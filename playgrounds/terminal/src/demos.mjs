@@ -7,6 +7,7 @@ import { createSlider } from '@sectile/terminal/slider';
 import { createText } from '@sectile/terminal/text';
 import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
+import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinbutton } from '@sectile/terminal/spinbutton'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
 import { ansi, plain, styled, terminalCell } from './ui.mjs';
 
 export const demos = Object.freeze([
@@ -17,7 +18,38 @@ export const demos = Object.freeze([
   { id: 'text', label: 'Text', description: 'type text · backspace/delete edit', create: createTextDemo },
   { id: 'combobox', label: 'Combobox', description: 'type filter · up/down move · enter accept · esc close', create: createComboboxDemo },
   { id: 'tree-grid', label: 'Tree grid', description: 'arrows move · alt+left/right or c/o fold · enter edit', create: createTreeGridDemo },
+  { id: 'tabs', label: 'Tabs', description: 'left/right move · enter activate', create: (host) => stateDemo(host, 'Tabs', createTabs({ items: ['one', 'two'], defaultValue: 'one', defaultHighlightedValue: 'one', onUpdate: host.render })) },
+  { id: 'radio-group', label: 'Radio group', description: 'left/right checks', create: (host) => stateDemo(host, 'Radio group', createRadioGroup({ items: ['a', 'b'], defaultValue: 'a', onUpdate: host.render })) },
+  { id: 'toolbar', label: 'Toolbar', description: 'left/right move · enter invoke', create: (host) => stateDemo(host, 'Toolbar', createToolbar({ items: ['bold', 'italic'], defaultHighlightedValue: 'bold', onUpdate: host.render })) },
+  { id: 'accordion', label: 'Accordion', description: 'up/down move · enter toggle', create: (host) => stateDemo(host, 'Accordion', createAccordion({ items: ['one', 'two'], defaultHighlightedValue: 'one', onUpdate: host.render })) },
+  { id: 'disclosure', label: 'Disclosure', description: 'enter/space toggle', create: (host) => stateDemo(host, 'Disclosure', createDisclosure({ onUpdate: host.render })) },
+  { id: 'checkbox', label: 'Checkbox', description: 'space toggles mixed/checked', create: (host) => stateDemo(host, 'Checkbox', createCheckbox({ defaultValue: 'mixed', onUpdate: host.render })) },
+  { id: 'switch', label: 'Switch', description: 'space toggles', create: (host) => stateDemo(host, 'Switch', createSwitch({ onUpdate: host.render })) },
+  { id: 'toggle-button', label: 'Toggle button', description: 'enter/space toggles', create: (host) => stateDemo(host, 'Toggle button', createToggleButton({ onUpdate: host.render })) },
+  { id: 'window-splitter', label: 'Window splitter', description: 'arrows resize', create: (host) => stateDemo(host, 'Window splitter', createWindowSplitter({ min: '0', max: '10', step: '1', defaultValue: 5, onUpdate: host.render })) },
+  { id: 'spinbutton', label: 'Spinbutton', description: 'up/down adjust · type draft · enter commit', create: (host) => stateDemo(host, 'Spinbutton', createSpinbutton({ min: '0', max: '10', step: '1', defaultValue: 5, onUpdate: host.render })) },
+  { id: 'dialog', label: 'Dialog', description: 'escape closes', create: (host) => stateDemo(host, 'Dialog', createDialog({ defaultOpen: true, onUpdate: host.render })) },
+  { id: 'alert-dialog', label: 'Alert dialog', description: 'escape closes and announces', create: (host) => stateDemo(host, 'Alert dialog', createAlertDialog({ defaultOpen: true, onUpdate: host.render })) },
+  { id: 'tooltip', label: 'Tooltip', description: 'escape hides', create: (host) => stateDemo(host, 'Tooltip', createTooltip({ defaultOpen: true, onUpdate: host.render })) },
+  { id: 'multi-thumb-slider', label: 'Multi-thumb slider', description: 'arrows adjust · tab changes thumb', create: (host) => stateDemo(host, 'Multi-thumb slider', createMultiThumbSlider({ thumbs: ['low', 'high'], min: '0', max: '10', step: '1', defaultValues: [2, 8], policies: { minGap: 2 }, onUpdate: host.render })) },
+  { id: 'grid', label: 'Grid', description: 'arrows move · space select · enter edit', create: (host) => stateDemo(host, 'Grid', createGridControl({ rows: [['a', 'b'], ['c', 'd']], defaultHighlightedValue: 'a', onUpdate: host.render })) },
+  { id: 'menu', label: 'Menu', description: 'arrows navigate · enter invoke', create: (host) => stateDemo(host, 'Menu', createMenu({ items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }], defaultHighlightedValue: 'file', onUpdate: host.render })) },
+  { id: 'menubar', label: 'Menubar', description: 'left/right roots · down opens', create: (host) => stateDemo(host, 'Menubar', createMenubar({ items: [{ id: 'file', parentID: null }, { id: 'edit', parentID: null }], defaultHighlightedValue: 'file', onUpdate: host.render })) },
+  { id: 'menu-button', label: 'Menu button', description: 'open then navigate/invoke', create: (host) => stateDemo(host, 'Menu button', createMenuButton({ items: [{ id: 'copy', parentID: null }], defaultOpen: true, defaultHighlightedValue: 'copy', onUpdate: host.render })) },
+  { id: 'carousel', label: 'Carousel', description: 'left/right move · space pause', create: (host) => stateDemo(host, 'Carousel', createCarousel({ slides: ['one', 'two', 'three'], onUpdate: host.render })) },
+  { id: 'feed', label: 'Feed', description: 'up/down move · load-before/load-after request', create: (host) => stateDemo(host, 'Feed', createFeed({ items: ['one', 'two'], onUpdate: host.render })) },
 ]);
+
+function stateDemo(host, title, result) {
+  const connection = unwrap(result);
+  return {
+    handle: (input) => connection.handleKeyboardInput(input),
+    lines() {
+      const { revision, state } = connection.getSnapshot();
+      return [`${ansi.bold}${title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '', ...JSON.stringify(state, null, 2).split('\n')];
+    },
+  };
+}
 
 function createListboxDemo(host) {
   const items = [

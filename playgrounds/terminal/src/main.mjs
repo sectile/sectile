@@ -86,14 +86,17 @@ function run() {
     const lines = [
       `${ansi.bold}${ansi.cyan}Sectile terminal playground${ansi.reset}`,
       active === null
-        ? `${ansi.dim}↑/↓ choose · enter open · 1–7 direct · q quit${ansi.reset}`
+        ? `${ansi.dim}↑/↓ choose · enter open · q quit${ansi.reset}`
         : `${ansi.dim}Ctrl+B menu · Ctrl+R reset · Ctrl+C quit${ansi.reset}`,
       '',
     ];
 
     if (active === null) {
       lines.push(`${ansi.bold}Choose a facade${ansi.reset}`, '');
-      demos.forEach((demo, index) => {
+      const visibleCount = Math.max(1, height - 7);
+      const start = Math.max(0, Math.min(demos.length - visibleCount, menuIndex - Math.floor(visibleCount / 2)));
+      demos.slice(start, start + visibleCount).forEach((demo, offset) => {
+        const index = start + offset;
         const label = `${index + 1}. ${demo.label}`;
         lines.push(index === menuIndex
           ? `${ansi.current}> ${label}${ansi.reset}`

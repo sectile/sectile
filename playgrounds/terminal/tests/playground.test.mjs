@@ -13,9 +13,7 @@ import { createTreeView } from '@sectile/terminal/tree-view';
 import { demos } from '../dist/demos.mjs';
 
 test('terminal playground exposes one demo for every public facade', () => {
-  assert.deepEqual(demos.map(({ id }) => id), [
-    'listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid',
-  ]);
+  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spinbutton', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed']);
 });
 
 test('terminal playground composes every facade through public package subpaths', () => {
