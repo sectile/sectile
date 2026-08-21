@@ -7,7 +7,7 @@ import {
   type CalendarPolicies,
   type CalendarState,
 } from '@sectile/primitives/calendar';
-import type { Grid } from '@sectile/primitives/grid';
+import { createGrid, type Grid } from '@sectile/primitives/grid';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
@@ -50,6 +50,7 @@ export interface CalendarControlledValues<ID extends StableID = StableID> {
 }
 
 export interface CalendarController<ID extends StableID = StableID> {
+  readonly grid: Grid<ID>;
   getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
   syncControlledValues(
     values: CalendarControlledValues<ID>,
@@ -59,6 +60,37 @@ export interface CalendarController<ID extends StableID = StableID> {
     expectedRevision?: number,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
 }
+
+export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
+  readonly direction: -1 | 1;
+  readonly from: ID | null;
+}
+
+export interface CalendarTransitionDetails<ID extends StableID = StableID> {
+  readonly event: CalendarEvent;
+  readonly result: RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
+}
+
+export interface CalendarConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: CalendarController<ID>;
+  readonly onPageRequest?: (details: CalendarPageRequestDetails<ID>) => void;
+  readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface CalendarConnection<ID extends StableID = StableID> {
+  readonly grid: Grid<ID>;
+  getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
+  syncControlledValues(
+    values: CalendarControlledValues<ID>,
+  ): Result<RevisionSnapshot<CalendarState<ID>>>;
+  handleKeyboardInput(input: KeyboardInput): boolean;
+}
+
+export type CalendarOptions<ID extends StableID = StableID> =
+  Omit<CalendarControllerOptions<ID>, 'grid'>
+  & Omit<CalendarConnectionOptions<ID>, 'controller'>
+  & { readonly rows: readonly (readonly ID[])[] };
 
 export function createCalendarController<ID extends StableID>(
   options: CalendarControllerOptions<ID>,
@@ -76,6 +108,22 @@ export function createCalendarController<ID extends StableID>(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalCalendarController(options, snapshot.value) };
+}
+
+export function createCalendar<ID extends StableID>(
+  options: CalendarOptions<ID>,
+): Result<CalendarConnection<ID>> {
+  const grid = createGrid(options.rows);
+  if (!grid.ok) return grid;
+  const controller = createCalendarController({ ...options, grid: grid.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectCalendar({ ...options, controller: controller.value }) };
+}
+
+export function connectCalendar<ID extends StableID>(
+  options: CalendarConnectionOptions<ID>,
+): CalendarConnection<ID> {
+  return new TerminalCalendarConnection(options);
 }
 
 export function toCalendarEvent(input: KeyboardInput): CalendarEvent | null {
@@ -97,7 +145,51 @@ export function toCalendarEffect<ID extends StableID>(
     : { type: 'request-page', direction: command.direction, from: command.from });
 }
 
+class TerminalCalendarConnection<ID extends StableID> implements CalendarConnection<ID> {
+  public readonly grid: Grid<ID>;
+  readonly #controller: CalendarController<ID>;
+  readonly #onPageRequest: ((details: CalendarPageRequestDetails<ID>) => void) | undefined;
+  readonly #onTransition: ((details: CalendarTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+
+  public constructor(options: CalendarConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.grid = options.controller.grid;
+    this.#onPageRequest = options.onPageRequest;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<CalendarState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: CalendarControlledValues<ID>,
+  ): Result<RevisionSnapshot<CalendarState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
+  }
+
+  public handleKeyboardInput(input: KeyboardInput): boolean {
+    const event = toCalendarEvent(input);
+    if (event === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) {
+      for (const effect of result.commands) {
+        if (effect.type !== 'request-page') continue;
+        this.#onPageRequest?.(Object.freeze({ direction: effect.direction, from: effect.from }));
+      }
+    }
+    this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+}
+
 class TerminalCalendarController<ID extends StableID> implements CalendarController<ID> {
+  public readonly grid: Grid<ID>;
   readonly #grid: Grid<ID>;
   readonly #policies: CalendarPolicies<ID>;
   readonly #valueControlled: boolean;
@@ -112,6 +204,7 @@ class TerminalCalendarController<ID extends StableID> implements CalendarControl
     options: CalendarControllerOptions<ID>,
     snapshot: RevisionSnapshot<CalendarState<ID>>,
   ) {
+    this.grid = options.grid;
     this.#grid = options.grid;
     this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;

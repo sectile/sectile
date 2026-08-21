@@ -23,6 +23,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its DOM connection owns keyboard dispatch and synchronized slider ARIA values.
 
+`createCalendar` constructs a grid from `rows`; its connection owns gridcell ARIA, focus, keyboard dispatch, and page requests.
+
 Calendar, slider, tree-view, and tree-grid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Tree-grid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 
 The text controller maps explicit `beforeinput` ranges and composition phases through `@sectile/dom/text`. It controls or owns the complete editing state so an active IME composition remains atomic.

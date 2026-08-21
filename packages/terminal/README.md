@@ -22,6 +22,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its terminal connection exposes the current rendered value and owns key dispatch.
 
+`createCalendar` constructs a grid from `rows`; its connection owns key dispatch and page requests.
+
 Calendar, slider, tree-view, and tree-grid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Tree-grid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 
 The text controller maps explicit insert, replace, and delete ranges through `@sectile/terminal/text`. Terminal input has no implicit composition phase; a host that supports one must expose it explicitly before the adapter contract expands.

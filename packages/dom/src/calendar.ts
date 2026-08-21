@@ -7,7 +7,7 @@ import {
   type CalendarPolicies,
   type CalendarState,
 } from '@sectile/primitives/calendar';
-import type { Grid } from '@sectile/primitives/grid';
+import { createGrid, type Grid } from '@sectile/primitives/grid';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
@@ -54,6 +54,7 @@ export interface CalendarControlledValues<ID extends StableID = StableID> {
 }
 
 export interface CalendarController<ID extends StableID = StableID> {
+  readonly grid: Grid<ID>;
   getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
   syncControlledValues(
     values: CalendarControlledValues<ID>,
@@ -63,6 +64,49 @@ export interface CalendarController<ID extends StableID = StableID> {
     expectedRevision?: number,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
 }
+
+export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
+  readonly direction: -1 | 1;
+  readonly from: ID | null;
+}
+
+export interface CalendarTransitionDetails<ID extends StableID = StableID> {
+  readonly event: CalendarEvent;
+  readonly result: RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
+}
+
+export interface CalendarConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: CalendarController<ID>;
+  readonly root: HTMLElement;
+  readonly onPageRequest?: (details: CalendarPageRequestDetails<ID>) => void;
+  readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface CalendarCellAttributes<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly rowIndex: number;
+  readonly columnIndex: number;
+  readonly disabled?: boolean;
+}
+
+export interface CalendarConnection<ID extends StableID = StableID> {
+  readonly grid: Grid<ID>;
+  getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
+  syncControlledValues(
+    values: CalendarControlledValues<ID>,
+  ): Result<RevisionSnapshot<CalendarState<ID>>>;
+  setCalendarAttributes(label?: string): void;
+  setCellAttributes(element: HTMLElement, attributes: CalendarCellAttributes<ID>): void;
+  handleKeyboardEvent(event: KeyboardEvent): boolean;
+  focusCurrent(): void;
+  disconnect(): void;
+}
+
+export type CalendarOptions<ID extends StableID = StableID> =
+  Omit<CalendarControllerOptions<ID>, 'grid'>
+  & Omit<CalendarConnectionOptions<ID>, 'controller'>
+  & { readonly rows: readonly (readonly ID[])[] };
 
 export function createCalendarController<ID extends StableID>(
   options: CalendarControllerOptions<ID>,
@@ -80,6 +124,22 @@ export function createCalendarController<ID extends StableID>(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new DOMCalendarController(options, snapshot.value) };
+}
+
+export function createCalendar<ID extends StableID>(
+  options: CalendarOptions<ID>,
+): Result<CalendarConnection<ID>> {
+  const grid = createGrid(options.rows);
+  if (!grid.ok) return grid;
+  const controller = createCalendarController({ ...options, grid: grid.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectCalendar({ ...options, controller: controller.value }) };
+}
+
+export function connectCalendar<ID extends StableID>(
+  options: CalendarConnectionOptions<ID>,
+): CalendarConnection<ID> {
+  return new DOMCalendarConnection(options);
 }
 
 export function toCalendarEvent(input: KeyboardInput): CalendarEvent | null {
@@ -102,7 +162,112 @@ export function toCalendarEffect<ID extends StableID>(
     : { type: 'request-page', direction: command.direction, from: command.from });
 }
 
+class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<ID> {
+  public readonly grid: Grid<ID>;
+  readonly #controller: CalendarController<ID>;
+  readonly #root: HTMLElement;
+  readonly #onPageRequest: ((details: CalendarPageRequestDetails<ID>) => void) | undefined;
+  readonly #onTransition: ((details: CalendarTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  readonly #handleKeydown: (event: KeyboardEvent) => void;
+
+  public constructor(options: CalendarConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.grid = options.controller.grid;
+    this.#root = options.root;
+    this.#onPageRequest = options.onPageRequest;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+    this.#handleKeydown = (event): void => {
+      if (this.handleKeyboardEvent(event)) event.preventDefault();
+    };
+    this.#root.addEventListener('keydown', this.#handleKeydown);
+  }
+
+  public getSnapshot(): RevisionSnapshot<CalendarState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: CalendarControlledValues<ID>,
+  ): Result<RevisionSnapshot<CalendarState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) {
+      this.#onUpdate?.();
+      this.focusCurrent();
+    }
+    return result;
+  }
+
+  public setCalendarAttributes(label?: string): void {
+    this.#root.setAttribute('role', 'grid');
+    this.#root.setAttribute('aria-rowcount', String(this.grid.rowCount));
+    this.#root.setAttribute('aria-colcount', String(this.grid.columnCount));
+    if (label === undefined) this.#root.removeAttribute('aria-label');
+    else this.#root.setAttribute('aria-label', label);
+  }
+
+  public setCellAttributes(
+    element: HTMLElement,
+    attributes: CalendarCellAttributes<ID>,
+  ): void {
+    const state = this.#controller.getSnapshot().state;
+    element.dataset['calendarId'] = String(attributes.id);
+    element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
+    element.setAttribute('role', 'gridcell');
+    element.setAttribute('aria-rowindex', String(attributes.rowIndex));
+    element.setAttribute('aria-colindex', String(attributes.columnIndex));
+    element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
+    if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');
+    else element.removeAttribute('aria-disabled');
+  }
+
+  public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    const input: KeyboardInput = {
+      key: event.key,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+    };
+    const semanticEvent = toCalendarEvent(input);
+    if (semanticEvent === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) this.#applyEffects(result.commands);
+    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onUpdate?.();
+    this.focusCurrent();
+    return true;
+  }
+
+  public focusCurrent(): void {
+    queueMicrotask((): void => {
+      const current = this.#controller.getSnapshot().state.cursor.current;
+      if (current === null) {
+        this.#root.focus();
+        return;
+      }
+      for (const element of this.#root.querySelectorAll<HTMLElement>('[data-calendar-id]')) {
+        if (element.dataset['calendarId'] !== String(current)) continue;
+        element.focus();
+        return;
+      }
+    });
+  }
+
+  public disconnect(): void {
+    this.#root.removeEventListener('keydown', this.#handleKeydown);
+  }
+
+  #applyEffects(effects: readonly CalendarEffect<ID>[]): void {
+    for (const effect of effects) {
+      if (effect.type !== 'request-page') continue;
+      this.#onPageRequest?.(Object.freeze({ direction: effect.direction, from: effect.from }));
+    }
+  }
+}
+
 class DOMCalendarController<ID extends StableID> implements CalendarController<ID> {
+  public readonly grid: Grid<ID>;
   readonly #grid: Grid<ID>;
   readonly #policies: CalendarPolicies<ID>;
   readonly #valueControlled: boolean;
@@ -117,6 +282,7 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     options: CalendarControllerOptions<ID>,
     snapshot: RevisionSnapshot<CalendarState<ID>>,
   ) {
+    this.grid = options.grid;
     this.#grid = options.grid;
     this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;

@@ -3,10 +3,37 @@ import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createGrid } from '@sectile/primitives/grid';
 import {
+  createCalendar,
   createCalendarController,
   toCalendarEffect,
   toCalendarEvent,
 } from '../dist/calendar.js';
+
+test('DOM calendar facade constructs the grid and owns ARIA, focus, and page requests', () => {
+  const root = new FakeElement();
+  const pages = [];
+  const connection = unwrap(createCalendar({
+    rows: [['a', 'b'], ['c', 'd']],
+    root,
+    defaultHighlightedValue: 'a',
+    onPageRequest: (request) => pages.push(request),
+  }));
+  connection.setCalendarAttributes('Dates');
+  assert.equal(connection.grid.rowCount, 2);
+  assert.equal(root.attributes.get('role'), 'grid');
+  assert.equal(root.attributes.get('aria-colcount'), '2');
+  const cell = new FakeElement();
+  connection.setCellAttributes(cell, { id: 'a', rowIndex: 1, columnIndex: 1 });
+  assert.equal(cell.attributes.get('role'), 'gridcell');
+  assert.equal(cell.tabIndex, 0);
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('PageDown')), true);
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Tab')), false);
+  assert.deepEqual(pages, [{ direction: 1, from: 'a' }]);
+  connection.disconnect();
+
+  const invalid = createCalendar({ rows: [['a'], ['a']], root: new FakeElement() });
+  assert.equal(invalid.ok, false);
+});
 
 test('DOM keys map onto calendar semantic events', () => {
   assert.equal(toCalendarEvent({ key: 'ArrowLeft' }), 'left');
@@ -72,4 +99,39 @@ test('controlled DOM calendar emits proposals until synchronized', () => {
 
 function grid() {
   return unwrap(createGrid([['a', 'b'], ['c', 'd']]));
+}
+
+function keyboardEvent(key) {
+  return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
+}
+
+class FakeElement {
+  attributes = new Map();
+  dataset = {};
+  listeners = new Map();
+  tabIndex = -1;
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value);
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+
+  querySelectorAll() {
+    return [];
+  }
+
+  focus() {}
 }

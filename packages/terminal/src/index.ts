@@ -17,14 +17,21 @@ export {
   type ListboxValueChangeDetails,
 } from './listbox.js';
 export {
+  connectCalendar,
+  createCalendar,
   createCalendarController,
   toCalendarEffect,
   toCalendarEvent,
   type CalendarControlledValues,
+  type CalendarConnection,
+  type CalendarConnectionOptions,
   type CalendarController,
   type CalendarControllerOptions,
   type CalendarEffect,
   type CalendarHighlightChangeDetails,
+  type CalendarOptions,
+  type CalendarPageRequestDetails,
+  type CalendarTransitionDetails,
   type CalendarValueChangeDetails,
   type KeyboardInput as CalendarKeyboardInput,
 } from './calendar.js';
