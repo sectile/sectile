@@ -1,3 +1,63 @@
-import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/primitives/result'; import { createWindowSplitter } from '../dist/window-splitter.js';
-test('DOM window splitter reuses range control with separator projection', () => { const root = new FakeElement(); const splitter = unwrap(createWindowSplitter({ root, min: '0', max: '10', step: '1', defaultValue: 5 })); assert.equal(root.attributes.get('role'), 'separator'); splitter.handleEvent('increment'); assert.equal(root.attributes.get('role'), 'separator'); assert.equal(splitter.getSnapshot().state.tick, 6); });
-class FakeElement { attributes = new Map(); listeners = new Map(); tabIndex = -1; setAttribute(n,v){this.attributes.set(n,v)} removeAttribute(n){this.attributes.delete(n)} addEventListener(t,l){const s=this.listeners.get(t)??new Set();s.add(l);this.listeners.set(t,s)} removeEventListener(t,l){this.listeners.get(t)?.delete(l)} getBoundingClientRect(){return {left:0,width:100}} }
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
+import { createWindowSplitter } from '../dist/window-splitter.js';
+
+test('DOM window splitter reuses range control with separator projection', () => {
+  const root = new FakeElement();
+  const splitter = unwrap(createWindowSplitter({
+    root, min: '0', max: '10', step: '1', defaultValue: 5,
+  }));
+  assert.equal(root.attributes.get('role'), 'separator');
+  splitter.handleEvent('increment');
+  assert.equal(splitter.getSnapshot().state.tick, 6);
+});
+
+test('DOM vertical window splitter follows its visual drag and arrow direction', () => {
+  const root = new FakeElement();
+  const splitter = unwrap(createWindowSplitter({
+    root, track: root, min: '0', max: '100', step: '1', defaultValue: 50,
+    orientation: 'vertical',
+  }));
+
+  root.emit('pointerdown', pointerEvent(75));
+  root.emit('pointerup', pointerEvent(75));
+  assert.equal(splitter.getSnapshot().state.tick, 75);
+
+  assert.equal(splitter.handleKeyboardEvent(keyboardEvent('ArrowUp')), true);
+  assert.equal(splitter.getSnapshot().state.tick, 74);
+  assert.equal(splitter.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
+  assert.equal(splitter.getSnapshot().state.tick, 75);
+});
+
+function pointerEvent(clientY) {
+  return { clientX: 0, clientY, pointerId: 1, preventDefault() {} };
+}
+
+function keyboardEvent(key) {
+  return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
+}
+
+class FakeElement {
+  attributes = new Map();
+  listeners = new Map();
+  tabIndex = -1;
+
+  setAttribute(name, value) { this.attributes.set(name, value); }
+  removeAttribute(name) { this.attributes.delete(name); }
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+  removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  emit(type, event) {
+    event.type = type;
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+  getBoundingClientRect() {
+    return { left: 0, width: 100, top: 0, bottom: 100, height: 100 };
+  }
+  setPointerCapture() {}
+  releasePointerCapture() {}
+}

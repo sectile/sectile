@@ -35,11 +35,12 @@ test('DOM and terminal spin buttons preserve draft, commit, cancel, and controll
 });
 
 test('DOM and terminal window splitters preserve range traces', () => {
-  const options = { min: '0', max: '100', step: '1', defaultValue: 50, page: 10 };
+  const options = { min: '0', max: '100', step: '1', defaultValue: 50, page: 10, orientation: 'vertical' };
   const DOM = unwrap(createDOMWindowSplitter({ ...options, root: new FakeElement() }));
   const terminal = unwrap(createTerminalWindowSplitter(options));
   const inputs = [
-    [{ key: 'ArrowRight' }, { key: 'right' }],
+    [{ key: 'ArrowDown' }, { key: 'down' }],
+    [{ key: 'ArrowUp' }, { key: 'up' }],
     [{ key: 'PageDown' }, { key: 'page-down' }],
     [{ key: 'End' }, { key: 'end' }],
     [{ key: 'Home' }, { key: 'home' }],

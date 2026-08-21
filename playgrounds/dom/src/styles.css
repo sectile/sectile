@@ -168,10 +168,11 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .vertical-slider .slider-track-fill { right: 0; bottom: 0; left: 0; width: 100%; }
 .vertical-slider .slider-thumb { top: auto; left: 50%; transform: translate(-50%, 50%); }
 .vertical-slider .slider-scale { flex-direction: column; margin: 0; text-align: left; }
-.splitter-demo { --split: 50%; display: grid; width: 100%; max-width: 36rem; height: 15rem; overflow: hidden; border: 1px solid #263246; border-radius: 0.85rem; background: #0c1320; }
-.splitter-demo.horizontal { grid-template-columns: minmax(0, var(--split)) 0.6rem minmax(0, 1fr); }
-.splitter-demo.vertical { grid-template-rows: minmax(0, var(--split)) 0.6rem minmax(0, 1fr); }
-.splitter-demo section { display: grid; min-width: 0; min-height: 0; padding: 1rem; color: #aebacd; place-items: center; }
+.splitter-demo { --first-pane: 1fr; --second-pane: 1fr; display: grid; width: 100%; max-width: 36rem; height: 15rem; overflow: hidden; border: 1px solid #263246; border-radius: 0.85rem; background: #0c1320; }
+.splitter-demo.horizontal { grid-template-columns: minmax(0, var(--first-pane)) 0.6rem minmax(0, var(--second-pane)); }
+.splitter-demo.vertical { grid-template-rows: minmax(0, var(--first-pane)) 0.6rem minmax(0, var(--second-pane)); }
+.splitter-demo section { display: grid; min-width: 0; min-height: 0; overflow: hidden; padding: 1rem; color: #aebacd; place-items: center; }
+.splitter-demo section[aria-hidden="true"] { visibility: hidden; padding: 0; }
 .splitter-separator { background: #5368eb; cursor: col-resize; outline: none; touch-action: none; }
 .splitter-demo.vertical .splitter-separator { cursor: row-resize; }
 .splitter-separator:focus-visible { background: #5eead4; box-shadow: 0 0 0 2px #0a0e17, 0 0 0 4px #99a7ff; }

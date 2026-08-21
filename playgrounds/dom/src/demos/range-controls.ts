@@ -71,13 +71,20 @@ function mountSplitter(
 
   function render(): void {
     const { revision, state } = connection.getSnapshot();
-    const ratio = `${state.tick}%`;
-    frame.style.setProperty('--split', ratio);
+    frame.style.setProperty('--first-pane', `${state.tick}fr`);
+    frame.style.setProperty('--second-pane', `${connection.range.count - state.tick}fr`);
+    setCollapsed(first, state.tick === 0);
+    setCollapsed(second, state.tick === connection.range.count);
     context.showState(revision, { value: connection.getValue(), orientation, ownership: controlled ? 'controlled' : 'uncontrolled' });
   }
 
   render();
   return { focus: () => separator.focus(), disconnect: () => connection.disconnect() };
+}
+
+function setCollapsed(element: HTMLElement, collapsed: boolean): void {
+  if (collapsed) element.setAttribute('aria-hidden', 'true');
+  else element.removeAttribute('aria-hidden');
 }
 
 function mountSpinButton(context: DemoContext, options: {

@@ -173,7 +173,9 @@ class DOMSliderConnection implements SliderConnection {
       if (extent <= 0) return;
       const rawRatio = this.#orientation === 'horizontal'
         ? (event.clientX - rect.left) / rect.width
-        : (rect.bottom - event.clientY) / rect.height;
+        : this.#role === 'separator'
+          ? (event.clientY - rect.top) / rect.height
+          : (rect.bottom - event.clientY) / rect.height;
       const ratio = Math.min(1, Math.max(0, rawRatio));
       const tick = Math.round(ratio * this.range.count);
       const semanticEvent: SliderEvent = { type: 'set-tick', tick };
@@ -232,7 +234,9 @@ class DOMSliderConnection implements SliderConnection {
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
-    const semanticEvent = toSliderEvent(input);
+    const semanticEvent = this.#role === 'separator' && this.#orientation === 'vertical'
+      ? toVerticalSplitterEvent(input)
+      : toSliderEvent(input);
     if (semanticEvent === null) return false;
     return this.handleEvent(semanticEvent);
   }
@@ -252,6 +256,13 @@ class DOMSliderConnection implements SliderConnection {
     this.#track.removeEventListener('pointerup', this.#handlePointerUp);
     this.#track.removeEventListener('pointercancel', this.#handlePointerUp);
   }
+}
+
+function toVerticalSplitterEvent(input: KeyboardInput): SliderEvent | null {
+  if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
+  if (input.key === 'ArrowUp') return 'decrement';
+  if (input.key === 'ArrowDown') return 'increment';
+  return toSliderEvent(input);
 }
 
 class DOMSliderController implements SliderController {
