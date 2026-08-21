@@ -3,10 +3,30 @@ import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createRange } from '@sectile/primitives/range';
 import {
+  createSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
 } from '../dist/slider.js';
+
+test('terminal slider facade constructs a bounded range and owns render updates', () => {
+  let updates = 0;
+  const connection = unwrap(createSlider({
+    min: '0',
+    max: '1',
+    step: '0.25',
+    defaultValue: 1,
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.getValue(), '0.25');
+  assert.equal(connection.handleKeyboardInput({ key: 'right' }), true);
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), false);
+  assert.equal(connection.getValue(), '0.5');
+  assert.equal(updates, 1);
+
+  const invalid = createSlider({ min: '1', max: '0', step: '0.25' });
+  assert.equal(invalid.ok, false);
+});
 
 test('terminal keys map onto slider semantic events', () => {
   assert.equal(toSliderEvent({ key: 'right' }), 'increment');

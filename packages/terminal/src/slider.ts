@@ -1,5 +1,9 @@
 import type { Result, SectileError } from '@sectile/primitives';
-import type { QuantizedRange } from '@sectile/primitives/range';
+import {
+  createBoundedRange,
+  type BoundedRangeInput,
+  type QuantizedRange,
+} from '@sectile/primitives/range';
 import {
   applySliderEvent,
   createSliderState,
@@ -41,6 +45,7 @@ export interface SliderControlledValues {
 }
 
 export interface SliderController {
+  readonly range: QuantizedRange;
   getSnapshot(): RevisionSnapshot<SliderState>;
   syncControlledValues(values: SliderControlledValues): Result<RevisionSnapshot<SliderState>>;
   handleKeyboardInput(
@@ -48,6 +53,29 @@ export interface SliderController {
     expectedRevision?: number,
   ): RevisionResult<SliderState, SliderEffect>;
 }
+
+export interface SliderTransitionDetails {
+  readonly event: SliderEvent;
+  readonly result: RevisionResult<SliderState, SliderEffect>;
+}
+
+export interface SliderConnectionOptions {
+  readonly controller: SliderController;
+  readonly onTransition?: (details: SliderTransitionDetails) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface SliderConnection {
+  readonly range: QuantizedRange;
+  getSnapshot(): RevisionSnapshot<SliderState>;
+  getValue(): string;
+  syncControlledValues(values: SliderControlledValues): Result<RevisionSnapshot<SliderState>>;
+  handleKeyboardInput(input: KeyboardInput): boolean;
+}
+
+export type SliderOptions = Omit<SliderControllerOptions, 'range'>
+  & Omit<SliderConnectionOptions, 'controller'>
+  & BoundedRangeInput;
 
 export function createSliderController(
   options: SliderControllerOptions,
@@ -57,6 +85,18 @@ export function createSliderController(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalSliderController(options, snapshot.value) };
+}
+
+export function createSlider(options: SliderOptions): Result<SliderConnection> {
+  const range = createBoundedRange(options);
+  if (!range.ok) return range;
+  const controller = createSliderController({ ...options, range: range.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectSlider({ ...options, controller: controller.value }) };
+}
+
+export function connectSlider(options: SliderConnectionOptions): SliderConnection {
+  return new TerminalSliderConnection(options);
 }
 
 export function toSliderEvent(input: KeyboardInput): SliderEvent | null {
@@ -73,7 +113,47 @@ export function toSliderEffect(command: SliderCommand): SliderEffect {
   return Object.freeze({ type: 'render-range-value', tick: command.tick });
 }
 
+class TerminalSliderConnection implements SliderConnection {
+  public readonly range: QuantizedRange;
+  readonly #controller: SliderController;
+  readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+
+  public constructor(options: SliderConnectionOptions) {
+    this.#controller = options.controller;
+    this.range = options.controller.range;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<SliderState> {
+    return this.#controller.getSnapshot();
+  }
+
+  public getValue(): string {
+    return this.range.valueAt(this.#controller.getSnapshot().state.tick) as string;
+  }
+
+  public syncControlledValues(
+    values: SliderControlledValues,
+  ): Result<RevisionSnapshot<SliderState>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
+  }
+
+  public handleKeyboardInput(input: KeyboardInput): boolean {
+    const event = toSliderEvent(input);
+    if (event === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+}
+
 class TerminalSliderController implements SliderController {
+  public readonly range: QuantizedRange;
   readonly #range: QuantizedRange;
   readonly #page: number;
   readonly #controlled: boolean;
@@ -84,6 +164,7 @@ class TerminalSliderController implements SliderController {
     options: SliderControllerOptions,
     snapshot: RevisionSnapshot<SliderState>,
   ) {
+    this.range = options.range;
     this.#range = options.range;
     this.#page = options.page ?? 2;
     this.#controlled = options.value !== undefined;

@@ -3,10 +3,39 @@ import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createRange } from '@sectile/primitives/range';
 import {
+  createSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
 } from '../dist/slider.js';
+
+test('DOM slider facade constructs a bounded range and owns keyboard ARIA updates', () => {
+  const root = new FakeElement();
+  let updates = 0;
+  const connection = unwrap(createSlider({
+    min: '0',
+    max: '1',
+    step: '0.25',
+    root,
+    label: 'Opacity',
+    defaultValue: 1,
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.getValue(), '0.25');
+  assert.equal(root.attributes.get('role'), 'slider');
+  assert.equal(root.attributes.get('aria-valuetext'), '0.25');
+  assert.equal(root.attributes.get('aria-label'), 'Opacity');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false);
+  assert.equal(connection.getValue(), '0.5');
+  assert.equal(root.attributes.get('aria-valuenow'), '2');
+  assert.equal(updates, 1);
+  connection.disconnect();
+  assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+
+  const invalid = createSlider({ min: '1', max: '0', step: '0.25', root: new FakeElement() });
+  assert.equal(invalid.ok, false);
+});
 
 test('DOM keys map onto slider semantic events', () => {
   assert.equal(toSliderEvent({ key: 'ArrowRight' }), 'increment');
@@ -68,4 +97,32 @@ test('unsupported and stale DOM slider inputs are failure-atomic', () => {
 
 function range() {
   return unwrap(createRange({ origin: '0', step: '0.5', count: 5 }));
+}
+
+function keyboardEvent(key) {
+  return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
+}
+
+class FakeElement {
+  attributes = new Map();
+  listeners = new Map();
+  tabIndex = -1;
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value);
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
 }

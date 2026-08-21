@@ -45,14 +45,20 @@ export {
   type KeyboardInput as ComboboxKeyboardInput,
 } from './combobox.js';
 export {
+  connectSlider,
+  createSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
   type KeyboardInput as SliderKeyboardInput,
   type SliderControlledValues,
+  type SliderConnection,
+  type SliderConnectionOptions,
   type SliderController,
   type SliderControllerOptions,
   type SliderEffect,
+  type SliderOptions,
+  type SliderTransitionDetails,
   type SliderValueChangeDetails,
 } from './slider.js';
 export {

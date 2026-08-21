@@ -1,5 +1,9 @@
 import type { Result, SectileError } from '@sectile/primitives';
-import type { QuantizedRange } from '@sectile/primitives/range';
+import {
+  createBoundedRange,
+  type BoundedRangeInput,
+  type QuantizedRange,
+} from '@sectile/primitives/range';
 import {
   applySliderEvent,
   createSliderState,
@@ -45,6 +49,7 @@ export interface SliderControlledValues {
 }
 
 export interface SliderController {
+  readonly range: QuantizedRange;
   getSnapshot(): RevisionSnapshot<SliderState>;
   syncControlledValues(values: SliderControlledValues): Result<RevisionSnapshot<SliderState>>;
   handleKeyboardInput(
@@ -52,6 +57,33 @@ export interface SliderController {
     expectedRevision?: number,
   ): RevisionResult<SliderState, SliderEffect>;
 }
+
+export interface SliderTransitionDetails {
+  readonly event: SliderEvent;
+  readonly result: RevisionResult<SliderState, SliderEffect>;
+}
+
+export interface SliderConnectionOptions {
+  readonly controller: SliderController;
+  readonly root: HTMLElement;
+  readonly label?: string;
+  readonly onTransition?: (details: SliderTransitionDetails) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface SliderConnection {
+  readonly range: QuantizedRange;
+  getSnapshot(): RevisionSnapshot<SliderState>;
+  getValue(): string;
+  syncControlledValues(values: SliderControlledValues): Result<RevisionSnapshot<SliderState>>;
+  refreshAttributes(): void;
+  handleKeyboardEvent(event: KeyboardEvent): boolean;
+  disconnect(): void;
+}
+
+export type SliderOptions = Omit<SliderControllerOptions, 'range'>
+  & Omit<SliderConnectionOptions, 'controller'>
+  & BoundedRangeInput;
 
 export function createSliderController(
   options: SliderControllerOptions,
@@ -61,6 +93,18 @@ export function createSliderController(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new DOMSliderController(options, snapshot.value) };
+}
+
+export function createSlider(options: SliderOptions): Result<SliderConnection> {
+  const range = createBoundedRange(options);
+  if (!range.ok) return range;
+  const controller = createSliderController({ ...options, range: range.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectSlider({ ...options, controller: controller.value }) };
+}
+
+export function connectSlider(options: SliderConnectionOptions): SliderConnection {
+  return new DOMSliderConnection(options);
 }
 
 export function toSliderEvent(input: KeyboardInput): SliderEvent | null {
@@ -78,7 +122,83 @@ export function toSliderEffect(command: SliderCommand): SliderEffect {
   return Object.freeze({ type: 'set-range-value', tick: command.tick });
 }
 
+class DOMSliderConnection implements SliderConnection {
+  public readonly range: QuantizedRange;
+  readonly #controller: SliderController;
+  readonly #root: HTMLElement;
+  readonly #label: string | undefined;
+  readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  readonly #handleKeydown: (event: KeyboardEvent) => void;
+
+  public constructor(options: SliderConnectionOptions) {
+    this.#controller = options.controller;
+    this.range = options.controller.range;
+    this.#root = options.root;
+    this.#label = options.label;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+    this.#handleKeydown = (event): void => {
+      if (this.handleKeyboardEvent(event)) event.preventDefault();
+    };
+    this.#root.addEventListener('keydown', this.#handleKeydown);
+    this.refreshAttributes();
+  }
+
+  public getSnapshot(): RevisionSnapshot<SliderState> {
+    return this.#controller.getSnapshot();
+  }
+
+  public getValue(): string {
+    return this.range.valueAt(this.#controller.getSnapshot().state.tick) as string;
+  }
+
+  public syncControlledValues(
+    values: SliderControlledValues,
+  ): Result<RevisionSnapshot<SliderState>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) {
+      this.refreshAttributes();
+      this.#onUpdate?.();
+    }
+    return result;
+  }
+
+  public refreshAttributes(): void {
+    const tick = this.#controller.getSnapshot().state.tick;
+    this.#root.setAttribute('role', 'slider');
+    this.#root.setAttribute('aria-valuemin', '0');
+    this.#root.setAttribute('aria-valuemax', String(this.range.count));
+    this.#root.setAttribute('aria-valuenow', String(tick));
+    this.#root.setAttribute('aria-valuetext', this.getValue());
+    if (this.#label === undefined) this.#root.removeAttribute('aria-label');
+    else this.#root.setAttribute('aria-label', this.#label);
+    if (this.#root.tabIndex < 0) this.#root.tabIndex = 0;
+  }
+
+  public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    const input: KeyboardInput = {
+      key: event.key,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+    };
+    const semanticEvent = toSliderEvent(input);
+    if (semanticEvent === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) this.refreshAttributes();
+    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+
+  public disconnect(): void {
+    this.#root.removeEventListener('keydown', this.#handleKeydown);
+  }
+}
+
 class DOMSliderController implements SliderController {
+  public readonly range: QuantizedRange;
   readonly #range: QuantizedRange;
   readonly #page: number;
   readonly #controlled: boolean;
@@ -89,6 +209,7 @@ class DOMSliderController implements SliderController {
     options: SliderControllerOptions,
     snapshot: RevisionSnapshot<SliderState>,
   ) {
+    this.range = options.range;
     this.#range = options.range;
     this.#page = options.page ?? 2;
     this.#controlled = options.value !== undefined;
