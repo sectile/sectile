@@ -48,11 +48,14 @@ export const carouselDemo: DemoDefinition = {
 };
 
 const feedItems = [
-  { id: 'r1', title: 'Primitive laws verified', detail: 'Sequence and selection checks passed.' },
-  { id: 'r2', title: 'DOM adapter published', detail: 'ARIA and focus projection ready.' },
-  { id: 'r3', title: 'Terminal adapter published', detail: 'Normalized input and rendering ready.' },
-  { id: 'r4', title: 'Playground refreshed', detail: 'Scenario coverage expanded.' },
-  { id: 'r5', title: 'Cross-host checks passed', detail: 'Semantic traces match.' },
+  { id: 'r1', time: '09:02', channel: 'Primitives', title: 'Primitive laws verified', detail: 'Sequence and selection checks passed.' },
+  { id: 'r2', time: '09:28', channel: 'DOM', title: 'DOM adapter published', detail: 'ARIA and focus projection ready.' },
+  { id: 'r3', time: '09:47', channel: 'Terminal', title: 'Terminal adapter published', detail: 'Normalized input and rendering ready.' },
+  { id: 'r4', time: '10:15', channel: 'Playground', title: 'Playground refreshed', detail: 'Scenario coverage expanded.' },
+  { id: 'r5', time: '10:34', channel: 'Verification', title: 'Cross-host checks passed', detail: 'Semantic traces match.' },
+  { id: 'r6', time: '10:58', channel: 'Docs', title: 'Architecture notes updated', detail: 'Host ownership and effect boundaries documented.' },
+  { id: 'r7', time: '11:16', channel: 'CI', title: 'Package matrix completed', detail: 'Public entry points and signatures remain aligned.' },
+  { id: 'r8', time: '11:42', channel: 'Release', title: 'Release candidate ready', detail: 'All required checks completed successfully.' },
 ] as const;
 type FeedID = typeof feedItems[number]['id'];
 
@@ -61,9 +64,9 @@ export const feedDemo: DemoDefinition = {
   description: 'Window-local navigation, revisioned loading requests, position metadata, and synchronized replacement.',
   shortcuts: [{ keys: ['↑', '↓'], label: 'move article' }, { keys: ['Page Up', 'Page Down'], label: 'move article' }],
   cases: [
-    { id: 'finite', title: 'Finite activity feed', mount: (context) => mountFeed(context, { start: 0, size: 5, load: false }) },
-    { id: 'load-after', title: 'Load newer window', mount: (context) => mountFeed(context, { start: 0, size: 3, load: true }) },
-    { id: 'load-before', title: 'Load earlier window', mount: (context) => mountFeed(context, { start: 2, size: 3, load: true }) },
+    { id: 'finite', title: 'Complete activity timeline', mount: (context) => mountFeed(context, { start: 0, end: feedItems.length }) },
+    { id: 'load-after', title: 'Load newer activity', mount: (context) => mountFeed(context, { start: 0, end: 4, loadAfter: true }) },
+    { id: 'load-before', title: 'Load earlier history', mount: (context) => mountFeed(context, { start: 4, end: feedItems.length, loadBefore: true }) },
   ],
 };
 
@@ -209,32 +212,92 @@ function mountCarousel(context: DemoContext, scenario: {
   };
 }
 
-function mountFeed(context: DemoContext, scenario: { readonly start: number; readonly size: number; readonly load: boolean }): DemoSession {
+function mountFeed(context: DemoContext, scenario: {
+  readonly start: number;
+  readonly end: number;
+  readonly loadBefore?: boolean;
+  readonly loadAfter?: boolean;
+}): DemoSession {
   const frame = document.createElement('div'); frame.className = 'feed-demo';
-  const before = document.createElement('button'); before.type = 'button'; before.className = 'secondary'; before.textContent = 'Load earlier';
+  const summary = document.createElement('div'); summary.className = 'feed-window-summary';
+  const summaryLabel = document.createElement('span'); summaryLabel.className = 'feed-window-label';
+  const summaryRange = document.createElement('span'); summaryRange.className = 'feed-window-range';
+  summary.append(summaryLabel, summaryRange);
+  const before = scenario.loadBefore ? feedLoadButton(ChevronUp) : undefined;
   const root = document.createElement('div'); root.className = 'activity-feed';
-  const after = document.createElement('button'); after.type = 'button'; after.className = 'secondary'; after.textContent = 'Load newer';
-  frame.append(before, root, after); context.surface.append(frame);
-  let windowStart = scenario.start; let revision = 1; let windowIDs = currentWindow(); let lastRequest: string | null = null;
+  const after = scenario.loadAfter ? feedLoadButton(ChevronDown) : undefined;
+  const requestStatus = document.createElement('p'); requestStatus.className = 'feed-request-status'; requestStatus.setAttribute('aria-live', 'polite');
+  frame.append(summary); if (before !== undefined) frame.append(before); frame.append(root); if (after !== undefined) frame.append(after); frame.append(requestStatus); context.surface.append(frame);
+  let windowStart = scenario.start; let windowEnd = scenario.end; let revision = 1; let windowIDs = currentWindow(); let lastRequest: string | null = null;
   let connection!: FeedConnection<FeedID>;
-  connection = unwrap(createFeed({ root, items: windowIDs, revision, label: 'Release activity', setSize: feedItems.length, getPosition: (id) => feedItems.findIndex((item) => item.id === id) + 1, onRequestWindow: (direction, anchor) => { lastRequest = `${direction} from ${anchor ?? 'none'}`; if (!scenario.load) { connection.handleEvent('clear-request'); return; } windowStart = Math.max(0, Math.min(feedItems.length - scenario.size, windowStart + (direction === 'after' ? 1 : -1))); windowIDs = currentWindow(); revision += 1; queueMicrotask(() => connection.syncWindow({ items: windowIDs, revision, highlightedValue: (direction === 'after' ? windowIDs.at(-1) : windowIDs[0]) ?? null })); }, onUpdate: render }));
+  connection = unwrap(createFeed({
+    root,
+    items: windowIDs,
+    revision,
+    label: 'Release activity timeline',
+    setSize: feedItems.length,
+    getPosition: (id) => feedItems.findIndex((item) => item.id === id) + 1,
+    onRequestWindow: (direction, anchor) => {
+      const previousStart = windowStart; const previousEnd = windowEnd;
+      if (direction === 'before' && scenario.loadBefore) windowStart = Math.max(0, windowStart - 2);
+      if (direction === 'after' && scenario.loadAfter) windowEnd = Math.min(feedItems.length, windowEnd + 2);
+      if (windowStart === previousStart && windowEnd === previousEnd) {
+        connection.handleEvent('clear-request');
+        return;
+      }
+      windowIDs = currentWindow(); revision += 1;
+      const addedCount = direction === 'before' ? previousStart - windowStart : windowEnd - previousEnd;
+      lastRequest = `Loaded ${addedCount} ${direction === 'before' ? 'earlier' : 'newer'} update${addedCount === 1 ? '' : 's'} from ${anchor ?? 'the feed boundary'}.`;
+      queueMicrotask(() => connection.syncWindow({ items: windowIDs, revision, highlightedValue: (direction === 'after' ? windowIDs.at(-1) : windowIDs[0]) ?? null }));
+    },
+    onUpdate: render,
+  }));
   const requestBefore = (): void => { connection.handleEvent('request-before'); };
   const requestAfter = (): void => { connection.handleEvent('request-after'); };
-  before.addEventListener('click', requestBefore); after.addEventListener('click', requestAfter);
-  function currentWindow(): FeedID[] { return feedItems.slice(windowStart, windowStart + scenario.size).map((item) => item.id); }
+  before?.addEventListener('click', requestBefore); after?.addEventListener('click', requestAfter);
+  function currentWindow(): FeedID[] { return feedItems.slice(windowStart, windowEnd).map((item) => item.id); }
   function render(): void {
     const { revision: stateRevision, state } = connection.getSnapshot(); root.replaceChildren();
     for (const id of windowIDs) {
       const item = feedItems.find((candidate) => candidate.id === id); if (item === undefined) continue;
       const article = document.createElement('article'); article.className = 'feed-item';
+      const marker = document.createElement('span'); marker.className = 'feed-marker'; marker.setAttribute('aria-hidden', 'true');
+      const body = document.createElement('div'); body.className = 'feed-item-body';
+      const header = document.createElement('header'); header.className = 'feed-item-header';
       const title = document.createElement('strong'); title.textContent = item.title;
+      const metadata = document.createElement('span'); metadata.className = 'feed-item-metadata'; metadata.textContent = `${item.time} · ${item.channel} · ${feedItems.findIndex((candidate) => candidate.id === id) + 1}/${feedItems.length}`;
       const detail = document.createElement('p'); detail.textContent = item.detail;
-      article.append(title, detail); connection.setItemAttributes(article, id); root.append(article);
+      header.append(title, metadata); body.append(header, detail);
+      article.append(marker, body); connection.setItemAttributes(article, id);
+      if (id === state.cursor.current) {
+        const current = document.createElement('span'); current.className = 'feed-current-label'; current.textContent = 'Current'; header.append(current);
+      }
+      root.append(article);
     }
-    before.disabled = !scenario.load || windowStart === 0; after.disabled = !scenario.load || windowStart + scenario.size >= feedItems.length;
+    summaryLabel.textContent = scenario.loadBefore || scenario.loadAfter ? 'Loaded activity window' : 'Complete activity';
+    summaryRange.textContent = `${windowStart + 1}–${windowEnd} of ${feedItems.length}`;
+    if (before !== undefined) {
+      before.disabled = windowStart === 0;
+      setFeedLoadLabel(before, windowStart === 0 ? 'Beginning of activity' : `Load ${Math.min(2, windowStart)} earlier updates`);
+    }
+    if (after !== undefined) {
+      after.disabled = windowEnd >= feedItems.length;
+      setFeedLoadLabel(after, windowEnd >= feedItems.length ? 'You’re up to date' : `Load ${Math.min(2, feedItems.length - windowEnd)} newer updates`);
+    }
+    requestStatus.textContent = lastRequest ?? (scenario.loadBefore || scenario.loadAfter ? 'Loaded updates join the timeline and receive focus.' : 'Use Arrow keys or Page Up and Page Down to move through the timeline.');
     context.showState(stateRevision, { window: windowIDs, current: state.cursor.current, revision: state.revision, pending: state.pending, lastRequest });
   }
-  render(); return { focus: () => root.querySelector<HTMLElement>('[tabindex="0"]')?.focus(), disconnect: () => { before.removeEventListener('click', requestBefore); after.removeEventListener('click', requestAfter); connection.disconnect(); } };
+  render(); return { focus: () => root.querySelector<HTMLElement>('[tabindex="0"]')?.focus(), disconnect: () => { before?.removeEventListener('click', requestBefore); after?.removeEventListener('click', requestAfter); connection.disconnect(); } };
+}
+
+function feedLoadButton(icon: Parameters<typeof createElement>[0]): HTMLButtonElement {
+  const button = document.createElement('button'); button.type = 'button'; button.className = 'feed-load-control secondary';
+  button.append(createElement(icon, { 'aria-hidden': 'true', height: 16, width: 16 }), document.createElement('span'));
+  return button;
+}
+
+function setFeedLoadLabel(button: HTMLButtonElement, label: string): void {
+  const text = button.querySelector('span'); if (text !== null) text.textContent = label;
 }
 
 function iconButton(icon: Parameters<typeof createElement>[0], label: string): HTMLButtonElement {
