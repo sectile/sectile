@@ -15,6 +15,7 @@ Recurring verification requires these canonical exports:
 ./grid
 ./tree
 ./listbox
+./calendar
 ./slider
 ./revision
 ./package.json

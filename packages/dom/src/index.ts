@@ -11,6 +11,18 @@ export {
   type ListboxValueChangeDetails,
 } from './listbox.js';
 export {
+  createCalendarController,
+  toCalendarEffect,
+  toCalendarEvent,
+  type CalendarControlledValues,
+  type CalendarController,
+  type CalendarControllerOptions,
+  type CalendarEffect,
+  type CalendarHighlightChangeDetails,
+  type CalendarValueChangeDetails,
+  type KeyboardInput as CalendarKeyboardInput,
+} from './calendar.js';
+export {
   createSliderController,
   toSliderEffect,
   toSliderEvent,

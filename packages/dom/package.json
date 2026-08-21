@@ -21,6 +21,11 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "default": "./dist/calendar.js"
+    },
     "./slider": {
       "types": "./dist/slider.d.ts",
       "import": "./dist/slider.js",

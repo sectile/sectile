@@ -44,10 +44,12 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   └── controller.ts
+│   │   │   ├── calendar.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   └── slider.ts
 │   │   ├── tests/
+│   │   │   ├── calendar.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   └── slider.test.mjs
 │   │   ├── package.json
@@ -121,6 +123,7 @@ sectile/
 │   │   │   │   ├── range.ts
 │   │   │   │   ├── sequence.ts
 │   │   │   │   └── tree.ts
+│   │   │   ├── calendar.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── revision.ts
@@ -172,10 +175,12 @@ sectile/
 │       ├── src/
 │       │   ├── internal/
 │       │   │   └── controller.ts
+│       │   ├── calendar.ts
 │       │   ├── index.ts
 │       │   ├── listbox.ts
 │       │   └── slider.ts
 │       ├── tests/
+│       │   ├── calendar.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   └── slider.test.mjs
 │       ├── package.json
@@ -191,6 +196,7 @@ sectile/
 │   └── update-tree.mjs
 ├── verification/
 │   └── cross-host/
+│       ├── calendar.test.mjs
 │       ├── listbox.test.mjs
 │       └── slider.test.mjs
 ├── .gitignore

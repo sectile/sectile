@@ -9,6 +9,7 @@
     "./grid",
     "./tree",
     "./listbox",
+    "./calendar",
     "./slider",
     "./revision",
     "./package.json"
@@ -19,6 +20,7 @@
     "./grid",
     "./tree",
     "./listbox",
+    "./calendar",
     "./slider",
     "./revision"
   ],
@@ -28,6 +30,7 @@
     "./grid": "structures/grid",
     "./tree": "structures/tree",
     "./listbox": "listbox",
+    "./calendar": "calendar",
     "./slider": "slider",
     "./revision": "revision"
   }

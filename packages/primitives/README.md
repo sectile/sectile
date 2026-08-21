@@ -8,6 +8,7 @@ import { createRange } from '@sectile/primitives/range';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { applyListboxEvent, createListboxState } from '@sectile/primitives/listbox';
+import { applyCalendarEvent, createCalendarState } from '@sectile/primitives/calendar';
 import { applySliderEvent, createSliderState } from '@sectile/primitives/slider';
 import { createRevisionSnapshot } from '@sectile/primitives/revision';
 ```
