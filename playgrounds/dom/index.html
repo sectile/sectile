@@ -14,40 +14,15 @@
           <h1>Sectile interaction lab</h1>
           <p id="demo-description" class="lede"></p>
         </div>
-        <div class="actions">
-          <button id="focus-button" type="button">Focus demo</button>
-          <button id="reset-button" type="button" class="secondary">Reset</button>
-        </div>
       </header>
 
       <nav id="demo-nav" class="demo-nav" aria-label="Examples"></nav>
-      <section id="shortcuts" class="shortcuts" aria-label="Keyboard shortcuts"></section>
+      <section id="shortcuts" class="shortcuts" aria-label="Demo controls">
+        <div id="shortcut-list" class="shortcut-list"></div>
+        <button id="reset-button" type="button" class="reset-button secondary"></button>
+      </section>
 
-      <div class="workspace">
-        <section class="panel demo-panel">
-          <div class="panel-heading">
-            <h2 id="demo-title"></h2>
-            <span id="revision-badge" class="badge"></span>
-          </div>
-          <div id="demo-surface" class="demo-surface"></div>
-        </section>
-
-        <aside class="inspector">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>State</h2>
-            </div>
-            <pre id="state-output"></pre>
-          </section>
-
-          <section class="panel log-panel">
-            <div class="panel-heading">
-              <h2>Events & effects</h2>
-            </div>
-            <ol id="event-log" class="event-log"></ol>
-          </section>
-        </aside>
-      </div>
+      <div id="workspace" class="workspace"></div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

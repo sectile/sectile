@@ -21,14 +21,24 @@ export interface DemoSession {
   readonly disconnect: () => void;
 }
 
-export interface DemoDefinition {
+interface DemoMetadata {
   readonly id: string;
   readonly label: string;
   readonly title: string;
   readonly description: string;
   readonly shortcuts: readonly Shortcut[];
+}
+
+export interface DemoCaseDefinition {
+  readonly id: string;
+  readonly title: string;
   readonly mount: (context: DemoContext) => DemoSession;
 }
+
+export type DemoDefinition = DemoMetadata & (
+  | { readonly mount: (context: DemoContext) => DemoSession; readonly cases?: never }
+  | { readonly cases: readonly DemoCaseDefinition[]; readonly mount?: never }
+);
 
 export function effectLabels(effects: readonly object[]): readonly string[] {
   return effects.map((effect) => Object.entries(effect)

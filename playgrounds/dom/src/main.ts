@@ -1,30 +1,25 @@
 import { demos } from './demos/index.js';
-import type { DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
+import { createElement, RotateCcw } from 'lucide';
+import type { DemoCaseDefinition, DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
 import './styles.css';
 
 const nav = requiredElement<HTMLElement>('#demo-nav');
-const title = requiredElement<HTMLElement>('#demo-title');
 const description = requiredElement<HTMLElement>('#demo-description');
-const shortcuts = requiredElement<HTMLElement>('#shortcuts');
-const surface = requiredElement<HTMLElement>('#demo-surface');
-const stateOutput = requiredElement<HTMLElement>('#state-output');
-const eventLog = requiredElement<HTMLOListElement>('#event-log');
-const revisionBadge = requiredElement<HTMLElement>('#revision-badge');
-const focusButton = requiredElement<HTMLButtonElement>('#focus-button');
+const shortcutList = requiredElement<HTMLElement>('#shortcut-list');
+const workspace = requiredElement<HTMLElement>('#workspace');
 const resetButton = requiredElement<HTMLButtonElement>('#reset-button');
 
 let activeID = demoIDFromHash();
-let session: DemoSession | null = null;
-let logEntries: LogEntry[] = [];
+let sessions: DemoSession[] = [];
 
 renderNavigation();
 mountActiveDemo();
 
-focusButton.addEventListener('click', () => session?.focus());
-resetButton.addEventListener('click', () => {
-  mountActiveDemo();
-  session?.focus();
-});
+resetButton.append(
+  createElement(RotateCcw, { 'aria-hidden': 'true', height: 13, width: 13 }),
+  'Reset',
+);
+resetButton.addEventListener('click', mountActiveDemo);
 window.addEventListener('hashchange', () => {
   const nextID = demoIDFromHash();
   if (nextID === activeID) return;
@@ -44,17 +39,58 @@ function renderNavigation(): void {
 }
 
 function mountActiveDemo(): void {
-  session?.disconnect();
-  logEntries = [];
-  surface.replaceChildren();
+  for (const session of sessions) session.disconnect();
+  sessions = [];
+  workspace.replaceChildren();
 
   const demo = demos.find((candidate) => candidate.id === activeID) ?? demos[0];
   if (demo === undefined) throw new Error('The DOM playground needs at least one demo.');
   activeID = demo.id;
-  title.textContent = demo.title;
   description.textContent = demo.description;
+  resetButton.setAttribute('aria-label', `Reset ${demo.label}`);
+  resetButton.title = `Reset ${demo.label}`;
   renderShortcuts(demo.shortcuts);
 
+  const cases: readonly DemoCaseDefinition[] = demo.cases ?? [{
+    id: demo.id,
+    title: demo.title,
+    mount: demo.mount,
+  }];
+  for (const demoCase of cases) mountDemoCase(demoCase);
+}
+
+function mountDemoCase(demoCase: DemoCaseDefinition): void {
+  const card = document.createElement('article');
+  card.className = 'example-card';
+  card.dataset['case'] = demoCase.id;
+
+  const main = document.createElement('section');
+  main.className = 'example-main';
+  const mainHeading = createPanelHeading(demoCase.title);
+  const revisionBadge = document.createElement('span');
+  revisionBadge.className = 'badge';
+  revisionBadge.textContent = 'revision 0';
+  mainHeading.append(revisionBadge);
+  const surface = document.createElement('div');
+  surface.className = 'demo-surface';
+  main.append(mainHeading, surface);
+
+  const inspector = document.createElement('aside');
+  inspector.className = 'example-inspector';
+  const stateSection = document.createElement('section');
+  stateSection.className = 'inspector-section';
+  const stateOutput = document.createElement('pre');
+  stateSection.append(createPanelHeading('State'), stateOutput);
+  const logSection = document.createElement('section');
+  logSection.className = 'inspector-section';
+  const eventLog = document.createElement('ol');
+  eventLog.className = 'event-log';
+  logSection.append(createPanelHeading('Events & effects'), eventLog);
+  inspector.append(stateSection, logSection);
+  card.append(main, inspector);
+  workspace.append(card);
+
+  let logEntries: LogEntry[] = [];
   const context: DemoContext = {
     surface,
     showState: (revision, state) => {
@@ -63,16 +99,24 @@ function mountActiveDemo(): void {
     },
     record: (entry) => {
       logEntries = [entry, ...logEntries].slice(0, 12);
-      renderLog();
+      renderLog(eventLog, logEntries);
     },
   };
-  session = demo.mount(context);
-  renderLog();
+  sessions.push(demoCase.mount(context));
+  renderLog(eventLog, logEntries);
+}
+
+function createPanelHeading(titleText: string): HTMLElement {
+  const heading = document.createElement('div');
+  heading.className = 'panel-heading';
+  const title = document.createElement('h2');
+  title.textContent = titleText;
+  heading.append(title);
+  return heading;
 }
 
 function renderShortcuts(items: readonly Shortcut[]): void {
-  shortcuts.toggleAttribute('hidden', items.length === 0);
-  shortcuts.replaceChildren(...items.map((shortcut) => {
+  shortcutList.replaceChildren(...items.map((shortcut) => {
     const item = document.createElement('span');
     for (const [index, key] of shortcut.keys.entries()) {
       if (index > 0) item.append(' + ');
@@ -85,16 +129,16 @@ function renderShortcuts(items: readonly Shortcut[]): void {
   }));
 }
 
-function renderLog(): void {
+function renderLog(eventLog: HTMLOListElement, entries: readonly LogEntry[]): void {
   eventLog.replaceChildren();
-  if (logEntries.length === 0) {
+  if (entries.length === 0) {
     const empty = document.createElement('li');
     empty.className = 'empty-log';
-    empty.textContent = 'Keyboard input will appear here.';
+    empty.textContent = 'Keyboard and pointer input will appear here.';
     eventLog.append(empty);
     return;
   }
-  for (const entry of logEntries) {
+  for (const entry of entries) {
     const item = document.createElement('li');
     item.className = 'event-entry';
     const revision = document.createElement('span');
