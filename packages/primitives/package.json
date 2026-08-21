@@ -80,6 +80,9 @@
     "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
     "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },
     "./multi-thumb-slider": { "types": "./dist/multi-thumb-slider.d.ts", "import": "./dist/multi-thumb-slider.js", "default": "./dist/multi-thumb-slider.js" },
+    "./menu": { "types": "./dist/menu.d.ts", "import": "./dist/menu.js", "default": "./dist/menu.js" },
+    "./menubar": { "types": "./dist/menubar.d.ts", "import": "./dist/menubar.js", "default": "./dist/menubar.js" },
+    "./menu-button": { "types": "./dist/menu-button.d.ts", "import": "./dist/menu-button.js", "default": "./dist/menu-button.js" },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "5f50e74775f83e9a0467d96943f31574ad2580bdc71bb66accfb1f02c667906f",
+  "fingerprint": "13661e7b62ef30ac7677def09fe6b2343273e7239d4c1d658a1a83366d0e5133",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -59,6 +59,10 @@
       "sha256": "8be9d8c65e559e1ee8d23944d9d24be22a487a4d4d2eee16eed955a10c5bf6bd"
     },
     {
+      "path": "dist/internal/composites/menu.d.ts",
+      "sha256": "3606dead1e045d9fd64b87307570cd07ec8000ecd455f342bf8203f9d103e82f"
+    },
+    {
       "path": "dist/internal/composites/popup.d.ts",
       "sha256": "139295ec8c40da3e1f8ea0542876b8b5535bc20523c565c6867687d458693659"
     },
@@ -109,6 +113,18 @@
     {
       "path": "dist/listbox.d.ts",
       "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
+    },
+    {
+      "path": "dist/menu-button.d.ts",
+      "sha256": "e5c86b2ae470c441d3ede2914437966a73b2d11c4b1fc9ecf3300625c5bab1d9"
+    },
+    {
+      "path": "dist/menu.d.ts",
+      "sha256": "cc64ac8b90583435510822dcc67adc89b03beb53d405363efc4db216168a1c10"
+    },
+    {
+      "path": "dist/menubar.d.ts",
+      "sha256": "0dde6c974afb37cd3e299e5b7b7009229c1a55242d09084e2c6a8cdbaac11a45"
     },
     {
       "path": "dist/multi-thumb-slider.d.ts",

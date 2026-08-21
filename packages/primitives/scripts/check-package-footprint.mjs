@@ -3,10 +3,10 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const ceilings = Object.freeze({
-  totalBytes: 450_000,
-  javascriptBytes: 150_000,
-  declarationBytes: 60_000,
-  sourceMapBytes: 250_000,
+  totalBytes: 550_000,
+  javascriptBytes: 175_000,
+  declarationBytes: 70_000,
+  sourceMapBytes: 300_000,
 });
 
 async function files(directory) {

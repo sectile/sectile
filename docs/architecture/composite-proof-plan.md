@@ -148,3 +148,12 @@ and navigation is suspended while an edit is active. The primitive is intentiona
 exported from the existing `grid` subpath; Tree Grid remains a strict extension because it
 also owns row expansion and visible projection. An independent coordinate reference and
 DOM/terminal witnesses cover navigation, direct targeting, selection, and editing.
+
+## Verified family: menu controls
+
+Menu, Menubar, and Menu Button share an ordered-tree cursor and a single connected open
+submenu path. Opening descends to the first child, closing returns to the owning parent,
+sibling movement wraps within one menu level, and leaf invocation atomically closes the
+path and requests focus restoration. This disproves reduction to Toolbar: identical item
+cursors can have different open submenu paths. Menu Button adds trigger projection while
+Menubar changes directional key meaning; neither duplicates the renderer-neutral machine.

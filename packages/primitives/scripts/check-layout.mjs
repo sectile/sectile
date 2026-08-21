@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises';
 
 await assertEntries('src', {
   directories: ['internal', 'structures'],
-  files: ['accordion.ts', 'alert-dialog.ts', 'calendar.ts', 'checkbox.ts', 'combobox.ts', 'dialog.ts', 'disclosure.ts', 'index.ts', 'listbox.ts', 'multi-thumb-slider.ts', 'radio-group.ts', 'result.ts', 'revision.ts', 'shared.ts', 'slider.ts', 'spinbutton.ts', 'switch.ts', 'tabs.ts', 'text.ts', 'toggle-button.ts', 'toolbar.ts', 'tooltip.ts', 'tree-grid.ts', 'tree-view.ts', 'window-splitter.ts'],
+  files: ['accordion.ts', 'alert-dialog.ts', 'calendar.ts', 'checkbox.ts', 'combobox.ts', 'dialog.ts', 'disclosure.ts', 'index.ts', 'listbox.ts', 'menu-button.ts', 'menu.ts', 'menubar.ts', 'multi-thumb-slider.ts', 'radio-group.ts', 'result.ts', 'revision.ts', 'shared.ts', 'slider.ts', 'spinbutton.ts', 'switch.ts', 'tabs.ts', 'text.ts', 'toggle-button.ts', 'toolbar.ts', 'tooltip.ts', 'tree-grid.ts', 'tree-view.ts', 'window-splitter.ts'],
 });
 await assertEntries('src/internal', {
   directories: ['composites', 'editing', 'kernel', 'reference', 'runtime', 'state'],
