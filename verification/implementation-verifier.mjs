@@ -5,6 +5,12 @@ import { createSequence } from '../packages/primitives/.verification-dist/sequen
 import { createTree } from '../packages/primitives/.verification-dist/tree.js';
 import { createCursorState, reconcileCursor } from '../packages/primitives/.verification-dist/internal/cursor.js';
 import {
+  createExpansionState,
+  reconcileExpansion,
+  setExpansionOpen,
+  toggleExpansion,
+} from '../packages/primitives/.verification-dist/internal/expansion.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -13,6 +19,12 @@ import {
   toggleMultipleSelection,
 } from '../packages/primitives/.verification-dist/internal/selection.js';
 import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/cursor.js';
+import {
+  createReferenceExpansionState,
+  reconcileReferenceExpansion,
+  referenceSetExpansionOpen,
+  referenceToggleExpansion,
+} from '../packages/primitives/.verification-dist/internal/reference/expansion.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -37,6 +49,7 @@ const counts = {
   tree: { models: 0, nodeObservations: 0, expansionObservations: 0, invalidConstructions: 0 },
   cursor: { models: 0, reconciliations: 0 },
   selection: { models: 0, reconciliations: 0, operations: 0, invalidSnapshots: 0 },
+  expansionState: { models: 0, reconciliations: 0, transitions: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -302,6 +315,55 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     counts.selection.invalidSnapshots += 1;
   }
   counts.selection.models += 1;
+}
+
+const expansionRng = createRng(seed ^ 0xe7a0d);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const size = expansionRng.int(0, 80);
+  const nodes = [];
+  for (let node = 0; node < size; node += 1) {
+    nodes.push({
+      id: `e${iteration}-${node}`,
+      parentId:
+        node === 0 || expansionRng.next() < 0.25
+          ? null
+          : `e${iteration}-${expansionRng.int(0, node)}`,
+    });
+  }
+  const tree = unwrap(createTree(nodes));
+  const referenceTree = new ReferenceTree(nodes);
+  const ids = tree.preorder().ids;
+  const missing = `missing-${iteration}`;
+  const requested = [...ids.filter(() => expansionRng.bool()), missing];
+  const optimized = createExpansionState(tree, requested);
+  const reference = createReferenceExpansionState(referenceTree, requested);
+  assert.deepEqual(optimized.ids, reference.ids);
+  assert.deepEqual(
+    reconcileExpansion(optimized, tree).ids,
+    reconcileReferenceExpansion(reference, referenceTree).ids,
+  );
+  counts.expansionState.reconciliations += 1;
+
+  assert.deepEqual(
+    toggleExpansion(optimized, missing, tree).ids,
+    referenceToggleExpansion(reference, missing, referenceTree).ids,
+  );
+  counts.expansionState.transitions += 1;
+
+  if (ids.length > 0) {
+    const id = expansionRng.pick(ids);
+    const open = expansionRng.bool();
+    assert.deepEqual(
+      setExpansionOpen(optimized, id, open, tree).ids,
+      referenceSetExpansionOpen(reference, id, open, referenceTree).ids,
+    );
+    assert.deepEqual(
+      toggleExpansion(optimized, id, tree).ids,
+      referenceToggleExpansion(reference, id, referenceTree).ids,
+    );
+    counts.expansionState.transitions += 2;
+  }
+  counts.expansionState.models += 1;
 }
 
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);

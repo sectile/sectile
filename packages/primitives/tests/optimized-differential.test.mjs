@@ -6,6 +6,12 @@ import { createSequence } from '../.verification-dist/sequence.js';
 import { createTree } from '../.verification-dist/tree.js';
 import { createCursorState, reconcileCursor } from '../.verification-dist/internal/cursor.js';
 import {
+  createExpansionState,
+  reconcileExpansion,
+  setExpansionOpen,
+  toggleExpansion,
+} from '../.verification-dist/internal/expansion.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -14,6 +20,12 @@ import {
   toggleMultipleSelection,
 } from '../.verification-dist/internal/selection.js';
 import { reconcileReferenceCursor } from '../.verification-dist/internal/reference/cursor.js';
+import {
+  createReferenceExpansionState,
+  reconcileReferenceExpansion,
+  referenceSetExpansionOpen,
+  referenceToggleExpansion,
+} from '../.verification-dist/internal/reference/expansion.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -39,6 +51,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTree(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCursor(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySelection(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyExpansion(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -234,6 +247,40 @@ function verifySelection(rng, iteration) {
 
 function selectionObservation(state) {
   return { selected: state.selected, anchor: state.anchor };
+}
+
+function verifyExpansion(rng, iteration) {
+  const size = rng.int(0, 80);
+  const nodes = [];
+  for (let node = 0; node < size; node += 1) {
+    nodes.push({
+      id: `e${iteration}-${node}`,
+      parentId: node === 0 || rng.next() < 0.25 ? null : `e${iteration}-${rng.int(0, node)}`,
+    });
+  }
+  const tree = unwrap(createTree(nodes));
+  const referenceTree = new ReferenceTree(nodes);
+  const ids = tree.preorder().ids;
+  const requested = [...ids.filter(() => rng.bool()), `missing-${iteration}`];
+  const optimized = createExpansionState(tree, requested);
+  const reference = createReferenceExpansionState(referenceTree, requested);
+  assert.deepEqual(optimized.ids, reference.ids);
+  assert.deepEqual(
+    reconcileExpansion(optimized, tree).ids,
+    reconcileReferenceExpansion(reference, referenceTree).ids,
+  );
+  if (ids.length === 0) return;
+
+  const id = rng.pick(ids);
+  const open = rng.bool();
+  assert.deepEqual(
+    setExpansionOpen(optimized, id, open, tree).ids,
+    referenceSetExpansionOpen(reference, id, open, referenceTree).ids,
+  );
+  assert.deepEqual(
+    toggleExpansion(optimized, id, tree).ids,
+    referenceToggleExpansion(reference, id, referenceTree).ids,
+  );
 }
 
 function decimal(integer, scale) {

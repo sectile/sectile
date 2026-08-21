@@ -40,5 +40,10 @@
     "reconciliations": 2000,
     "operations": 7904,
     "invalidSnapshots": 1953
+  },
+  "expansionState": {
+    "models": 2000,
+    "reconciliations": 2000,
+    "transitions": 5956
   }
 }

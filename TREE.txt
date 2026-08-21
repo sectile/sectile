@@ -43,6 +43,7 @@ sectile/
 │       │   ├── internal/
 │       │   │   ├── reference/
 │       │   │   │   ├── cursor.ts
+│       │   │   │   ├── expansion.ts
 │       │   │   │   ├── grid.ts
 │       │   │   │   ├── range.ts
 │       │   │   │   ├── selection.ts
@@ -50,6 +51,7 @@ sectile/
 │       │   │   │   └── tree.ts
 │       │   │   ├── cursor.ts
 │       │   │   ├── decimal.ts
+│       │   │   ├── expansion.ts
 │       │   │   ├── foundation.ts
 │       │   │   ├── optimized-sequence.ts
 │       │   │   └── selection.ts
@@ -61,6 +63,7 @@ sectile/
 │       │   └── tree.ts
 │       ├── tests/
 │       │   ├── cursor.reference-law.test.mjs
+│       │   ├── expansion.reference-law.test.mjs
 │       │   ├── grid.reference-law.test.mjs
 │       │   ├── optimized-differential.test.mjs
 │       │   ├── range.reference-law.test.mjs
