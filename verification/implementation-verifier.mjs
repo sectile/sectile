@@ -31,6 +31,10 @@ import {
   stepTreeView,
 } from '../packages/primitives/.verification-dist/internal/composites/tree-view.js';
 import {
+  createRevisionEnvelope,
+  stepRevisioned,
+} from '../packages/primitives/.verification-dist/internal/runtime/revision.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -96,7 +100,7 @@ import { ReferenceGrid } from '../packages/primitives/.verification-dist/interna
 import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/structures/range.js';
 import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/structures/sequence.js';
 import { ReferenceTree } from '../packages/primitives/.verification-dist/internal/reference/structures/tree.js';
-import { createRng, deepNormalize, unwrap } from '../packages/primitives/tests/support.mjs';
+import { createRng, deepNormalize, powerset, unwrap } from '../packages/primitives/tests/support.mjs';
 
 const seed = 0x5ec71e;
 const iterations = 2_000;
@@ -121,6 +125,7 @@ const counts = {
   calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   combobox: { models: 0, accepted: 0, rejected: 0, commands: 0 },
+  revision: { cases: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -744,6 +749,43 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     counts.combobox.rejected += 1;
   }
   counts.combobox.models += 1;
+}
+
+for (let size = 0; size <= 4; size += 1) {
+  const ids = Array.from({ length: size }, (_, index) => `r${index}`);
+  const domain = unwrap(createSequence(ids));
+  for (const eligibleIDs of powerset(ids)) {
+    const eligible = new Set(eligibleIDs);
+    const state = unwrap(createListboxState(domain));
+    const base = unwrap(createRevisionEnvelope(state, 7));
+    const reducer = (current, event) => stepListbox(domain, current, event, {
+      eligible: (id) => eligible.has(id),
+      selectionFollowsFocus: false,
+      boundary: 'stop',
+    });
+    const stale = stepRevisioned(base, 6, 'next', reducer);
+    assert.equal(stale.ok, false);
+    assert.equal(stale.error.code, 'stale-revision');
+    assert.equal(stale.envelope, base);
+    counts.revision.cases += 1;
+
+    const failed = stepRevisioned(base, 7, 'toggle', reducer);
+    assert.equal(failed.ok, false);
+    assert.equal(failed.error.code, 'no-cursor');
+    assert.equal(failed.envelope, base);
+    counts.revision.cases += 1;
+
+    const accepted = stepRevisioned(base, 7, 'next', reducer);
+    assert.equal(accepted.ok, true);
+    assert.equal(accepted.envelope.revision, 8);
+    counts.revision.cases += 1;
+
+    const repeated = stepRevisioned(accepted.envelope, 7, 'next', reducer);
+    assert.equal(repeated.ok, false);
+    assert.equal(repeated.error.code, 'stale-revision');
+    assert.equal(repeated.envelope, accepted.envelope);
+    counts.revision.cases += 1;
+  }
 }
 
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);

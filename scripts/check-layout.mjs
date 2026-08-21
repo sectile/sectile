@@ -6,7 +6,7 @@ await assertEntries('packages/primitives/src', {
   files: ['index.ts', 'shared.ts'],
 });
 await assertEntries('packages/primitives/src/internal', {
-  directories: ['composites', 'editing', 'kernel', 'reference', 'state'],
+  directories: ['composites', 'editing', 'kernel', 'reference', 'runtime', 'state'],
   files: [],
 });
 await assertEntries('packages/primitives/src/internal/reference', {
@@ -14,15 +14,15 @@ await assertEntries('packages/primitives/src/internal/reference', {
   files: [],
 });
 await assertEntries('packages/primitives/tests', {
-  directories: ['composites', 'differential', 'editing', 'state', 'structures'],
+  directories: ['composites', 'differential', 'editing', 'runtime', 'state', 'structures'],
   files: ['support.mjs'],
 });
 
 console.log(JSON.stringify({
   status: 'passed',
-  sourceLayers: 5,
+  sourceLayers: 6,
   referenceLayers: 4,
-  testLayers: 5,
+  testLayers: 6,
 }, null, 2));
 
 async function assertEntries(directory, expected) {

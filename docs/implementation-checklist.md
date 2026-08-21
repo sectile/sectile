@@ -19,4 +19,5 @@
 - [x] Implement internal calendar composition with grid navigation and external page authority.
 - [x] Implement internal tree-view composition with visible navigation and expansion/selection authority.
 - [x] Implement internal combobox candidate acceptance with explicit composition handling.
+- [x] Implement the revisioned machine wrapper with stale-input and exactly-once evidence.
 - [ ] Promote cursor, selection, expansion, or text only after their independent usage-evidence gates are met.
