@@ -28,4 +28,4 @@ The check is additive: it verifies that these required entries exist and resolve
 
 The root runtime must remain empty. Consumer import checks execute the required canonical subpaths through Node package resolution and compile a separate strict TypeScript project against the emitted declarations.
 
-The primitives package footprint gate rejects reference files and output larger than 250 KB. DOM and terminal code are emitted only by their own packages.
+The primitives package footprint gate rejects reference files and applies separate byte ceilings to JavaScript, declarations, source maps, and the complete package. This keeps runtime growth visible without treating optional debugging metadata as runtime code. DOM and terminal code are emitted only by their own packages.
