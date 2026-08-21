@@ -34,5 +34,11 @@
   "cursor": {
     "models": 2000,
     "reconciliations": 6000
+  },
+  "selection": {
+    "models": 2000,
+    "reconciliations": 2000,
+    "operations": 7904,
+    "invalidSnapshots": 1953
   }
 }

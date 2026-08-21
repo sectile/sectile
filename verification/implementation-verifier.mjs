@@ -4,7 +4,23 @@ import { createRange } from '../packages/primitives/.verification-dist/range.js'
 import { createSequence } from '../packages/primitives/.verification-dist/sequence.js';
 import { createTree } from '../packages/primitives/.verification-dist/tree.js';
 import { createCursorState, reconcileCursor } from '../packages/primitives/.verification-dist/internal/cursor.js';
+import {
+  clearSelection,
+  createSelectionState,
+  reconcileSelection,
+  selectInterval,
+  selectOne,
+  toggleMultipleSelection,
+} from '../packages/primitives/.verification-dist/internal/selection.js';
 import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/cursor.js';
+import {
+  ReferenceSelectionState,
+  reconcileReferenceSelection,
+  referenceClearSelection,
+  referenceSelectInterval,
+  referenceSelectOne,
+  referenceToggleMultipleSelection,
+} from '../packages/primitives/.verification-dist/internal/reference/selection.js';
 import { ReferenceGrid } from '../packages/primitives/.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/sequence.js';
@@ -20,6 +36,7 @@ const counts = {
   grid: { models: 0, cellObservations: 0, positionObservations: 0, projectionObservations: 0, movements: 0, invalidConstructions: 0 },
   tree: { models: 0, nodeObservations: 0, expansionObservations: 0, invalidConstructions: 0 },
   cursor: { models: 0, reconciliations: 0 },
+  selection: { models: 0, reconciliations: 0, operations: 0, invalidSnapshots: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -229,7 +246,69 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.cursor.models += 1;
 }
 
+const selectionRng = createRng(seed ^ 0x5e1ec7);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const size = selectionRng.int(0, 80);
+  const ids = selectionRng.shuffle(
+    Array.from({ length: size }, (_, index) => `l${iteration}-${index}`),
+  );
+  const missing = `missing-${iteration}`;
+  const domain = unwrap(createSequence(ids));
+  const previousDomain = unwrap(createSequence([...ids, missing]));
+  const mode = selectionRng.bool() ? 'single' : 'multiple';
+  const selected = mode === 'single'
+    ? (selectionRng.bool() ? [] : [selectionRng.pick([...ids, missing])])
+    : [...ids, missing].filter(() => selectionRng.bool());
+  const anchor = selectionRng.pick([null, ...ids, missing]);
+  const optimizedState = unwrap(
+    createSelectionState(previousDomain, mode, { selected, anchor }),
+  );
+  const referenceState = new ReferenceSelectionState(selected, anchor);
+  const optimized = unwrap(reconcileSelection(optimizedState, domain, mode));
+  const reference = reconcileReferenceSelection(referenceState, domain, mode);
+  assert.deepEqual(selectionObservation(optimized), selectionObservation(reference));
+  counts.selection.reconciliations += 1;
+
+  assert.deepEqual(
+    selectionObservation(clearSelection(optimized)),
+    selectionObservation(referenceClearSelection(reference)),
+  );
+  counts.selection.operations += 1;
+
+  if (ids.length > 0) {
+    const id = selectionRng.pick(ids);
+    const extent = selectionRng.pick(ids);
+    const additive = selectionRng.bool();
+    for (const [left, right] of [
+      [selectOne(optimized, id, domain), referenceSelectOne(reference, id, domain)],
+      [
+        toggleMultipleSelection(optimized, id, domain),
+        referenceToggleMultipleSelection(reference, id, domain),
+      ],
+      [
+        selectInterval(optimized, id, extent, domain, additive),
+        referenceSelectInterval(reference, id, extent, domain, additive),
+      ],
+    ]) {
+      assert.deepEqual(selectionObservation(left), selectionObservation(right));
+      counts.selection.operations += 1;
+    }
+  }
+
+  if (ids.length > 1) {
+    const invalid = createSelectionState(domain, 'single', { selected: ids.slice(0, 2) });
+    assert.equal(invalid.ok, false);
+    assert.equal(invalid.error.code, 'invalid-selection-cardinality');
+    counts.selection.invalidSnapshots += 1;
+  }
+  counts.selection.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
+
+function selectionObservation(state) {
+  return { selected: state.selected, anchor: state.anchor };
+}
 
 function decimal(integer, scale) {
   const negative = integer < 0;

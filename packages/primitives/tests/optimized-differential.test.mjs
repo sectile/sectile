@@ -5,7 +5,23 @@ import { createRange } from '../.verification-dist/range.js';
 import { createSequence } from '../.verification-dist/sequence.js';
 import { createTree } from '../.verification-dist/tree.js';
 import { createCursorState, reconcileCursor } from '../.verification-dist/internal/cursor.js';
+import {
+  clearSelection,
+  createSelectionState,
+  reconcileSelection,
+  selectInterval,
+  selectOne,
+  toggleMultipleSelection,
+} from '../.verification-dist/internal/selection.js';
 import { reconcileReferenceCursor } from '../.verification-dist/internal/reference/cursor.js';
+import {
+  ReferenceSelectionState,
+  reconcileReferenceSelection,
+  referenceClearSelection,
+  referenceSelectInterval,
+  referenceSelectOne,
+  referenceToggleMultipleSelection,
+} from '../.verification-dist/internal/reference/selection.js';
 import { ReferenceGrid } from '../.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../.verification-dist/internal/reference/sequence.js';
@@ -22,6 +38,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyGrid(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTree(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCursor(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySelection(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -172,6 +189,51 @@ function verifyCursor(rng, iteration) {
       reconcileReferenceCursor(state, domain, fallback),
     );
   }
+}
+
+function verifySelection(rng, iteration) {
+  const size = rng.int(0, 80);
+  const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `l${iteration}-${index}`));
+  const missing = `missing-${iteration}`;
+  const domain = unwrap(createSequence(ids));
+  const previousDomain = unwrap(createSequence([...ids, missing]));
+  const mode = rng.bool() ? 'single' : 'multiple';
+  const selected = mode === 'single'
+    ? (rng.bool() ? [] : [rng.pick([...ids, missing])])
+    : [...ids, missing].filter(() => rng.bool());
+  const anchor = rng.pick([null, ...ids, missing]);
+  const optimizedState = unwrap(
+    createSelectionState(previousDomain, mode, { selected, anchor }),
+  );
+  const referenceState = new ReferenceSelectionState(selected, anchor);
+  const optimized = unwrap(reconcileSelection(optimizedState, domain, mode));
+  const reference = reconcileReferenceSelection(referenceState, domain, mode);
+  assert.deepEqual(selectionObservation(optimized), selectionObservation(reference));
+  assert.deepEqual(
+    selectionObservation(clearSelection(optimized)),
+    selectionObservation(referenceClearSelection(reference)),
+  );
+
+  if (ids.length === 0) return;
+  const id = rng.pick(ids);
+  assert.deepEqual(
+    selectionObservation(selectOne(optimized, id, domain)),
+    selectionObservation(referenceSelectOne(reference, id, domain)),
+  );
+  assert.deepEqual(
+    selectionObservation(toggleMultipleSelection(optimized, id, domain)),
+    selectionObservation(referenceToggleMultipleSelection(reference, id, domain)),
+  );
+  const extent = rng.pick(ids);
+  const additive = rng.bool();
+  assert.deepEqual(
+    selectionObservation(selectInterval(optimized, id, extent, domain, additive)),
+    selectionObservation(referenceSelectInterval(reference, id, extent, domain, additive)),
+  );
+}
+
+function selectionObservation(state) {
+  return { selected: state.selected, anchor: state.anchor };
 }
 
 function decimal(integer, scale) {
