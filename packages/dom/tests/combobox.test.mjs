@@ -89,6 +89,41 @@ test('DOM keyboard and text inputs map onto combobox semantics', () => {
   });
 });
 
+test('DOM combobox restores controlled text after each native IME commit', () => {
+  const input = new FakeTextElement();
+  const connection = unwrap(createCombobox({
+    items: [{ id: 'hangul', label: '한글' }],
+    input,
+  }));
+
+  commitComposition(input, '한', '한한');
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, '한');
+  assert.equal(input.value, '한');
+
+  commitComposition(input, '글', '한글글');
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, '한글');
+  assert.equal(input.value, '한글');
+});
+
+test('DOM combobox leaves live native IME text under browser ownership', () => {
+  const input = new TrackingTextElement();
+  let connection;
+  connection = unwrap(createCombobox({
+    items: [{ id: 'hangul', label: '한글' }],
+    input,
+    onUpdate: () => connection.render(),
+  }));
+
+  input.emit('compositionstart', { data: '' });
+  input.emit('compositionupdate', { data: '한' });
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, '한');
+  assert.equal(input.valueWrites, 0);
+
+  input.emit('compositionend', { data: '한' });
+  assert.equal(input.value, '한');
+  assert.equal(input.valueWrites, 1);
+});
+
 test('DOM combobox delegates option clicks into direct acceptance', () => {
   const input = new FakeTextElement();
   const popup = new FakeElement();
@@ -249,6 +284,16 @@ function inputEvent(inputType, data = null) {
   return { inputType, data, isComposing: false, preventDefault() {} };
 }
 
+function commitComposition(input, text, nativeValue) {
+  input.emit('compositionstart', { data: '' });
+  input.emit('compositionupdate', { data: text });
+  input.emit('compositionend', { data: text });
+  input.value = nativeValue;
+  input.selectionStart = nativeValue.length;
+  input.selectionEnd = nativeValue.length;
+  input.emit('input', {});
+}
+
 function keyboardEvent(key, overrides = {}) {
   return {
     key,
@@ -299,6 +344,27 @@ class FakeTextElement extends FakeElement {
   value = '';
   selectionStart = 0;
   selectionEnd = 0;
+
+  setSelectionRange(start, end) {
+    this.selectionStart = start;
+    this.selectionEnd = end;
+  }
+}
+
+class TrackingTextElement extends FakeElement {
+  #value = '';
+  valueWrites = 0;
+  selectionStart = 0;
+  selectionEnd = 0;
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(value) {
+    this.#value = value;
+    this.valueWrites += 1;
+  }
 
   setSelectionRange(start, end) {
     this.selectionStart = start;

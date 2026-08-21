@@ -12,6 +12,7 @@ export class DOMTextElementBinding {
   readonly #getState: () => TextEditingState;
   readonly #dispatch: (input: TextInput) => boolean;
   readonly #handleBeforeInputEvent: (event: Event) => void;
+  readonly #handleInputEvent: () => void;
   readonly #handleCompositionStart: (event: Event) => void;
   readonly #handleCompositionUpdate: (event: Event) => void;
   readonly #handleCompositionEnd: (event: Event) => void;
@@ -25,6 +26,9 @@ export class DOMTextElementBinding {
     this.#handleBeforeInputEvent = (event): void => {
       if (this.handleBeforeInput(event as InputEvent)) event.preventDefault();
     };
+    this.#handleInputEvent = (): void => {
+      if (!this.#composing) this.render();
+    };
     this.#handleCompositionStart = (event): void => {
       this.#startComposition(event as CompositionEvent);
     };
@@ -35,6 +39,7 @@ export class DOMTextElementBinding {
       this.#endComposition(event as CompositionEvent);
     };
     this.#element.addEventListener('beforeinput', this.#handleBeforeInputEvent);
+    this.#element.addEventListener('input', this.#handleInputEvent);
     this.#element.addEventListener('compositionstart', this.#handleCompositionStart);
     this.#element.addEventListener('compositionupdate', this.#handleCompositionUpdate);
     this.#element.addEventListener('compositionend', this.#handleCompositionEnd);
@@ -78,6 +83,7 @@ export class DOMTextElementBinding {
   }
 
   public render(): void {
+    if (this.#composing) return;
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
     this.#element.setSelectionRange(
@@ -88,6 +94,7 @@ export class DOMTextElementBinding {
 
   public disconnect(): void {
     this.#element.removeEventListener('beforeinput', this.#handleBeforeInputEvent);
+    this.#element.removeEventListener('input', this.#handleInputEvent);
     this.#element.removeEventListener('compositionstart', this.#handleCompositionStart);
     this.#element.removeEventListener('compositionupdate', this.#handleCompositionUpdate);
     this.#element.removeEventListener('compositionend', this.#handleCompositionEnd);
