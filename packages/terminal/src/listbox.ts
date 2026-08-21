@@ -8,7 +8,7 @@ import {
   type ListboxState,
   type ListboxStateInput,
 } from '@sectile/primitives/listbox';
-import type { Sequence } from '@sectile/primitives/sequence';
+import { createSequence, type Sequence } from '@sectile/primitives/sequence';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
@@ -61,6 +61,31 @@ export interface ListboxController<ID extends StableID = StableID> {
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
+export interface ListboxTransitionDetails<ID extends StableID = StableID> {
+  readonly event: ListboxEvent;
+  readonly result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+}
+
+export interface ListboxConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: ListboxController<ID>;
+  readonly onActivate?: (id: ID) => void;
+  readonly onTransition?: (details: ListboxTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface ListboxConnection<ID extends StableID = StableID> {
+  getSnapshot(): RevisionSnapshot<ListboxState<ID>>;
+  syncControlledValues(
+    values: ListboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ListboxState<ID>>>;
+  handleKeyboardInput(input: KeyboardInput): boolean;
+}
+
+export type ListboxOptions<ID extends StableID = StableID> =
+  Omit<ListboxControllerOptions<ID>, 'domain'>
+  & Omit<ListboxConnectionOptions<ID>, 'controller'>
+  & { readonly items: readonly ID[] };
+
 export function createListboxController<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
 ): Result<ListboxController<ID>> {
@@ -74,6 +99,22 @@ export function createListboxController<ID extends StableID>(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalListboxController(options, snapshot.value) };
+}
+
+export function createListbox<ID extends StableID>(
+  options: ListboxOptions<ID>,
+): Result<ListboxConnection<ID>> {
+  const domain = createSequence(options.items);
+  if (!domain.ok) return domain;
+  const controller = createListboxController({ ...options, domain: domain.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectListbox({ ...options, controller: controller.value }) };
+}
+
+export function connectListbox<ID extends StableID>(
+  options: ListboxConnectionOptions<ID>,
+): ListboxConnection<ID> {
+  return new TerminalListboxConnection(options);
 }
 
 export function toListboxEvent(input: KeyboardInput): ListboxEvent | null {
@@ -91,6 +132,46 @@ export function toListboxEffect<ID extends StableID>(
   return Object.freeze(command.type === 'focus'
     ? { type: 'move-highlight', id: command.id }
     : { type: 'submit-item', id: command.id });
+}
+
+class TerminalListboxConnection<ID extends StableID> implements ListboxConnection<ID> {
+  readonly #controller: ListboxController<ID>;
+  readonly #onActivate: ((id: ID) => void) | undefined;
+  readonly #onTransition: ((details: ListboxTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+
+  public constructor(options: ListboxConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.#onActivate = options.onActivate;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<ListboxState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: ListboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ListboxState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
+  }
+
+  public handleKeyboardInput(input: KeyboardInput): boolean {
+    const event = toListboxEvent(input);
+    if (event === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) {
+      for (const effect of result.commands) {
+        if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
+      }
+    }
+    this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return true;
+  }
 }
 
 class TerminalListboxController<ID extends StableID> implements ListboxController<ID> {

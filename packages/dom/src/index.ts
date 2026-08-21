@@ -1,13 +1,20 @@
 export {
+  connectListbox,
+  createListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
   type KeyboardInput,
   type ListboxControlledValues,
+  type ListboxConnection,
+  type ListboxConnectionOptions,
   type ListboxController,
   type ListboxControllerOptions,
   type ListboxEffect,
   type ListboxHighlightChangeDetails,
+  type ListboxItemAttributes,
+  type ListboxOptions,
+  type ListboxTransitionDetails,
   type ListboxValueChangeDetails,
 } from './listbox.js';
 export {

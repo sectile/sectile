@@ -2,11 +2,46 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import {
+  createListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
 } from '../dist/listbox.js';
 import { createSequence } from '@sectile/primitives/sequence';
+
+test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activation', async () => {
+  const root = new FakeElement();
+  const activations = [];
+  let updates = 0;
+  const connection = unwrap(createListbox({
+    items: ['a', 'b'],
+    root,
+    defaultHighlightedValue: 'a',
+    onActivate: (id) => activations.push(id),
+    onUpdate: () => { updates += 1; },
+  }));
+  connection.setListboxAttributes('Letters');
+  assert.equal(root.attributes.get('role'), 'listbox');
+  assert.equal(root.attributes.get('aria-label'), 'Letters');
+  const item = new FakeElement();
+  connection.setItemAttributes(item, { id: 'a' });
+  assert.equal(item.attributes.get('role'), 'option');
+  assert.equal(item.attributes.get('aria-selected'), 'false');
+  assert.equal(item.tabIndex, 0);
+
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Tab')), false);
+  await Promise.resolve();
+  assert.deepEqual(activations, ['b']);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.equal(updates, 2);
+  connection.disconnect();
+  assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+
+  const duplicate = createListbox({ items: ['a', 'a'], root: new FakeElement() });
+  assert.equal(duplicate.ok, false);
+});
 
 test('DOM keyboard inputs map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'ArrowDown' }), 'next');
@@ -112,3 +147,38 @@ test('controlled null highlight overrides defaults and uncontrolled controllers 
   assert.equal(sync.ok, false);
   assert.equal(sync.error.code, 'uncontrolled-controller-sync');
 });
+
+function keyboardEvent(key) {
+  return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
+}
+
+class FakeElement {
+  attributes = new Map();
+  dataset = {};
+  listeners = new Map();
+  tabIndex = -1;
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value);
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+
+  querySelectorAll() {
+    return [];
+  }
+
+  focus() {}
+}

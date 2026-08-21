@@ -3,17 +3,23 @@
 DOM controllers for Sectile semantic machines. This package depends only on exported `@sectile/primitives` subpaths and owns its state, build, and tests.
 
 ```ts
-import { createListboxController } from '@sectile/dom/listbox';
+import { createListbox } from '@sectile/dom/listbox';
 import { unwrap } from '@sectile/primitives/result';
 
-const controller = unwrap(createListboxController({
-  domain,
+const listbox = unwrap(createListbox({
+  items: ['alpha', 'beta'],
+  root,
   defaultValue: [],
   defaultHighlightedValue: null,
+  onActivate: (id) => openItem(id),
 }));
+
+listbox.setListboxAttributes('Items');
 ```
 
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
+
+`createListbox` constructs its sequence and connection, owns DOM keyboard dispatch, focus, listbox ARIA, and activation delivery. `createListboxController` and `connectListbox` remain available when those layers have separate ownership.
 
 Calendar, slider, tree-view, and tree-grid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Tree-grid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 

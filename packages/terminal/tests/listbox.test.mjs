@@ -2,11 +2,32 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import {
+  createListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
 } from '../dist/listbox.js';
 import { createSequence } from '@sectile/primitives/sequence';
+
+test('terminal listbox facade owns construction, input dispatch, and activation', () => {
+  const activations = [];
+  let updates = 0;
+  const connection = unwrap(createListbox({
+    items: ['a', 'b'],
+    defaultHighlightedValue: 'a',
+    onActivate: (id) => activations.push(id),
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.handleKeyboardInput({ key: 'down' }), true);
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
+  assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.deepEqual(activations, ['b']);
+  assert.equal(updates, 2);
+
+  const duplicate = createListbox({ items: ['a', 'a'] });
+  assert.equal(duplicate.ok, false);
+});
 
 test('terminal keys map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'down' }), 'next');
