@@ -1224,7 +1224,7 @@ range
 × announce/focus command
 ```
 
-Text draft와 parse/format은 spinbutton composite에서만 추가한다.
+Text draft와 parse/format은 spin button composite에서만 추가한다.
 
 ### 14.3 Calendar
 

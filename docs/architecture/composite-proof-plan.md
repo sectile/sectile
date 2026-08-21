@@ -36,7 +36,7 @@ Every candidate passes these gates in order:
 | Switch | checked state | shares two-state checked algebra; adapter semantics differ |
 | Toggle button | checked state | shares two-state checked algebra; activation command differs |
 | Grid | grid + cursor + selection + edit mode | cell/row selection modes, visible eligibility, and edit authority |
-| Spinbutton | range + text + parsed tick | parse/format/validation policy and invalid-draft behavior |
+| Spin Button | range + text + parsed tick | parse/format/validation policy and invalid-draft behavior |
 | Multi-thumb slider | sequence of thumbs + range + constrained ticks | ordering/cross-thumb constraints and atomic multi-value updates |
 | Window splitter | range + tick | shares bounded range algebra unless splitter-specific invariants disprove it |
 | Dialog | popup state + commands | open/close algebra; modality and focus scope stay host capabilities |
@@ -57,7 +57,7 @@ unless an independent state invariant is demonstrated.
 - `checked`: checkbox, switch, and toggle button share one value algebra.
 - `open-state`: disclosure and simple popup controls may share set/toggle mechanics, but
   popup focus-return commands remain a separate composite concern.
-- `range-control`: slider and window splitter share bounded tick transitions; spinbutton
+- `range-control`: slider and window splitter share bounded tick transitions; spin button
   and multi-thumb slider add genuinely different text or constraint authority.
 
 Sharing is an implementation conclusion only after observational equivalence is proved.
@@ -114,9 +114,9 @@ event; the only additional obligation is the DOM `separator` projection. Sectile
 reuses the bounded slider algebra and exposes a role-specific host facade instead of
 inventing a second primitive machine.
 
-## Verified composite: spinbutton
+## Verified composite: spin button
 
-Spinbutton is not a slider projection because the same committed tick may coexist with
+Spin button is not a slider projection because the same committed tick may coexist with
 different valid or invalid text drafts. Its state is `tick × optional draft`; range events
 clear a draft, commit parses onto the exact range lattice, and invalid commits reject
 without losing the draft. Independent reference enumeration and both host witnesses cover

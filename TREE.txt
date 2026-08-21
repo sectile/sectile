@@ -69,7 +69,7 @@ sectile/
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── slider.ts
-│   │   │   ├── spinbutton.ts
+│   │   │   ├── spin-button.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tabs.ts
 │   │   │   ├── text.ts
@@ -93,7 +93,7 @@ sectile/
 │   │   │   ├── multi-thumb-slider.test.mjs
 │   │   │   ├── popup-controls.test.mjs
 │   │   │   ├── slider.test.mjs
-│   │   │   ├── spinbutton.test.mjs
+│   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
@@ -160,7 +160,7 @@ sectile/
 │   │   │   │   │   │   ├── menu.ts
 │   │   │   │   │   │   ├── multi-thumb-slider.ts
 │   │   │   │   │   │   ├── slider.ts
-│   │   │   │   │   │   ├── spinbutton.ts
+│   │   │   │   │   │   ├── spin-button.ts
 │   │   │   │   │   │   ├── tree-grid.ts
 │   │   │   │   │   │   └── tree-view.ts
 │   │   │   │   │   ├── editing/
@@ -209,7 +209,7 @@ sectile/
 │   │   │   ├── revision.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
-│   │   │   ├── spinbutton.ts
+│   │   │   ├── spin-button.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tabs.ts
 │   │   │   ├── text.ts
@@ -241,7 +241,7 @@ sectile/
 │   │   │   │   ├── multi-thumb-slider.reference-law.test.mjs
 │   │   │   │   ├── popup-controls.reference-law.test.mjs
 │   │   │   │   ├── slider.reference-law.test.mjs
-│   │   │   │   ├── spinbutton.reference-law.test.mjs
+│   │   │   │   ├── spin-button.reference-law.test.mjs
 │   │   │   │   ├── tree-grid.reference-law.test.mjs
 │   │   │   │   ├── tree-view.reference-law.test.mjs
 │   │   │   │   └── window-splitter.reference-law.test.mjs
@@ -305,7 +305,7 @@ sectile/
 │       │   ├── node.ts
 │       │   ├── radio-group.ts
 │       │   ├── slider.ts
-│       │   ├── spinbutton.ts
+│       │   ├── spin-button.ts
 │       │   ├── switch.ts
 │       │   ├── tabs.ts
 │       │   ├── text.ts
@@ -330,7 +330,7 @@ sectile/
 │       │   ├── multi-thumb-slider.test.mjs
 │       │   ├── popup-controls.test.mjs
 │       │   ├── slider.test.mjs
-│       │   ├── spinbutton.test.mjs
+│       │   ├── spin-button.test.mjs
 │       │   ├── text.test.mjs
 │       │   ├── tree-grid.test.mjs
 │       │   ├── tree-view.test.mjs

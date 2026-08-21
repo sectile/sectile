@@ -56,7 +56,7 @@ export {
 export { createSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
 export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
 export { createWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
-export { createSpinbutton, toSpinbuttonEvent, type SpinbuttonConnection, type SpinbuttonOptions } from './spinbutton.js';
+export { createSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
 export { createDialog, type DialogConnection, type DialogOptions } from './dialog.js';
 export { createAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
 export { createTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';
