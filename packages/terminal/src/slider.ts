@@ -14,10 +14,9 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-}
+export type KeyboardInput = TerminalKeyboardInput;
 
 export interface SliderEffect {
   readonly type: 'render-range-value';

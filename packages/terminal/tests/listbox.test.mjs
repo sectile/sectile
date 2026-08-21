@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import {
   createListboxController,
   toListboxEffect,
@@ -67,8 +68,3 @@ test('unsupported and stale terminal inputs are failure-atomic', () => {
   assert.equal(stale.error.code, 'stale-revision');
   assert.equal(stale.snapshot, initial);
 });
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
-}

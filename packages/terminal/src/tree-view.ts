@@ -14,10 +14,9 @@ import {
   type TreeViewState,
 } from '@sectile/primitives/tree-view';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-}
+export type KeyboardInput = TerminalKeyboardInput;
 
 export interface TreeViewEffect<ID extends StableID = StableID> {
   readonly type: 'move-highlight';

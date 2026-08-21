@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createGrid } from '@sectile/primitives/grid';
 import {
   createCalendarController,
@@ -62,9 +63,4 @@ test('unsupported terminal calendar input is failure-atomic', () => {
 
 function grid() {
   return unwrap(createGrid([['a', 'b'], ['c', 'd']]));
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

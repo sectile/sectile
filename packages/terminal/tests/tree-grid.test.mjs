@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
+  connectTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -18,6 +20,34 @@ test('terminal keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'enter' }, 'editing'), 'commit-edit');
   assert.equal(toTreeGridEvent({ key: 'escape' }, 'editing'), 'cancel-edit');
   assert.equal(toTreeGridEvent({ key: 'right' }, 'editing'), null);
+  assert.equal(toTreeGridEvent({ key: 'left', altKey: true }), 'collapse');
+  assert.equal(toTreeGridEvent({ key: 'right', altKey: true }), 'expand');
+  assert.equal(toTreeGridEvent({ key: 'b', altKey: true }), null);
+  assert.equal(toTreeGridEvent({ key: 'down', ctrlKey: true }), null);
+});
+
+test('terminal tree-grid connection owns edit buffering and cancel restoration', () => {
+  const values = new Map([['root-name', 'Root']]);
+  const events = [];
+  let updates = 0;
+  const connection = connectTreeGrid({
+    controller: unwrap(createTreeGridController({
+      model: model(),
+      defaultHighlightedValue: 'root-name',
+    })),
+    getCellValue: (id) => values.get(id) ?? '',
+    setCellValue: (id, value) => values.set(id, value),
+    onTransition: ({ event }) => events.push(event),
+    onUpdate: () => { updates += 1; },
+  });
+
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
+  assert.equal(connection.handleKeyboardInput({ key: '한', text: '한' }), true);
+  assert.equal(values.get('root-name'), 'Root한');
+  assert.equal(connection.handleKeyboardInput({ key: 'escape' }), true);
+  assert.equal(values.get('root-name'), 'Root');
+  assert.deepEqual(events, ['start-edit', 'cancel-edit']);
+  assert.equal(updates, 3);
 });
 
 test('terminal tree-grid commands project into highlight and cell edit effects', () => {
@@ -98,9 +128,4 @@ function model() {
     ['child-name', 'child-value'],
   ]));
   return unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

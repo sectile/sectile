@@ -24,10 +24,9 @@ import {
   synchronizeControllerState,
 } from './internal/controller.js';
 import { toTextEvent, type TextInput } from './text.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-}
+export type KeyboardInput = TerminalKeyboardInput;
 
 export type ComboboxEffect<ID extends StableID = StableID> =
   | { readonly type: 'highlight-candidate'; readonly id: ID }

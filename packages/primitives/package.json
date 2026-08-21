@@ -36,6 +36,11 @@
       "import": "./dist/structures/tree.js",
       "default": "./dist/structures/tree.js"
     },
+    "./result": {
+      "types": "./dist/result.d.ts",
+      "import": "./dist/result.js",
+      "default": "./dist/result.js"
+    },
     "./listbox": {
       "types": "./dist/listbox.d.ts",
       "import": "./dist/listbox.js",

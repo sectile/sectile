@@ -1,6 +1,7 @@
 /* Cross-package evidence: two published host surfaces drive one semantic machine. */
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import {
   createListboxController as createDOMListboxController,
   toListboxEvent as toDOMListboxEvent,
@@ -93,10 +94,6 @@ function stateObservation(state) {
   };
 }
 
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
-}
 
 function createRNG(seed) {
   let state = seed >>> 0;

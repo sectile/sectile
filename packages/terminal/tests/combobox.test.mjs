@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createSequence } from '@sectile/primitives/sequence';
 import { createTextEditingState } from '@sectile/primitives/text';
 import {
@@ -117,9 +118,4 @@ function fixture() {
 
 function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

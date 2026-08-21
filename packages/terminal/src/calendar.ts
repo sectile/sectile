@@ -15,10 +15,9 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-}
+export type KeyboardInput = TerminalKeyboardInput;
 
 export type CalendarEffect<ID extends StableID = StableID> =
   | { readonly type: 'move-highlight'; readonly id: ID }

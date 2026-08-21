@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createTextController as createDOMTextController } from '@sectile/dom/text';
 import { createTextEditingState } from '@sectile/primitives/text';
 import { createTextController as createTerminalTextController } from '@sectile/terminal/text';
@@ -68,9 +69,4 @@ function observe(result) {
 
 function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

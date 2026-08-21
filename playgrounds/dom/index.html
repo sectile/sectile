@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Sectile DOM playground</title>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">@sectile/dom · tree-grid</p>
+          <h1>Interaction playground</h1>
+          <p class="lede">Move through a hierarchical grid and inspect the pure state and host effects.</p>
+        </div>
+        <div class="actions">
+          <button id="focus-button" type="button">Focus grid</button>
+          <button id="reset-button" type="button" class="secondary">Reset</button>
+        </div>
+      </header>
+
+      <section class="shortcuts" aria-label="Keyboard shortcuts">
+        <span><kbd>↑ ↓ ← →</kbd> move</span>
+        <span><kbd>Alt</kbd> + <kbd>← →</kbd> collapse / expand</span>
+        <span><kbd>Space</kbd> select</span>
+        <span><kbd>Enter</kbd> edit / commit</span>
+        <span><kbd>Esc</kbd> cancel</span>
+      </section>
+
+      <div class="workspace">
+        <section class="panel grid-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Interactive surface</p>
+              <h2>Project tree grid</h2>
+            </div>
+            <span id="revision-badge" class="badge"></span>
+          </div>
+          <div id="tree-grid" class="tree-grid" role="treegrid" aria-label="Project status"></div>
+        </section>
+
+        <aside class="inspector">
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Controller snapshot</p>
+                <h2>State</h2>
+              </div>
+            </div>
+            <pre id="state-output"></pre>
+          </section>
+
+          <section class="panel log-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Host boundary</p>
+                <h2>Events & effects</h2>
+              </div>
+            </div>
+            <ol id="event-log" class="event-log"></ol>
+          </section>
+        </aside>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

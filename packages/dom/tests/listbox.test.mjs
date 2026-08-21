@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import {
   createListboxController,
   toListboxEffect,
@@ -111,8 +112,3 @@ test('controlled null highlight overrides defaults and uncontrolled controllers 
   assert.equal(sync.ok, false);
   assert.equal(sync.error.code, 'uncontrolled-controller-sync');
 });
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
-}

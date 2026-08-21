@@ -1,13 +1,66 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
+  connectTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
 } from '../dist/tree-grid.js';
+
+test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', async () => {
+  const root = new FakeElement();
+  const values = new Map([['root-name', 'Root']]);
+  const events = [];
+  const controller = unwrap(createTreeGridController({
+    model: model(),
+    defaultHighlightedValue: 'root-name',
+  }));
+  const connection = connectTreeGrid({
+    controller,
+    root,
+    getCellValue: (id) => values.get(id) ?? '',
+    setCellValue: (id, value) => values.set(id, value),
+    onTransition: ({ event }) => events.push(event),
+  });
+
+  connection.setGridAttributes(2, 2);
+  assert.equal(root.attributes.get('role'), 'treegrid');
+  assert.equal(root.attributes.get('aria-rowcount'), '2');
+  const row = new FakeElement();
+  connection.setRowAttributes(row, { rowIndex: 1, level: 1, expanded: false });
+  assert.equal(row.attributes.get('aria-expanded'), 'false');
+  const cell = new FakeElement();
+  connection.setCellAttributes(cell, { id: 'root-name', columnIndex: 1 });
+  assert.equal(cell.tabIndex, 0);
+  assert.equal(cell.attributes.get('aria-selected'), 'false');
+
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
+  const input = new FakeInput();
+  connection.bindEditor(input, { id: 'root-name' });
+  input.emit('compositionstart');
+  input.value = '한글';
+  input.emit('input');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter', { isComposing: true })), false);
+  input.emit('compositionend');
+  await new Promise((resolve) => setTimeout(resolve, 5));
+
+  assert.equal(values.get('root-name'), '한글');
+  assert.equal(controller.getSnapshot().state.editMode, 'navigation');
+  connection.handleKeyboardEvent(keyboardEvent('Enter'));
+  const cancelledInput = new FakeInput();
+  connection.bindEditor(cancelledInput, { id: 'root-name' });
+  cancelledInput.value = 'discard me';
+  cancelledInput.emit('input');
+  connection.handleKeyboardEvent(keyboardEvent('Escape'));
+  assert.equal(values.get('root-name'), '한글');
+  assert.deepEqual(events, ['start-edit', 'commit-edit', 'start-edit', 'cancel-edit']);
+  connection.disconnect();
+  assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+});
 
 test('DOM keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'ArrowDown' }), 'down');
@@ -17,6 +70,7 @@ test('DOM keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'Enter' }), 'start-edit');
   assert.equal(toTreeGridEvent({ key: 'Enter' }, 'editing'), 'commit-edit');
   assert.equal(toTreeGridEvent({ key: 'Escape' }, 'editing'), 'cancel-edit');
+  assert.equal(toTreeGridEvent({ key: 'Enter', isComposing: true }, 'editing'), null);
   assert.equal(toTreeGridEvent({ key: 'ArrowRight' }, 'editing'), null);
   assert.equal(toTreeGridEvent({ key: 'ArrowRight', ctrlKey: true }), null);
 });
@@ -136,7 +190,55 @@ function model() {
   return unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
 }
 
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
+function keyboardEvent(key, overrides = {}) {
+  return {
+    key,
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    isComposing: false,
+    preventDefault() {},
+    ...overrides,
+  };
+}
+
+class FakeElement {
+  attributes = new Map();
+  dataset = {};
+  listeners = new Map();
+  tabIndex = -1;
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event = {}) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value);
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+
+  querySelectorAll() {
+    return [];
+  }
+
+  focus() {}
+}
+
+class FakeInput extends FakeElement {
+  value = '';
+
+  select() {}
 }

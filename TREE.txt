@@ -137,6 +137,7 @@ sectile/
 │   │   │   ├── combobox.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
+│   │   │   ├── result.ts
 │   │   │   ├── revision.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
@@ -162,6 +163,7 @@ sectile/
 │   │   │   ├── editing/
 │   │   │   │   └── text.reference-law.test.mjs
 │   │   │   ├── runtime/
+│   │   │   │   ├── result.test.mjs
 │   │   │   │   └── revision.test.mjs
 │   │   │   ├── state/
 │   │   │   │   ├── cursor.reference-law.test.mjs
@@ -193,7 +195,10 @@ sectile/
 │       │   ├── calendar.ts
 │       │   ├── combobox.ts
 │       │   ├── index.ts
+│       │   ├── keyboard.ts
+│       │   ├── layout.ts
 │       │   ├── listbox.ts
+│       │   ├── node.ts
 │       │   ├── slider.ts
 │       │   ├── text.ts
 │       │   ├── tree-grid.ts
@@ -201,6 +206,7 @@ sectile/
 │       ├── tests/
 │       │   ├── calendar.test.mjs
 │       │   ├── combobox.test.mjs
+│       │   ├── keyboard.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   ├── slider.test.mjs
 │       │   ├── text.test.mjs
@@ -210,6 +216,28 @@ sectile/
 │       ├── README.md
 │       ├── tsconfig.build.json
 │       └── tsconfig.json
+├── playgrounds/
+│   ├── dom/
+│   │   ├── src/
+│   │   │   ├── main.ts
+│   │   │   ├── styles.css
+│   │   │   └── vite-env.d.ts
+│   │   ├── tests/
+│   │   │   └── playground.test.mjs
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── tsconfig.json
+│   ├── terminal/
+│   │   ├── scripts/
+│   │   │   └── build.mjs
+│   │   ├── src/
+│   │   │   └── main.mjs
+│   │   ├── tests/
+│   │   │   └── playground.test.mjs
+│   │   ├── package.json
+│   │   └── README.md
+│   └── README.md
 ├── scripts/
 │   ├── lib/
 │   │   ├── repository.mjs

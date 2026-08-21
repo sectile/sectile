@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createRange } from '@sectile/primitives/range';
 import {
   createSliderController,
@@ -52,9 +53,4 @@ test('uncontrolled terminal slider sync is rejected atomically', () => {
 
 function range() {
   return unwrap(createRange({ origin: '0', step: '0.5', count: 5 }));
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createSliderController as createDOMSliderController } from '@sectile/dom/slider';
 import { createRange } from '@sectile/primitives/range';
 import { createSliderController as createTerminalSliderController } from '@sectile/terminal/slider';
@@ -73,9 +74,4 @@ function random(seed) {
       return Math.floor((state / 0x100000000) * maximumExclusive);
     },
   };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

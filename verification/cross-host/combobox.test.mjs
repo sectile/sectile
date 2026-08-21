@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createComboboxController as createDOMComboboxController } from '@sectile/dom/combobox';
 import { createSequence } from '@sectile/primitives/sequence';
 import { createComboboxController as createTerminalComboboxController } from '@sectile/terminal/combobox';
@@ -108,9 +109,4 @@ function observeState(controller) {
 
 function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

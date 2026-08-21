@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createTreeViewController as createDOMTreeViewController } from '@sectile/dom/tree-view';
 import { createTree } from '@sectile/primitives/tree';
 import { createTreeViewController as createTerminalTreeViewController } from '@sectile/terminal/tree-view';
@@ -73,9 +74,4 @@ function random(seed) {
       return Math.floor((state / 0x100000000) * maximumExclusive);
     },
   };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

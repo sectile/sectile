@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createTree } from '@sectile/primitives/tree';
 import {
   createTreeViewController,
@@ -77,9 +78,4 @@ function tree() {
     { id: 'grandchild', parentID: 'child-a' },
     { id: 'child-b', parentID: 'root' },
   ]));
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

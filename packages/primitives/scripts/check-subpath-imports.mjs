@@ -15,6 +15,7 @@ try {
     import { createRange } from '@sectile/primitives/range';
     import { createGrid } from '@sectile/primitives/grid';
     import { createTree } from '@sectile/primitives/tree';
+    import { unwrap } from '@sectile/primitives/result';
     import { createListboxState } from '@sectile/primitives/listbox';
     import { createCalendarState } from '@sectile/primitives/calendar';
     import { createComboboxState } from '@sectile/primitives/combobox';
@@ -24,7 +25,7 @@ try {
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     import { createTextEditingState } from '@sectile/primitives/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createRevisionSnapshot, createTextEditingState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -32,6 +33,7 @@ try {
   assert.equal(runtime.status, 0, runtime.stderr);
   await writeFile(join(directory, 'consumer.ts'), `
     import type { Result } from '@sectile/primitives';
+    import { unwrap } from '@sectile/primitives/result';
     import { createSequence, type Sequence } from '@sectile/primitives/sequence';
     import { createRange, type QuantizedRange } from '@sectile/primitives/range';
     import { createGrid, type Grid } from '@sectile/primitives/grid';
@@ -60,7 +62,8 @@ try {
     const j: Result<ComboboxState<string>> = createComboboxState(a.value);
     const k: Result<TextEditingState> = createTextEditingState();
     const l: Result<TreeGridModel<string, string>> = createTreeGridModel(d.value, c.value, ['a']);
-    void [a, b, c, d, e, f, g, h, i, j, k, l];
+    const sequence: Sequence<string> = unwrap(a);
+    void [a, b, c, d, e, f, g, h, i, j, k, l, sequence];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -74,7 +77,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 13, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 14, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -16,10 +16,12 @@ import {
   type TreeGridState,
 } from '@sectile/primitives/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import {
+  applyTerminalTextInput,
+  type TerminalKeyboardInput,
+} from './keyboard.js';
 
-export interface KeyboardInput {
-  readonly key: string;
-}
+export type KeyboardInput = TerminalKeyboardInput;
 
 export type TreeGridEffect<CellID extends StableID = StableID> =
   | { readonly type: 'move-highlight'; readonly id: CellID }
@@ -91,6 +93,33 @@ export interface TreeGridController<
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
 }
 
+export interface TreeGridTransitionDetails<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> {
+  readonly event: TreeGridEvent;
+  readonly result: RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
+}
+
+export interface TreeGridConnectionOptions<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> {
+  readonly controller: TreeGridController<RowID, CellID>;
+  readonly getCellValue: (id: CellID) => string;
+  readonly setCellValue: (id: CellID, value: string) => void;
+  readonly onTransition?: (details: TreeGridTransitionDetails<RowID, CellID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface TreeGridConnection<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> {
+  getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>>;
+  handleKeyboardInput(input: KeyboardInput): boolean;
+}
+
 export function createTreeGridController<
   RowID extends StableID,
   CellID extends StableID,
@@ -113,25 +142,99 @@ export function createTreeGridController<
   return { ok: true, value: new TerminalTreeGridController(options, snapshot.value) };
 }
 
+export function connectTreeGrid<RowID extends StableID, CellID extends StableID>(
+  options: TreeGridConnectionOptions<RowID, CellID>,
+): TreeGridConnection<RowID, CellID> {
+  return new TerminalTreeGridConnection(options);
+}
+
 export function toTreeGridEvent(
   input: KeyboardInput,
   editMode: TreeGridEditMode = 'navigation',
 ): TreeGridEvent | null {
+  if (input.ctrlKey === true) return null;
   if (editMode === 'editing') {
     if (input.key === 'enter') return 'commit-edit';
     if (input.key === 'escape') return 'cancel-edit';
     if (input.key === 'edit') return 'start-edit';
     return null;
   }
+  if (input.altKey === true && input.key === 'right') return 'expand';
+  if (input.altKey === true && input.key === 'left') return 'collapse';
   if (input.key === 'left') return 'left';
   if (input.key === 'right') return 'right';
   if (input.key === 'up') return 'up';
   if (input.key === 'down') return 'down';
   if (input.key === 'expand') return 'expand';
   if (input.key === 'collapse') return 'collapse';
+  if (input.key === 'o') return 'expand';
+  if (input.key === 'c') return 'collapse';
   if (input.key === 'space') return 'select';
   if (input.key === 'enter' || input.key === 'edit') return 'start-edit';
   return null;
+}
+
+class TerminalTreeGridConnection<RowID extends StableID, CellID extends StableID>
+  implements TreeGridConnection<RowID, CellID> {
+  readonly #controller: TreeGridController<RowID, CellID>;
+  readonly #getCellValue: (id: CellID) => string;
+  readonly #setCellValue: (id: CellID, value: string) => void;
+  readonly #onTransition:
+    | ((details: TreeGridTransitionDetails<RowID, CellID>) => void)
+    | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  #editBaseline: { readonly id: CellID; readonly value: string } | null = null;
+
+  public constructor(options: TreeGridConnectionOptions<RowID, CellID>) {
+    this.#controller = options.controller;
+    this.#getCellValue = options.getCellValue;
+    this.#setCellValue = options.setCellValue;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public handleKeyboardInput(input: KeyboardInput): boolean {
+    const snapshot = this.#controller.getSnapshot();
+    if (snapshot.state.editMode === 'editing' && snapshot.state.cursor.current !== null) {
+      const id = snapshot.state.cursor.current;
+      const nextValue = applyTerminalTextInput(this.#getCellValue(id), input);
+      if (nextValue !== null) {
+        this.#setCellValue(id, nextValue);
+        this.#onUpdate?.();
+        return true;
+      }
+    }
+
+    const event = toTreeGridEvent(input, snapshot.state.editMode);
+    if (event === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) this.#applyEffects(result.commands);
+    this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+
+  #applyEffects(effects: readonly TreeGridEffect<CellID>[]): void {
+    for (const effect of effects) {
+      if (effect.type === 'begin-cell-edit') {
+        this.#editBaseline = Object.freeze({
+          id: effect.id,
+          value: this.#getCellValue(effect.id),
+        });
+      } else if (effect.type === 'cancel-cell-edit') {
+        if (this.#editBaseline?.id === effect.id) {
+          this.#setCellValue(effect.id, this.#editBaseline.value);
+        }
+        this.#editBaseline = null;
+      } else if (effect.type === 'commit-cell-edit') {
+        this.#editBaseline = null;
+      }
+    }
+  }
 }
 
 export function toTreeGridEffect<CellID extends StableID>(

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
 import { createCalendarController as createDOMCalendarController } from '@sectile/dom/calendar';
 import { createGrid } from '@sectile/primitives/grid';
 import { createCalendarController as createTerminalCalendarController } from '@sectile/terminal/calendar';
@@ -67,9 +68,4 @@ function random(seed) {
       return Math.floor((state / 0x100000000) * maximumExclusive);
     },
   };
-}
-
-function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : result.error.message);
-  return result.value;
 }

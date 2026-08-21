@@ -1,9 +1,4 @@
-import assert from 'node:assert/strict';
-
-export function unwrap(result) {
-  assert.equal(result.ok, true, result.ok ? undefined : JSON.stringify(result.error));
-  return result.value;
-}
+export { unwrap } from '../.verification-dist/result.js';
 
 export function* powerset(values) {
   const items = [...values];

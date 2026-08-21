@@ -1,0 +1,21 @@
+{
+  "name": "@sectile/playground-dom",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "pnpm run typecheck && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "@sectile/dom": "workspace:*",
+    "@sectile/primitives": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vite": "^8.2.2"
+  }
+}
