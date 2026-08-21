@@ -6,7 +6,7 @@ import { renderTree } from './lib/tree.mjs';
 
 const docsRoot = resolve(root, 'docs');
 const markdownFiles = (await listFiles(docsRoot)).filter((path) => path.endsWith('.md'));
-assert.equal(markdownFiles.length, 24, 'documentation inventory changed without updating its contract');
+assert.equal(markdownFiles.length, 25, 'documentation inventory changed without updating its contract');
 const relativePath = (path) => relative(root, path).split(sep).join('/');
 const byPath = new Set(markdownFiles.map(relativePath));
 for (const path of markdownFiles) {

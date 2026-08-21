@@ -1,0 +1,64 @@
+# Composite proof plan
+
+Sectile does not equate an accessibility pattern with a new primitive. A host role may
+need its own adapter facade while sharing the same renderer-neutral state machine with
+other roles. A new `@sectile/primitives/*` subpath is promoted only when it owns a
+distinct invariant or event algebra.
+
+## Promotion gate
+
+Every candidate passes these gates in order:
+
+1. Identify each authoritative fact: structure, cursor, selection, expansion, text,
+   checked value, popup state, edit mode, revision, and constrained numeric value.
+2. Separate pure state from policy and host capability. Geometry, timers, focus scopes,
+   scrolling, announcements, and network access remain adapter capabilities or commands.
+3. Produce counterexamples showing whether the candidate is reducible to an existing
+   machine. Patterns with the same state and event algebra share one primitive machine.
+4. Specify valid models, invariants, accepted events, failure atomicity, commands,
+   resource ceilings, and complexity.
+5. Implement an independent reference model and bounded/property/differential tests.
+6. Promote a public primitive facade only after DOM and terminal can independently
+   witness the same semantic transitions.
+
+## Candidate audit
+
+| Candidate facade | Proposed primitive composition | Required proof before implementation |
+|---|---|---|
+| Tabs | sequence + cursor + single selection | manual/automatic activation laws and focus/selection separation |
+| Radio group | sequence + cursor + single selection | required/optional selection and selection-follows-focus policy |
+| Toolbar | sequence + cursor | orientation, disabled-item eligibility, and boundary policy |
+| Menu / menubar | sequence or tree + cursor + popup path | nested popup ownership, invocation, close propagation, and focus return |
+| Menu button | sequence + cursor + popup | trigger/open/list navigation authority and focus return |
+| Accordion | sequence + cursor + keyed open set | single/multiple expansion and non-collapsible policy; tree expansion is not reused blindly |
+| Disclosure | open state | idempotent set/toggle algebra; likely shares a small open-state machine |
+| Checkbox | checked state | two/three-state carrier and cycle/set laws |
+| Switch | checked state | shares two-state checked algebra; adapter semantics differ |
+| Toggle button | checked state | shares two-state checked algebra; activation command differs |
+| Grid | grid + cursor + selection + edit mode | cell/row selection modes, visible eligibility, and edit authority |
+| Spinbutton | range + text + parsed tick | parse/format/validation policy and invalid-draft behavior |
+| Multi-thumb slider | sequence of thumbs + range + constrained ticks | ordering/cross-thumb constraints and atomic multi-value updates |
+| Window splitter | range + tick | shares bounded range algebra unless splitter-specific invariants disprove it |
+| Dialog | popup state + commands | open/close algebra; modality and focus scope stay host capabilities |
+| Alert dialog | popup state + announce command | dialog algebra plus initial-focus and announcement obligations |
+| Tooltip | popup state + commands | deterministic open/close events; delay and hover geometry stay host capabilities |
+| Carousel | sequence + cursor + rotation policy | manual/automatic movement, pause, wrapping, and announcement laws |
+| Feed | sequence window + cursor + revision + request command | finite/windowed access laws; a genuinely unbounded feed requires a separate stream theory |
+
+The static APG patterns—alert, breadcrumb, landmarks, link, meter, and table—do not
+automatically become interaction machines. They are adapter semantics or projections
+unless an independent state invariant is demonstrated.
+
+## Expected sharing
+
+- `linear-choice`: tabs and radio group share movement and single-selection mechanisms,
+  while keeping distinct activation policy facades.
+- `linear-cursor`: toolbar and flat menu navigation share sequence/cursor movement.
+- `checked`: checkbox, switch, and toggle button share one value algebra.
+- `open-state`: disclosure and simple popup controls may share set/toggle mechanics, but
+  popup focus-return commands remain a separate composite concern.
+- `range-control`: slider and window splitter share bounded tick transitions; spinbutton
+  and multi-thumb slider add genuinely different text or constraint authority.
+
+Sharing is an implementation conclusion only after observational equivalence is proved.
+It must not erase role-specific DOM or terminal behavior.

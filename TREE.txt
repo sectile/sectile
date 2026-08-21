@@ -5,6 +5,7 @@ sectile/
 │       └── testing.yml
 ├── docs/
 │   ├── architecture/
+│   │   ├── composite-proof-plan.md
 │   │   ├── README.md
 │   │   └── theory-to-runtime.md
 │   ├── decisions/
@@ -44,6 +45,7 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   ├── controller.ts
+│   │   │   │   ├── delegated-event.ts
 │   │   │   │   └── text-element.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── combobox.ts
