@@ -8,6 +8,38 @@ importers:
 
   .:
     devDependencies:
+      '@sectile/dom':
+        specifier: workspace:*
+        version: link:packages/dom
+      '@sectile/primitives':
+        specifier: workspace:*
+        version: link:packages/primitives
+      '@sectile/terminal':
+        specifier: workspace:*
+        version: link:packages/terminal
+
+  packages/dom:
+    dependencies:
+      '@sectile/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/primitives:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/terminal:
+    dependencies:
+      '@sectile/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+    devDependencies:
       typescript:
         specifier: 7.0.2
         version: 7.0.2

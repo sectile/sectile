@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/primitives",
+  "rootPolicy": "type-only",
+  "requiredSubpaths": [
+    ".",
+    "./sequence",
+    "./range",
+    "./grid",
+    "./tree",
+    "./listbox",
+    "./revision",
+    "./package.json"
+  ],
+  "requiredRuntimeSubpaths": [
+    "./sequence",
+    "./range",
+    "./grid",
+    "./tree",
+    "./listbox",
+    "./revision"
+  ],
+  "runtimeTargets": {
+    "./sequence": "structures/sequence",
+    "./range": "structures/range",
+    "./grid": "structures/grid",
+    "./tree": "structures/tree",
+    "./listbox": "listbox",
+    "./revision": "revision"
+  }
+}

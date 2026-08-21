@@ -1,18 +1,17 @@
 # Sectile
 
-Sectile is a renderer-neutral TypeScript package for deterministic logical interaction structures. The current public runtime consists of four canonical structures:
+Sectile is a pnpm monorepo for deterministic, renderer-neutral interaction semantics and host adapters. The current workspace contains:
 
-- `@sectile/primitives/sequence`
-- `@sectile/primitives/range`
-- `@sectile/primitives/grid`
-- `@sectile/primitives/tree`
+- `@sectile/primitives`: canonical structures, listbox semantics, and revision control;
+- `@sectile/dom`: DOM keyboard and effect mappings;
+- `@sectile/terminal`: terminal keyboard and effect mappings.
 
-The implementation follows an explicit refinement pipeline: independent reference models, normative law suites, indexed production implementations, deterministic differential verification, and transactional public migration. The package root is intentionally type-only.
+Each package owns its source, build, tests, and package-specific verification. The workspace root only orchestrates package scripts, enforces package boundaries, and runs true cross-package verification.
 
 ```sh
-npm run verify
-npm run verify:theory
-npm run verify:reproducible-build
+pnpm verify
+pnpm verify:theory
+pnpm verify:reproducible-build
 ```
 
 Start with [the documentation index](docs/README.md), the [accepted theory](docs/references/sectile-theory.md), and the [verification record](docs/references/verification.md).

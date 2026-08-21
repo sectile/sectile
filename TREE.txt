@@ -3,8 +3,6 @@ sectile/
 │   └── workflows/
 │       ├── quality.yml
 │       └── testing.yml
-├── benchmarks/
-│   └── structures.mjs
 ├── docs/
 │   ├── architecture/
 │   │   ├── README.md
@@ -39,124 +37,156 @@ sectile/
 │   ├── README.md
 │   └── roadmap.md
 ├── packages/
-│   └── primitives/
+│   ├── dom/
+│   │   ├── scripts/
+│   │   │   ├── build.mjs
+│   │   │   └── check-reproducible-build.mjs
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   └── listbox.ts
+│   │   ├── tests/
+│   │   │   └── listbox.test.mjs
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   └── tsconfig.json
+│   ├── primitives/
+│   │   ├── benchmarks/
+│   │   │   └── structures.mjs
+│   │   ├── scripts/
+│   │   │   ├── lib/
+│   │   │   │   ├── public-signatures.mjs
+│   │   │   │   └── repository.mjs
+│   │   │   ├── build.mjs
+│   │   │   ├── check-acronym-casing.mjs
+│   │   │   ├── check-api-stability.mjs
+│   │   │   ├── check-contracts.mjs
+│   │   │   ├── check-dist-platform-boundary.mjs
+│   │   │   ├── check-law-coverage.mjs
+│   │   │   ├── check-layout.mjs
+│   │   │   ├── check-package-footprint.mjs
+│   │   │   ├── check-public-api.mjs
+│   │   │   ├── check-public-signatures.mjs
+│   │   │   ├── check-reproducible-build.mjs
+│   │   │   ├── check-subpath-imports.mjs
+│   │   │   ├── check-verification.mjs
+│   │   │   ├── update-api-stability.mjs
+│   │   │   ├── update-public-signatures.mjs
+│   │   │   └── verify-theory.mjs
+│   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   ├── composites/
+│   │   │   │   │   ├── calendar.ts
+│   │   │   │   │   ├── combobox.ts
+│   │   │   │   │   ├── listbox.ts
+│   │   │   │   │   ├── slider.ts
+│   │   │   │   │   └── tree-view.ts
+│   │   │   │   ├── editing/
+│   │   │   │   │   └── text.ts
+│   │   │   │   ├── kernel/
+│   │   │   │   │   ├── decimal.ts
+│   │   │   │   │   ├── foundation.ts
+│   │   │   │   │   └── indexed-sequence.ts
+│   │   │   │   ├── reference/
+│   │   │   │   │   ├── composites/
+│   │   │   │   │   │   ├── calendar.ts
+│   │   │   │   │   │   ├── combobox.ts
+│   │   │   │   │   │   ├── listbox.ts
+│   │   │   │   │   │   ├── slider.ts
+│   │   │   │   │   │   └── tree-view.ts
+│   │   │   │   │   ├── editing/
+│   │   │   │   │   │   └── text.ts
+│   │   │   │   │   ├── state/
+│   │   │   │   │   │   ├── cursor.ts
+│   │   │   │   │   │   ├── expansion.ts
+│   │   │   │   │   │   └── selection.ts
+│   │   │   │   │   └── structures/
+│   │   │   │   │       ├── grid.ts
+│   │   │   │   │       ├── range.ts
+│   │   │   │   │       ├── sequence.ts
+│   │   │   │   │       └── tree.ts
+│   │   │   │   ├── runtime/
+│   │   │   │   │   └── revision.ts
+│   │   │   │   └── state/
+│   │   │   │       ├── cursor.ts
+│   │   │   │       ├── expansion.ts
+│   │   │   │       └── selection.ts
+│   │   │   ├── structures/
+│   │   │   │   ├── grid.ts
+│   │   │   │   ├── range.ts
+│   │   │   │   ├── sequence.ts
+│   │   │   │   └── tree.ts
+│   │   │   ├── index.ts
+│   │   │   ├── listbox.ts
+│   │   │   ├── revision.ts
+│   │   │   └── shared.ts
+│   │   ├── testing/
+│   │   │   ├── api-stability.json
+│   │   │   ├── law-evidence.json
+│   │   │   ├── law-registry.json
+│   │   │   ├── public-api.json
+│   │   │   └── public-signatures.json
+│   │   ├── tests/
+│   │   │   ├── composites/
+│   │   │   │   ├── calendar.reference-law.test.mjs
+│   │   │   │   ├── combobox.reference-law.test.mjs
+│   │   │   │   ├── listbox.reference-law.test.mjs
+│   │   │   │   ├── slider.reference-law.test.mjs
+│   │   │   │   └── tree-view.reference-law.test.mjs
+│   │   │   ├── differential/
+│   │   │   │   └── optimized-differential.test.mjs
+│   │   │   ├── editing/
+│   │   │   │   └── text.reference-law.test.mjs
+│   │   │   ├── runtime/
+│   │   │   │   └── revision.test.mjs
+│   │   │   ├── state/
+│   │   │   │   ├── cursor.reference-law.test.mjs
+│   │   │   │   ├── expansion.reference-law.test.mjs
+│   │   │   │   └── selection.reference-law.test.mjs
+│   │   │   ├── structures/
+│   │   │   │   ├── grid.reference-law.test.mjs
+│   │   │   │   ├── range.reference-law.test.mjs
+│   │   │   │   ├── sequence.reference-law.test.mjs
+│   │   │   │   └── tree.reference-law.test.mjs
+│   │   │   └── support.mjs
+│   │   ├── verification/
+│   │   │   ├── implementation-verification.json
+│   │   │   ├── implementation-verifier.mjs
+│   │   │   ├── theory-verification.json
+│   │   │   └── theory-verifier.py
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.verify-build.json
+│   └── terminal/
+│       ├── scripts/
+│       │   ├── build.mjs
+│       │   └── check-reproducible-build.mjs
 │       ├── src/
-│       │   ├── internal/
-│       │   │   ├── adapters/
-│       │   │   │   ├── dom.ts
-│       │   │   │   └── terminal.ts
-│       │   │   ├── composites/
-│       │   │   │   ├── calendar.ts
-│       │   │   │   ├── combobox.ts
-│       │   │   │   ├── listbox.ts
-│       │   │   │   ├── slider.ts
-│       │   │   │   └── tree-view.ts
-│       │   │   ├── editing/
-│       │   │   │   └── text.ts
-│       │   │   ├── kernel/
-│       │   │   │   ├── decimal.ts
-│       │   │   │   ├── foundation.ts
-│       │   │   │   └── indexed-sequence.ts
-│       │   │   ├── reference/
-│       │   │   │   ├── composites/
-│       │   │   │   │   ├── calendar.ts
-│       │   │   │   │   ├── combobox.ts
-│       │   │   │   │   ├── listbox.ts
-│       │   │   │   │   ├── slider.ts
-│       │   │   │   │   └── tree-view.ts
-│       │   │   │   ├── editing/
-│       │   │   │   │   └── text.ts
-│       │   │   │   ├── state/
-│       │   │   │   │   ├── cursor.ts
-│       │   │   │   │   ├── expansion.ts
-│       │   │   │   │   └── selection.ts
-│       │   │   │   └── structures/
-│       │   │   │       ├── grid.ts
-│       │   │   │       ├── range.ts
-│       │   │   │       ├── sequence.ts
-│       │   │   │       └── tree.ts
-│       │   │   ├── runtime/
-│       │   │   │   └── revision.ts
-│       │   │   └── state/
-│       │   │       ├── cursor.ts
-│       │   │       ├── expansion.ts
-│       │   │       └── selection.ts
-│       │   ├── structures/
-│       │   │   ├── grid.ts
-│       │   │   ├── range.ts
-│       │   │   ├── sequence.ts
-│       │   │   └── tree.ts
 │       │   ├── index.ts
-│       │   └── shared.ts
+│       │   └── listbox.ts
 │       ├── tests/
-│       │   ├── adapters/
-│       │   │   └── host-adapters.test.mjs
-│       │   ├── composites/
-│       │   │   ├── calendar.reference-law.test.mjs
-│       │   │   ├── combobox.reference-law.test.mjs
-│       │   │   ├── listbox.reference-law.test.mjs
-│       │   │   ├── slider.reference-law.test.mjs
-│       │   │   └── tree-view.reference-law.test.mjs
-│       │   ├── differential/
-│       │   │   └── optimized-differential.test.mjs
-│       │   ├── editing/
-│       │   │   └── text.reference-law.test.mjs
-│       │   ├── runtime/
-│       │   │   └── revision.test.mjs
-│       │   ├── state/
-│       │   │   ├── cursor.reference-law.test.mjs
-│       │   │   ├── expansion.reference-law.test.mjs
-│       │   │   └── selection.reference-law.test.mjs
-│       │   ├── structures/
-│       │   │   ├── grid.reference-law.test.mjs
-│       │   │   ├── range.reference-law.test.mjs
-│       │   │   ├── sequence.reference-law.test.mjs
-│       │   │   └── tree.reference-law.test.mjs
-│       │   └── support.mjs
+│       │   └── listbox.test.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
-│       ├── tsconfig.json
-│       └── tsconfig.verify-build.json
+│       └── tsconfig.json
 ├── scripts/
 │   ├── lib/
-│   │   ├── public-signatures.mjs
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
-│   ├── build.mjs
-│   ├── check-acronym-casing.mjs
-│   ├── check-api-stability.mjs
-│   ├── check-contracts.mjs
-│   ├── check-dist-platform-boundary.mjs
 │   ├── check-docs.mjs
-│   ├── check-law-coverage.mjs
-│   ├── check-layout.mjs
-│   ├── check-package-footprint.mjs
-│   ├── check-public-api.mjs
-│   ├── check-public-signatures.mjs
-│   ├── check-reproducible-build.mjs
-│   ├── check-subpath-imports.mjs
-│   ├── check-verification.mjs
-│   ├── update-api-stability.mjs
-│   ├── update-public-signatures.mjs
-│   ├── update-tree.mjs
-│   └── verify-theory.mjs
-├── testing/
-│   ├── api-stability.json
-│   ├── law-evidence.json
-│   ├── law-registry.json
-│   ├── public-api.json
-│   └── public-signatures.json
+│   ├── check-workspace-boundaries.mjs
+│   └── update-tree.mjs
 ├── verification/
-│   ├── implementation-verification.json
-│   ├── implementation-verifier.mjs
-│   ├── theory-verification.json
-│   └── theory-verifier.py
+│   └── cross-host/
+│       └── listbox.test.mjs
 ├── .gitignore
 ├── .node-version
 ├── package.json
 ├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
 ├── README.md
 ├── TREE.txt
-├── tsconfig.base.json
-└── tsconfig.json
+└── tsconfig.base.json

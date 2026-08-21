@@ -3,29 +3,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs production",
-    "build:verification": "node scripts/build.mjs verification",
-    "typecheck": "tsc --project packages/primitives/tsconfig.json --pretty false && tsc --project tsconfig.json --pretty false",
-    "test": "npm run build:verification --silent && node --test packages/primitives/tests/*/*.test.mjs",
-    "verify:theory": "node scripts/verify-theory.mjs",
-    "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
-    "check:contracts": "node scripts/check-contracts.mjs",
-    "check:public-api": "node scripts/check-public-api.mjs",
-    "check:api-stability": "node scripts/check-api-stability.mjs",
-    "check:signatures": "node scripts/check-public-signatures.mjs",
-    "check:laws": "node scripts/check-law-coverage.mjs",
-    "check:naming": "node scripts/check-acronym-casing.mjs",
-    "check:layout": "node scripts/check-layout.mjs",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm build && pnpm -r --if-present typecheck",
+    "test": "pnpm build && pnpm -r --if-present test && node --test verification/cross-host/*.test.mjs",
+    "test:cross-host": "pnpm build && node --test verification/cross-host/*.test.mjs",
+    "verify:theory": "pnpm -r --if-present verify:theory",
+    "verify:reproducible-build": "pnpm -r --if-present verify:reproducible-build",
+    "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
     "check:docs": "node scripts/check-docs.mjs",
-    "check:dist-boundary": "node scripts/check-dist-platform-boundary.mjs",
-    "check:subpaths": "node scripts/check-subpath-imports.mjs",
-    "check:package": "node scripts/check-package-footprint.mjs",
-    "check:verification": "node scripts/check-verification.mjs",
     "update:tree": "node scripts/update-tree.mjs",
-    "verify": "npm run typecheck && npm run test && npm run build && npm run check:contracts && npm run check:public-api && npm run check:api-stability && npm run check:signatures && npm run check:laws && npm run check:naming && npm run check:layout && npm run check:docs && npm run check:dist-boundary && npm run check:subpaths && npm run check:package && npm run check:verification"
+    "verify": "pnpm -r --if-present verify && node --test verification/cross-host/*.test.mjs && pnpm check:boundaries && pnpm check:docs"
   },
   "devDependencies": {
-    "typescript": "7.0.2"
+    "@sectile/dom": "workspace:*",
+    "@sectile/primitives": "workspace:*",
+    "@sectile/terminal": "workspace:*"
   },
   "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }

@@ -41,5 +41,5 @@ for (const name of ['sequence', 'range', 'grid', 'tree']) {
 const theory = await readFile('docs/references/sectile-theory.md', 'utf8');
 assert.equal(theory.includes('> Status: Accepted'), true);
 const tree = await readFile('TREE.txt', 'utf8');
-assert.equal(tree, await renderTree(root), 'TREE.txt is stale; run npm run update:tree');
-console.log(JSON.stringify({ status: 'passed', files: markdownFiles.length, reachable: reachable.size, publicSubpaths: 4 }, null, 2));
+assert.equal(tree, await renderTree(root), 'TREE.txt is stale; run pnpm update:tree');
+console.log(JSON.stringify({ status: 'passed', files: markdownFiles.length, reachable: reachable.size, publicStructureDocs: 4 }, null, 2));

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "fingerprint": "f1eb9ddcf1eeb7cd3d49b74785ae769d528769bf51945234b84ae7544e6a024e",
+  "files": [
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "bcbd8cf602e9c971699d4c713d8bc950962196fe0d92850a061f792fdd06168e"
+    },
+    {
+      "path": "dist/structures/sequence.d.ts",
+      "sha256": "909ffef9a9a7db4aa9a66ff79612c9467ee3cc85613c51feb7814dda67f00c09"
+    },
+    {
+      "path": "dist/structures/range.d.ts",
+      "sha256": "a87ce374f030bf26b00efe0625e0547714eacd4be6e1f0ecf596335ae5c0c519"
+    },
+    {
+      "path": "dist/structures/grid.d.ts",
+      "sha256": "d3434226cdda459c8fadf5f3d0d04c92d6b9f94a358828da3d56fc59a7ad5186"
+    },
+    {
+      "path": "dist/structures/tree.d.ts",
+      "sha256": "14cde3a229e9257ac2e6d468a089f088e8ab1508f53b7b6d4df81a1acc04a80d"
+    },
+    {
+      "path": "dist/listbox.d.ts",
+      "sha256": "a6a8f6b19053737c6ba7a9e8da3cef5058d1c24370350fcb9b6cee25a36e25ba"
+    },
+    {
+      "path": "dist/revision.d.ts",
+      "sha256": "50347f9130d67e8276bdd0fcedc4ac8e29986445e89987b07ffc3dd552d72c35"
+    }
+  ]
+}

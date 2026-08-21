@@ -1,6 +1,10 @@
 # Package boundary
 
-Production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public runtime structures live under `src/structures`; internal state, editing, composites, revision wrappers, host adapters, and kernel mechanisms remain non-exported. Verification build input includes the mirrored reference models and emits to `.verification-dist`, which is never packaged.
+The pnpm workspace contains `@sectile/primitives`, `@sectile/dom`, and `@sectile/terminal`. Every package owns its source, build, tests, package contract, and package-specific verification. The repository root only orchestrates recursive package commands, validates workspace boundaries, checks repository documentation, and runs cross-package tests.
+
+Workspace packages may depend on another package only through a declared `workspace:*` dependency and an exported package-name subpath. Relative imports that escape a package, direct imports from another package's `src`, `dist`, or `.verification-dist`, and package scripts that reach into another package are rejected by the workspace boundary gate.
+
+For `@sectile/primitives`, production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public structures live under `src/structures`; listbox and revision use stable public facades; internal state, editing, remaining composites, and kernel mechanisms remain non-exported. Verification build input includes mirrored reference models and emits to `.verification-dist`, which is never packaged.
 
 Recurring verification requires these canonical exports:
 
@@ -10,6 +14,8 @@ Recurring verification requires these canonical exports:
 ./range
 ./grid
 ./tree
+./listbox
+./revision
 ./package.json
 ```
 
@@ -17,4 +23,4 @@ The check is additive: it verifies that these required entries exist and resolve
 
 The root runtime must remain empty. Consumer import checks execute the required canonical subpaths through Node package resolution and compile a separate strict TypeScript project against the emitted declarations.
 
-The package footprint gate rejects reference files and output larger than 250 KB.
+The primitives package footprint gate rejects reference files and output larger than 250 KB. DOM and terminal code are emitted only by their own packages.

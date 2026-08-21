@@ -1,6 +1,6 @@
 # Verification pipeline
 
-The default `npm run verify` gate performs:
+The default `pnpm verify` gate first runs each package's own `verify` script in dependency order, then performs cross-package adapter equivalence, workspace-boundary, and repository-documentation checks. Package-level gates perform:
 
 1. strict TypeScript type checking;
 2. reference law suites and 2,000-model differential tests for structures and internal state theories;
@@ -11,7 +11,7 @@ The default `npm run verify` gate performs:
 7. package footprint validation;
 8. deterministic implementation verifier replay.
 
-`npm run verify:theory` reruns the Python theory model checker and compares exact output bytes. `npm run verify:reproducible-build` performs two clean production builds and compares a path-sensitive SHA-256 fingerprint.
+`pnpm verify:theory` delegates to the package that owns the Python theory model. `pnpm verify:reproducible-build` delegates reproducibility checks to every package that declares one. The DOM and terminal packages test their host mappings independently; the root cross-host suite compares 40,000 transitions through their exported package subpaths.
 
 The law registry contains all 37 currently public structure laws. Each law has an evidence file, and the optimized implementation has a separate differential evidence file.
 
