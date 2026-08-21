@@ -1,10 +1,14 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "f8d8b26b3ab4c673333e0fd4bdd7257da40f324f9714baed73eee0a816bbf1ef",
+  "fingerprint": "bd4b3b43c92886f46d5efd84cd68f5fb525a12a798f0a387508e39456f1cd8af",
   "files": [
     {
       "path": "dist/accordion.d.ts",
       "sha256": "01690bac3d43a26a55523a38172f76faee17b422f9f12bf7689ad3f79667b29e"
+    },
+    {
+      "path": "dist/alert-dialog.d.ts",
+      "sha256": "5a08504520ccb1c1d8d1c6ff84cd3173dce31839d1b0fa87a70b6f40ad6e15b6"
     },
     {
       "path": "dist/calendar.d.ts",
@@ -17,6 +21,10 @@
     {
       "path": "dist/combobox.d.ts",
       "sha256": "7c5148ec90d2f57a0a045bcd2afc154cac6410d75a4564e8944c7c6b5b4e1c51"
+    },
+    {
+      "path": "dist/dialog.d.ts",
+      "sha256": "b6f3aa14727dd3b295be945a06a898c5bbad2ecee7d30dea418daffaa6cc8471"
     },
     {
       "path": "dist/disclosure.d.ts",
@@ -45,6 +53,10 @@
     {
       "path": "dist/internal/composites/listbox.d.ts",
       "sha256": "8be9d8c65e559e1ee8d23944d9d24be22a487a4d4d2eee16eed955a10c5bf6bd"
+    },
+    {
+      "path": "dist/internal/composites/popup.d.ts",
+      "sha256": "139295ec8c40da3e1f8ea0542876b8b5535bc20523c565c6867687d458693659"
     },
     {
       "path": "dist/internal/composites/slider.d.ts",
@@ -153,6 +165,10 @@
     {
       "path": "dist/toolbar.d.ts",
       "sha256": "0447627bf011da937c1231d750c698b046516bcba3cb5268227999ee48f88262"
+    },
+    {
+      "path": "dist/tooltip.d.ts",
+      "sha256": "462178f6b183e4604e60fbca1a5c4c63bf426dd46dbc6cbf03c4f1a71bfaa1d3"
     },
     {
       "path": "dist/tree-grid.d.ts",

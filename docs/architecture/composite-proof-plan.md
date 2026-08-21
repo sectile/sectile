@@ -121,3 +121,11 @@ different valid or invalid text drafts. Its state is `tick × optional draft`; r
 clear a draft, commit parses onto the exact range lattice, and invalid commits reject
 without losing the draft. Independent reference enumeration and both host witnesses cover
 valid commit, invalid draft preservation, cancellation, and range movement.
+
+## Verified family: popup surfaces
+
+Dialog, alert dialog, and tooltip share deterministic open/close mechanics but not command
+authority. Dialog requests initial focus and restoration, alert dialog additionally requests
+announcement, and tooltip owns neither focus command. Focus containment, inertness, hover
+geometry, and delay timers remain host capabilities. DOM and terminal witnesses verify the
+distinct command projections and escape handling.
