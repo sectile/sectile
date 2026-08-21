@@ -83,6 +83,7 @@
     "./menu": { "types": "./dist/menu.d.ts", "import": "./dist/menu.js", "default": "./dist/menu.js" },
     "./menubar": { "types": "./dist/menubar.d.ts", "import": "./dist/menubar.js", "default": "./dist/menubar.js" },
     "./menu-button": { "types": "./dist/menu-button.d.ts", "import": "./dist/menu-button.js", "default": "./dist/menu-button.js" },
+    "./carousel": { "types": "./dist/carousel.d.ts", "import": "./dist/carousel.js", "default": "./dist/carousel.js" },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",

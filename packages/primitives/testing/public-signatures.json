@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "13661e7b62ef30ac7677def09fe6b2343273e7239d4c1d658a1a83366d0e5133",
+  "fingerprint": "8f06640e8f3e419f6a29a35823eb9025bef665175aa888d5cf2701d9541ea1c2",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -13,6 +13,10 @@
     {
       "path": "dist/calendar.d.ts",
       "sha256": "f5ed730ad6c2a39de3de1932e70e0be7f8606a28bcbcdeac1121b2289727faa4"
+    },
+    {
+      "path": "dist/carousel.d.ts",
+      "sha256": "24c793e15c6a2443870d729d6006811635697ca1320c73cf82b760f16cfc2f08"
     },
     {
       "path": "dist/checkbox.d.ts",

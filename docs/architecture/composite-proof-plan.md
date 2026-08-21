@@ -157,3 +157,10 @@ sibling movement wraps within one menu level, and leaf invocation atomically clo
 path and requests focus restoration. This disproves reduction to Toolbar: identical item
 cursors can have different open submenu paths. Menu Button adds trigger projection while
 Menubar changes directional key meaning; neither duplicates the renderer-neutral machine.
+
+## Verified composite: carousel
+
+Carousel owns a slide cursor and an independent paused flag. Manual movement remains valid
+while paused; pause controls only whether a host timer dispatches automatic movement. The
+primitive therefore contains no clock. Bounded reference comparison covers wrapping,
+stopped boundaries, direct slide focus, and pause algebra; both hosts witness projection.
