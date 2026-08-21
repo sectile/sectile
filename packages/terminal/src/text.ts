@@ -18,6 +18,7 @@ import {
   sameControllerState,
   synchronizeControllerState,
 } from './internal/controller.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
 
 export type TextInput =
   | {
@@ -60,6 +61,28 @@ export interface TextController {
   ): RevisionResult<TextEditingState, never>;
 }
 
+export interface TextTransitionDetails {
+  readonly input: TextInput;
+  readonly result: RevisionResult<TextEditingState, never>;
+}
+
+export interface TextConnectionOptions {
+  readonly controller: TextController;
+  readonly onTransition?: (details: TextTransitionDetails) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface TextConnection {
+  getSnapshot(): RevisionSnapshot<TextEditingState>;
+  getValue(): string;
+  syncControlledValues(
+    values: TextControlledValues,
+  ): Result<RevisionSnapshot<TextEditingState>>;
+  handleKeyboardInput(input: TerminalKeyboardInput): boolean;
+}
+
+export type TextOptions = TextControllerOptions & Omit<TextConnectionOptions, 'controller'>;
+
 export function createTextController(options: TextControllerOptions = {}): Result<TextController> {
   const requested = options.value !== undefined ? options.value : options.defaultValue;
   const initial = requested === undefined
@@ -69,6 +92,16 @@ export function createTextController(options: TextControllerOptions = {}): Resul
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalTextController(options, snapshot.value) };
+}
+
+export function createText(options: TextOptions = {}): Result<TextConnection> {
+  const controller = createTextController(options);
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectText({ ...options, controller: controller.value }) };
+}
+
+export function connectText(options: TextConnectionOptions): TextConnection {
+  return new TerminalTextConnection(options);
 }
 
 export function toTextEvent(input: TextInput): TextEvent | null {
@@ -82,6 +115,66 @@ export function toTextEvent(input: TextInput): TextEvent | null {
     text: input.type === 'delete' ? '' : input.text,
     selection: input.selection,
   });
+}
+
+class TerminalTextConnection implements TextConnection {
+  readonly #controller: TextController;
+  readonly #onTransition: ((details: TextTransitionDetails) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+
+  public constructor(options: TextConnectionOptions) {
+    this.#controller = options.controller;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<TextEditingState> {
+    return this.#controller.getSnapshot();
+  }
+
+  public getValue(): string {
+    return this.#controller.getSnapshot().state.snapshot.text;
+  }
+
+  public syncControlledValues(
+    values: TextControlledValues,
+  ): Result<RevisionSnapshot<TextEditingState>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
+  }
+
+  public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
+    if (input.ctrlKey === true || input.altKey === true) return false;
+    const snapshot = this.#controller.getSnapshot().state.snapshot;
+    let start = snapshot.selection.startCodeUnitOffset;
+    let end = snapshot.selection.endCodeUnitOffset;
+    let text: string;
+    let type: TextInput['type'];
+    if (input.key === 'backspace') {
+      if (start === end) start = previousGraphemeOffset(snapshot.text, start);
+      text = '';
+      type = 'delete';
+    } else if (input.key === 'delete') {
+      if (start === end) end = nextGraphemeOffset(snapshot.text, end);
+      text = '';
+      type = 'delete';
+    } else if (input.text !== undefined && input.text.length > 0) {
+      text = input.text;
+      type = start === end ? 'insert' : 'replace';
+    } else {
+      return false;
+    }
+    const offset = start + text.length;
+    const selection = collapsedSelection(offset);
+    const semanticInput: TextInput = type === 'delete'
+      ? { type, startCodeUnitOffset: start, endCodeUnitOffset: end, selection }
+      : { type, text, startCodeUnitOffset: start, endCodeUnitOffset: end, selection };
+    const result = this.#controller.handleTextInput(semanticInput);
+    this.#onTransition?.(Object.freeze({ input: semanticInput, result }));
+    this.#onUpdate?.();
+    return true;
+  }
 }
 
 class TerminalTextController implements TextController {
@@ -160,4 +253,24 @@ function controlledInputError(controlled: boolean): SectileError | null {
 
 function impossibleEffect(command: never): never {
   return command;
+}
+
+function collapsedSelection(offset: number): TextSelectionInput {
+  return Object.freeze({ anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset });
+}
+
+function previousGraphemeOffset(text: string, offset: number): number {
+  let previous = 0;
+  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
+    if (segment.index >= offset) break;
+    previous = segment.index;
+  }
+  return previous;
+}
+
+function nextGraphemeOffset(text: string, offset: number): number {
+  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
+    if (segment.index > offset) return segment.index;
+  }
+  return text.length;
 }

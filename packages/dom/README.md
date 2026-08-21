@@ -29,7 +29,7 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 Calendar, slider, tree-view, and tree-grid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Tree-grid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 
-The text controller maps explicit `beforeinput` ranges and composition phases through `@sectile/dom/text`. It controls or owns the complete editing state so an active IME composition remains atomic.
+`createText` binds an input or textarea, owns `beforeinput` rendering and the complete IME composition lifecycle, and keeps UTF-16 selections synchronized. The lower-level text controller remains available for custom elements.
 
 The combobox controller reuses the same DOM text normalization for editable filtering, keeps IME phases explicit, and maps candidate movement to active-descendant effects. Its controlled input field is the complete `inputState`, not a string fragment.
 

@@ -2,7 +2,36 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createTextEditingState } from '@sectile/primitives/text';
-import { createTextController, toTextEvent } from '../dist/text.js';
+import { createText, createTextController, toTextEvent } from '../dist/text.js';
+
+test('DOM text facade owns beforeinput rendering and IME composition lifecycle', () => {
+  const element = new FakeTextElement();
+  const transitions = [];
+  const connection = unwrap(createText({
+    element,
+    defaultValue: unwrap(createTextEditingState('a', selection(1))),
+    onTransition: ({ input }) => transitions.push(input.type),
+  }));
+  assert.equal(element.value, 'a');
+  assert.equal(connection.handleBeforeInput(inputEvent('insertText', '한')), true);
+  assert.equal(connection.getValue(), 'a한');
+  assert.equal(element.value, 'a한');
+  assert.deepEqual(element.selection, [2, 2]);
+
+  element.emit('compositionstart', { data: '' });
+  element.emit('compositionupdate', { data: '글' });
+  element.emit('compositionend', { data: '글' });
+  assert.equal(connection.getValue(), 'a한글');
+  assert.equal(connection.getSnapshot().state.composition, null);
+  assert.deepEqual(transitions, [
+    'beforeinput',
+    'composition-start',
+    'composition-update',
+    'composition-commit',
+  ]);
+  connection.disconnect();
+  assert.equal(element.listeners.get('beforeinput')?.size ?? 0, 0);
+});
 
 test('DOM beforeinput and composition inputs map to semantic text events', () => {
   assert.deepEqual(toTextEvent({
@@ -95,4 +124,36 @@ test('DOM text rejects unsupported input and malformed external state atomically
 
 function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
+}
+
+function inputEvent(inputType, data = null) {
+  return { inputType, data, isComposing: false, preventDefault() {} };
+}
+
+class FakeTextElement {
+  value = '';
+  selectionStart = 0;
+  selectionEnd = 0;
+  selection = [0, 0];
+  listeners = new Map();
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+
+  setSelectionRange(start, end) {
+    this.selectionStart = start;
+    this.selectionEnd = end;
+    this.selection = [start, end];
+  }
 }

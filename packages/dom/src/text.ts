@@ -69,6 +69,33 @@ export interface TextController {
   ): RevisionResult<TextEditingState, never>;
 }
 
+export interface TextTransitionDetails {
+  readonly input: TextInput;
+  readonly result: RevisionResult<TextEditingState, never>;
+}
+
+export type TextElement = HTMLInputElement | HTMLTextAreaElement;
+
+export interface TextConnectionOptions {
+  readonly controller: TextController;
+  readonly element: TextElement;
+  readonly onTransition?: (details: TextTransitionDetails) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface TextConnection {
+  getSnapshot(): RevisionSnapshot<TextEditingState>;
+  getValue(): string;
+  syncControlledValues(
+    values: TextControlledValues,
+  ): Result<RevisionSnapshot<TextEditingState>>;
+  handleBeforeInput(event: InputEvent): boolean;
+  render(): void;
+  disconnect(): void;
+}
+
+export type TextOptions = TextControllerOptions & Omit<TextConnectionOptions, 'controller'>;
+
 export function createTextController(options: TextControllerOptions = {}): Result<TextController> {
   const requested = options.value !== undefined ? options.value : options.defaultValue;
   const initial = requested === undefined
@@ -78,6 +105,16 @@ export function createTextController(options: TextControllerOptions = {}): Resul
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new DOMTextController(options, snapshot.value) };
+}
+
+export function createText(options: TextOptions): Result<TextConnection> {
+  const controller = createTextController(options);
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectText({ ...options, controller: controller.value }) };
+}
+
+export function connectText(options: TextConnectionOptions): TextConnection {
+  return new DOMTextConnection(options);
 }
 
 export function toTextEvent(input: TextInput): TextEvent | null {
@@ -120,6 +157,162 @@ export function toTextEvent(input: TextInput): TextEvent | null {
   if (input.type === 'composition-commit') return Object.freeze({ type: input.type });
   if (input.type === 'composition-cancel') return Object.freeze({ type: input.type });
   return null;
+}
+
+class DOMTextConnection implements TextConnection {
+  readonly #controller: TextController;
+  readonly #element: TextElement;
+  readonly #onTransition: ((details: TextTransitionDetails) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  readonly #handleBeforeInputEvent: (event: Event) => void;
+  readonly #handleCompositionStart: (event: Event) => void;
+  readonly #handleCompositionUpdate: (event: Event) => void;
+  readonly #handleCompositionEnd: (event: Event) => void;
+  #composing = false;
+  #compositionStart = 0;
+
+  public constructor(options: TextConnectionOptions) {
+    this.#controller = options.controller;
+    this.#element = options.element;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+    this.#handleBeforeInputEvent = (event): void => {
+      if (this.handleBeforeInput(event as InputEvent)) event.preventDefault();
+    };
+    this.#handleCompositionStart = (event): void => {
+      this.#startComposition(event as CompositionEvent);
+    };
+    this.#handleCompositionUpdate = (event): void => {
+      this.#updateComposition(event as CompositionEvent);
+    };
+    this.#handleCompositionEnd = (event): void => {
+      this.#endComposition(event as CompositionEvent);
+    };
+    this.#element.addEventListener('beforeinput', this.#handleBeforeInputEvent);
+    this.#element.addEventListener('compositionstart', this.#handleCompositionStart);
+    this.#element.addEventListener('compositionupdate', this.#handleCompositionUpdate);
+    this.#element.addEventListener('compositionend', this.#handleCompositionEnd);
+    this.render();
+  }
+
+  public getSnapshot(): RevisionSnapshot<TextEditingState> {
+    return this.#controller.getSnapshot();
+  }
+
+  public getValue(): string {
+    return this.#controller.getSnapshot().state.snapshot.text;
+  }
+
+  public syncControlledValues(
+    values: TextControlledValues,
+  ): Result<RevisionSnapshot<TextEditingState>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) {
+      this.render();
+      this.#onUpdate?.();
+    }
+    return result;
+  }
+
+  public handleBeforeInput(event: InputEvent): boolean {
+    if (this.#composing || event.isComposing) return false;
+    const snapshot = this.#controller.getSnapshot().state.snapshot;
+    let start = this.#element.selectionStart ?? snapshot.selection.startCodeUnitOffset;
+    let end = this.#element.selectionEnd ?? snapshot.selection.endCodeUnitOffset;
+    if (start === end && event.inputType === 'deleteContentBackward') {
+      start = previousCodePointOffset(snapshot.text, start);
+    } else if (start === end && event.inputType === 'deleteContentForward') {
+      end = nextCodePointOffset(snapshot.text, end);
+    }
+    const insertion = event.inputType === 'insertText'
+      || event.inputType === 'insertFromPaste'
+      || event.inputType === 'insertReplacementText';
+    const deletion = event.inputType === 'deleteContentBackward'
+      || event.inputType === 'deleteContentForward'
+      || event.inputType === 'deleteByCut';
+    if (!insertion && !deletion) return false;
+    if (insertion && typeof event.data !== 'string') return false;
+    const text = deletion ? '' : event.data as string;
+    const offset = start + text.length;
+    const input: TextInput = {
+      type: 'beforeinput',
+      inputType: event.inputType,
+      data: event.data,
+      startCodeUnitOffset: start,
+      endCodeUnitOffset: end,
+      selection: collapsedSelection(offset),
+    };
+    const result = this.#dispatch(input);
+    if (result.ok) this.render();
+    return true;
+  }
+
+  public render(): void {
+    const snapshot = this.#controller.getSnapshot().state.snapshot;
+    if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
+    this.#element.setSelectionRange(
+      snapshot.selection.anchorCodeUnitOffset,
+      snapshot.selection.focusCodeUnitOffset,
+    );
+  }
+
+  public disconnect(): void {
+    this.#element.removeEventListener('beforeinput', this.#handleBeforeInputEvent);
+    this.#element.removeEventListener('compositionstart', this.#handleCompositionStart);
+    this.#element.removeEventListener('compositionupdate', this.#handleCompositionUpdate);
+    this.#element.removeEventListener('compositionend', this.#handleCompositionEnd);
+  }
+
+  #startComposition(event: CompositionEvent): void {
+    if (this.#composing) return;
+    const snapshot = this.#controller.getSnapshot().state.snapshot;
+    this.#compositionStart = this.#element.selectionStart
+      ?? snapshot.selection.startCodeUnitOffset;
+    const end = this.#element.selectionEnd
+      ?? snapshot.selection.endCodeUnitOffset;
+    this.#composing = true;
+    const text = event.data ?? '';
+    this.#dispatch({
+      type: 'composition-start',
+      text,
+      startCodeUnitOffset: this.#compositionStart,
+      endCodeUnitOffset: end,
+      selection: collapsedSelection(this.#compositionStart + text.length),
+    });
+  }
+
+  #updateComposition(event: CompositionEvent): void {
+    if (!this.#composing) return;
+    const text = event.data ?? '';
+    this.#dispatch({
+      type: 'composition-update',
+      text,
+      selection: collapsedSelection(this.#compositionStart + text.length),
+    });
+  }
+
+  #endComposition(event: CompositionEvent): void {
+    if (!this.#composing) return;
+    const current = this.#controller.getSnapshot().state.composition?.composingText ?? '';
+    const text = event.data ?? current;
+    if (text !== current) {
+      this.#dispatch({
+        type: 'composition-update',
+        text,
+        selection: collapsedSelection(this.#compositionStart + text.length),
+      });
+    }
+    this.#composing = false;
+    const result = this.#dispatch({ type: 'composition-commit' });
+    if (result.ok) this.render();
+  }
+
+  #dispatch(input: TextInput): RevisionResult<TextEditingState, never> {
+    const result = this.#controller.handleTextInput(input);
+    this.#onTransition?.(Object.freeze({ input, result }));
+    this.#onUpdate?.();
+    return result;
+  }
 }
 
 class DOMTextController implements TextController {
@@ -198,4 +391,22 @@ function controlledInputError(controlled: boolean): SectileError | null {
 
 function impossibleEffect(command: never): never {
   return command;
+}
+
+function collapsedSelection(offset: number): TextSelectionInput {
+  return Object.freeze({ anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset });
+}
+
+function previousCodePointOffset(text: string, offset: number): number {
+  if (offset <= 0) return 0;
+  const previous = text.charCodeAt(offset - 1);
+  if (previous >= 0xdc00 && previous <= 0xdfff && offset >= 2) return offset - 2;
+  return offset - 1;
+}
+
+function nextCodePointOffset(text: string, offset: number): number {
+  if (offset >= text.length) return text.length;
+  const current = text.charCodeAt(offset);
+  if (current >= 0xd800 && current <= 0xdbff && offset + 1 < text.length) return offset + 2;
+  return offset + 1;
 }

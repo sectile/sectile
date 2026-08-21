@@ -113,11 +113,18 @@ export {
   type TreeGridValueChangeDetails,
 } from './tree-grid.js';
 export {
+  connectText,
+  createText,
   createTextController,
   toTextEvent,
   type TextControlledValues,
+  type TextConnection,
+  type TextConnectionOptions,
   type TextController,
   type TextControllerOptions,
   type TextInput as DOMTextInput,
+  type TextElement,
+  type TextOptions,
+  type TextTransitionDetails,
   type TextValueChangeDetails,
 } from './text.js';

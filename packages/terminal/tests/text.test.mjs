@@ -2,7 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createTextEditingState } from '@sectile/primitives/text';
-import { createTextController, toTextEvent } from '../dist/text.js';
+import { createText, createTextController, toTextEvent } from '../dist/text.js';
+
+test('terminal text facade owns grapheme-safe keyboard editing', () => {
+  let updates = 0;
+  const connection = unwrap(createText({
+    defaultValue: unwrap(createTextEditingState('a😀', selection(3))),
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.handleKeyboardInput({ key: 'backspace' }), true);
+  assert.equal(connection.getValue(), 'a');
+  assert.equal(connection.handleKeyboardInput({ key: '한', text: '한' }), true);
+  assert.equal(connection.getValue(), 'a한');
+  assert.equal(connection.handleKeyboardInput({ key: 'left' }), false);
+  assert.equal(updates, 2);
+});
 
 test('terminal insert, replace, and delete inputs map to semantic replacement', () => {
   assert.deepEqual(toTextEvent({
