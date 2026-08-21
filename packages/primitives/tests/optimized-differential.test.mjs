@@ -4,6 +4,8 @@ import { createGrid } from '../.verification-dist/grid.js';
 import { createRange } from '../.verification-dist/range.js';
 import { createSequence } from '../.verification-dist/sequence.js';
 import { createTree } from '../.verification-dist/tree.js';
+import { createCursorState, reconcileCursor } from '../.verification-dist/internal/cursor.js';
+import { reconcileReferenceCursor } from '../.verification-dist/internal/reference/cursor.js';
 import { ReferenceGrid } from '../.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../.verification-dist/internal/reference/sequence.js';
@@ -19,6 +21,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyRange(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyGrid(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTree(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCursor(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -154,6 +157,20 @@ function verifyTree(rng, iteration) {
     const referenceExpansion = reference.normalizeExpansion(requested);
     assert.deepEqual(optimizedExpansion.ids, referenceExpansion.ids);
     assert.deepEqual(optimized.visible(optimizedExpansion).ids, reference.visible(referenceExpansion).ids);
+  }
+}
+
+function verifyCursor(rng, iteration) {
+  const size = rng.int(0, 80);
+  const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `c${iteration}-${index}`));
+  const domain = unwrap(createSequence(ids));
+  const current = rng.pick([null, ...ids, `missing-${iteration}`]);
+  const state = createCursorState(current);
+  for (const fallback of ['none', 'first', 'last']) {
+    assert.deepEqual(
+      reconcileCursor(state, domain, fallback),
+      reconcileReferenceCursor(state, domain, fallback),
+    );
   }
 }
 

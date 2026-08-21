@@ -3,7 +3,7 @@
 The default `npm run verify` gate performs:
 
 1. strict TypeScript type checking;
-2. reference law suites and 2,000-model differential tests;
+2. reference law suites and 2,000-model differential tests for structures and internal state theories;
 3. production build;
 4. source/required-public-surface/declaration/law/document checks;
 5. renderer-neutral output inspection;

@@ -6,6 +6,6 @@ The theory verifier is preserved byte-for-byte at `verification/theory-verifier.
 
 The stored theory output is `verification/theory-verification.json`. Its SHA-256 is `774d1f79119a212b0798245d7ce4e59542954a67f37f7bb15f927d240cf0b7ec`.
 
-The implementation verifier uses seed `0x5EC71E`, compares 2,000 generated models per structure, covers invalid construction vectors, and checks normal observations, query absence, projections, movement, scan rejection, exact range arithmetic, and tree expansion. The repository gate runs it twice, requires byte-identical output, and compares it with `verification/implementation-verification.json`.
+The implementation verifier uses seed `0x5EC71E`, compares 2,000 generated models per structure and internal cursor theory, covers invalid construction vectors, and checks normal observations, query absence, projections, movement, scan rejection, exact range arithmetic, tree expansion, and cursor reconciliation. The repository gate runs it twice, requires byte-identical output, and compares it with `verification/implementation-verification.json`.
 
 Reference implementations are compiled only for verification. Production declarations and output are independently fingerprinted and reproducibly rebuilt.

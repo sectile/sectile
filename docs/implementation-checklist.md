@@ -10,4 +10,5 @@
 - [x] Make the root runtime type-only.
 - [x] Fingerprint declarations and required API metadata.
 - [x] Verify package imports, platform neutrality, footprint, and reproducibility.
+- [x] Implement internal cursor state and reconciliation with independent law evidence.
 - [ ] Promote cursor, selection, expansion, or text only after their independent usage-evidence gates are met.

@@ -3,6 +3,8 @@ import { createGrid } from '../packages/primitives/.verification-dist/grid.js';
 import { createRange } from '../packages/primitives/.verification-dist/range.js';
 import { createSequence } from '../packages/primitives/.verification-dist/sequence.js';
 import { createTree } from '../packages/primitives/.verification-dist/tree.js';
+import { createCursorState, reconcileCursor } from '../packages/primitives/.verification-dist/internal/cursor.js';
+import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/cursor.js';
 import { ReferenceGrid } from '../packages/primitives/.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/sequence.js';
@@ -17,6 +19,7 @@ const counts = {
   range: { models: 0, valueObservations: 0, tickObservations: 0, ratioObservations: 0, snapObservations: 0, invalidConstructions: 0 },
   grid: { models: 0, cellObservations: 0, positionObservations: 0, projectionObservations: 0, movements: 0, invalidConstructions: 0 },
   tree: { models: 0, nodeObservations: 0, expansionObservations: 0, invalidConstructions: 0 },
+  cursor: { models: 0, reconciliations: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -205,6 +208,25 @@ for (const result of [
 ]) {
   assert.equal(result.ok, false);
   counts.tree.invalidConstructions += 1;
+}
+
+const cursorRng = createRng(seed ^ 0xc0ffee);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const size = cursorRng.int(0, 80);
+  const ids = cursorRng.shuffle(
+    Array.from({ length: size }, (_, index) => `c${iteration}-${index}`),
+  );
+  const domain = unwrap(createSequence(ids));
+  const current = cursorRng.pick([null, ...ids, `missing-${iteration}`]);
+  const state = createCursorState(current);
+  for (const fallback of ['none', 'first', 'last']) {
+    assert.deepEqual(
+      reconcileCursor(state, domain, fallback),
+      reconcileReferenceCursor(state, domain, fallback),
+    );
+    counts.cursor.reconciliations += 1;
+  }
+  counts.cursor.models += 1;
 }
 
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
