@@ -36,18 +36,25 @@ export {
   type KeyboardInput as CalendarKeyboardInput,
 } from './calendar.js';
 export {
+  connectCombobox,
+  createCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
   toComboboxTextEvent,
   type ComboboxControlledValues,
+  type ComboboxConnection,
+  type ComboboxConnectionOptions,
   type ComboboxController,
   type ComboboxControllerOptions,
   type ComboboxEffect,
   type ComboboxHighlightChangeDetails,
+  type ComboboxItem,
+  type ComboboxOptions,
   type ComboboxInputStateChangeDetails,
   type ComboboxOpenChangeDetails,
   type ComboboxValueChangeDetails,
+  type ComboboxTransitionDetails,
   type KeyboardInput as ComboboxKeyboardInput,
 } from './combobox.js';
 export {

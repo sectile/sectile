@@ -30,7 +30,7 @@ Calendar, slider, tree-view, and tree-grid controllers follow the same ownership
 
 `createText` owns printable, backspace, and delete key editing with grapheme-safe terminal boundaries. The lower-level controller still accepts explicit insert, replace, and delete ranges.
 
-The combobox controller reuses terminal text normalization for editable filtering and maps candidate movement to terminal highlight effects. Its controlled input field is the complete `inputState`, not a string fragment.
+`createCombobox` constructs its sequence and labels from `items`, reuses grapheme-safe terminal text input, and owns filtering, candidate movement, and acceptance. Its controlled input field remains the complete `inputState`.
 
 Node TTY applications can use `createTTYKeyboard` from `@sectile/terminal/node` instead of parsing escape sequences. It normalizes Alt+Arrow and common Alt+B/F variants into `TerminalKeyboardInput`. `connectTreeGrid` owns tree-grid edit buffering and rollback, while `fitTerminalText` from `@sectile/terminal/layout` clips and pads by rendered Unicode width.
 

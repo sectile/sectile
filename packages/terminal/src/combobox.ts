@@ -13,7 +13,7 @@ import {
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
-import type { Sequence } from '@sectile/primitives/sequence';
+import { createSequence, type Sequence } from '@sectile/primitives/sequence';
 import {
   createTextEditingState,
   type TextEditingState,
@@ -25,6 +25,7 @@ import {
 } from './internal/controller.js';
 import { toTextEvent, type TextInput } from './text.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
+import { toTerminalTextInput } from './internal/text-input.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
 
@@ -78,6 +79,8 @@ export interface ComboboxControlledValues<ID extends StableID = StableID> {
 }
 
 export interface ComboboxController<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>;
+  readonly labels: ReadonlyMap<ID, string>;
   getSnapshot(): RevisionSnapshot<ComboboxState<ID>>;
   syncControlledValues(
     values: ComboboxControlledValues<ID>,
@@ -91,6 +94,39 @@ export interface ComboboxController<ID extends StableID = StableID> {
     expectedRevision?: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
+
+export interface ComboboxItem<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly label: string;
+}
+
+export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
+  readonly event: ComboboxEvent;
+  readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
+}
+
+export interface ComboboxConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: ComboboxController<ID>;
+  readonly onAccept?: (id: ID) => void;
+  readonly onTransition?: (details: ComboboxTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface ComboboxConnection<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>;
+  readonly labels: ReadonlyMap<ID, string>;
+  getSnapshot(): RevisionSnapshot<ComboboxState<ID>>;
+  getInputValue(): string;
+  syncControlledValues(
+    values: ComboboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ComboboxState<ID>>>;
+  handleKeyboardInput(input: KeyboardInput): boolean;
+}
+
+export type ComboboxOptions<ID extends StableID = StableID> =
+  Omit<ComboboxControllerOptions<ID>, 'domain' | 'labels'>
+  & Omit<ComboboxConnectionOptions<ID>, 'controller'>
+  & { readonly items: readonly ComboboxItem<ID>[] };
 
 export function createComboboxController<ID extends StableID>(
   options: ComboboxControllerOptions<ID>,
@@ -118,6 +154,23 @@ export function createComboboxController<ID extends StableID>(
   return { ok: true, value: new TerminalComboboxController(options, snapshot.value) };
 }
 
+export function createCombobox<ID extends StableID>(
+  options: ComboboxOptions<ID>,
+): Result<ComboboxConnection<ID>> {
+  const domain = createSequence(options.items.map((item) => item.id));
+  if (!domain.ok) return domain;
+  const labels = new Map(options.items.map((item) => [item.id, item.label] as const));
+  const controller = createComboboxController({ ...options, domain: domain.value, labels });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectCombobox({ ...options, controller: controller.value }) };
+}
+
+export function connectCombobox<ID extends StableID>(
+  options: ComboboxConnectionOptions<ID>,
+): ComboboxConnection<ID> {
+  return new TerminalComboboxConnection(options);
+}
+
 export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
   if (input.key === 'down') return 'next';
   if (input.key === 'up') return 'previous';
@@ -139,7 +192,68 @@ export function toComboboxEffect<ID extends StableID>(
     : { type: 'submit-candidate', id: command.id });
 }
 
+class TerminalComboboxConnection<ID extends StableID> implements ComboboxConnection<ID> {
+  public readonly domain: Sequence<ID>;
+  public readonly labels: ReadonlyMap<ID, string>;
+  readonly #controller: ComboboxController<ID>;
+  readonly #onAccept: ((id: ID) => void) | undefined;
+  readonly #onTransition: ((details: ComboboxTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+
+  public constructor(options: ComboboxConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.domain = options.controller.domain;
+    this.labels = options.controller.labels;
+    this.#onAccept = options.onAccept;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+  }
+
+  public getSnapshot(): RevisionSnapshot<ComboboxState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public getInputValue(): string {
+    return this.#controller.getSnapshot().state.text.snapshot.text;
+  }
+
+  public syncControlledValues(
+    values: ComboboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ComboboxState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
+  }
+
+  public handleKeyboardInput(input: KeyboardInput): boolean {
+    const keyboardEvent = toComboboxEvent(input);
+    if (keyboardEvent !== null) {
+      const result = this.#controller.handleKeyboardInput(input);
+      if (result.ok) this.#applyEffects(result.commands);
+      this.#onTransition?.(Object.freeze({ event: keyboardEvent, result }));
+      this.#onUpdate?.();
+      return true;
+    }
+    const textInput = toTerminalTextInput(this.#controller.getSnapshot().state.text, input);
+    if (textInput === null) return false;
+    const event = toComboboxTextEvent(textInput);
+    const result = this.#controller.handleTextInput(textInput);
+    if (result.ok) this.#applyEffects(result.commands);
+    if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+
+  #applyEffects(effects: readonly ComboboxEffect<ID>[]): void {
+    for (const effect of effects) {
+      if (effect.type === 'submit-candidate') this.#onAccept?.(effect.id);
+    }
+  }
+}
+
 class TerminalComboboxController<ID extends StableID> implements ComboboxController<ID> {
+  public readonly domain: Sequence<ID>;
+  public readonly labels: ReadonlyMap<ID, string>;
   readonly #domain: Sequence<ID>;
   readonly #labels: ReadonlyMap<ID, string>;
   readonly #policies: ComboboxPolicies<ID>;
@@ -161,6 +275,8 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     options: ComboboxControllerOptions<ID>,
     snapshot: RevisionSnapshot<ComboboxState<ID>>,
   ) {
+    this.domain = options.domain;
+    this.labels = options.labels;
     this.#domain = options.domain;
     this.#labels = options.labels;
     this.#policies = options.policies ?? {};

@@ -19,6 +19,7 @@ import {
   synchronizeControllerState,
 } from './internal/controller.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
+import { toTerminalTextInput } from './internal/text-input.js';
 
 export type TextInput =
   | {
@@ -145,31 +146,8 @@ class TerminalTextConnection implements TextConnection {
   }
 
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
-    if (input.ctrlKey === true || input.altKey === true) return false;
-    const snapshot = this.#controller.getSnapshot().state.snapshot;
-    let start = snapshot.selection.startCodeUnitOffset;
-    let end = snapshot.selection.endCodeUnitOffset;
-    let text: string;
-    let type: TextInput['type'];
-    if (input.key === 'backspace') {
-      if (start === end) start = previousGraphemeOffset(snapshot.text, start);
-      text = '';
-      type = 'delete';
-    } else if (input.key === 'delete') {
-      if (start === end) end = nextGraphemeOffset(snapshot.text, end);
-      text = '';
-      type = 'delete';
-    } else if (input.text !== undefined && input.text.length > 0) {
-      text = input.text;
-      type = start === end ? 'insert' : 'replace';
-    } else {
-      return false;
-    }
-    const offset = start + text.length;
-    const selection = collapsedSelection(offset);
-    const semanticInput: TextInput = type === 'delete'
-      ? { type, startCodeUnitOffset: start, endCodeUnitOffset: end, selection }
-      : { type, text, startCodeUnitOffset: start, endCodeUnitOffset: end, selection };
+    const semanticInput = toTerminalTextInput(this.#controller.getSnapshot().state, input);
+    if (semanticInput === null) return false;
     const result = this.#controller.handleTextInput(semanticInput);
     this.#onTransition?.(Object.freeze({ input: semanticInput, result }));
     this.#onUpdate?.();
@@ -253,24 +231,4 @@ function controlledInputError(controlled: boolean): SectileError | null {
 
 function impossibleEffect(command: never): never {
   return command;
-}
-
-function collapsedSelection(offset: number): TextSelectionInput {
-  return Object.freeze({ anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset });
-}
-
-function previousGraphemeOffset(text: string, offset: number): number {
-  let previous = 0;
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index >= offset) break;
-    previous = segment.index;
-  }
-  return previous;
-}
-
-function nextGraphemeOffset(text: string, offset: number): number {
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index > offset) return segment.index;
-  }
-  return text.length;
 }

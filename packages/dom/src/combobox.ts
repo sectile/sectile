@@ -13,7 +13,7 @@ import {
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
-import type { Sequence } from '@sectile/primitives/sequence';
+import { createSequence, type Sequence } from '@sectile/primitives/sequence';
 import {
   createTextEditingState,
   type TextEditingState,
@@ -24,12 +24,15 @@ import {
   synchronizeControllerState,
 } from './internal/controller.js';
 import { toTextEvent, type TextInput } from './text.js';
+import type { TextElement } from './text.js';
+import { DOMTextElementBinding } from './internal/text-element.js';
 
 export interface KeyboardInput {
   readonly key: string;
   readonly altKey?: boolean;
   readonly ctrlKey?: boolean;
   readonly metaKey?: boolean;
+  readonly isComposing?: boolean;
 }
 
 export type ComboboxEffect<ID extends StableID = StableID> =
@@ -82,6 +85,8 @@ export interface ComboboxControlledValues<ID extends StableID = StableID> {
 }
 
 export interface ComboboxController<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>;
+  readonly labels: ReadonlyMap<ID, string>;
   getSnapshot(): RevisionSnapshot<ComboboxState<ID>>;
   syncControlledValues(
     values: ComboboxControlledValues<ID>,
@@ -95,6 +100,52 @@ export interface ComboboxController<ID extends StableID = StableID> {
     expectedRevision?: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
+
+export interface ComboboxItem<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly label: string;
+}
+
+export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
+  readonly event: ComboboxEvent;
+  readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
+}
+
+export interface ComboboxConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: ComboboxController<ID>;
+  readonly input: TextElement;
+  readonly popup?: HTMLElement;
+  readonly getItemElementID?: (id: ID) => string;
+  readonly onAccept?: (id: ID) => void;
+  readonly onTransition?: (details: ComboboxTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface ComboboxItemAttributes<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly disabled?: boolean;
+}
+
+export interface ComboboxConnection<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>;
+  readonly labels: ReadonlyMap<ID, string>;
+  getSnapshot(): RevisionSnapshot<ComboboxState<ID>>;
+  syncControlledValues(
+    values: ComboboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ComboboxState<ID>>>;
+  setInputAttributes(label?: string): void;
+  setPopupAttributes(label?: string): void;
+  setItemAttributes(element: HTMLElement, attributes: ComboboxItemAttributes<ID>): void;
+  handleKeyboardEvent(event: KeyboardEvent): boolean;
+  handleBeforeInput(event: InputEvent): boolean;
+  render(): void;
+  disconnect(): void;
+}
+
+export type ComboboxOptions<ID extends StableID = StableID> =
+  Omit<ComboboxControllerOptions<ID>, 'domain' | 'labels'>
+  & Omit<ComboboxConnectionOptions<ID>, 'controller'>
+  & { readonly items: readonly ComboboxItem<ID>[] };
 
 export function createComboboxController<ID extends StableID>(
   options: ComboboxControllerOptions<ID>,
@@ -122,7 +173,25 @@ export function createComboboxController<ID extends StableID>(
   return { ok: true, value: new DOMComboboxController(options, snapshot.value) };
 }
 
+export function createCombobox<ID extends StableID>(
+  options: ComboboxOptions<ID>,
+): Result<ComboboxConnection<ID>> {
+  const domain = createSequence(options.items.map((item) => item.id));
+  if (!domain.ok) return domain;
+  const labels = new Map(options.items.map((item) => [item.id, item.label] as const));
+  const controller = createComboboxController({ ...options, domain: domain.value, labels });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectCombobox({ ...options, controller: controller.value }) };
+}
+
+export function connectCombobox<ID extends StableID>(
+  options: ComboboxConnectionOptions<ID>,
+): ComboboxConnection<ID> {
+  return new DOMComboboxConnection(options);
+}
+
 export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
+  if (input.isComposing === true) return null;
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
   if (input.key === 'ArrowDown') return 'next';
   if (input.key === 'ArrowUp') return 'previous';
@@ -144,7 +213,150 @@ export function toComboboxEffect<ID extends StableID>(
     : { type: 'dispatch-accept', id: command.id });
 }
 
+class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<ID> {
+  public readonly domain: Sequence<ID>;
+  public readonly labels: ReadonlyMap<ID, string>;
+  readonly #controller: ComboboxController<ID>;
+  readonly #input: TextElement;
+  readonly #popup: HTMLElement | undefined;
+  readonly #getItemElementID: (id: ID) => string;
+  readonly #onAccept: ((id: ID) => void) | undefined;
+  readonly #onTransition: ((details: ComboboxTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  readonly #binding: DOMTextElementBinding;
+  readonly #handleKeydown: (event: Event) => void;
+
+  public constructor(options: ComboboxConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.domain = options.controller.domain;
+    this.labels = options.controller.labels;
+    this.#input = options.input;
+    this.#popup = options.popup;
+    this.#getItemElementID = options.getItemElementID
+      ?? ((id): string => `sectile-combobox-${String(id)}`);
+    this.#onAccept = options.onAccept;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+    this.#binding = new DOMTextElementBinding({
+      element: this.#input,
+      getState: () => this.#controller.getSnapshot().state.text,
+      dispatch: (input) => this.#dispatchTextInput(input).ok,
+    });
+    this.#handleKeydown = (event): void => {
+      if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault();
+    };
+    this.#input.addEventListener('keydown', this.#handleKeydown);
+    this.render();
+  }
+
+  public getSnapshot(): RevisionSnapshot<ComboboxState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: ComboboxControlledValues<ID>,
+  ): Result<RevisionSnapshot<ComboboxState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) {
+      this.render();
+      this.#onUpdate?.();
+    }
+    return result;
+  }
+
+  public setInputAttributes(label?: string): void {
+    const state = this.#controller.getSnapshot().state;
+    this.#input.setAttribute('role', 'combobox');
+    this.#input.setAttribute('aria-autocomplete', 'list');
+    this.#input.setAttribute('aria-expanded', String(state.popupOpen));
+    if (this.#popup?.id) this.#input.setAttribute('aria-controls', this.#popup.id);
+    else this.#input.removeAttribute('aria-controls');
+    if (state.cursor.current === null) this.#input.removeAttribute('aria-activedescendant');
+    else {
+      this.#input.setAttribute(
+        'aria-activedescendant',
+        this.#getItemElementID(state.cursor.current),
+      );
+    }
+    if (label === undefined) this.#input.removeAttribute('aria-label');
+    else this.#input.setAttribute('aria-label', label);
+  }
+
+  public setPopupAttributes(label?: string): void {
+    if (this.#popup === undefined) return;
+    this.#popup.setAttribute('role', 'listbox');
+    this.#popup.hidden = !this.#controller.getSnapshot().state.popupOpen;
+    if (label === undefined) this.#popup.removeAttribute('aria-label');
+    else this.#popup.setAttribute('aria-label', label);
+  }
+
+  public setItemAttributes(
+    element: HTMLElement,
+    attributes: ComboboxItemAttributes<ID>,
+  ): void {
+    const state = this.#controller.getSnapshot().state;
+    element.id = this.#getItemElementID(attributes.id);
+    element.dataset['comboboxId'] = String(attributes.id);
+    element.setAttribute('role', 'option');
+    element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
+    if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');
+    else element.removeAttribute('aria-disabled');
+  }
+
+  public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    const input: KeyboardInput = {
+      key: event.key,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      isComposing: event.isComposing || this.#binding.isComposing,
+    };
+    const semanticEvent = toComboboxEvent(input);
+    if (semanticEvent === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) this.#applyEffects(result.commands);
+    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.render();
+    this.#onUpdate?.();
+    return true;
+  }
+
+  public handleBeforeInput(event: InputEvent): boolean {
+    return this.#binding.handleBeforeInput(event);
+  }
+
+  public render(): void {
+    this.#binding.render();
+    this.setInputAttributes(this.#input.getAttribute('aria-label') ?? undefined);
+    this.setPopupAttributes(this.#popup?.getAttribute('aria-label') ?? undefined);
+  }
+
+  public disconnect(): void {
+    this.#binding.disconnect();
+    this.#input.removeEventListener('keydown', this.#handleKeydown);
+  }
+
+  #dispatchTextInput(
+    input: TextInput,
+  ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
+    const event = toComboboxTextEvent(input);
+    const result = this.#controller.handleTextInput(input);
+    if (result.ok) this.#applyEffects(result.commands);
+    if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
+    this.#onUpdate?.();
+    return result;
+  }
+
+  #applyEffects(effects: readonly ComboboxEffect<ID>[]): void {
+    for (const effect of effects) {
+      if (effect.type === 'dispatch-accept') this.#onAccept?.(effect.id);
+    }
+  }
+}
+
 class DOMComboboxController<ID extends StableID> implements ComboboxController<ID> {
+  public readonly domain: Sequence<ID>;
+  public readonly labels: ReadonlyMap<ID, string>;
   readonly #domain: Sequence<ID>;
   readonly #labels: ReadonlyMap<ID, string>;
   readonly #policies: ComboboxPolicies<ID>;
@@ -166,6 +378,8 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     options: ComboboxControllerOptions<ID>,
     snapshot: RevisionSnapshot<ComboboxState<ID>>,
   ) {
+    this.domain = options.domain;
+    this.labels = options.labels;
     this.#domain = options.domain;
     this.#labels = options.labels;
     this.#policies = options.policies ?? {};

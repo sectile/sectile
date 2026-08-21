@@ -4,11 +4,65 @@ import { unwrap } from '@sectile/primitives/result';
 import { createSequence } from '@sectile/primitives/sequence';
 import { createTextEditingState } from '@sectile/primitives/text';
 import {
+  createCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
   toComboboxTextEvent,
 } from '../dist/combobox.js';
+
+test('DOM combobox facade owns construction, text input, ARIA, navigation, and acceptance', () => {
+  const input = new FakeTextElement();
+  const popup = new FakeElement();
+  popup.id = 'cities-popup';
+  const accepted = [];
+  const connection = unwrap(createCombobox({
+    items: items(),
+    input,
+    popup,
+    policies: fixture().policies,
+    onAccept: (id) => accepted.push(id),
+  }));
+  connection.setInputAttributes('City');
+  connection.setPopupAttributes('Cities');
+  assert.equal(connection.domain.size, 3);
+  assert.equal(input.attributes.get('role'), 'combobox');
+  assert.equal(input.attributes.get('aria-controls'), 'cities-popup');
+  assert.equal(popup.attributes.get('role'), 'listbox');
+
+  assert.equal(connection.handleBeforeInput(inputEvent('insertText', 'al')), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'a');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
+  assert.equal(input.attributes.get('aria-activedescendant'), 'sectile-combobox-c');
+  const item = new FakeElement();
+  connection.setItemAttributes(item, { id: 'c' });
+  assert.equal(item.id, 'sectile-combobox-c');
+  assert.equal(item.attributes.get('role'), 'option');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
+  assert.deepEqual(accepted, ['c']);
+  assert.equal(input.value, 'Alpine');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter', { isComposing: true })), false);
+  connection.disconnect();
+
+  const imeInput = new FakeTextElement();
+  const imeConnection = unwrap(createCombobox({
+    items: items(),
+    input: imeInput,
+    policies: fixture().policies,
+  }));
+  imeInput.emit('compositionstart', { data: '' });
+  imeInput.emit('compositionupdate', { data: 'be' });
+  imeInput.emit('compositionend', { data: 'be' });
+  assert.equal(imeConnection.getSnapshot().state.text.snapshot.text, 'be');
+  assert.equal(imeConnection.getSnapshot().state.cursor.current, 'b');
+  imeConnection.disconnect();
+
+  const duplicate = createCombobox({
+    items: [{ id: 'a', label: 'A' }, { id: 'a', label: 'Again' }],
+    input: new FakeTextElement(),
+  });
+  assert.equal(duplicate.ok, false);
+});
 
 test('DOM keyboard and text inputs map onto combobox semantics', () => {
   assert.equal(toComboboxEvent({ key: 'ArrowDown' }), 'next');
@@ -161,6 +215,75 @@ function fixture() {
   };
 }
 
+function items() {
+  return [
+    { id: 'a', label: 'Alpha' },
+    { id: 'b', label: 'Beta' },
+    { id: 'c', label: 'Alpine' },
+  ];
+}
+
 function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
+}
+
+function inputEvent(inputType, data = null) {
+  return { inputType, data, isComposing: false, preventDefault() {} };
+}
+
+function keyboardEvent(key, overrides = {}) {
+  return {
+    key,
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    isComposing: false,
+    preventDefault() {},
+    ...overrides,
+  };
+}
+
+class FakeElement {
+  attributes = new Map();
+  dataset = {};
+  listeners = new Map();
+  id = '';
+  hidden = false;
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value);
+  }
+
+  getAttribute(name) {
+    return this.attributes.get(name) ?? null;
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+}
+
+class FakeTextElement extends FakeElement {
+  value = '';
+  selectionStart = 0;
+  selectionEnd = 0;
+
+  setSelectionRange(start, end) {
+    this.selectionStart = start;
+    this.selectionEnd = end;
+  }
 }

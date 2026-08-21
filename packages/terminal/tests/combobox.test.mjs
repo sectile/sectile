@@ -4,11 +4,38 @@ import { unwrap } from '@sectile/primitives/result';
 import { createSequence } from '@sectile/primitives/sequence';
 import { createTextEditingState } from '@sectile/primitives/text';
 import {
+  createCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
   toComboboxTextEvent,
 } from '../dist/combobox.js';
+
+test('terminal combobox facade owns construction, text editing, navigation, and acceptance', () => {
+  const accepted = [];
+  let updates = 0;
+  const connection = unwrap(createCombobox({
+    items: items(),
+    policies: fixture().policies,
+    onAccept: (id) => accepted.push(id),
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.domain.size, 3);
+  assert.equal(connection.handleKeyboardInput({ key: 'a', text: 'al' }), true);
+  assert.equal(connection.getInputValue(), 'al');
+  assert.equal(connection.handleKeyboardInput({ key: 'down' }), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'c');
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
+  assert.equal(connection.getInputValue(), 'Alpine');
+  assert.deepEqual(accepted, ['c']);
+  assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
+  assert.equal(updates, 3);
+
+  const duplicate = createCombobox({
+    items: [{ id: 'a', label: 'A' }, { id: 'a', label: 'Again' }],
+  });
+  assert.equal(duplicate.ok, false);
+});
 
 test('terminal keyboard and text inputs map onto combobox semantics', () => {
   assert.equal(toComboboxEvent({ key: 'down' }), 'next');
@@ -114,6 +141,14 @@ function fixture() {
       matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),
     },
   };
+}
+
+function items() {
+  return [
+    { id: 'a', label: 'Alpha' },
+    { id: 'b', label: 'Beta' },
+    { id: 'c', label: 'Alpine' },
+  ];
 }
 
 function selection(offset) {

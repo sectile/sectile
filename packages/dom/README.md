@@ -31,7 +31,7 @@ Calendar, slider, tree-view, and tree-grid controllers follow the same ownership
 
 `createText` binds an input or textarea, owns `beforeinput` rendering and the complete IME composition lifecycle, and keeps UTF-16 selections synchronized. The lower-level text controller remains available for custom elements.
 
-The combobox controller reuses the same DOM text normalization for editable filtering, keeps IME phases explicit, and maps candidate movement to active-descendant effects. Its controlled input field is the complete `inputState`, not a string fragment.
+`createCombobox` constructs its sequence and labels from `items`, reuses the same DOM text binding as `createText`, and owns input/popup ARIA, IME-safe filtering, candidate movement, and acceptance. Its controlled input field remains the complete `inputState`.
 
 `connectTreeGrid` binds a controller to a DOM root and owns keyboard dispatch, IME-safe Enter commits, edit rollback, focus movement, and tree-grid ARIA attributes. Consumers remain responsible for their data and rendered content, then call the connection's row, cell, and editor binding methods while rendering.
 
