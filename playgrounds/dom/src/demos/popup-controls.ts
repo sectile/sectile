@@ -61,6 +61,7 @@ function mountDialog(context: DemoContext, options: { readonly title: string; re
 
 function mountAlertDialog(context: DemoContext, title: string, controlled: boolean): DemoSession {
   const surface = popupSurface(title, 'This action cannot be undone. The safe action receives initial focus.');
+  surface.trigger.classList.add('button-with-icon');
   surface.trigger.replaceChildren(createElement(Trash2, { 'aria-hidden': 'true', height: 17, width: 17 }), 'Open confirmation');
   const confirm = document.createElement('button'); confirm.type = 'button'; confirm.textContent = 'Delete';
   surface.actions.append(surface.close, confirm);

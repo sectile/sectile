@@ -46,6 +46,7 @@ function mountActiveDemo(): void {
   const demo = demos.find((candidate) => candidate.id === activeID) ?? demos[0];
   if (demo === undefined) throw new Error('The DOM playground needs at least one demo.');
   activeID = demo.id;
+  workspace.dataset['demo'] = demo.id;
   description.textContent = demo.description;
   resetButton.setAttribute('aria-label', `Reset ${demo.label}`);
   resetButton.title = `Reset ${demo.label}`;
