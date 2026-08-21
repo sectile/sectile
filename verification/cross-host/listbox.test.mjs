@@ -1,11 +1,15 @@
 /* Cross-package evidence: two published host surfaces drive one semantic machine. */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DOMListboxEvent, stepDOMListboxAdapter } from '@sectile/dom/listbox';
-import { createListboxState } from '@sectile/primitives/listbox';
-import { createRevisionEnvelope } from '@sectile/primitives/revision';
+import {
+  createListboxController as createDOMListboxController,
+  toListboxEvent as toDOMListboxEvent,
+} from '@sectile/dom/listbox';
 import { createSequence } from '@sectile/primitives/sequence';
-import { stepTerminalListboxAdapter, terminalListboxEvent } from '@sectile/terminal/listbox';
+import {
+  createListboxController as createTerminalListboxController,
+  toListboxEvent as toTerminalListboxEvent,
+} from '@sectile/terminal/listbox';
 
 const INPUTS = [
   [{ key: 'ArrowDown' }, { key: 'down' }, 'next'],
@@ -17,41 +21,26 @@ const INPUTS = [
 
 test('DOM and terminal packages produce equivalent semantic traces', () => {
   const domain = unwrap(createSequence(['a', 'b', 'c']));
-  const initial = unwrap(createListboxState(domain));
-  let DOMEnvelope = unwrap(createRevisionEnvelope(initial));
-  let terminalEnvelope = unwrap(createRevisionEnvelope(initial));
   const policies = { boundary: 'stop', selectionFollowsFocus: false };
+  const DOMController = unwrap(createDOMListboxController({ domain, policies }));
+  const terminalController = unwrap(createTerminalListboxController({ domain, policies }));
 
   for (const [DOMInput, terminalInput, semantic] of INPUTS) {
-    assert.equal(DOMListboxEvent(DOMInput), semantic);
-    assert.equal(terminalListboxEvent(terminalInput), semantic);
-    const DOMResult = stepDOMListboxAdapter(
-      domain,
-      DOMEnvelope,
-      DOMEnvelope.revision,
-      DOMInput,
-      policies,
-    );
-    const terminalResult = stepTerminalListboxAdapter(
-      domain,
-      terminalEnvelope,
-      terminalEnvelope.revision,
-      terminalInput,
-      policies,
-    );
+    assert.equal(toDOMListboxEvent(DOMInput), semantic);
+    assert.equal(toTerminalListboxEvent(terminalInput), semantic);
+    const DOMResult = DOMController.handleKeyboardInput(DOMInput);
+    const terminalResult = terminalController.handleKeyboardInput(terminalInput);
     assert.deepEqual(observe(DOMResult), observe(terminalResult));
-    if (DOMResult.ok && terminalResult.ok) {
-      DOMEnvelope = DOMResult.envelope;
-      terminalEnvelope = terminalResult.envelope;
-    }
   }
-  assert.deepEqual(stateObservation(DOMEnvelope.state), {
+  const DOMSnapshot = DOMController.getSnapshot();
+  const terminalSnapshot = terminalController.getSnapshot();
+  assert.deepEqual(stateObservation(DOMSnapshot.state), {
     current: 'a',
     selected: [],
     anchor: null,
   });
-  assert.equal(DOMEnvelope.revision, 5);
-  assert.equal(terminalEnvelope.revision, 5);
+  assert.equal(DOMSnapshot.revision, 5);
+  assert.equal(terminalSnapshot.revision, 5);
 });
 
 test('DOM and terminal packages remain equivalent across 40,000 host transitions', () => {
@@ -61,37 +50,20 @@ test('DOM and terminal packages remain equivalent across 40,000 host transitions
     const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `a${iteration}-${index}`);
     const domain = unwrap(createSequence(ids));
     const eligible = new Set(ids.filter(() => rng.bool()));
-    const initial = unwrap(createListboxState(domain));
-    let DOMEnvelope = unwrap(createRevisionEnvelope(initial));
-    let terminalEnvelope = unwrap(createRevisionEnvelope(initial));
     const policies = {
       eligible: (id) => eligible.has(id),
       selectionFollowsFocus: rng.bool(),
       boundary: rng.pick(['stop', 'wrap']),
       maxScan: rng.int(0, ids.length + 2),
     };
+    const DOMController = unwrap(createDOMListboxController({ domain, policies }));
+    const terminalController = unwrap(createTerminalListboxController({ domain, policies }));
     for (let step = 0; step < 10; step += 1) {
       const [DOMInput, terminalInput] = rng.pick(INPUTS);
-      const DOMResult = stepDOMListboxAdapter(
-        domain,
-        DOMEnvelope,
-        DOMEnvelope.revision,
-        DOMInput,
-        policies,
-      );
-      const terminalResult = stepTerminalListboxAdapter(
-        domain,
-        terminalEnvelope,
-        terminalEnvelope.revision,
-        terminalInput,
-        policies,
-      );
+      const DOMResult = DOMController.handleKeyboardInput(DOMInput);
+      const terminalResult = terminalController.handleKeyboardInput(terminalInput);
       assert.deepEqual(observe(DOMResult), observe(terminalResult));
       transitions += 2;
-      if (DOMResult.ok && terminalResult.ok) {
-        DOMEnvelope = DOMResult.envelope;
-        terminalEnvelope = terminalResult.envelope;
-      }
     }
   }
   assert.equal(transitions, 40_000);
@@ -101,13 +73,13 @@ function observe(result) {
   return result.ok
     ? {
         ok: true,
-        revision: result.envelope.revision,
-        ...stateObservation(result.envelope.state),
+        revision: result.snapshot.revision,
+        ...stateObservation(result.snapshot.state),
         targets: result.commands.map((command) => command.id),
       }
     : {
         ok: false,
-        revision: result.envelope.revision,
+        revision: result.snapshot.revision,
         errorClass: result.error.class,
         errorCode: result.error.code,
       };

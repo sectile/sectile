@@ -13,23 +13,23 @@ import {
 } from '../../.verification-dist/internal/state/expansion.js';
 import {
   createListboxState,
-  stepListbox,
+  applyListboxEvent,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
   createCalendarState,
-  stepCalendar,
+  applyCalendarEvent,
 } from '../../.verification-dist/internal/composites/calendar.js';
 import {
-  acceptCombobox,
+  acceptComboboxCandidate,
   createComboboxState,
 } from '../../.verification-dist/internal/composites/combobox.js';
 import {
   createSliderState,
-  stepSlider,
+  applySliderEvent,
 } from '../../.verification-dist/internal/composites/slider.js';
 import {
   createTreeViewState,
-  stepTreeView,
+  applyTreeViewEvent,
 } from '../../.verification-dist/internal/composites/tree-view.js';
 import {
   clearSelection,
@@ -57,11 +57,11 @@ import {
 } from '../../.verification-dist/internal/reference/state/expansion.js';
 import {
   createReferenceListboxState,
-  referenceStepListbox,
+  applyReferenceListboxEvent,
 } from '../../.verification-dist/internal/reference/composites/listbox.js';
 import {
   createReferenceCalendarState,
-  referenceStepCalendar,
+  applyReferenceCalendarEvent,
 } from '../../.verification-dist/internal/reference/composites/calendar.js';
 import {
   createReferenceComboboxState,
@@ -69,11 +69,11 @@ import {
 } from '../../.verification-dist/internal/reference/composites/combobox.js';
 import {
   createReferenceSliderState,
-  referenceStepSlider,
+  applyReferenceSliderEvent,
 } from '../../.verification-dist/internal/reference/composites/slider.js';
 import {
   createReferenceTreeViewState,
-  referenceStepTreeView,
+  applyReferenceTreeViewEvent,
 } from '../../.verification-dist/internal/reference/composites/tree-view.js';
 import {
   ReferenceSelectionState,
@@ -97,7 +97,24 @@ import { ReferenceGrid } from '../../.verification-dist/internal/reference/struc
 import { ReferenceRange } from '../../.verification-dist/internal/reference/structures/range.js';
 import { ReferenceSequence } from '../../.verification-dist/internal/reference/structures/sequence.js';
 import { ReferenceTree } from '../../.verification-dist/internal/reference/structures/tree.js';
-import { createRng, deepNormalize, unwrap } from '../support.mjs';
+import {
+  calendarResultObservation,
+  comboboxResultObservation,
+  createRng,
+  decimal,
+  deepNormalize,
+  listboxResultObservation,
+  randomText,
+  referenceCalendarResultObservation,
+  referenceComboboxResultObservation,
+  referenceListboxResultObservation,
+  referenceSliderResultObservation,
+  referenceTreeViewResultObservation,
+  sliderResultObservation,
+  textObservation,
+  treeViewResultObservation,
+  unwrap,
+} from '../support.mjs';
 
 const SEED = 0x5ec71e;
 const ITERATIONS = 2_000;
@@ -469,8 +486,8 @@ function verifyListbox(rng, iteration) {
   };
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['next', 'previous', 'toggle', 'activate', 'clear']);
-    const left = stepListbox(domain, optimized, event, policies);
-    const right = referenceStepListbox(domain, reference, event, policies);
+    const left = applyListboxEvent(domain, optimized, event, policies);
+    const right = applyReferenceListboxEvent(domain, reference, event, policies);
     assert.deepEqual(listboxResultObservation(left), referenceListboxResultObservation(right));
     if (left.ok && right.ok) {
       optimized = left.value.state;
@@ -488,8 +505,8 @@ function verifySlider(rng) {
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['increment', 'decrement', 'page-up', 'page-down', 'home', 'end']);
     const page = rng.int(1, count + 4);
-    const left = stepSlider(range, optimized, event, page);
-    const right = referenceStepSlider(range, reference, event, page);
+    const left = applySliderEvent(range, optimized, event, page);
+    const right = applyReferenceSliderEvent(range, reference, event, page);
     assert.deepEqual(sliderResultObservation(left), referenceSliderResultObservation(right));
     if (left.ok && right.ok) {
       optimized = left.value.state;
@@ -523,8 +540,8 @@ function verifyCalendar(rng, iteration) {
   };
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page']);
-    const left = stepCalendar(grid, optimized, event, policies);
-    const right = referenceStepCalendar(grid, reference, event, policies);
+    const left = applyCalendarEvent(grid, optimized, event, policies);
+    const right = applyReferenceCalendarEvent(grid, reference, event, policies);
     assert.deepEqual(calendarResultObservation(left), referenceCalendarResultObservation(right));
     if (left.ok && right.ok) {
       optimized = left.value.state;
@@ -557,8 +574,8 @@ function verifyTreeView(rng, iteration) {
   let reference = createReferenceTreeViewState(tree, input);
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['next', 'previous', 'right', 'left', 'toggle-select']);
-    const left = stepTreeView(tree, optimized, event);
-    const right = referenceStepTreeView(tree, reference, event);
+    const left = applyTreeViewEvent(tree, optimized, event);
+    const right = applyReferenceTreeViewEvent(tree, reference, event);
     assert.deepEqual(treeViewResultObservation(left), referenceTreeViewResultObservation(right));
     if (left.ok && right.ok) {
       optimized = left.value.state;
@@ -586,146 +603,7 @@ function verifyCombobox(rng, iteration) {
   const optimized = unwrap(createComboboxState(domain, text, input));
   const reference = createReferenceComboboxState(domain, text, input);
   assert.deepEqual(
-    comboboxResultObservation(acceptCombobox(domain, labels, optimized)),
+    comboboxResultObservation(acceptComboboxCandidate(domain, labels, optimized)),
     referenceComboboxResultObservation(referenceAcceptCombobox(domain, labels, reference)),
   );
-}
-
-function listboxResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
-}
-
-function referenceListboxResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
-}
-
-function sliderResultObservation(result) {
-  return result.ok
-    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
-    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
-}
-
-function referenceSliderResultObservation(result) {
-  return result.ok
-    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
-    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
-}
-
-function calendarResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
-}
-
-function referenceCalendarResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
-}
-
-function treeViewResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        expanded: result.value.state.expansion.ids,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
-}
-
-function referenceTreeViewResultObservation(result) {
-  return result.ok
-    ? {
-        ok: true,
-        expanded: result.value.state.expansion.ids,
-        current: result.value.state.cursor.current,
-        selected: result.value.state.selection.selected,
-        anchor: result.value.state.selection.anchor,
-        commands: result.value.commands,
-      }
-    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
-}
-
-function comboboxResultObservation(result) {
-  return result.ok
-    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
-    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
-}
-
-function referenceComboboxResultObservation(result) {
-  return result.ok
-    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
-    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
-}
-
-function comboboxStateObservation(state) {
-  return {
-    text: textObservation(state.text),
-    popupOpen: state.popupOpen,
-    current: state.cursor.current,
-    selected: state.selection.selected,
-    anchor: state.selection.anchor,
-  };
-}
-
-function textObservation(state) {
-  return {
-    text: state.snapshot.text,
-    anchor: state.snapshot.selection.anchorCodeUnitOffset,
-    focus: state.snapshot.selection.focusCodeUnitOffset,
-    composition: state.composition === null
-      ? null
-      : {
-          baselineText: state.composition.baseline.text,
-          baselineAnchor: state.composition.baseline.selection.anchorCodeUnitOffset,
-          baselineFocus: state.composition.baseline.selection.focusCodeUnitOffset,
-          start: state.composition.startCodeUnitOffset,
-          end: state.composition.endCodeUnitOffset,
-          composingText: state.composition.composingText,
-        },
-  };
-}
-
-function randomText(rng, maxLength) {
-  const scalars = ['a', '가', '😀', '\u0301', '\u200d', '🇰', '🇷'];
-  return Array.from({ length: rng.int(0, maxLength + 1) }, () => rng.pick(scalars)).join('');
-}
-
-function decimal(integer, scale) {
-  const negative = integer < 0;
-  const digits = Math.abs(integer).toString().padStart(scale + 1, '0');
-  if (scale === 0) return `${negative ? '-' : ''}${digits}`;
-  const split = digits.length - scale;
-  return `${negative ? '-' : ''}${digits.slice(0, split)}.${digits.slice(split)}`;
 }

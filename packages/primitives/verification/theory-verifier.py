@@ -1127,8 +1127,8 @@ class RevisionedListbox:
 
 
 @dataclass(frozen=True)
-class RevisionedResult:
-    envelope: RevisionedListbox
+class RevisionResult:
+    snapshot: RevisionedListbox
     commands: tuple[tuple[str, Optional[int]], ...]
     error: Optional[str] = None
 
@@ -1136,29 +1136,29 @@ class RevisionedResult:
 def revisioned_listbox_step(
     domain: SequenceModel,
     eligible: frozenset[int],
-    envelope: RevisionedListbox,
+    snapshot: RevisionedListbox,
     expected_revision: int,
     event: str,
     selection_follows_focus: bool,
     boundary: str,
-) -> RevisionedResult:
-    if expected_revision != envelope.revision:
-        return RevisionedResult(envelope, (), "stale-revision")
+) -> RevisionResult:
+    if expected_revision != snapshot.revision:
+        return RevisionResult(snapshot, (), "stale-revision")
     result = listbox_step(
         domain,
         eligible,
-        envelope.state,
+        snapshot.state,
         event,
         selection_follows_focus,
         boundary,
     )
     if result.error is not None:
-        return RevisionedResult(envelope, (), result.error)
+        return RevisionResult(snapshot, (), result.error)
     # Every accepted semantic input advances the revision, including lawful
     # no-ops at a boundary. This gives adapters a total order for stale-input
     # rejection without leaking host event ordering into the core.
-    return RevisionedResult(
-        RevisionedListbox(envelope.revision + 1, result.state),
+    return RevisionResult(
+        RevisionedListbox(snapshot.revision + 1, result.state),
         result.commands,
         None,
     )
@@ -1396,28 +1396,28 @@ def verify_machine():
             )
             stale = revisioned_listbox_step(domain, eligible, base, 6, "next", False, "stop")
             assert stale.error == "stale-revision"
-            assert stale.envelope == base and stale.commands == ()
+            assert stale.snapshot == base and stale.commands == ()
             revision_cases += 1
 
             failed = revisioned_listbox_step(domain, eligible, base, 7, "toggle", False, "stop")
             assert failed.error == "no-cursor"
-            assert failed.envelope == base and failed.commands == ()
+            assert failed.snapshot == base and failed.commands == ()
             revision_cases += 1
 
             accepted = revisioned_listbox_step(domain, eligible, base, 7, "next", False, "stop")
             assert accepted.error is None
-            assert accepted.envelope.revision == 8
+            assert accepted.snapshot.revision == 8
             repeated_old = revisioned_listbox_step(
                 domain,
                 eligible,
-                accepted.envelope,
+                accepted.snapshot,
                 7,
                 "next",
                 False,
                 "stop",
             )
             assert repeated_old.error == "stale-revision"
-            assert repeated_old.envelope == accepted.envelope and repeated_old.commands == ()
+            assert repeated_old.snapshot == accepted.snapshot and repeated_old.commands == ()
             revision_cases += 2
 
     # Slider traces over every small quantized domain.

@@ -333,7 +333,7 @@ iff
 Stateful behavior는 internal representation보다 input trace와 observation을 기준으로 비교한다. 이는 transition system과 coalgebra의 behavioral 관점에 대응한다.[R5] 다음으로 명세한다.
 
 ```text
-step : State × SemanticInput
+applyEvent : State × SemanticEvent
     → Result<State × OrderedCommand*>
 ```
 
@@ -346,15 +346,15 @@ atomicity
 failure atomicity
 ordered commands
 explicit revision
-bounded transition work
+bounded event-application work
 ```
 
 ### 4.3 Revision wrapper
 
-Revision은 각 structure snapshot의 intrinsic field가 아니라 machine에 선택적으로 합성하는 standard wrapper다. Controlled 또는 asynchronous adapter는 다음 envelope를 사용한다.
+Revision은 각 structure snapshot의 intrinsic field가 아니라 machine에 선택적으로 합성하는 standard wrapper다. Controlled 또는 asynchronous adapter는 다음 snapshot를 사용한다.
 
 ```text
-Envelope<State> = {
+RevisionSnapshot<State> = {
   revision: Natural
   state: State
 }
@@ -419,14 +419,14 @@ child theory끼리 중복 authority 소유
 두 child reducer `A`, `B`가 각각 결정적이며 disjoint state authority를 소유한다고 하자.
 
 ```text
-stepA : SA × IA → Result<SA × CA*>
-stepB : SB × IB → Result<SB × CB*>
+applyEventA : SA × IA → Result<SA × CA*>
+applyEventB : SB × IB → Result<SB × CB*>
 ```
 
 Composite가 동일 input을 deterministic하게 두 input으로 분해하고, child 결과를 고정된 순서로 계산한 뒤 둘 다 성공할 때만 commit한다면:
 
 ```text
-stepAB : (SA × SB) × I
+applyEventAB : (SA × SB) × I
       → Result<(SA × SB) × (CA* ++ CB*)>
 ```
 
@@ -1593,7 +1593,7 @@ resource/cost contract가 없음
 typed Result/error
 well-formed stable string ID
 resource ceiling helpers
-revision envelope
+revision snapshot
 law registry
 ```
 
@@ -3130,8 +3130,8 @@ class RevisionedListbox:
 
 
 @dataclass(frozen=True)
-class RevisionedResult:
-    envelope: RevisionedListbox
+class RevisionResult:
+    snapshot: RevisionedListbox
     commands: tuple[tuple[str, Optional[int]], ...]
     error: Optional[str] = None
 
@@ -3139,29 +3139,29 @@ class RevisionedResult:
 def revisioned_listbox_step(
     domain: SequenceModel,
     eligible: frozenset[int],
-    envelope: RevisionedListbox,
+    snapshot: RevisionedListbox,
     expected_revision: int,
     event: str,
     selection_follows_focus: bool,
     boundary: str,
-) -> RevisionedResult:
-    if expected_revision != envelope.revision:
-        return RevisionedResult(envelope, (), "stale-revision")
+) -> RevisionResult:
+    if expected_revision != snapshot.revision:
+        return RevisionResult(snapshot, (), "stale-revision")
     result = listbox_step(
         domain,
         eligible,
-        envelope.state,
+        snapshot.state,
         event,
         selection_follows_focus,
         boundary,
     )
     if result.error is not None:
-        return RevisionedResult(envelope, (), result.error)
+        return RevisionResult(snapshot, (), result.error)
     # Every accepted semantic input advances the revision, including lawful
     # no-ops at a boundary. This gives adapters a total order for stale-input
     # rejection without leaking host event ordering into the core.
-    return RevisionedResult(
-        RevisionedListbox(envelope.revision + 1, result.state),
+    return RevisionResult(
+        RevisionedListbox(snapshot.revision + 1, result.state),
         result.commands,
         None,
     )
@@ -3399,28 +3399,28 @@ def verify_machine():
             )
             stale = revisioned_listbox_step(domain, eligible, base, 6, "next", False, "stop")
             assert stale.error == "stale-revision"
-            assert stale.envelope == base and stale.commands == ()
+            assert stale.snapshot == base and stale.commands == ()
             revision_cases += 1
 
             failed = revisioned_listbox_step(domain, eligible, base, 7, "toggle", False, "stop")
             assert failed.error == "no-cursor"
-            assert failed.envelope == base and failed.commands == ()
+            assert failed.snapshot == base and failed.commands == ()
             revision_cases += 1
 
             accepted = revisioned_listbox_step(domain, eligible, base, 7, "next", False, "stop")
             assert accepted.error is None
-            assert accepted.envelope.revision == 8
+            assert accepted.snapshot.revision == 8
             repeated_old = revisioned_listbox_step(
                 domain,
                 eligible,
-                accepted.envelope,
+                accepted.snapshot,
                 7,
                 "next",
                 False,
                 "stop",
             )
             assert repeated_old.error == "stale-revision"
-            assert repeated_old.envelope == accepted.envelope and repeated_old.commands == ()
+            assert repeated_old.snapshot == accepted.snapshot and repeated_old.commands == ()
             revision_cases += 2
 
     # Slider traces over every small quantized domain.

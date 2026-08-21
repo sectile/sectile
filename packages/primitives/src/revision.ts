@@ -1,8 +1,10 @@
 export {
-  createRevisionEnvelope,
-  stepRevisioned,
-  type MachineReducer,
-  type MachineTransition,
-  type RevisionEnvelope,
-  type RevisionedResult,
+  applyRevisionedEvent,
+  createRevisionSnapshot,
+  mapRevisionCommands,
+  rejectRevisionInput,
+  type EventReducer,
+  type MachineUpdate,
+  type RevisionSnapshot,
+  type RevisionResult,
 } from './internal/runtime/revision.js';

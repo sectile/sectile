@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createCalendarState,
-  stepCalendar,
+  applyCalendarEvent,
 } from '../../.verification-dist/internal/composites/calendar.js';
 import {
   createReferenceCalendarState,
-  referenceStepCalendar,
+  applyReferenceCalendarEvent,
 } from '../../.verification-dist/internal/reference/composites/calendar.js';
 import { createGrid } from '../../.verification-dist/structures/grid.js';
 import { powerset, unwrap } from '../support.mjs';
@@ -45,9 +45,9 @@ test('calendar composition matches its reference across bounded grid views', () 
               const policies = { eligible: (id) => eligible.has(id), boundary };
               models += 1;
               for (const event of EVENTS) {
-                const left = stepCalendar(grid, state, event, policies);
-                const repeated = stepCalendar(grid, state, event, policies);
-                const reference = referenceStepCalendar(grid, state, event, policies);
+                const left = applyCalendarEvent(grid, state, event, policies);
+                const repeated = applyCalendarEvent(grid, state, event, policies);
+                const reference = applyReferenceCalendarEvent(grid, state, event, policies);
                 assert.deepEqual(observe(left), observe(repeated));
                 assert.deepEqual(observe(left), observeReference(reference));
                 if (left.ok) assertState(left.value.state, ids);
@@ -73,26 +73,26 @@ test('calendar movement, selection, and page authority remain distinct', () => {
     ['d', 'e', 'f'],
   ]));
   const empty = unwrap(createCalendarState(grid));
-  const initial = unwrap(stepCalendar(grid, empty, 'right'));
+  const initial = unwrap(applyCalendarEvent(grid, empty, 'right'));
   assert.equal(initial.state.cursor.current, 'a');
   assert.deepEqual(initial.commands, [{ type: 'focus', id: 'a' }]);
 
-  const skipped = unwrap(stepCalendar(grid, initial.state, 'right', {
+  const skipped = unwrap(applyCalendarEvent(grid, initial.state, 'right', {
     eligible: (id) => id === 'c',
   }));
   assert.equal(skipped.state.cursor.current, 'c');
   assert.deepEqual(skipped.state.selection.selected, []);
 
-  const selected = unwrap(stepCalendar(grid, skipped.state, 'select'));
+  const selected = unwrap(applyCalendarEvent(grid, skipped.state, 'select'));
   assert.deepEqual(selected.state.selection.selected, ['c']);
   assert.equal(selected.state.selection.anchor, 'c');
   assert.deepEqual(selected.commands, []);
 
-  const down = unwrap(stepCalendar(grid, selected.state, 'down'));
+  const down = unwrap(applyCalendarEvent(grid, selected.state, 'down'));
   assert.equal(down.state.cursor.current, 'f');
   assert.deepEqual(down.state.selection.selected, ['c']);
 
-  const page = unwrap(stepCalendar(grid, down.state, 'next-page'));
+  const page = unwrap(applyCalendarEvent(grid, down.state, 'next-page'));
   assert.equal(page.state, down.state);
   assert.deepEqual(page.commands, [{ type: 'request-page', direction: 1, from: 'f' }]);
   assert.equal(Object.isFrozen(page.commands[0]), true);
@@ -108,13 +108,13 @@ test('calendar rejects malformed state and policies without partial effects', ()
     cursor: Object.freeze({ current: 'missing' }),
     selection: empty.selection,
   });
-  assert.equal(stepCalendar(grid, invalidState, 'right').error.code, 'calendar-cursor-outside-grid');
-  assert.equal(stepCalendar(grid, empty, 'select').error.code, 'no-cursor');
-  assert.equal(stepCalendar(grid, empty, 'unknown').error.code, 'invalid-calendar-event');
-  assert.equal(stepCalendar(grid, empty, 'right', { boundary: 'wrap' }).error.code, 'invalid-calendar-boundary');
-  assert.equal(stepCalendar(grid, empty, 'right', { eligible: true }).error.code, 'invalid-eligibility-policy');
+  assert.equal(applyCalendarEvent(grid, invalidState, 'right').error.code, 'calendar-cursor-outside-grid');
+  assert.equal(applyCalendarEvent(grid, empty, 'select').error.code, 'no-cursor');
+  assert.equal(applyCalendarEvent(grid, empty, 'unknown').error.code, 'invalid-calendar-event');
+  assert.equal(applyCalendarEvent(grid, empty, 'right', { boundary: 'wrap' }).error.code, 'invalid-calendar-boundary');
+  assert.equal(applyCalendarEvent(grid, empty, 'right', { eligible: true }).error.code, 'invalid-eligibility-policy');
 
-  const ceiling = stepCalendar(grid, empty, 'right', {
+  const ceiling = applyCalendarEvent(grid, empty, 'right', {
     eligible: (id) => id === 'b',
     maxScan: 1,
   });

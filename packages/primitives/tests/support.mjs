@@ -48,6 +48,137 @@ export function deepNormalize(value) {
   );
 }
 
+export function selectionObservation(state) {
+  return { selected: state.selected, anchor: state.anchor };
+}
+
+export function listboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : resultObservationError(result);
+}
+
+export function referenceListboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : referenceResultObservationError(result);
+}
+
+export function sliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : resultObservationError(result);
+}
+
+export function referenceSliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : referenceResultObservationError(result);
+}
+
+export function calendarResultObservation(result) {
+  return result.ok
+    ? selectionUpdateObservation(result.value)
+    : resultObservationError(result);
+}
+
+export function referenceCalendarResultObservation(result) {
+  return result.ok
+    ? selectionUpdateObservation(result.value)
+    : referenceResultObservationError(result);
+}
+
+export function treeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : resultObservationError(result);
+}
+
+export function referenceTreeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : referenceResultObservationError(result);
+}
+
+export function comboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : resultObservationError(result);
+}
+
+export function referenceComboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : referenceResultObservationError(result);
+}
+
+export function comboboxStateObservation(state) {
+  return {
+    text: textObservation(state.text),
+    popupOpen: state.popupOpen,
+    current: state.cursor.current,
+    selected: state.selection.selected,
+    anchor: state.selection.anchor,
+  };
+}
+
+export function textObservation(state) {
+  return {
+    text: state.snapshot.text,
+    anchor: state.snapshot.selection.anchorCodeUnitOffset,
+    focus: state.snapshot.selection.focusCodeUnitOffset,
+    composition: state.composition === null
+      ? null
+      : {
+          baselineText: state.composition.baseline.text,
+          baselineAnchor: state.composition.baseline.selection.anchorCodeUnitOffset,
+          baselineFocus: state.composition.baseline.selection.focusCodeUnitOffset,
+          start: state.composition.startCodeUnitOffset,
+          end: state.composition.endCodeUnitOffset,
+          composingText: state.composition.composingText,
+        },
+  };
+}
+
+export function randomText(rng, maxLength) {
+  const scalars = ['a', '가', '😀', '\u0301', '\u200d', '🇰', '🇷'];
+  return Array.from({ length: rng.int(0, maxLength + 1) }, () => rng.pick(scalars)).join('');
+}
+
+export function decimal(integer, scale) {
+  const negative = integer < 0;
+  const digits = Math.abs(integer).toString().padStart(scale + 1, '0');
+  if (scale === 0) return `${negative ? '-' : ''}${digits}`;
+  const split = digits.length - scale;
+  return `${negative ? '-' : ''}${digits.slice(0, split)}.${digits.slice(split)}`;
+}
+
 export function createRng(seed = 0x5ec71e) {
   let state = seed >>> 0;
   return {
@@ -131,4 +262,22 @@ function cartesian(groups) {
     result = next;
   }
   return result;
+}
+
+function selectionUpdateObservation(update) {
+  return {
+    ok: true,
+    current: update.state.cursor.current,
+    selected: update.state.selection.selected,
+    anchor: update.state.selection.anchor,
+    commands: update.commands,
+  };
+}
+
+function resultObservationError(result) {
+  return { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceResultObservationError(result) {
+  return { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }

@@ -16,9 +16,9 @@ try {
     import { createGrid } from '@sectile/primitives/grid';
     import { createTree } from '@sectile/primitives/tree';
     import { createListboxState } from '@sectile/primitives/listbox';
-    import { createRevisionEnvelope } from '@sectile/primitives/revision';
+    import { createRevisionSnapshot } from '@sectile/primitives/revision';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createRevisionEnvelope]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createRevisionSnapshot]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -31,14 +31,14 @@ try {
     import { createGrid, type Grid } from '@sectile/primitives/grid';
     import { createTree, type Tree } from '@sectile/primitives/tree';
     import { createListboxState, type ListboxState } from '@sectile/primitives/listbox';
-    import { createRevisionEnvelope, type RevisionEnvelope } from '@sectile/primitives/revision';
+    import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
     const a: Result<Sequence<string>> = createSequence(['a']);
     const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
     const c: Result<Grid<string>> = createGrid([['a']]);
     const d: Result<Tree<string>> = createTree([{ id: 'a', parentID: null }]);
     if (!a.ok) throw new Error(a.error.message);
     const e: Result<ListboxState<string>> = createListboxState(a.value);
-    const f: Result<RevisionEnvelope<string>> = createRevisionEnvelope('state');
+    const f: Result<RevisionSnapshot<string>> = createRevisionSnapshot('state');
     void [a, b, c, d, e, f];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({

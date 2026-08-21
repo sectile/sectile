@@ -7,8 +7,9 @@ import type {
 } from '../../shared.js';
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { IndexedSequence } from '../kernel/indexed-sequence.js';
-import { fail, freezeArray, normalizeMaxScan, ok, resourceError } from '../kernel/foundation.js';
+import { fail, ok } from '../kernel/foundation.js';
+import { findEligibleFromEdge, IndexedSequence } from '../kernel/indexed-sequence.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
   createSelectionState,
@@ -39,7 +40,7 @@ export interface CalendarPolicies<ID extends StableID = StableID> {
   readonly maxScan?: number;
 }
 
-export interface CalendarTransition<ID extends StableID = StableID> {
+export interface CalendarUpdate<ID extends StableID = StableID> {
   readonly state: CalendarState<ID>;
   readonly commands: readonly CalendarCommand<ID>[];
 }
@@ -63,12 +64,12 @@ export function createCalendarState<ID extends StableID>(
   return ok(calendarState(createCursorState(current), selection.value));
 }
 
-export function stepCalendar<ID extends StableID>(
+export function applyCalendarEvent<ID extends StableID>(
   grid: Grid<ID>,
   state: CalendarState<ID>,
   event: CalendarEvent,
   policies: CalendarPolicies<ID> = {},
-): Result<CalendarTransition<ID>> {
+): Result<CalendarUpdate<ID>> {
   const domain = calendarDomain(grid);
   const stateError = validateCalendarState(domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
@@ -98,7 +99,7 @@ export function stepCalendar<ID extends StableID>(
   }
 
   if (event === 'previous-page' || event === 'next-page') {
-    return accepted(state, [{
+    return createMachineUpdate(state, [{
       type: 'request-page',
       direction: event === 'previous-page' ? -1 : 1,
       from: state.cursor.current,
@@ -110,7 +111,7 @@ export function stepCalendar<ID extends StableID>(
       return fail('transition-rejection', 'no-cursor', 'Calendar selection requires a cursor.');
     }
     const selection = selectOne(state.selection, current, domain);
-    return accepted(
+    return createMachineUpdate(
       selection === state.selection ? state : calendarState(state.cursor, selection),
     );
   }
@@ -119,11 +120,13 @@ export function stepCalendar<ID extends StableID>(
   const current = state.cursor.current;
   let target: ID | null;
   if (current === null) {
-    const initial = initialEligible(
+    const initial = findEligibleFromEdge(
       domain,
       event === 'right' || event === 'down' ? 1 : -1,
-      eligible,
-      policies.maxScan,
+      {
+        eligible,
+        ...(policies.maxScan === undefined ? {} : { maxScan: policies.maxScan }),
+      },
     );
     if (!initial.ok) return initial;
     target = initial.value;
@@ -135,8 +138,8 @@ export function stepCalendar<ID extends StableID>(
     if (movement.kind === 'resource-rejected') return { ok: false, error: movement.error };
     target = movement.kind === 'found' ? movement.id : null;
   }
-  if (target === null) return accepted(state);
-  return accepted(
+  if (target === null) return createMachineUpdate(state);
+  return createMachineUpdate(
     calendarState(createCursorState(target), state.selection),
     [{ type: 'focus', id: target }],
   );
@@ -151,35 +154,6 @@ function calendarDomain<ID extends StableID>(grid: Grid<ID>): Sequence<ID> {
     }
   }
   return new IndexedSequence(ids) as Sequence<ID>;
-}
-
-function initialEligible<ID extends StableID>(
-  domain: Sequence<ID>,
-  direction: -1 | 1,
-  eligible: (id: ID) => boolean,
-  requestedMaxScan: number | undefined,
-): Result<ID | null> {
-  const maxScan = normalizeMaxScan(requestedMaxScan);
-  if (typeof maxScan !== 'number') return { ok: false, error: maxScan };
-  let scanned = 0;
-  let index = direction > 0 ? 0 : domain.size - 1;
-  while (index >= 0 && index < domain.size) {
-    if (scanned === maxScan) {
-      return {
-        ok: false,
-        error: resourceError(
-          'scan-ceiling-reached',
-          'Calendar movement reached maxScan before its semantic result was determined.',
-          { maxScan },
-        ),
-      };
-    }
-    const id = domain.at(index);
-    scanned += 1;
-    if (id !== null && eligible(id)) return ok(id);
-    index += direction;
-  }
-  return ok(null);
 }
 
 function validateCalendarState<ID extends StableID>(
@@ -227,16 +201,6 @@ function calendarState<ID extends StableID>(
   selection: SelectionState<ID>,
 ): CalendarState<ID> {
   return Object.freeze({ cursor, selection });
-}
-
-function accepted<ID extends StableID>(
-  state: CalendarState<ID>,
-  commands: readonly CalendarCommand<ID>[] = [],
-): Result<CalendarTransition<ID>> {
-  return ok(Object.freeze({
-    state,
-    commands: freezeArray(commands.map((command) => Object.freeze({ ...command }))),
-  }));
 }
 
 function isCalendarEvent(value: string): value is CalendarEvent {

@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createListboxState,
-  stepListbox,
+  applyListboxEvent,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
-  createRevisionEnvelope,
-  stepRevisioned,
+  createRevisionSnapshot,
+  applyRevisionedEvent,
 } from '../../.verification-dist/internal/runtime/revision.js';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { powerset, unwrap } from '../support.mjs';
@@ -20,44 +20,44 @@ test('revision wrapper reproduces all accepted stale and failure-atomic cases', 
     for (const eligibleIDs of powerset(ids)) {
       const eligible = new Set(eligibleIDs);
       const state = unwrap(createListboxState(domain));
-      const base = unwrap(createRevisionEnvelope(state, 7));
+      const base = unwrap(createRevisionSnapshot(state, 7));
       let calls = 0;
       const reducer = (current, event) => {
         calls += 1;
-        return stepListbox(domain, current, event, {
+        return applyListboxEvent(domain, current, event, {
           eligible: (id) => eligible.has(id),
           selectionFollowsFocus: false,
           boundary: 'stop',
         });
       };
 
-      const stale = stepRevisioned(base, 6, 'next', reducer);
+      const stale = applyRevisionedEvent(base, 6, 'next', reducer);
       assert.equal(stale.ok, false);
       assert.equal(stale.error.code, 'stale-revision');
-      assert.equal(stale.envelope, base);
+      assert.equal(stale.snapshot, base);
       assert.deepEqual(stale.commands, []);
       assert.equal(calls, 0);
       cases += 1;
 
-      const failed = stepRevisioned(base, 7, 'toggle', reducer);
+      const failed = applyRevisionedEvent(base, 7, 'toggle', reducer);
       assert.equal(failed.ok, false);
       assert.equal(failed.error.code, 'no-cursor');
-      assert.equal(failed.envelope, base);
+      assert.equal(failed.snapshot, base);
       assert.deepEqual(failed.commands, []);
       assert.equal(calls, 1);
       cases += 1;
 
-      const accepted = stepRevisioned(base, 7, 'next', reducer);
+      const accepted = applyRevisionedEvent(base, 7, 'next', reducer);
       assert.equal(accepted.ok, true);
-      assert.equal(accepted.envelope.revision, 8);
-      assert.equal(Object.isFrozen(accepted.envelope), true);
+      assert.equal(accepted.snapshot.revision, 8);
+      assert.equal(Object.isFrozen(accepted.snapshot), true);
       assert.equal(Object.isFrozen(accepted.commands), true);
       cases += 1;
 
-      const repeated = stepRevisioned(accepted.envelope, 7, 'next', reducer);
+      const repeated = applyRevisionedEvent(accepted.snapshot, 7, 'next', reducer);
       assert.equal(repeated.ok, false);
       assert.equal(repeated.error.code, 'stale-revision');
-      assert.equal(repeated.envelope, accepted.envelope);
+      assert.equal(repeated.snapshot, accepted.snapshot);
       assert.deepEqual(repeated.commands, []);
       cases += 1;
     }
@@ -68,27 +68,27 @@ test('revision wrapper reproduces all accepted stale and failure-atomic cases', 
 test('accepted semantic no-ops still advance exactly one revision', () => {
   const domain = unwrap(createSequence(['a']));
   const state = unwrap(createListboxState(domain, { current: 'a' }));
-  const base = unwrap(createRevisionEnvelope(state, 3));
-  const result = stepRevisioned(base, 3, 'next', (current, event) =>
-    stepListbox(domain, current, event, { boundary: 'stop' }));
+  const base = unwrap(createRevisionSnapshot(state, 3));
+  const result = applyRevisionedEvent(base, 3, 'next', (current, event) =>
+    applyListboxEvent(domain, current, event, { boundary: 'stop' }));
   assert.equal(result.ok, true);
-  assert.equal(result.envelope.revision, 4);
-  assert.equal(result.envelope.state, state);
+  assert.equal(result.snapshot.revision, 4);
+  assert.equal(result.snapshot.state, state);
   assert.deepEqual(result.commands, []);
 });
 
 test('invalid and exhausted revisions reject before reducer execution', () => {
   const state = Object.freeze({ value: 1 });
-  assert.equal(createRevisionEnvelope(state, -1).error.code, 'invalid-revision');
-  const exhausted = unwrap(createRevisionEnvelope(state, Number.MAX_SAFE_INTEGER));
+  assert.equal(createRevisionSnapshot(state, -1).error.code, 'invalid-revision');
+  const exhausted = unwrap(createRevisionSnapshot(state, Number.MAX_SAFE_INTEGER));
   let calls = 0;
-  const result = stepRevisioned(exhausted, Number.MAX_SAFE_INTEGER, 'input', () => {
+  const result = applyRevisionedEvent(exhausted, Number.MAX_SAFE_INTEGER, 'input', () => {
     calls += 1;
     throw new Error('must not run');
   });
   assert.equal(result.ok, false);
   assert.equal(result.error.class, 'resource-rejection');
   assert.equal(result.error.code, 'revision-ceiling-reached');
-  assert.equal(result.envelope, exhausted);
+  assert.equal(result.snapshot, exhausted);
   assert.equal(calls, 0);
 });

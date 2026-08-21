@@ -1,41 +1,71 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { stepTerminalListboxAdapter, terminalListboxEffect, terminalListboxEvent } from '../dist/listbox.js';
-import { createListboxState } from '@sectile/primitives/listbox';
-import { createRevisionEnvelope } from '@sectile/primitives/revision';
+import {
+  createListboxController,
+  toListboxEffect,
+  toListboxEvent,
+} from '../dist/listbox.js';
 import { createSequence } from '@sectile/primitives/sequence';
 
 test('terminal keys map onto listbox semantic events', () => {
-  assert.equal(terminalListboxEvent({ key: 'down' }), 'next');
-  assert.equal(terminalListboxEvent({ key: 'up' }), 'previous');
-  assert.equal(terminalListboxEvent({ key: 'space' }), 'toggle');
-  assert.equal(terminalListboxEvent({ key: 'enter' }), 'activate');
-  assert.equal(terminalListboxEvent({ key: 'escape' }), 'clear');
-  assert.equal(terminalListboxEvent({ key: 'tab' }), null);
+  assert.equal(toListboxEvent({ key: 'down' }), 'next');
+  assert.equal(toListboxEvent({ key: 'up' }), 'previous');
+  assert.equal(toListboxEvent({ key: 'space' }), 'toggle');
+  assert.equal(toListboxEvent({ key: 'enter' }), 'activate');
+  assert.equal(toListboxEvent({ key: 'escape' }), 'clear');
+  assert.equal(toListboxEvent({ key: 'tab' }), null);
 });
 
 test('terminal commands project into terminal-specific effects', () => {
-  assert.deepEqual(terminalListboxEffect({ type: 'focus', id: 'a' }), {
+  assert.deepEqual(toListboxEffect({ type: 'focus', id: 'a' }), {
     type: 'move-highlight',
     id: 'a',
   });
-  assert.deepEqual(terminalListboxEffect({ type: 'activate', id: 'a' }), {
+  assert.deepEqual(toListboxEffect({ type: 'activate', id: 'a' }), {
     type: 'submit-item',
     id: 'a',
   });
 });
 
+test('terminal controller supports mixed controlled and uncontrolled state', () => {
+  const domain = unwrap(createSequence(['a', 'b']));
+  const highlights = [];
+  const controller = unwrap(createListboxController({
+    domain,
+    value: [],
+    defaultHighlightedValue: 'a',
+    onHighlightedValueChange(change) {
+      highlights.push(change);
+    },
+  }));
+
+  const moved = controller.handleKeyboardInput({ key: 'down' });
+  assert.equal(moved.ok, true);
+  assert.equal(moved.snapshot.state.cursor.current, 'b');
+  assert.deepEqual(moved.commands, [{ type: 'move-highlight', id: 'b' }]);
+  assert.deepEqual(highlights, [{ value: 'b', previousValue: 'a' }]);
+
+  const toggled = controller.handleKeyboardInput({ key: 'space' });
+  assert.equal(toggled.ok, true);
+  assert.deepEqual(toggled.snapshot.state.selection.selected, []);
+
+  const synchronized = unwrap(controller.syncControlledValues({ value: ['b'] }));
+  assert.deepEqual(synchronized.state.selection.selected, ['b']);
+  assert.equal(synchronized.state.cursor.current, 'b');
+});
+
 test('unsupported and stale terminal inputs are failure-atomic', () => {
   const domain = unwrap(createSequence(['a']));
-  const initial = unwrap(createRevisionEnvelope(unwrap(createListboxState(domain))));
-  const unsupported = stepTerminalListboxAdapter(domain, initial, 0, { key: 'tab' });
+  const controller = unwrap(createListboxController({ domain }));
+  const initial = controller.getSnapshot();
+  const unsupported = controller.handleKeyboardInput({ key: 'tab' });
   assert.equal(unsupported.ok, false);
-  assert.equal(unsupported.envelope, initial);
+  assert.equal(unsupported.snapshot, initial);
   assert.deepEqual(unsupported.commands, []);
-  const stale = stepTerminalListboxAdapter(domain, initial, 1, { key: 'down' });
+  const stale = controller.handleKeyboardInput({ key: 'down' }, 1);
   assert.equal(stale.ok, false);
   assert.equal(stale.error.code, 'stale-revision');
-  assert.equal(stale.envelope, initial);
+  assert.equal(stale.snapshot, initial);
 });
 
 function unwrap(result) {

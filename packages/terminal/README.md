@@ -1,7 +1,18 @@
 # @sectile/terminal
 
-Terminal host mappings for Sectile semantic machines. This package depends only on exported `@sectile/primitives` subpaths and owns its build and tests.
+Terminal controllers for Sectile semantic machines. This package depends only on exported `@sectile/primitives` subpaths and owns its state, build, and tests.
 
 ```ts
-import { stepTerminalListboxAdapter } from '@sectile/terminal/listbox';
+import { createListboxController } from '@sectile/terminal/listbox';
+
+const result = createListboxController({
+  domain,
+  defaultValue: [],
+  defaultHighlightedValue: null,
+});
+
+if (!result.ok) throw new Error(result.error.message);
+const controller = result.value;
 ```
+
+Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.

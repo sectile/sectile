@@ -1,6 +1,7 @@
 import type { Result } from '../../shared.js';
 import type { QuantizedRange } from '../../structures/range.js';
-import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import { fail, ok } from '../kernel/foundation.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 
 export type SliderEvent =
   | 'increment'
@@ -19,7 +20,7 @@ export interface SliderCommand {
   readonly tick: number;
 }
 
-export interface SliderTransition {
+export interface SliderUpdate {
   readonly state: SliderState;
   readonly commands: readonly SliderCommand[];
 }
@@ -39,12 +40,12 @@ export function createSliderState(
   return ok(sliderState(tick));
 }
 
-export function stepSlider(
+export function applySliderEvent(
   range: QuantizedRange,
   state: SliderState,
   event: SliderEvent,
   page = 2,
-): Result<SliderTransition> {
+): Result<SliderUpdate> {
   if (!isSliderTick(range, state.tick)) {
     return fail(
       'transition-rejection',
@@ -92,9 +93,9 @@ export function stepSlider(
       break;
   }
 
-  if (tick === state.tick) return accepted(state);
+  if (tick === state.tick) return createMachineUpdate(state);
   const next = sliderState(tick);
-  return accepted(next, [{ type: 'announce-tick', tick }]);
+  return createMachineUpdate(next, [{ type: 'announce-tick', tick }]);
 }
 
 function isSliderTick(range: QuantizedRange, tick: number): boolean {
@@ -114,14 +115,4 @@ function isSliderEvent(value: string): value is SliderEvent {
 
 function sliderState(tick: number): SliderState {
   return Object.freeze({ tick });
-}
-
-function accepted(
-  state: SliderState,
-  commands: readonly SliderCommand[] = [],
-): Result<SliderTransition> {
-  const frozenCommands = freezeArray(
-    commands.map((command) => Object.freeze({ ...command })),
-  );
-  return ok(Object.freeze({ state, commands: frozenCommands }));
 }

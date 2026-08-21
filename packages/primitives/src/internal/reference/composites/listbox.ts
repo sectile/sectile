@@ -6,7 +6,7 @@ import type {
   ListboxPolicies,
   ListboxState,
   ListboxStateInput,
-  ListboxTransition,
+  ListboxUpdate,
 } from '../../composites/listbox.js';
 import { ReferenceSelectionState, referenceClearSelection, referenceSelectOne, referenceToggleMultipleSelection } from '../state/selection.js';
 
@@ -17,7 +17,7 @@ interface ReferenceRejection {
 }
 
 export type ReferenceListboxResult<ID extends StableID> =
-  | { readonly ok: true; readonly value: ListboxTransition<ID> }
+  | { readonly ok: true; readonly value: ListboxUpdate<ID> }
   | ReferenceRejection;
 
 type ReferenceTargetResult<ID extends StableID> =
@@ -45,7 +45,7 @@ export function createReferenceListboxState<ID extends StableID>(
   return referenceState(current, new ReferenceSelectionState(selected, anchor));
 }
 
-export function referenceStepListbox<ID extends StableID>(
+export function applyReferenceListboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   state: ListboxState<ID>,
   event: ListboxEvent,

@@ -6,7 +6,7 @@ const hash = (value) => createHash('sha256').update(value).digest('hex');
 const theoryOutput = await readFile('verification/theory-verification.json');
 const theoryVerifier = await readFile('verification/theory-verifier.py');
 assert.equal(hash(theoryOutput), '774d1f79119a212b0798245d7ce4e59542954a67f37f7bb15f927d240cf0b7ec');
-assert.equal(hash(theoryVerifier), '83ffb6798c61a295d409dd5327512d8fff691ac89c857bb8aa0fa775fd3fb584');
+assert.equal(hash(theoryVerifier), 'a1a620fde1c6a0e309deed31231571eb6f8c63a6617f847c3cb7f14562981fbb');
 const stored = await readFile('verification/implementation-verification.json');
 const run = () => spawnSync(process.execPath, ['verification/implementation-verifier.mjs'], {
   encoding: null,

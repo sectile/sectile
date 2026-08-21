@@ -1,10 +1,10 @@
 export {
+  applyListboxEvent,
   createListboxState,
-  stepListbox,
   type ListboxCommand,
   type ListboxEvent,
   type ListboxPolicies,
   type ListboxState,
   type ListboxStateInput,
-  type ListboxTransition,
+  type ListboxUpdate,
 } from './internal/composites/listbox.js';

@@ -1,6 +1,7 @@
 import type { Result, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
-import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import { fail, ok } from '../kernel/foundation.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
   createSelectionState,
@@ -31,7 +32,7 @@ export interface ComboboxStateInput<ID extends StableID = StableID>
   readonly current?: ID | null;
 }
 
-export interface ComboboxTransition<ID extends StableID = StableID> {
+export interface ComboboxUpdate<ID extends StableID = StableID> {
   readonly state: ComboboxState<ID>;
   readonly commands: readonly ComboboxCommand<ID>[];
 }
@@ -59,11 +60,11 @@ export function createComboboxState<ID extends StableID>(
   return ok(comboboxState(text, popupOpen, createCursorState(current), selection.value));
 }
 
-export function acceptCombobox<ID extends StableID>(
+export function acceptComboboxCandidate<ID extends StableID>(
   domain: Sequence<ID>,
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
-): Result<ComboboxTransition<ID>> {
+): Result<ComboboxUpdate<ID>> {
   const current = state.cursor.current;
   if (current === null || !domain.contains(current)) {
     return fail(
@@ -102,7 +103,7 @@ export function acceptCombobox<ID extends StableID>(
   }
   const selection = selectOne(state.selection, current, domain);
   const next = comboboxState(text.value, false, state.cursor, selection);
-  return accepted(next, [{ type: 'accept', id: current }]);
+  return createMachineUpdate(next, [{ type: 'accept', id: current }]);
 }
 
 function comboboxState<ID extends StableID>(
@@ -112,14 +113,4 @@ function comboboxState<ID extends StableID>(
   selection: SelectionState<ID>,
 ): ComboboxState<ID> {
   return Object.freeze({ text, popupOpen, cursor, selection });
-}
-
-function accepted<ID extends StableID>(
-  state: ComboboxState<ID>,
-  commands: readonly ComboboxCommand<ID>[],
-): Result<ComboboxTransition<ID>> {
-  return ok(Object.freeze({
-    state,
-    commands: freezeArray(commands.map((command) => Object.freeze({ ...command }))),
-  }));
 }

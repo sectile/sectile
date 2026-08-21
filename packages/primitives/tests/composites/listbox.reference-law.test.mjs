@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createListboxState,
-  stepListbox,
+  applyListboxEvent,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
   createReferenceListboxState,
-  referenceStepListbox,
+  applyReferenceListboxEvent,
 } from '../../.verification-dist/internal/reference/composites/listbox.js';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { canonicalIDs, powerset, unwrap } from '../support.mjs';
@@ -44,9 +44,9 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
               if (depth === 5) continue;
 
               for (const event of EVENTS) {
-                const left = stepListbox(domain, state, event, policies);
-                const repeated = stepListbox(domain, state, event, policies);
-                const reference = referenceStepListbox(domain, state, event, policies);
+                const left = applyListboxEvent(domain, state, event, policies);
+                const repeated = applyListboxEvent(domain, state, event, policies);
+                const reference = applyReferenceListboxEvent(domain, state, event, policies);
                 assert.deepEqual(observeResult(left), observeResult(repeated));
                 assert.deepEqual(observeResult(left), observeReferenceResult(reference));
                 transitions += 1;
@@ -81,14 +81,14 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
 test('listbox policies control movement, selection following, boundaries, and command order', () => {
   const domain = unwrap(createSequence(['a', 'b', 'c']));
   const initial = unwrap(createListboxState(domain, { selected: ['c'], anchor: 'c' }));
-  const next = unwrap(stepListbox(domain, initial, 'next', {
+  const next = unwrap(applyListboxEvent(domain, initial, 'next', {
     eligible: (id) => id !== 'a',
   }));
   assert.equal(next.state.cursor.current, 'b');
   assert.deepEqual(next.state.selection.selected, ['c']);
   assert.deepEqual(next.commands, [{ type: 'focus', id: 'b' }]);
 
-  const followed = unwrap(stepListbox(domain, initial, 'next', {
+  const followed = unwrap(applyListboxEvent(domain, initial, 'next', {
     eligible: (id) => id !== 'a',
     selectionFollowsFocus: true,
   }));
@@ -96,22 +96,22 @@ test('listbox policies control movement, selection following, boundaries, and co
   assert.equal(followed.state.selection.anchor, 'b');
 
   const last = unwrap(createListboxState(domain, { current: 'c' }));
-  const stopped = unwrap(stepListbox(domain, last, 'next', { boundary: 'stop' }));
+  const stopped = unwrap(applyListboxEvent(domain, last, 'next', { boundary: 'stop' }));
   assert.equal(stopped.state, last);
   assert.deepEqual(stopped.commands, []);
-  const wrapped = unwrap(stepListbox(domain, last, 'next', { boundary: 'wrap' }));
+  const wrapped = unwrap(applyListboxEvent(domain, last, 'next', { boundary: 'wrap' }));
   assert.equal(wrapped.state.cursor.current, 'a');
   assert.deepEqual(wrapped.commands, [{ type: 'focus', id: 'a' }]);
 
-  const toggled = unwrap(stepListbox(domain, wrapped.state, 'toggle'));
+  const toggled = unwrap(applyListboxEvent(domain, wrapped.state, 'toggle'));
   assert.deepEqual(toggled.state.selection.selected, ['a']);
   assert.deepEqual(toggled.commands, []);
-  const activated = unwrap(stepListbox(domain, toggled.state, 'activate'));
+  const activated = unwrap(applyListboxEvent(domain, toggled.state, 'activate'));
   assert.deepEqual(activated.state.selection.selected, ['a']);
   assert.deepEqual(activated.commands, [{ type: 'activate', id: 'a' }]);
-  const cleared = unwrap(stepListbox(domain, activated.state, 'clear'));
+  const cleared = unwrap(applyListboxEvent(domain, activated.state, 'clear'));
   assert.deepEqual(cleared.state.selection.selected, []);
-  assert.equal(unwrap(stepListbox(domain, cleared.state, 'clear')).state, cleared.state);
+  assert.equal(unwrap(applyListboxEvent(domain, cleared.state, 'clear')).state, cleared.state);
 });
 
 test('listbox rejects invalid snapshots and unknown semantics without partial state or commands', () => {
@@ -121,16 +121,16 @@ test('listbox rejects invalid snapshots and unknown semantics without partial st
 
   const empty = unwrap(createListboxState(domain));
   for (const event of ['toggle', 'activate']) {
-    const result = stepListbox(domain, empty, event);
+    const result = applyListboxEvent(domain, empty, event);
     assert.equal(result.ok, false);
     assert.equal(result.error.class, 'transition-rejection');
     assert.equal(result.error.code, 'no-cursor');
   }
   for (const result of [
-    stepListbox(domain, empty, 'unknown'),
-    stepListbox(domain, empty, 'next', { boundary: 'invalid' }),
-    stepListbox(domain, empty, 'next', { selectionFollowsFocus: 'yes' }),
-    stepListbox(domain, empty, 'next', { eligible: true }),
+    applyListboxEvent(domain, empty, 'unknown'),
+    applyListboxEvent(domain, empty, 'next', { boundary: 'invalid' }),
+    applyListboxEvent(domain, empty, 'next', { selectionFollowsFocus: 'yes' }),
+    applyListboxEvent(domain, empty, 'next', { eligible: true }),
   ]) {
     assert.equal(result.ok, false);
     assert.equal(result.error.class, 'transition-rejection');
@@ -140,7 +140,7 @@ test('listbox rejects invalid snapshots and unknown semantics without partial st
     cursor: Object.freeze({ current: 'missing' }),
     selection: empty.selection,
   });
-  const invalidState = stepListbox(domain, invalidCursor, 'clear');
+  const invalidState = applyListboxEvent(domain, invalidCursor, 'clear');
   assert.equal(invalidState.ok, false);
   assert.equal(invalidState.error.code, 'listbox-cursor-outside-domain');
 
@@ -153,11 +153,11 @@ test('listbox rejects invalid snapshots and unknown semantics without partial st
       has: () => true,
     }),
   });
-  const rejectedSelection = stepListbox(domain, invalidSelection, 'clear');
+  const rejectedSelection = applyListboxEvent(domain, invalidSelection, 'clear');
   assert.equal(rejectedSelection.ok, false);
   assert.equal(rejectedSelection.error.code, 'invalid-listbox-selection');
 
-  const ceiling = stepListbox(domain, empty, 'next', {
+  const ceiling = applyListboxEvent(domain, empty, 'next', {
     eligible: (id) => id === 'b',
     maxScan: 1,
   });
@@ -166,7 +166,7 @@ test('listbox rejects invalid snapshots and unknown semantics without partial st
   assert.equal(ceiling.error.code, 'scan-ceiling-reached');
   assert.equal(empty.cursor.current, null);
   assert.deepEqual(empty.selection.selected, []);
-  const enough = unwrap(stepListbox(domain, empty, 'next', {
+  const enough = unwrap(applyListboxEvent(domain, empty, 'next', {
     eligible: (id) => id === 'b',
     maxScan: 2,
   }));
@@ -190,23 +190,23 @@ function stateKey(state, depth) {
 
 function observeResult(result) {
   return result.ok
-    ? { ok: true, ...observeTransition(result.value) }
+    ? { ok: true, ...observeUpdate(result.value) }
     : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
 }
 
 function observeReferenceResult(result) {
   return result.ok
-    ? { ok: true, ...observeTransition(result.value) }
+    ? { ok: true, ...observeUpdate(result.value) }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 
-function observeTransition(transition) {
+function observeUpdate(update) {
   return {
     state: {
-      current: transition.state.cursor.current,
-      selected: transition.state.selection.selected,
-      anchor: transition.state.selection.anchor,
+      current: update.state.cursor.current,
+      selected: update.state.selection.selected,
+      anchor: update.state.selection.anchor,
     },
-    commands: transition.commands,
+    commands: update.commands,
   };
 }

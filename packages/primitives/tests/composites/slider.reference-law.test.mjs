@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createSliderState,
-  stepSlider,
+  applySliderEvent,
 } from '../../.verification-dist/internal/composites/slider.js';
 import {
   createReferenceSliderState,
-  referenceStepSlider,
+  applyReferenceSliderEvent,
 } from '../../.verification-dist/internal/reference/composites/slider.js';
 import { createRange } from '../../.verification-dist/structures/range.js';
 import { unwrap } from '../support.mjs';
@@ -33,9 +33,9 @@ test('slider composition is deterministic, bounded, and matches its independent 
         if (depth === 6) continue;
 
         for (const event of EVENTS) {
-          const left = stepSlider(range, state, event);
-          const repeated = stepSlider(range, state, event);
-          const reference = referenceStepSlider(range, state, event);
+          const left = applySliderEvent(range, state, event);
+          const repeated = applySliderEvent(range, state, event);
+          const reference = applyReferenceSliderEvent(range, state, event);
           assert.deepEqual(observeResult(left), observeResult(repeated));
           assert.deepEqual(observeResult(left), observeReferenceResult(reference));
           transitions += 1;
@@ -63,34 +63,34 @@ test('slider events clamp to boundaries and announce only changed ticks', () => 
   const range = quantizedRange(5);
   const initial = unwrap(createSliderState(range, 2));
 
-  const incremented = unwrap(stepSlider(range, initial, 'increment'));
+  const incremented = unwrap(applySliderEvent(range, initial, 'increment'));
   assert.equal(incremented.state.tick, 3);
   assert.deepEqual(incremented.commands, [{ type: 'announce-tick', tick: 3 }]);
 
-  const paged = unwrap(stepSlider(range, initial, 'page-up'));
+  const paged = unwrap(applySliderEvent(range, initial, 'page-up'));
   assert.equal(paged.state.tick, 4);
   assert.deepEqual(paged.commands, [{ type: 'announce-tick', tick: 4 }]);
 
-  const clamped = unwrap(stepSlider(range, initial, 'page-up', 10));
+  const clamped = unwrap(applySliderEvent(range, initial, 'page-up', 10));
   assert.equal(clamped.state.tick, 5);
   assert.deepEqual(clamped.commands, [{ type: 'announce-tick', tick: 5 }]);
 
-  const first = unwrap(stepSlider(range, initial, 'home'));
+  const first = unwrap(applySliderEvent(range, initial, 'home'));
   assert.equal(first.state.tick, 0);
-  const stopped = unwrap(stepSlider(range, first.state, 'decrement'));
+  const stopped = unwrap(applySliderEvent(range, first.state, 'decrement'));
   assert.equal(stopped.state, first.state);
   assert.deepEqual(stopped.commands, []);
 
-  const last = unwrap(stepSlider(range, initial, 'end'));
+  const last = unwrap(applySliderEvent(range, initial, 'end'));
   assert.equal(last.state.tick, 5);
-  const ended = unwrap(stepSlider(range, last.state, 'end'));
+  const ended = unwrap(applySliderEvent(range, last.state, 'end'));
   assert.equal(ended.state, last.state);
   assert.deepEqual(ended.commands, []);
 
   const singleton = quantizedRange(0);
   const only = unwrap(createSliderState(singleton));
   for (const event of EVENTS) {
-    const result = unwrap(stepSlider(singleton, only, event));
+    const result = unwrap(applySliderEvent(singleton, only, event));
     assert.equal(result.state, only);
     assert.deepEqual(result.commands, []);
   }
@@ -106,32 +106,32 @@ test('slider rejects invalid snapshots, events, and page sizes atomically', () =
   }
 
   const invalidState = Object.freeze({ tick: 6 });
-  const rejectedState = stepSlider(range, invalidState, 'home');
+  const rejectedState = applySliderEvent(range, invalidState, 'home');
   assert.equal(rejectedState.ok, false);
   assert.equal(rejectedState.error.class, 'transition-rejection');
   assert.equal(rejectedState.error.code, 'slider-tick-outside-range');
   assert.equal(invalidState.tick, 6);
 
   const state = unwrap(createSliderState(range, 2));
-  const invalidEvent = stepSlider(range, state, 'unknown');
+  const invalidEvent = applySliderEvent(range, state, 'unknown');
   assert.deepEqual(observeResult(invalidEvent), {
     ok: false,
     errorClass: 'transition-rejection',
     errorCode: 'invalid-slider-event',
   });
   assert.deepEqual(observeResult(invalidEvent), observeReferenceResult(
-    referenceStepSlider(range, state, 'unknown'),
+    applyReferenceSliderEvent(range, state, 'unknown'),
   ));
 
   for (const page of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
-    const result = stepSlider(range, state, 'page-up', page);
+    const result = applySliderEvent(range, state, 'page-up', page);
     assert.deepEqual(observeResult(result), {
       ok: false,
       errorClass: 'transition-rejection',
       errorCode: 'invalid-slider-page',
     });
     assert.deepEqual(observeResult(result), observeReferenceResult(
-      referenceStepSlider(range, state, 'page-up', page),
+      applyReferenceSliderEvent(range, state, 'page-up', page),
     ));
     assert.equal(state.tick, 2);
   }

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  acceptCombobox,
+  acceptComboboxCandidate,
   createComboboxState,
 } from '../../.verification-dist/internal/composites/combobox.js';
 import {
@@ -28,7 +28,7 @@ test('combobox acceptance matches all accepted authority cases', () => {
       const state = unwrap(createComboboxState(domain, text, input));
       const referenceState = createReferenceComboboxState(domain, text, input);
       assert.deepEqual(stateObservation(state), stateObservation(referenceState));
-      const left = acceptCombobox(domain, labels, state);
+      const left = acceptComboboxCandidate(domain, labels, state);
       const right = referenceAcceptCombobox(domain, labels, referenceState);
       assert.deepEqual(resultObservation(left), referenceResultObservation(right));
 
@@ -52,7 +52,7 @@ test('combobox acceptance matches all accepted authority cases', () => {
           { anchorCodeUnitOffset: 1, focusCodeUnitOffset: 1 },
         ));
         const active = unwrap(createComboboxState(domain, composing, input));
-        const rejected = acceptCombobox(domain, labels, active);
+        const rejected = acceptComboboxCandidate(domain, labels, active);
         assert.equal(rejected.ok, false);
         assert.equal(rejected.error.code, 'composition-active');
         assert.equal(active.text.composition === null, false);
@@ -71,7 +71,7 @@ test('combobox acceptance replaces text at a collapsed UTF-16 endpoint', () => {
     focusCodeUnitOffset: 4,
   }));
   const state = unwrap(createComboboxState(domain, text, { popupOpen: true, current: 'a' }));
-  const result = unwrap(acceptCombobox(domain, new Map([['a', '가😀']]), state));
+  const result = unwrap(acceptComboboxCandidate(domain, new Map([['a', '가😀']]), state));
   assert.equal(result.state.text.snapshot.text, '가😀');
   assert.equal(result.state.text.snapshot.selection.anchorCodeUnitOffset, 3);
   assert.equal(result.state.text.snapshot.selection.focusCodeUnitOffset, 3);
@@ -85,10 +85,10 @@ test('combobox rejects missing and malformed labels without partial state', () =
   assert.equal(createComboboxState(domain, text, { current: 'missing' }).error.code, 'combobox-cursor-outside-domain');
   assert.equal(createComboboxState(domain, text, { popupOpen: 'yes' }).error.code, 'invalid-popup-state');
 
-  const missing = acceptCombobox(domain, new Map(), state);
+  const missing = acceptComboboxCandidate(domain, new Map(), state);
   assert.equal(missing.ok, false);
   assert.equal(missing.error.code, 'missing-candidate-label');
-  const malformed = acceptCombobox(domain, new Map([['a', '\ud800']]), state);
+  const malformed = acceptComboboxCandidate(domain, new Map([['a', '\ud800']]), state);
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, 'invalid-candidate-label');
   assert.equal(state.text.snapshot.text, 'query');

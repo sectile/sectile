@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createTreeViewState,
-  stepTreeView,
+  applyTreeViewEvent,
 } from '../../.verification-dist/internal/composites/tree-view.js';
 import {
   createReferenceTreeViewState,
-  referenceStepTreeView,
+  applyReferenceTreeViewEvent,
 } from '../../.verification-dist/internal/reference/composites/tree-view.js';
 import { createTree } from '../../.verification-dist/structures/tree.js';
 import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
@@ -37,9 +37,9 @@ test('tree-view composition matches accepted exhaustive transition counts', () =
             assertState(tree, state);
             if (depth === 4) continue;
             for (const event of EVENTS) {
-              const left = stepTreeView(tree, state, event);
-              const repeated = stepTreeView(tree, state, event);
-              const reference = referenceStepTreeView(tree, state, event);
+              const left = applyTreeViewEvent(tree, state, event);
+              const repeated = applyTreeViewEvent(tree, state, event);
+              const reference = applyReferenceTreeViewEvent(tree, state, event);
               assert.deepEqual(resultObservation(left), resultObservation(repeated));
               assert.deepEqual(resultObservation(left), referenceResultObservation(reference));
               transitions += 1;
@@ -72,22 +72,22 @@ test('tree-view right and left separate expansion from focus movement', () => {
     { id: 'leaf', parentID: 'child' },
   ]));
   const root = unwrap(createTreeViewState(tree, { current: 'root' }));
-  const opened = unwrap(stepTreeView(tree, root, 'right'));
+  const opened = unwrap(applyTreeViewEvent(tree, root, 'right'));
   assert.deepEqual(opened.state.expansion.ids, ['root']);
   assert.equal(opened.state.cursor.current, 'root');
   assert.deepEqual(opened.commands, []);
 
-  const child = unwrap(stepTreeView(tree, opened.state, 'right'));
+  const child = unwrap(applyTreeViewEvent(tree, opened.state, 'right'));
   assert.equal(child.state.cursor.current, 'child');
   assert.deepEqual(child.commands, [{ type: 'focus', id: 'child' }]);
 
-  const returned = unwrap(stepTreeView(tree, child.state, 'left'));
+  const returned = unwrap(applyTreeViewEvent(tree, child.state, 'left'));
   assert.equal(returned.state.cursor.current, 'root');
-  const closed = unwrap(stepTreeView(tree, returned.state, 'left'));
+  const closed = unwrap(applyTreeViewEvent(tree, returned.state, 'left'));
   assert.deepEqual(closed.state.expansion.ids, []);
   assert.equal(closed.state.cursor.current, 'root');
 
-  const selected = unwrap(stepTreeView(tree, child.state, 'toggle-select'));
+  const selected = unwrap(applyTreeViewEvent(tree, child.state, 'toggle-select'));
   assert.deepEqual(selected.state.selection.selected, ['child']);
   assert.equal(selected.state.cursor.current, 'child');
 });
@@ -99,11 +99,11 @@ test('tree-view rejects hidden cursors and unknown events atomically', () => {
   ]));
   assert.equal(createTreeViewState(tree, { current: 'child' }).error.code, 'tree-view-cursor-hidden');
   const empty = unwrap(createTreeViewState(tree));
-  assert.equal(stepTreeView(tree, empty, 'toggle-select').error.code, 'no-cursor');
-  assert.equal(stepTreeView(tree, empty, 'unknown').error.code, 'invalid-tree-view-event');
+  assert.equal(applyTreeViewEvent(tree, empty, 'toggle-select').error.code, 'no-cursor');
+  assert.equal(applyTreeViewEvent(tree, empty, 'unknown').error.code, 'invalid-tree-view-event');
 
   const hidden = Object.freeze({ ...empty, cursor: Object.freeze({ current: 'child' }) });
-  const result = stepTreeView(tree, hidden, 'next');
+  const result = applyTreeViewEvent(tree, hidden, 'next');
   assert.equal(result.ok, false);
   assert.equal(result.error.code, 'tree-view-cursor-hidden');
   assert.equal(hidden.cursor.current, 'child');

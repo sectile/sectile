@@ -86,7 +86,8 @@ sectile/
 │   │   │   │   ├── kernel/
 │   │   │   │   │   ├── decimal.ts
 │   │   │   │   │   ├── foundation.ts
-│   │   │   │   │   └── indexed-sequence.ts
+│   │   │   │   │   ├── indexed-sequence.ts
+│   │   │   │   │   └── machine.ts
 │   │   │   │   ├── reference/
 │   │   │   │   │   ├── composites/
 │   │   │   │   │   │   ├── calendar.ts

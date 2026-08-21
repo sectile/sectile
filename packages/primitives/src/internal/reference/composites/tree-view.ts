@@ -5,7 +5,7 @@ import type {
   TreeViewEvent,
   TreeViewState,
   TreeViewStateInput,
-  TreeViewTransition,
+  TreeViewUpdate,
 } from '../../composites/tree-view.js';
 import { ReferenceSelectionState, referenceToggleMultipleSelection } from '../state/selection.js';
 
@@ -16,7 +16,7 @@ interface ReferenceTreeViewRejection {
 }
 
 export type ReferenceTreeViewResult<ID extends StableID> =
-  | { readonly ok: true; readonly value: TreeViewTransition<ID> }
+  | { readonly ok: true; readonly value: TreeViewUpdate<ID> }
   | ReferenceTreeViewRejection;
 
 export function createReferenceTreeViewState<ID extends StableID>(
@@ -35,7 +35,7 @@ export function createReferenceTreeViewState<ID extends StableID>(
   return referenceState(expansion, current, new ReferenceSelectionState(selected, anchor));
 }
 
-export function referenceStepTreeView<ID extends StableID>(
+export function applyReferenceTreeViewEvent<ID extends StableID>(
   tree: Tree<ID>,
   state: TreeViewState<ID>,
   event: TreeViewEvent,

@@ -6,7 +6,7 @@ import type {
   CalendarPolicies,
   CalendarState,
   CalendarStateInput,
-  CalendarTransition,
+  CalendarUpdate,
 } from '../../composites/calendar.js';
 import { ReferenceSelectionState, referenceSelectOne } from '../state/selection.js';
 
@@ -17,7 +17,7 @@ interface ReferenceCalendarRejection {
 }
 
 export type ReferenceCalendarResult<ID extends StableID> =
-  | { readonly ok: true; readonly value: CalendarTransition<ID> }
+  | { readonly ok: true; readonly value: CalendarUpdate<ID> }
   | ReferenceCalendarRejection;
 
 export function createReferenceCalendarState<ID extends StableID>(
@@ -36,7 +36,7 @@ export function createReferenceCalendarState<ID extends StableID>(
   return referenceState(current, new ReferenceSelectionState(selected, anchor));
 }
 
-export function referenceStepCalendar<ID extends StableID>(
+export function applyReferenceCalendarEvent<ID extends StableID>(
   grid: Grid<ID>,
   state: CalendarState<ID>,
   event: CalendarEvent,

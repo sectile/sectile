@@ -3,7 +3,7 @@ import type {
   SliderCommand,
   SliderEvent,
   SliderState,
-  SliderTransition,
+  SliderUpdate,
 } from '../../composites/slider.js';
 
 interface ReferenceSliderRejection {
@@ -13,7 +13,7 @@ interface ReferenceSliderRejection {
 }
 
 export type ReferenceSliderResult =
-  | { readonly ok: true; readonly value: SliderTransition }
+  | { readonly ok: true; readonly value: SliderUpdate }
   | ReferenceSliderRejection;
 
 export function createReferenceSliderState(
@@ -26,7 +26,7 @@ export function createReferenceSliderState(
   return referenceState(tick);
 }
 
-export function referenceStepSlider(
+export function applyReferenceSliderEvent(
   range: QuantizedRange,
   state: SliderState,
   event: SliderEvent,

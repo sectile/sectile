@@ -2,11 +2,12 @@ import {
   type BoundaryPolicy,
   type Direction,
   type MoveResult,
+  type Result,
   type ScanOptions,
   type SectileError,
   type StableID,
 } from '../../shared.js';
-import { freezeArray, normalizeMaxScan, resourceError } from './foundation.js';
+import { freezeArray, normalizeMaxScan, ok, resourceError } from './foundation.js';
 
 export interface SequenceView<ID extends StableID> {
   readonly size: number;
@@ -119,6 +120,36 @@ export function moveInSequence<ID extends StableID>(
   }
 
   return { kind: 'none', scanned };
+}
+
+export function findEligibleFromEdge<ID extends StableID>(
+  sequence: SequenceView<ID>,
+  direction: Direction,
+  options: ScanOptions<ID> = {},
+): Result<ID | null> {
+  const maxScan = normalizeMaxScan(options.maxScan);
+  if (typeof maxScan !== 'number') return { ok: false, error: maxScan };
+  const eligible = options.eligible ?? (() => true);
+  let scanned = 0;
+  let index = direction > 0 ? 0 : sequence.size - 1;
+
+  while (index >= 0 && index < sequence.size) {
+    if (scanned === maxScan) {
+      return {
+        ok: false,
+        error: resourceError(
+          'scan-ceiling-reached',
+          'Movement reached maxScan before its semantic result was determined.',
+          { maxScan },
+        ),
+      };
+    }
+    const id = sequence.at(index);
+    scanned += 1;
+    if (id !== null && eligible(id)) return ok(id);
+    index += direction;
+  }
+  return ok(null);
 }
 
 function scanRejected<ID extends StableID>(scanned: number, maxScan: number): MoveResult<ID> {

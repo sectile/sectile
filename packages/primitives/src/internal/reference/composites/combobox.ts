@@ -4,7 +4,7 @@ import type {
   ComboboxCommand,
   ComboboxState,
   ComboboxStateInput,
-  ComboboxTransition,
+  ComboboxUpdate,
 } from '../../composites/combobox.js';
 import type { TextEditingState } from '../../editing/text.js';
 import { createReferenceTextEditingState } from '../editing/text.js';
@@ -17,7 +17,7 @@ interface ReferenceComboboxRejection {
 }
 
 export type ReferenceComboboxResult<ID extends StableID> =
-  | { readonly ok: true; readonly value: ComboboxTransition<ID> }
+  | { readonly ok: true; readonly value: ComboboxUpdate<ID> }
   | ReferenceComboboxRejection;
 
 export function createReferenceComboboxState<ID extends StableID>(

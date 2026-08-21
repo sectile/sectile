@@ -1,7 +1,9 @@
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
-import { fail, freezeArray, normalizeMaxScan, ok, resourceError } from '../kernel/foundation.js';
+import { fail, ok } from '../kernel/foundation.js';
+import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 import {
   clearSelection,
   createSelectionState,
@@ -34,7 +36,7 @@ export interface ListboxPolicies<ID extends StableID = StableID> {
   readonly maxScan?: number;
 }
 
-export interface ListboxTransition<ID extends StableID = StableID> {
+export interface ListboxUpdate<ID extends StableID = StableID> {
   readonly state: ListboxState<ID>;
   readonly commands: readonly ListboxCommand<ID>[];
 }
@@ -57,12 +59,12 @@ export function createListboxState<ID extends StableID>(
   return ok(listboxState(createCursorState(current), selection.value));
 }
 
-export function stepListbox<ID extends StableID>(
+export function applyListboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   state: ListboxState<ID>,
   event: ListboxEvent,
   policies: ListboxPolicies<ID> = {},
-): Result<ListboxTransition<ID>> {
+): Result<ListboxUpdate<ID>> {
   const stateError = validateListboxState(domain, state);
   if (stateError !== null) return { ok: false, error: stateError };
   if (!isListboxEvent(event)) {
@@ -107,7 +109,7 @@ export function stepListbox<ID extends StableID>(
     case 'toggle': {
       const current = state.cursor.current;
       if (current === null) return noCursor();
-      return accepted(
+      return createMachineUpdate(
         listboxState(
           state.cursor,
           toggleMultipleSelection(state.selection, current, domain),
@@ -117,14 +119,16 @@ export function stepListbox<ID extends StableID>(
     case 'activate': {
       const current = state.cursor.current;
       if (current === null) return noCursor();
-      return accepted(
+      return createMachineUpdate(
         listboxState(state.cursor, selectOne(state.selection, current, domain)),
         [{ type: 'activate', id: current }],
       );
     }
     case 'clear': {
       const selection = clearSelection(state.selection);
-      return accepted(selection === state.selection ? state : listboxState(state.cursor, selection));
+      return createMachineUpdate(
+        selection === state.selection ? state : listboxState(state.cursor, selection),
+      );
     }
   }
 }
@@ -136,12 +140,15 @@ function moveListbox<ID extends StableID>(
   boundary: BoundaryPolicy,
   selectionFollowsFocus: boolean,
   policies: ListboxPolicies<ID>,
-): Result<ListboxTransition<ID>> {
+): Result<ListboxUpdate<ID>> {
   const eligible = policies.eligible ?? (() => true);
   const current = state.cursor.current;
   let target: ID | null;
   if (current === null) {
-    const initial = initialEligible(domain, direction, eligible, policies.maxScan);
+    const initial = findEligibleFromEdge(domain, direction, {
+      eligible,
+      ...(policies.maxScan === undefined ? {} : { maxScan: policies.maxScan }),
+    });
     if (!initial.ok) return initial;
     target = initial.value;
   } else {
@@ -152,41 +159,12 @@ function moveListbox<ID extends StableID>(
     if (movement.kind === 'resource-rejected') return { ok: false, error: movement.error };
     target = movement.kind === 'found' ? movement.id : null;
   }
-  if (target === null) return accepted(state);
+  if (target === null) return createMachineUpdate(state);
   const cursor = createCursorState(target);
   const selection = selectionFollowsFocus
     ? selectOne(state.selection, target, domain)
     : state.selection;
-  return accepted(listboxState(cursor, selection), [{ type: 'focus', id: target }]);
-}
-
-function initialEligible<ID extends StableID>(
-  domain: Sequence<ID>,
-  direction: -1 | 1,
-  eligible: (id: ID) => boolean,
-  requestedMaxScan: number | undefined,
-): Result<ID | null> {
-  const maxScan = normalizeMaxScan(requestedMaxScan);
-  if (typeof maxScan !== 'number') return { ok: false, error: maxScan };
-  let scanned = 0;
-  let index = direction > 0 ? 0 : domain.size - 1;
-  while (index >= 0 && index < domain.size) {
-    if (scanned === maxScan) {
-      return {
-        ok: false,
-        error: resourceError(
-          'scan-ceiling-reached',
-          'Listbox movement reached maxScan before its semantic result was determined.',
-          { maxScan },
-        ),
-      };
-    }
-    const id = domain.at(index);
-    scanned += 1;
-    if (id !== null && eligible(id)) return ok(id);
-    index += direction;
-  }
-  return ok(null);
+  return createMachineUpdate(listboxState(cursor, selection), [{ type: 'focus', id: target }]);
 }
 
 function validateListboxState<ID extends StableID>(
@@ -256,17 +234,7 @@ function listboxState<ID extends StableID>(
   return Object.freeze({ cursor, selection });
 }
 
-function accepted<ID extends StableID>(
-  state: ListboxState<ID>,
-  commands: readonly ListboxCommand<ID>[] = [],
-): Result<ListboxTransition<ID>> {
-  const frozenCommands = freezeArray(
-    commands.map((command) => Object.freeze({ ...command })),
-  );
-  return ok(Object.freeze({ state, commands: frozenCommands }));
-}
-
-function noCursor<ID extends StableID>(): Result<ListboxTransition<ID>> {
+function noCursor<ID extends StableID>(): Result<ListboxUpdate<ID>> {
   return fail(
     'transition-rejection',
     'no-cursor',

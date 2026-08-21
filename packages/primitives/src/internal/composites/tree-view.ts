@@ -1,6 +1,7 @@
 import type { Result, SectileError, StableID } from '../../shared.js';
 import type { Tree } from '../../structures/tree.js';
-import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import { fail, ok } from '../kernel/foundation.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
   createExpansionState,
@@ -33,7 +34,7 @@ export interface TreeViewStateInput<ID extends StableID = StableID>
   readonly current?: ID | null;
 }
 
-export interface TreeViewTransition<ID extends StableID = StableID> {
+export interface TreeViewUpdate<ID extends StableID = StableID> {
   readonly state: TreeViewState<ID>;
   readonly commands: readonly TreeViewCommand<ID>[];
 }
@@ -58,11 +59,11 @@ export function createTreeViewState<ID extends StableID>(
   return ok(treeViewState(expansion, createCursorState(current), selection.value));
 }
 
-export function stepTreeView<ID extends StableID>(
+export function applyTreeViewEvent<ID extends StableID>(
   tree: Tree<ID>,
   state: TreeViewState<ID>,
   event: TreeViewEvent,
-): Result<TreeViewTransition<ID>> {
+): Result<TreeViewUpdate<ID>> {
   if (!isTreeViewEvent(event)) {
     return fail(
       'transition-rejection',
@@ -84,44 +85,44 @@ export function stepTreeView<ID extends StableID>(
     const target = current === null
       ? visible.at(event === 'next' ? 0 : visible.size - 1)
       : movementTarget(visible, current, event === 'next' ? 1 : -1);
-    if (target === null) return accepted(normalized);
-    return accepted(
+    if (target === null) return createMachineUpdate(normalized);
+    return createMachineUpdate(
       treeViewState(expansion, createCursorState(target), state.selection),
       [{ type: 'focus', id: target }],
     );
   }
 
   if (event === 'right') {
-    if (current === null) return accepted(normalized);
+    if (current === null) return createMachineUpdate(normalized);
     const children = tree.childrenOf(current);
-    if (children === null || children.size === 0) return accepted(normalized);
+    if (children === null || children.size === 0) return createMachineUpdate(normalized);
     if (!expansion.has(current)) {
-      return accepted(treeViewState(
+      return createMachineUpdate(treeViewState(
         setExpansionOpen(expansion, current, true, tree),
         state.cursor,
         state.selection,
       ));
     }
     const target = children.at(0);
-    if (target === null) return accepted(normalized);
-    return accepted(
+    if (target === null) return createMachineUpdate(normalized);
+    return createMachineUpdate(
       treeViewState(expansion, createCursorState(target), state.selection),
       [{ type: 'focus', id: target }],
     );
   }
 
   if (event === 'left') {
-    if (current === null) return accepted(normalized);
+    if (current === null) return createMachineUpdate(normalized);
     if (expansion.has(current)) {
-      return accepted(treeViewState(
+      return createMachineUpdate(treeViewState(
         setExpansionOpen(expansion, current, false, tree),
         state.cursor,
         state.selection,
       ));
     }
     const parent = tree.parentOf(current);
-    if (parent === null) return accepted(normalized);
-    return accepted(
+    if (parent === null) return createMachineUpdate(normalized);
+    return createMachineUpdate(
       treeViewState(expansion, createCursorState(parent), state.selection),
       [{ type: 'focus', id: parent }],
     );
@@ -130,7 +131,7 @@ export function stepTreeView<ID extends StableID>(
   if (current === null) {
     return fail('transition-rejection', 'no-cursor', 'Tree-view selection requires a cursor.');
   }
-  return accepted(treeViewState(
+  return createMachineUpdate(treeViewState(
     expansion,
     state.cursor,
     toggleMultipleSelection(state.selection, current, tree.preorder()),
@@ -202,16 +203,6 @@ function treeViewState<ID extends StableID>(
   selection: SelectionState<ID>,
 ): TreeViewState<ID> {
   return Object.freeze({ expansion, cursor, selection });
-}
-
-function accepted<ID extends StableID>(
-  state: TreeViewState<ID>,
-  commands: readonly TreeViewCommand<ID>[] = [],
-): Result<TreeViewTransition<ID>> {
-  return ok(Object.freeze({
-    state,
-    commands: freezeArray(commands.map((command) => Object.freeze({ ...command }))),
-  }));
 }
 
 function isTreeViewEvent(value: string): value is TreeViewEvent {

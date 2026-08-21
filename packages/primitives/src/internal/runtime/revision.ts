@@ -1,38 +1,31 @@
 import type { Result, SectileError } from '../../shared.js';
 import { fail, freezeArray, ok } from '../kernel/foundation.js';
+import type { EventReducer } from '../kernel/machine.js';
 
-export interface MachineTransition<State, Command> {
-  readonly state: State;
-  readonly commands: readonly Command[];
-}
+export type { EventReducer, MachineUpdate } from '../kernel/machine.js';
 
-export type MachineReducer<State, Input, Command> = (
-  state: State,
-  input: Input,
-) => Result<MachineTransition<State, Command>>;
-
-export interface RevisionEnvelope<State> {
+export interface RevisionSnapshot<State> {
   readonly revision: number;
   readonly state: State;
 }
 
-export type RevisionedResult<State, Command> =
+export type RevisionResult<State, Command> =
   | {
       readonly ok: true;
-      readonly envelope: RevisionEnvelope<State>;
+      readonly snapshot: RevisionSnapshot<State>;
       readonly commands: readonly Command[];
     }
   | {
       readonly ok: false;
-      readonly envelope: RevisionEnvelope<State>;
+      readonly snapshot: RevisionSnapshot<State>;
       readonly commands: readonly [];
       readonly error: SectileError;
     };
 
-export function createRevisionEnvelope<State>(
+export function createRevisionSnapshot<State>(
   state: State,
   revision = 0,
-): Result<RevisionEnvelope<State>> {
+): Result<RevisionSnapshot<State>> {
   if (!Number.isSafeInteger(revision) || revision < 0) {
     return fail(
       'construction',
@@ -41,15 +34,15 @@ export function createRevisionEnvelope<State>(
       { revision },
     );
   }
-  return ok(envelope(revision, state));
+  return ok(snapshot(revision, state));
 }
 
-export function stepRevisioned<State, Input, Command>(
-  current: RevisionEnvelope<State>,
+export function applyRevisionedEvent<State, Event, Command>(
+  current: RevisionSnapshot<State>,
   expectedRevision: number,
-  input: Input,
-  reducer: MachineReducer<State, Input, Command>,
-): RevisionedResult<State, Command> {
+  event: Event,
+  reducer: EventReducer<State, Event, Command>,
+): RevisionResult<State, Command> {
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
     return rejected(current, {
       class: 'transition-rejection',
@@ -82,26 +75,45 @@ export function stepRevisioned<State, Input, Command>(
     });
   }
 
-  const transition = reducer(current.state, input);
-  if (!transition.ok) return rejected(current, transition.error);
+  const update = reducer(current.state, event);
+  if (!update.ok) return rejected(current, update.error);
   return Object.freeze({
     ok: true,
-    envelope: envelope(current.revision + 1, transition.value.state),
-    commands: freezeArray(transition.value.commands),
+    snapshot: snapshot(current.revision + 1, update.value.state),
+    commands: freezeArray(update.value.commands),
   });
 }
 
-function envelope<State>(revision: number, state: State): RevisionEnvelope<State> {
+export function mapRevisionCommands<State, Command, Effect>(
+  result: RevisionResult<State, Command>,
+  toEffect: (command: Command) => Effect,
+): RevisionResult<State, Effect> {
+  if (!result.ok) return result;
+  return Object.freeze({
+    ok: true,
+    snapshot: result.snapshot,
+    commands: freezeArray(result.commands.map(toEffect)),
+  });
+}
+
+export function rejectRevisionInput<State, Command = never>(
+  current: RevisionSnapshot<State>,
+  error: SectileError,
+): RevisionResult<State, Command> {
+  return rejected(current, error);
+}
+
+function snapshot<State>(revision: number, state: State): RevisionSnapshot<State> {
   return Object.freeze({ revision, state });
 }
 
 function rejected<State, Command>(
-  current: RevisionEnvelope<State>,
+  current: RevisionSnapshot<State>,
   error: SectileError,
-): RevisionedResult<State, Command> {
+): RevisionResult<State, Command> {
   return Object.freeze({
     ok: false,
-    envelope: current,
+    snapshot: current,
     commands: Object.freeze([]) as readonly [],
     error,
   });
