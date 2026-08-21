@@ -43,7 +43,8 @@ sectile/
 │       ├── src/
 │       │   ├── internal/
 │       │   │   ├── composites/
-│       │   │   │   └── listbox.ts
+│       │   │   │   ├── listbox.ts
+│       │   │   │   └── slider.ts
 │       │   │   ├── editing/
 │       │   │   │   └── text.ts
 │       │   │   ├── kernel/
@@ -52,7 +53,8 @@ sectile/
 │       │   │   │   └── indexed-sequence.ts
 │       │   │   ├── reference/
 │       │   │   │   ├── composites/
-│       │   │   │   │   └── listbox.ts
+│       │   │   │   │   ├── listbox.ts
+│       │   │   │   │   └── slider.ts
 │       │   │   │   ├── editing/
 │       │   │   │   │   └── text.ts
 │       │   │   │   ├── state/
@@ -77,7 +79,8 @@ sectile/
 │       │   └── shared.ts
 │       ├── tests/
 │       │   ├── composites/
-│       │   │   └── listbox.reference-law.test.mjs
+│       │   │   ├── listbox.reference-law.test.mjs
+│       │   │   └── slider.reference-law.test.mjs
 │       │   ├── differential/
 │       │   │   └── optimized-differential.test.mjs
 │       │   ├── editing/

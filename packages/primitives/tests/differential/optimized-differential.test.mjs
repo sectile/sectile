@@ -16,6 +16,10 @@ import {
   stepListbox,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
+  createSliderState,
+  stepSlider,
+} from '../../.verification-dist/internal/composites/slider.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -43,6 +47,10 @@ import {
   createReferenceListboxState,
   referenceStepListbox,
 } from '../../.verification-dist/internal/reference/composites/listbox.js';
+import {
+  createReferenceSliderState,
+  referenceStepSlider,
+} from '../../.verification-dist/internal/reference/composites/slider.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -81,6 +89,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyExpansion(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyText(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyListbox(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySlider(rng);
 });
 
 function verifySequence(rng, iteration) {
@@ -443,6 +452,25 @@ function verifyListbox(rng, iteration) {
   }
 }
 
+function verifySlider(rng) {
+  const count = rng.int(0, 81);
+  const range = unwrap(createRange({ origin: '-2', step: '0.5', count }));
+  const initial = rng.int(0, count + 1);
+  let optimized = unwrap(createSliderState(range, initial));
+  let reference = createReferenceSliderState(range, initial);
+  for (let step = 0; step < 10; step += 1) {
+    const event = rng.pick(['increment', 'decrement', 'page-up', 'page-down', 'home', 'end']);
+    const page = rng.int(1, count + 4);
+    const left = stepSlider(range, optimized, event, page);
+    const right = referenceStepSlider(range, reference, event, page);
+    assert.deepEqual(sliderResultObservation(left), referenceSliderResultObservation(right));
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+    }
+  }
+}
+
 function listboxResultObservation(result) {
   return result.ok
     ? {
@@ -464,6 +492,18 @@ function referenceListboxResultObservation(result) {
         anchor: result.value.state.selection.anchor,
         commands: result.value.commands,
       }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function sliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceSliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 

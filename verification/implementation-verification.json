@@ -59,5 +59,10 @@
     "accepted": 18375,
     "rejected": 1625,
     "commands": 9698
+  },
+  "slider": {
+    "models": 2000,
+    "transitions": 20000,
+    "commands": 13806
   }
 }

@@ -15,4 +15,5 @@
 - [x] Implement internal expansion transitions and reconciliation with independent law evidence.
 - [x] Implement internal plain-text carrier, replacement, selection, and composition transitions with independent law evidence.
 - [x] Implement internal listbox composition with deterministic commands and failure-atomic law evidence.
+- [x] Implement internal slider composition with bounded tick transitions and independent law evidence.
 - [ ] Promote cursor, selection, expansion, or text only after their independent usage-evidence gates are met.

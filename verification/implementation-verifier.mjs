@@ -15,6 +15,10 @@ import {
   stepListbox,
 } from '../packages/primitives/.verification-dist/internal/composites/listbox.js';
 import {
+  createSliderState,
+  stepSlider,
+} from '../packages/primitives/.verification-dist/internal/composites/slider.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -42,6 +46,10 @@ import {
   createReferenceListboxState,
   referenceStepListbox,
 } from '../packages/primitives/.verification-dist/internal/reference/composites/listbox.js';
+import {
+  createReferenceSliderState,
+  referenceStepSlider,
+} from '../packages/primitives/.verification-dist/internal/reference/composites/slider.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -85,6 +93,7 @@ const counts = {
     invalidTransitions: 0,
   },
   listbox: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
+  slider: { models: 0, transitions: 0, commands: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -552,6 +561,36 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.listbox.models += 1;
 }
 
+const sliderRng = createRng(seed ^ 0x511de);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const count = sliderRng.int(0, 81);
+  const range = unwrap(createRange({ origin: '-2', step: '0.5', count }));
+  const initial = sliderRng.int(0, count + 1);
+  let optimized = unwrap(createSliderState(range, initial));
+  let reference = createReferenceSliderState(range, initial);
+  for (let step = 0; step < 10; step += 1) {
+    const event = sliderRng.pick([
+      'increment',
+      'decrement',
+      'page-up',
+      'page-down',
+      'home',
+      'end',
+    ]);
+    const page = sliderRng.int(1, count + 4);
+    const left = stepSlider(range, optimized, event, page);
+    const right = referenceStepSlider(range, reference, event, page);
+    assert.deepEqual(sliderResultObservation(left), referenceSliderResultObservation(right));
+    counts.slider.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.slider.commands += left.value.commands.length;
+    }
+  }
+  counts.slider.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
@@ -579,6 +618,18 @@ function referenceListboxResultObservation(result) {
         anchor: result.value.state.selection.anchor,
         commands: result.value.commands,
       }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function sliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceSliderResultObservation(result) {
+  return result.ok
+    ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 
