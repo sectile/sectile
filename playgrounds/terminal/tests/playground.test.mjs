@@ -67,3 +67,27 @@ test('terminal playground composes every facade through public package subpaths'
   const fitted = fitTerminalText('한글', 8);
   assert.equal(fitted.length > 0, true);
 });
+
+test('terminal calendar demo renders a complete month and fulfills page requests', () => {
+  const demo = demos.find(({ id }) => id === 'calendar');
+  assert.notEqual(demo, undefined);
+  const session = demo.create({ render() {}, record() {} });
+  const before = session.lines(80);
+  const today = new Date();
+  const selected = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  assert.equal(before.length, 12);
+  assert.equal(before.at(-1).includes(`selected=${selected}`), true);
+
+  assert.equal(session.handle({ key: 'page-down' }), true);
+  const expectedMonth = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(today.getFullYear(), today.getMonth() + 1, 1));
+  const after = session.lines(80);
+  assert.equal(after[0].includes(expectedMonth), true);
+  assert.equal(after.at(-1).includes(`selected=${selected}`), true);
+});
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}

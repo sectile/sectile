@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@sectile/dom": "workspace:*",
-    "@sectile/primitives": "workspace:*"
+    "@sectile/primitives": "workspace:*",
+    "lucide": "^1.33.0"
   },
   "devDependencies": {
     "typescript": "7.0.2",

@@ -10,6 +10,14 @@ import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
 import { ansi, plain, styled, terminalCell } from './ui.mjs';
 
+const terminalCalendarMonthFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  year: 'numeric',
+});
+const terminalCalendarShortMonthFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+});
+
 export const demos = Object.freeze([
   { id: 'listbox', label: 'Listbox', description: 'move · space select · enter activate · esc clear', create: createListboxDemo },
   { id: 'slider', label: 'Slider', description: 'arrows step · page up/down · home/end', create: createSliderDemo },
@@ -112,33 +120,96 @@ function createSliderDemo(host) {
 }
 
 function createCalendarDemo(host) {
-  const weeks = [['18', '19', '20', '21', '22', '23', '24'], ['25', '26', '27', '28', '29', '30', '31']];
-  let pageRequest = null;
-  const connection = unwrap(createCalendar({
-    rows: weeks,
-    defaultHighlightedValue: '18',
-    onPageRequest: ({ direction }) => { pageRequest = direction < 0 ? 'previous' : 'next'; },
-    onTransition: host.record,
-    onUpdate: host.render,
-  }));
+  const today = new Date();
+  const todayID = calendarDateID(today);
+  let page = createCalendarMonth(today);
+  let selectedDate = todayID;
+  let connection = connect(todayID);
+
+  function connect(highlightedValue) {
+    const visibleValue = page.ids.has(selectedDate) ? selectedDate : null;
+    return unwrap(createCalendar({
+      rows: page.rows,
+      defaultValue: visibleValue,
+      defaultHighlightedValue: highlightedValue,
+      onValueChange: ({ value }) => { selectedDate = value; },
+      onPageRequest: ({ direction, from }) => {
+        const target = shiftCalendarMonth(page.date, direction, from);
+        page = createCalendarMonth(target);
+        connection = connect(calendarDateID(target));
+      },
+      onTransition: host.record,
+      onUpdate: host.render,
+    }));
+  }
+
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
       const { revision, state } = connection.getSnapshot();
-      const cellWidth = Math.max(4, Math.min(8, Math.floor((width - 6) / 7)));
+      const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
       return [
-        `${ansi.bold}August 2026${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${page.label}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
         '',
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
-        ...weeks.map((week) => week.map((id) => terminalCell(id, cellWidth, {
+        ...page.rows.map((week) => week.map((id) => terminalCell(calendarCellLabel(id, page), cellWidth, {
           current: state.cursor.current === id,
           selected: state.selection.has(id),
         })).join(' ')),
         '',
-        `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}  page=${pageRequest ?? '−'}`,
+        `view=${page.key}  current=${state.cursor.current ?? '−'}`,
+        `selected=${selectedDate ?? '−'}  visible=${state.selection.selected.join(',') || '−'}`,
       ];
     },
   };
+}
+
+function createCalendarMonth(date) {
+  const month = new Date(date.getFullYear(), date.getMonth(), 1);
+  const mondayOffset = (month.getDay() + 6) % 7;
+  const firstCell = new Date(month.getFullYear(), month.getMonth(), 1 - mondayOffset);
+  const rows = Array.from({ length: 6 }, (_, row) => Array.from(
+    { length: 7 },
+    (_, column) => calendarDateID(addCalendarDays(firstCell, row * 7 + column)),
+  ));
+  return Object.freeze({
+    date: month,
+    key: `${month.getFullYear()}-${calendarPad(month.getMonth() + 1)}`,
+    label: terminalCalendarMonthFormatter.format(month),
+    rows: Object.freeze(rows.map((row) => Object.freeze(row))),
+    ids: new Set(rows.flat()),
+  });
+}
+
+function shiftCalendarMonth(view, direction, from) {
+  const source = from === null ? view : calendarDateFromID(from);
+  const first = new Date(view.getFullYear(), view.getMonth() + direction, 1);
+  const lastDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return new Date(first.getFullYear(), first.getMonth(), Math.min(source.getDate(), lastDay));
+}
+
+function calendarCellLabel(id, page) {
+  const date = calendarDateFromID(id);
+  return date.getMonth() === page.date.getMonth()
+    ? String(date.getDate())
+    : `${terminalCalendarShortMonthFormatter.format(date)}${date.getDate()}`;
+}
+
+function addCalendarDays(date, amount) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+}
+
+function calendarDateID(date) {
+  return `${date.getFullYear()}-${calendarPad(date.getMonth() + 1)}-${calendarPad(date.getDate())}`;
+}
+
+function calendarDateFromID(id) {
+  const [year, month, day] = id.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function calendarPad(value) {
+  return String(value).padStart(2, '0');
 }
 
 function createTreeViewDemo(host) {
