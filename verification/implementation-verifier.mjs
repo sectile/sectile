@@ -34,6 +34,8 @@ import {
   createRevisionEnvelope,
   stepRevisioned,
 } from '../packages/primitives/.verification-dist/internal/runtime/revision.js';
+import { stepDOMListboxAdapter } from '../packages/primitives/.verification-dist/internal/adapters/dom.js';
+import { stepTerminalListboxAdapter } from '../packages/primitives/.verification-dist/internal/adapters/terminal.js';
 import {
   clearSelection,
   createSelectionState,
@@ -126,6 +128,7 @@ const counts = {
   treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   combobox: { models: 0, accepted: 0, rejected: 0, commands: 0 },
   revision: { cases: 0 },
+  adapters: { hosts: 2, models: 0, transitions: 0, effects: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -788,6 +791,57 @@ for (let size = 0; size <= 4; size += 1) {
   }
 }
 
+const adapterRng = createRng(seed ^ 0xada7);
+const adapterInputs = [
+  [{ key: 'ArrowDown' }, { key: 'down' }],
+  [{ key: 'ArrowUp' }, { key: 'up' }],
+  [{ key: ' ' }, { key: 'space' }],
+  [{ key: 'Enter' }, { key: 'enter' }],
+  [{ key: 'Escape' }, { key: 'escape' }],
+];
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const ids = Array.from(
+    { length: adapterRng.int(0, 40) },
+    (_, index) => `a${iteration}-${index}`,
+  );
+  const domain = unwrap(createSequence(ids));
+  const eligible = new Set(ids.filter(() => adapterRng.bool()));
+  const initial = unwrap(createListboxState(domain));
+  let DOMEnvelope = unwrap(createRevisionEnvelope(initial));
+  let terminalEnvelope = unwrap(createRevisionEnvelope(initial));
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    selectionFollowsFocus: adapterRng.bool(),
+    boundary: adapterRng.pick(['stop', 'wrap']),
+    maxScan: adapterRng.int(0, ids.length + 2),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const [DOMInput, terminalInput] = adapterRng.pick(adapterInputs);
+    const DOMResult = stepDOMListboxAdapter(
+      domain,
+      DOMEnvelope,
+      DOMEnvelope.revision,
+      DOMInput,
+      policies,
+    );
+    const terminalResult = stepTerminalListboxAdapter(
+      domain,
+      terminalEnvelope,
+      terminalEnvelope.revision,
+      terminalInput,
+      policies,
+    );
+    assert.deepEqual(adapterResultObservation(DOMResult), adapterResultObservation(terminalResult));
+    counts.adapters.transitions += 2;
+    if (DOMResult.ok && terminalResult.ok) {
+      DOMEnvelope = DOMResult.envelope;
+      terminalEnvelope = terminalResult.envelope;
+      counts.adapters.effects += DOMResult.commands.length + terminalResult.commands.length;
+    }
+  }
+  counts.adapters.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
@@ -918,6 +972,24 @@ function textObservation(state) {
           composingText: state.composition.composingText,
         },
   };
+}
+
+function adapterResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        revision: result.envelope.revision,
+        current: result.envelope.state.cursor.current,
+        selected: result.envelope.state.selection.selected,
+        anchor: result.envelope.state.selection.anchor,
+        targets: result.commands.map((command) => command.id),
+      }
+    : {
+        ok: false,
+        revision: result.envelope.revision,
+        errorClass: result.error.class,
+        errorCode: result.error.code,
+      };
 }
 
 function randomText(rng, maxLength) {

@@ -11,6 +11,6 @@ carrier + observations + laws + failures + costs
   → public subpath
 ```
 
-Runtime sources are grouped by theory role: public structures under `src/structures`, internal state under `src/internal/state`, editing under `src/internal/editing`, composites under `src/internal/composites`, revision wrappers under `src/internal/runtime`, and shared mechanisms under `src/internal/kernel`. Reference models mirror the semantic theory groups under `src/internal/reference` and are compiled only into `.verification-dist`. Production builds exclude them. Public declarations are fingerprinted so a signature change cannot be merged as an incidental implementation edit.
+Runtime sources are grouped by theory role: public structures under `src/structures`, internal state under `src/internal/state`, editing under `src/internal/editing`, composites under `src/internal/composites`, revision wrappers under `src/internal/runtime`, host mappings under `src/internal/adapters`, and shared mechanisms under `src/internal/kernel`. Reference models mirror the semantic theory groups under `src/internal/reference` and are compiled only into `.verification-dist`. Production builds exclude them. Public declarations are fingerprinted so a signature change cannot be merged as an incidental implementation edit.
 
 The root module exports types only. This prevents an ambient service, event loop, or renderer binding from becoming accidental shared authority.

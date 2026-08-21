@@ -42,6 +42,9 @@ sectile/
 │   └── primitives/
 │       ├── src/
 │       │   ├── internal/
+│       │   │   ├── adapters/
+│       │   │   │   ├── dom.ts
+│       │   │   │   └── terminal.ts
 │       │   │   ├── composites/
 │       │   │   │   ├── calendar.ts
 │       │   │   │   ├── combobox.ts
@@ -86,6 +89,8 @@ sectile/
 │       │   ├── index.ts
 │       │   └── shared.ts
 │       ├── tests/
+│       │   ├── adapters/
+│       │   │   └── host-adapters.test.mjs
 │       │   ├── composites/
 │       │   │   ├── calendar.reference-law.test.mjs
 │       │   │   ├── combobox.reference-law.test.mjs

@@ -87,5 +87,11 @@
   },
   "revision": {
     "cases": 124
+  },
+  "adapters": {
+    "hosts": 2,
+    "models": 2000,
+    "transitions": 40000,
+    "effects": 16302
   }
 }
