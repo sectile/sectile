@@ -1,157 +1,87 @@
-import { createTreeGrid } from '@sectile/dom/tree-grid';
-import { unwrap } from '@sectile/primitives/result';
+import { demos } from './demos/index.js';
+import type { DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
 import './styles.css';
 
-interface LogEntry {
-  readonly revision: number;
-  readonly event: string;
-  readonly accepted: boolean;
-  readonly effects: readonly string[];
-}
-
-const treeGridRows = [
-  { id: 'projects', parentID: null, cells: ['projects-name', 'projects-status'] },
-  { id: 'atlas', parentID: 'projects', cells: ['atlas-name', 'atlas-status'] },
-  { id: 'atlas-design', parentID: 'atlas', cells: ['atlas-design-name', 'atlas-design-status'] },
-  { id: 'atlas-build', parentID: 'atlas', cells: ['atlas-build-name', 'atlas-build-status'] },
-  { id: 'beacon', parentID: 'projects', cells: ['beacon-name', 'beacon-status'] },
-  { id: 'archive', parentID: null, cells: ['archive-name', 'archive-status'] },
-] as const;
-
-const initialValues = new Map<string, string>([
-  ['projects-name', 'Projects'],
-  ['projects-status', 'Portfolio'],
-  ['atlas-name', 'Atlas'],
-  ['atlas-status', 'In progress'],
-  ['atlas-design-name', 'Design system'],
-  ['atlas-design-status', 'Review'],
-  ['atlas-build-name', 'Implementation'],
-  ['atlas-build-status', 'Active'],
-  ['beacon-name', 'Beacon'],
-  ['beacon-status', 'Planning'],
-  ['archive-name', 'Archive'],
-  ['archive-status', '12 items'],
-]);
-
-const gridElement = requiredElement<HTMLElement>('#tree-grid');
+const nav = requiredElement<HTMLElement>('#demo-nav');
+const title = requiredElement<HTMLElement>('#demo-title');
+const description = requiredElement<HTMLElement>('#demo-description');
+const shortcuts = requiredElement<HTMLElement>('#shortcuts');
+const surface = requiredElement<HTMLElement>('#demo-surface');
 const stateOutput = requiredElement<HTMLElement>('#state-output');
 const eventLog = requiredElement<HTMLOListElement>('#event-log');
 const revisionBadge = requiredElement<HTMLElement>('#revision-badge');
 const focusButton = requiredElement<HTMLButtonElement>('#focus-button');
 const resetButton = requiredElement<HTMLButtonElement>('#reset-button');
 
-let values = new Map(initialValues);
+let activeID = demoIDFromHash();
+let session: DemoSession | null = null;
 let logEntries: LogEntry[] = [];
-let connection = createConnection();
 
-focusButton.addEventListener('click', () => connection.focusCurrent());
+renderNavigation();
+mountActiveDemo();
+
+focusButton.addEventListener('click', () => session?.focus());
 resetButton.addEventListener('click', () => {
-  connection.disconnect();
-  values = new Map(initialValues);
-  logEntries = [];
-  connection = createConnection();
-  render();
-  connection.focusCurrent();
+  mountActiveDemo();
+  session?.focus();
+});
+window.addEventListener('hashchange', () => {
+  const nextID = demoIDFromHash();
+  if (nextID === activeID) return;
+  activeID = nextID;
+  renderNavigation();
+  mountActiveDemo();
 });
 
-render();
-
-function createConnection() {
-  return unwrap(createTreeGrid({
-    rows: treeGridRows,
-    root: gridElement,
-    defaultExpandedValue: ['projects', 'atlas'],
-    defaultHighlightedValue: 'projects-name',
-    getCellValue: (id) => values.get(id) ?? '',
-    setCellValue: (id, value) => values.set(id, value),
-    onTransition: ({ event, result }) => {
-      logEntries = [
-        {
-          revision: result.snapshot.revision,
-          event,
-          accepted: result.ok,
-          effects: result.commands.map((effect) => `${effect.type}:${effect.id}`),
-        },
-        ...logEntries,
-      ].slice(0, 12);
-    },
-    onUpdate: render,
+function renderNavigation(): void {
+  nav.replaceChildren(...demos.map((demo) => {
+    const link = document.createElement('a');
+    link.href = `#${demo.id}`;
+    link.textContent = demo.label;
+    if (demo.id === activeID) link.setAttribute('aria-current', 'page');
+    return link;
   }));
 }
 
-function render(): void {
-  const { model } = connection;
-  const { tree, grid } = model;
-  const { revision, state } = connection.getSnapshot();
-  const visibleRows = new Set(tree.visible(state.expansion).ids);
-  gridElement.replaceChildren();
-  connection.setGridAttributes(visibleRows.size, grid.columnCount);
+function mountActiveDemo(): void {
+  session?.disconnect();
+  logEntries = [];
+  surface.replaceChildren();
 
-  let visibleRowIndex = 0;
-  for (let rowIndex = 0; rowIndex < grid.rowCount; rowIndex += 1) {
-    const rowID = model.rowIDs[rowIndex];
-    if (rowID === undefined || !visibleRows.has(rowID)) continue;
-    visibleRowIndex += 1;
-    const rowElement = document.createElement('div');
-    rowElement.className = 'tree-row';
-    const level = (tree.depthOf(rowID) ?? 0) + 1;
-    connection.setRowAttributes(rowElement, {
-      rowIndex: visibleRowIndex,
-      level,
-      ...(tree.isLeaf(rowID) === false ? { expanded: state.expansion.has(rowID) } : {}),
-    });
+  const demo = demos.find((candidate) => candidate.id === activeID) ?? demos[0];
+  if (demo === undefined) throw new Error('The DOM playground needs at least one demo.');
+  activeID = demo.id;
+  title.textContent = demo.title;
+  description.textContent = demo.description;
+  renderShortcuts(demo.shortcuts);
 
-    for (let column = 0; column < grid.columnCount; column += 1) {
-      const cellID = grid.cellAt(rowIndex, column);
-      if (cellID === null) continue;
-      const current = state.cursor.current === cellID;
-      const selected = state.selection.has(cellID);
-      const editing = current && state.editMode === 'editing';
-      const cell = document.createElement('div');
-      cell.className = ['tree-cell', current ? 'current' : '', selected ? 'selected' : '']
-        .filter(Boolean)
-        .join(' ');
-      connection.setCellAttributes(cell, { id: cellID, columnIndex: column + 1 });
-
-      if (editing) {
-        const input = document.createElement('input');
-        input.className = 'cell-editor';
-        connection.bindEditor(input, { id: cellID });
-        cell.append(input);
-      } else if (column === 0) {
-        const label = document.createElement('span');
-        label.className = 'tree-label';
-        label.style.paddingLeft = `${(tree.depthOf(rowID) ?? 0) * 1.15}rem`;
-        const disclosure = document.createElement('span');
-        disclosure.className = 'disclosure';
-        disclosure.textContent = tree.isLeaf(rowID) === false
-          ? state.expansion.has(rowID) ? '▾' : '▸'
-          : '·';
-        const text = document.createElement('span');
-        text.textContent = values.get(cellID) ?? '';
-        label.append(disclosure, text);
-        if (selected) label.append(selectionDot());
-        cell.append(label);
-      } else {
-        const text = document.createElement('span');
-        text.textContent = values.get(cellID) ?? '';
-        cell.append(text);
-        if (selected) cell.append(selectionDot());
-      }
-      rowElement.append(cell);
-    }
-    gridElement.append(rowElement);
-  }
-
-  revisionBadge.textContent = `revision ${revision}`;
-  stateOutput.textContent = JSON.stringify({
-    revision,
-    expanded: state.expansion.ids,
-    current: state.cursor.current,
-    selected: state.selection.selected,
-    editMode: state.editMode,
-  }, null, 2);
+  const context: DemoContext = {
+    surface,
+    showState: (revision, state) => {
+      revisionBadge.textContent = `revision ${revision}`;
+      stateOutput.textContent = JSON.stringify(state, null, 2);
+    },
+    record: (entry) => {
+      logEntries = [entry, ...logEntries].slice(0, 12);
+      renderLog();
+    },
+  };
+  session = demo.mount(context);
   renderLog();
+}
+
+function renderShortcuts(items: readonly Shortcut[]): void {
+  shortcuts.replaceChildren(...items.map((shortcut) => {
+    const item = document.createElement('span');
+    for (const [index, key] of shortcut.keys.entries()) {
+      if (index > 0) item.append(' + ');
+      const keyElement = document.createElement('kbd');
+      keyElement.textContent = key;
+      item.append(keyElement);
+    }
+    item.append(` ${shortcut.label}`);
+    return item;
+  }));
 }
 
 function renderLog(): void {
@@ -182,11 +112,9 @@ function renderLog(): void {
   }
 }
 
-function selectionDot(): HTMLElement {
-  const dot = document.createElement('span');
-  dot.className = 'selection-dot';
-  dot.setAttribute('aria-hidden', 'true');
-  return dot;
+function demoIDFromHash(): string {
+  const requested = window.location.hash.slice(1);
+  return demos.some((demo) => demo.id === requested) ? requested : demos[0]?.id ?? '';
 }
 
 function requiredElement<T extends Element>(selector: string): T {
