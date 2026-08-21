@@ -1,9 +1,12 @@
 # Terminal playground
 
-Interactive tree-grid witness for the public terminal adapter.
+Interactive witnesses for every public terminal facade: listbox, slider, calendar,
+tree-view, text, combobox, and tree-grid.
 
 ```sh
 pnpm --filter @sectile/playground-terminal dev
 ```
 
-Use arrow keys to move, `Alt+ArrowLeft/Right` or `c`/`o` to collapse and expand, Space to select, Enter to edit or commit, and Escape to cancel. Press `q` to quit from navigation mode or `Ctrl+C` from any mode.
+Choose a demo with the arrow keys and Enter, or press `1`–`7`. Each demo shows its
+own shortcuts, revision state, and host effects. Press `Ctrl+B` to return to the menu,
+`Ctrl+R` to reset the active demo, and `Ctrl+C` to quit.
