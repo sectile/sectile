@@ -1,7 +1,7 @@
 import { createAccordion, type AccordionConnection } from '@sectile/dom/accordion';
 import { createDisclosure, type DisclosureConnection } from '@sectile/dom/disclosure';
 import { unwrap } from '@sectile/primitives/result';
-import { ChevronDown, createElement } from 'lucide';
+import { ChevronDown, createElement, Rocket, Settings2, TriangleAlert } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const accordionItems = [
@@ -70,11 +70,24 @@ function mountAccordion(context: DemoContext, options: {
       header.type = 'button';
       header.id = `accordion-header-${options.expansion}-${item.id}`;
       header.className = 'accordion-header';
-      header.append(item.label, createElement(ChevronDown, { 'aria-hidden': 'true', height: 17, width: 17 }));
+      const label = document.createElement('span');
+      label.className = 'accordion-label';
+      const icon = createElement(
+        item.id === 'general' ? Settings2 : item.id === 'deployments' ? Rocket : TriangleAlert,
+        { 'aria-hidden': 'true', height: 17, width: 17 },
+      );
+      const labelText = document.createElement('span');
+      labelText.textContent = item.label;
+      label.append(icon, labelText);
+      const chevron = createElement(ChevronDown, { 'aria-hidden': 'true', height: 17, width: 17 });
+      chevron.classList.add('expansion-chevron');
+      header.append(label, chevron);
       const panel = document.createElement('div');
       panel.id = `accordion-panel-${options.expansion}-${item.id}`;
       panel.className = 'accordion-panel';
-      panel.textContent = item.panel;
+      const panelCopy = document.createElement('p');
+      panelCopy.textContent = item.panel;
+      panel.append(panelCopy);
       connection.setHeaderAttributes(header, item.id, panel.id);
       connection.setPanelAttributes(panel, item.id, header.id);
       section.append(header, panel);
@@ -99,10 +112,30 @@ function mountDisclosure(context: DemoContext, initial: boolean, controlled: boo
   const trigger = document.createElement('button');
   trigger.type = 'button';
   trigger.className = 'disclosure-trigger secondary';
-  trigger.append('Advanced deployment options', createElement(ChevronDown, { 'aria-hidden': 'true', height: 17, width: 17 }));
+  const triggerLabel = document.createElement('span');
+  triggerLabel.className = 'disclosure-label';
+  const triggerTitle = document.createElement('strong');
+  triggerTitle.textContent = 'Advanced deployment options';
+  const triggerDescription = document.createElement('small');
+  triggerDescription.textContent = 'Retries, rollout windows, and health checks';
+  triggerLabel.append(triggerTitle, triggerDescription);
+  const chevron = createElement(ChevronDown, { 'aria-hidden': 'true', height: 18, width: 18 });
+  chevron.classList.add('expansion-chevron');
+  trigger.append(triggerLabel, chevron);
   const panel = document.createElement('div');
   panel.className = 'disclosure-panel';
-  panel.textContent = 'Configure retry limits, rollout windows, and health-check thresholds.';
+  const details = document.createElement('dl');
+  details.className = 'disclosure-details';
+  for (const [label, value] of [['Retry limit', '3 attempts'], ['Rollout window', '15 minutes'], ['Health threshold', '95%']] as const) {
+    const row = document.createElement('div');
+    const term = document.createElement('dt');
+    term.textContent = label;
+    const description = document.createElement('dd');
+    description.textContent = value;
+    row.append(term, description);
+    details.append(row);
+  }
+  panel.append(details);
   root.append(trigger, panel);
   context.surface.append(root);
   let external = initial;

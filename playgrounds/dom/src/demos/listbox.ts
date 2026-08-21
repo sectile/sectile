@@ -1,5 +1,6 @@
 import { createListbox } from '@sectile/dom/listbox';
 import { unwrap } from '@sectile/primitives/result';
+import { Check, createElement, LockKeyhole } from 'lucide';
 import {
   effectLabels,
   eventLabel,
@@ -89,12 +90,19 @@ function mountListboxCase(
 ): DemoSession {
   const layout = document.createElement('div');
   layout.className = 'listbox-example';
+  layout.dataset['mode'] = options.selectionMode;
+  const intro = document.createElement('div');
+  intro.className = 'listbox-intro';
   const description = document.createElement('p');
   description.className = 'demo-copy';
   description.textContent = options.description;
+  const mode = document.createElement('span');
+  mode.className = 'listbox-mode';
+  mode.textContent = options.selectionMode === 'single' ? 'Single select' : 'Multi select';
+  intro.append(description, mode);
   const root = document.createElement('div');
-  root.className = 'option-list';
-  layout.append(description, root);
+  root.className = 'option-list listbox-options';
+  layout.append(intro, root);
   context.surface.append(layout);
 
   let activated: ItemID | null = null;
@@ -150,6 +158,7 @@ function mountListboxCase(
       ].filter(Boolean).join(' ');
       connection.setItemAttributes(element, { id: item.id });
       const copy = document.createElement('span');
+      copy.className = 'option-copy';
       const label = document.createElement('strong');
       label.textContent = item.label;
       const detail = document.createElement('small');
@@ -157,7 +166,26 @@ function mountListboxCase(
       copy.append(label, detail);
       const marker = document.createElement('span');
       marker.className = 'option-marker';
-      marker.textContent = disabled ? 'Unavailable' : selected ? 'Selected' : '';
+      if (disabled) {
+        marker.append(
+          createElement(LockKeyhole, { 'aria-hidden': 'true', height: 14, width: 14 }),
+          'Unavailable',
+        );
+      } else {
+        const indicator = document.createElement('span');
+        indicator.className = 'option-selection-indicator';
+        indicator.setAttribute('aria-hidden', 'true');
+        if (selected) {
+          if (options.selectionMode === 'multiple') {
+            indicator.append(createElement(Check, { height: 14, width: 14 }));
+          } else {
+            const dot = document.createElement('span');
+            dot.className = 'option-selection-dot';
+            indicator.append(dot);
+          }
+        }
+        marker.append(indicator);
+      }
       element.append(copy, marker);
       root.append(element);
     }
