@@ -24,6 +24,10 @@ import {
   stepSlider,
 } from '../../.verification-dist/internal/composites/slider.js';
 import {
+  createTreeViewState,
+  stepTreeView,
+} from '../../.verification-dist/internal/composites/tree-view.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -59,6 +63,10 @@ import {
   createReferenceSliderState,
   referenceStepSlider,
 } from '../../.verification-dist/internal/reference/composites/slider.js';
+import {
+  createReferenceTreeViewState,
+  referenceStepTreeView,
+} from '../../.verification-dist/internal/reference/composites/tree-view.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -99,6 +107,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyListbox(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySlider(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCalendar(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTreeView(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -515,6 +524,40 @@ function verifyCalendar(rng, iteration) {
   }
 }
 
+function verifyTreeView(rng, iteration) {
+  const size = rng.int(0, 40);
+  const nodes = [];
+  for (let node = 0; node < size; node += 1) {
+    nodes.push({
+      id: `v${iteration}-${node}`,
+      parentID: node === 0 || rng.next() < 0.25 ? null : `v${iteration}-${rng.int(0, node)}`,
+    });
+  }
+  const tree = unwrap(createTree(nodes));
+  const ids = tree.preorder().ids;
+  const branches = ids.filter((id) => tree.childrenOf(id).size > 0);
+  const expanded = branches.filter(() => rng.bool());
+  const visible = tree.visible(expanded).ids;
+  const input = {
+    expanded,
+    current: rng.pick([null, ...visible]),
+    selected: ids.filter(() => rng.bool()),
+    anchor: rng.pick([null, ...ids]),
+  };
+  let optimized = unwrap(createTreeViewState(tree, input));
+  let reference = createReferenceTreeViewState(tree, input);
+  for (let step = 0; step < 10; step += 1) {
+    const event = rng.pick(['next', 'previous', 'right', 'left', 'toggle-select']);
+    const left = stepTreeView(tree, optimized, event);
+    const right = referenceStepTreeView(tree, reference, event);
+    assert.deepEqual(treeViewResultObservation(left), referenceTreeViewResultObservation(right));
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+    }
+  }
+}
+
 function listboxResultObservation(result) {
   return result.ok
     ? {
@@ -567,6 +610,32 @@ function referenceCalendarResultObservation(result) {
   return result.ok
     ? {
         ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function treeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceTreeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
         current: result.value.state.cursor.current,
         selected: result.value.state.selection.selected,
         anchor: result.value.state.selection.anchor,

@@ -71,5 +71,12 @@
     "accepted": 16949,
     "rejected": 3051,
     "commands": 7930
+  },
+  "treeView": {
+    "models": 2000,
+    "transitions": 20000,
+    "accepted": 19757,
+    "rejected": 243,
+    "commands": 8001
   }
 }

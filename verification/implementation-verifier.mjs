@@ -23,6 +23,10 @@ import {
   stepSlider,
 } from '../packages/primitives/.verification-dist/internal/composites/slider.js';
 import {
+  createTreeViewState,
+  stepTreeView,
+} from '../packages/primitives/.verification-dist/internal/composites/tree-view.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -58,6 +62,10 @@ import {
   createReferenceSliderState,
   referenceStepSlider,
 } from '../packages/primitives/.verification-dist/internal/reference/composites/slider.js';
+import {
+  createReferenceTreeViewState,
+  referenceStepTreeView,
+} from '../packages/primitives/.verification-dist/internal/reference/composites/tree-view.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -103,6 +111,7 @@ const counts = {
   listbox: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   slider: { models: 0, transitions: 0, commands: 0 },
   calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
+  treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -650,6 +659,50 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.calendar.models += 1;
 }
 
+const treeViewRng = createRng(seed ^ 0x7ee);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const size = treeViewRng.int(0, 40);
+  const nodes = [];
+  for (let node = 0; node < size; node += 1) {
+    nodes.push({
+      id: `v${iteration}-${node}`,
+      parentID:
+        node === 0 || treeViewRng.next() < 0.25
+          ? null
+          : `v${iteration}-${treeViewRng.int(0, node)}`,
+    });
+  }
+  const tree = unwrap(createTree(nodes));
+  const ids = tree.preorder().ids;
+  const branches = ids.filter((id) => tree.childrenOf(id).size > 0);
+  const expanded = branches.filter(() => treeViewRng.bool());
+  const visible = tree.visible(expanded).ids;
+  const input = {
+    expanded,
+    current: treeViewRng.pick([null, ...visible]),
+    selected: ids.filter(() => treeViewRng.bool()),
+    anchor: treeViewRng.pick([null, ...ids]),
+  };
+  let optimized = unwrap(createTreeViewState(tree, input));
+  let reference = createReferenceTreeViewState(tree, input);
+  for (let step = 0; step < 10; step += 1) {
+    const event = treeViewRng.pick(['next', 'previous', 'right', 'left', 'toggle-select']);
+    const left = stepTreeView(tree, optimized, event);
+    const right = referenceStepTreeView(tree, reference, event);
+    assert.deepEqual(treeViewResultObservation(left), referenceTreeViewResultObservation(right));
+    counts.treeView.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.treeView.accepted += 1;
+      counts.treeView.commands += left.value.commands.length;
+    } else {
+      counts.treeView.rejected += 1;
+    }
+  }
+  counts.treeView.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
@@ -708,6 +761,32 @@ function referenceCalendarResultObservation(result) {
   return result.ok
     ? {
         ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function treeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceTreeViewResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        expanded: result.value.state.expansion.ids,
         current: result.value.state.cursor.current,
         selected: result.value.state.selection.selected,
         anchor: result.value.state.selection.anchor,

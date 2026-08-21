@@ -17,4 +17,5 @@
 - [x] Implement internal listbox composition with deterministic commands and failure-atomic law evidence.
 - [x] Implement internal slider composition with bounded tick transitions and independent law evidence.
 - [x] Implement internal calendar composition with grid navigation and external page authority.
+- [x] Implement internal tree-view composition with visible navigation and expansion/selection authority.
 - [ ] Promote cursor, selection, expansion, or text only after their independent usage-evidence gates are met.
