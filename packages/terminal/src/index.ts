@@ -68,16 +68,22 @@ export {
   type SliderValueChangeDetails,
 } from './slider.js';
 export {
+  connectTreeView,
+  createTreeView,
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
   type KeyboardInput as TreeViewKeyboardInput,
   type TreeViewControlledValues,
+  type TreeViewConnection,
+  type TreeViewConnectionOptions,
   type TreeViewController,
   type TreeViewControllerOptions,
   type TreeViewEffect,
   type TreeViewExpandedChangeDetails,
   type TreeViewHighlightChangeDetails,
+  type TreeViewOptions,
+  type TreeViewTransitionDetails,
   type TreeViewValueChangeDetails,
 } from './tree-view.js';
 export {

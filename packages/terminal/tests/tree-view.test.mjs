@@ -3,10 +3,28 @@ import test from 'node:test';
 import { unwrap } from '@sectile/primitives/result';
 import { createTree } from '@sectile/primitives/tree';
 import {
+  createTreeView,
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
 } from '../dist/tree-view.js';
+
+test('terminal tree-view facade constructs the tree and owns keyboard updates', () => {
+  let updates = 0;
+  const connection = unwrap(createTreeView({
+    nodes: nodes(),
+    defaultHighlightedValue: 'root',
+    onUpdate: () => { updates += 1; },
+  }));
+  assert.equal(connection.tree.size, 4);
+  assert.equal(connection.handleKeyboardInput({ key: 'right' }), true);
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), false);
+  assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
+  assert.equal(updates, 1);
+
+  const invalid = createTreeView({ nodes: [{ id: 'child', parentID: 'missing' }] });
+  assert.equal(invalid.ok, false);
+});
 
 test('terminal keys map onto tree-view semantic events', () => {
   assert.equal(toTreeViewEvent({ key: 'down' }), 'next');
@@ -54,10 +72,14 @@ test('unsupported terminal tree-view input is failure-atomic', () => {
 });
 
 function tree() {
-  return unwrap(createTree([
+  return unwrap(createTree(nodes()));
+}
+
+function nodes() {
+  return [
     { id: 'root', parentID: null },
     { id: 'child-a', parentID: 'root' },
     { id: 'grandchild', parentID: 'child-a' },
     { id: 'child-b', parentID: 'root' },
-  ]));
+  ];
 }

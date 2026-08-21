@@ -5,7 +5,7 @@ import {
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
-import type { Tree } from '@sectile/primitives/tree';
+import { createTree, type Tree, type TreeNodeInput } from '@sectile/primitives/tree';
 import {
   applyTreeViewEvent,
   createTreeViewState,
@@ -62,6 +62,7 @@ export interface TreeViewControlledValues<ID extends StableID = StableID> {
 }
 
 export interface TreeViewController<ID extends StableID = StableID> {
+  readonly tree: Tree<ID>;
   getSnapshot(): RevisionSnapshot<TreeViewState<ID>>;
   syncControlledValues(
     values: TreeViewControlledValues<ID>,
@@ -71,6 +72,42 @@ export interface TreeViewController<ID extends StableID = StableID> {
     expectedRevision?: number,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>>;
 }
+
+export interface TreeViewTransitionDetails<ID extends StableID = StableID> {
+  readonly event: TreeViewEvent;
+  readonly result: RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>>;
+}
+
+export interface TreeViewConnectionOptions<ID extends StableID = StableID> {
+  readonly controller: TreeViewController<ID>;
+  readonly root: HTMLElement;
+  readonly onTransition?: (details: TreeViewTransitionDetails<ID>) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface TreeViewItemAttributes<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly level?: number;
+  readonly disabled?: boolean;
+}
+
+export interface TreeViewConnection<ID extends StableID = StableID> {
+  readonly tree: Tree<ID>;
+  getSnapshot(): RevisionSnapshot<TreeViewState<ID>>;
+  syncControlledValues(
+    values: TreeViewControlledValues<ID>,
+  ): Result<RevisionSnapshot<TreeViewState<ID>>>;
+  setTreeAttributes(label?: string): void;
+  setItemAttributes(element: HTMLElement, attributes: TreeViewItemAttributes<ID>): void;
+  handleKeyboardEvent(event: KeyboardEvent): boolean;
+  focusCurrent(): void;
+  disconnect(): void;
+}
+
+export type TreeViewOptions<ID extends StableID = StableID> =
+  Omit<TreeViewControllerOptions<ID>, 'tree'>
+  & Omit<TreeViewConnectionOptions<ID>, 'controller'>
+  & { readonly nodes: readonly TreeNodeInput<ID>[] };
 
 export function createTreeViewController<ID extends StableID>(
   options: TreeViewControllerOptions<ID>,
@@ -86,6 +123,22 @@ export function createTreeViewController<ID extends StableID>(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new DOMTreeViewController(options, snapshot.value) };
+}
+
+export function createTreeView<ID extends StableID>(
+  options: TreeViewOptions<ID>,
+): Result<TreeViewConnection<ID>> {
+  const tree = createTree(options.nodes);
+  if (!tree.ok) return tree;
+  const controller = createTreeViewController({ ...options, tree: tree.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectTreeView({ ...options, controller: controller.value }) };
+}
+
+export function connectTreeView<ID extends StableID>(
+  options: TreeViewConnectionOptions<ID>,
+): TreeViewConnection<ID> {
+  return new DOMTreeViewConnection(options);
 }
 
 export function toTreeViewEvent(input: KeyboardInput): TreeViewEvent | null {
@@ -104,7 +157,107 @@ export function toTreeViewEffect<ID extends StableID>(
   return Object.freeze({ type: 'focus-element', id: command.id });
 }
 
+class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<ID> {
+  public readonly tree: Tree<ID>;
+  readonly #controller: TreeViewController<ID>;
+  readonly #root: HTMLElement;
+  readonly #onTransition: ((details: TreeViewTransitionDetails<ID>) => void) | undefined;
+  readonly #onUpdate: (() => void) | undefined;
+  readonly #handleKeydown: (event: KeyboardEvent) => void;
+
+  public constructor(options: TreeViewConnectionOptions<ID>) {
+    this.#controller = options.controller;
+    this.tree = options.controller.tree;
+    this.#root = options.root;
+    this.#onTransition = options.onTransition;
+    this.#onUpdate = options.onUpdate;
+    this.#handleKeydown = (event): void => {
+      if (this.handleKeyboardEvent(event)) event.preventDefault();
+    };
+    this.#root.addEventListener('keydown', this.#handleKeydown);
+  }
+
+  public getSnapshot(): RevisionSnapshot<TreeViewState<ID>> {
+    return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: TreeViewControlledValues<ID>,
+  ): Result<RevisionSnapshot<TreeViewState<ID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) {
+      this.#onUpdate?.();
+      this.focusCurrent();
+    }
+    return result;
+  }
+
+  public setTreeAttributes(label?: string): void {
+    this.#root.setAttribute('role', 'tree');
+    this.#root.setAttribute('aria-multiselectable', 'true');
+    if (label === undefined) this.#root.removeAttribute('aria-label');
+    else this.#root.setAttribute('aria-label', label);
+  }
+
+  public setItemAttributes(
+    element: HTMLElement,
+    attributes: TreeViewItemAttributes<ID>,
+  ): void {
+    const state = this.#controller.getSnapshot().state;
+    const leaf = this.tree.isLeaf(attributes.id);
+    const level = attributes.level ?? (this.tree.depthOf(attributes.id) ?? 0) + 1;
+    element.dataset['treeViewId'] = String(attributes.id);
+    element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
+    element.setAttribute('role', 'treeitem');
+    element.setAttribute('aria-level', String(level));
+    element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
+    if (leaf === false) {
+      element.setAttribute('aria-expanded', String(state.expansion.has(attributes.id)));
+    } else {
+      element.removeAttribute('aria-expanded');
+    }
+    if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');
+    else element.removeAttribute('aria-disabled');
+  }
+
+  public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    const input: KeyboardInput = {
+      key: event.key,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+    };
+    const semanticEvent = toTreeViewEvent(input);
+    if (semanticEvent === null) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onUpdate?.();
+    this.focusCurrent();
+    return true;
+  }
+
+  public focusCurrent(): void {
+    queueMicrotask((): void => {
+      const current = this.#controller.getSnapshot().state.cursor.current;
+      if (current === null) {
+        this.#root.focus();
+        return;
+      }
+      for (const element of this.#root.querySelectorAll<HTMLElement>('[data-tree-view-id]')) {
+        if (element.dataset['treeViewId'] !== String(current)) continue;
+        element.focus();
+        return;
+      }
+    });
+  }
+
+  public disconnect(): void {
+    this.#root.removeEventListener('keydown', this.#handleKeydown);
+  }
+}
+
 class DOMTreeViewController<ID extends StableID> implements TreeViewController<ID> {
+  public readonly tree: Tree<ID>;
   readonly #tree: Tree<ID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
@@ -122,6 +275,7 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
     options: TreeViewControllerOptions<ID>,
     snapshot: RevisionSnapshot<TreeViewState<ID>>,
   ) {
+    this.tree = options.tree;
     this.#tree = options.tree;
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValue !== undefined;
