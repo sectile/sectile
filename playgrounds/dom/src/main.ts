@@ -71,6 +71,7 @@ function mountActiveDemo(): void {
 }
 
 function renderShortcuts(items: readonly Shortcut[]): void {
+  shortcuts.toggleAttribute('hidden', items.length === 0);
   shortcuts.replaceChildren(...items.map((shortcut) => {
     const item = document.createElement('span');
     for (const [index, key] of shortcut.keys.entries()) {
