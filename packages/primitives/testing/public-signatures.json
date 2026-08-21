@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "6ec1d1f4d558a3dbc81941015c431f334b258e4b87d8ede6599094e6bce39cb0",
+  "fingerprint": "5f50e74775f83e9a0467d96943f31574ad2580bdc71bb66accfb1f02c667906f",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -41,6 +41,10 @@
     {
       "path": "dist/internal/composites/combobox.d.ts",
       "sha256": "de87d5b499dd2dc62962e41084e0157d31e6d9675812371082778a6e9b716714"
+    },
+    {
+      "path": "dist/internal/composites/grid-control.d.ts",
+      "sha256": "c96749315f6966bacc198ecca5711d31d2c903683632f3d242a33b646cbdd6e0"
     },
     {
       "path": "dist/internal/composites/linear-action.d.ts",
@@ -136,7 +140,7 @@
     },
     {
       "path": "dist/structures/grid.d.ts",
-      "sha256": "d3434226cdda459c8fadf5f3d0d04c92d6b9f94a358828da3d56fc59a7ad5186"
+      "sha256": "0fead834c870f722fb563731214851cb2a6fdc881d936e9b93e1433b3341d7b2"
     },
     {
       "path": "dist/structures/range.d.ts",

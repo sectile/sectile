@@ -139,3 +139,12 @@ represent the invariant without an external coordinator. Bounded differential co
 against an independent vector reference covers every valid two-thumb state, active thumb,
 movement event, direct focus, and direct tick assignment. DOM and terminal witnesses expose
 the same controlled/uncontrolled transitions without taking ownership of the constraint.
+
+## Verified composite: grid
+
+Grid interaction adds `cursor × single selection × edit mode` to the existing coordinate
+structure. Directional movement changes only one axis, selection does not imply editing,
+and navigation is suspended while an edit is active. The primitive is intentionally
+exported from the existing `grid` subpath; Tree Grid remains a strict extension because it
+also owns row expansion and visible projection. An independent coordinate reference and
+DOM/terminal witnesses cover navigation, direct targeting, selection, and editing.

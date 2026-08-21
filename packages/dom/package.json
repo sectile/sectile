@@ -21,6 +21,7 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
+    "./grid": { "types": "./dist/grid.d.ts", "import": "./dist/grid.js", "default": "./dist/grid.js" },
     "./tabs": {
       "types": "./dist/tabs.d.ts",
       "import": "./dist/tabs.js",
