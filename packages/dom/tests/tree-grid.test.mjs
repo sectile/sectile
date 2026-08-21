@@ -5,7 +5,7 @@ import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
-  connectTreeGrid,
+  createTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -15,17 +15,15 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   const root = new FakeElement();
   const values = new Map([['root-name', 'Root']]);
   const events = [];
-  const controller = unwrap(createTreeGridController({
-    model: model(),
-    defaultHighlightedValue: 'root-name',
-  }));
-  const connection = connectTreeGrid({
-    controller,
+  const connection = unwrap(createTreeGrid({
+    rows: modelRows(),
     root,
+    defaultHighlightedValue: 'root-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event }) => events.push(event),
-  });
+  }));
+  assert.equal(connection.model.tree.parentOf('child'), 'root');
 
   connection.setGridAttributes(2, 2);
   assert.equal(root.attributes.get('role'), 'treegrid');
@@ -49,7 +47,7 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   await new Promise((resolve) => setTimeout(resolve, 5));
 
   assert.equal(values.get('root-name'), '한글');
-  assert.equal(controller.getSnapshot().state.editMode, 'navigation');
+  assert.equal(connection.getSnapshot().state.editMode, 'navigation');
   connection.handleKeyboardEvent(keyboardEvent('Enter'));
   const cancelledInput = new FakeInput();
   connection.bindEditor(cancelledInput, { id: 'root-name' });
@@ -60,6 +58,28 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.deepEqual(events, ['start-edit', 'commit-edit', 'start-edit', 'cancel-edit']);
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+
+  const invalid = createTreeGrid({
+    rows: [{ id: 'child', parentID: 'missing', cells: ['child-name'] }],
+    root: new FakeElement(),
+    getCellValue: () => '',
+    setCellValue: () => {},
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'missing-parent');
+
+  let renders = 0;
+  const controlled = unwrap(createTreeGrid({
+    rows: modelRows(),
+    root: new FakeElement(),
+    value: null,
+    getCellValue: () => '',
+    setCellValue: () => {},
+    onUpdate: () => { renders += 1; },
+  }));
+  const synchronized = unwrap(controlled.syncControlledValues({ value: 'root-name' }));
+  assert.deepEqual(synchronized.state.selection.selected, ['root-name']);
+  assert.equal(renders, 1);
 });
 
 test('DOM keys map onto tree-grid navigation and edit modes', () => {
@@ -188,6 +208,13 @@ function model() {
     ['child-name', 'child-value'],
   ]));
   return unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
+}
+
+function modelRows() {
+  return [
+    { id: 'root', parentID: null, cells: ['root-name', 'root-value'] },
+    { id: 'child', parentID: 'root', cells: ['child-name', 'child-value'] },
+  ];
 }
 
 function keyboardEvent(key, overrides = {}) {

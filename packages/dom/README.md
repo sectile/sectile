@@ -22,3 +22,5 @@ The text controller maps explicit `beforeinput` ranges and composition phases th
 The combobox controller reuses the same DOM text normalization for editable filtering, keeps IME phases explicit, and maps candidate movement to active-descendant effects. Its controlled input field is the complete `inputState`, not a string fragment.
 
 `connectTreeGrid` binds a controller to a DOM root and owns keyboard dispatch, IME-safe Enter commits, edit rollback, focus movement, and tree-grid ARIA attributes. Consumers remain responsible for their data and rendered content, then call the connection's row, cell, and editor binding methods while rendering.
+
+For ordinary setup, `createTreeGrid` accepts `{ id, parentID, cells }` rows plus controller and DOM connection options. It validates and constructs the primitive model, controller, and connection behind one `Result`. The lower-level controller and connection factories remain available for separately owned models or controllers.

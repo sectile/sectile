@@ -7,12 +7,14 @@ import {
 } from '@sectile/primitives/revision';
 import {
   applyTreeGridEvent,
+  createTreeGridModelFromRows,
   createTreeGridState,
   type TreeGridCommand,
   type TreeGridEditMode,
   type TreeGridEvent,
   type TreeGridModel,
   type TreeGridPolicies,
+  type TreeGridRowInput,
   type TreeGridState,
 } from '@sectile/primitives/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
@@ -83,6 +85,7 @@ export interface TreeGridController<
   RowID extends StableID = StableID,
   CellID extends StableID = StableID,
 > {
+  readonly model: TreeGridModel<RowID, CellID>;
   getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>>;
   syncControlledValues(
     values: TreeGridControlledValues<RowID, CellID>,
@@ -116,9 +119,20 @@ export interface TreeGridConnection<
   RowID extends StableID = StableID,
   CellID extends StableID = StableID,
 > {
+  readonly model: TreeGridModel<RowID, CellID>;
   getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>>;
+  syncControlledValues(
+    values: TreeGridControlledValues<RowID, CellID>,
+  ): Result<RevisionSnapshot<TreeGridState<RowID, CellID>>>;
   handleKeyboardInput(input: KeyboardInput): boolean;
 }
+
+export type TreeGridOptions<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> = Omit<TreeGridControllerOptions<RowID, CellID>, 'model'>
+  & Omit<TreeGridConnectionOptions<RowID, CellID>, 'controller'>
+  & { readonly rows: readonly TreeGridRowInput<RowID, CellID>[] };
 
 export function createTreeGridController<
   RowID extends StableID,
@@ -140,6 +154,16 @@ export function createTreeGridController<
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalTreeGridController(options, snapshot.value) };
+}
+
+export function createTreeGrid<RowID extends StableID, CellID extends StableID>(
+  options: TreeGridOptions<RowID, CellID>,
+): Result<TreeGridConnection<RowID, CellID>> {
+  const model = createTreeGridModelFromRows(options.rows);
+  if (!model.ok) return model;
+  const controller = createTreeGridController({ ...options, model: model.value });
+  if (!controller.ok) return controller;
+  return { ok: true, value: connectTreeGrid({ ...options, controller: controller.value }) };
 }
 
 export function connectTreeGrid<RowID extends StableID, CellID extends StableID>(
@@ -176,6 +200,7 @@ export function toTreeGridEvent(
 
 class TerminalTreeGridConnection<RowID extends StableID, CellID extends StableID>
   implements TreeGridConnection<RowID, CellID> {
+  public readonly model: TreeGridModel<RowID, CellID>;
   readonly #controller: TreeGridController<RowID, CellID>;
   readonly #getCellValue: (id: CellID) => string;
   readonly #setCellValue: (id: CellID, value: string) => void;
@@ -187,6 +212,7 @@ class TerminalTreeGridConnection<RowID extends StableID, CellID extends StableID
 
   public constructor(options: TreeGridConnectionOptions<RowID, CellID>) {
     this.#controller = options.controller;
+    this.model = options.controller.model;
     this.#getCellValue = options.getCellValue;
     this.#setCellValue = options.setCellValue;
     this.#onTransition = options.onTransition;
@@ -195,6 +221,14 @@ class TerminalTreeGridConnection<RowID extends StableID, CellID extends StableID
 
   public getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>> {
     return this.#controller.getSnapshot();
+  }
+
+  public syncControlledValues(
+    values: TreeGridControlledValues<RowID, CellID>,
+  ): Result<RevisionSnapshot<TreeGridState<RowID, CellID>>> {
+    const result = this.#controller.syncControlledValues(values);
+    if (result.ok) this.#onUpdate?.();
+    return result;
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
@@ -254,7 +288,7 @@ export function toTreeGridEffect<CellID extends StableID>(
 
 class TerminalTreeGridController<RowID extends StableID, CellID extends StableID>
   implements TreeGridController<RowID, CellID> {
-  readonly #model: TreeGridModel<RowID, CellID>;
+  public readonly model: TreeGridModel<RowID, CellID>;
   readonly #policies: TreeGridPolicies<CellID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
@@ -278,7 +312,7 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
     options: TreeGridControllerOptions<RowID, CellID>,
     snapshot: RevisionSnapshot<TreeGridState<RowID, CellID>>,
   ) {
-    this.#model = options.model;
+    this.model = options.model;
     this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValue !== undefined;
@@ -309,7 +343,7 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
     const selected = this.#valueControlled
       ? (values.value as CellID | null)
       : selectedValue(this.#snapshot.state);
-    const state = createTreeGridState(this.#model, {
+    const state = createTreeGridState(this.model, {
       selected: selected === null ? [] : [selected],
       anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
       expanded: this.#expandedControlled
@@ -346,13 +380,13 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
       expectedRevision,
       event,
       (state, semanticEvent) => applyTreeGridEvent(
-        this.#model,
+        this.model,
         state,
         semanticEvent,
         this.#policies,
       ),
       (previous, proposed) => controlledState(
-        this.#model,
+        this.model,
         previous,
         proposed,
         this.#valueControlled,

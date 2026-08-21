@@ -63,6 +63,7 @@ export {
 } from './tree-view.js';
 export {
   connectTreeGrid,
+  createTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -78,6 +79,7 @@ export {
   type TreeGridEffect,
   type TreeGridExpandedChangeDetails,
   type TreeGridHighlightChangeDetails,
+  type TreeGridOptions,
   type TreeGridRowAttributes,
   type TreeGridTransitionDetails,
   type TreeGridValueChangeDetails,

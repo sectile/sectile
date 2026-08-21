@@ -1,25 +1,16 @@
-import { createGrid } from '@sectile/primitives/grid';
 import { unwrap } from '@sectile/primitives/result';
-import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import { fitTerminalText } from '@sectile/terminal/layout';
 import { createTTYKeyboard } from '@sectile/terminal/node';
-import {
-  connectTreeGrid,
-  createTreeGridController,
-} from '@sectile/terminal/tree-grid';
+import { createTreeGrid } from '@sectile/terminal/tree-grid';
 
-const tree = unwrap(createTree([
-  { id: 'projects', parentID: null },
-  { id: 'atlas', parentID: 'projects' },
-  { id: 'atlas-design', parentID: 'atlas' },
-  { id: 'atlas-build', parentID: 'atlas' },
-  { id: 'beacon', parentID: 'projects' },
-  { id: 'archive', parentID: null },
-]));
-const rowIDs = tree.preorder().ids;
-const grid = unwrap(createGrid(rowIDs.map((row) => [`${row}-name`, `${row}-status`])));
-const model = unwrap(createTreeGridModel(tree, grid, rowIDs));
+const treeGridRows = [
+  { id: 'projects', parentID: null, cells: ['projects-name', 'projects-status'] },
+  { id: 'atlas', parentID: 'projects', cells: ['atlas-name', 'atlas-status'] },
+  { id: 'atlas-design', parentID: 'atlas', cells: ['atlas-design-name', 'atlas-design-status'] },
+  { id: 'atlas-build', parentID: 'atlas', cells: ['atlas-build-name', 'atlas-build-status'] },
+  { id: 'beacon', parentID: 'projects', cells: ['beacon-name', 'beacon-status'] },
+  { id: 'archive', parentID: null, cells: ['archive-name', 'archive-status'] },
+];
 
 const initialValues = new Map([
   ['projects-name', 'Projects'],
@@ -47,9 +38,10 @@ function run() {
   let values = new Map(initialValues);
   let logs = [];
   let closed = false;
-  const controller = createController();
-  const connection = connectTreeGrid({
-    controller,
+  const connection = unwrap(createTreeGrid({
+    rows: treeGridRows,
+    defaultExpandedValue: ['projects', 'atlas'],
+    defaultHighlightedValue: 'projects-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event, result }) => {
@@ -61,7 +53,9 @@ function run() {
       }, ...logs].slice(0, 6);
     },
     onUpdate: render,
-  });
+  }));
+  const { model } = connection;
+  const { tree, grid } = model;
   const keyboard = unwrap(createTTYKeyboard(process.stdin, handleInput));
   process.once('SIGINT', close);
   process.once('SIGTERM', close);
@@ -132,14 +126,6 @@ function run() {
       if (selected) return `\u001b[36m${marker}${selection}${clipped}\u001b[0m`;
       return `${marker}${selection}${clipped}`;
     }
-  }
-
-  function createController() {
-    return unwrap(createTreeGridController({
-      model,
-      defaultExpandedValue: ['projects', 'atlas'],
-      defaultHighlightedValue: 'projects-name',
-    }));
   }
 
   function close() {

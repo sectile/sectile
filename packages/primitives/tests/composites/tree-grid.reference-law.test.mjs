@@ -12,6 +12,7 @@ import {
 } from '../../.verification-dist/internal/reference/composites/tree-grid.js';
 import { createGrid } from '../../.verification-dist/structures/grid.js';
 import { createTree } from '../../.verification-dist/structures/tree.js';
+import { createTreeGridModelFromRows } from '../../.verification-dist/tree-grid.js';
 import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
 
 const EVENTS = [
@@ -26,6 +27,23 @@ const EVENTS = [
   'commit-edit',
   'cancel-edit',
 ];
+
+test('tree-grid row input constructs and validates its tree, grid, and mapping atomically', () => {
+  const result = createTreeGridModelFromRows([
+    { id: 'root', parentID: null, cells: ['root-name', 'root-status'] },
+    { id: 'child', parentID: 'root', cells: ['child-name', null] },
+  ]);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.rowIDs, ['root', 'child']);
+  assert.equal(result.value.tree.parentOf('child'), 'root');
+  assert.equal(result.value.grid.cellAt(1, 0), 'child-name');
+
+  const invalid = createTreeGridModelFromRows([
+    { id: 'child', parentID: 'missing', cells: ['child-name'] },
+  ]);
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'missing-parent');
+});
 
 test('tree-grid composition matches its independent reference across bounded row trees and cell grids', () => {
   let models = 0;

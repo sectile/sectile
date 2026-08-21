@@ -5,7 +5,7 @@ import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
-  connectTreeGrid,
+  createTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -30,16 +30,15 @@ test('terminal tree-grid connection owns edit buffering and cancel restoration',
   const values = new Map([['root-name', 'Root']]);
   const events = [];
   let updates = 0;
-  const connection = connectTreeGrid({
-    controller: unwrap(createTreeGridController({
-      model: model(),
-      defaultHighlightedValue: 'root-name',
-    })),
+  const connection = unwrap(createTreeGrid({
+    rows: modelRows(),
+    defaultHighlightedValue: 'root-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event }) => events.push(event),
     onUpdate: () => { updates += 1; },
-  });
+  }));
+  assert.equal(connection.model.tree.parentOf('child'), 'root');
 
   assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
   assert.equal(connection.handleKeyboardInput({ key: '한', text: '한' }), true);
@@ -48,6 +47,26 @@ test('terminal tree-grid connection owns edit buffering and cancel restoration',
   assert.equal(values.get('root-name'), 'Root');
   assert.deepEqual(events, ['start-edit', 'cancel-edit']);
   assert.equal(updates, 3);
+
+  const invalid = createTreeGrid({
+    rows: [{ id: 'child', parentID: 'missing', cells: ['child-name'] }],
+    getCellValue: () => '',
+    setCellValue: () => {},
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'missing-parent');
+
+  let synchronizedUpdates = 0;
+  const controlled = unwrap(createTreeGrid({
+    rows: modelRows(),
+    value: null,
+    getCellValue: () => '',
+    setCellValue: () => {},
+    onUpdate: () => { synchronizedUpdates += 1; },
+  }));
+  const synchronized = unwrap(controlled.syncControlledValues({ value: 'root-name' }));
+  assert.deepEqual(synchronized.state.selection.selected, ['root-name']);
+  assert.equal(synchronizedUpdates, 1);
 });
 
 test('terminal tree-grid commands project into highlight and cell edit effects', () => {
@@ -128,4 +147,11 @@ function model() {
     ['child-name', 'child-value'],
   ]));
   return unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
+}
+
+function modelRows() {
+  return [
+    { id: 'root', parentID: null, cells: ['root-name', 'root-value'] },
+    { id: 'child', parentID: 'root', cells: ['child-name', 'child-value'] },
+  ];
 }

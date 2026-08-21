@@ -22,3 +22,5 @@ The text controller maps explicit insert, replace, and delete ranges through `@s
 The combobox controller reuses terminal text normalization for editable filtering and maps candidate movement to terminal highlight effects. Its controlled input field is the complete `inputState`, not a string fragment.
 
 Node TTY applications can use `createTTYKeyboard` from `@sectile/terminal/node` instead of parsing escape sequences. It normalizes Alt+Arrow and common Alt+B/F variants into `TerminalKeyboardInput`. `connectTreeGrid` owns tree-grid edit buffering and rollback, while `fitTerminalText` from `@sectile/terminal/layout` clips and pads by rendered Unicode width.
+
+For ordinary setup, `createTreeGrid` accepts `{ id, parentID, cells }` rows plus controller and terminal connection options. It validates and constructs the primitive model, controller, and connection behind one `Result`. The lower-level controller and connection factories remain available when their ownership is separate.

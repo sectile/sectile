@@ -21,11 +21,11 @@ try {
     import { createComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState } from '@sectile/primitives/slider';
     import { createTreeViewState } from '@sectile/primitives/tree-view';
-    import { createTreeGridModel } from '@sectile/primitives/tree-grid';
+    import { createTreeGridModel, createTreeGridModelFromRows } from '@sectile/primitives/tree-grid';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     import { createTextEditingState } from '@sectile/primitives/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createRevisionSnapshot, createTextEditingState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -43,7 +43,7 @@ try {
     import { createComboboxState, type ComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState, type SliderState } from '@sectile/primitives/slider';
     import { createTreeViewState, type TreeViewState } from '@sectile/primitives/tree-view';
-    import { createTreeGridModel, type TreeGridModel } from '@sectile/primitives/tree-grid';
+    import { createTreeGridModel, createTreeGridModelFromRows, type TreeGridModel, type TreeGridRowInput } from '@sectile/primitives/tree-grid';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
     import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
     const a: Result<Sequence<string>> = createSequence(['a']);
@@ -62,8 +62,10 @@ try {
     const j: Result<ComboboxState<string>> = createComboboxState(a.value);
     const k: Result<TextEditingState> = createTextEditingState();
     const l: Result<TreeGridModel<string, string>> = createTreeGridModel(d.value, c.value, ['a']);
+    const rows: readonly TreeGridRowInput<string, string>[] = [{ id: 'a', parentID: null, cells: ['a'] }];
+    const m: Result<TreeGridModel<string, string>> = createTreeGridModelFromRows(rows);
     const sequence: Sequence<string> = unwrap(a);
-    void [a, b, c, d, e, f, g, h, i, j, k, l, sequence];
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, sequence];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {

@@ -1,8 +1,5 @@
-import { connectTreeGrid, createTreeGridController } from '@sectile/dom/tree-grid';
-import { createGrid } from '@sectile/primitives/grid';
+import { createTreeGrid } from '@sectile/dom/tree-grid';
 import { unwrap } from '@sectile/primitives/result';
-import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import './styles.css';
 
 interface LogEntry {
@@ -12,17 +9,14 @@ interface LogEntry {
   readonly effects: readonly string[];
 }
 
-const tree = unwrap(createTree([
-  { id: 'projects', parentID: null },
-  { id: 'atlas', parentID: 'projects' },
-  { id: 'atlas-design', parentID: 'atlas' },
-  { id: 'atlas-build', parentID: 'atlas' },
-  { id: 'beacon', parentID: 'projects' },
-  { id: 'archive', parentID: null },
-]));
-const rowIDs = tree.preorder().ids;
-const grid = unwrap(createGrid(rowIDs.map((row) => [`${row}-name`, `${row}-status`])));
-const model = unwrap(createTreeGridModel(tree, grid, rowIDs));
+const treeGridRows = [
+  { id: 'projects', parentID: null, cells: ['projects-name', 'projects-status'] },
+  { id: 'atlas', parentID: 'projects', cells: ['atlas-name', 'atlas-status'] },
+  { id: 'atlas-design', parentID: 'atlas', cells: ['atlas-design-name', 'atlas-design-status'] },
+  { id: 'atlas-build', parentID: 'atlas', cells: ['atlas-build-name', 'atlas-build-status'] },
+  { id: 'beacon', parentID: 'projects', cells: ['beacon-name', 'beacon-status'] },
+  { id: 'archive', parentID: null, cells: ['archive-name', 'archive-status'] },
+] as const;
 
 const initialValues = new Map<string, string>([
   ['projects-name', 'Projects'],
@@ -63,13 +57,11 @@ resetButton.addEventListener('click', () => {
 render();
 
 function createConnection() {
-  return connectTreeGrid<(typeof rowIDs)[number], string>({
-    controller: unwrap(createTreeGridController({
-      model,
-      defaultExpandedValue: ['projects', 'atlas'],
-      defaultHighlightedValue: 'projects-name',
-    })),
+  return unwrap(createTreeGrid({
+    rows: treeGridRows,
     root: gridElement,
+    defaultExpandedValue: ['projects', 'atlas'],
+    defaultHighlightedValue: 'projects-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event, result }) => {
@@ -84,10 +76,12 @@ function createConnection() {
       ].slice(0, 12);
     },
     onUpdate: render,
-  });
+  }));
 }
 
 function render(): void {
+  const { model } = connection;
+  const { tree, grid } = model;
   const { revision, state } = connection.getSnapshot();
   const visibleRows = new Set(tree.visible(state.expansion).ids);
   gridElement.replaceChildren();

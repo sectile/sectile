@@ -27,3 +27,5 @@ Logical grids preserve empty coordinates. Trees preserve input root and sibling 
 Host packages expose connections for wiring semantic controllers without reimplementing host details. `@sectile/dom/tree-grid` owns DOM keyboard events, IME-safe Enter handling, ARIA attributes, edit rollback, and focus. `@sectile/terminal/node` turns a Node TTY into normalized keyboard input, including common Alt-key variants; `@sectile/terminal/tree-grid` owns terminal edit buffering, and `@sectile/terminal/layout` fits text by displayed Unicode width.
 
 The application still owns its data and presentation. It supplies cell getters and setters to a connection, renders its chosen markup or terminal rows, and reacts to the connection's transition callback when it needs logging or external synchronization.
+
+The host-level `createTreeGrid` facade accepts rows shaped as `{ id, parentID, cells }` and performs primitive model, controller, and connection construction behind one `Result`. Use the separate primitive and adapter factories only when the tree, grid, model, or controller has an independent owner.

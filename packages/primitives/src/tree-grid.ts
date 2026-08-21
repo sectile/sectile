@@ -1,3 +1,33 @@
+import type { Result, StableID } from './shared.js';
+import { createGrid } from './structures/grid.js';
+import { createTree } from './structures/tree.js';
+import {
+  createTreeGridModel,
+  type TreeGridModel,
+} from './internal/composites/tree-grid.js';
+
+export interface TreeGridRowInput<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> {
+  readonly id: RowID;
+  readonly parentID: RowID | null;
+  readonly cells: readonly (CellID | null)[];
+}
+
+export function createTreeGridModelFromRows<
+  RowID extends StableID,
+  CellID extends StableID,
+>(
+  rows: readonly TreeGridRowInput<RowID, CellID>[],
+): Result<TreeGridModel<RowID, CellID>> {
+  const tree = createTree(rows.map((row) => ({ id: row.id, parentID: row.parentID })));
+  if (!tree.ok) return tree;
+  const grid = createGrid(rows.map((row) => row.cells));
+  if (!grid.ok) return grid;
+  return createTreeGridModel(tree.value, grid.value, rows.map((row) => row.id));
+}
+
 export {
   applyTreeGridEvent,
   createTreeGridModel,

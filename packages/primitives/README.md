@@ -22,4 +22,6 @@ The root export contains shared types and has no runtime authority. State primit
 
 The text facade owns well-formed UTF-16 replacement, selection, and composition transitions. The combobox facade combines that state with explicit filtering policy, popup navigation, and composition-safe candidate acceptance. Composing text does not become a filter query until commit. The tree-grid facade validates the authoritative mapping between tree rows and grid coordinates before coordinating visible cell navigation, expansion, single selection, and edit mode.
 
+`createTreeGridModelFromRows` accepts rows shaped as `{ id, parentID, cells }` and validates the tree, grid, and row mapping as one construction boundary. The lower-level tree, grid, and model factories remain available when those structures have separate ownership.
+
 See the [primitive documentation](../../docs/primitives/README.md).

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "a61499fb6bd341c23519355169b0541c928182d2f50fbaab7cdd4780382244ab",
+  "fingerprint": "229dbab973746655f4831684bc2c5447061c432bb82d1a5895d4abd1cf8ebf6f",
   "files": [
     {
       "path": "dist/calendar.d.ts",
@@ -104,7 +104,7 @@
     },
     {
       "path": "dist/tree-grid.d.ts",
-      "sha256": "732ac85f17ff6e7fbcae3663f1cef8ecf7b5e0113e932b6ccb07217b4dc12212"
+      "sha256": "b45f220a99c2fbecd80ca971c66b6da8d2320f7c65ed92135e40f2916aa59ebb"
     },
     {
       "path": "dist/tree-view.d.ts",
