@@ -10,13 +10,12 @@ import {
 } from '@sectile/primitives/listbox';
 import type { Sequence } from '@sectile/primitives/sequence';
 import {
-  applyRevisionedEvent,
   createRevisionSnapshot,
-  mapRevisionCommands,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
+import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -146,17 +145,6 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
       values,
     );
     if (inputError !== null) return { ok: false, error: inputError };
-    if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) {
-      return {
-        ok: false,
-        error: {
-          class: 'resource-rejection',
-          code: 'revision-ceiling-reached',
-          message: 'Listbox controller revision cannot advance beyond the safe-integer ceiling.',
-          details: { revision: this.#snapshot.revision },
-        },
-      };
-    }
     const state = createListboxState<ID>(this.#domain, {
       selected: this.#valueControlled
         ? (values.value as readonly ID[])
@@ -166,8 +154,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         ? (values.highlightedValue as ID | null)
         : this.#snapshot.state.cursor.current,
     });
-    if (!state.ok) return state;
-    const snapshot = createRevisionSnapshot(state.value, this.#snapshot.revision + 1);
+    const snapshot = synchronizeControllerState(this.#snapshot, state);
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
     return snapshot;
@@ -186,8 +173,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         details: { key: input.key },
       });
     }
-    const previous = this.#snapshot.state;
-    const semantic = applyRevisionedEvent(
+    const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
       event,
@@ -197,33 +183,18 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         semanticEvent,
         this.#policies,
       ),
-    );
-    if (!semantic.ok) return semantic;
-    const proposed = semantic.snapshot.state;
-    const committed = controlledState(
-      this.#domain,
-      previous,
-      proposed,
-      this.#valueControlled,
-      this.#highlightControlled,
-    );
-    if (!committed.ok) return rejectRevisionInput(this.#snapshot, committed.error);
-    this.#snapshot = Object.freeze({
-      revision: semantic.snapshot.revision,
-      state: committed.value,
-    });
-    this.#notify(previous, proposed);
-    const mapped = mapRevisionCommands(
-      Object.freeze({
-        ok: true as const,
-        snapshot: this.#snapshot,
-        commands: semantic.commands,
-      }),
+      (previous, proposed) => controlledState(
+        this.#domain,
+        previous,
+        proposed,
+        this.#valueControlled,
+        this.#highlightControlled,
+      ),
+      (previous, proposed) => this.#notify(previous, proposed),
       toListboxEffect,
     );
-    return this.#snapshot === mapped.snapshot
-      ? mapped
-      : Object.freeze({ ...mapped, snapshot: this.#snapshot });
+    if (result.ok) this.#snapshot = result.snapshot;
+    return result;
   }
 
   #notify(previous: ListboxState<ID>, proposed: ListboxState<ID>): void {

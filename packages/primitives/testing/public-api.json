@@ -9,6 +9,7 @@
     "./grid",
     "./tree",
     "./listbox",
+    "./slider",
     "./revision",
     "./package.json"
   ],
@@ -18,6 +19,7 @@
     "./grid",
     "./tree",
     "./listbox",
+    "./slider",
     "./revision"
   ],
   "runtimeTargets": {
@@ -26,6 +28,7 @@
     "./grid": "structures/grid",
     "./tree": "structures/tree",
     "./listbox": "listbox",
+    "./slider": "slider",
     "./revision": "revision"
   }
 }

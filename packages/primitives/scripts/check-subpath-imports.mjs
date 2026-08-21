@@ -16,9 +16,10 @@ try {
     import { createGrid } from '@sectile/primitives/grid';
     import { createTree } from '@sectile/primitives/tree';
     import { createListboxState } from '@sectile/primitives/listbox';
+    import { createSliderState } from '@sectile/primitives/slider';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createRevisionSnapshot]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createSliderState, createRevisionSnapshot]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -31,6 +32,7 @@ try {
     import { createGrid, type Grid } from '@sectile/primitives/grid';
     import { createTree, type Tree } from '@sectile/primitives/tree';
     import { createListboxState, type ListboxState } from '@sectile/primitives/listbox';
+    import { createSliderState, type SliderState } from '@sectile/primitives/slider';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
     const a: Result<Sequence<string>> = createSequence(['a']);
     const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
@@ -39,7 +41,9 @@ try {
     if (!a.ok) throw new Error(a.error.message);
     const e: Result<ListboxState<string>> = createListboxState(a.value);
     const f: Result<RevisionSnapshot<string>> = createRevisionSnapshot('state');
-    void [a, b, c, d, e, f];
+    if (!b.ok) throw new Error(b.error.message);
+    const g: Result<SliderState> = createSliderState(b.value);
+    void [a, b, c, d, e, f, g];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -53,7 +57,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 7, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 8, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -16,3 +16,5 @@ const controller = result.value;
 ```
 
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
+
+Slider controllers follow the same ownership contract through `@sectile/dom/slider`.

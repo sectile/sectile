@@ -10,3 +10,14 @@ export {
   type ListboxHighlightChangeDetails,
   type ListboxValueChangeDetails,
 } from './listbox.js';
+export {
+  createSliderController,
+  toSliderEffect,
+  toSliderEvent,
+  type KeyboardInput as SliderKeyboardInput,
+  type SliderControlledValues,
+  type SliderController,
+  type SliderControllerOptions,
+  type SliderEffect,
+  type SliderValueChangeDetails,
+} from './slider.js';

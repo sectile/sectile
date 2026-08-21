@@ -21,6 +21,11 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
+    "./slider": {
+      "types": "./dist/slider.d.ts",
+      "import": "./dist/slider.js",
+      "default": "./dist/slider.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

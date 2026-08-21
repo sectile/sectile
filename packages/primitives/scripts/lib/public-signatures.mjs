@@ -1,14 +1,11 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
+const publicAPI = JSON.parse(await readFile('testing/public-api.json', 'utf8'));
+
 export const publicDeclarationFiles = [
   'dist/index.d.ts',
-  'dist/structures/sequence.d.ts',
-  'dist/structures/range.d.ts',
-  'dist/structures/grid.d.ts',
-  'dist/structures/tree.d.ts',
-  'dist/listbox.d.ts',
-  'dist/revision.d.ts',
+  ...Object.values(publicAPI.runtimeTargets).map((target) => `dist/${target}.d.ts`),
 ];
 
 export async function collectPublicSignatures() {

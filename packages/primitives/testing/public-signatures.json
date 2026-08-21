@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fingerprint": "3f1695bb1763b44f40b573f1cfa60957f04dba0f4da5c732e28b7bd76c4d81f9",
+  "fingerprint": "09eb13df865e7559868442fd6c876f64a779d4ba3c2fe5804759b9db799a11d6",
   "files": [
     {
       "path": "dist/index.d.ts",
@@ -25,6 +25,10 @@
     {
       "path": "dist/listbox.d.ts",
       "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
+    },
+    {
+      "path": "dist/slider.d.ts",
+      "sha256": "316e1fdce15e62079d14dbe144fa25fb759107a1edeaf69e08c115a332f959dd"
     },
     {
       "path": "dist/revision.d.ts",

@@ -42,10 +42,14 @@ sectile/
 │   │   │   ├── build.mjs
 │   │   │   └── check-reproducible-build.mjs
 │   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   └── controller.ts
 │   │   │   ├── index.ts
-│   │   │   └── listbox.ts
+│   │   │   ├── listbox.ts
+│   │   │   └── slider.ts
 │   │   ├── tests/
-│   │   │   └── listbox.test.mjs
+│   │   │   ├── listbox.test.mjs
+│   │   │   └── slider.test.mjs
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -120,7 +124,8 @@ sectile/
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── revision.ts
-│   │   │   └── shared.ts
+│   │   │   ├── shared.ts
+│   │   │   └── slider.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
@@ -165,10 +170,14 @@ sectile/
 │       │   ├── build.mjs
 │       │   └── check-reproducible-build.mjs
 │       ├── src/
+│       │   ├── internal/
+│       │   │   └── controller.ts
 │       │   ├── index.ts
-│       │   └── listbox.ts
+│       │   ├── listbox.ts
+│       │   └── slider.ts
 │       ├── tests/
-│       │   └── listbox.test.mjs
+│       │   ├── listbox.test.mjs
+│       │   └── slider.test.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -182,7 +191,8 @@ sectile/
 │   └── update-tree.mjs
 ├── verification/
 │   └── cross-host/
-│       └── listbox.test.mjs
+│       ├── listbox.test.mjs
+│       └── slider.test.mjs
 ├── .gitignore
 ├── .node-version
 ├── package.json
