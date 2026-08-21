@@ -10,6 +10,7 @@ import {
   type ToolbarState,
 } from '@sectile/primitives/toolbar';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import type { KeyboardInput } from './tabs.js';
 
@@ -21,6 +22,7 @@ export interface ToolbarOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly items: readonly ID[];
   readonly policies?: ToolbarPolicies<ID>;
+  readonly disabledItems?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly orientation?: 'horizontal' | 'vertical';
@@ -43,6 +45,13 @@ export function createToolbar<ID extends StableID>(
 ): Result<ToolbarConnection<ID>> {
   const domain = createSequence(options.items);
   if (!domain.ok) return domain;
+  const disabled = createDisabledItems(domain.value, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: ToolbarPolicies<ID> = Object.freeze({
+    ...options.policies,
+    eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true),
+  });
   const controlled = options.highlightedValue !== undefined;
   const runtime = createSemanticController<
     ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
@@ -52,7 +61,7 @@ export function createToolbar<ID extends StableID>(
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }),
-    reducer: (state, event) => applyToolbarEvent(domain.value, state, event, options.policies),
+    reducer: (state, event) => applyToolbarEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createToolbarState(domain.value, {
       current: controlled ? previous.cursor.current : proposed.cursor.current,
     }),
@@ -66,7 +75,7 @@ export function createToolbar<ID extends StableID>(
       : Object.freeze({ type: 'invoke-control', id: command.id }),
   });
   if (!runtime.ok) return runtime;
-  return { ok: true, value: new DOMToolbarConnection(options, domain.value, runtime.value, controlled) };
+  return { ok: true, value: new DOMToolbarConnection(options, domain.value, runtime.value, controlled, disabled.value) };
 }
 
 export function toToolbarEvent<ID extends StableID = StableID>(
@@ -89,6 +98,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   readonly #domain: Sequence<ID>;
   readonly #runtime: SemanticController<ToolbarState<ID>, ToolbarEvent<ID>, ToolbarEffect<ID>>;
   readonly #controlled: boolean;
+  readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
 
@@ -96,11 +106,13 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
     options: ToolbarOptions<ID>, domain: Sequence<ID>,
     runtime: SemanticController<ToolbarState<ID>, ToolbarEvent<ID>, ToolbarEffect<ID>>,
     controlled: boolean,
+    disabledItems: ReadonlySet<ID>,
   ) {
     this.#options = options;
     this.#domain = domain;
     this.#runtime = runtime;
     this.#controlled = controlled;
+    this.#disabledItems = disabledItems;
     options.root.setAttribute('role', 'toolbar');
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
@@ -133,7 +145,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
     element.dataset['toolbarId'] = id;
     element.tabIndex = this.#runtime.getSnapshot().state.cursor.current === id ? 0 : -1;
-    if (disabled) element.setAttribute('aria-disabled', 'true');
+    if (disabled || this.#disabledItems.has(id)) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
   }
 

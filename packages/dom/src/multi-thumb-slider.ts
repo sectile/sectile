@@ -13,6 +13,10 @@ export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends
   readonly defaultValues?: readonly number[];
   readonly defaultHighlightedValue?: ID | null;
   readonly policies?: MultiThumbSliderPolicies;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly label?: string;
+  readonly getThumbLabel?: (id: ID) => string;
+  readonly formatValue?: (value: string, id: ID) => string;
   readonly onValuesChange?: (ticks: readonly number[]) => void;
   readonly onUpdate?: () => void;
 }
@@ -20,6 +24,7 @@ export interface MultiThumbSliderControlledValues<ID extends StableID = StableID
 export interface MultiThumbSliderConnection<ID extends StableID = StableID> {
   readonly range: QuantizedRange;
   getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>>;
+  getValues(): readonly string[];
   syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>>;
   setThumbAttributes(element: HTMLElement, id: ID): void;
   handleEvent(event: MultiThumbSliderEvent<ID>): boolean;
@@ -68,8 +73,13 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     };
     this.#handlePointer = (event): void => {
       const rect = (options.track ?? options.root).getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+      const orientation = options.orientation ?? 'horizontal';
+      const extent = orientation === 'horizontal' ? rect.width : rect.height;
+      if (extent <= 0) return;
+      const rawRatio = orientation === 'horizontal'
+        ? (event.clientX - rect.left) / rect.width
+        : (rect.bottom - event.clientY) / rect.height;
+      const ratio = Math.max(0, Math.min(1, rawRatio));
       const tick = Math.round(ratio * range.count);
       if (event.type === 'pointerdown') {
         const id = this.#thumbForTarget(event.target) ?? this.#nearestThumb(tick);
@@ -97,8 +107,10 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     (options.track ?? options.root).addEventListener('pointerup', this.#handlePointerUp);
     (options.track ?? options.root).addEventListener('pointercancel', this.#handlePointerUp);
     options.root.setAttribute('role', 'group');
+    if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
   }
   public getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>> { return this.#runtime.getSnapshot(); }
+  public getValues(): readonly string[] { return Object.freeze(this.getSnapshot().state.ticks.map((tick) => this.range.valueAt(tick) as string)); }
   public syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>> {
     if (this.#options.values === undefined) return { ok: false, error: { class: 'construction', code: 'not-controlled', message: 'Only a controlled multi-thumb slider can be synchronized.' } };
     const result = this.#runtime.replace(createMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
@@ -129,7 +141,24 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     for (const [id, element] of this.#elements) {
       const index = this.#thumbs.indexOf(id);
       if (index === null) continue;
-      element.setAttribute('role', 'slider'); element.setAttribute('aria-valuemin', '0'); element.setAttribute('aria-valuemax', String(this.range.count)); element.setAttribute('aria-valuenow', String(state.ticks[index])); element.tabIndex = 0;
+      const tick = state.ticks[index] as number;
+      const gap = this.#options.policies?.minGap ?? 0;
+      const lowerTick = this.#options.policies?.allowCross || index === 0
+        ? 0
+        : (state.ticks[index - 1] as number) + gap;
+      const upperTick = this.#options.policies?.allowCross || index === state.ticks.length - 1
+        ? this.range.count
+        : (state.ticks[index + 1] as number) - gap;
+      const value = this.range.valueAt(tick) as string;
+      element.setAttribute('role', 'slider');
+      element.setAttribute('aria-valuemin', this.range.valueAt(lowerTick) as string);
+      element.setAttribute('aria-valuemax', this.range.valueAt(upperTick) as string);
+      element.setAttribute('aria-valuenow', value);
+      element.setAttribute('aria-valuetext', this.#options.formatValue?.(value, id) ?? value);
+      element.setAttribute('aria-orientation', this.#options.orientation ?? 'horizontal');
+      const label = this.#options.getThumbLabel?.(id);
+      if (label !== undefined) element.setAttribute('aria-label', label);
+      element.tabIndex = 0;
     }
   }
 }

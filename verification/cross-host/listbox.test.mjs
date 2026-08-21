@@ -70,6 +70,32 @@ test('DOM and terminal packages remain equivalent across 40,000 host transitions
   assert.equal(transitions, 40_000);
 });
 
+test('DOM and terminal listboxes preserve edge movement and single-selection parity', () => {
+  const domain = unwrap(createSequence(['a', 'disabled', 'c']));
+  const options = {
+    domain,
+    selectionMode: 'single',
+    policies: { eligible: (id) => id !== 'disabled' },
+  };
+  const DOMController = unwrap(createDOMListboxController(options));
+  const terminalController = unwrap(createTerminalListboxController(options));
+  for (const event of ['last', 'toggle', 'first', 'toggle', 'toggle']) {
+    assert.deepEqual(
+      observe(DOMController.handleEvent(event)),
+      observe(terminalController.handleEvent(event)),
+    );
+    assert.deepEqual(
+      stateObservation(DOMController.getSnapshot().state),
+      stateObservation(terminalController.getSnapshot().state),
+    );
+  }
+  assert.deepEqual(stateObservation(DOMController.getSnapshot().state), {
+    current: 'a',
+    selected: ['a'],
+    anchor: 'a',
+  });
+});
+
 function observe(result) {
   return result.ok
     ? {

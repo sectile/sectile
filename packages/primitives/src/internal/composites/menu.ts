@@ -5,9 +5,10 @@ import { createMachineUpdate } from '../kernel/machine.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 
 export interface MenuState<ID extends StableID = StableID> { readonly open: boolean; readonly cursor: CursorState<ID>; readonly openPath: readonly ID[] }
-export type MenuEvent<ID extends StableID = StableID> = 'open-popup' | 'close-popup' | 'next' | 'previous' | 'open-submenu' | 'close-submenu' | 'invoke' | 'escape' | { readonly type: 'focus'; readonly id: ID };
+export type MenuEvent<ID extends StableID = StableID> = 'open-popup' | 'close-popup' | 'next' | 'previous' | 'first' | 'last' | 'open-submenu' | 'close-submenu' | 'invoke' | 'escape' | { readonly type: 'focus'; readonly id: ID };
 export type MenuCommand<ID extends StableID = StableID> = { readonly type: 'focus' | 'invoke'; readonly id: ID } | { readonly type: 'restore-focus' };
 export interface MenuUpdate<ID extends StableID = StableID> { readonly state: MenuState<ID>; readonly commands: readonly MenuCommand<ID>[] }
+export interface MenuPolicies<ID extends StableID = StableID> { readonly disabled?: (id: ID) => boolean }
 
 export function createMenuState<ID extends StableID>(tree: Tree<ID>, open = false, current: ID | null = null, openPath: readonly ID[] = []): Result<MenuState<ID>> {
   const normalized = tree.normalizeExpansion(openPath).ids;
@@ -18,7 +19,7 @@ export function createMenuState<ID extends StableID>(tree: Tree<ID>, open = fals
   return ok(Object.freeze({ open, cursor: createCursorState(current), openPath: Object.freeze([...openPath]) }));
 }
 
-export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>, event: MenuEvent<ID>): Result<MenuUpdate<ID>> {
+export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>, event: MenuEvent<ID>, policies: MenuPolicies<ID> = {}): Result<MenuUpdate<ID>> {
   const valid = createMenuState(tree, state.open, state.cursor.current, state.openPath); if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (event === 'open-popup') { if (state.open) return createMachineUpdate(state); const id = tree.roots.at(0); return createMachineUpdate(menuState(true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
   if (event === 'close-popup') return createMachineUpdate(menuState(false, null, []), state.open ? [{ type: 'restore-focus' }] : []);
@@ -26,11 +27,11 @@ export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuS
   if (typeof event === 'object') { if (!tree.visible(state.openPath).contains(event.id)) return fail('transition-rejection', 'menu-target-hidden', 'Direct menu focus requires a visible item.'); return createMachineUpdate(menuState(true, event.id, pathFor(tree, event.id, state.openPath)), [{ type: 'focus', id: event.id }]); }
   const current = state.cursor.current;
   if (event === 'escape') return closeLevel(tree, state);
-  if (current === null) { const id = tree.roots.at(0); return createMachineUpdate(menuState(true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
-  if (event === 'next' || event === 'previous') { const siblings = tree.parentOf(current) === null ? tree.roots : tree.childrenOf(tree.parentOf(current) as ID); if (siblings === null || siblings.size === 0) return createMachineUpdate(state); const index = siblings.indexOf(current) ?? 0; const delta = event === 'next' ? 1 : -1; const id = siblings.at((index + delta + siblings.size) % siblings.size); return id === null ? createMachineUpdate(state) : createMachineUpdate(menuState(true, id, state.openPath), [{ type: 'focus', id }]); }
-  if (event === 'open-submenu') { const child = tree.childrenOf(current)?.at(0) ?? null; if (child === null) return createMachineUpdate(state); const path = [...(tree.ancestorsOf(current) ?? [])].reverse().filter((id) => tree.isLeaf(id) === false); path.push(current); return createMachineUpdate(menuState(true, child, path), [{ type: 'focus', id: child }]); }
+  if (current === null) { const id = tree.roots.at(event === 'last' ? tree.roots.size - 1 : 0); return createMachineUpdate(menuState(true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
+  if (event === 'next' || event === 'previous' || event === 'first' || event === 'last') { const siblings = tree.parentOf(current) === null ? tree.roots : tree.childrenOf(tree.parentOf(current) as ID); if (siblings === null || siblings.size === 0) return createMachineUpdate(state); const index = siblings.indexOf(current) ?? 0; const target = event === 'first' ? 0 : event === 'last' ? siblings.size - 1 : (index + (event === 'next' ? 1 : -1) + siblings.size) % siblings.size; const id = siblings.at(target); return id === null ? createMachineUpdate(state) : createMachineUpdate(menuState(true, id, state.openPath), [{ type: 'focus', id }]); }
+  if (event === 'open-submenu') { if (policies.disabled?.(current) === true) return createMachineUpdate(state); const child = tree.childrenOf(current)?.at(0) ?? null; if (child === null) return createMachineUpdate(state); const path = [...(tree.ancestorsOf(current) ?? [])].reverse().filter((id) => tree.isLeaf(id) === false); path.push(current); return createMachineUpdate(menuState(true, child, path), [{ type: 'focus', id: child }]); }
   if (event === 'close-submenu') return closeLevel(tree, state);
-  if (tree.isLeaf(current) !== true) return createMachineUpdate(state);
+  if (tree.isLeaf(current) !== true || policies.disabled?.(current) === true) return createMachineUpdate(state);
   return createMachineUpdate(menuState(false, null, []), [{ type: 'invoke', id: current }, { type: 'restore-focus' }]);
 }
 

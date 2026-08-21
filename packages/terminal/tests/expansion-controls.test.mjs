@@ -16,3 +16,11 @@ test('terminal disclosure and accordion own key dispatch', () => {
   assert.equal(accordion.getSnapshot().state.cursor.current, 'b');
   assert.deepEqual(accordion.getSnapshot().state.openIDs, ['b']);
 });
+
+test('terminal accordion skips disabled headers', () => {
+  const accordion = unwrap(createAccordion({
+    items: ['a', 'b', 'c'], disabledItems: ['b'], defaultHighlightedValue: 'a',
+  }));
+  accordion.handleKeyboardInput({ key: 'down' });
+  assert.equal(accordion.getSnapshot().state.cursor.current, 'c');
+});

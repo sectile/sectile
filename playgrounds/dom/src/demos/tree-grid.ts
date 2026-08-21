@@ -1,6 +1,6 @@
-import { createTreeGrid } from '@sectile/dom/tree-grid';
+import { createTreeGrid, type TreeGridConnection } from '@sectile/dom/tree-grid';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const rows = [
   { id: 'projects', parentID: null, cells: ['projects-name', 'projects-status'] },
@@ -18,6 +18,8 @@ const initialValues = new Map<string, string>([
   ['beacon-name', 'Beacon'], ['beacon-status', 'Planning'],
   ['archive-name', 'Archive'], ['archive-status', '12 items'],
 ]);
+type RowID = typeof rows[number]['id'];
+type CellID = typeof rows[number]['cells'][number];
 
 export const treeGridDemo: DemoDefinition = {
   id: 'tree-grid',
@@ -31,16 +33,32 @@ export const treeGridDemo: DemoDefinition = {
     { keys: ['Enter'], label: 'edit / commit' },
     { keys: ['Esc'], label: 'cancel' },
   ],
-  mount(context) {
+  cases: [
+    { id: 'expanded', title: 'Expanded project tree grid', mount: (context) => mountTreeGrid(context, { expanded: ['projects', 'atlas'], disabled: [], controlled: false }) },
+    { id: 'collapsed', title: 'Collapsed portfolio rows', mount: (context) => mountTreeGrid(context, { expanded: [], disabled: [], controlled: false }) },
+    { id: 'unavailable-cells', title: 'Unavailable status cells', mount: (context) => mountTreeGrid(context, { expanded: ['projects'], disabled: ['atlas-status', 'beacon-status'], controlled: false }) },
+    { id: 'controlled', title: 'Controlled tree grid', mount: (context) => mountTreeGrid(context, { expanded: ['projects', 'atlas'], disabled: [], controlled: true }) },
+  ],
+};
+
+function mountTreeGrid(context: DemoContext, scenario: { readonly expanded: readonly RowID[]; readonly disabled: readonly CellID[]; readonly controlled: boolean }): DemoSession {
     const root = document.createElement('div');
     root.className = 'tree-grid';
     context.surface.append(root);
     const values = new Map(initialValues);
-    const connection = unwrap(createTreeGrid({
+    let externalExpanded = [...scenario.expanded]; let externalValue: CellID | null = null; let externalHighlight: CellID | null = 'projects-name'; let externalEdit: 'navigation' | 'editing' = 'navigation';
+    let connection!: TreeGridConnection<RowID, CellID>;
+    connection = unwrap(createTreeGrid({
       rows,
       root,
-      defaultExpandedValue: ['projects', 'atlas'],
-      defaultHighlightedValue: 'projects-name',
+      policies: { eligible: (id) => !scenario.disabled.includes(id) },
+      ...(scenario.controlled ? {
+        expandedValue: externalExpanded, value: externalValue, highlightedValue: externalHighlight, editMode: externalEdit,
+        onExpandedValueChange: ({ value }) => { externalExpanded = [...value]; queueMicrotask(syncControlled); },
+        onValueChange: ({ value }) => { externalValue = value; queueMicrotask(syncControlled); },
+        onHighlightedValueChange: ({ value }) => { externalHighlight = value; queueMicrotask(syncControlled); },
+        onEditModeChange: ({ value }) => { externalEdit = value; queueMicrotask(syncControlled); },
+      } : { defaultExpandedValue: scenario.expanded, defaultHighlightedValue: externalHighlight }),
       getCellValue: (id) => values.get(id) ?? '',
       setCellValue: (id, value) => values.set(id, value),
       onTransition: ({ event, result }) => context.record({
@@ -82,6 +100,7 @@ export const treeGridDemo: DemoDefinition = {
           const cell = document.createElement('div');
           cell.className = ['tree-cell', current ? 'current' : '', selected ? 'selected' : '']
             .filter(Boolean).join(' ');
+          if (scenario.disabled.includes(cellID)) { cell.classList.add('disabled'); cell.setAttribute('aria-disabled', 'true'); }
           connection.setCellAttributes(cell, { id: cellID, columnIndex: column + 1 });
 
           if (editing) {
@@ -123,13 +142,16 @@ export const treeGridDemo: DemoDefinition = {
         current: state.cursor.current,
         selected: state.selection.selected,
         editMode: state.editMode,
+        disabled: scenario.disabled,
+        ownership: scenario.controlled ? 'controlled' : 'uncontrolled',
       });
     }
 
+    function syncControlled(): void { connection.syncControlledValues({ expandedValue: externalExpanded, value: externalValue, highlightedValue: externalHighlight, editMode: externalEdit }); }
+
     render();
     return { focus: () => connection.focusCurrent(), disconnect: () => connection.disconnect() };
-  },
-};
+}
 
 function selectionDot(): HTMLElement {
   const dot = document.createElement('span');

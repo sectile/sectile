@@ -10,9 +10,10 @@
     "verify:theory": "pnpm -r --if-present verify:theory",
     "verify:reproducible-build": "pnpm -r --if-present verify:reproducible-build",
     "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
+    "check:components": "node scripts/check-component-completeness.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "update:tree": "node scripts/update-tree.mjs",
-    "verify": "pnpm -r --if-present verify && node --test verification/cross-host/*.test.mjs && pnpm check:boundaries && pnpm check:docs"
+    "verify": "pnpm -r --if-present verify && node --test verification/cross-host/*.test.mjs && pnpm check:boundaries && pnpm check:components && pnpm check:docs"
   },
   "devDependencies": {
     "@sectile/dom": "workspace:*",

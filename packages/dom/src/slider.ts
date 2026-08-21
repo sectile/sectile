@@ -73,6 +73,8 @@ export interface SliderConnectionOptions {
   readonly track?: HTMLElement;
   readonly label?: string;
   readonly role?: 'slider' | 'separator';
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly formatValue?: (value: string) => string;
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
@@ -136,6 +138,8 @@ class DOMSliderConnection implements SliderConnection {
   readonly #track: HTMLElement;
   readonly #label: string | undefined;
   readonly #role: 'slider' | 'separator';
+  readonly #orientation: 'horizontal' | 'vertical';
+  readonly #formatValue: (value: string) => string;
   readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
@@ -150,6 +154,8 @@ class DOMSliderConnection implements SliderConnection {
     this.#track = options.track ?? options.root;
     this.#label = options.label;
     this.#role = options.role ?? 'slider';
+    this.#orientation = options.orientation ?? 'horizontal';
+    this.#formatValue = options.formatValue ?? ((value) => value);
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#handleKeydown = (event): void => {
@@ -163,8 +169,12 @@ class DOMSliderConnection implements SliderConnection {
         return;
       }
       const rect = this.#track.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      const extent = this.#orientation === 'horizontal' ? rect.width : rect.height;
+      if (extent <= 0) return;
+      const rawRatio = this.#orientation === 'horizontal'
+        ? (event.clientX - rect.left) / rect.width
+        : (rect.bottom - event.clientY) / rect.height;
+      const ratio = Math.min(1, Math.max(0, rawRatio));
       const tick = Math.round(ratio * this.range.count);
       const semanticEvent: SliderEvent = { type: 'set-tick', tick };
       if (this.handleEvent(semanticEvent)) event.preventDefault();
@@ -203,11 +213,13 @@ class DOMSliderConnection implements SliderConnection {
 
   public refreshAttributes(): void {
     const tick = this.#controller.getSnapshot().state.tick;
+    const value = this.range.valueAt(tick) as string;
     this.#root.setAttribute('role', this.#role);
-    this.#root.setAttribute('aria-valuemin', '0');
-    this.#root.setAttribute('aria-valuemax', String(this.range.count));
-    this.#root.setAttribute('aria-valuenow', String(tick));
-    this.#root.setAttribute('aria-valuetext', this.getValue());
+    this.#root.setAttribute('aria-valuemin', this.range.lower);
+    this.#root.setAttribute('aria-valuemax', this.range.upper);
+    this.#root.setAttribute('aria-valuenow', value);
+    this.#root.setAttribute('aria-valuetext', this.#formatValue(value));
+    this.#root.setAttribute('aria-orientation', this.#orientation);
     if (this.#label === undefined) this.#root.removeAttribute('aria-label');
     else this.#root.setAttribute('aria-label', this.#label);
     if (this.#root.tabIndex < 0) this.#root.tabIndex = 0;

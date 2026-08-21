@@ -22,6 +22,16 @@ test('DOM accordion owns header click, keyboard movement, and ARIA projection', 
   root.emit('click', { target: b }); assert.deepEqual(accordion.getSnapshot().state.openIDs, ['b']);
 });
 
+test('DOM accordion derives disabled header semantics and skips it', () => {
+  const root = new FakeElement(); const accordion = unwrap(createAccordion({
+    root, items: ['a', 'b', 'c'], disabledItems: ['b'], defaultHighlightedValue: 'a',
+  }));
+  const b = new FakeElement(); accordion.setHeaderAttributes(b, 'b');
+  assert.equal(b.attributes.get('aria-disabled'), 'true');
+  root.emit('keydown', { key: 'ArrowDown', altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} });
+  assert.equal(accordion.getSnapshot().state.cursor.current, 'c');
+});
+
 class FakeElement {
   attributes = new Map(); dataset = {}; listeners = new Map(); tabIndex = -1; hidden = false;
   addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); }

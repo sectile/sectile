@@ -9,13 +9,18 @@ import {
   createSelectionState,
   selectOne,
   toggleMultipleSelection,
+  type SelectionMode,
   type SelectionSnapshotInput,
   type SelectionState,
 } from '../state/selection.js';
 
+export type ListboxSelectionMode = SelectionMode;
+
 export type ListboxEvent<ID extends StableID = StableID> =
   | 'next'
   | 'previous'
+  | 'first'
+  | 'last'
   | 'toggle'
   | 'activate'
   | 'clear'
@@ -38,6 +43,7 @@ export interface ListboxStateInput<ID extends StableID = StableID>
 }
 
 export interface ListboxPolicies<ID extends StableID = StableID> {
+  readonly selectionMode?: SelectionMode;
   readonly eligible?: (id: ID) => boolean;
   readonly selectionFollowsFocus?: boolean;
   readonly boundary?: BoundaryPolicy;
@@ -52,6 +58,7 @@ export interface ListboxUpdate<ID extends StableID = StableID> {
 export function createListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
+  selectionMode: SelectionMode = 'multiple',
 ): Result<ListboxState<ID>> {
   const current = input.current ?? null;
   if (current !== null && !domain.contains(current)) {
@@ -62,7 +69,7 @@ export function createListboxState<ID extends StableID>(
       { current },
     );
   }
-  const selection = createSelectionState(domain, 'multiple', input);
+  const selection = createSelectionState(domain, selectionMode, input);
   if (!selection.ok) return selection;
   return ok(listboxState(createCursorState(current), selection.value));
 }
@@ -79,7 +86,7 @@ export function applyListboxEvent<ID extends StableID>(
     return fail(
       'transition-rejection',
       'invalid-listbox-event',
-      'Listbox event must be next, previous, toggle, activate, or clear.',
+      'Listbox event must be next, previous, first, last, toggle, activate, or clear.',
       { event },
     );
   }
@@ -108,6 +115,23 @@ export function applyListboxEvent<ID extends StableID>(
       'Listbox eligibility policy must be a function.',
     );
   }
+  const selectionMode = policies.selectionMode ?? 'multiple';
+  if (selectionMode !== 'single' && selectionMode !== 'multiple') {
+    return fail(
+      'transition-rejection',
+      'invalid-selection-mode',
+      'Listbox selection mode must be single or multiple.',
+      { selectionMode },
+    );
+  }
+  if (selectionMode === 'single' && state.selection.size > 1) {
+    return fail(
+      'transition-rejection',
+      'invalid-selection-cardinality',
+      'Single-selection listbox state permits at most one selected identity.',
+      { selectedCount: state.selection.size },
+    );
+  }
 
   if (typeof event === 'object') {
     if (!domain.contains(event.id) || policies.eligible?.(event.id) === false) {
@@ -130,7 +154,7 @@ export function applyListboxEvent<ID extends StableID>(
     if (event.type === 'toggle') {
       return createMachineUpdate(listboxState(
         createCursorState(event.id),
-        toggleMultipleSelection(state.selection, event.id, domain),
+        selectForMode(state.selection, event.id, domain, selectionMode),
       ), [{ type: 'focus', id: event.id }]);
     }
     return createMachineUpdate(
@@ -144,13 +168,17 @@ export function applyListboxEvent<ID extends StableID>(
       return moveListbox(domain, state, 1, boundary, selectionFollowsFocus, policies);
     case 'previous':
       return moveListbox(domain, state, -1, boundary, selectionFollowsFocus, policies);
+    case 'first':
+      return moveListboxToEdge(domain, state, 1, selectionFollowsFocus, policies);
+    case 'last':
+      return moveListboxToEdge(domain, state, -1, selectionFollowsFocus, policies);
     case 'toggle': {
       const current = state.cursor.current;
       if (current === null) return noCursor();
       return createMachineUpdate(
         listboxState(
           state.cursor,
-          toggleMultipleSelection(state.selection, current, domain),
+          selectForMode(state.selection, current, domain, selectionMode),
         ),
       );
     }
@@ -169,6 +197,62 @@ export function applyListboxEvent<ID extends StableID>(
       );
     }
   }
+}
+
+export interface ListboxTypeaheadOptions<ID extends StableID = StableID> {
+  readonly textValue: (id: ID) => string;
+  readonly eligible?: (id: ID) => boolean;
+  readonly normalize?: (text: string) => string;
+  readonly maxScan?: number;
+}
+
+export function findListboxTypeaheadMatch<ID extends StableID>(
+  domain: Sequence<ID>,
+  current: ID | null,
+  query: string,
+  options: ListboxTypeaheadOptions<ID>,
+): Result<ID | null> {
+  if (typeof query !== 'string' || query.length === 0) return ok(null);
+  if (typeof options.textValue !== 'function') {
+    return fail('transition-rejection', 'invalid-typeahead-text-value',
+      'Listbox typeahead requires a textValue function.');
+  }
+  if (options.eligible !== undefined && typeof options.eligible !== 'function') {
+    return fail('transition-rejection', 'invalid-eligibility-policy',
+      'Listbox typeahead eligibility must be a function.');
+  }
+  if (options.normalize !== undefined && typeof options.normalize !== 'function') {
+    return fail('transition-rejection', 'invalid-typeahead-normalizer',
+      'Listbox typeahead normalize must be a function.');
+  }
+  if (options.maxScan !== undefined
+    && (!Number.isSafeInteger(options.maxScan) || options.maxScan < 0)) {
+    return fail('resource-rejection', 'invalid-scan-ceiling',
+      'Listbox typeahead maxScan must be a non-negative safe integer.');
+  }
+  if (current !== null && !domain.contains(current)) {
+    return fail('transition-rejection', 'listbox-cursor-outside-domain',
+      'Listbox typeahead cursor must exist in the sequence domain.', { current });
+  }
+  const normalize = options.normalize ?? ((text: string) => text.toLowerCase());
+  const needle = normalize(query);
+  if (needle.length === 0 || domain.size === 0) return ok(null);
+  const eligible = options.eligible ?? (() => true);
+  const maxScan = options.maxScan ?? Number.MAX_SAFE_INTEGER;
+  const start = current === null ? 0 : ((domain.indexOf(current) as number) + 1) % domain.size;
+  let scanned = 0;
+  for (let offset = 0; offset < domain.size; offset += 1) {
+    if (scanned === maxScan) {
+      return fail('resource-rejection', 'scan-ceiling-reached',
+        'Listbox typeahead reached maxScan before its result was determined.', { maxScan });
+    }
+    const id = domain.at((start + offset) % domain.size);
+    scanned += 1;
+    if (id !== null && eligible(id) && normalize(options.textValue(id)).startsWith(needle)) {
+      return ok(id);
+    }
+  }
+  return ok(null);
 }
 
 function moveListbox<ID extends StableID>(
@@ -203,6 +287,41 @@ function moveListbox<ID extends StableID>(
     ? selectOne(state.selection, target, domain)
     : state.selection;
   return createMachineUpdate(listboxState(cursor, selection), [{ type: 'focus', id: target }]);
+}
+
+function moveListboxToEdge<ID extends StableID>(
+  domain: Sequence<ID>,
+  state: ListboxState<ID>,
+  direction: -1 | 1,
+  selectionFollowsFocus: boolean,
+  policies: ListboxPolicies<ID>,
+): Result<ListboxUpdate<ID>> {
+  const target = findEligibleFromEdge(domain, direction, {
+    eligible: policies.eligible ?? (() => true),
+    ...(policies.maxScan === undefined ? {} : { maxScan: policies.maxScan }),
+  });
+  if (!target.ok) return target;
+  if (target.value === null || target.value === state.cursor.current) {
+    return createMachineUpdate(state);
+  }
+  return createMachineUpdate(
+    listboxState(
+      createCursorState(target.value),
+      selectionFollowsFocus ? selectOne(state.selection, target.value, domain) : state.selection,
+    ),
+    [{ type: 'focus', id: target.value }],
+  );
+}
+
+function selectForMode<ID extends StableID>(
+  state: SelectionState<ID>,
+  id: ID,
+  domain: Sequence<ID>,
+  selectionMode: SelectionMode,
+): SelectionState<ID> {
+  return selectionMode === 'single'
+    ? selectOne(state, id, domain)
+    : toggleMultipleSelection(state, id, domain);
 }
 
 function validateListboxState<ID extends StableID>(
@@ -284,6 +403,8 @@ function isListboxEvent<ID extends StableID>(value: unknown): value is ListboxEv
   return typeof value === 'string' ? (
     value === 'next' ||
     value === 'previous' ||
+    value === 'first' ||
+    value === 'last' ||
     value === 'toggle' ||
     value === 'activate' ||
     value === 'clear'

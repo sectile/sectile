@@ -9,6 +9,9 @@ test('DOM multi-thumb slider projects constrained thumb values', () => {
   slider.setThumbAttributes(low, 'low'); slider.setThumbAttributes(high, 'high'); slider.handleEvent('end');
   assert.deepEqual(slider.getSnapshot().state.ticks, [6, 8]);
   assert.equal(low.attributes.get('aria-valuenow'), '6'); assert.equal(high.attributes.get('aria-valuenow'), '8');
+  assert.equal(low.attributes.get('aria-valuemax'), '6');
+  assert.equal(high.attributes.get('aria-valuemin'), '8');
+  assert.deepEqual(slider.getValues(), ['6', '8']);
   assert.equal(low.tabIndex, 0); assert.equal(high.tabIndex, 0);
 });
 
@@ -46,7 +49,7 @@ class FakeElement {
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   emit(type, event = {}) { event.type = type; for (const listener of this.listeners.get(type) ?? []) listener(event); }
-  getBoundingClientRect() { return { left: 0, width: 100 }; }
+  getBoundingClientRect() { return { left: 0, width: 100, top: 0, bottom: 100, height: 100 }; }
   setPointerCapture() {}
   releasePointerCapture() {}
   focus() { this.focused = true; }

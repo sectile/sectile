@@ -2,9 +2,11 @@ import type { Result, SectileError, StableID } from '@sectile/primitives';
 import {
   applyListboxEvent,
   createListboxState,
+  findListboxTypeaheadMatch,
   type ListboxCommand,
   type ListboxEvent,
   type ListboxPolicies,
+  type ListboxSelectionMode,
   type ListboxState,
   type ListboxStateInput,
 } from '@sectile/primitives/listbox';
@@ -16,6 +18,7 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
@@ -37,12 +40,23 @@ export interface ListboxHighlightChangeDetails<ID extends StableID = StableID> {
 export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly domain: Sequence<ID>;
   readonly policies?: ListboxPolicies<ID>;
+  readonly selectionMode?: ListboxSelectionMode;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly disabledItems?: readonly ID[];
+  readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly onValueChange?: (change: ListboxValueChangeDetails<ID>) => void;
   readonly onHighlightedValueChange?: (change: ListboxHighlightChangeDetails<ID>) => void;
+}
+
+export interface ListboxTypeaheadOptions<ID extends StableID = StableID> {
+  readonly textValue: (id: ID) => string;
+  readonly normalize?: (text: string) => string;
+  readonly timeoutMs?: number;
+  readonly now?: () => number;
 }
 
 export interface ListboxControlledValues<ID extends StableID = StableID> {
@@ -59,15 +73,21 @@ export interface ListboxController<ID extends StableID = StableID> {
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+  handleEvent(
+    event: ListboxEvent<ID>,
+    expectedRevision?: number,
+  ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
 export interface ListboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ListboxEvent<ID>;
+  readonly event: ListboxEvent<ID> | { readonly type: 'typeahead'; readonly query: string };
   readonly result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
 export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly controller: ListboxController<ID>;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly onActivate?: (id: ID) => void;
   readonly onTransition?: (details: ListboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
@@ -79,6 +99,7 @@ export interface ListboxConnection<ID extends StableID = StableID> {
     values: ListboxControlledValues<ID>,
   ): Result<RevisionSnapshot<ListboxState<ID>>>;
   handleKeyboardInput(input: KeyboardInput): boolean;
+  handleEvent(event: ListboxEvent<ID>): boolean;
 }
 
 export type ListboxOptions<ID extends StableID = StableID> =
@@ -89,16 +110,18 @@ export type ListboxOptions<ID extends StableID = StableID> =
 export function createListboxController<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
 ): Result<ListboxController<ID>> {
+  const policies = listboxPolicies(options);
+  if (!policies.ok) return policies;
   const initial = createListboxState(options.domain, {
     selected: options.value ?? options.defaultValue ?? [],
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
       : options.defaultHighlightedValue ?? null,
-  });
+  }, options.selectionMode ?? options.policies?.selectionMode ?? 'multiple');
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalListboxController(options, snapshot.value) };
+  return { ok: true, value: new TerminalListboxController(options, policies.value, snapshot.value) };
 }
 
 export function createListbox<ID extends StableID>(
@@ -119,9 +142,14 @@ export function connectListbox<ID extends StableID>(
 
 export function toListboxEvent<ID extends StableID = StableID>(
   input: KeyboardInput,
+  orientation: 'horizontal' | 'vertical' = 'vertical',
 ): ListboxEvent<ID> | null {
-  if (input.key === 'down') return 'next';
-  if (input.key === 'up') return 'previous';
+  if (input.key === 'home') return 'first';
+  if (input.key === 'end') return 'last';
+  if (orientation === 'vertical' && input.key === 'down') return 'next';
+  if (orientation === 'vertical' && input.key === 'up') return 'previous';
+  if (orientation === 'horizontal' && input.key === 'right') return 'next';
+  if (orientation === 'horizontal' && input.key === 'left') return 'previous';
   if (input.key === 'space') return 'toggle';
   if (input.key === 'enter') return 'activate';
   if (input.key === 'escape') return 'clear';
@@ -141,12 +169,16 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
   readonly #onActivate: ((id: ID) => void) | undefined;
   readonly #onTransition: ((details: ListboxTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
+  readonly #orientation: 'horizontal' | 'vertical';
+  readonly #typeaheadEnabled: boolean;
 
   public constructor(options: ListboxConnectionOptions<ID>) {
     this.#controller = options.controller;
     this.#onActivate = options.onActivate;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
+    this.#orientation = options.orientation ?? 'vertical';
+    this.#typeaheadEnabled = options.typeahead !== undefined;
   }
 
   public getSnapshot(): RevisionSnapshot<ListboxState<ID>> {
@@ -162,9 +194,24 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
-    const event = toListboxEvent<ID>(input);
-    if (event === null) return false;
+    const event = toListboxEvent<ID>(input, this.#orientation);
+    const query = printableText(input);
+    if (event === null && (query === null || !this.#typeaheadEnabled)) return false;
     const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) {
+      for (const effect of result.commands) {
+        if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
+      }
+    }
+    const transitionEvent: ListboxTransitionDetails<ID>['event'] = event
+      ?? { type: 'typeahead', query: query as string };
+    this.#onTransition?.(Object.freeze({ event: transitionEvent, result }));
+    this.#onUpdate?.();
+    return true;
+  }
+
+  public handleEvent(event: ListboxEvent<ID>): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) {
       for (const effect of result.commands) {
         if (effect.type === 'submit-item') this.#onActivate?.(effect.id);
@@ -179,6 +226,9 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
 class TerminalListboxController<ID extends StableID> implements ListboxController<ID> {
   readonly #domain: Sequence<ID>;
   readonly #policies: ListboxPolicies<ID>;
+  readonly #selectionMode: ListboxSelectionMode;
+  readonly #orientation: 'horizontal' | 'vertical';
+  readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #onValueChange: ((change: ListboxValueChangeDetails<ID>) => void) | undefined;
@@ -186,13 +236,19 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     | ((change: ListboxHighlightChangeDetails<ID>) => void)
     | undefined;
   #snapshot: RevisionSnapshot<ListboxState<ID>>;
+  #typeaheadBuffer = '';
+  #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
 
   public constructor(
     options: ListboxControllerOptions<ID>,
+    policies: ListboxPolicies<ID>,
     snapshot: RevisionSnapshot<ListboxState<ID>>,
   ) {
     this.#domain = options.domain;
-    this.#policies = options.policies ?? {};
+    this.#policies = policies;
+    this.#selectionMode = policies.selectionMode ?? 'multiple';
+    this.#orientation = options.orientation ?? 'vertical';
+    this.#typeahead = options.typeahead;
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
@@ -231,7 +287,7 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
       current: this.#highlightControlled
         ? (values.highlightedValue as ID | null)
         : this.#snapshot.state.cursor.current,
-    });
+    }, this.#selectionMode);
     const snapshot = synchronizeControllerState(this.#snapshot, state);
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
@@ -242,8 +298,10 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
-    const event = toListboxEvent<ID>(input);
-    if (event === null) {
+    const event = toListboxEvent<ID>(input, this.#orientation);
+    if (event !== null) return this.handleEvent(event, expectedRevision);
+    const queryPart = printableText(input);
+    if (queryPart === null || this.#typeahead === undefined) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
         code: 'unsupported-terminal-key',
@@ -251,6 +309,40 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
         details: { key: input.key },
       });
     }
+    const now = this.#typeahead.now?.() ?? Date.now();
+    const timeoutMs = this.#typeahead.timeoutMs ?? 500;
+    if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+      return rejectRevisionInput(this.#snapshot, {
+        class: 'transition-rejection', code: 'invalid-typeahead-timeout',
+        message: 'Listbox typeahead timeout must be a non-negative finite number.',
+      });
+    }
+    const buffer = now - this.#lastTypeaheadAt > timeoutMs
+      ? queryPart
+      : repeatedTypeahead(this.#typeaheadBuffer, queryPart);
+    const match = findListboxTypeaheadMatch(this.#domain, this.#snapshot.state.cursor.current, buffer, {
+      textValue: this.#typeahead.textValue,
+      ...(this.#typeahead.normalize === undefined ? {} : { normalize: this.#typeahead.normalize }),
+      ...(this.#policies.eligible === undefined ? {} : { eligible: this.#policies.eligible }),
+      ...(this.#policies.maxScan === undefined ? {} : { maxScan: this.#policies.maxScan }),
+    });
+    this.#typeaheadBuffer = buffer;
+    this.#lastTypeaheadAt = now;
+    if (!match.ok) return rejectRevisionInput(this.#snapshot, match.error);
+    if (match.value === null) {
+      return rejectRevisionInput(this.#snapshot, {
+        class: 'transition-rejection', code: 'typeahead-no-match',
+        message: 'Listbox typeahead did not match an eligible item.',
+        details: { query: buffer },
+      });
+    }
+    return this.handleEvent({ type: 'focus', id: match.value }, expectedRevision);
+  }
+
+  public handleEvent(
+    event: ListboxEvent<ID>,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -267,6 +359,7 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
         proposed,
         this.#valueControlled,
         this.#highlightControlled,
+        this.#selectionMode,
       ),
       (previous, proposed) => this.#notify(previous, proposed),
       toListboxEffect,
@@ -297,13 +390,40 @@ function controlledState<ID extends StableID>(
   proposed: ListboxState<ID>,
   valueControlled: boolean,
   highlightControlled: boolean,
+  selectionMode: ListboxSelectionMode,
 ): Result<ListboxState<ID>> {
   const input: ListboxStateInput<ID> = {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: proposed.selection.anchor,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
   };
-  return createListboxState(domain, input);
+  return createListboxState(domain, input, selectionMode);
+}
+
+function listboxPolicies<ID extends StableID>(
+  options: ListboxControllerOptions<ID>,
+): Result<ListboxPolicies<ID>> {
+  const disabled = createDisabledItems(options.domain, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const eligible = options.policies?.eligible;
+  return { ok: true, value: Object.freeze({
+    ...options.policies,
+    selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
+    eligible: (id: ID) => !disabled.value.has(id) && (eligible?.(id) ?? true),
+  }) };
+}
+
+function printableText(input: KeyboardInput): string | null {
+  return input.altKey === true || input.ctrlKey === true
+    || input.text === undefined || input.text.length === 0
+    ? null
+    : input.text;
+}
+
+function repeatedTypeahead(buffer: string, next: string): string {
+  return buffer.length > 0 && Array.from(buffer).every((character) => character === next)
+    ? next
+    : `${buffer}${next}`;
 }
 
 function controlledInputError<ID extends StableID>(

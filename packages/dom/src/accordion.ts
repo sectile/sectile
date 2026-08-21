@@ -6,6 +6,7 @@ import {
   type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState,
 } from '@sectile/primitives/accordion';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import type { KeyboardInput } from './tabs.js';
 
@@ -14,6 +15,7 @@ export interface AccordionOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly items: readonly ID[];
   readonly policies?: AccordionPolicies<ID>;
+  readonly disabledItems?: readonly ID[];
   readonly openIDs?: readonly ID[];
   readonly defaultOpenIDs?: readonly ID[];
   readonly highlightedValue?: ID | null;
@@ -33,6 +35,9 @@ export interface AccordionConnection<ID extends StableID = StableID> {
 }
 export function createAccordion<ID extends StableID>(options: AccordionOptions<ID>): Result<AccordionConnection<ID>> {
   const domain = createSequence(options.items); if (!domain.ok) return domain;
+  const disabled = createDisabledItems(domain.value, options.disabledItems); if (!disabled.ok) return disabled;
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: AccordionPolicies<ID> = Object.freeze({ ...options.policies, eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true) });
   const openControlled = options.openIDs !== undefined;
   const highlightControlled = options.highlightedValue !== undefined;
   const initialOpen = options.openIDs ?? options.defaultOpenIDs
@@ -41,12 +46,12 @@ export function createAccordion<ID extends StableID>(options: AccordionOptions<I
     initial: createAccordionState(domain.value, {
       openIDs: initialOpen,
       current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null,
-    }, options.policies),
-    reducer: (state, event) => applyAccordionEvent(domain.value, state, event, options.policies),
+    }, policies),
+    reducer: (state, event) => applyAccordionEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createAccordionState(domain.value, {
       openIDs: openControlled ? previous.openIDs : proposed.openIDs,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
-    }, options.policies),
+    }, policies),
     notify: (previous, proposed) => {
       if (!sameIDs(previous.openIDs, proposed.openIDs)) options.onOpenChange?.(proposed.openIDs);
       if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current);
@@ -54,7 +59,7 @@ export function createAccordion<ID extends StableID>(options: AccordionOptions<I
     toEffect: (command) => command,
   });
   if (!runtime.ok) return runtime;
-  return { ok: true, value: new DOMAccordionConnection(options, domain.value, runtime.value, openControlled, highlightControlled) };
+  return { ok: true, value: new DOMAccordionConnection(options, domain.value, runtime.value, openControlled, highlightControlled, policies, disabled.value) };
 }
 export function toAccordionEvent<ID extends StableID = StableID>(input: KeyboardInput): AccordionEvent<ID> | null {
   if (input.altKey || input.ctrlKey || input.metaKey) return null;
@@ -66,10 +71,12 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
   readonly #options: AccordionOptions<ID>; readonly #domain: Sequence<ID>;
   readonly #runtime: SemanticController<AccordionState<ID>, AccordionEvent<ID>, AccordionEffect<ID>>;
   readonly #openControlled: boolean; readonly #highlightControlled: boolean;
+  readonly #policies: AccordionPolicies<ID>; readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void;
-  public constructor(options: AccordionOptions<ID>, domain: Sequence<ID>, runtime: SemanticController<AccordionState<ID>, AccordionEvent<ID>, AccordionEffect<ID>>, openControlled: boolean, highlightControlled: boolean) {
+  public constructor(options: AccordionOptions<ID>, domain: Sequence<ID>, runtime: SemanticController<AccordionState<ID>, AccordionEvent<ID>, AccordionEffect<ID>>, openControlled: boolean, highlightControlled: boolean, policies: AccordionPolicies<ID>, disabledItems: ReadonlySet<ID>) {
     this.#options = options; this.#domain = domain; this.#runtime = runtime;
     this.#openControlled = openControlled; this.#highlightControlled = highlightControlled;
+    this.#policies = policies; this.#disabledItems = disabledItems;
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     this.#keydown = (event): void => { const semantic = toAccordionEvent<ID>(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
     this.#click = (event): void => { const id = findDelegatedID(event.target, options.root, 'accordionId'); if (id !== null) this.handleEvent({ type: 'toggle', id: id as ID }); };
@@ -84,14 +91,14 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
     const result = this.#runtime.replace(createAccordionState(this.#domain, {
       openIDs: this.#openControlled ? (values.openIDs as readonly ID[]) : state.openIDs,
       current: this.#highlightControlled ? (values.highlightedValue as ID | null) : state.cursor.current,
-    }, this.#options.policies));
+    }, this.#policies));
     if (result.ok) this.#options.onUpdate?.(); return result;
   }
   public setHeaderAttributes(element: HTMLElement, id: ID, panelID?: string, disabled = false): void {
     const state = this.#runtime.getSnapshot().state; element.dataset['accordionId'] = id;
     element.setAttribute('aria-expanded', String(state.has(id))); element.tabIndex = state.cursor.current === id ? 0 : -1;
     if (panelID !== undefined) element.setAttribute('aria-controls', panelID);
-    if (disabled) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
+    if (disabled || this.#disabledItems.has(id)) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
   }
   public setPanelAttributes(element: HTMLElement, id: ID, headerID?: string): void {
     element.setAttribute('role', 'region'); element.hidden = !this.#runtime.getSnapshot().state.has(id);

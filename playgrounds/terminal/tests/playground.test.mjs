@@ -75,7 +75,7 @@ test('terminal calendar demo renders a complete month and fulfills page requests
   const before = session.lines(80);
   const today = new Date();
   const selected = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-  assert.equal(before.length, 12);
+  assert.equal(before.length, 13);
   assert.equal(before.at(-1).includes(`selected=${selected}`), true);
 
   assert.equal(session.handle({ key: 'page-down' }), true);
@@ -84,7 +84,7 @@ test('terminal calendar demo renders a complete month and fulfills page requests
     year: 'numeric',
   }).format(new Date(today.getFullYear(), today.getMonth() + 1, 1));
   const after = session.lines(80);
-  assert.equal(after[0].includes(expectedMonth), true);
+  assert.equal(after.some((line) => line.includes(expectedMonth)), true);
   assert.equal(after.at(-1).includes(`selected=${selected}`), true);
 });
 

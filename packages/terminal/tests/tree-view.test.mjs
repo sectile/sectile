@@ -42,6 +42,14 @@ test('terminal tree-view commands project into highlight effects', () => {
   });
 });
 
+test('terminal tree-view skips disabled items without host policy glue', () => {
+  const connection = unwrap(createTreeView({ nodes: nodes(), defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] }));
+  connection.handleKeyboardInput({ key: 'down' });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
+  connection.handleKeyboardInput({ key: 'down' });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
+});
+
 test('terminal tree-view supports mixed controlled state', () => {
   const selections = [];
   const controller = unwrap(createTreeViewController({

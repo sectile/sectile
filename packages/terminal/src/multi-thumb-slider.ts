@@ -19,6 +19,7 @@ export interface MultiThumbSliderControlledValues<ID extends StableID = StableID
 export interface MultiThumbSliderConnection<ID extends StableID = StableID> {
   readonly range: QuantizedRange;
   getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>>;
+  getValues(): readonly string[];
   syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>>;
   handleEvent(event: MultiThumbSliderEvent<ID>): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
@@ -48,6 +49,7 @@ class TerminalMultiThumbSlider<ID extends StableID> implements MultiThumbSliderC
   readonly #runtime: SemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>>;
   public constructor(options: MultiThumbSliderOptions<ID>, thumbs: Sequence<ID>, range: QuantizedRange, runtime: SemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>>) { this.#options = options; this.#thumbs = thumbs; this.range = range; this.#runtime = runtime; }
   public getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>> { return this.#runtime.getSnapshot(); }
+  public getValues(): readonly string[] { return Object.freeze(this.getSnapshot().state.ticks.map((tick) => this.range.valueAt(tick) as string)); }
   public syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>> {
     if (this.#options.values === undefined) return { ok: false, error: { class: 'construction', code: 'not-controlled', message: 'Only a controlled multi-thumb slider can be synchronized.' } };
     return this.#runtime.replace(createMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));

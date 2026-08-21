@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "3fb69e68483e12cd9da915b8cd03944000f8b0666e1913c5d2ad84bb72a2b3ed",
+  "fingerprint": "a0f054ac19125bd2ac4c9d919434b02bebf6b713b5311a24336293eea26761d0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -64,11 +64,11 @@
     },
     {
       "path": "dist/internal/composites/listbox.d.ts",
-      "sha256": "8be9d8c65e559e1ee8d23944d9d24be22a487a4d4d2eee16eed955a10c5bf6bd"
+      "sha256": "05144655af953b3a8a9ee660e6bc40df20535f755186c599dc020f4bc0dd0b74"
     },
     {
       "path": "dist/internal/composites/menu.d.ts",
-      "sha256": "3606dead1e045d9fd64b87307570cd07ec8000ecd455f342bf8203f9d103e82f"
+      "sha256": "8aeb1500cf3cb7b9122e0b5805a056ba1e1181e4fc1b2517cb10bb35ed538a23"
     },
     {
       "path": "dist/internal/composites/popup.d.ts",
@@ -84,7 +84,7 @@
     },
     {
       "path": "dist/internal/composites/tree-view.d.ts",
-      "sha256": "fc80388a989e2e2a9c14008f9a70b2b293b7ad8d6b8491045f9f0bcf82d352cd"
+      "sha256": "475077a339ad3c6cb9de609a56c91addcfafed23fbcef3d13db04a81438197e0"
     },
     {
       "path": "dist/internal/editing/text.d.ts",
@@ -120,7 +120,7 @@
     },
     {
       "path": "dist/listbox.d.ts",
-      "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
+      "sha256": "c688527b015439eff367c650fc5a8dc0cd188d544036ddb235a9e5cd175cbceb"
     },
     {
       "path": "dist/menu-button.d.ts",
@@ -128,7 +128,7 @@
     },
     {
       "path": "dist/menu.d.ts",
-      "sha256": "cc64ac8b90583435510822dcc67adc89b03beb53d405363efc4db216168a1c10"
+      "sha256": "090c2ea7dab8111bd6d4a1f4686ebd0e61568873a20c88dc000e45e37485fa61"
     },
     {
       "path": "dist/menubar.d.ts",
@@ -208,7 +208,7 @@
     },
     {
       "path": "dist/tree-view.d.ts",
-      "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
+      "sha256": "5a5bd113c87cca3812262c2ce3c064354c11aac5ca4dac44a8cb71d735990151"
     },
     {
       "path": "dist/window-splitter.d.ts",

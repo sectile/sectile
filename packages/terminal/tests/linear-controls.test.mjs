@@ -38,3 +38,25 @@ test('terminal linear controls own key normalization', () => {
   assert.equal(toToolbarEvent({ key: 'enter' }), 'invoke');
   assert.equal(toToolbarEvent({ key: 'down' }), null);
 });
+
+test('terminal linear controls skip disabledItems without application policy glue', () => {
+  const tabs = unwrap(createTabs({
+    items: ['one', 'disabled', 'three'], disabledItems: ['disabled'],
+    defaultHighlightedValue: 'one',
+  }));
+  tabs.handleKeyboardInput({ key: 'right' });
+  assert.equal(tabs.getSnapshot().state.cursor.current, 'three');
+
+  const radio = unwrap(createRadioGroup({
+    items: ['a', 'b', 'c'], disabledItems: ['b'], defaultValue: 'a', defaultHighlightedValue: 'a',
+  }));
+  radio.handleKeyboardInput({ key: 'down' });
+  assert.equal(radio.getSnapshot().state.cursor.current, 'c');
+
+  const toolbar = unwrap(createToolbar({
+    items: ['bold', 'disabled', 'italic'], disabledItems: ['disabled'],
+    defaultHighlightedValue: 'bold',
+  }));
+  toolbar.handleKeyboardInput({ key: 'right' });
+  assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
+});

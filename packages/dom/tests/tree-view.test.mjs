@@ -74,6 +74,19 @@ test('DOM tree-view commands project into focus effects', () => {
   });
 });
 
+test('DOM tree-view derives disabled semantics and skips unavailable items', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createTreeView({ nodes: nodes(), root, defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] }));
+  const disabled = new FakeElement(); connection.setItemAttributes(disabled, { id: 'child-b' });
+  assert.equal(disabled.attributes.get('aria-disabled'), 'true');
+  connection.handleEvent('next');
+  assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
+  connection.handleEvent('next');
+  assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
+  assert.equal(connection.handleEvent({ type: 'toggle-select', id: 'child-b' }), true);
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, []);
+});
+
 test('uncontrolled DOM tree-view owns expansion, highlight, and selection', () => {
   const controller = unwrap(createTreeViewController({
     tree: tree(),

@@ -10,6 +10,7 @@ import {
   type TabsState,
 } from '@sectile/primitives/tabs';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
 export interface KeyboardInput {
@@ -27,6 +28,7 @@ export interface TabsOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly items: readonly ID[];
   readonly policies?: TabsPolicies<ID>;
+  readonly disabledItems?: readonly ID[];
   readonly value?: ID | null;
   readonly defaultValue?: ID | null;
   readonly highlightedValue?: ID | null;
@@ -62,6 +64,13 @@ export function createTabs<ID extends StableID>(
 ): Result<TabsConnection<ID>> {
   const domain = createSequence(options.items);
   if (!domain.ok) return domain;
+  const disabled = createDisabledItems(domain.value, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: TabsPolicies<ID> = Object.freeze({
+    ...options.policies,
+    eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true),
+  });
   const valueControlled = options.value !== undefined;
   const highlightControlled = options.highlightedValue !== undefined;
   const initial = createTabsState(domain.value, {
@@ -77,7 +86,7 @@ export function createTabs<ID extends StableID>(
     TabsEffect<ID>
   >({
     initial,
-    reducer: (state, event) => applyTabsEvent(domain.value, state, event, options.policies),
+    reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createTabsState(domain.value, {
       selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
@@ -101,6 +110,7 @@ export function createTabs<ID extends StableID>(
       runtime.value,
       valueControlled,
       highlightControlled,
+      disabled.value,
     ),
   };
 }
@@ -132,6 +142,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   readonly #runtime: SemanticController<TabsState<ID>, TabsEvent<ID>, TabsEffect<ID>>;
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
+  readonly #disabledItems: ReadonlySet<ID>;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
 
@@ -141,12 +152,14 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     runtime: SemanticController<TabsState<ID>, TabsEvent<ID>, TabsEffect<ID>>,
     valueControlled: boolean,
     highlightControlled: boolean,
+    disabledItems: ReadonlySet<ID>,
   ) {
     this.#options = options;
     this.#domain = domain;
     this.#runtime = runtime;
     this.#valueControlled = valueControlled;
     this.#highlightControlled = highlightControlled;
+    this.#disabledItems = disabledItems;
     options.root.setAttribute('role', 'tablist');
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
@@ -193,7 +206,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     element.setAttribute('aria-selected', String(active));
     element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
     if (attributes.panelID !== undefined) element.setAttribute('aria-controls', attributes.panelID);
-    if (attributes.disabled) element.setAttribute('aria-disabled', 'true');
+    if (attributes.disabled || this.#disabledItems.has(attributes.id)) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
   }
 

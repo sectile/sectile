@@ -53,6 +53,35 @@ test('DOM linear controls expose orientation-aware semantic key maps', () => {
   assert.equal(toToolbarEvent({ key: 'ArrowDown' }), null);
 });
 
+test('DOM linear controls derive eligibility and ARIA from disabledItems', () => {
+  const tabsRoot = new FakeElement();
+  const tabs = unwrap(createTabs({
+    root: tabsRoot, items: ['one', 'disabled', 'three'], disabledItems: ['disabled'],
+    defaultHighlightedValue: 'one',
+  }));
+  const disabledTab = new FakeElement();
+  tabs.setItemAttributes(disabledTab, { id: 'disabled' });
+  assert.equal(disabledTab.attributes.get('aria-disabled'), 'true');
+  tabsRoot.emit('keydown', keyboardEvent('ArrowRight'));
+  assert.equal(tabs.getSnapshot().state.cursor.current, 'three');
+
+  const radioRoot = new FakeElement();
+  const radio = unwrap(createRadioGroup({
+    root: radioRoot, items: ['a', 'b', 'c'], disabledItems: ['b'],
+    defaultValue: 'a', defaultHighlightedValue: 'a',
+  }));
+  radioRoot.emit('keydown', keyboardEvent('ArrowDown'));
+  assert.equal(radio.getSnapshot().state.cursor.current, 'c');
+
+  const toolbarRoot = new FakeElement();
+  const toolbar = unwrap(createToolbar({
+    root: toolbarRoot, items: ['bold', 'disabled', 'italic'], disabledItems: ['disabled'],
+    defaultHighlightedValue: 'bold',
+  }));
+  toolbarRoot.emit('keydown', keyboardEvent('ArrowRight'));
+  assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
+});
+
 function keyboardEvent(key) {
   return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
 }

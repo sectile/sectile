@@ -11,6 +11,7 @@ import {
   createTreeViewState,
   type TreeViewCommand,
   type TreeViewEvent,
+  type TreeViewPolicies,
   type TreeViewState,
 } from '@sectile/primitives/tree-view';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
@@ -51,6 +52,7 @@ export interface TreeViewControllerOptions<ID extends StableID = StableID> {
   readonly defaultExpandedValue?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
+  readonly policies?: TreeViewPolicies<ID>;
   readonly onValueChange?: (change: TreeViewValueChangeDetails<ID>) => void;
   readonly onExpandedValueChange?: (change: TreeViewExpandedChangeDetails<ID>) => void;
   readonly onHighlightedValueChange?: (change: TreeViewHighlightChangeDetails<ID>) => void;
@@ -88,6 +90,7 @@ export interface TreeViewConnectionOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly onTransition?: (details: TreeViewTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
+  readonly disabledItems?: readonly ID[];
 }
 
 export interface TreeViewItemAttributes<ID extends StableID = StableID> {
@@ -137,7 +140,11 @@ export function createTreeView<ID extends StableID>(
 ): Result<TreeViewConnection<ID>> {
   const tree = createTree(options.nodes);
   if (!tree.ok) return tree;
-  const controller = createTreeViewController({ ...options, tree: tree.value });
+  const disabled = new Set(options.disabledItems ?? []);
+  for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled tree-view item must exist in the tree.', details: { id } } };
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: TreeViewPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.has(id) && (suppliedEligibility?.(id) ?? true) };
+  const controller = createTreeViewController({ ...options, policies, tree: tree.value });
   if (!controller.ok) return controller;
   return { ok: true, value: connectTreeView({ ...options, controller: controller.value }) };
 }
@@ -172,6 +179,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   readonly #root: HTMLElement;
   readonly #onTransition: ((details: TreeViewTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
+  readonly #disabled: ReadonlySet<ID>;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
 
@@ -181,6 +189,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     this.#root = options.root;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
+    this.#disabled = new Set(options.disabledItems ?? []);
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
@@ -238,7 +247,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     } else {
       element.removeAttribute('aria-expanded');
     }
-    if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');
+    if (attributes.disabled === true || this.#disabled.has(attributes.id)) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
   }
 
@@ -291,6 +300,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
 class DOMTreeViewController<ID extends StableID> implements TreeViewController<ID> {
   public readonly tree: Tree<ID>;
   readonly #tree: Tree<ID>;
+  readonly #policies: TreeViewPolicies<ID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
   readonly #highlightControlled: boolean;
@@ -309,6 +319,7 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
   ) {
     this.tree = options.tree;
     this.#tree = options.tree;
+    this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValue !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
@@ -374,7 +385,7 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
       this.#snapshot,
       expectedRevision,
       event,
-      (state, semanticEvent) => applyTreeViewEvent(this.#tree, state, semanticEvent),
+      (state, semanticEvent) => applyTreeViewEvent(this.#tree, state, semanticEvent, this.#policies),
       (previous, proposed) => controlledState(
         this.#tree,
         previous,

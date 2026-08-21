@@ -2,9 +2,11 @@ import type { Result, SectileError, StableID } from '@sectile/primitives';
 import {
   applyListboxEvent,
   createListboxState,
+  findListboxTypeaheadMatch,
   type ListboxCommand,
   type ListboxEvent,
   type ListboxPolicies,
+  type ListboxSelectionMode,
   type ListboxState,
   type ListboxStateInput,
 } from '@sectile/primitives/listbox';
@@ -17,6 +19,7 @@ import {
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -42,12 +45,23 @@ export interface ListboxHighlightChangeDetails<ID extends StableID = StableID> {
 export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly domain: Sequence<ID>;
   readonly policies?: ListboxPolicies<ID>;
+  readonly selectionMode?: ListboxSelectionMode;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly disabledItems?: readonly ID[];
+  readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly onValueChange?: (change: ListboxValueChangeDetails<ID>) => void;
   readonly onHighlightedValueChange?: (change: ListboxHighlightChangeDetails<ID>) => void;
+}
+
+export interface ListboxTypeaheadOptions<ID extends StableID = StableID> {
+  readonly textValue: (id: ID) => string;
+  readonly normalize?: (text: string) => string;
+  readonly timeoutMs?: number;
+  readonly now?: () => number;
 }
 
 export interface ListboxControlledValues<ID extends StableID = StableID> {
@@ -71,13 +85,18 @@ export interface ListboxController<ID extends StableID = StableID> {
 }
 
 export interface ListboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ListboxEvent<ID>;
+  readonly event: ListboxEvent<ID> | { readonly type: 'typeahead'; readonly query: string };
   readonly result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
 export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly controller: ListboxController<ID>;
   readonly root: HTMLElement;
+  readonly selectionMode?: ListboxSelectionMode;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly disabledItems?: readonly ID[];
+  readonly typeahead?: ListboxTypeaheadOptions<ID>;
+  readonly label?: string;
   readonly onActivate?: (id: ID) => void;
   readonly onTransition?: (details: ListboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
@@ -109,16 +128,18 @@ export type ListboxOptions<ID extends StableID = StableID> =
 export function createListboxController<ID extends StableID>(
   options: ListboxControllerOptions<ID>,
 ): Result<ListboxController<ID>> {
+  const policies = listboxPolicies(options);
+  if (!policies.ok) return policies;
   const initial = createListboxState(options.domain, {
     selected: options.value ?? options.defaultValue ?? [],
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
       : options.defaultHighlightedValue ?? null,
-  });
+  }, options.selectionMode ?? options.policies?.selectionMode ?? 'multiple');
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new DOMListboxController(options, snapshot.value) };
+  return { ok: true, value: new DOMListboxController(options, policies.value, snapshot.value) };
 }
 
 export function createListbox<ID extends StableID>(
@@ -128,7 +149,11 @@ export function createListbox<ID extends StableID>(
   if (!domain.ok) return domain;
   const controller = createListboxController({ ...options, domain: domain.value });
   if (!controller.ok) return controller;
-  return { ok: true, value: connectListbox({ ...options, controller: controller.value }) };
+  return { ok: true, value: connectListbox({
+    ...options,
+    selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
+    controller: controller.value,
+  }) };
 }
 
 export function connectListbox<ID extends StableID>(
@@ -139,10 +164,15 @@ export function connectListbox<ID extends StableID>(
 
 export function toListboxEvent<ID extends StableID = StableID>(
   input: KeyboardInput,
+  orientation: 'horizontal' | 'vertical' = 'vertical',
 ): ListboxEvent<ID> | null {
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
-  if (input.key === 'ArrowDown') return 'next';
-  if (input.key === 'ArrowUp') return 'previous';
+  if (input.key === 'Home') return 'first';
+  if (input.key === 'End') return 'last';
+  if (orientation === 'vertical' && input.key === 'ArrowDown') return 'next';
+  if (orientation === 'vertical' && input.key === 'ArrowUp') return 'previous';
+  if (orientation === 'horizontal' && input.key === 'ArrowRight') return 'next';
+  if (orientation === 'horizontal' && input.key === 'ArrowLeft') return 'previous';
   if (input.key === ' ') return 'toggle';
   if (input.key === 'Enter') return 'activate';
   if (input.key === 'Escape') return 'clear';
@@ -163,6 +193,10 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #onActivate: ((id: ID) => void) | undefined;
   readonly #onTransition: ((details: ListboxTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
+  readonly #selectionMode: ListboxSelectionMode;
+  readonly #orientation: 'horizontal' | 'vertical';
+  readonly #disabledItems: ReadonlySet<ID>;
+  readonly #typeaheadEnabled: boolean;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
 
@@ -172,15 +206,23 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#onActivate = options.onActivate;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
+    this.#selectionMode = options.selectionMode ?? 'multiple';
+    this.#orientation = options.orientation ?? 'vertical';
+    this.#disabledItems = new Set(options.disabledItems ?? []);
+    this.#typeaheadEnabled = options.typeahead !== undefined;
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      const id = findDelegatedID(event.target, this.#root, 'listboxId');
-      if (id !== null) this.handleEvent({ type: 'activate', id: id as ID });
+      const id = findDelegatedID(event.target, this.#root, 'listboxId') as ID | null;
+      if (id === null || this.#disabledItems.has(id)) return;
+      this.handleEvent(this.#selectionMode === 'multiple'
+        ? { type: 'toggle', id }
+        : { type: 'activate', id });
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
     this.#root.addEventListener('click', this.#handleClick);
+    this.setListboxAttributes(options.label);
   }
 
   public getSnapshot(): RevisionSnapshot<ListboxState<ID>> {
@@ -200,7 +242,12 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
 
   public setListboxAttributes(label?: string): void {
     this.#root.setAttribute('role', 'listbox');
-    this.#root.setAttribute('aria-multiselectable', 'true');
+    this.#root.setAttribute('aria-orientation', this.#orientation);
+    if (this.#selectionMode === 'multiple') {
+      this.#root.setAttribute('aria-multiselectable', 'true');
+    } else {
+      this.#root.removeAttribute('aria-multiselectable');
+    }
     if (label === undefined) this.#root.removeAttribute('aria-label');
     else this.#root.setAttribute('aria-label', label);
   }
@@ -215,7 +262,8 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     element.tabIndex = current ? 0 : -1;
     element.setAttribute('role', 'option');
     element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
-    if (attributes.disabled === true) element.setAttribute('aria-disabled', 'true');
+    const disabled = attributes.disabled === true || this.#disabledItems.has(attributes.id);
+    if (disabled) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
   }
 
@@ -226,9 +274,20 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
-    const semanticEvent = toListboxEvent<ID>(input);
-    if (semanticEvent === null) return false;
-    return this.handleEvent(semanticEvent);
+    const semanticEvent = toListboxEvent<ID>(input, this.#orientation);
+    const query = printableKey(input);
+    if (semanticEvent === null && (query === null || !this.#typeaheadEnabled)) return false;
+    const result = this.#controller.handleKeyboardInput(input);
+    if (result.ok) this.#applyEffects(result.commands);
+    const transitionEvent: ListboxTransitionDetails<ID>['event'] = semanticEvent
+      ?? { type: 'typeahead', query: query as string };
+    this.#onTransition?.(Object.freeze({
+      event: transitionEvent,
+      result,
+    }));
+    this.#onUpdate?.();
+    this.focusCurrent();
+    return true;
   }
 
   public handleEvent(event: ListboxEvent<ID>): boolean {
@@ -270,6 +329,9 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
 class DOMListboxController<ID extends StableID> implements ListboxController<ID> {
   readonly #domain: Sequence<ID>;
   readonly #policies: ListboxPolicies<ID>;
+  readonly #selectionMode: ListboxSelectionMode;
+  readonly #orientation: 'horizontal' | 'vertical';
+  readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #onValueChange: ((change: ListboxValueChangeDetails<ID>) => void) | undefined;
@@ -277,13 +339,19 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     | ((change: ListboxHighlightChangeDetails<ID>) => void)
     | undefined;
   #snapshot: RevisionSnapshot<ListboxState<ID>>;
+  #typeaheadBuffer = '';
+  #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
 
   public constructor(
     options: ListboxControllerOptions<ID>,
+    policies: ListboxPolicies<ID>,
     snapshot: RevisionSnapshot<ListboxState<ID>>,
   ) {
     this.#domain = options.domain;
-    this.#policies = options.policies ?? {};
+    this.#policies = policies;
+    this.#selectionMode = policies.selectionMode ?? 'multiple';
+    this.#orientation = options.orientation ?? 'vertical';
+    this.#typeahead = options.typeahead;
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
@@ -322,7 +390,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
       current: this.#highlightControlled
         ? (values.highlightedValue as ID | null)
         : this.#snapshot.state.cursor.current,
-    });
+    }, this.#selectionMode);
     const snapshot = synchronizeControllerState(this.#snapshot, state);
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
@@ -333,8 +401,10 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
-    const event = toListboxEvent<ID>(input);
-    if (event === null) {
+    const event = toListboxEvent<ID>(input, this.#orientation);
+    if (event !== null) return this.handleEvent(event, expectedRevision);
+    const queryPart = printableKey(input);
+    if (queryPart === null || this.#typeahead === undefined) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
         code: 'unsupported-dom-key',
@@ -342,7 +412,36 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         details: { key: input.key },
       });
     }
-    return this.handleEvent(event, expectedRevision);
+    const now = this.#typeahead.now?.() ?? Date.now();
+    const timeoutMs = this.#typeahead.timeoutMs ?? 500;
+    if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+      return rejectRevisionInput(this.#snapshot, {
+        class: 'transition-rejection',
+        code: 'invalid-typeahead-timeout',
+        message: 'Listbox typeahead timeout must be a non-negative finite number.',
+      });
+    }
+    const buffer = now - this.#lastTypeaheadAt > timeoutMs
+      ? queryPart
+      : repeatedTypeahead(this.#typeaheadBuffer, queryPart);
+    const match = findListboxTypeaheadMatch(this.#domain, this.#snapshot.state.cursor.current, buffer, {
+      textValue: this.#typeahead.textValue,
+      ...(this.#typeahead.normalize === undefined ? {} : { normalize: this.#typeahead.normalize }),
+      ...(this.#policies.eligible === undefined ? {} : { eligible: this.#policies.eligible }),
+      ...(this.#policies.maxScan === undefined ? {} : { maxScan: this.#policies.maxScan }),
+    });
+    this.#typeaheadBuffer = buffer;
+    this.#lastTypeaheadAt = now;
+    if (!match.ok) return rejectRevisionInput(this.#snapshot, match.error);
+    if (match.value === null) {
+      return rejectRevisionInput(this.#snapshot, {
+        class: 'transition-rejection',
+        code: 'typeahead-no-match',
+        message: 'Listbox typeahead did not match an eligible item.',
+        details: { query: buffer },
+      });
+    }
+    return this.handleEvent({ type: 'focus', id: match.value }, expectedRevision);
   }
 
   public handleEvent(
@@ -365,6 +464,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         proposed,
         this.#valueControlled,
         this.#highlightControlled,
+        this.#selectionMode,
       ),
       (previous, proposed) => this.#notify(previous, proposed),
       toListboxEffect,
@@ -396,13 +496,40 @@ function controlledState<ID extends StableID>(
   proposed: ListboxState<ID>,
   valueControlled: boolean,
   highlightControlled: boolean,
+  selectionMode: ListboxSelectionMode,
 ): Result<ListboxState<ID>> {
   const input: ListboxStateInput<ID> = {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: proposed.selection.anchor,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
   };
-  return createListboxState(domain, input);
+  return createListboxState(domain, input, selectionMode);
+}
+
+function listboxPolicies<ID extends StableID>(
+  options: ListboxControllerOptions<ID>,
+): Result<ListboxPolicies<ID>> {
+  const disabled = createDisabledItems(options.domain, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const eligible = options.policies?.eligible;
+  return { ok: true, value: Object.freeze({
+    ...options.policies,
+    selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
+    eligible: (id: ID) => !disabled.value.has(id) && (eligible?.(id) ?? true),
+  }) };
+}
+
+function printableKey(input: KeyboardInput): string | null {
+  return input.altKey === true || input.ctrlKey === true || input.metaKey === true
+    || Array.from(input.key).length !== 1
+    ? null
+    : input.key;
+}
+
+function repeatedTypeahead(buffer: string, next: string): string {
+  return buffer.length > 0 && Array.from(buffer).every((character) => character === next)
+    ? next
+    : `${buffer}${next}`;
 }
 
 function controlledInputError<ID extends StableID>(

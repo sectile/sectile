@@ -49,16 +49,22 @@ test('DOM keyboard inputs map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: ' ' }), 'toggle');
   assert.equal(toListboxEvent({ key: 'Enter' }), 'activate');
   assert.equal(toListboxEvent({ key: 'Escape' }), 'clear');
+  assert.equal(toListboxEvent({ key: 'Home' }), 'first');
+  assert.equal(toListboxEvent({ key: 'End' }), 'last');
+  assert.equal(toListboxEvent({ key: 'ArrowRight' }, 'horizontal'), 'next');
+  assert.equal(toListboxEvent({ key: 'ArrowDown' }, 'horizontal'), null);
   assert.equal(toListboxEvent({ key: 'ArrowDown', ctrlKey: true }), null);
   assert.equal(toListboxEvent({ key: 'Tab' }), null);
 });
 
-test('DOM listbox delegates option clicks into direct activation', () => {
+test('DOM listbox delegates clicks by selection mode and derives disabled semantics', () => {
   const root = new FakeElement();
   const activations = [];
   const connection = unwrap(createListbox({
-    items: ['a', 'b'],
+    items: ['a', 'b', 'disabled'],
     root,
+    selectionMode: 'single',
+    disabledItems: ['disabled'],
     defaultHighlightedValue: 'a',
     onActivate: (id) => activations.push(id),
   }));
@@ -68,6 +74,32 @@ test('DOM listbox delegates option clicks into direct activation', () => {
   assert.equal(connection.getSnapshot().state.cursor.current, 'b');
   assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
   assert.deepEqual(activations, ['b']);
+
+  const disabled = new FakeElement();
+  connection.setItemAttributes(disabled, { id: 'disabled' });
+  assert.equal(disabled.attributes.get('aria-disabled'), 'true');
+  root.emit('click', { target: disabled });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.equal(root.attributes.has('aria-multiselectable'), false);
+});
+
+test('DOM listbox typeahead skips disabled items and uses a timeout buffer', () => {
+  let now = 0;
+  const controller = unwrap(createListboxController({
+    domain: unwrap(createSequence(['alpha', 'blocked', 'bravo', 'beta'])),
+    disabledItems: ['blocked'],
+    defaultHighlightedValue: 'alpha',
+    typeahead: { textValue: (id) => id, now: () => now, timeoutMs: 250 },
+  }));
+
+  assert.equal(controller.handleKeyboardInput({ key: 'b' }).snapshot.state.cursor.current, 'bravo');
+  now = 50;
+  assert.equal(controller.handleKeyboardInput({ key: 'r' }).snapshot.state.cursor.current, 'bravo');
+  now = 400;
+  assert.equal(controller.handleKeyboardInput({ key: 'b' }).snapshot.state.cursor.current, 'beta');
+  assert.equal(createListboxController({
+    domain: unwrap(createSequence(['a'])), disabledItems: ['missing'],
+  }).error.code, 'disabled-item-outside-domain');
 });
 
 test('DOM commands project into DOM-specific effects', () => {

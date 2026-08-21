@@ -35,7 +35,32 @@ test('terminal keys map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'space' }), 'toggle');
   assert.equal(toListboxEvent({ key: 'enter' }), 'activate');
   assert.equal(toListboxEvent({ key: 'escape' }), 'clear');
+  assert.equal(toListboxEvent({ key: 'home' }), 'first');
+  assert.equal(toListboxEvent({ key: 'end' }), 'last');
+  assert.equal(toListboxEvent({ key: 'right' }, 'horizontal'), 'next');
+  assert.equal(toListboxEvent({ key: 'down' }, 'horizontal'), null);
   assert.equal(toListboxEvent({ key: 'tab' }), null);
+});
+
+test('terminal listbox supports single selection, disabled items, typeahead, and direct events', () => {
+  let now = 0;
+  const connection = unwrap(createListbox({
+    items: ['alpha', 'blocked', 'bravo', 'beta'],
+    selectionMode: 'single',
+    disabledItems: ['blocked'],
+    defaultHighlightedValue: 'alpha',
+    typeahead: { textValue: (id) => id, now: () => now, timeoutMs: 250 },
+  }));
+
+  assert.equal(connection.handleKeyboardInput({ key: 'b', text: 'b' }), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'bravo');
+  assert.equal(connection.handleEvent('toggle'), true);
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['bravo']);
+  assert.equal(connection.handleEvent('toggle'), true);
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['bravo']);
+  now = 400;
+  connection.handleKeyboardInput({ key: 'b', text: 'b' });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'beta');
 });
 
 test('terminal commands project into terminal-specific effects', () => {

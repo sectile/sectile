@@ -28,7 +28,10 @@ test('DOM slider facade constructs a bounded range and owns keyboard ARIA update
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false);
   assert.equal(connection.getValue(), '0.5');
-  assert.equal(root.attributes.get('aria-valuenow'), '2');
+  assert.equal(root.attributes.get('aria-valuemin'), '0');
+  assert.equal(root.attributes.get('aria-valuemax'), '1');
+  assert.equal(root.attributes.get('aria-valuenow'), '0.5');
+  assert.equal(root.attributes.get('aria-orientation'), 'horizontal');
   assert.equal(updates, 1);
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
@@ -59,6 +62,23 @@ test('DOM slider maps pointer position onto an exact tick', () => {
   root.emit('pointerup', pointerEvent(75));
   assert.equal(connection.getSnapshot().state.tick, 3);
   assert.equal(connection.getValue(), '0.75');
+});
+
+test('DOM vertical slider maps its top edge to the upper value', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createSlider({
+    min: '-1',
+    max: '1',
+    step: '0.5',
+    root,
+    orientation: 'vertical',
+    formatValue: (value) => `${value} units`,
+  }));
+  root.emit('pointerdown', { clientX: 0, clientY: 0, pointerId: 1, preventDefault() {} });
+  assert.equal(connection.getValue(), '1');
+  assert.equal(root.attributes.get('aria-valuenow'), '1');
+  assert.equal(root.attributes.get('aria-valuetext'), '1 units');
+  assert.equal(root.attributes.get('aria-orientation'), 'vertical');
 });
 
 test('DOM slider commands project into range effects', () => {
@@ -142,7 +162,7 @@ class FakeElement {
   }
 
   getBoundingClientRect() {
-    return { left: 0, width: 100 };
+    return { left: 0, width: 100, top: 0, bottom: 100, height: 100 };
   }
 
   setPointerCapture() {}

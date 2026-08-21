@@ -42,6 +42,10 @@ export interface TreeViewStateInput<ID extends StableID = StableID>
   readonly current?: ID | null;
 }
 
+export interface TreeViewPolicies<ID extends StableID = StableID> {
+  readonly eligible?: (id: ID) => boolean;
+}
+
 export interface TreeViewUpdate<ID extends StableID = StableID> {
   readonly state: TreeViewState<ID>;
   readonly commands: readonly TreeViewCommand<ID>[];
@@ -71,6 +75,7 @@ export function applyTreeViewEvent<ID extends StableID>(
   tree: Tree<ID>,
   state: TreeViewState<ID>,
   event: TreeViewEvent<ID>,
+  policies: TreeViewPolicies<ID> = {},
 ): Result<TreeViewUpdate<ID>> {
   if (!isTreeViewEvent(event)) {
     return fail(
@@ -81,6 +86,10 @@ export function applyTreeViewEvent<ID extends StableID>(
     );
   }
   const expansion = createExpansionState(tree, state.expansion.ids);
+  if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
+    return fail('transition-rejection', 'invalid-eligibility-policy', 'Tree-view eligibility policy must be a function.');
+  }
+  const eligible = policies.eligible ?? (() => true);
   const visible = tree.visible(expansion);
   const stateError = validateTreeViewState(tree, visible, state);
   if (stateError !== null) return { ok: false, error: stateError };
@@ -99,6 +108,7 @@ export function applyTreeViewEvent<ID extends StableID>(
       );
     }
     if (event.type === 'set-expanded') {
+      if (!eligible(event.id)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Disabled tree-view items cannot change expansion.', { id: event.id });
       const nextExpansion = setExpansionOpen(expansion, event.id, event.open, tree);
       const nextVisible = tree.visible(nextExpansion);
       const target = current !== null && nextVisible.contains(current) ? current : event.id;
@@ -115,6 +125,7 @@ export function applyTreeViewEvent<ID extends StableID>(
         { id: event.id },
       );
     }
+    if (!eligible(event.id)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Direct tree-view focus and selection require an eligible identity.', { id: event.id });
     if (event.type === 'focus') {
       return createMachineUpdate(
         treeViewState(expansion, createCursorState(event.id), state.selection),
@@ -130,8 +141,8 @@ export function applyTreeViewEvent<ID extends StableID>(
 
   if (event === 'next' || event === 'previous') {
     const target = current === null
-      ? visible.at(event === 'next' ? 0 : visible.size - 1)
-      : movementTarget(visible, current, event === 'next' ? 1 : -1);
+      ? eligibleFromEdge(visible, event === 'next' ? 1 : -1, eligible)
+      : movementTarget(visible, current, event === 'next' ? 1 : -1, eligible);
     if (target === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
       treeViewState(expansion, createCursorState(target), state.selection),
@@ -150,7 +161,7 @@ export function applyTreeViewEvent<ID extends StableID>(
         state.selection,
       ));
     }
-    const target = children.at(0);
+    const target = eligibleFromEdge(children, 1, eligible);
     if (target === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
       treeViewState(expansion, createCursorState(target), state.selection),
@@ -167,7 +178,7 @@ export function applyTreeViewEvent<ID extends StableID>(
         state.selection,
       ));
     }
-    const parent = tree.parentOf(current);
+    const parent = eligibleAncestor(tree, current, eligible);
     if (parent === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
       treeViewState(expansion, createCursorState(parent), state.selection),
@@ -178,6 +189,7 @@ export function applyTreeViewEvent<ID extends StableID>(
   if (current === null) {
     return fail('transition-rejection', 'no-cursor', 'Tree-view selection requires a cursor.');
   }
+  if (!eligible(current)) return fail('transition-rejection', 'tree-view-target-ineligible', 'Tree-view selection requires an eligible cursor.', { id: current });
   return createMachineUpdate(treeViewState(
     expansion,
     state.cursor,
@@ -189,9 +201,28 @@ function movementTarget<ID extends StableID>(
   visible: ReturnType<Tree<ID>['visible']>,
   current: ID,
   direction: -1 | 1,
+  eligible: (id: ID) => boolean,
 ): ID | null {
-  const movement = visible.move(current, direction, 'stop');
-  return movement.kind === 'found' ? movement.id : null;
+  const index = visible.indexOf(current);
+  if (index === null) return null;
+  for (let candidate = index + direction; candidate >= 0 && candidate < visible.size; candidate += direction) {
+    const id = visible.at(candidate);
+    if (id !== null && eligible(id)) return id;
+  }
+  return null;
+}
+
+function eligibleFromEdge<ID extends StableID>(domain: { readonly size: number; at(index: number): ID | null }, direction: -1 | 1, eligible: (id: ID) => boolean): ID | null {
+  for (let index = direction === 1 ? 0 : domain.size - 1; index >= 0 && index < domain.size; index += direction) {
+    const id = domain.at(index); if (id !== null && eligible(id)) return id;
+  }
+  return null;
+}
+
+function eligibleAncestor<ID extends StableID>(tree: Tree<ID>, id: ID, eligible: (id: ID) => boolean): ID | null {
+  let parent = tree.parentOf(id);
+  while (parent !== null && !eligible(parent)) parent = tree.parentOf(parent);
+  return parent;
 }
 
 function validateTreeViewState<ID extends StableID>(

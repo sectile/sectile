@@ -110,6 +110,21 @@ test('tree-view right and left separate expansion from focus movement', () => {
   assert.equal(selected.state.cursor.current, 'child');
 });
 
+test('tree-view eligibility skips disabled visible nodes and rejects direct targeting', () => {
+  const tree = unwrap(createTree([
+    { id: 'root', parentID: null },
+    { id: 'disabled', parentID: null },
+    { id: 'target', parentID: null },
+  ]));
+  const state = unwrap(createTreeViewState(tree, { current: 'root' }));
+  const policies = { eligible: (id) => id !== 'disabled' };
+  const moved = unwrap(applyTreeViewEvent(tree, state, 'next', policies));
+  assert.equal(moved.state.cursor.current, 'target');
+  const direct = applyTreeViewEvent(tree, state, { type: 'toggle-select', id: 'disabled' }, policies);
+  assert.equal(direct.ok, false);
+  assert.equal(direct.error.code, 'tree-view-target-ineligible');
+});
+
 test('tree-view rejects hidden cursors and unknown events atomically', () => {
   const tree = unwrap(createTree([
     { id: 'root', parentID: null },

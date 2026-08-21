@@ -1,6 +1,7 @@
 import { createCombobox } from '@sectile/dom/combobox';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
+import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
+import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const items = [
   { id: 'alpha', label: 'Alpha' },
@@ -9,8 +10,7 @@ const items = [
   { id: 'gamma', label: 'Gamma' },
   { id: 'hangul', label: '한글' },
 ] as const;
-const matches = (label: string, query: string): boolean =>
-  label.toLocaleLowerCase().startsWith(query.toLocaleLowerCase());
+type ItemID = typeof items[number]['id'];
 
 export const comboboxDemo: DemoDefinition = {
   id: 'combobox',
@@ -23,7 +23,15 @@ export const comboboxDemo: DemoDefinition = {
     { keys: ['Enter'], label: 'accept' },
     { keys: ['Esc'], label: 'close' },
   ],
-  mount(context) {
+  cases: [
+    { id: 'prefix', title: 'Prefix command search', mount: (context) => mountCombobox(context, { mode: 'prefix', initial: '', controlled: false }) },
+    { id: 'contains', title: 'Contains matching', mount: (context) => mountCombobox(context, { mode: 'contains', initial: 'a', controlled: false }) },
+    { id: 'ime', title: 'Korean IME search', mount: (context) => mountCombobox(context, { mode: 'prefix', initial: '한', controlled: false }) },
+    { id: 'controlled', title: 'Controlled command search', mount: (context) => mountCombobox(context, { mode: 'prefix', initial: '', controlled: true }) },
+  ],
+};
+
+function mountCombobox(context: DemoContext, scenario: { readonly mode: 'prefix' | 'contains'; readonly initial: string; readonly controlled: boolean }): DemoSession {
     const wrap = document.createElement('div');
     wrap.className = 'combobox-demo';
     const input = document.createElement('input');
@@ -35,12 +43,21 @@ export const comboboxDemo: DemoDefinition = {
     popup.className = 'combobox-popup';
     wrap.append(input, popup);
     context.surface.append(wrap);
-    let accepted: string | null = null;
-    const connection = unwrap(createCombobox({
+    let accepted: ItemID | null = null;
+    const initialInput = unwrap(createTextEditingState(scenario.initial, { anchorCodeUnitOffset: scenario.initial.length, focusCodeUnitOffset: scenario.initial.length }));
+    let externalValue: ItemID | null = null; let externalInput: TextEditingState = initialInput; let externalOpen = scenario.initial.length > 0; let externalHighlight: ItemID | null = null;
+    let connection = unwrap(createCombobox<ItemID>({
       items,
       input,
       popup,
-      policies: { matches },
+      policies: { matches: (label, query) => match(label, query, scenario.mode) },
+      ...(scenario.controlled ? {
+        value: externalValue, inputState: externalInput, open: externalOpen, highlightedValue: externalHighlight,
+        onValueChange: ({ value }) => { externalValue = value; queueMicrotask(syncControlled); },
+        onInputStateChange: ({ value }) => { externalInput = value; queueMicrotask(syncControlled); },
+        onOpenChange: ({ value }) => { externalOpen = value; queueMicrotask(syncControlled); },
+        onHighlightedValueChange: ({ value }) => { externalHighlight = value; queueMicrotask(syncControlled); },
+      } : { defaultInputState: initialInput, defaultOpen: scenario.initial.length > 0 }),
       onAccept: (id) => { accepted = id; },
       onTransition: ({ event, result }) => context.record({
         revision: result.snapshot.revision,
@@ -55,7 +72,7 @@ export const comboboxDemo: DemoDefinition = {
       const { revision, state } = connection.getSnapshot();
       const query = state.text.snapshot.text;
       popup.replaceChildren();
-      for (const item of items.filter((candidate) => matches(candidate.label, query))) {
+      for (const item of items.filter((candidate) => match(candidate.label, query, scenario.mode))) {
         const element = document.createElement('div');
         element.className = [
           'combobox-option',
@@ -76,10 +93,20 @@ export const comboboxDemo: DemoDefinition = {
         selected: state.selection.selected,
         accepted,
         composition: state.text.composition,
+        matching: scenario.mode,
+        ownership: scenario.controlled ? 'controlled' : 'uncontrolled',
       });
+    }
+
+    function syncControlled(): void {
+      connection.syncControlledValues({ value: externalValue, inputState: externalInput, open: externalOpen, highlightedValue: externalHighlight });
     }
 
     render();
     return { focus: () => input.focus(), disconnect: () => connection.disconnect() };
-  },
-};
+}
+
+function match(label: string, query: string, mode: 'prefix' | 'contains'): boolean {
+  const normalizedLabel = label.toLocaleLowerCase(); const normalizedQuery = query.toLocaleLowerCase();
+  return mode === 'prefix' ? normalizedLabel.startsWith(normalizedQuery) : normalizedLabel.includes(normalizedQuery);
+}

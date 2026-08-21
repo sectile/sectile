@@ -11,6 +11,7 @@ import {
 } from '@sectile/primitives/tabs';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
 export type TabsEffect<ID extends StableID = StableID> =
@@ -20,6 +21,7 @@ export type TabsEffect<ID extends StableID = StableID> =
 export interface TabsOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[];
   readonly policies?: TabsPolicies<ID>;
+  readonly disabledItems?: readonly ID[];
   readonly value?: ID | null;
   readonly defaultValue?: ID | null;
   readonly highlightedValue?: ID | null;
@@ -44,6 +46,13 @@ export interface TabsConnection<ID extends StableID = StableID> {
 export function createTabs<ID extends StableID>(options: TabsOptions<ID>): Result<TabsConnection<ID>> {
   const domain = createSequence(options.items);
   if (!domain.ok) return domain;
+  const disabled = createDisabledItems(domain.value, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: TabsPolicies<ID> = Object.freeze({
+    ...options.policies,
+    eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true),
+  });
   const valueControlled = options.value !== undefined;
   const highlightControlled = options.highlightedValue !== undefined;
   const runtime = createSemanticController<TabsState<ID>, TabsEvent<ID>, TabsCommand<ID>, TabsEffect<ID>>({
@@ -53,7 +62,7 @@ export function createTabs<ID extends StableID>(options: TabsOptions<ID>): Resul
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }),
-    reducer: (state, event) => applyTabsEvent(domain.value, state, event, options.policies),
+    reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createTabsState(domain.value, {
       selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,

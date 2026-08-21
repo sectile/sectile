@@ -1,7 +1,7 @@
 import { createCalendar, type CalendarConnection } from '@sectile/dom/calendar';
 import { unwrap } from '@sectile/primitives/result';
 import { ChevronLeft, ChevronRight, createElement } from 'lucide';
-import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const monthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'long',
@@ -34,11 +34,19 @@ export const calendarDemo: DemoDefinition = {
     { keys: ['Enter'], label: 'select date' },
     { keys: ['Page Up', 'Page Down'], label: 'change month' },
   ],
-  mount(context) {
+  cases: [
+    { id: 'month', title: 'Monthly date picker', mount: (context) => mountCalendar(context, { disabledWeekends: false, controlled: false }) },
+    { id: 'disabled-weekends', title: 'Weekday booking', mount: (context) => mountCalendar(context, { disabledWeekends: true, controlled: false }) },
+    { id: 'controlled', title: 'Controlled date picker', mount: (context) => mountCalendar(context, { disabledWeekends: false, controlled: true }) },
+  ],
+};
+
+function mountCalendar(context: DemoContext, scenario: { readonly disabledWeekends: boolean; readonly controlled: boolean }): DemoSession {
     const today = new Date();
     const todayID = dateID(today);
     let page = createMonthPage(today);
     let selectedDate: string | null = todayID;
+    let highlightedDate: string | null = todayID;
     let connection: CalendarConnection<string>;
 
     const wrap = document.createElement('div');
@@ -83,9 +91,10 @@ export const calendarDemo: DemoDefinition = {
       connection = unwrap(createCalendar({
         rows: page.rows,
         root,
-        defaultValue: visibleValue,
-        defaultHighlightedValue: highlightedValue,
-        onValueChange: ({ value }) => { selectedDate = value; },
+        policies: { eligible: (id) => !scenario.disabledWeekends || !isWeekend(id) },
+        ...(scenario.controlled ? { value: visibleValue, highlightedValue } : { defaultValue: visibleValue, defaultHighlightedValue: highlightedValue }),
+        onValueChange: ({ value }) => { selectedDate = value; if (scenario.controlled) queueMicrotask(syncControlled); },
+        onHighlightedValueChange: ({ value }) => { highlightedDate = value; if (scenario.controlled) queueMicrotask(syncControlled); },
         onPageRequest: ({ direction, from }) => {
           const target = shiftMonth(page.date, direction, from);
           page = createMonthPage(target);
@@ -111,6 +120,7 @@ export const calendarDemo: DemoDefinition = {
       page.rows.forEach((week, rowIndex) => week.forEach((id, columnIndex) => {
         const date = dateFromID(id);
         const outsideMonth = date.getMonth() !== page.date.getMonth();
+        const disabled = scenario.disabledWeekends && isWeekend(id);
         const cell = document.createElement('div');
         cell.className = [
           'calendar-cell',
@@ -118,6 +128,7 @@ export const calendarDemo: DemoDefinition = {
           id === todayID ? 'today' : '',
           state.cursor.current === id ? 'current' : '',
           state.selection.has(id) ? 'selected' : '',
+          disabled ? 'disabled' : '',
         ].filter(Boolean).join(' ');
         cell.setAttribute('aria-label', dateFormatter.format(date));
         if (id === todayID) cell.setAttribute('aria-current', 'date');
@@ -139,6 +150,7 @@ export const calendarDemo: DemoDefinition = {
           id,
           rowIndex: rowIndex + 1,
           columnIndex: columnIndex + 1,
+          disabled,
         });
         root.append(cell);
       }));
@@ -147,6 +159,15 @@ export const calendarDemo: DemoDefinition = {
         current: state.cursor.current,
         selected: selectedDate,
         visibleSelection: state.selection.selected,
+        disabledWeekends: scenario.disabledWeekends,
+        ownership: scenario.controlled ? 'controlled' : 'uncontrolled',
+      });
+    }
+
+    function syncControlled(): void {
+      connection.syncControlledValues({
+        value: selectedDate !== null && page.ids.has(selectedDate) ? selectedDate : null,
+        highlightedValue: highlightedDate !== null && page.ids.has(highlightedDate) ? highlightedDate : null,
       });
     }
 
@@ -158,8 +179,7 @@ export const calendarDemo: DemoDefinition = {
         connection.disconnect();
       },
     };
-  },
-};
+}
 
 function createMonthPage(date: Date): MonthPage {
   const month = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -196,6 +216,11 @@ function dateID(date: Date): string {
 function dateFromID(id: string): Date {
   const [year, month, day] = id.split('-').map(Number);
   return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
+}
+
+function isWeekend(id: string): boolean {
+  const day = dateFromID(id).getDay();
+  return day === 0 || day === 6;
 }
 
 function pad(value: number): string {

@@ -11,6 +11,7 @@ import {
 } from '@sectile/primitives/toolbar';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createDisabledItems } from './internal/disabled-items.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =
   | { readonly type: 'move-control-highlight'; readonly id: ID }
@@ -19,6 +20,7 @@ export type ToolbarEffect<ID extends StableID = StableID> =
 export interface ToolbarOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[];
   readonly policies?: ToolbarPolicies<ID>;
+  readonly disabledItems?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly orientation?: 'horizontal' | 'vertical';
@@ -39,6 +41,13 @@ export function createToolbar<ID extends StableID>(
 ): Result<ToolbarConnection<ID>> {
   const domain = createSequence(options.items);
   if (!domain.ok) return domain;
+  const disabled = createDisabledItems(domain.value, options.disabledItems);
+  if (!disabled.ok) return disabled;
+  const suppliedEligibility = options.policies?.eligible;
+  const policies: ToolbarPolicies<ID> = Object.freeze({
+    ...options.policies,
+    eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true),
+  });
   const controlled = options.highlightedValue !== undefined;
   const runtime = createSemanticController<
     ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
@@ -48,7 +57,7 @@ export function createToolbar<ID extends StableID>(
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }),
-    reducer: (state, event) => applyToolbarEvent(domain.value, state, event, options.policies),
+    reducer: (state, event) => applyToolbarEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createToolbarState(domain.value, {
       current: controlled ? previous.cursor.current : proposed.cursor.current,
     }),

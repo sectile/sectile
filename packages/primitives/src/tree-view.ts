@@ -3,6 +3,7 @@ export {
   createTreeViewState,
   type TreeViewCommand,
   type TreeViewEvent,
+  type TreeViewPolicies,
   type TreeViewState,
   type TreeViewStateInput,
   type TreeViewUpdate,

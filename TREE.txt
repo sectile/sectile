@@ -12,6 +12,7 @@ sectile/
 │   │   ├── public-migration.md
 │   │   └── README.md
 │   ├── engineering/
+│   │   ├── component-completeness.md
 │   │   ├── naming.md
 │   │   ├── package-boundary.md
 │   │   └── README.md
@@ -47,6 +48,7 @@ sectile/
 │   │   │   │   ├── checked-control.ts
 │   │   │   │   ├── controller.ts
 │   │   │   │   ├── delegated-event.ts
+│   │   │   │   ├── disabled-items.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
 │   │   │   │   ├── semantic-controller.ts
@@ -280,6 +282,7 @@ sectile/
 │       │   ├── internal/
 │       │   │   ├── checked-control.ts
 │       │   │   ├── controller.ts
+│       │   │   ├── disabled-items.ts
 │       │   │   ├── menu-control.ts
 │       │   │   ├── popup-control.ts
 │       │   │   ├── semantic-controller.ts
@@ -344,10 +347,16 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── demos/
 │   │   │   │   ├── calendar.ts
+│   │   │   │   ├── checked-controls.ts
+│   │   │   │   ├── collection-controls.ts
 │   │   │   │   ├── combobox.ts
-│   │   │   │   ├── extras.ts
+│   │   │   │   ├── expansion-controls.ts
 │   │   │   │   ├── index.ts
+│   │   │   │   ├── linear-controls.ts
 │   │   │   │   ├── listbox.ts
+│   │   │   │   ├── menu-controls.ts
+│   │   │   │   ├── popup-controls.ts
+│   │   │   │   ├── range-controls.ts
 │   │   │   │   ├── slider.ts
 │   │   │   │   ├── text.ts
 │   │   │   │   ├── tree-grid.ts
@@ -378,18 +387,27 @@ sectile/
 │   ├── lib/
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
+│   ├── check-component-completeness.mjs
 │   ├── check-docs.mjs
 │   ├── check-workspace-boundaries.mjs
 │   └── update-tree.mjs
 ├── verification/
-│   └── cross-host/
-│       ├── calendar.test.mjs
-│       ├── combobox.test.mjs
-│       ├── listbox.test.mjs
-│       ├── slider.test.mjs
-│       ├── text.test.mjs
-│       ├── tree-grid.test.mjs
-│       └── tree-view.test.mjs
+│   ├── cross-host/
+│   │   ├── calendar.test.mjs
+│   │   ├── checked-controls.test.mjs
+│   │   ├── collection-controls.test.mjs
+│   │   ├── combobox.test.mjs
+│   │   ├── expansion-controls.test.mjs
+│   │   ├── linear-controls.test.mjs
+│   │   ├── listbox.test.mjs
+│   │   ├── menu-controls.test.mjs
+│   │   ├── popup-controls.test.mjs
+│   │   ├── range-controls.test.mjs
+│   │   ├── slider.test.mjs
+│   │   ├── text.test.mjs
+│   │   ├── tree-grid.test.mjs
+│   │   └── tree-view.test.mjs
+│   └── component-completeness.json
 ├── .gitignore
 ├── .node-version
 ├── package.json

@@ -6,9 +6,11 @@ import type {
   ListboxPolicies,
   ListboxState,
   ListboxStateInput,
+  ListboxTypeaheadOptions,
   ListboxUpdate,
 } from '../../composites/listbox.js';
 import { ReferenceSelectionState, referenceClearSelection, referenceSelectOne, referenceToggleMultipleSelection } from '../state/selection.js';
+import type { SelectionMode } from '../../state/selection.js';
 
 interface ReferenceRejection {
   readonly ok: false;
@@ -27,12 +29,16 @@ type ReferenceTargetResult<ID extends StableID> =
 export function createReferenceListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
+  selectionMode: SelectionMode = 'multiple',
 ): ListboxState<ID> {
   const current = input.current ?? null;
   if (current !== null && referenceIndexOf(domain, current) === null) {
     throw new TypeError('reference listbox cursor outside domain');
   }
   const selected = [...new Set(input.selected ?? [])];
+  if (selectionMode === 'single' && selected.length > 1) {
+    throw new TypeError('reference single listbox selection cardinality');
+  }
   for (const id of selected) {
     if (referenceIndexOf(domain, id) === null) {
       throw new TypeError('reference listbox selection outside domain');
@@ -53,6 +59,7 @@ export function applyReferenceListboxEvent<ID extends StableID>(
 ): ReferenceListboxResult<ID> {
   const boundary = policies.boundary ?? 'stop';
   const selectionFollowsFocus = policies.selectionFollowsFocus ?? false;
+  const selectionMode = policies.selectionMode ?? 'multiple';
   const eligible = policies.eligible ?? (() => true);
 
   if (typeof event === 'object') {
@@ -70,7 +77,7 @@ export function applyReferenceListboxEvent<ID extends StableID>(
     if (event.type === 'toggle') {
       return referenceAccepted(referenceState(
         event.id,
-        referenceToggleMultipleSelection(state.selection, event.id, domain),
+        referenceSelectForMode(state.selection, event.id, domain, selectionMode),
       ), [{ type: 'focus', id: event.id }]);
     }
     return referenceAccepted(
@@ -100,13 +107,32 @@ export function applyReferenceListboxEvent<ID extends StableID>(
     );
   }
 
+  if (event === 'first' || event === 'last') {
+    const target = referenceTarget(
+      domain,
+      null,
+      event === 'first' ? 1 : -1,
+      'stop',
+      eligible,
+      policies.maxScan,
+    );
+    if (!target.ok) return target;
+    if (target.id === null || target.id === state.cursor.current) return referenceAccepted(state);
+    const selection = selectionFollowsFocus
+      ? referenceSelectOne(state.selection, target.id, domain)
+      : state.selection;
+    return referenceAccepted(referenceState(target.id, selection), [
+      { type: 'focus', id: target.id },
+    ]);
+  }
+
   if (event === 'toggle') {
     const current = state.cursor.current;
     if (current === null) return referenceRejected('transition-rejection', 'no-cursor');
     return referenceAccepted(
       referenceState(
         current,
-        referenceToggleMultipleSelection(state.selection, current, domain),
+        referenceSelectForMode(state.selection, current, domain, selectionMode),
       ),
     );
   }
@@ -123,6 +149,42 @@ export function applyReferenceListboxEvent<ID extends StableID>(
   return referenceAccepted(
     referenceState(state.cursor.current, referenceClearSelection(state.selection)),
   );
+}
+
+export function findReferenceListboxTypeaheadMatch<ID extends StableID>(
+  domain: Sequence<ID>,
+  current: ID | null,
+  query: string,
+  options: ListboxTypeaheadOptions<ID>,
+): ID | null {
+  if (query.length === 0 || domain.size === 0) return null;
+  const normalize = options.normalize ?? ((text: string) => text.toLowerCase());
+  const needle = normalize(query);
+  if (needle.length === 0) return null;
+  const start = current === null ? 0 : ((referenceIndexOf(domain, current) as number) + 1) % domain.size;
+  const eligible = options.eligible ?? (() => true);
+  const limit = options.maxScan ?? Number.MAX_SAFE_INTEGER;
+  let scanned = 0;
+  for (let offset = 0; offset < domain.size; offset += 1) {
+    if (scanned === limit) throw new RangeError('reference typeahead scan ceiling reached');
+    const id = domain.at((start + offset) % domain.size);
+    scanned += 1;
+    if (id !== null && eligible(id) && normalize(options.textValue(id)).startsWith(needle)) {
+      return id;
+    }
+  }
+  return null;
+}
+
+function referenceSelectForMode<ID extends StableID>(
+  state: ListboxState<ID>['selection'],
+  id: ID,
+  domain: Sequence<ID>,
+  mode: SelectionMode,
+): ListboxState<ID>['selection'] {
+  return mode === 'single'
+    ? referenceSelectOne(state, id, domain)
+    : referenceToggleMultipleSelection(state, id, domain);
 }
 
 function referenceTarget<ID extends StableID>(
