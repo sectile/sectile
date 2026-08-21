@@ -1,0 +1,29 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+const hash = (value) => createHash('sha256').update(value).digest('hex');
+const theoryOutput = await readFile('verification/theory-verification.json');
+const theoryVerifier = await readFile('verification/theory-verifier.py');
+assert.equal(hash(theoryOutput), '774d1f79119a212b0798245d7ce4e59542954a67f37f7bb15f927d240cf0b7ec');
+assert.equal(hash(theoryVerifier), '83ffb6798c61a295d409dd5327512d8fff691ac89c857bb8aa0fa775fd3fb584');
+const stored = await readFile('verification/implementation-verification.json');
+const run = () => spawnSync(process.execPath, ['verification/implementation-verifier.mjs'], {
+  encoding: null,
+  maxBuffer: 32 * 1024 * 1024,
+});
+const first = run();
+assert.equal(first.status, 0, first.stderr?.toString() ?? 'implementation verifier failed');
+const second = run();
+assert.equal(second.status, 0, second.stderr?.toString() ?? 'implementation verifier failed');
+assert.deepEqual(second.stdout, first.stdout, 'implementation verification is not deterministic');
+assert.deepEqual(first.stdout, stored, 'stored implementation verification is stale');
+const parsed = JSON.parse(first.stdout.toString('utf8'));
+assert.equal(parsed.status, 'pass');
+assert.equal(parsed.seed, 0x5ec71e);
+console.log(JSON.stringify({
+  status: 'passed',
+  theorySha256: hash(theoryOutput),
+  implementationSha256: hash(first.stdout),
+  seed: parsed.seed,
+}, null, 2));

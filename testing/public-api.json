@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/primitives",
+  "rootPolicy": "type-only",
+  "requiredSubpaths": [
+    ".",
+    "./sequence",
+    "./range",
+    "./grid",
+    "./tree",
+    "./package.json"
+  ],
+  "requiredRuntimeSubpaths": [
+    "./sequence",
+    "./range",
+    "./grid",
+    "./tree"
+  ]
+}

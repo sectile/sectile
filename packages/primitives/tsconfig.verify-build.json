@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "isolatedDeclarations": false,
+    "noEmit": false,
+    "outDir": "./.verification-dist",
+    "rootDir": "./src",
+    "sourceMap": false,
+    "tsBuildInfoFile": null
+  },
+  "include": ["src/**/*.ts"]
+}

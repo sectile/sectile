@@ -1,0 +1,34 @@
+{
+  "status": "pass",
+  "seed": 6211358,
+  "iterationsPerStructure": 2000,
+  "sequence": {
+    "models": 2000,
+    "observations": 244100,
+    "movements": 23784,
+    "projections": 8000,
+    "invalidConstructions": 4
+  },
+  "range": {
+    "models": 2000,
+    "valueObservations": 20771,
+    "tickObservations": 20771,
+    "ratioObservations": 62313,
+    "snapObservations": 72000,
+    "invalidConstructions": 4
+  },
+  "grid": {
+    "models": 2000,
+    "cellObservations": 111649,
+    "positionObservations": 20770,
+    "projectionObservations": 29911,
+    "movements": 32780,
+    "invalidConstructions": 4
+  },
+  "tree": {
+    "models": 2000,
+    "nodeObservations": 319904,
+    "expansionObservations": 20000,
+    "invalidConstructions": 4
+  }
+}

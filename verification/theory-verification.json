@@ -1,0 +1,72 @@
+{
+  "coverage": {
+    "patterns": 30,
+    "structuralUsage": {
+      "grid": 3,
+      "range": 5,
+      "sequence": 11,
+      "tree": 2
+    },
+    "unclassified": []
+  },
+  "cursorSelection": {
+    "cursorCases": 162,
+    "intervalCases": 204,
+    "invalidSnapshotCases": 466,
+    "renamingCases": 695483,
+    "selectionCases": 9546
+  },
+  "grid": {
+    "coordinateCountermodel": true,
+    "inverseCases": 2753,
+    "models": 689,
+    "movementCases": 554536,
+    "projectionCases": 3880
+  },
+  "machine": {
+    "comboboxCases": 15,
+    "listboxStatesExplored": 9034,
+    "listboxTracePrefixes": 30885,
+    "listboxTransitions": 30885,
+    "revisionCases": 124,
+    "sliderStatesExplored": 1655,
+    "sliderTransitions": 8220,
+    "treeViewStatesExplored": 73649,
+    "treeViewTransitions": 169835
+  },
+  "randomStress": {
+    "gridCases": 2000,
+    "machineTransitions": 50000,
+    "rangeCases": 2000,
+    "seed": 6211358,
+    "sequenceCases": 2000,
+    "textCases": 2000,
+    "treeCases": 2000
+  },
+  "range": {
+    "configurations": 4784,
+    "exactLawCases": 33488,
+    "monotonicCases": 76544,
+    "snapCases": 243984
+  },
+  "sequence": {
+    "embeddingModels": 5914,
+    "inverseModels": 5914,
+    "movementCases": 14344,
+    "projectionCases": 511
+  },
+  "text": {
+    "compositionCases": 54675,
+    "normalizationCases": 2,
+    "replaceCases": 2355,
+    "selectionCases": 243,
+    "strings": 24
+  },
+  "tree": {
+    "expansionCases": 23810,
+    "models": 11465,
+    "nodeCases": 67567,
+    "siblingOrderCountermodel": true,
+    "visibilityCases": 139531
+  }
+}

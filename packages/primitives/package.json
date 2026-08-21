@@ -1,0 +1,46 @@
+{
+  "name": "@sectile/primitives",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Renderer-neutral canonical interaction structures with explicit laws, failures, and costs.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./sequence": {
+      "types": "./dist/sequence.d.ts",
+      "import": "./dist/sequence.js",
+      "default": "./dist/sequence.js"
+    },
+    "./range": {
+      "types": "./dist/range.d.ts",
+      "import": "./dist/range.js",
+      "default": "./dist/range.js"
+    },
+    "./grid": {
+      "types": "./dist/grid.d.ts",
+      "import": "./dist/grid.js",
+      "default": "./dist/grid.js"
+    },
+    "./tree": {
+      "types": "./dist/tree.d.ts",
+      "import": "./dist/tree.js",
+      "default": "./dist/tree.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node ../../scripts/build.mjs production",
+    "check": "tsc --project tsconfig.json --pretty false",
+    "test": "node ../../scripts/build.mjs verification && node --test tests/*.test.mjs"
+  }
+}

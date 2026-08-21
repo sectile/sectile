@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "fingerprint": "a637e3c4564478ae7753f30054b629d3ea85e1e1bf5538507db0671f3fc1acd1",
+  "files": [
+    {
+      "path": "packages/primitives/dist/index.d.ts",
+      "sha256": "b498c58f14c7d4123fcffb3c8d815d088c7c64a779dadea725f9485dcdfd7b9d"
+    },
+    {
+      "path": "packages/primitives/dist/sequence.d.ts",
+      "sha256": "fa566fc1cb5d2fe829a517c8bd6a0969b92bdbad719f259d94b48823bb236335"
+    },
+    {
+      "path": "packages/primitives/dist/range.d.ts",
+      "sha256": "9d4f7bbb50f23a6590860f385e5e46dd49b023692003cd1b0713a16a39078497"
+    },
+    {
+      "path": "packages/primitives/dist/grid.d.ts",
+      "sha256": "451cf943de750b6cca3a8343e0cab3ad05aaeafbd8695ed3f309a04cac09e88e"
+    },
+    {
+      "path": "packages/primitives/dist/tree.d.ts",
+      "sha256": "15ba53535078ab69de153f3cd24c224d74dd11a629766460756a664d3875ff63"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+sectile/
+├── .github/
+│   └── workflows/
+│       ├── quality.yml
+│       └── testing.yml
+├── benchmarks/
+│   └── structures.mjs
+├── docs/
+│   ├── architecture/
+│   │   ├── README.md
+│   │   └── theory-to-runtime.md
+│   ├── decisions/
+│   │   ├── public-migration.md
+│   │   └── README.md
+│   ├── engineering/
+│   │   ├── package-boundary.md
+│   │   └── README.md
+│   ├── getting-started/
+│   │   ├── consumer-usage.md
+│   │   └── README.md
+│   ├── performance/
+│   │   ├── complexity.md
+│   │   └── README.md
+│   ├── primitives/
+│   │   ├── grid.md
+│   │   ├── range.md
+│   │   ├── README.md
+│   │   ├── sequence.md
+│   │   └── tree.md
+│   ├── references/
+│   │   ├── README.md
+│   │   ├── sectile-theory.md
+│   │   └── verification.md
+│   ├── testing/
+│   │   ├── README.md
+│   │   └── verification-pipeline.md
+│   ├── implementation-checklist.md
+│   ├── README.md
+│   └── roadmap.md
+├── packages/
+│   └── primitives/
+│       ├── src/
+│       │   ├── internal/
+│       │   │   ├── reference/
+│       │   │   │   ├── grid.ts
+│       │   │   │   ├── range.ts
+│       │   │   │   ├── sequence.ts
+│       │   │   │   └── tree.ts
+│       │   │   ├── decimal.ts
+│       │   │   ├── foundation.ts
+│       │   │   └── optimized-sequence.ts
+│       │   ├── grid.ts
+│       │   ├── index.ts
+│       │   ├── range.ts
+│       │   ├── sequence.ts
+│       │   ├── shared.ts
+│       │   └── tree.ts
+│       ├── tests/
+│       │   ├── grid.reference-law.test.mjs
+│       │   ├── optimized-differential.test.mjs
+│       │   ├── range.reference-law.test.mjs
+│       │   ├── sequence.reference-law.test.mjs
+│       │   ├── support.mjs
+│       │   └── tree.reference-law.test.mjs
+│       ├── package.json
+│       ├── README.md
+│       ├── tsconfig.build.json
+│       ├── tsconfig.json
+│       └── tsconfig.verify-build.json
+├── scripts/
+│   ├── lib/
+│   │   ├── public-signatures.mjs
+│   │   ├── repository.mjs
+│   │   └── tree.mjs
+│   ├── build.mjs
+│   ├── check-api-stability.mjs
+│   ├── check-contracts.mjs
+│   ├── check-dist-platform-boundary.mjs
+│   ├── check-docs.mjs
+│   ├── check-law-coverage.mjs
+│   ├── check-package-footprint.mjs
+│   ├── check-public-api.mjs
+│   ├── check-public-signatures.mjs
+│   ├── check-reproducible-build.mjs
+│   ├── check-subpath-imports.mjs
+│   ├── check-verification.mjs
+│   ├── update-api-stability.mjs
+│   ├── update-public-signatures.mjs
+│   ├── update-tree.mjs
+│   └── verify-theory.mjs
+├── testing/
+│   ├── api-stability.json
+│   ├── law-evidence.json
+│   ├── law-registry.json
+│   ├── public-api.json
+│   └── public-signatures.json
+├── verification/
+│   ├── implementation-verification.json
+│   ├── implementation-verifier.mjs
+│   ├── theory-verification.json
+│   └── theory-verifier.py
+├── .gitignore
+├── .node-version
+├── package.json
+├── pnpm-lock.yaml
+├── README.md
+├── TREE.txt
+├── tsconfig.base.json
+└── tsconfig.json
