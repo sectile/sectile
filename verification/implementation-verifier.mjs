@@ -18,6 +18,15 @@ import {
   selectOne,
   toggleMultipleSelection,
 } from '../packages/primitives/.verification-dist/internal/selection.js';
+import {
+  cancelTextComposition,
+  commitTextComposition,
+  createTextEditingState,
+  replacePlainText,
+  replaceTextState,
+  startTextComposition,
+  updateTextComposition,
+} from '../packages/primitives/.verification-dist/internal/text.js';
 import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/cursor.js';
 import {
   createReferenceExpansionState,
@@ -33,6 +42,16 @@ import {
   referenceSelectOne,
   referenceToggleMultipleSelection,
 } from '../packages/primitives/.verification-dist/internal/reference/selection.js';
+import {
+  createReferenceTextEditingState,
+  referenceCancelTextComposition,
+  referenceCommitTextComposition,
+  referenceReplacePlainText,
+  referenceReplaceTextState,
+  referenceStartTextComposition,
+  referenceTextCodeUnitBoundaries,
+  referenceUpdateTextComposition,
+} from '../packages/primitives/.verification-dist/internal/reference/text.js';
 import { ReferenceGrid } from '../packages/primitives/.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/sequence.js';
@@ -50,6 +69,13 @@ const counts = {
   cursor: { models: 0, reconciliations: 0 },
   selection: { models: 0, reconciliations: 0, operations: 0, invalidSnapshots: 0 },
   expansionState: { models: 0, reconciliations: 0, transitions: 0 },
+  text: {
+    models: 0,
+    replacements: 0,
+    stableTransitions: 0,
+    compositionTransitions: 0,
+    invalidTransitions: 0,
+  },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -366,10 +392,146 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.expansionState.models += 1;
 }
 
+const textRng = createRng(seed ^ 0x7e87);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const text = randomText(textRng, 12);
+  const replacement = randomText(textRng, 4);
+  const boundaries = referenceTextCodeUnitBoundaries(text);
+  const startCodeUnitOffset = textRng.pick(boundaries);
+  const endCodeUnitOffset = textRng.pick(
+    boundaries.filter((offset) => offset >= startCodeUnitOffset),
+  );
+  assert.equal(
+    unwrap(replacePlainText(text, startCodeUnitOffset, endCodeUnitOffset, replacement)),
+    referenceReplacePlainText(text, startCodeUnitOffset, endCodeUnitOffset, replacement),
+  );
+  counts.text.replacements += 1;
+
+  const initialSelection = {
+    anchorCodeUnitOffset: textRng.pick(boundaries),
+    focusCodeUnitOffset: textRng.pick(boundaries),
+  };
+  const optimized = unwrap(createTextEditingState(text, initialSelection));
+  const reference = createReferenceTextEditingState(text, initialSelection);
+  const projected = referenceReplacePlainText(
+    text,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    replacement,
+  );
+  const projectedBoundaries = referenceTextCodeUnitBoundaries(projected);
+  const projectedSelection = {
+    anchorCodeUnitOffset: textRng.pick(projectedBoundaries),
+    focusCodeUnitOffset: textRng.pick(projectedBoundaries),
+  };
+  assert.deepEqual(
+    textObservation(
+      unwrap(
+        replaceTextState(
+          optimized,
+          startCodeUnitOffset,
+          endCodeUnitOffset,
+          replacement,
+          projectedSelection,
+        ),
+      ),
+    ),
+    textObservation(
+      referenceReplaceTextState(
+        reference,
+        startCodeUnitOffset,
+        endCodeUnitOffset,
+        replacement,
+        projectedSelection,
+      ),
+    ),
+  );
+  counts.text.stableTransitions += 1;
+
+  const started = unwrap(
+    startTextComposition(
+      optimized,
+      startCodeUnitOffset,
+      endCodeUnitOffset,
+      replacement,
+      projectedSelection,
+    ),
+  );
+  const referenceStarted = referenceStartTextComposition(
+    reference,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    replacement,
+    projectedSelection,
+  );
+  assert.deepEqual(textObservation(started), textObservation(referenceStarted));
+  counts.text.compositionTransitions += 1;
+
+  const second = randomText(textRng, 4);
+  const secondProjected = referenceReplacePlainText(
+    text,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    second,
+  );
+  const secondBoundaries = referenceTextCodeUnitBoundaries(secondProjected);
+  const secondSelection = {
+    anchorCodeUnitOffset: textRng.pick(secondBoundaries),
+    focusCodeUnitOffset: textRng.pick(secondBoundaries),
+  };
+  const updated = unwrap(updateTextComposition(started, second, secondSelection));
+  const referenceUpdated = referenceUpdateTextComposition(
+    referenceStarted,
+    second,
+    secondSelection,
+  );
+  assert.deepEqual(textObservation(updated), textObservation(referenceUpdated));
+  counts.text.compositionTransitions += 1;
+  assert.deepEqual(
+    textObservation(unwrap(commitTextComposition(updated))),
+    textObservation(referenceCommitTextComposition(referenceUpdated)),
+  );
+  counts.text.compositionTransitions += 1;
+  assert.deepEqual(
+    textObservation(unwrap(cancelTextComposition(updated))),
+    textObservation(referenceCancelTextComposition(referenceUpdated)),
+  );
+  counts.text.compositionTransitions += 1;
+
+  const invalid = updateTextComposition(optimized, second, secondSelection);
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'composition-inactive');
+  counts.text.invalidTransitions += 1;
+  counts.text.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
   return { selected: state.selected, anchor: state.anchor };
+}
+
+function textObservation(state) {
+  return {
+    text: state.snapshot.text,
+    anchor: state.snapshot.selection.anchorCodeUnitOffset,
+    focus: state.snapshot.selection.focusCodeUnitOffset,
+    composition: state.composition === null
+      ? null
+      : {
+          baselineText: state.composition.baseline.text,
+          baselineAnchor: state.composition.baseline.selection.anchorCodeUnitOffset,
+          baselineFocus: state.composition.baseline.selection.focusCodeUnitOffset,
+          start: state.composition.startCodeUnitOffset,
+          end: state.composition.endCodeUnitOffset,
+          composingText: state.composition.composingText,
+        },
+  };
+}
+
+function randomText(rng, maxLength) {
+  const scalars = ['a', '가', '😀', '\u0301', '\u200d', '🇰', '🇷'];
+  return Array.from({ length: rng.int(0, maxLength + 1) }, () => rng.pick(scalars)).join('');
 }
 
 function decimal(integer, scale) {

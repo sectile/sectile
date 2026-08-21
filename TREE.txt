@@ -48,13 +48,15 @@ sectile/
 │       │   │   │   ├── range.ts
 │       │   │   │   ├── selection.ts
 │       │   │   │   ├── sequence.ts
+│       │   │   │   ├── text.ts
 │       │   │   │   └── tree.ts
 │       │   │   ├── cursor.ts
 │       │   │   ├── decimal.ts
 │       │   │   ├── expansion.ts
 │       │   │   ├── foundation.ts
 │       │   │   ├── optimized-sequence.ts
-│       │   │   └── selection.ts
+│       │   │   ├── selection.ts
+│       │   │   └── text.ts
 │       │   ├── grid.ts
 │       │   ├── index.ts
 │       │   ├── range.ts
@@ -70,6 +72,7 @@ sectile/
 │       │   ├── selection.reference-law.test.mjs
 │       │   ├── sequence.reference-law.test.mjs
 │       │   ├── support.mjs
+│       │   ├── text.reference-law.test.mjs
 │       │   └── tree.reference-law.test.mjs
 │       ├── package.json
 │       ├── README.md

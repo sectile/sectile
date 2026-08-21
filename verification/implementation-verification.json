@@ -45,5 +45,12 @@
     "models": 2000,
     "reconciliations": 2000,
     "transitions": 5956
+  },
+  "text": {
+    "models": 2000,
+    "replacements": 2000,
+    "stableTransitions": 2000,
+    "compositionTransitions": 8000,
+    "invalidTransitions": 2000
   }
 }

@@ -19,6 +19,15 @@ import {
   selectOne,
   toggleMultipleSelection,
 } from '../.verification-dist/internal/selection.js';
+import {
+  cancelTextComposition,
+  commitTextComposition,
+  createTextEditingState,
+  replacePlainText,
+  replaceTextState,
+  startTextComposition,
+  updateTextComposition,
+} from '../.verification-dist/internal/text.js';
 import { reconcileReferenceCursor } from '../.verification-dist/internal/reference/cursor.js';
 import {
   createReferenceExpansionState,
@@ -34,6 +43,16 @@ import {
   referenceSelectOne,
   referenceToggleMultipleSelection,
 } from '../.verification-dist/internal/reference/selection.js';
+import {
+  createReferenceTextEditingState,
+  referenceCancelTextComposition,
+  referenceCommitTextComposition,
+  referenceReplacePlainText,
+  referenceReplaceTextState,
+  referenceStartTextComposition,
+  referenceTextCodeUnitBoundaries,
+  referenceUpdateTextComposition,
+} from '../.verification-dist/internal/reference/text.js';
 import { ReferenceGrid } from '../.verification-dist/internal/reference/grid.js';
 import { ReferenceRange } from '../.verification-dist/internal/reference/range.js';
 import { ReferenceSequence } from '../.verification-dist/internal/reference/sequence.js';
@@ -52,6 +71,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCursor(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySelection(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyExpansion(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyText(rng);
 });
 
 function verifySequence(rng, iteration) {
@@ -281,6 +301,129 @@ function verifyExpansion(rng, iteration) {
     toggleExpansion(optimized, id, tree).ids,
     referenceToggleExpansion(reference, id, referenceTree).ids,
   );
+}
+
+function verifyText(rng) {
+  const text = randomText(rng, 12);
+  const replacement = randomText(rng, 4);
+  const boundaries = referenceTextCodeUnitBoundaries(text);
+  const startCodeUnitOffset = rng.pick(boundaries);
+  const endCodeUnitOffset = rng.pick(
+    boundaries.filter((offset) => offset >= startCodeUnitOffset),
+  );
+  assert.equal(
+    unwrap(replacePlainText(text, startCodeUnitOffset, endCodeUnitOffset, replacement)),
+    referenceReplacePlainText(text, startCodeUnitOffset, endCodeUnitOffset, replacement),
+  );
+
+  const initialSelection = {
+    anchorCodeUnitOffset: rng.pick(boundaries),
+    focusCodeUnitOffset: rng.pick(boundaries),
+  };
+  const optimized = unwrap(createTextEditingState(text, initialSelection));
+  const reference = createReferenceTextEditingState(text, initialSelection);
+  const projected = referenceReplacePlainText(
+    text,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    replacement,
+  );
+  const projectedBoundaries = referenceTextCodeUnitBoundaries(projected);
+  const projectedSelection = {
+    anchorCodeUnitOffset: rng.pick(projectedBoundaries),
+    focusCodeUnitOffset: rng.pick(projectedBoundaries),
+  };
+  assert.deepEqual(
+    textObservation(
+      unwrap(
+        replaceTextState(
+          optimized,
+          startCodeUnitOffset,
+          endCodeUnitOffset,
+          replacement,
+          projectedSelection,
+        ),
+      ),
+    ),
+    textObservation(
+      referenceReplaceTextState(
+        reference,
+        startCodeUnitOffset,
+        endCodeUnitOffset,
+        replacement,
+        projectedSelection,
+      ),
+    ),
+  );
+
+  const started = unwrap(
+    startTextComposition(
+      optimized,
+      startCodeUnitOffset,
+      endCodeUnitOffset,
+      replacement,
+      projectedSelection,
+    ),
+  );
+  const referenceStarted = referenceStartTextComposition(
+    reference,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    replacement,
+    projectedSelection,
+  );
+  assert.deepEqual(textObservation(started), textObservation(referenceStarted));
+
+  const second = randomText(rng, 4);
+  const secondProjected = referenceReplacePlainText(
+    text,
+    startCodeUnitOffset,
+    endCodeUnitOffset,
+    second,
+  );
+  const secondBoundaries = referenceTextCodeUnitBoundaries(secondProjected);
+  const secondSelection = {
+    anchorCodeUnitOffset: rng.pick(secondBoundaries),
+    focusCodeUnitOffset: rng.pick(secondBoundaries),
+  };
+  const updated = unwrap(updateTextComposition(started, second, secondSelection));
+  const referenceUpdated = referenceUpdateTextComposition(
+    referenceStarted,
+    second,
+    secondSelection,
+  );
+  assert.deepEqual(textObservation(updated), textObservation(referenceUpdated));
+  assert.deepEqual(
+    textObservation(unwrap(commitTextComposition(updated))),
+    textObservation(referenceCommitTextComposition(referenceUpdated)),
+  );
+  assert.deepEqual(
+    textObservation(unwrap(cancelTextComposition(updated))),
+    textObservation(referenceCancelTextComposition(referenceUpdated)),
+  );
+}
+
+function textObservation(state) {
+  return {
+    text: state.snapshot.text,
+    anchor: state.snapshot.selection.anchorCodeUnitOffset,
+    focus: state.snapshot.selection.focusCodeUnitOffset,
+    composition: state.composition === null
+      ? null
+      : {
+          baselineText: state.composition.baseline.text,
+          baselineAnchor: state.composition.baseline.selection.anchorCodeUnitOffset,
+          baselineFocus: state.composition.baseline.selection.focusCodeUnitOffset,
+          start: state.composition.startCodeUnitOffset,
+          end: state.composition.endCodeUnitOffset,
+          composingText: state.composition.composingText,
+        },
+  };
+}
+
+function randomText(rng, maxLength) {
+  const scalars = ['a', '가', '😀', '\u0301', '\u200d', '🇰', '🇷'];
+  return Array.from({ length: rng.int(0, maxLength + 1) }, () => rng.pick(scalars)).join('');
 }
 
 function decimal(integer, scale) {
