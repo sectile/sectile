@@ -6,9 +6,9 @@ import { Bold, Code2, Italic, List, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const tabItems = [
-  { id: 'overview', label: 'Overview', panel: 'Release health and current rollout.' },
-  { id: 'changes', label: 'Changes', panel: 'Files and migration notes in this release.' },
-  { id: 'checks', label: 'Checks', panel: 'Automated verification and approval status.' },
+  { id: 'overview', label: 'Overview', heading: 'Release health', status: 'Ready to ship', panel: 'The current rollout is healthy across primitives, DOM, and terminal packages.' },
+  { id: 'changes', label: 'Changes', heading: 'Migration summary', status: '3 packages updated', panel: 'Review public entry-point changes and the migration notes for this release.' },
+  { id: 'checks', label: 'Checks', heading: 'Verification status', status: '18 checks passed', panel: 'Automated package, cross-host, and public-signature checks completed successfully.' },
 ] as const;
 type TabID = typeof tabItems[number]['id'];
 
@@ -96,7 +96,17 @@ function mountTabs(
       root.append(tab);
       const content = document.createElement('section');
       content.id = `panel-${activation}-${orientation}-${item.id}`;
-      content.textContent = item.panel;
+      const contentHeader = document.createElement('header');
+      contentHeader.className = 'tab-panel-header';
+      const heading = document.createElement('h3');
+      heading.textContent = item.heading;
+      const status = document.createElement('span');
+      status.className = 'tab-panel-status';
+      status.textContent = item.status;
+      const description = document.createElement('p');
+      description.textContent = item.panel;
+      contentHeader.append(heading, status);
+      content.append(contentHeader, description);
       connection.setPanelAttributes(content, item.id, tab.id);
       panel.append(content);
     }
