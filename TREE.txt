@@ -44,25 +44,60 @@ sectile/
 │   │   │   └── check-reproducible-build.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
+│   │   │   │   ├── checked-control.ts
 │   │   │   │   ├── controller.ts
 │   │   │   │   ├── delegated-event.ts
+│   │   │   │   ├── menu-control.ts
+│   │   │   │   ├── popup-control.ts
+│   │   │   │   ├── semantic-controller.ts
 │   │   │   │   └── text-element.ts
+│   │   │   ├── accordion.ts
+│   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
+│   │   │   ├── carousel.ts
+│   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
+│   │   │   ├── dialog.ts
+│   │   │   ├── disclosure.ts
+│   │   │   ├── feed.ts
+│   │   │   ├── grid.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
+│   │   │   ├── menu-button.ts
+│   │   │   ├── menu.ts
+│   │   │   ├── menubar.ts
+│   │   │   ├── multi-thumb-slider.ts
+│   │   │   ├── radio-group.ts
 │   │   │   ├── slider.ts
+│   │   │   ├── spinbutton.ts
+│   │   │   ├── switch.ts
+│   │   │   ├── tabs.ts
 │   │   │   ├── text.ts
+│   │   │   ├── toggle-button.ts
+│   │   │   ├── toolbar.ts
+│   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
-│   │   │   └── tree-view.ts
+│   │   │   ├── tree-view.ts
+│   │   │   └── window-splitter.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
+│   │   │   ├── carousel.test.mjs
+│   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── combobox.test.mjs
+│   │   │   ├── expansion-controls.test.mjs
+│   │   │   ├── feed.test.mjs
+│   │   │   ├── grid.test.mjs
+│   │   │   ├── linear-controls.test.mjs
 │   │   │   ├── listbox.test.mjs
+│   │   │   ├── menu.test.mjs
+│   │   │   ├── multi-thumb-slider.test.mjs
+│   │   │   ├── popup-controls.test.mjs
 │   │   │   ├── slider.test.mjs
+│   │   │   ├── spinbutton.test.mjs
 │   │   │   ├── text.test.mjs
 │   │   │   ├── tree-grid.test.mjs
-│   │   │   └── tree-view.test.mjs
+│   │   │   ├── tree-view.test.mjs
+│   │   │   └── window-splitter.test.mjs
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -95,7 +130,12 @@ sectile/
 │   │   │   │   ├── composites/
 │   │   │   │   │   ├── calendar.ts
 │   │   │   │   │   ├── combobox.ts
+│   │   │   │   │   ├── grid-control.ts
+│   │   │   │   │   ├── linear-action.ts
+│   │   │   │   │   ├── linear-choice.ts
 │   │   │   │   │   ├── listbox.ts
+│   │   │   │   │   ├── menu.ts
+│   │   │   │   │   ├── popup.ts
 │   │   │   │   │   ├── slider.ts
 │   │   │   │   │   ├── tree-grid.ts
 │   │   │   │   │   └── tree-view.ts
@@ -108,17 +148,28 @@ sectile/
 │   │   │   │   │   └── machine.ts
 │   │   │   │   ├── reference/
 │   │   │   │   │   ├── composites/
+│   │   │   │   │   │   ├── accordion.ts
 │   │   │   │   │   │   ├── calendar.ts
+│   │   │   │   │   │   ├── carousel.ts
 │   │   │   │   │   │   ├── combobox.ts
+│   │   │   │   │   │   ├── feed.ts
+│   │   │   │   │   │   ├── grid-control.ts
+│   │   │   │   │   │   ├── linear-action.ts
+│   │   │   │   │   │   ├── linear-choice.ts
 │   │   │   │   │   │   ├── listbox.ts
+│   │   │   │   │   │   ├── menu.ts
+│   │   │   │   │   │   ├── multi-thumb-slider.ts
 │   │   │   │   │   │   ├── slider.ts
+│   │   │   │   │   │   ├── spinbutton.ts
 │   │   │   │   │   │   ├── tree-grid.ts
 │   │   │   │   │   │   └── tree-view.ts
 │   │   │   │   │   ├── editing/
 │   │   │   │   │   │   └── text.ts
 │   │   │   │   │   ├── state/
+│   │   │   │   │   │   ├── checked.ts
 │   │   │   │   │   │   ├── cursor.ts
 │   │   │   │   │   │   ├── expansion.ts
+│   │   │   │   │   │   ├── open-state.ts
 │   │   │   │   │   │   └── selection.ts
 │   │   │   │   │   └── structures/
 │   │   │   │   │       ├── grid.ts
@@ -128,25 +179,46 @@ sectile/
 │   │   │   │   ├── runtime/
 │   │   │   │   │   └── revision.ts
 │   │   │   │   └── state/
+│   │   │   │       ├── checked.ts
 │   │   │   │       ├── cursor.ts
 │   │   │   │       ├── expansion.ts
+│   │   │   │       ├── open-state.ts
 │   │   │   │       └── selection.ts
 │   │   │   ├── structures/
 │   │   │   │   ├── grid.ts
 │   │   │   │   ├── range.ts
 │   │   │   │   ├── sequence.ts
 │   │   │   │   └── tree.ts
+│   │   │   ├── accordion.ts
+│   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
+│   │   │   ├── carousel.ts
+│   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
+│   │   │   ├── dialog.ts
+│   │   │   ├── disclosure.ts
+│   │   │   ├── feed.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
+│   │   │   ├── menu-button.ts
+│   │   │   ├── menu.ts
+│   │   │   ├── menubar.ts
+│   │   │   ├── multi-thumb-slider.ts
+│   │   │   ├── radio-group.ts
 │   │   │   ├── result.ts
 │   │   │   ├── revision.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
+│   │   │   ├── spinbutton.ts
+│   │   │   ├── switch.ts
+│   │   │   ├── tabs.ts
 │   │   │   ├── text.ts
+│   │   │   ├── toggle-button.ts
+│   │   │   ├── toolbar.ts
+│   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
-│   │   │   └── tree-view.ts
+│   │   │   ├── tree-view.ts
+│   │   │   └── window-splitter.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
@@ -156,11 +228,23 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── composites/
 │   │   │   │   ├── calendar.reference-law.test.mjs
+│   │   │   │   ├── carousel.reference-law.test.mjs
+│   │   │   │   ├── checked-controls.reference-law.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
+│   │   │   │   ├── expansion-controls.reference-law.test.mjs
+│   │   │   │   ├── feed.reference-law.test.mjs
+│   │   │   │   ├── grid-control.reference-law.test.mjs
+│   │   │   │   ├── linear-action.reference-law.test.mjs
+│   │   │   │   ├── linear-choice.reference-law.test.mjs
 │   │   │   │   ├── listbox.reference-law.test.mjs
+│   │   │   │   ├── menu.reference-law.test.mjs
+│   │   │   │   ├── multi-thumb-slider.reference-law.test.mjs
+│   │   │   │   ├── popup-controls.reference-law.test.mjs
 │   │   │   │   ├── slider.reference-law.test.mjs
+│   │   │   │   ├── spinbutton.reference-law.test.mjs
 │   │   │   │   ├── tree-grid.reference-law.test.mjs
-│   │   │   │   └── tree-view.reference-law.test.mjs
+│   │   │   │   ├── tree-view.reference-law.test.mjs
+│   │   │   │   └── window-splitter.reference-law.test.mjs
 │   │   │   ├── differential/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
@@ -194,28 +278,63 @@ sectile/
 │       │   └── check-reproducible-build.mjs
 │       ├── src/
 │       │   ├── internal/
+│       │   │   ├── checked-control.ts
 │       │   │   ├── controller.ts
+│       │   │   ├── menu-control.ts
+│       │   │   ├── popup-control.ts
+│       │   │   ├── semantic-controller.ts
 │       │   │   └── text-input.ts
+│       │   ├── accordion.ts
+│       │   ├── alert-dialog.ts
 │       │   ├── calendar.ts
+│       │   ├── carousel.ts
+│       │   ├── checkbox.ts
 │       │   ├── combobox.ts
+│       │   ├── dialog.ts
+│       │   ├── disclosure.ts
+│       │   ├── feed.ts
+│       │   ├── grid.ts
 │       │   ├── index.ts
 │       │   ├── keyboard.ts
 │       │   ├── layout.ts
 │       │   ├── listbox.ts
+│       │   ├── menu-button.ts
+│       │   ├── menu.ts
+│       │   ├── menubar.ts
+│       │   ├── multi-thumb-slider.ts
 │       │   ├── node.ts
+│       │   ├── radio-group.ts
 │       │   ├── slider.ts
+│       │   ├── spinbutton.ts
+│       │   ├── switch.ts
+│       │   ├── tabs.ts
 │       │   ├── text.ts
+│       │   ├── toggle-button.ts
+│       │   ├── toolbar.ts
+│       │   ├── tooltip.ts
 │       │   ├── tree-grid.ts
-│       │   └── tree-view.ts
+│       │   ├── tree-view.ts
+│       │   └── window-splitter.ts
 │       ├── tests/
 │       │   ├── calendar.test.mjs
+│       │   ├── carousel.test.mjs
+│       │   ├── checked-controls.test.mjs
 │       │   ├── combobox.test.mjs
+│       │   ├── expansion-controls.test.mjs
+│       │   ├── feed.test.mjs
+│       │   ├── grid.test.mjs
 │       │   ├── keyboard.test.mjs
+│       │   ├── linear-controls.test.mjs
 │       │   ├── listbox.test.mjs
+│       │   ├── menu.test.mjs
+│       │   ├── multi-thumb-slider.test.mjs
+│       │   ├── popup-controls.test.mjs
 │       │   ├── slider.test.mjs
+│       │   ├── spinbutton.test.mjs
 │       │   ├── text.test.mjs
 │       │   ├── tree-grid.test.mjs
-│       │   └── tree-view.test.mjs
+│       │   ├── tree-view.test.mjs
+│       │   └── window-splitter.test.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -226,6 +345,7 @@ sectile/
 │   │   │   ├── demos/
 │   │   │   │   ├── calendar.ts
 │   │   │   │   ├── combobox.ts
+│   │   │   │   ├── extras.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── listbox.ts
 │   │   │   │   ├── slider.ts
