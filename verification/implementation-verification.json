@@ -78,5 +78,11 @@
     "accepted": 19757,
     "rejected": 243,
     "commands": 8001
+  },
+  "combobox": {
+    "models": 2000,
+    "accepted": 911,
+    "rejected": 1089,
+    "commands": 911
   }
 }

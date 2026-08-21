@@ -20,6 +20,10 @@ import {
   stepCalendar,
 } from '../../.verification-dist/internal/composites/calendar.js';
 import {
+  acceptCombobox,
+  createComboboxState,
+} from '../../.verification-dist/internal/composites/combobox.js';
+import {
   createSliderState,
   stepSlider,
 } from '../../.verification-dist/internal/composites/slider.js';
@@ -59,6 +63,10 @@ import {
   createReferenceCalendarState,
   referenceStepCalendar,
 } from '../../.verification-dist/internal/reference/composites/calendar.js';
+import {
+  createReferenceComboboxState,
+  referenceAcceptCombobox,
+} from '../../.verification-dist/internal/reference/composites/combobox.js';
 import {
   createReferenceSliderState,
   referenceStepSlider,
@@ -108,6 +116,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySlider(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCalendar(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTreeView(rng, iteration);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCombobox(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -558,6 +567,30 @@ function verifyTreeView(rng, iteration) {
   }
 }
 
+function verifyCombobox(rng, iteration) {
+  const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `o${iteration}-${index}`);
+  const domain = unwrap(createSequence(ids));
+  const labels = new Map(ids.map((id) => [id, randomText(rng, 6)]));
+  let text = unwrap(createTextEditingState(randomText(rng, 6)));
+  if (rng.bool()) {
+    const offset = text.snapshot.text.length;
+    text = unwrap(startTextComposition(
+      text,
+      offset,
+      offset,
+      '가',
+      { anchorCodeUnitOffset: offset + 1, focusCodeUnitOffset: offset + 1 },
+    ));
+  }
+  const input = { popupOpen: true, current: rng.pick([null, ...ids]) };
+  const optimized = unwrap(createComboboxState(domain, text, input));
+  const reference = createReferenceComboboxState(domain, text, input);
+  assert.deepEqual(
+    comboboxResultObservation(acceptCombobox(domain, labels, optimized)),
+    referenceComboboxResultObservation(referenceAcceptCombobox(domain, labels, reference)),
+  );
+}
+
 function listboxResultObservation(result) {
   return result.ok
     ? {
@@ -642,6 +675,28 @@ function referenceTreeViewResultObservation(result) {
         commands: result.value.commands,
       }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function comboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceComboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function comboboxStateObservation(state) {
+  return {
+    text: textObservation(state.text),
+    popupOpen: state.popupOpen,
+    current: state.cursor.current,
+    selected: state.selection.selected,
+    anchor: state.selection.anchor,
+  };
 }
 
 function textObservation(state) {

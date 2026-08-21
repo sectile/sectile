@@ -19,6 +19,10 @@ import {
   stepCalendar,
 } from '../packages/primitives/.verification-dist/internal/composites/calendar.js';
 import {
+  acceptCombobox,
+  createComboboxState,
+} from '../packages/primitives/.verification-dist/internal/composites/combobox.js';
+import {
   createSliderState,
   stepSlider,
 } from '../packages/primitives/.verification-dist/internal/composites/slider.js';
@@ -58,6 +62,10 @@ import {
   createReferenceCalendarState,
   referenceStepCalendar,
 } from '../packages/primitives/.verification-dist/internal/reference/composites/calendar.js';
+import {
+  createReferenceComboboxState,
+  referenceAcceptCombobox,
+} from '../packages/primitives/.verification-dist/internal/reference/composites/combobox.js';
 import {
   createReferenceSliderState,
   referenceStepSlider,
@@ -112,6 +120,7 @@ const counts = {
   slider: { models: 0, transitions: 0, commands: 0 },
   calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
+  combobox: { models: 0, accepted: 0, rejected: 0, commands: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -703,6 +712,40 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.treeView.models += 1;
 }
 
+const comboboxRng = createRng(seed ^ 0xc0b0);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const ids = Array.from(
+    { length: comboboxRng.int(0, 40) },
+    (_, index) => `o${iteration}-${index}`,
+  );
+  const domain = unwrap(createSequence(ids));
+  const labels = new Map(ids.map((id) => [id, randomText(comboboxRng, 6)]));
+  let text = unwrap(createTextEditingState(randomText(comboboxRng, 6)));
+  if (comboboxRng.bool()) {
+    const offset = text.snapshot.text.length;
+    text = unwrap(startTextComposition(
+      text,
+      offset,
+      offset,
+      '가',
+      { anchorCodeUnitOffset: offset + 1, focusCodeUnitOffset: offset + 1 },
+    ));
+  }
+  const input = { popupOpen: true, current: comboboxRng.pick([null, ...ids]) };
+  const optimized = unwrap(createComboboxState(domain, text, input));
+  const reference = createReferenceComboboxState(domain, text, input);
+  const left = acceptCombobox(domain, labels, optimized);
+  const right = referenceAcceptCombobox(domain, labels, reference);
+  assert.deepEqual(comboboxResultObservation(left), referenceComboboxResultObservation(right));
+  if (left.ok && right.ok) {
+    counts.combobox.accepted += 1;
+    counts.combobox.commands += left.value.commands.length;
+  } else {
+    counts.combobox.rejected += 1;
+  }
+  counts.combobox.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
@@ -793,6 +836,28 @@ function referenceTreeViewResultObservation(result) {
         commands: result.value.commands,
       }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function comboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceComboboxResultObservation(result) {
+  return result.ok
+    ? { ok: true, ...comboboxStateObservation(result.value.state), commands: result.value.commands }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function comboboxStateObservation(state) {
+  return {
+    text: textObservation(state.text),
+    popupOpen: state.popupOpen,
+    current: state.cursor.current,
+    selected: state.selection.selected,
+    anchor: state.selection.anchor,
+  };
 }
 
 function textObservation(state) {

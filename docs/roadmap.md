@@ -2,7 +2,7 @@
 
 Foundational structure research and the internal state/data theories are closed for the declared scope. The next implementation phases are composite reference behaviors and runtime evidence:
 
-1. combobox composition (`listbox`, `slider`, `calendar`, and `tree-view` are implemented internally);
+1. composite reference behaviors are implemented internally;
 2. revisioned machine wrapper and two host adapters;
 3. public promotion only after two independent consumer or adapter witnesses.
 
