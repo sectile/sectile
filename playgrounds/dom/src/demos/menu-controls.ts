@@ -3,7 +3,7 @@ import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
 import type { StableID } from '@sectile/primitives';
 import { unwrap } from '@sectile/primitives/result';
-import { ChevronDown, ChevronRight, createElement, MoreHorizontal } from 'lucide';
+import { ChevronDown, ChevronRight, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const basicItems = [
@@ -59,16 +59,26 @@ interface MenuCase { readonly id: string; readonly title: string; readonly items
 function mountMenu(context: DemoContext, kind: 'menu' | 'menubar' | 'menu-button', scenario: MenuCase): DemoSession {
   const wrapper = document.createElement('div'); wrapper.className = `menu-demo ${kind}`;
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'secondary menu-trigger';
-  trigger.append(createElement(MoreHorizontal, { 'aria-hidden': 'true', height: 18, width: 18 }), 'Actions', createElement(ChevronDown, { 'aria-hidden': 'true', height: 15, width: 15 }));
+  trigger.append('Actions', createElement(ChevronDown, { 'aria-hidden': 'true', height: 15, width: 15 }));
   const root = document.createElement('div'); root.className = 'menu-surface';
   if (kind === 'menu-button') wrapper.append(trigger);
   wrapper.append(root); context.surface.append(wrapper);
   const elements = new Map<string, HTMLButtonElement>();
+  const submenuSurfaces = new Map<string, HTMLDivElement>();
   for (const item of scenario.items) {
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'menu-item'; button.dataset['depth'] = String(depthOf(scenario.items, item.id));
+    if (!scenario.items.some((candidate) => candidate.parentID === item.id)) continue;
+    const submenu = document.createElement('div'); submenu.className = 'menu-surface submenu-surface';
+    submenuSurfaces.set(item.id, submenu); root.append(submenu);
+  }
+  for (const item of scenario.items) {
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'menu-item';
     button.append(document.createTextNode(item.label));
-    if (scenario.items.some((candidate) => candidate.parentID === item.id)) button.append(createElement(ChevronRight, { 'aria-hidden': 'true', height: 15, width: 15 }));
-    root.append(button); elements.set(item.id, button);
+    if (scenario.items.some((candidate) => candidate.parentID === item.id)) {
+      const icon = kind === 'menubar' && item.parentID === null ? ChevronDown : ChevronRight;
+      button.append(createElement(icon, { 'aria-hidden': 'true', height: 15, width: 15 }));
+    }
+    const surface = item.parentID === null ? root : submenuSurfaces.get(item.parentID);
+    surface?.append(button); elements.set(item.id, button);
   }
   let invoked: string | null = null; let externalOpen = false; let connection!: MenuConnection<string>;
   const common = {
@@ -86,24 +96,16 @@ function mountMenu(context: DemoContext, kind: 'menu' | 'menubar' | 'menu-button
         ...(scenario.controlled ? { open: externalOpen, onOpenChange: (open) => { externalOpen = open; queueMicrotask(() => connection.syncControlledValue(externalOpen)); } } : {}),
       }));
   for (const [id, element] of elements) connection.setItemAttributes(element, id);
+  for (const [parentID, submenu] of submenuSurfaces) connection.setSubmenuAttributes(submenu, parentID);
 
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     for (const item of scenario.items) {
       const element = elements.get(item.id); if (element === undefined) continue;
-      const visible = item.parentID === null || state.openPath.includes(item.parentID);
-      element.hidden = !visible;
       element.classList.toggle('current', state.cursor.current === item.id);
-      connection.setItemAttributes(element, item.id);
     }
     context.showState(revision, { open: state.open, current: state.cursor.current, openPath: state.openPath, invoked, disabled: scenario.disabled, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' });
   }
   render();
   return { focus: () => (kind === 'menu-button' ? trigger : root).focus(), disconnect: () => connection.disconnect() };
-}
-
-function depthOf(items: readonly MenuItem[], id: string): number {
-  let depth = 0; let current = items.find((item) => item.id === id)?.parentID ?? null;
-  while (current !== null) { depth += 1; current = items.find((item) => item.id === current)?.parentID ?? null; }
-  return depth;
 }
