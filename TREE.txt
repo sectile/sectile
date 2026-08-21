@@ -221,7 +221,17 @@ sectile/
 ├── playgrounds/
 │   ├── dom/
 │   │   ├── src/
+│   │   │   ├── demos/
+│   │   │   │   ├── calendar.ts
+│   │   │   │   ├── combobox.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── listbox.ts
+│   │   │   │   ├── slider.ts
+│   │   │   │   ├── text.ts
+│   │   │   │   ├── tree-grid.ts
+│   │   │   │   └── tree-view.ts
 │   │   │   ├── main.ts
+│   │   │   ├── playground.ts
 │   │   │   ├── styles.css
 │   │   │   └── vite-env.d.ts
 │   │   ├── tests/
@@ -234,7 +244,9 @@ sectile/
 │   │   ├── scripts/
 │   │   │   └── build.mjs
 │   │   ├── src/
-│   │   │   └── main.mjs
+│   │   │   ├── demos.mjs
+│   │   │   ├── main.mjs
+│   │   │   └── ui.mjs
 │   │   ├── tests/
 │   │   │   └── playground.test.mjs
 │   │   ├── package.json
