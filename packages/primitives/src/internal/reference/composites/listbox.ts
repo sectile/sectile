@@ -1,5 +1,5 @@
 import type { BoundaryPolicy, StableID } from '../../../shared.js';
-import type { Sequence } from '../../../sequence.js';
+import type { Sequence } from '../../../structures/sequence.js';
 import type {
   ListboxCommand,
   ListboxEvent,
@@ -8,7 +8,7 @@ import type {
   ListboxStateInput,
   ListboxTransition,
 } from '../../composites/listbox.js';
-import { ReferenceSelectionState, referenceClearSelection, referenceSelectOne, referenceToggleMultipleSelection } from '../selection.js';
+import { ReferenceSelectionState, referenceClearSelection, referenceSelectOne, referenceToggleMultipleSelection } from '../state/selection.js';
 
 interface ReferenceRejection {
   readonly ok: false;

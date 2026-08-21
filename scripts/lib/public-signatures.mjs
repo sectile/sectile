@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 
 export const publicDeclarationFiles = [
   'packages/primitives/dist/index.d.ts',
-  'packages/primitives/dist/sequence.d.ts',
-  'packages/primitives/dist/range.d.ts',
-  'packages/primitives/dist/grid.d.ts',
-  'packages/primitives/dist/tree.d.ts',
+  'packages/primitives/dist/structures/sequence.d.ts',
+  'packages/primitives/dist/structures/range.d.ts',
+  'packages/primitives/dist/structures/grid.d.ts',
+  'packages/primitives/dist/structures/tree.d.ts',
 ];
 
 export async function collectPublicSignatures() {

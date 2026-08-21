@@ -1,8 +1,8 @@
 import { performance } from 'node:perf_hooks';
-import { createGrid } from '../packages/primitives/dist/grid.js';
-import { createRange } from '../packages/primitives/dist/range.js';
-import { createSequence } from '../packages/primitives/dist/sequence.js';
-import { createTree } from '../packages/primitives/dist/tree.js';
+import { createGrid } from '../packages/primitives/dist/structures/grid.js';
+import { createRange } from '../packages/primitives/dist/structures/range.js';
+import { createSequence } from '../packages/primitives/dist/structures/sequence.js';
+import { createTree } from '../packages/primitives/dist/structures/tree.js';
 
 const unwrap = (result) => {
   if (!result.ok) throw new Error(result.error.message);

@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
-import { createGrid } from '../packages/primitives/.verification-dist/grid.js';
-import { createRange } from '../packages/primitives/.verification-dist/range.js';
-import { createSequence } from '../packages/primitives/.verification-dist/sequence.js';
-import { createTree } from '../packages/primitives/.verification-dist/tree.js';
-import { createCursorState, reconcileCursor } from '../packages/primitives/.verification-dist/internal/cursor.js';
+import { createGrid } from '../packages/primitives/.verification-dist/structures/grid.js';
+import { createRange } from '../packages/primitives/.verification-dist/structures/range.js';
+import { createSequence } from '../packages/primitives/.verification-dist/structures/sequence.js';
+import { createTree } from '../packages/primitives/.verification-dist/structures/tree.js';
+import { createCursorState, reconcileCursor } from '../packages/primitives/.verification-dist/internal/state/cursor.js';
 import {
   createExpansionState,
   reconcileExpansion,
   setExpansionOpen,
   toggleExpansion,
-} from '../packages/primitives/.verification-dist/internal/expansion.js';
+} from '../packages/primitives/.verification-dist/internal/state/expansion.js';
 import {
   createListboxState,
   stepListbox,
@@ -21,7 +21,7 @@ import {
   selectInterval,
   selectOne,
   toggleMultipleSelection,
-} from '../packages/primitives/.verification-dist/internal/selection.js';
+} from '../packages/primitives/.verification-dist/internal/state/selection.js';
 import {
   cancelTextComposition,
   commitTextComposition,
@@ -30,14 +30,14 @@ import {
   replaceTextState,
   startTextComposition,
   updateTextComposition,
-} from '../packages/primitives/.verification-dist/internal/text.js';
-import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/cursor.js';
+} from '../packages/primitives/.verification-dist/internal/editing/text.js';
+import { reconcileReferenceCursor } from '../packages/primitives/.verification-dist/internal/reference/state/cursor.js';
 import {
   createReferenceExpansionState,
   reconcileReferenceExpansion,
   referenceSetExpansionOpen,
   referenceToggleExpansion,
-} from '../packages/primitives/.verification-dist/internal/reference/expansion.js';
+} from '../packages/primitives/.verification-dist/internal/reference/state/expansion.js';
 import {
   createReferenceListboxState,
   referenceStepListbox,
@@ -49,7 +49,7 @@ import {
   referenceSelectInterval,
   referenceSelectOne,
   referenceToggleMultipleSelection,
-} from '../packages/primitives/.verification-dist/internal/reference/selection.js';
+} from '../packages/primitives/.verification-dist/internal/reference/state/selection.js';
 import {
   createReferenceTextEditingState,
   referenceCancelTextComposition,
@@ -59,11 +59,11 @@ import {
   referenceStartTextComposition,
   referenceTextCodeUnitBoundaries,
   referenceUpdateTextComposition,
-} from '../packages/primitives/.verification-dist/internal/reference/text.js';
-import { ReferenceGrid } from '../packages/primitives/.verification-dist/internal/reference/grid.js';
-import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/range.js';
-import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/sequence.js';
-import { ReferenceTree } from '../packages/primitives/.verification-dist/internal/reference/tree.js';
+} from '../packages/primitives/.verification-dist/internal/reference/editing/text.js';
+import { ReferenceGrid } from '../packages/primitives/.verification-dist/internal/reference/structures/grid.js';
+import { ReferenceRange } from '../packages/primitives/.verification-dist/internal/reference/structures/range.js';
+import { ReferenceSequence } from '../packages/primitives/.verification-dist/internal/reference/structures/sequence.js';
+import { ReferenceTree } from '../packages/primitives/.verification-dist/internal/reference/structures/tree.js';
 import { createRng, deepNormalize, unwrap } from '../packages/primitives/tests/support.mjs';
 
 const seed = 0x5ec71e;

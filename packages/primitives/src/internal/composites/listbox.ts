@@ -1,7 +1,7 @@
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
-import type { Sequence } from '../../sequence.js';
-import { createCursorState, type CursorState } from '../cursor.js';
-import { fail, freezeArray, normalizeMaxScan, ok, resourceError } from '../foundation.js';
+import type { Sequence } from '../../structures/sequence.js';
+import { createCursorState, type CursorState } from '../state/cursor.js';
+import { fail, freezeArray, normalizeMaxScan, ok, resourceError } from '../kernel/foundation.js';
 import {
   clearSelection,
   createSelectionState,
@@ -9,7 +9,7 @@ import {
   toggleMultipleSelection,
   type SelectionSnapshotInput,
   type SelectionState,
-} from '../selection.js';
+} from '../state/selection.js';
 
 export type ListboxEvent = 'next' | 'previous' | 'toggle' | 'activate' | 'clear';
 

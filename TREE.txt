@@ -44,42 +44,54 @@ sectile/
 │       │   ├── internal/
 │       │   │   ├── composites/
 │       │   │   │   └── listbox.ts
+│       │   │   ├── editing/
+│       │   │   │   └── text.ts
+│       │   │   ├── kernel/
+│       │   │   │   ├── decimal.ts
+│       │   │   │   ├── foundation.ts
+│       │   │   │   └── indexed-sequence.ts
 │       │   │   ├── reference/
 │       │   │   │   ├── composites/
 │       │   │   │   │   └── listbox.ts
-│       │   │   │   ├── cursor.ts
-│       │   │   │   ├── expansion.ts
-│       │   │   │   ├── grid.ts
-│       │   │   │   ├── range.ts
-│       │   │   │   ├── selection.ts
-│       │   │   │   ├── sequence.ts
-│       │   │   │   ├── text.ts
-│       │   │   │   └── tree.ts
-│       │   │   ├── cursor.ts
-│       │   │   ├── decimal.ts
-│       │   │   ├── expansion.ts
-│       │   │   ├── foundation.ts
-│       │   │   ├── optimized-sequence.ts
-│       │   │   ├── selection.ts
-│       │   │   └── text.ts
-│       │   ├── grid.ts
+│       │   │   │   ├── editing/
+│       │   │   │   │   └── text.ts
+│       │   │   │   ├── state/
+│       │   │   │   │   ├── cursor.ts
+│       │   │   │   │   ├── expansion.ts
+│       │   │   │   │   └── selection.ts
+│       │   │   │   └── structures/
+│       │   │   │       ├── grid.ts
+│       │   │   │       ├── range.ts
+│       │   │   │       ├── sequence.ts
+│       │   │   │       └── tree.ts
+│       │   │   └── state/
+│       │   │       ├── cursor.ts
+│       │   │       ├── expansion.ts
+│       │   │       └── selection.ts
+│       │   ├── structures/
+│       │   │   ├── grid.ts
+│       │   │   ├── range.ts
+│       │   │   ├── sequence.ts
+│       │   │   └── tree.ts
 │       │   ├── index.ts
-│       │   ├── range.ts
-│       │   ├── sequence.ts
-│       │   ├── shared.ts
-│       │   └── tree.ts
+│       │   └── shared.ts
 │       ├── tests/
-│       │   ├── cursor.reference-law.test.mjs
-│       │   ├── expansion.reference-law.test.mjs
-│       │   ├── grid.reference-law.test.mjs
-│       │   ├── listbox.reference-law.test.mjs
-│       │   ├── optimized-differential.test.mjs
-│       │   ├── range.reference-law.test.mjs
-│       │   ├── selection.reference-law.test.mjs
-│       │   ├── sequence.reference-law.test.mjs
-│       │   ├── support.mjs
-│       │   ├── text.reference-law.test.mjs
-│       │   └── tree.reference-law.test.mjs
+│       │   ├── composites/
+│       │   │   └── listbox.reference-law.test.mjs
+│       │   ├── differential/
+│       │   │   └── optimized-differential.test.mjs
+│       │   ├── editing/
+│       │   │   └── text.reference-law.test.mjs
+│       │   ├── state/
+│       │   │   ├── cursor.reference-law.test.mjs
+│       │   │   ├── expansion.reference-law.test.mjs
+│       │   │   └── selection.reference-law.test.mjs
+│       │   ├── structures/
+│       │   │   ├── grid.reference-law.test.mjs
+│       │   │   ├── range.reference-law.test.mjs
+│       │   │   ├── sequence.reference-law.test.mjs
+│       │   │   └── tree.reference-law.test.mjs
+│       │   └── support.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -97,6 +109,7 @@ sectile/
 │   ├── check-dist-platform-boundary.mjs
 │   ├── check-docs.mjs
 │   ├── check-law-coverage.mjs
+│   ├── check-layout.mjs
 │   ├── check-package-footprint.mjs
 │   ├── check-public-api.mjs
 │   ├── check-public-signatures.mjs

@@ -1,6 +1,6 @@
 # Package boundary
 
-Production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Verification build input includes the reference models and emits to `.verification-dist`, which is never packaged.
+Production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public runtime structures live under `src/structures`; internal state, editing, composites, and kernel mechanisms remain non-exported. Verification build input includes the mirrored reference models and emits to `.verification-dist`, which is never packaged.
 
 Recurring verification requires these canonical exports:
 

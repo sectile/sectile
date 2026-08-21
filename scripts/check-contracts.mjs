@@ -3,7 +3,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 
 const publicSources = ['sequence.ts', 'range.ts', 'grid.ts', 'tree.ts'];
 for (const file of publicSources) {
-  assert.equal((await stat(`packages/primitives/src/${file}`)).isFile(), true);
+  assert.equal((await stat(`packages/primitives/src/structures/${file}`)).isFile(), true);
 }
 
 const root = await readFile('packages/primitives/src/index.ts', 'utf8');

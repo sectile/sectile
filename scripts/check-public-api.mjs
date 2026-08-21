@@ -27,9 +27,9 @@ assert.equal(exportsMap['./package.json'], './package.json');
 for (const subpath of contract.requiredRuntimeSubpaths) {
   const name = subpath.slice(2);
   assert.deepEqual(exportsMap[subpath], {
-    types: `./dist/${name}.d.ts`,
-    import: `./dist/${name}.js`,
-    default: `./dist/${name}.js`,
+    types: `./dist/structures/${name}.d.ts`,
+    import: `./dist/structures/${name}.js`,
+    default: `./dist/structures/${name}.js`,
   });
 }
 
