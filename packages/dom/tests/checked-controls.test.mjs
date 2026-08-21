@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/primitives/result';
+import { createCheckbox } from '../dist/checkbox.js'; import { createSwitch } from '../dist/switch.js'; import { createToggleButton } from '../dist/toggle-button.js';
+test('DOM checked controls own click dispatch and role-specific ARIA', () => {
+  const checkboxElement = new FakeElement(); const checkbox = unwrap(createCheckbox({ element: checkboxElement, defaultValue: 'mixed' })); checkboxElement.emit('click'); assert.equal(checkbox.getSnapshot().state.checked, true); assert.equal(checkboxElement.attributes.get('aria-checked'), 'true');
+  const switchElement = new FakeElement(); const control = unwrap(createSwitch({ element: switchElement })); switchElement.emit('click'); assert.equal(control.getSnapshot().state.checked, true); assert.equal(switchElement.attributes.get('role'), 'switch');
+  const button = new FakeElement(); const toggle = unwrap(createToggleButton({ element: button })); button.emit('click'); assert.equal(toggle.getSnapshot().state.pressed, true); assert.equal(button.attributes.get('aria-pressed'), 'true');
+});
+class FakeElement { attributes = new Map(); listeners = new Map(); setAttribute(name, value) { this.attributes.set(name, value); } addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); } removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); } emit(type) { for (const listener of this.listeners.get(type) ?? []) listener(); } }

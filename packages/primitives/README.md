@@ -31,6 +31,8 @@ Tabs and radio groups share the proven cursor plus single-selection algebra whil
 
 Disclosure exposes a boolean open algebra. Accordion separately owns a keyed open set plus cursor so single/multiple and collapsible policies remain atomic.
 
+Checkbox, switch, and toggle-button share checked transition mechanics while preserving mixed, checked, and pressed public vocabularies.
+
 `createTreeGridModelFromRows` accepts rows shaped as `{ id, parentID, cells }` and validates the tree, grid, and row mapping as one construction boundary. The lower-level tree, grid, and model factories remain available when those structures have separate ownership.
 
 See the [primitive documentation](../../docs/primitives/README.md).

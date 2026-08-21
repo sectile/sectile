@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "7144ebb799911c132331a882323bdd4ecfbc1ce0e461c2f15aa0d14969fc1541",
+  "fingerprint": "b89de0c3bf3505dcd1475659b846fbbaedd2aaf0c2003d748ff6f9f30ed641c0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -9,6 +9,10 @@
     {
       "path": "dist/calendar.d.ts",
       "sha256": "f5ed730ad6c2a39de3de1932e70e0be7f8606a28bcbcdeac1121b2289727faa4"
+    },
+    {
+      "path": "dist/checkbox.d.ts",
+      "sha256": "ef46097331ac06a7ff52a8f9296ce96aa6dfd159c8264a085c2460117f247aa2"
     },
     {
       "path": "dist/combobox.d.ts",
@@ -67,6 +71,10 @@
       "sha256": "fbf5ddfba14b263ff404d22d7cad187fa2e4156c3c4519819e3b3c9ac4650a9f"
     },
     {
+      "path": "dist/internal/state/checked.d.ts",
+      "sha256": "408137b130812e0bf36050fa7766cd25eb5c8d8ecf52070f47d35dd93c63a615"
+    },
+    {
       "path": "dist/internal/state/cursor.d.ts",
       "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
     },
@@ -123,12 +131,20 @@
       "sha256": "14cde3a229e9257ac2e6d468a089f088e8ab1508f53b7b6d4df81a1acc04a80d"
     },
     {
+      "path": "dist/switch.d.ts",
+      "sha256": "09c2a5c40dfd55a32b957e5fc6750376b6e089e0ad27eb373ff874115e059431"
+    },
+    {
       "path": "dist/tabs.d.ts",
       "sha256": "9fc704b11f985e2715e3254c4b7101ef9efe5da75751ceb57e42bbe23c61f5f8"
     },
     {
       "path": "dist/text.d.ts",
       "sha256": "aff65f99c95f52b7121e1deba149665b7e126690317719fd005c934de878bb93"
+    },
+    {
+      "path": "dist/toggle-button.d.ts",
+      "sha256": "331b80bddc1109b71903c8e16b31fe1022e262255c34b11f0d8672b88da961fc"
     },
     {
       "path": "dist/toolbar.d.ts",

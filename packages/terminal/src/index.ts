@@ -51,6 +51,11 @@ export {
   type DisclosureOptions,
 } from './disclosure.js';
 export {
+  createCheckbox, type CheckboxConnection, type CheckboxOptions,
+} from './checkbox.js';
+export { createSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
+export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
+export {
   connectCalendar,
   createCalendar,
   createCalendarController,

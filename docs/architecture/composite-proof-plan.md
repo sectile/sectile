@@ -97,3 +97,12 @@ not independently open two disclosure booleans, which disproves boolean-product 
 Both mechanisms match independent references under bounded enumeration. DOM witnesses
 project click, focus, `aria-expanded`, and panel visibility; terminal witnesses own the
 equivalent enter/space and directional key mapping.
+
+## Verified family: checked controls
+
+Checkbox, switch, and toggle button share set/toggle mechanics, but not the same public
+carrier or host projection. Checkbox may observe `mixed`; switch and toggle button are
+binary projections, and toggle button renames checked authority to pressed authority.
+Independent reference comparison covers every carrier/event/policy combination. DOM and
+terminal witnesses verify role-specific ARIA or key dispatch without duplicating the state
+machine.

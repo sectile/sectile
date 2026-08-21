@@ -46,6 +46,9 @@
       "import": "./dist/accordion.js",
       "default": "./dist/accordion.js"
     },
+    "./checkbox": { "types": "./dist/checkbox.d.ts", "import": "./dist/checkbox.js", "default": "./dist/checkbox.js" },
+    "./switch": { "types": "./dist/switch.d.ts", "import": "./dist/switch.js", "default": "./dist/switch.js" },
+    "./toggle-button": { "types": "./dist/toggle-button.d.ts", "import": "./dist/toggle-button.js", "default": "./dist/toggle-button.js" },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",

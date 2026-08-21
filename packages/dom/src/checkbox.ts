@@ -1,0 +1,6 @@
+import type { Result } from '@sectile/primitives';
+import { applyCheckboxEvent, createCheckboxState, type CheckboxCommand, type CheckboxEvent, type CheckboxPolicies, type CheckboxState, type CheckboxValue } from '@sectile/primitives/checkbox';
+import { createDOMCheckedControl, type DOMCheckedControl } from './internal/checked-control.js';
+export interface CheckboxOptions { readonly element: HTMLElement; readonly value?: CheckboxValue; readonly defaultValue?: CheckboxValue; readonly policies?: CheckboxPolicies; readonly onValueChange?: (value: CheckboxValue) => void; readonly onUpdate?: () => void }
+export type CheckboxConnection = DOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxValue>;
+export function createCheckbox(options: CheckboxOptions): Result<CheckboxConnection> { return createDOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxCommand, CheckboxValue>({ element: options.element, role: 'checkbox', attribute: 'aria-checked', controlled: options.value !== undefined, initial: createCheckboxState(options.value ?? options.defaultValue ?? false, options.policies), toggleEvent: 'toggle', reducer: (state, event) => applyCheckboxEvent(state, event, options.policies), create: (value) => createCheckboxState(value, options.policies), read: (state) => state.checked, format: String, onChange: options.onValueChange, onUpdate: options.onUpdate }); }
