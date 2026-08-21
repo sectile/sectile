@@ -43,6 +43,7 @@ sectile/
 │       ├── src/
 │       │   ├── internal/
 │       │   │   ├── composites/
+│       │   │   │   ├── calendar.ts
 │       │   │   │   ├── listbox.ts
 │       │   │   │   └── slider.ts
 │       │   │   ├── editing/
@@ -53,6 +54,7 @@ sectile/
 │       │   │   │   └── indexed-sequence.ts
 │       │   │   ├── reference/
 │       │   │   │   ├── composites/
+│       │   │   │   │   ├── calendar.ts
 │       │   │   │   │   ├── listbox.ts
 │       │   │   │   │   └── slider.ts
 │       │   │   │   ├── editing/
@@ -79,6 +81,7 @@ sectile/
 │       │   └── shared.ts
 │       ├── tests/
 │       │   ├── composites/
+│       │   │   ├── calendar.reference-law.test.mjs
 │       │   │   ├── listbox.reference-law.test.mjs
 │       │   │   └── slider.reference-law.test.mjs
 │       │   ├── differential/

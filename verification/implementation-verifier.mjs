@@ -15,6 +15,10 @@ import {
   stepListbox,
 } from '../packages/primitives/.verification-dist/internal/composites/listbox.js';
 import {
+  createCalendarState,
+  stepCalendar,
+} from '../packages/primitives/.verification-dist/internal/composites/calendar.js';
+import {
   createSliderState,
   stepSlider,
 } from '../packages/primitives/.verification-dist/internal/composites/slider.js';
@@ -46,6 +50,10 @@ import {
   createReferenceListboxState,
   referenceStepListbox,
 } from '../packages/primitives/.verification-dist/internal/reference/composites/listbox.js';
+import {
+  createReferenceCalendarState,
+  referenceStepCalendar,
+} from '../packages/primitives/.verification-dist/internal/reference/composites/calendar.js';
 import {
   createReferenceSliderState,
   referenceStepSlider,
@@ -94,6 +102,7 @@ const counts = {
   },
   listbox: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   slider: { models: 0, transitions: 0, commands: 0 },
+  calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -591,6 +600,56 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.slider.models += 1;
 }
 
+const calendarRng = createRng(seed ^ 0xca1e);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const rowCount = calendarRng.int(0, 8);
+  const columnCount = calendarRng.int(0, 8);
+  const ids = [];
+  const rows = Array.from({ length: rowCount }, (_, row) =>
+    Array.from({ length: columnCount }, (_, column) => {
+      if (!calendarRng.bool()) return null;
+      const id = `c${iteration}-${row}-${column}`;
+      ids.push(id);
+      return id;
+    }));
+  const grid = unwrap(createGrid(rows, { columnCount }));
+  const current = calendarRng.pick([null, ...ids]);
+  const selected = ids.length > 0 && calendarRng.bool() ? [calendarRng.pick(ids)] : [];
+  const input = { current, selected, anchor: selected[0] ?? null };
+  let optimized = unwrap(createCalendarState(grid, input));
+  let reference = createReferenceCalendarState(grid, input);
+  const eligible = new Set(ids.filter(() => calendarRng.bool()));
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    boundary: calendarRng.pick(['stop', 'wrap-axis']),
+    maxScan: calendarRng.int(0, Math.max(rowCount, columnCount) + 2),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const event = calendarRng.pick([
+      'left',
+      'right',
+      'up',
+      'down',
+      'select',
+      'previous-page',
+      'next-page',
+    ]);
+    const left = stepCalendar(grid, optimized, event, policies);
+    const right = referenceStepCalendar(grid, reference, event, policies);
+    assert.deepEqual(calendarResultObservation(left), referenceCalendarResultObservation(right));
+    counts.calendar.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.calendar.accepted += 1;
+      counts.calendar.commands += left.value.commands.length;
+    } else {
+      counts.calendar.rejected += 1;
+    }
+  }
+  counts.calendar.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
@@ -630,6 +689,30 @@ function sliderResultObservation(result) {
 function referenceSliderResultObservation(result) {
   return result.ok
     ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function calendarResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceCalendarResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 

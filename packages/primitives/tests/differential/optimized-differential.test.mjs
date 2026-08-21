@@ -16,6 +16,10 @@ import {
   stepListbox,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
+  createCalendarState,
+  stepCalendar,
+} from '../../.verification-dist/internal/composites/calendar.js';
+import {
   createSliderState,
   stepSlider,
 } from '../../.verification-dist/internal/composites/slider.js';
@@ -47,6 +51,10 @@ import {
   createReferenceListboxState,
   referenceStepListbox,
 } from '../../.verification-dist/internal/reference/composites/listbox.js';
+import {
+  createReferenceCalendarState,
+  referenceStepCalendar,
+} from '../../.verification-dist/internal/reference/composites/calendar.js';
 import {
   createReferenceSliderState,
   referenceStepSlider,
@@ -90,6 +98,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyText(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyListbox(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySlider(rng);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCalendar(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -471,6 +480,41 @@ function verifySlider(rng) {
   }
 }
 
+function verifyCalendar(rng, iteration) {
+  const rowCount = rng.int(0, 8);
+  const columnCount = rng.int(0, 8);
+  const ids = [];
+  const rows = Array.from({ length: rowCount }, (_, row) =>
+    Array.from({ length: columnCount }, (_, column) => {
+      if (!rng.bool()) return null;
+      const id = `c${iteration}-${row}-${column}`;
+      ids.push(id);
+      return id;
+    }));
+  const grid = unwrap(createGrid(rows, { columnCount }));
+  const current = rng.pick([null, ...ids]);
+  const selected = ids.length > 0 && rng.bool() ? [rng.pick(ids)] : [];
+  const input = { current, selected, anchor: selected[0] ?? null };
+  let optimized = unwrap(createCalendarState(grid, input));
+  let reference = createReferenceCalendarState(grid, input);
+  const eligible = new Set(ids.filter(() => rng.bool()));
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    boundary: rng.pick(['stop', 'wrap-axis']),
+    maxScan: rng.int(0, Math.max(rowCount, columnCount) + 2),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const event = rng.pick(['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page']);
+    const left = stepCalendar(grid, optimized, event, policies);
+    const right = referenceStepCalendar(grid, reference, event, policies);
+    assert.deepEqual(calendarResultObservation(left), referenceCalendarResultObservation(right));
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+    }
+  }
+}
+
 function listboxResultObservation(result) {
   return result.ok
     ? {
@@ -504,6 +548,30 @@ function sliderResultObservation(result) {
 function referenceSliderResultObservation(result) {
   return result.ok
     ? { ok: true, tick: result.value.state.tick, commands: result.value.commands }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function calendarResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceCalendarResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
     : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 

@@ -64,5 +64,12 @@
     "models": 2000,
     "transitions": 20000,
     "commands": 13806
+  },
+  "calendar": {
+    "models": 2000,
+    "transitions": 20000,
+    "accepted": 16949,
+    "rejected": 3051,
+    "commands": 7930
   }
 }
