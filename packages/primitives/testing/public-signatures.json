@@ -1,7 +1,11 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "23198d2cc5886f14c2f6659a071f70cf0ca815a83c96e2f3ba9540a207ead293",
+  "fingerprint": "7144ebb799911c132331a882323bdd4ecfbc1ce0e461c2f15aa0d14969fc1541",
   "files": [
+    {
+      "path": "dist/accordion.d.ts",
+      "sha256": "01690bac3d43a26a55523a38172f76faee17b422f9f12bf7689ad3f79667b29e"
+    },
     {
       "path": "dist/calendar.d.ts",
       "sha256": "f5ed730ad6c2a39de3de1932e70e0be7f8606a28bcbcdeac1121b2289727faa4"
@@ -9,6 +13,10 @@
     {
       "path": "dist/combobox.d.ts",
       "sha256": "7c5148ec90d2f57a0a045bcd2afc154cac6410d75a4564e8944c7c6b5b4e1c51"
+    },
+    {
+      "path": "dist/disclosure.d.ts",
+      "sha256": "d1591f8e0371ee53dc78d196b57dc8a8d6dc7e4090a218d0501ede9c2b806f71"
     },
     {
       "path": "dist/index.d.ts",
@@ -65,6 +73,10 @@
     {
       "path": "dist/internal/state/expansion.d.ts",
       "sha256": "88bef741a782c8a4233f07f5f1717efb5631fa07e2b0a2a7397f735cb307417b"
+    },
+    {
+      "path": "dist/internal/state/open-state.d.ts",
+      "sha256": "128e072d5a76977578f74d113aa1c4c78f137248c697a958e44c785d1d82c5c9"
     },
     {
       "path": "dist/internal/state/selection.d.ts",

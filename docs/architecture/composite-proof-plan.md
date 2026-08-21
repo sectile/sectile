@@ -84,3 +84,16 @@ Evidence consists of independent array-based references, bounded differential en
 2,000 seeded random models and 20,000 transitions per shared machine, plus DOM and terminal
 keyboard/direct-target witnesses. The promoted public facades are `tabs`, `radio-group`,
 and `toolbar`; `linear-choice` and `linear-action` remain internal shared mechanisms.
+
+## Verified family: expansion controls
+
+`disclosure` is the two-state algebra `open ∈ boolean` with toggle and idempotent set
+events. `accordion` is not a sequence of disclosure machines: its single-expansion and
+non-collapsible policies constrain the open identities as one atomic keyed set, alongside
+an independently owned cursor. Two accordions may have the same focused header but
+different open headers, which disproves cursor-only reduction; two single accordions may
+not independently open two disclosure booleans, which disproves boolean-product reduction.
+
+Both mechanisms match independent references under bounded enumeration. DOM witnesses
+project click, focus, `aria-expanded`, and panel visibility; terminal witnesses own the
+equivalent enter/space and directional key mapping.

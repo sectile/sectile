@@ -22,6 +22,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createTabs`, `createRadioGroup`, and `createToolbar` own terminal key normalization and witness the same semantic transitions as their DOM counterparts without importing DOM behavior.
 
+`createDisclosure` and `createAccordion` own terminal expansion keys and expose the same boolean or keyed-open state algebras.
+
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its terminal connection exposes the current rendered value and owns key dispatch.
 
 `createCalendar` constructs a grid from `rows`; its connection owns key dispatch and page requests.

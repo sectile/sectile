@@ -23,6 +23,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createTabs`, `createRadioGroup`, and `createToolbar` own orientation-aware keyboard mapping, delegated pointer events, focus projection, and their matching ARIA roles. Their controlled and uncontrolled values follow the same proposal-then-sync contract.
 
+`createDisclosure` and `createAccordion` own trigger/header clicks, expansion ARIA, panel visibility, and controlled or uncontrolled open state.
+
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its DOM connection owns keyboard dispatch, pointer dragging on the optional `track`, and synchronized slider ARIA values.
 
 `createCalendar` constructs a grid from `rows`; its connection owns gridcell ARIA, focus, keyboard and delegated click dispatch, and page requests.

@@ -12,6 +12,8 @@ import { applyListboxEvent, createListboxState } from '@sectile/primitives/listb
 import { applyTabsEvent, createTabsState } from '@sectile/primitives/tabs';
 import { applyRadioGroupEvent, createRadioGroupState } from '@sectile/primitives/radio-group';
 import { applyToolbarEvent, createToolbarState } from '@sectile/primitives/toolbar';
+import { applyAccordionEvent, createAccordionState } from '@sectile/primitives/accordion';
+import { applyDisclosureEvent, createDisclosureState } from '@sectile/primitives/disclosure';
 import { applyCalendarEvent, createCalendarState } from '@sectile/primitives/calendar';
 import { applyComboboxEvent, createComboboxState } from '@sectile/primitives/combobox';
 import { applySliderEvent, createSliderState } from '@sectile/primitives/slider';
@@ -26,6 +28,8 @@ The root export contains shared types and has no runtime authority. State primit
 The text facade owns well-formed UTF-16 replacement, selection, and composition transitions. The combobox facade combines that state with explicit filtering policy, popup navigation, and composition-safe candidate acceptance. Composing text does not become a filter query until commit. The tree-grid facade validates the authoritative mapping between tree rows and grid coordinates before coordinating visible cell navigation, expansion, single selection, and edit mode.
 
 Tabs and radio groups share the proven cursor plus single-selection algebra while exposing role-specific event vocabularies. Toolbars use the cursor-only linear-action algebra, so invocation never invents selection state.
+
+Disclosure exposes a boolean open algebra. Accordion separately owns a keyed open set plus cursor so single/multiple and collapsible policies remain atomic.
 
 `createTreeGridModelFromRows` accepts rows shaped as `{ id, parentID, cells }` and validates the tree, grid, and row mapping as one construction boundary. The lower-level tree, grid, and model factories remain available when those structures have separate ownership.
 

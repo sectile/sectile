@@ -41,6 +41,18 @@ export {
   type ToolbarOptions,
 } from './toolbar.js';
 export {
+  createAccordion,
+  toAccordionEvent,
+  type AccordionConnection,
+  type AccordionEffect,
+  type AccordionOptions,
+} from './accordion.js';
+export {
+  createDisclosure,
+  type DisclosureConnection,
+  type DisclosureOptions,
+} from './disclosure.js';
+export {
   connectCalendar,
   createCalendar,
   createCalendarController,
