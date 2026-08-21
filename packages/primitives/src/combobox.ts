@@ -1,18 +1,23 @@
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import {
-  acceptComboboxCandidate,
+  applyComboboxEvent as applyInternalComboboxEvent,
   createComboboxState as createInternalComboboxState,
   type ComboboxCommand,
+  type ComboboxEvent,
+  type ComboboxPolicies,
   type ComboboxState,
   type ComboboxUpdate,
 } from './internal/composites/combobox.js';
-import { createTextEditingState } from './internal/editing/text.js';
-
-export type ComboboxEvent = 'accept';
+import {
+  createTextEditingState,
+  normalizeTextEditingState,
+  type TextEditingState,
+} from './internal/editing/text.js';
 
 export interface ComboboxStateInput<ID extends StableID = StableID> {
   readonly inputValue?: string;
+  readonly text?: TextEditingState;
   readonly popupOpen?: boolean;
   readonly current?: ID | null;
   readonly selected?: readonly ID[];
@@ -23,21 +28,36 @@ export function createComboboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ComboboxStateInput<ID> = {},
 ): Result<ComboboxState<ID>> {
-  const inputValue = input.inputValue === undefined ? '' : input.inputValue;
-  if (typeof inputValue !== 'string') {
+  if (input.text !== undefined && input.inputValue !== undefined) {
     return {
       ok: false,
       error: {
         class: 'construction',
-        code: 'invalid-combobox-input-value',
-        message: 'Combobox inputValue must be a string.',
+        code: 'ambiguous-combobox-text',
+        message: 'Combobox state accepts either text or inputValue, not both.',
       },
     };
   }
-  const text = createTextEditingState(inputValue, {
-    anchorCodeUnitOffset: inputValue.length,
-    focusCodeUnitOffset: inputValue.length,
-  });
+  let text: Result<TextEditingState>;
+  if (input.text !== undefined) {
+    text = normalizeTextEditingState(input.text);
+  } else {
+    const inputValue = input.inputValue === undefined ? '' : input.inputValue;
+    if (typeof inputValue !== 'string') {
+      return {
+        ok: false,
+        error: {
+          class: 'construction',
+          code: 'invalid-combobox-input-value',
+          message: 'Combobox inputValue must be a string.',
+        },
+      };
+    }
+    text = createTextEditingState(inputValue, {
+      anchorCodeUnitOffset: inputValue.length,
+      focusCodeUnitOffset: inputValue.length,
+    });
+  }
   if (!text.ok) return text;
   return createInternalComboboxState(domain, text.value, input);
 }
@@ -47,23 +67,15 @@ export function applyComboboxEvent<ID extends StableID>(
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
   event: ComboboxEvent,
+  policies: ComboboxPolicies<ID> = {},
 ): Result<ComboboxUpdate<ID>> {
-  if (event !== 'accept') {
-    return {
-      ok: false,
-      error: {
-        class: 'transition-rejection',
-        code: 'invalid-combobox-event',
-        message: 'Combobox event must be accept.',
-        details: { event },
-      },
-    };
-  }
-  return acceptComboboxCandidate(domain, labels, state);
+  return applyInternalComboboxEvent(domain, labels, state, event, policies);
 }
 
 export type {
   ComboboxCommand,
+  ComboboxEvent,
+  ComboboxPolicies,
   ComboboxState,
   ComboboxUpdate,
 };

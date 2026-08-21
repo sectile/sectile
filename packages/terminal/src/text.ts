@@ -13,7 +13,11 @@ import {
   type TextEvent,
   type TextSelectionInput,
 } from '@sectile/primitives/text';
-import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import {
+  applyControllerEvent,
+  sameControllerState,
+  synchronizeControllerState,
+} from './internal/controller.js';
 
 export type TextInput =
   | {
@@ -133,7 +137,7 @@ class TerminalTextController implements TextController {
         this.#controlled ? previous : proposed,
       ),
       (previous, proposed) => {
-        if (!sameTextState(previous, proposed)) {
+        if (!sameControllerState(previous, proposed)) {
           this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
         }
       },
@@ -156,8 +160,4 @@ function controlledInputError(controlled: boolean): SectileError | null {
 
 function impossibleEffect(command: never): never {
   return command;
-}
-
-function sameTextState(left: TextEditingState, right: TextEditingState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }

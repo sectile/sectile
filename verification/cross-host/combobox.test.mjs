@@ -4,10 +4,31 @@ import { createComboboxController as createDOMComboboxController } from '@sectil
 import { createSequence } from '@sectile/primitives/sequence';
 import { createComboboxController as createTerminalComboboxController } from '@sectile/terminal/combobox';
 
-test('DOM and terminal combobox controllers produce equivalent acceptance traces', () => {
+test('DOM and terminal combobox controllers produce equivalent editing and navigation traces', () => {
   const options = fixture();
   const DOMController = unwrap(createDOMComboboxController(options));
   const terminalController = unwrap(createTerminalComboboxController(options));
+  assert.deepEqual(
+    observe(DOMController.handleTextInput({
+      type: 'beforeinput',
+      inputType: 'insertText',
+      data: 'al',
+      startCodeUnitOffset: 0,
+      endCodeUnitOffset: 0,
+      selection: selection(2),
+    })),
+    observe(terminalController.handleTextInput({
+      type: 'insert',
+      text: 'al',
+      startCodeUnitOffset: 0,
+      endCodeUnitOffset: 0,
+      selection: selection(2),
+    })),
+  );
+  assert.deepEqual(
+    observe(DOMController.handleKeyboardInput({ key: 'ArrowDown' })),
+    observe(terminalController.handleKeyboardInput({ key: 'down' })),
+  );
   assert.deepEqual(
     observe(DOMController.handleKeyboardInput({ key: 'Enter' })),
     observe(terminalController.handleKeyboardInput({ key: 'enter' })),
@@ -15,25 +36,47 @@ test('DOM and terminal combobox controllers produce equivalent acceptance traces
   assert.deepEqual(observeState(DOMController), observeState(terminalController));
 });
 
-test('DOM and terminal combobox controllers remain equivalent across 20,000 accepts', () => {
-  const options = fixture();
-  const DOMController = unwrap(createDOMComboboxController(options));
-  const terminalController = unwrap(createTerminalComboboxController(options));
+test('DOM and terminal combobox controllers remain equivalent across 20,000 operations', () => {
+  const DOMController = unwrap(createDOMComboboxController(fixture()));
+  const terminalController = unwrap(createTerminalComboboxController(fixture()));
   for (let index = 0; index < 10_000; index += 1) {
-    assert.deepEqual(
-      observe(DOMController.handleKeyboardInput({ key: 'Enter' })),
-      observe(terminalController.handleKeyboardInput({ key: 'enter' })),
-    );
+    if (index % 2 === 0) {
+      const text = index % 4 === 0 ? 'al' : 'be';
+      const length = DOMController.getSnapshot().state.text.snapshot.text.length;
+      assert.deepEqual(
+        observe(DOMController.handleTextInput({
+          type: 'beforeinput',
+          inputType: 'insertReplacementText',
+          data: text,
+          startCodeUnitOffset: 0,
+          endCodeUnitOffset: length,
+          selection: selection(text.length),
+        })),
+        observe(terminalController.handleTextInput({
+          type: 'replace',
+          text,
+          startCodeUnitOffset: 0,
+          endCodeUnitOffset: length,
+          selection: selection(text.length),
+        })),
+      );
+    } else {
+      assert.deepEqual(
+        observe(DOMController.handleKeyboardInput({ key: 'ArrowDown' })),
+        observe(terminalController.handleKeyboardInput({ key: 'down' })),
+      );
+    }
   }
 });
 
 function fixture() {
   return {
     domain: unwrap(createSequence(['a', 'b', 'c'])),
-    labels: new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Gamma']]),
-    defaultInputValue: 'be',
-    defaultOpen: true,
-    defaultHighlightedValue: 'b',
+    labels: new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]),
+    policies: {
+      matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),
+      boundary: 'wrap',
+    },
   };
 }
 
@@ -43,7 +86,7 @@ function observe(result) {
     ? {
         ok: true,
         revision: result.snapshot.revision,
-        inputValue: state.text.snapshot.text,
+        inputState: state.text,
         open: state.popupOpen,
         current: state.cursor.current,
         selected: state.selection.selected,
@@ -56,11 +99,15 @@ function observeState(controller) {
   const { revision, state } = controller.getSnapshot();
   return {
     revision,
-    inputValue: state.text.snapshot.text,
+    inputState: state.text,
     open: state.popupOpen,
     current: state.cursor.current,
     selected: state.selection.selected,
   };
+}
+
+function selection(offset) {
+  return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
 }
 
 function unwrap(result) {

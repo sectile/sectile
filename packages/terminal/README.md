@@ -21,4 +21,4 @@ Calendar, slider, and tree-view controllers follow the same ownership contract t
 
 The text controller maps explicit insert, replace, and delete ranges through `@sectile/terminal/text`. Terminal input has no implicit composition phase; a host that supports one must expose it explicitly before the adapter contract expands.
 
-The combobox controller witnesses candidate acceptance only; connecting text input, filtering, and popup navigation to combobox remains separate work.
+The combobox controller reuses terminal text normalization for editable filtering and maps candidate movement to terminal highlight effects. Its controlled input field is the complete `inputState`, not a string fragment.

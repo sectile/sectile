@@ -21,4 +21,4 @@ Calendar, slider, and tree-view controllers follow the same ownership contract t
 
 The text controller maps explicit `beforeinput` ranges and composition phases through `@sectile/dom/text`. It controls or owns the complete editing state so an active IME composition remains atomic.
 
-The combobox controller witnesses candidate acceptance only; connecting text input, filtering, and popup navigation to combobox remains separate work.
+The combobox controller reuses the same DOM text normalization for editable filtering, keeps IME phases explicit, and maps candidate movement to active-descendant effects. Its controlled input field is the complete `inputState`, not a string fragment.

@@ -20,7 +20,7 @@ import {
   applyCalendarEvent,
 } from '../../.verification-dist/internal/composites/calendar.js';
 import {
-  acceptComboboxCandidate,
+  applyComboboxEvent,
   createComboboxState,
 } from '../../.verification-dist/internal/composites/combobox.js';
 import {
@@ -65,7 +65,7 @@ import {
 } from '../../.verification-dist/internal/reference/composites/calendar.js';
 import {
   createReferenceComboboxState,
-  referenceAcceptCombobox,
+  referenceApplyComboboxEvent,
 } from '../../.verification-dist/internal/reference/composites/combobox.js';
 import {
   createReferenceSliderState,
@@ -588,22 +588,41 @@ function verifyCombobox(rng, iteration) {
   const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `o${iteration}-${index}`);
   const domain = unwrap(createSequence(ids));
   const labels = new Map(ids.map((id) => [id, randomText(rng, 6)]));
-  let text = unwrap(createTextEditingState(randomText(rng, 6)));
-  if (rng.bool()) {
-    const offset = text.snapshot.text.length;
-    text = unwrap(startTextComposition(
-      text,
-      offset,
-      offset,
-      '가',
-      { anchorCodeUnitOffset: offset + 1, focusCodeUnitOffset: offset + 1 },
-    ));
-  }
+  const text = unwrap(createTextEditingState(randomText(rng, 3)));
   const input = { popupOpen: true, current: rng.pick([null, ...ids]) };
-  const optimized = unwrap(createComboboxState(domain, text, input));
-  const reference = createReferenceComboboxState(domain, text, input);
-  assert.deepEqual(
-    comboboxResultObservation(acceptComboboxCandidate(domain, labels, optimized)),
-    referenceComboboxResultObservation(referenceAcceptCombobox(domain, labels, reference)),
-  );
+  const policies = {
+    matches: (label, query) => label.includes(query),
+    boundary: rng.bool() ? 'stop' : 'wrap',
+  };
+  let optimized = unwrap(createComboboxState(domain, text, input));
+  let reference = createReferenceComboboxState(domain, text, input);
+  for (let step = 0; step < 10; step += 1) {
+    let event = rng.pick(['next', 'previous', 'close', 'accept']);
+    if (rng.bool()) {
+      const replacement = randomText(rng, 3);
+      event = {
+        type: 'text',
+        event: {
+          type: 'replace',
+          startCodeUnitOffset: 0,
+          endCodeUnitOffset: optimized.text.snapshot.text.length,
+          text: replacement,
+          selection: {
+            anchorCodeUnitOffset: replacement.length,
+            focusCodeUnitOffset: replacement.length,
+          },
+        },
+      };
+    }
+    const left = applyComboboxEvent(domain, labels, optimized, event, policies);
+    const right = referenceApplyComboboxEvent(domain, labels, reference, event, policies);
+    assert.deepEqual(
+      comboboxResultObservation(left),
+      referenceComboboxResultObservation(right),
+    );
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+    }
+  }
 }

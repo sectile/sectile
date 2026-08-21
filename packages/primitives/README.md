@@ -18,6 +18,6 @@ import { applyTextEvent, createTextEditingState } from '@sectile/primitives/text
 
 The root export contains shared types and has no runtime authority. State primitives are pure: adapters create a valid state, apply semantic events, and own the resulting state. Construction returns a typed `Result`; query absence returns `null`; bounded movement reports resource rejection rather than silently choosing a different result.
 
-The text facade owns well-formed UTF-16 replacement, selection, and composition transitions. The combobox facade still covers candidate acceptance only; integrating text input, filtering, and popup navigation into combobox remains separate work.
+The text facade owns well-formed UTF-16 replacement, selection, and composition transitions. The combobox facade combines that state with explicit filtering policy, popup navigation, and composition-safe candidate acceptance. Composing text does not become a filter query until commit.
 
 See the [primitive documentation](../../docs/primitives/README.md).

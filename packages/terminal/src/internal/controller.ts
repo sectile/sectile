@@ -51,3 +51,7 @@ export function synchronizeControllerState<State>(
   }
   return createRevisionSnapshot(state.value, current.revision + 1);
 }
+
+export function sameControllerState<State>(left: State, right: State): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}

@@ -1,54 +1,102 @@
 {
-  "schemaVersion": 1,
-  "fingerprint": "8727d99dd5eb357003f6f1e57c62524c2d3c7719a6e31278c4699a835a662c63",
+  "schemaVersion": 2,
+  "fingerprint": "b51da2844ed265d749ac582596ec0fb69a0bdde42d71fce4213b96822f38f280",
   "files": [
-    {
-      "path": "dist/index.d.ts",
-      "sha256": "bcbd8cf602e9c971699d4c713d8bc950962196fe0d92850a061f792fdd06168e"
-    },
-    {
-      "path": "dist/structures/sequence.d.ts",
-      "sha256": "909ffef9a9a7db4aa9a66ff79612c9467ee3cc85613c51feb7814dda67f00c09"
-    },
-    {
-      "path": "dist/structures/range.d.ts",
-      "sha256": "a87ce374f030bf26b00efe0625e0547714eacd4be6e1f0ecf596335ae5c0c519"
-    },
-    {
-      "path": "dist/structures/grid.d.ts",
-      "sha256": "d3434226cdda459c8fadf5f3d0d04c92d6b9f94a358828da3d56fc59a7ad5186"
-    },
-    {
-      "path": "dist/structures/tree.d.ts",
-      "sha256": "14cde3a229e9257ac2e6d468a089f088e8ab1508f53b7b6d4df81a1acc04a80d"
-    },
-    {
-      "path": "dist/listbox.d.ts",
-      "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
-    },
     {
       "path": "dist/calendar.d.ts",
       "sha256": "f5ed730ad6c2a39de3de1932e70e0be7f8606a28bcbcdeac1121b2289727faa4"
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "8ca3846e8c5c9c38dd79b0403507511672e4ffba8ddf354eb183b9805301c974"
+      "sha256": "97022a1697932370e74ac375f2586e10dcc804e6011f84adfce342c91a95a7f7"
     },
     {
-      "path": "dist/slider.d.ts",
-      "sha256": "316e1fdce15e62079d14dbe144fa25fb759107a1edeaf69e08c115a332f959dd"
+      "path": "dist/index.d.ts",
+      "sha256": "bcbd8cf602e9c971699d4c713d8bc950962196fe0d92850a061f792fdd06168e"
     },
     {
-      "path": "dist/tree-view.d.ts",
-      "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
+      "path": "dist/internal/composites/calendar.d.ts",
+      "sha256": "66332bbe6e6db515b085ee28093568fe315f2c9d9e474f4214aa339d4dcb6084"
+    },
+    {
+      "path": "dist/internal/composites/combobox.d.ts",
+      "sha256": "5981b20f81a581d483c5b1c4b94c7c6126095be27f05ffd05d9b4e0d2c57e43f"
+    },
+    {
+      "path": "dist/internal/composites/listbox.d.ts",
+      "sha256": "af19938c7502081154e31d24b9b1eb683b9ce1402f2e424799515e1800d22d07"
+    },
+    {
+      "path": "dist/internal/composites/slider.d.ts",
+      "sha256": "b775df765f0cec04d9bedb4ed4ba2655d748f264e83193e3f0314319345baf6f"
+    },
+    {
+      "path": "dist/internal/composites/tree-view.d.ts",
+      "sha256": "33d48f5c45f11476e02b184d263977cf71e2a4da502c0c5281c83a4c7751ec9e"
+    },
+    {
+      "path": "dist/internal/editing/text.d.ts",
+      "sha256": "1c976155f2fc8905a2660057bb96eb3df7c70ff1bda9be7e1a0c523ae2e380c7"
+    },
+    {
+      "path": "dist/internal/kernel/machine.d.ts",
+      "sha256": "0f85493845e5da85fb2c0957f15c4de1a269fb57cea9c057c7e49a486b621583"
+    },
+    {
+      "path": "dist/internal/runtime/revision.d.ts",
+      "sha256": "fbf5ddfba14b263ff404d22d7cad187fa2e4156c3c4519819e3b3c9ac4650a9f"
+    },
+    {
+      "path": "dist/internal/state/cursor.d.ts",
+      "sha256": "0aef9b7e72fe2c717d21a37d0eb3a5027d9d6ef57599558749a293fe46da68a0"
+    },
+    {
+      "path": "dist/internal/state/expansion.d.ts",
+      "sha256": "88bef741a782c8a4233f07f5f1717efb5631fa07e2b0a2a7397f735cb307417b"
+    },
+    {
+      "path": "dist/internal/state/selection.d.ts",
+      "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+    },
+    {
+      "path": "dist/listbox.d.ts",
+      "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
     },
     {
       "path": "dist/revision.d.ts",
       "sha256": "605aaf5d999c37b9e2d849576c270c746d14d0b460c642de64e0ab58d4665af1"
     },
     {
+      "path": "dist/shared.d.ts",
+      "sha256": "8063aa9ed5db55353e657a771e57c263adeae5ee55197c88301746785dac291e"
+    },
+    {
+      "path": "dist/slider.d.ts",
+      "sha256": "316e1fdce15e62079d14dbe144fa25fb759107a1edeaf69e08c115a332f959dd"
+    },
+    {
+      "path": "dist/structures/grid.d.ts",
+      "sha256": "d3434226cdda459c8fadf5f3d0d04c92d6b9f94a358828da3d56fc59a7ad5186"
+    },
+    {
+      "path": "dist/structures/range.d.ts",
+      "sha256": "a87ce374f030bf26b00efe0625e0547714eacd4be6e1f0ecf596335ae5c0c519"
+    },
+    {
+      "path": "dist/structures/sequence.d.ts",
+      "sha256": "909ffef9a9a7db4aa9a66ff79612c9467ee3cc85613c51feb7814dda67f00c09"
+    },
+    {
+      "path": "dist/structures/tree.d.ts",
+      "sha256": "14cde3a229e9257ac2e6d468a089f088e8ab1508f53b7b6d4df81a1acc04a80d"
+    },
+    {
       "path": "dist/text.d.ts",
       "sha256": "aff65f99c95f52b7121e1deba149665b7e126690317719fd005c934de878bb93"
+    },
+    {
+      "path": "dist/tree-view.d.ts",
+      "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
     }
   ]
 }

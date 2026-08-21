@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   acceptComboboxCandidate,
+  applyComboboxEvent,
   createComboboxState,
 } from '../../.verification-dist/internal/composites/combobox.js';
 import {
   createReferenceComboboxState,
+  referenceApplyComboboxEvent,
   referenceAcceptCombobox,
 } from '../../.verification-dist/internal/reference/composites/combobox.js';
 import {
@@ -96,6 +98,95 @@ test('combobox rejects missing and malformed labels without partial state', () =
   assert.deepEqual(state.selection.selected, []);
 });
 
+test('combobox text, filtering, popup, navigation, and acceptance match the reference', () => {
+  const domain = unwrap(createSequence(['a', 'b', 'c']));
+  const labels = new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]);
+  const policies = {
+    matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),
+    boundary: 'stop',
+  };
+  let optimized = unwrap(createComboboxState(domain, unwrap(createTextEditingState())));
+  let reference = createReferenceComboboxState(domain, unwrap(createTextEditingState()));
+  const events = [
+    {
+      type: 'text',
+      event: {
+        type: 'replace',
+        startCodeUnitOffset: 0,
+        endCodeUnitOffset: 0,
+        text: 'al',
+        selection: endSelection('al'),
+      },
+    },
+    'next',
+    'next',
+    'previous',
+    'close',
+    {
+      type: 'text',
+      event: {
+        type: 'composition-start',
+        startCodeUnitOffset: 0,
+        endCodeUnitOffset: 2,
+        text: 'be',
+        selection: endSelection('be'),
+      },
+    },
+    {
+      type: 'text',
+      event: {
+        type: 'composition-update',
+        text: 'bet',
+        selection: endSelection('bet'),
+      },
+    },
+    { type: 'text', event: { type: 'composition-commit' } },
+    'accept',
+  ];
+
+  for (const event of events) {
+    const left = applyComboboxEvent(domain, labels, optimized, event, policies);
+    const right = referenceApplyComboboxEvent(domain, labels, reference, event, policies);
+    assert.deepEqual(resultObservation(left), referenceResultObservation(right));
+    optimized = unwrap(left).state;
+    reference = right.value.state;
+  }
+  assert.equal(optimized.text.snapshot.text, 'Beta');
+  assert.equal(optimized.popupOpen, false);
+  assert.equal(optimized.cursor.current, 'b');
+  assert.deepEqual(optimized.selection.selected, ['b']);
+});
+
+test('combobox filtering rejects missing labels and invalid policies atomically', () => {
+  const domain = unwrap(createSequence(['a', 'b']));
+  const state = unwrap(createComboboxState(domain, unwrap(createTextEditingState())));
+  const textEvent = {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 0,
+      endCodeUnitOffset: 0,
+      text: 'a',
+      selection: endSelection('a'),
+    },
+  };
+  const missing = applyComboboxEvent(
+    domain,
+    new Map([['a', 'Alpha']]),
+    state,
+    textEvent,
+    { matches: () => true },
+  );
+  assert.equal(missing.ok, false);
+  assert.equal(missing.error.code, 'missing-candidate-label');
+  assert.equal(state.text.snapshot.text, '');
+
+  const invalid = applyComboboxEvent(domain, new Map(), state, 'next', { boundary: 'loop' });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'invalid-combobox-boundary');
+
+});
+
 function stateObservation(state) {
   return {
     text: state.text.snapshot.text,
@@ -106,6 +197,13 @@ function stateObservation(state) {
     current: state.cursor.current,
     selected: state.selection.selected,
     anchor: state.selection.anchor,
+  };
+}
+
+function endSelection(text) {
+  return {
+    anchorCodeUnitOffset: text.length,
+    focusCodeUnitOffset: text.length,
   };
 }
 

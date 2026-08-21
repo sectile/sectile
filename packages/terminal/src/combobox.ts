@@ -4,6 +4,7 @@ import {
   createComboboxState,
   type ComboboxCommand,
   type ComboboxEvent,
+  type ComboboxPolicies,
   type ComboboxState,
 } from '@sectile/primitives/combobox';
 import {
@@ -13,25 +14,33 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import type { Sequence } from '@sectile/primitives/sequence';
-import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import {
+  createTextEditingState,
+  type TextEditingState,
+} from '@sectile/primitives/text';
+import {
+  applyControllerEvent,
+  sameControllerState,
+  synchronizeControllerState,
+} from './internal/controller.js';
+import { toTextEvent, type TextInput } from './text.js';
 
 export interface KeyboardInput {
   readonly key: string;
 }
 
-export interface ComboboxEffect<ID extends StableID = StableID> {
-  readonly type: 'submit-candidate';
-  readonly id: ID;
-}
+export type ComboboxEffect<ID extends StableID = StableID> =
+  | { readonly type: 'highlight-candidate'; readonly id: ID }
+  | { readonly type: 'submit-candidate'; readonly id: ID };
 
 export interface ComboboxValueChangeDetails<ID extends StableID = StableID> {
   readonly value: ID | null;
   readonly previousValue: ID | null;
 }
 
-export interface ComboboxInputValueChangeDetails {
-  readonly value: string;
-  readonly previousValue: string;
+export interface ComboboxInputStateChangeDetails {
+  readonly value: TextEditingState;
+  readonly previousValue: TextEditingState;
 }
 
 export interface ComboboxOpenChangeDetails {
@@ -47,23 +56,24 @@ export interface ComboboxHighlightChangeDetails<ID extends StableID = StableID> 
 export interface ComboboxControllerOptions<ID extends StableID = StableID> {
   readonly domain: Sequence<ID>;
   readonly labels: ReadonlyMap<ID, string>;
+  readonly policies?: ComboboxPolicies<ID>;
   readonly value?: ID | null;
   readonly defaultValue?: ID | null;
-  readonly inputValue?: string;
-  readonly defaultInputValue?: string;
+  readonly inputState?: TextEditingState;
+  readonly defaultInputState?: TextEditingState;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly onValueChange?: (change: ComboboxValueChangeDetails<ID>) => void;
-  readonly onInputValueChange?: (change: ComboboxInputValueChangeDetails) => void;
+  readonly onInputStateChange?: (change: ComboboxInputStateChangeDetails) => void;
   readonly onOpenChange?: (change: ComboboxOpenChangeDetails) => void;
   readonly onHighlightedValueChange?: (change: ComboboxHighlightChangeDetails<ID>) => void;
 }
 
 export interface ComboboxControlledValues<ID extends StableID = StableID> {
   readonly value?: ID | null;
-  readonly inputValue?: string;
+  readonly inputState?: TextEditingState;
   readonly open?: boolean;
   readonly highlightedValue?: ID | null;
 }
@@ -77,18 +87,25 @@ export interface ComboboxController<ID extends StableID = StableID> {
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
+  handleTextInput(
+    input: TextInput,
+    expectedRevision?: number,
+  ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
 export function createComboboxController<ID extends StableID>(
   options: ComboboxControllerOptions<ID>,
 ): Result<ComboboxController<ID>> {
   const value = options.value !== undefined ? options.value : options.defaultValue ?? null;
+  const requestedInput = options.inputState !== undefined
+    ? options.inputState
+    : options.defaultInputState;
+  const inputState = requestedInput === undefined
+    ? createTextEditingState()
+    : { ok: true as const, value: requestedInput };
+  if (!inputState.ok) return inputState;
   const initial = createComboboxState(options.domain, {
-    inputValue: options.inputValue !== undefined
-      ? options.inputValue
-      : options.defaultInputValue !== undefined
-        ? options.defaultInputValue
-        : '',
+    text: inputState.value,
     popupOpen: options.open !== undefined ? options.open : options.defaultOpen ?? false,
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
@@ -103,24 +120,38 @@ export function createComboboxController<ID extends StableID>(
 }
 
 export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
-  return input.key === 'enter' ? 'accept' : null;
+  if (input.key === 'down') return 'next';
+  if (input.key === 'up') return 'previous';
+  if (input.key === 'escape') return 'close';
+  if (input.key === 'enter') return 'accept';
+  return null;
+}
+
+export function toComboboxTextEvent(input: TextInput): ComboboxEvent | null {
+  const event = toTextEvent(input);
+  return event === null ? null : Object.freeze({ type: 'text', event });
 }
 
 export function toComboboxEffect<ID extends StableID>(
   command: ComboboxCommand<ID>,
 ): ComboboxEffect<ID> {
-  return Object.freeze({ type: 'submit-candidate', id: command.id });
+  return Object.freeze(command.type === 'focus'
+    ? { type: 'highlight-candidate', id: command.id }
+    : { type: 'submit-candidate', id: command.id });
 }
 
 class TerminalComboboxController<ID extends StableID> implements ComboboxController<ID> {
   readonly #domain: Sequence<ID>;
   readonly #labels: ReadonlyMap<ID, string>;
+  readonly #policies: ComboboxPolicies<ID>;
   readonly #valueControlled: boolean;
-  readonly #inputValueControlled: boolean;
+  readonly #inputStateControlled: boolean;
   readonly #openControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #onValueChange: ((change: ComboboxValueChangeDetails<ID>) => void) | undefined;
-  readonly #onInputValueChange: ((change: ComboboxInputValueChangeDetails) => void) | undefined;
+  readonly #onInputStateChange:
+    | ((change: ComboboxInputStateChangeDetails) => void)
+    | undefined;
   readonly #onOpenChange: ((change: ComboboxOpenChangeDetails) => void) | undefined;
   readonly #onHighlightedValueChange:
     | ((change: ComboboxHighlightChangeDetails<ID>) => void)
@@ -133,12 +164,13 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   ) {
     this.#domain = options.domain;
     this.#labels = options.labels;
+    this.#policies = options.policies ?? {};
     this.#valueControlled = options.value !== undefined;
-    this.#inputValueControlled = options.inputValue !== undefined;
+    this.#inputStateControlled = options.inputState !== undefined;
     this.#openControlled = options.open !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
-    this.#onInputValueChange = options.onInputValueChange;
+    this.#onInputStateChange = options.onInputStateChange;
     this.#onOpenChange = options.onOpenChange;
     this.#onHighlightedValueChange = options.onHighlightedValueChange;
     this.#snapshot = snapshot;
@@ -153,7 +185,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   ): Result<RevisionSnapshot<ComboboxState<ID>>> {
     const error = controlledInputError(
       this.#valueControlled,
-      this.#inputValueControlled,
+      this.#inputStateControlled,
       this.#openControlled,
       this.#highlightControlled,
       values,
@@ -163,9 +195,9 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
       ? (values.value as ID | null)
       : selectedValue(this.#snapshot.state);
     const state = createComboboxState(this.#domain, {
-      inputValue: this.#inputValueControlled
-        ? values.inputValue as string
-        : inputValue(this.#snapshot.state),
+      text: this.#inputStateControlled
+        ? values.inputState as TextEditingState
+        : this.#snapshot.state.text,
       popupOpen: this.#openControlled
         ? values.open as boolean
         : this.#snapshot.state.popupOpen,
@@ -186,14 +218,34 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const event = toComboboxEvent(input);
-    if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-terminal-key',
-        message: 'Terminal keyboard input does not map to a combobox acceptance event.',
-        details: { key: input.key },
-      });
-    }
+    return event === null
+      ? rejectRevisionInput(this.#snapshot, {
+          class: 'transition-rejection',
+          code: 'unsupported-terminal-key',
+          message: 'Terminal keyboard input does not map to a combobox semantic event.',
+          details: { key: input.key },
+        })
+      : this.#applyEvent(event, expectedRevision);
+  }
+
+  public handleTextInput(
+    input: TextInput,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
+    const event = toComboboxTextEvent(input);
+    return event === null
+      ? rejectRevisionInput(this.#snapshot, {
+          class: 'transition-rejection',
+          code: 'unsupported-terminal-text-input',
+          message: 'Terminal text input does not map to a combobox semantic event.',
+        })
+      : this.#applyEvent(event, expectedRevision);
+  }
+
+  #applyEvent(
+    event: ComboboxEvent,
+    expectedRevision: number,
+  ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -203,13 +255,14 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
         this.#labels,
         state,
         semanticEvent,
+        this.#policies,
       ),
       (previous, proposed) => controlledState(
         this.#domain,
         previous,
         proposed,
         this.#valueControlled,
-        this.#inputValueControlled,
+        this.#inputStateControlled,
         this.#openControlled,
         this.#highlightControlled,
       ),
@@ -224,12 +277,10 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     const previousValue = selectedValue(previous);
     const value = selectedValue(proposed);
     if (previousValue !== value) this.#onValueChange?.(Object.freeze({ value, previousValue }));
-    const previousInputValue = inputValue(previous);
-    const nextInputValue = inputValue(proposed);
-    if (previousInputValue !== nextInputValue) {
-      this.#onInputValueChange?.(Object.freeze({
-        value: nextInputValue,
-        previousValue: previousInputValue,
+    if (!sameControllerState(previous.text, proposed.text)) {
+      this.#onInputStateChange?.(Object.freeze({
+        value: proposed.text,
+        previousValue: previous.text,
       }));
     }
     if (previous.popupOpen !== proposed.popupOpen) {
@@ -252,12 +303,12 @@ function controlledState<ID extends StableID>(
   previous: ComboboxState<ID>,
   proposed: ComboboxState<ID>,
   valueControlled: boolean,
-  inputValueControlled: boolean,
+  inputStateControlled: boolean,
   openControlled: boolean,
   highlightControlled: boolean,
 ): Result<ComboboxState<ID>> {
   return createComboboxState(domain, {
-    inputValue: inputValueControlled ? inputValue(previous) : inputValue(proposed),
+    text: inputStateControlled ? previous.text : proposed.text,
     popupOpen: openControlled ? previous.popupOpen : proposed.popupOpen,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
@@ -269,23 +320,19 @@ function selectedValue<ID extends StableID>(state: ComboboxState<ID>): ID | null
   return state.selection.selected[0] ?? null;
 }
 
-function inputValue<ID extends StableID>(state: ComboboxState<ID>): string {
-  return state.text.snapshot.text;
-}
-
 function controlledInputError<ID extends StableID>(
   valueControlled: boolean,
-  inputValueControlled: boolean,
+  inputStateControlled: boolean,
   openControlled: boolean,
   highlightControlled: boolean,
   values: ComboboxControlledValues<ID>,
 ): SectileError | null {
   return fieldError(valueControlled, values.value !== undefined, 'value', 'combobox value')
     ?? fieldError(
-      inputValueControlled,
-      values.inputValue !== undefined,
-      'input-value',
-      'combobox input value',
+      inputStateControlled,
+      values.inputState !== undefined,
+      'input-state',
+      'combobox input state',
     )
     ?? fieldError(openControlled, values.open !== undefined, 'open', 'combobox open state')
     ?? fieldError(
