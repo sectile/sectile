@@ -4,7 +4,7 @@ The pnpm workspace contains `@sectile/primitives`, `@sectile/dom`, and `@sectile
 
 Workspace packages may depend on another package only through a declared `workspace:*` dependency and an exported package-name subpath. Relative imports that escape a package, direct imports from another package's `src`, `dist`, or `.verification-dist`, and package scripts that reach into another package are rejected by the workspace boundary gate.
 
-For `@sectile/primitives`, production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public structures live under `src/structures`; promoted composites and revision use public facade files under `src`; state, editing, reference models, and kernel mechanisms remain non-exported. Verification build input includes mirrored reference models and emits to `.verification-dist`, which is never packaged.
+For `@sectile/primitives`, production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public structures live under `src/structures`; promoted composites, text, and revision use public facade files under `src`; state utilities, the editing implementation behind the text facade, reference models, and kernel mechanisms remain non-exported. Verification build input includes mirrored reference models and emits to `.verification-dist`, which is never packaged.
 
 Recurring verification requires these canonical exports:
 
@@ -20,6 +20,7 @@ Recurring verification requires these canonical exports:
 ./slider
 ./tree-view
 ./revision
+./text
 ./package.json
 ```
 

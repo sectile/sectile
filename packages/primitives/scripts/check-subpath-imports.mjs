@@ -21,8 +21,9 @@ try {
     import { createSliderState } from '@sectile/primitives/slider';
     import { createTreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
+    import { createTextEditingState } from '@sectile/primitives/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createRevisionSnapshot]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -40,6 +41,7 @@ try {
     import { createSliderState, type SliderState } from '@sectile/primitives/slider';
     import { createTreeViewState, type TreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
+    import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
     const a: Result<Sequence<string>> = createSequence(['a']);
     const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
     const c: Result<Grid<string>> = createGrid([['a']]);
@@ -54,7 +56,8 @@ try {
     if (!d.ok) throw new Error(d.error.message);
     const i: Result<TreeViewState<string>> = createTreeViewState(d.value);
     const j: Result<ComboboxState<string>> = createComboboxState(a.value);
-    void [a, b, c, d, e, f, g, h, i, j];
+    const k: Result<TextEditingState> = createTextEditingState();
+    void [a, b, c, d, e, f, g, h, i, j, k];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -68,7 +71,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 11, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 12, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

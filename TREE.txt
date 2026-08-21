@@ -49,12 +49,14 @@ sectile/
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── slider.ts
+│   │   │   ├── text.ts
 │   │   │   └── tree-view.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── slider.test.mjs
+│   │   │   ├── text.test.mjs
 │   │   │   └── tree-view.test.mjs
 │   │   ├── package.json
 │   │   ├── README.md
@@ -134,6 +136,7 @@ sectile/
 │   │   │   ├── revision.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
+│   │   │   ├── text.ts
 │   │   │   └── tree-view.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
@@ -186,12 +189,14 @@ sectile/
 │       │   ├── index.ts
 │       │   ├── listbox.ts
 │       │   ├── slider.ts
+│       │   ├── text.ts
 │       │   └── tree-view.ts
 │       ├── tests/
 │       │   ├── calendar.test.mjs
 │       │   ├── combobox.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   ├── slider.test.mjs
+│       │   ├── text.test.mjs
 │       │   └── tree-view.test.mjs
 │       ├── package.json
 │       ├── README.md
@@ -210,6 +215,7 @@ sectile/
 │       ├── combobox.test.mjs
 │       ├── listbox.test.mjs
 │       ├── slider.test.mjs
+│       ├── text.test.mjs
 │       └── tree-view.test.mjs
 ├── .gitignore
 ├── .node-version

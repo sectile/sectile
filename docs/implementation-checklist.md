@@ -23,5 +23,5 @@
 - [x] Verify listbox, slider, calendar, tree-view, and combobox acceptance through independent DOM and terminal controllers.
 - [x] Promote each composite facade only in the same transaction as its two host witnesses.
 - [x] Support controlled and uncontrolled state ownership in every host controller.
-- [ ] Add independent DOM and terminal text-input witnesses before promoting the text facade.
+- [x] Promote the text facade with independent DOM and terminal text-input witnesses.
 - [ ] Keep cursor, selection, and expansion internal until direct usage evidence justifies separate public subpaths.

@@ -60,3 +60,12 @@ export {
   type TreeViewHighlightChangeDetails,
   type TreeViewValueChangeDetails,
 } from './tree-view.js';
+export {
+  createTextController,
+  toTextEvent,
+  type TextControlledValues,
+  type TextController,
+  type TextControllerOptions,
+  type TextInput as DOMTextInput,
+  type TextValueChangeDetails,
+} from './text.js';

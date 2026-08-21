@@ -8,3 +8,5 @@ The public canonical structures are:
 - [Tree](tree.md): ordered rooted forest with expansion as separate state.
 
 They are canonical public vocabulary, not a claim of a unique mathematical minimum.
+
+The public [text theory](../references/sectile-theory.md#13-text) separately owns well-formed UTF-16 editing, selection, and composition transitions. It is not a character-sequence alias.

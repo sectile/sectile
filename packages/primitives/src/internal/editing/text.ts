@@ -1,5 +1,6 @@
 import type { ErrorClass, Result } from '../../shared.js';
 import { fail, isWellFormedUTF16, ok } from '../kernel/foundation.js';
+import { createMachineUpdate } from '../kernel/machine.js';
 
 export type TextSelectionDirection = 'none' | 'forward' | 'backward';
 
@@ -31,6 +32,34 @@ export interface TextEditingState {
   readonly composition: TextComposition | null;
 }
 
+export type TextEvent =
+  | {
+      readonly type: 'replace';
+      readonly startCodeUnitOffset: number;
+      readonly endCodeUnitOffset: number;
+      readonly text: string;
+      readonly selection: TextSelectionInput;
+    }
+  | {
+      readonly type: 'composition-start';
+      readonly startCodeUnitOffset: number;
+      readonly endCodeUnitOffset: number;
+      readonly text: string;
+      readonly selection: TextSelectionInput;
+    }
+  | {
+      readonly type: 'composition-update';
+      readonly text: string;
+      readonly selection: TextSelectionInput;
+    }
+  | { readonly type: 'composition-commit' }
+  | { readonly type: 'composition-cancel' };
+
+export interface TextUpdate {
+  readonly state: TextEditingState;
+  readonly commands: readonly never[];
+}
+
 type TextErrorClass = Extract<ErrorClass, 'construction' | 'transition-rejection'>;
 
 export function isWellFormedPlainText(text: string): boolean {
@@ -60,6 +89,71 @@ export function createTextEditingState(
 ): Result<TextEditingState> {
   const snapshot = createSnapshot(text, selection, 'construction');
   return snapshot.ok ? ok(stateFromSnapshot(snapshot.value)) : snapshot;
+}
+
+export function normalizeTextEditingState(
+  state: TextEditingState,
+): Result<TextEditingState> {
+  return normalizeEditingState(state, 'construction');
+}
+
+export function applyTextEvent(
+  state: TextEditingState,
+  event: TextEvent,
+): Result<TextUpdate> {
+  const normalized = normalizeEditingState(state, 'transition-rejection');
+  if (!normalized.ok) return normalized;
+  if (!isObject(event) || typeof event.type !== 'string') {
+    return fail(
+      'transition-rejection',
+      'invalid-text-event',
+      'Text event must be a supported discriminated event object.',
+    );
+  }
+
+  let next: Result<TextEditingState>;
+  switch (event.type) {
+    case 'replace':
+      next = replaceTextState(
+        normalized.value,
+        event.startCodeUnitOffset,
+        event.endCodeUnitOffset,
+        event.text,
+        event.selection,
+      );
+      break;
+    case 'composition-start':
+      next = startTextComposition(
+        normalized.value,
+        event.startCodeUnitOffset,
+        event.endCodeUnitOffset,
+        event.text,
+        event.selection,
+      );
+      break;
+    case 'composition-update':
+      next = updateTextComposition(
+        normalized.value,
+        event.text,
+        event.selection,
+      );
+      break;
+    case 'composition-commit':
+      next = commitTextComposition(normalized.value);
+      break;
+    case 'composition-cancel':
+      next = cancelTextComposition(normalized.value);
+      break;
+    default:
+      return fail(
+        'transition-rejection',
+        'invalid-text-event',
+        'Text event type is not supported.',
+      );
+  }
+  return next.ok
+    ? createMachineUpdate<TextEditingState, never>(next.value)
+    : next;
 }
 
 export function slicePlainText(
@@ -205,6 +299,13 @@ function createSnapshot(
   if (!isWellFormedPlainText(text)) {
     return fail(errorClass, 'ill-formed-text', 'Plain text must be a well-formed UTF-16 string.');
   }
+  if (!isObject(selection)) {
+    return fail(
+      errorClass,
+      'invalid-text-selection',
+      'Text selection must provide anchor and focus code-unit offsets.',
+    );
+  }
   const anchorError = validateOffset(
     text,
     selection.anchorCodeUnitOffset,
@@ -229,6 +330,61 @@ function createSnapshot(
     direction: anchor === focus ? 'none' : anchor < focus ? 'forward' : 'backward',
   });
   return ok(Object.freeze({ text, selection: textSelection }));
+}
+
+function normalizeEditingState(
+  state: TextEditingState,
+  errorClass: TextErrorClass,
+): Result<TextEditingState> {
+  if (!isObject(state)) {
+    return fail(errorClass, 'invalid-text-state', 'Text editing state must be an object.');
+  }
+  const snapshot = normalizeSnapshot(state.snapshot, errorClass);
+  if (!snapshot.ok) return snapshot;
+  if (state.composition === null) return ok(stateFromSnapshot(snapshot.value));
+  if (!isObject(state.composition)) {
+    return fail(
+      errorClass,
+      'invalid-text-composition',
+      'Text composition must be null or a composition snapshot.',
+    );
+  }
+  const baseline = normalizeSnapshot(state.composition.baseline, errorClass);
+  if (!baseline.ok) return baseline;
+  const projected = replaceChecked(
+    baseline.value.text,
+    state.composition.startCodeUnitOffset,
+    state.composition.endCodeUnitOffset,
+    state.composition.composingText,
+    errorClass,
+  );
+  if (!projected.ok) return projected;
+  if (projected.value !== snapshot.value.text) {
+    return fail(
+      errorClass,
+      'inconsistent-composition-snapshot',
+      'Text composition snapshot must equal its baseline replacement.',
+    );
+  }
+  return ok(Object.freeze({
+    snapshot: snapshot.value,
+    composition: freezeComposition({
+      baseline: baseline.value,
+      startCodeUnitOffset: state.composition.startCodeUnitOffset,
+      endCodeUnitOffset: state.composition.endCodeUnitOffset,
+      composingText: state.composition.composingText,
+    }),
+  }));
+}
+
+function normalizeSnapshot(
+  snapshot: TextSnapshot,
+  errorClass: TextErrorClass,
+): Result<TextSnapshot> {
+  if (!isObject(snapshot)) {
+    return fail(errorClass, 'invalid-text-snapshot', 'Text snapshot must be an object.');
+  }
+  return createSnapshot(snapshot.text, snapshot.selection, errorClass);
 }
 
 function replaceChecked(
@@ -323,4 +479,8 @@ function isHighSurrogate(code: number): boolean {
 
 function isLowSurrogate(code: number): boolean {
   return code >= 0xdc00 && code <= 0xdfff;
+}
+
+function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
 }

@@ -2,12 +2,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  applyTextEvent,
   cancelTextComposition,
   commitTextComposition,
   createTextEditingState,
   createTextSnapshot,
   isTextCodeUnitBoundary,
   isWellFormedPlainText,
+  normalizeTextEditingState,
   replacePlainText,
   replaceTextState,
   slicePlainText,
@@ -235,6 +237,57 @@ test('TXT-12: malformed snapshots, surrogate splits, and invalid composition pha
 
   const unchanged = unwrap(replaceTextState(baseline, 1, 3, '😀', baseline.snapshot.selection));
   assert.equal(unchanged, baseline);
+});
+
+test('public text events reduce replacement and composition as one atomic state transition', () => {
+  const baseline = unwrap(createTextEditingState('ab', endSelection('ab')));
+  const replaced = unwrap(applyTextEvent(baseline, {
+    type: 'replace',
+    startCodeUnitOffset: 1,
+    endCodeUnitOffset: 2,
+    text: '😀',
+    selection: endSelection('a😀'),
+  }));
+  assert.equal(replaced.state.snapshot.text, 'a😀');
+  assert.deepEqual(replaced.commands, []);
+
+  const started = unwrap(applyTextEvent(replaced.state, {
+    type: 'composition-start',
+    startCodeUnitOffset: 1,
+    endCodeUnitOffset: 3,
+    text: 'ㅎ',
+    selection: endSelection('aㅎ'),
+  }));
+  const updated = unwrap(applyTextEvent(started.state, {
+    type: 'composition-update',
+    text: '한',
+    selection: endSelection('a한'),
+  }));
+  const committed = unwrap(applyTextEvent(updated.state, { type: 'composition-commit' }));
+  assert.equal(committed.state.snapshot.text, 'a한');
+  assert.equal(committed.state.composition, null);
+
+  const cancelled = unwrap(applyTextEvent(started.state, { type: 'composition-cancel' }));
+  assert.deepEqual(cancelled.state, replaced.state);
+});
+
+test('public text normalization rejects malformed external state without throwing', () => {
+  for (const invalid of [
+    normalizeTextEditingState({ snapshot: null, composition: null }),
+    normalizeTextEditingState({
+      snapshot: { text: 'projected', selection: endSelection('projected') },
+      composition: {
+        baseline: { text: 'base', selection: endSelection('base') },
+        startCodeUnitOffset: 0,
+        endCodeUnitOffset: 4,
+        composingText: 'different',
+      },
+    }),
+    applyTextEvent(null, { type: 'composition-commit' }),
+    applyTextEvent(unwrap(createTextEditingState()), { type: 'unknown' }),
+  ]) {
+    assert.equal(invalid.ok, false);
+  }
 });
 
 function representativeStrings() {

@@ -19,4 +19,6 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 Calendar, slider, and tree-view controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects.
 
-The combobox controller witnesses candidate acceptance only; it does not claim text-input, composition, filtering, or popup-navigation behavior.
+The text controller maps explicit insert, replace, and delete ranges through `@sectile/terminal/text`. Terminal input has no implicit composition phase; a host that supports one must expose it explicitly before the adapter contract expands.
+
+The combobox controller witnesses candidate acceptance only; connecting text input, filtering, and popup navigation to combobox remains separate work.

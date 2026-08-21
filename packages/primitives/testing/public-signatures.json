@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fingerprint": "2b7c69ec829ba1086ed60c8eb9a36bd5642fdcf90c76a2420f6a42789550993f",
+  "fingerprint": "8727d99dd5eb357003f6f1e57c62524c2d3c7719a6e31278c4699a835a662c63",
   "files": [
     {
       "path": "dist/index.d.ts",
@@ -45,6 +45,10 @@
     {
       "path": "dist/revision.d.ts",
       "sha256": "605aaf5d999c37b9e2d849576c270c746d14d0b460c642de64e0ab58d4665af1"
+    },
+    {
+      "path": "dist/text.d.ts",
+      "sha256": "aff65f99c95f52b7121e1deba149665b7e126690317719fd005c934de878bb93"
     }
   ]
 }

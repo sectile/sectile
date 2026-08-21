@@ -13,10 +13,11 @@ import { applyComboboxEvent, createComboboxState } from '@sectile/primitives/com
 import { applySliderEvent, createSliderState } from '@sectile/primitives/slider';
 import { applyTreeViewEvent, createTreeViewState } from '@sectile/primitives/tree-view';
 import { createRevisionSnapshot } from '@sectile/primitives/revision';
+import { applyTextEvent, createTextEditingState } from '@sectile/primitives/text';
 ```
 
 The root export contains shared types and has no runtime authority. State primitives are pure: adapters create a valid state, apply semantic events, and own the resulting state. Construction returns a typed `Result`; query absence returns `null`; bounded movement reports resource rejection rather than silently choosing a different result.
 
-The combobox facade currently covers candidate acceptance only. Text input, composition, popup navigation, and filtering remain separate authorities.
+The text facade owns well-formed UTF-16 replacement, selection, and composition transitions. The combobox facade still covers candidate acceptance only; integrating text input, filtering, and popup navigation into combobox remains separate work.
 
 See the [primitive documentation](../../docs/primitives/README.md).

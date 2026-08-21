@@ -41,6 +41,11 @@
       "import": "./dist/tree-view.js",
       "default": "./dist/tree-view.js"
     },
+    "./text": {
+      "types": "./dist/text.d.ts",
+      "import": "./dist/text.js",
+      "default": "./dist/text.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

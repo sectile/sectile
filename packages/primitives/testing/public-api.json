@@ -14,6 +14,7 @@
     "./slider",
     "./tree-view",
     "./revision",
+    "./text",
     "./package.json"
   ],
   "requiredRuntimeSubpaths": [
@@ -26,7 +27,8 @@
     "./combobox",
     "./slider",
     "./tree-view",
-    "./revision"
+    "./revision",
+    "./text"
   ],
   "runtimeTargets": {
     "./sequence": "structures/sequence",
@@ -38,6 +40,7 @@
     "./combobox": "combobox",
     "./slider": "slider",
     "./tree-view": "tree-view",
-    "./revision": "revision"
+    "./revision": "revision",
+    "./text": "text"
   }
 }
