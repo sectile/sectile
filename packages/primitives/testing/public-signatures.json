@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "2cdf3df176625ba2a10b77844e763ebb12d1f08db63268b57dbfad6b21117d02",
+  "fingerprint": "f8d8b26b3ab4c673333e0fd4bdd7257da40f324f9714baed73eee0a816bbf1ef",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -113,6 +113,10 @@
     {
       "path": "dist/slider.d.ts",
       "sha256": "316e1fdce15e62079d14dbe144fa25fb759107a1edeaf69e08c115a332f959dd"
+    },
+    {
+      "path": "dist/spinbutton.d.ts",
+      "sha256": "6258761417c6e45a0a519a9d06f52cd410919f0e5c4c61b56df47698a6604691"
     },
     {
       "path": "dist/structures/grid.d.ts",

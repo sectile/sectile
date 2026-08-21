@@ -113,3 +113,11 @@ Window splitter and slider are observationally equivalent over every range state
 event; the only additional obligation is the DOM `separator` projection. Sectile therefore
 reuses the bounded slider algebra and exposes a role-specific host facade instead of
 inventing a second primitive machine.
+
+## Verified composite: spinbutton
+
+Spinbutton is not a slider projection because the same committed tick may coexist with
+different valid or invalid text drafts. Its state is `tick × optional draft`; range events
+clear a draft, commit parses onto the exact range lattice, and invalid commits reject
+without losing the draft. Independent reference enumeration and both host witnesses cover
+valid commit, invalid draft preservation, cancellation, and range movement.

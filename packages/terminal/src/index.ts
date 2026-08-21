@@ -56,6 +56,7 @@ export {
 export { createSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
 export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
 export { createWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
+export { createSpinbutton, toSpinbuttonEvent, type SpinbuttonConnection, type SpinbuttonOptions } from './spinbutton.js';
 export {
   connectCalendar,
   createCalendar,
