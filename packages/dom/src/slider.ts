@@ -72,6 +72,7 @@ export interface SliderConnectionOptions {
   readonly root: HTMLElement;
   readonly track?: HTMLElement;
   readonly label?: string;
+  readonly role?: 'slider' | 'separator';
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
@@ -134,6 +135,7 @@ class DOMSliderConnection implements SliderConnection {
   readonly #root: HTMLElement;
   readonly #track: HTMLElement;
   readonly #label: string | undefined;
+  readonly #role: 'slider' | 'separator';
   readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
@@ -147,6 +149,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#root = options.root;
     this.#track = options.track ?? options.root;
     this.#label = options.label;
+    this.#role = options.role ?? 'slider';
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#handleKeydown = (event): void => {
@@ -200,7 +203,7 @@ class DOMSliderConnection implements SliderConnection {
 
   public refreshAttributes(): void {
     const tick = this.#controller.getSnapshot().state.tick;
-    this.#root.setAttribute('role', 'slider');
+    this.#root.setAttribute('role', this.#role);
     this.#root.setAttribute('aria-valuemin', '0');
     this.#root.setAttribute('aria-valuemax', String(this.range.count));
     this.#root.setAttribute('aria-valuenow', String(tick));

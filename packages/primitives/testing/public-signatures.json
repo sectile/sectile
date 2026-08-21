@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "b89de0c3bf3505dcd1475659b846fbbaedd2aaf0c2003d748ff6f9f30ed641c0",
+  "fingerprint": "2cdf3df176625ba2a10b77844e763ebb12d1f08db63268b57dbfad6b21117d02",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -157,6 +157,10 @@
     {
       "path": "dist/tree-view.d.ts",
       "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
+    },
+    {
+      "path": "dist/window-splitter.d.ts",
+      "sha256": "413329d45e748c4eea9f947249f3d3cd7518fc7097e93fe91b30effdffbb9e29"
     }
   ]
 }

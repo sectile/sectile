@@ -106,3 +106,10 @@ binary projections, and toggle button renames checked authority to pressed autho
 Independent reference comparison covers every carrier/event/policy combination. DOM and
 terminal witnesses verify role-specific ARIA or key dispatch without duplicating the state
 machine.
+
+## Verified projection: window splitter
+
+Window splitter and slider are observationally equivalent over every range state and
+event; the only additional obligation is the DOM `separator` projection. Sectile therefore
+reuses the bounded slider algebra and exposes a role-specific host facade instead of
+inventing a second primitive machine.
