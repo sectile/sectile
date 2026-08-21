@@ -38,7 +38,7 @@ export function* permutations(values) {
   yield* visit([], items);
 }
 
-export function canonicalIds(count, prefix = 'i') {
+export function canonicalIDs(count, prefix = 'i') {
   return Array.from({ length: count }, (_, index) => `${prefix}${index}`);
 }
 
@@ -95,10 +95,10 @@ export function enumerateOrderedForests(count) {
         const owner = owners[ownerIndex];
         selected[ownerIndex].forEach((node, index) => rank.set(`${owner}:${node}`, index));
       }
-      const nodes = Array.from({ length: count }, (_, id) => ({ id, parentId: parents[id] }));
+      const nodes = Array.from({ length: count }, (_, id) => ({ id, parentID: parents[id] }));
       nodes.sort((left, right) => {
-        const leftParent = left.parentId;
-        const rightParent = right.parentId;
+        const leftParent = left.parentID;
+        const rightParent = right.parentID;
         if (leftParent === rightParent) {
           return rank.get(`${leftParent}:${left.id}`) - rank.get(`${rightParent}:${right.id}`);
         }
@@ -111,7 +111,7 @@ export function enumerateOrderedForests(count) {
       const children = new Map(owners.map((owner, index) => [owner, selected[index]]));
       const ordered = [];
       const visit = (id) => {
-        ordered.push({ id, parentId: parents[id] });
+        ordered.push({ id, parentID: parents[id] });
         for (const child of children.get(id)) visit(child);
       };
       for (const root of children.get(null)) visit(root);

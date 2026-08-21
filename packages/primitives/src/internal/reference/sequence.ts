@@ -3,16 +3,16 @@ import {
   type Direction,
   type MoveResult,
   type ScanOptions,
-  type StableId,
+  type StableID,
 } from '../../shared.js';
 import type { Sequence } from '../../sequence.js';
 import { freezeArray, normalizeMaxScan, resourceError } from '../foundation.js';
 
 /** Deliberately linear executable specification for differential verification. */
-export class ReferenceSequence<Id extends StableId> implements Sequence<Id> {
-  public readonly ids: readonly Id[];
+export class ReferenceSequence<ID extends StableID> implements Sequence<ID> {
+  public readonly ids: readonly ID[];
 
-  public constructor(ids: readonly Id[]) {
+  public constructor(ids: readonly ID[]) {
     this.ids = freezeArray(ids);
     Object.freeze(this);
   }
@@ -21,30 +21,30 @@ export class ReferenceSequence<Id extends StableId> implements Sequence<Id> {
     return this.ids.length;
   }
 
-  public at(index: number): Id | null {
+  public at(index: number): ID | null {
     return Number.isSafeInteger(index) && index >= 0 && index < this.ids.length
       ? (this.ids[index] ?? null)
       : null;
   }
 
-  public indexOf(id: Id): number | null {
+  public indexOf(id: ID): number | null {
     const index = this.ids.indexOf(id);
     return index < 0 ? null : index;
   }
 
-  public contains(id: Id): boolean {
+  public contains(id: ID): boolean {
     return this.ids.includes(id);
   }
 
-  public compare(left: Id, right: Id): -1 | 0 | 1 | null {
+  public compare(left: ID, right: ID): -1 | 0 | 1 | null {
     const leftIndex = this.ids.indexOf(left);
     const rightIndex = this.ids.indexOf(right);
     if (leftIndex < 0 || rightIndex < 0) return null;
     return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
   }
 
-  public project(predicate: (id: Id, index: number) => boolean): ReferenceSequence<Id> {
-    const result: Id[] = [];
+  public project(predicate: (id: ID, index: number) => boolean): ReferenceSequence<ID> {
+    const result: ID[] = [];
     for (let index = 0; index < this.ids.length; index += 1) {
       const id = this.ids[index];
       if (id !== undefined && predicate(id, index)) result.push(id);
@@ -53,11 +53,11 @@ export class ReferenceSequence<Id extends StableId> implements Sequence<Id> {
   }
 
   public move(
-    current: Id,
+    current: ID,
     direction: Direction,
     boundary: BoundaryPolicy = 'stop',
-    options: ScanOptions<Id> = {},
-  ): MoveResult<Id> {
+    options: ScanOptions<ID> = {},
+  ): MoveResult<ID> {
     const currentIndex = this.ids.indexOf(current);
     if (currentIndex < 0) return { kind: 'none', scanned: 0 };
     const maxScan = normalizeMaxScan(options.maxScan);

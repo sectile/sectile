@@ -1,6 +1,6 @@
 /** Shared public contracts for the canonical Sectile structures. */
 
-export type StableId = string;
+export type StableID = string;
 
 export type ErrorClass =
   | 'construction'
@@ -25,13 +25,13 @@ export type Direction = -1 | 1;
 export type GridDirection = 'left' | 'right' | 'up' | 'down';
 export type TiePolicy = 'lower' | 'upper' | 'even-tick';
 
-export interface ScanOptions<Id extends StableId> {
-  readonly eligible?: (id: Id) => boolean;
+export interface ScanOptions<ID extends StableID> {
+  readonly eligible?: (id: ID) => boolean;
   readonly maxScan?: number;
 }
 
-export type MoveResult<Id extends StableId> =
-  | { readonly kind: 'found'; readonly id: Id; readonly scanned: number }
+export type MoveResult<ID extends StableID> =
+  | { readonly kind: 'found'; readonly id: ID; readonly scanned: number }
   | { readonly kind: 'none'; readonly scanned: number }
   | {
       readonly kind: 'resource-rejected';
@@ -40,7 +40,7 @@ export type MoveResult<Id extends StableId> =
     };
 
 export interface ResourceCeilings {
-  readonly maxIdCodeUnits?: number;
+  readonly maxIDCodeUnits?: number;
 }
 
 export const DEFAULT_MAX_ID_CODE_UNITS = 1_024;

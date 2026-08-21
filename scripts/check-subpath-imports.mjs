@@ -31,7 +31,7 @@ try {
     const a: Result<Sequence<string>> = createSequence(['a']);
     const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
     const c: Result<Grid<string>> = createGrid([['a']]);
-    const d: Result<Tree<string>> = createTree([{ id: 'a', parentId: null }]);
+    const d: Result<Tree<string>> = createTree([{ id: 'a', parentID: null }]);
     void [a, b, c, d];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({

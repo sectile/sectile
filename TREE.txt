@@ -13,6 +13,7 @@ sectile/
 │   │   ├── public-migration.md
 │   │   └── README.md
 │   ├── engineering/
+│   │   ├── naming.md
 │   │   ├── package-boundary.md
 │   │   └── README.md
 │   ├── getting-started/
@@ -85,6 +86,7 @@ sectile/
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
 │   ├── build.mjs
+│   ├── check-acronym-casing.mjs
 │   ├── check-api-stability.mjs
 │   ├── check-contracts.mjs
 │   ├── check-dist-platform-boundary.mjs

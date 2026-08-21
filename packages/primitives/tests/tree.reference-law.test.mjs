@@ -6,9 +6,9 @@ import { ReferenceTree } from '../.verification-dist/internal/reference/tree.js'
 import { enumerateOrderedForests, powerset, unwrap } from './support.mjs';
 
 function stringTree(nodes) {
-  return nodes.map(({ id, parentId }) => ({
+  return nodes.map(({ id, parentID }) => ({
     id: `i${id}`,
-    parentId: parentId === null ? null : `i${parentId}`,
+    parentID: parentID === null ? null : `i${parentID}`,
   }));
 }
 
@@ -79,38 +79,38 @@ test('TRE-07..10: normalized expansion produces a unique preorder subsequence wi
 
 test('ordered sibling semantics are not definable from parent relations alone', () => {
   const first = new ReferenceTree([
-    { id: 'a', parentId: null },
-    { id: 'b', parentId: 'a' },
-    { id: 'c', parentId: 'a' },
+    { id: 'a', parentID: null },
+    { id: 'b', parentID: 'a' },
+    { id: 'c', parentID: 'a' },
   ]);
   const second = new ReferenceTree([
-    { id: 'a', parentId: null },
-    { id: 'c', parentId: 'a' },
-    { id: 'b', parentId: 'a' },
+    { id: 'a', parentID: null },
+    { id: 'c', parentID: 'a' },
+    { id: 'b', parentID: 'a' },
   ]);
   for (const id of ['a', 'b', 'c']) assert.equal(first.parentOf(id), second.parentOf(id));
   assert.notDeepEqual(first.preorder().ids, second.preorder().ids);
 });
 
 test('tree construction rejects duplicate, missing, cyclic, self-parent, and depth-invalid models', () => {
-  assert.equal(createTree([{ id: 'a', parentId: null }, { id: 'a', parentId: null }]).error.code, 'duplicate-id');
-  assert.equal(createTree([], { maxIdCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
+  assert.equal(createTree([{ id: 'a', parentID: null }, { id: 'a', parentID: null }]).error.code, 'duplicate-id');
+  assert.equal(createTree([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
   assert.equal(createTree(Array(1)).error.code, 'invalid-node');
-  assert.equal(createTree([{ id: 'a', parentId: 'missing' }]).error.code, 'missing-parent');
-  assert.equal(createTree([{ id: 'a', parentId: 'a' }]).error.code, 'self-parent');
-  assert.equal(createTree([{ id: 'a', parentId: 'b' }, { id: 'b', parentId: 'a' }]).error.code, 'cycle');
+  assert.equal(createTree([{ id: 'a', parentID: 'missing' }]).error.code, 'missing-parent');
+  assert.equal(createTree([{ id: 'a', parentID: 'a' }]).error.code, 'self-parent');
+  assert.equal(createTree([{ id: 'a', parentID: 'b' }, { id: 'b', parentID: 'a' }]).error.code, 'cycle');
   assert.equal(
     createTree([
-      { id: 'a', parentId: null },
-      { id: 'b', parentId: 'a' },
-      { id: 'c', parentId: 'b' },
+      { id: 'a', parentID: null },
+      { id: 'b', parentID: 'a' },
+      { id: 'c', parentID: 'b' },
     ], { maxDepth: 1 }).error.code,
     'depth-ceiling-exceeded',
   );
   const tree = unwrap(createTree([
-    { id: 'right', parentId: 'root' },
-    { id: 'root', parentId: null },
-    { id: 'left', parentId: 'root' },
+    { id: 'right', parentID: 'root' },
+    { id: 'root', parentID: null },
+    { id: 'left', parentID: 'root' },
   ]));
   assert.deepEqual(tree.childrenOf('root').ids, ['right', 'left']);
   assert.equal(tree.childrenOf('missing'), null);
@@ -123,7 +123,7 @@ test('tree production traversal remains stack-safe at the declared depth ceiling
   const size = 20_000;
   const nodes = Array.from({ length: size }, (_, index) => ({
     id: `deep-${index}`,
-    parentId: index === 0 ? null : `deep-${index - 1}`,
+    parentID: index === 0 ? null : `deep-${index - 1}`,
   }));
   const tree = unwrap(createTree(nodes, { maxItems: size, maxDepth: size - 1 }));
   assert.equal(tree.depthOf(`deep-${size - 1}`), size - 1);

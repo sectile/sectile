@@ -6,40 +6,40 @@ import {
   type ResourceCeilings,
   type Result,
   type ScanOptions,
-  type StableId,
+  type StableID,
 } from './shared.js';
-import { fail, ok, validateSafeCeiling, validateUniqueIds } from './internal/foundation.js';
+import { fail, ok, validateSafeCeiling, validateUniqueIDs } from './internal/foundation.js';
 import { IndexedSequence, type SequenceView } from './internal/optimized-sequence.js';
 
 export interface SequenceOptions extends ResourceCeilings {
   readonly maxItems?: number;
 }
 
-export interface Sequence<Id extends StableId = StableId> {
+export interface Sequence<ID extends StableID = StableID> {
   readonly size: number;
-  readonly ids: readonly Id[];
-  at(index: number): Id | null;
-  indexOf(id: Id): number | null;
-  contains(id: Id): boolean;
-  compare(left: Id, right: Id): -1 | 0 | 1 | null;
-  project(predicate: (id: Id, index: number) => boolean): Sequence<Id>;
+  readonly ids: readonly ID[];
+  at(index: number): ID | null;
+  indexOf(id: ID): number | null;
+  contains(id: ID): boolean;
+  compare(left: ID, right: ID): -1 | 0 | 1 | null;
+  project(predicate: (id: ID, index: number) => boolean): Sequence<ID>;
   move(
-    current: Id,
+    current: ID,
     direction: Direction,
     boundary?: BoundaryPolicy,
-    options?: ScanOptions<Id>,
-  ): MoveResult<Id>;
+    options?: ScanOptions<ID>,
+  ): MoveResult<ID>;
 }
 
-export function createSequence<Id extends StableId>(
-  ids: readonly Id[],
+export function createSequence<ID extends StableID>(
+  ids: readonly ID[],
   options: SequenceOptions = {},
-): Result<Sequence<Id>> {
+): Result<Sequence<ID>> {
   const maxItems = options.maxItems ?? 100_000;
   const ceilingError = validateSafeCeiling(maxItems, 'maxItems');
   if (ceilingError !== null) return { ok: false, error: ceilingError };
-  const maxIdCodeUnits = options.maxIdCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
-  const idCeilingError = validateSafeCeiling(maxIdCodeUnits, 'maxIdCodeUnits', 1);
+  const maxIDCodeUnits = options.maxIDCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
+  const idCeilingError = validateSafeCeiling(maxIDCodeUnits, 'maxIDCodeUnits', 1);
   if (idCeilingError !== null) return { ok: false, error: idCeilingError };
   if (ids.length > maxItems) {
     return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
@@ -47,9 +47,9 @@ export function createSequence<Id extends StableId>(
       maxItems,
     });
   }
-  const validated = validateUniqueIds(ids, maxIdCodeUnits);
+  const validated = validateUniqueIDs(ids, maxIDCodeUnits);
   if (!validated.ok) return validated;
-  return ok(new IndexedSequence(validated.value) as SequenceView<Id>);
+  return ok(new IndexedSequence(validated.value) as SequenceView<ID>);
 }
 
 export type {
@@ -59,5 +59,5 @@ export type {
   Result,
   ScanOptions,
   SectileError,
-  StableId,
+  StableID,
 } from './shared.js';

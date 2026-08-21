@@ -13,6 +13,6 @@ export type {
   Result,
   ScanOptions,
   SectileError,
-  StableId,
+  StableID,
   TiePolicy,
 } from './shared.js';

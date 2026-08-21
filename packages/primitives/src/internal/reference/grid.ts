@@ -4,18 +4,18 @@ import {
   type GridDirection,
   type MoveResult,
   type ScanOptions,
-  type StableId,
+  type StableID,
 } from '../../shared.js';
 import { freezeArray, normalizeMaxScan, resourceError } from '../foundation.js';
 import { ReferenceSequence } from './sequence.js';
 
 /** Scan-based coordinate table used only as an executable oracle. */
-export class ReferenceGrid<Id extends StableId> implements Grid<Id> {
+export class ReferenceGrid<ID extends StableID> implements Grid<ID> {
   public readonly rowCount: number;
   public readonly columnCount: number;
-  readonly #cells: readonly (Id | null)[];
+  readonly #cells: readonly (ID | null)[];
 
-  public constructor(rowCount: number, columnCount: number, cells: readonly (Id | null)[]) {
+  public constructor(rowCount: number, columnCount: number, cells: readonly (ID | null)[]) {
     this.rowCount = rowCount;
     this.columnCount = columnCount;
     this.#cells = freezeArray(cells);
@@ -28,21 +28,21 @@ export class ReferenceGrid<Id extends StableId> implements Grid<Id> {
     return count;
   }
 
-  public cellAt(row: number, column: number): Id | null {
+  public cellAt(row: number, column: number): ID | null {
     if (row < 0 || column < 0 || row >= this.rowCount || column >= this.columnCount) return null;
     return this.#cells[row * this.columnCount + column] ?? null;
   }
 
-  public positionOf(id: Id): GridPosition | null {
+  public positionOf(id: ID): GridPosition | null {
     const index = this.#cells.indexOf(id);
     return index < 0
       ? null
       : Object.freeze({ row: Math.floor(index / this.columnCount), column: index % this.columnCount });
   }
 
-  public row(row: number): ReferenceSequence<Id> | null {
+  public row(row: number): ReferenceSequence<ID> | null {
     if (!Number.isSafeInteger(row) || row < 0 || row >= this.rowCount) return null;
-    const result: Id[] = [];
+    const result: ID[] = [];
     for (let column = 0; column < this.columnCount; column += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) result.push(id);
@@ -50,9 +50,9 @@ export class ReferenceGrid<Id extends StableId> implements Grid<Id> {
     return new ReferenceSequence(result);
   }
 
-  public column(column: number): ReferenceSequence<Id> | null {
+  public column(column: number): ReferenceSequence<ID> | null {
     if (!Number.isSafeInteger(column) || column < 0 || column >= this.columnCount) return null;
-    const result: Id[] = [];
+    const result: ID[] = [];
     for (let row = 0; row < this.rowCount; row += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) result.push(id);
@@ -61,11 +61,11 @@ export class ReferenceGrid<Id extends StableId> implements Grid<Id> {
   }
 
   public move(
-    current: Id,
+    current: ID,
     direction: GridDirection,
     boundary: AxisBoundaryPolicy = 'stop',
-    options: ScanOptions<Id> = {},
-  ): MoveResult<Id> {
+    options: ScanOptions<ID> = {},
+  ): MoveResult<ID> {
     const position = this.positionOf(current);
     if (position === null) return { kind: 'none', scanned: 0 };
     const maxScan = normalizeMaxScan(options.maxScan);

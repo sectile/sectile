@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const contract = JSON.parse(await readFile('testing/public-api.json', 'utf8'));
-const packageJson = JSON.parse(await readFile('packages/primitives/package.json', 'utf8'));
-const exportsMap = packageJson.exports;
+const packageJSON = JSON.parse(await readFile('packages/primitives/package.json', 'utf8'));
+const exportsMap = packageJSON.exports;
 
-assert.equal(packageJson.name, contract.package);
+assert.equal(packageJSON.name, contract.package);
 assert.equal(typeof exportsMap, 'object');
 assert.notEqual(exportsMap, null);
 

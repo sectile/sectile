@@ -4,31 +4,31 @@ import {
   type MoveResult,
   type ScanOptions,
   type SectileError,
-  type StableId,
+  type StableID,
 } from '../shared.js';
 import { freezeArray, normalizeMaxScan, resourceError } from './foundation.js';
 
-export interface SequenceView<Id extends StableId> {
+export interface SequenceView<ID extends StableID> {
   readonly size: number;
-  readonly ids: readonly Id[];
-  at(index: number): Id | null;
-  indexOf(id: Id): number | null;
-  contains(id: Id): boolean;
-  compare(left: Id, right: Id): -1 | 0 | 1 | null;
-  project(predicate: (id: Id, index: number) => boolean): SequenceView<Id>;
+  readonly ids: readonly ID[];
+  at(index: number): ID | null;
+  indexOf(id: ID): number | null;
+  contains(id: ID): boolean;
+  compare(left: ID, right: ID): -1 | 0 | 1 | null;
+  project(predicate: (id: ID, index: number) => boolean): SequenceView<ID>;
   move(
-    current: Id,
+    current: ID,
     direction: Direction,
     boundary?: BoundaryPolicy,
-    options?: ScanOptions<Id>,
-  ): MoveResult<Id>;
+    options?: ScanOptions<ID>,
+  ): MoveResult<ID>;
 }
 
-export class IndexedSequence<Id extends StableId> implements SequenceView<Id> {
-  public readonly ids: readonly Id[];
-  readonly #index: ReadonlyMap<Id, number>;
+export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
+  public readonly ids: readonly ID[];
+  readonly #index: ReadonlyMap<ID, number>;
 
-  public constructor(ids: readonly Id[]) {
+  public constructor(ids: readonly ID[]) {
     this.ids = freezeArray(ids);
     this.#index = new Map(this.ids.map((id, index) => [id, index]));
     Object.freeze(this);
@@ -38,49 +38,49 @@ export class IndexedSequence<Id extends StableId> implements SequenceView<Id> {
     return this.ids.length;
   }
 
-  public at(index: number): Id | null {
+  public at(index: number): ID | null {
     return Number.isSafeInteger(index) && index >= 0 && index < this.ids.length
       ? (this.ids[index] ?? null)
       : null;
   }
 
-  public indexOf(id: Id): number | null {
+  public indexOf(id: ID): number | null {
     return this.#index.get(id) ?? null;
   }
 
-  public contains(id: Id): boolean {
+  public contains(id: ID): boolean {
     return this.#index.has(id);
   }
 
-  public compare(left: Id, right: Id): -1 | 0 | 1 | null {
+  public compare(left: ID, right: ID): -1 | 0 | 1 | null {
     const leftIndex = this.#index.get(left);
     const rightIndex = this.#index.get(right);
     if (leftIndex === undefined || rightIndex === undefined) return null;
     return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
   }
 
-  public project(predicate: (id: Id, index: number) => boolean): IndexedSequence<Id> {
+  public project(predicate: (id: ID, index: number) => boolean): IndexedSequence<ID> {
     return new IndexedSequence(this.ids.filter(predicate));
   }
 
   public move(
-    current: Id,
+    current: ID,
     direction: Direction,
     boundary: BoundaryPolicy = 'stop',
-    options: ScanOptions<Id> = {},
-  ): MoveResult<Id> {
+    options: ScanOptions<ID> = {},
+  ): MoveResult<ID> {
     return moveInSequence(this.ids, this.#index, current, direction, boundary, options);
   }
 }
 
-export function moveInSequence<Id extends StableId>(
-  ids: readonly Id[],
-  index: ReadonlyMap<Id, number> | null,
-  current: Id,
+export function moveInSequence<ID extends StableID>(
+  ids: readonly ID[],
+  index: ReadonlyMap<ID, number> | null,
+  current: ID,
   direction: Direction,
   boundary: BoundaryPolicy,
-  options: ScanOptions<Id>,
-): MoveResult<Id> {
+  options: ScanOptions<ID>,
+): MoveResult<ID> {
   const currentIndex = index === null ? ids.indexOf(current) : index.get(current);
   if (currentIndex === undefined || currentIndex < 0) return { kind: 'none', scanned: 0 };
   if (direction !== -1 && direction !== 1) return invalidMovement('invalid-direction');
@@ -121,7 +121,7 @@ export function moveInSequence<Id extends StableId>(
   return { kind: 'none', scanned };
 }
 
-function scanRejected<Id extends StableId>(scanned: number, maxScan: number): MoveResult<Id> {
+function scanRejected<ID extends StableID>(scanned: number, maxScan: number): MoveResult<ID> {
   return {
     kind: 'resource-rejected',
     scanned,
@@ -133,7 +133,7 @@ function scanRejected<Id extends StableId>(scanned: number, maxScan: number): Mo
   };
 }
 
-function invalidMovement<Id extends StableId>(code: string): MoveResult<Id> {
+function invalidMovement<ID extends StableID>(code: string): MoveResult<ID> {
   const error: SectileError = {
     class: 'internal-invariant',
     code,

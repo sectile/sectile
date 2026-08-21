@@ -2,21 +2,21 @@ import {
   DEFAULT_MAX_ID_CODE_UNITS,
   type ResourceCeilings,
   type Result,
-  type StableId,
+  type StableID,
 } from './shared.js';
 import {
   fail,
   freezeArray,
   ok,
   validateSafeCeiling,
-  validateStableId,
+  validateStableID,
 } from './internal/foundation.js';
 import { IndexedSequence, type SequenceView } from './internal/optimized-sequence.js';
 import type { Sequence } from './sequence.js';
 
-export interface TreeNodeInput<Id extends StableId = StableId> {
-  readonly id: Id;
-  readonly parentId: Id | null;
+export interface TreeNodeInput<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly parentID: ID | null;
 }
 
 export interface TreeOptions extends ResourceCeilings {
@@ -24,32 +24,32 @@ export interface TreeOptions extends ResourceCeilings {
   readonly maxDepth?: number;
 }
 
-export interface Tree<Id extends StableId = StableId> {
+export interface Tree<ID extends StableID = StableID> {
   readonly size: number;
-  readonly roots: Sequence<Id>;
-  has(id: Id): boolean;
-  parentOf(id: Id): Id | null;
-  childrenOf(id: Id): Sequence<Id> | null;
-  isLeaf(id: Id): boolean | null;
-  depthOf(id: Id): number | null;
-  ancestorsOf(id: Id): readonly Id[] | null;
-  preorder(): Sequence<Id>;
-  postorder(): Sequence<Id>;
-  normalizeExpansion(expanded: Iterable<Id>): Expansion<Id>;
-  visible(expansion: Expansion<Id> | Iterable<Id>): Sequence<Id>;
+  readonly roots: Sequence<ID>;
+  has(id: ID): boolean;
+  parentOf(id: ID): ID | null;
+  childrenOf(id: ID): Sequence<ID> | null;
+  isLeaf(id: ID): boolean | null;
+  depthOf(id: ID): number | null;
+  ancestorsOf(id: ID): readonly ID[] | null;
+  preorder(): Sequence<ID>;
+  postorder(): Sequence<ID>;
+  normalizeExpansion(expanded: Iterable<ID>): Expansion<ID>;
+  visible(expansion: Expansion<ID> | Iterable<ID>): Sequence<ID>;
 }
 
-export interface Expansion<Id extends StableId = StableId> {
-  readonly ids: readonly Id[];
+export interface Expansion<ID extends StableID = StableID> {
+  readonly ids: readonly ID[];
   readonly size: number;
-  has(id: Id): boolean;
+  has(id: ID): boolean;
 }
 
-class NormalizedExpansion<Id extends StableId> implements Expansion<Id> {
-  public readonly ids: readonly Id[];
-  readonly #set: ReadonlySet<Id>;
+class NormalizedExpansion<ID extends StableID> implements Expansion<ID> {
+  public readonly ids: readonly ID[];
+  readonly #set: ReadonlySet<ID>;
 
-  public constructor(ids: readonly Id[]) {
+  public constructor(ids: readonly ID[]) {
     this.ids = freezeArray(ids);
     this.#set = new Set(ids);
     Object.freeze(this);
@@ -59,30 +59,30 @@ class NormalizedExpansion<Id extends StableId> implements Expansion<Id> {
     return this.ids.length;
   }
 
-  public has(id: Id): boolean {
+  public has(id: ID): boolean {
     return this.#set.has(id);
   }
 }
 
-class IndexedTree<Id extends StableId> implements Tree<Id> {
+class IndexedTree<ID extends StableID> implements Tree<ID> {
   public readonly size: number;
-  public readonly roots: Sequence<Id>;
-  readonly #parent: ReadonlyMap<Id, Id | null>;
-  readonly #children: ReadonlyMap<Id, readonly Id[]>;
-  readonly #depth: ReadonlyMap<Id, number>;
-  readonly #preorder: readonly Id[];
-  readonly #postorder: readonly Id[];
+  public readonly roots: Sequence<ID>;
+  readonly #parent: ReadonlyMap<ID, ID | null>;
+  readonly #children: ReadonlyMap<ID, readonly ID[]>;
+  readonly #depth: ReadonlyMap<ID, number>;
+  readonly #preorder: readonly ID[];
+  readonly #postorder: readonly ID[];
 
   public constructor(
-    roots: readonly Id[],
-    parent: ReadonlyMap<Id, Id | null>,
-    children: ReadonlyMap<Id, readonly Id[]>,
-    depth: ReadonlyMap<Id, number>,
-    preorder: readonly Id[],
-    postorder: readonly Id[],
+    roots: readonly ID[],
+    parent: ReadonlyMap<ID, ID | null>,
+    children: ReadonlyMap<ID, readonly ID[]>,
+    depth: ReadonlyMap<ID, number>,
+    preorder: readonly ID[],
+    postorder: readonly ID[],
   ) {
     this.size = preorder.length;
-    this.roots = new IndexedSequence(roots) as SequenceView<Id>;
+    this.roots = new IndexedSequence(roots) as SequenceView<ID>;
     this.#parent = parent;
     this.#children = children;
     this.#depth = depth;
@@ -91,31 +91,31 @@ class IndexedTree<Id extends StableId> implements Tree<Id> {
     Object.freeze(this);
   }
 
-  public has(id: Id): boolean {
+  public has(id: ID): boolean {
     return this.#parent.has(id);
   }
 
-  public parentOf(id: Id): Id | null {
+  public parentOf(id: ID): ID | null {
     return this.#parent.get(id) ?? null;
   }
 
-  public childrenOf(id: Id): Sequence<Id> | null {
+  public childrenOf(id: ID): Sequence<ID> | null {
     const children = this.#children.get(id);
-    return children === undefined ? null : (new IndexedSequence(children) as SequenceView<Id>);
+    return children === undefined ? null : (new IndexedSequence(children) as SequenceView<ID>);
   }
 
-  public isLeaf(id: Id): boolean | null {
+  public isLeaf(id: ID): boolean | null {
     const children = this.#children.get(id);
     return children === undefined ? null : children.length === 0;
   }
 
-  public depthOf(id: Id): number | null {
+  public depthOf(id: ID): number | null {
     return this.#depth.get(id) ?? null;
   }
 
-  public ancestorsOf(id: Id): readonly Id[] | null {
+  public ancestorsOf(id: ID): readonly ID[] | null {
     if (!this.#parent.has(id)) return null;
-    const result: Id[] = [];
+    const result: ID[] = [];
     let current = this.#parent.get(id) ?? null;
     while (current !== null) {
       result.push(current);
@@ -124,15 +124,15 @@ class IndexedTree<Id extends StableId> implements Tree<Id> {
     return freezeArray(result);
   }
 
-  public preorder(): Sequence<Id> {
-    return new IndexedSequence(this.#preorder) as SequenceView<Id>;
+  public preorder(): Sequence<ID> {
+    return new IndexedSequence(this.#preorder) as SequenceView<ID>;
   }
 
-  public postorder(): Sequence<Id> {
-    return new IndexedSequence(this.#postorder) as SequenceView<Id>;
+  public postorder(): Sequence<ID> {
+    return new IndexedSequence(this.#postorder) as SequenceView<ID>;
   }
 
-  public normalizeExpansion(expanded: Iterable<Id>): Expansion<Id> {
+  public normalizeExpansion(expanded: Iterable<ID>): Expansion<ID> {
     const requested = new Set(expanded);
     const normalized = this.#preorder.filter(
       (id) => requested.has(id) && (this.#children.get(id)?.length ?? 0) > 0,
@@ -140,12 +140,12 @@ class IndexedTree<Id extends StableId> implements Tree<Id> {
     return new NormalizedExpansion(normalized);
   }
 
-  public visible(expansion: Expansion<Id> | Iterable<Id>): Sequence<Id> {
+  public visible(expansion: Expansion<ID> | Iterable<ID>): Sequence<ID> {
     const normalized =
       expansion instanceof NormalizedExpansion
         ? expansion
         : this.normalizeExpansion(isExpansion(expansion) ? expansion.ids : expansion);
-    const result: Id[] = [];
+    const result: ID[] = [];
     const stack = [...this.roots.ids].reverse();
     while (stack.length > 0) {
       const id = stack.pop();
@@ -158,33 +158,33 @@ class IndexedTree<Id extends StableId> implements Tree<Id> {
         if (child !== undefined) stack.push(child);
       }
     }
-    return new IndexedSequence(result) as SequenceView<Id>;
+    return new IndexedSequence(result) as SequenceView<ID>;
   }
 }
 
-interface TraversalFrame<Id extends StableId> {
-  readonly id: Id;
+interface TraversalFrame<ID extends StableID> {
+  readonly id: ID;
   readonly depth: number;
   nextChild: number;
 }
 
-export function createTree<Id extends StableId>(
-  nodes: readonly TreeNodeInput<Id>[],
+export function createTree<ID extends StableID>(
+  nodes: readonly TreeNodeInput<ID>[],
   options: TreeOptions = {},
-): Result<Tree<Id>> {
+): Result<Tree<ID>> {
   const maxItems = options.maxItems ?? 100_000;
   const maxDepth = options.maxDepth ?? 1_024;
-  const maxIdCodeUnits = options.maxIdCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
+  const maxIDCodeUnits = options.maxIDCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
   for (const [value, name] of [
     [maxItems, 'maxItems'],
     [maxDepth, 'maxDepth'],
-    [maxIdCodeUnits, 'maxIdCodeUnits'],
+    [maxIDCodeUnits, 'maxIDCodeUnits'],
   ] as const) {
     const error = validateSafeCeiling(value, name);
     if (error !== null) return { ok: false, error };
   }
-  if (maxIdCodeUnits < 1) {
-    return fail('construction', 'invalid-max-id-code-units', 'maxIdCodeUnits must be a positive safe integer.', { maxIdCodeUnits });
+  if (maxIDCodeUnits < 1) {
+    return fail('construction', 'invalid-max-id-code-units', 'maxIDCodeUnits must be a positive safe integer.', { maxIDCodeUnits });
   }
   if (nodes.length > maxItems) {
     return fail('resource-rejection', 'item-ceiling-exceeded', 'Tree exceeds maxItems.', {
@@ -193,14 +193,14 @@ export function createTree<Id extends StableId>(
     });
   }
 
-  const parent = new Map<Id, Id | null>();
-  const ids: Id[] = [];
+  const parent = new Map<ID, ID | null>();
+  const ids: ID[] = [];
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index];
     if (node === undefined) {
       return fail('construction', 'invalid-node', 'Tree input must not contain sparse or missing nodes.', { index });
     }
-    const idError = validateStableId(node.id, maxIdCodeUnits);
+    const idError = validateStableID(node.id, maxIDCodeUnits);
     if (idError !== null) return { ok: false, error: idError };
     if (parent.has(node.id)) {
       return fail('construction', 'duplicate-id', 'Tree identities must be unique.', {
@@ -208,39 +208,39 @@ export function createTree<Id extends StableId>(
         index,
       });
     }
-    if (node.parentId === node.id) {
+    if (node.parentID === node.id) {
       return fail('construction', 'self-parent', 'A tree node cannot be its own parent.', {
         id: node.id,
       });
     }
-    parent.set(node.id, node.parentId);
+    parent.set(node.id, node.parentID);
     ids.push(node.id);
   }
   for (const id of ids) {
-    const parentId = parent.get(id) ?? null;
-    if (parentId !== null && !parent.has(parentId)) {
+    const parentID = parent.get(id) ?? null;
+    if (parentID !== null && !parent.has(parentID)) {
       return fail('construction', 'missing-parent', 'Every non-root parent must exist.', {
         id,
-        parentId,
+        parentID,
       });
     }
   }
 
-  const childrenMutable = new Map<Id, Id[]>();
+  const childrenMutable = new Map<ID, ID[]>();
   for (const id of ids) childrenMutable.set(id, []);
-  const roots: Id[] = [];
+  const roots: ID[] = [];
   for (const id of ids) {
-    const parentId = parent.get(id) ?? null;
-    if (parentId === null) roots.push(id);
-    else childrenMutable.get(parentId)?.push(id);
+    const parentID = parent.get(id) ?? null;
+    if (parentID === null) roots.push(id);
+    else childrenMutable.get(parentID)?.push(id);
   }
 
-  const marks = new Map<Id, 0 | 1 | 2>();
-  const depth = new Map<Id, number>();
-  const preorder: Id[] = [];
-  const postorder: Id[] = [];
+  const marks = new Map<ID, 0 | 1 | 2>();
+  const depth = new Map<ID, number>();
+  const preorder: ID[] = [];
+  const postorder: ID[] = [];
   for (const root of roots) {
-    const stack: TraversalFrame<Id>[] = [{ id: root, depth: 0, nextChild: 0 }];
+    const stack: TraversalFrame<ID>[] = [{ id: root, depth: 0, nextChild: 0 }];
     while (stack.length > 0) {
       const frame = stack[stack.length - 1];
       if (frame === undefined) break;
@@ -296,18 +296,18 @@ export function createTree<Id extends StableId>(
     });
   }
 
-  const children = new Map<Id, readonly Id[]>();
+  const children = new Map<ID, readonly ID[]>();
   for (const [id, values] of childrenMutable) children.set(id, freezeArray(values));
   return ok(new IndexedTree(roots, parent, children, depth, preorder, postorder));
 }
 
-function isExpansion<Id extends StableId>(value: Expansion<Id> | Iterable<Id>): value is Expansion<Id> {
+function isExpansion<ID extends StableID>(value: Expansion<ID> | Iterable<ID>): value is Expansion<ID> {
   return (
     typeof value === 'object' &&
     value !== null &&
     'ids' in value &&
-    Array.isArray((value as Expansion<Id>).ids)
+    Array.isArray((value as Expansion<ID>).ids)
   );
 }
 
-export type { Result, StableId } from './shared.js';
+export type { Result, StableID } from './shared.js';

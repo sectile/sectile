@@ -280,8 +280,8 @@ universal state machine
 ```text
 sequence → one-row grid
 sequence → virtual-root flat tree
-grid     → sequence<sequence<optional Id>>
-tree     → sequence<(Id, depth)>
+grid     → sequence<sequence<optional ID>>
+tree     → sequence<(ID, depth)>
 range    → finite ordinal + affine interpretation
 ```
 
@@ -442,7 +442,7 @@ stepAB : (SA × SB) × I
 
 ### 5.1 Identity
 
-Theory 수준의 `Id`는 opaque equality sort다. TypeScript v1은 다음 contract를 사용한다.
+Theory 수준의 `ID`는 opaque equality sort다. TypeScript v1은 다음 contract를 사용한다.
 
 ```text
 non-empty string
@@ -491,10 +491,10 @@ Ceiling은 성능 튜닝 값이 아니라 denial-of-service와 accidental unboun
 `sequence`는 stable identity의 finite strict total order다.
 
 ```text
-Sequence<Id> = <n, at, indexOf>
+Sequence<ID> = <n, at, indexOf>
 
-at      : Fin(n) → Id
-indexOf : Id ⇀ Fin(n)
+at      : Fin(n) → ID
+indexOf : ID ⇀ Fin(n)
 ```
 
 `at`과 `indexOf`는 존재하는 identity에 대해 서로 inverse다.
@@ -696,7 +696,7 @@ V1 logical grid는 rectangular finite ordinal product 위의 partial injective o
 ```text
 Row    = Fin(rowCount)
 Column = Fin(columnCount)
-cell   : Row × Column ⇀ Id
+cell   : Row × Column ⇀ ID
 ```
 
 한 coordinate에는 최대 한 ID, 한 ID에는 최대 한 coordinate가 있다.
@@ -796,8 +796,8 @@ Sparse input을 받는 구현은 build/memory를 `O(occupied + index)`로 줄일
 Public `tree`는 ordered rooted forest다. 여러 root는 internal virtual root의 ordered children으로 본다.
 
 ```text
-parent   : Id → Id | virtualRoot
-children : Id | virtualRoot → Sequence<Id>
+parent   : ID → ID | virtualRoot
+children : ID | virtualRoot → Sequence<ID>
 ```
 
 ### 9.2 Laws
@@ -850,7 +850,7 @@ leaf ID 제거
 Visible preorder는 다음 projection이다.
 
 ```text
-visible : Tree × Expansion → Sequence<Id>
+visible : Tree × Expansion → Sequence<ID>
 ```
 
 Node는 모든 proper ancestor가 expanded일 때만 visible하다. Root는 항상 visible하다.
@@ -921,7 +921,7 @@ Depth ceiling을 constructor에서 검증한다.
 Cursor는 logical current identity다.
 
 ```text
-Cursor<Id> = Id | none
+Cursor<ID> = ID | none
 ```
 
 Valid state는 current가 현재 domain에 있거나 `none`인 상태다. Cursor는 selection과 focus를 소유하지 않는다.
@@ -954,9 +954,9 @@ APG keyboard guidance는 focus와 selection이 구별되는 상태라고 명시�
 ### 11.2 State
 
 ```text
-Selection<Id> = {
-  selected: finite set<Id>
-  anchor: Id | none
+Selection<ID> = {
+  selected: finite set<ID>
+  anchor: ID | none
 }
 
 mode = single | multiple
@@ -995,7 +995,7 @@ Selection은 독립 theory로 확정한다. Public subpath 이름은 승격 시 
 Expansion은 tree node의 open state다.
 
 ```text
-Expansion<Tree> = subset(branchIds(Tree))
+Expansion<Tree> = subset(branchIDs(Tree))
 ```
 
 Laws:

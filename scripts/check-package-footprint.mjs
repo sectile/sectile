@@ -22,6 +22,6 @@ for (const path of paths) {
   assert.equal(path.includes('/reference/'), false);
 }
 assert.ok(totalBytes < 250_000, `package footprint ${totalBytes} exceeds 250KB ceiling`);
-const packageJson = JSON.parse(await readFile('packages/primitives/package.json', 'utf8'));
-assert.deepEqual(packageJson.files, ['dist']);
+const packageJSON = JSON.parse(await readFile('packages/primitives/package.json', 'utf8'));
+assert.deepEqual(packageJSON.files, ['dist']);
 console.log(JSON.stringify({ status: 'passed', files: paths.length, totalBytes, javascriptBytes, declarationBytes }, null, 2));

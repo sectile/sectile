@@ -221,12 +221,12 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   for (let node = 0; node < size; node += 1) {
     initial.push({
       id: `t${iteration}-${node}`,
-      parentId: node === 0 || rng.next() < 0.25 ? null : `t${iteration}-${rng.int(0, node)}`,
+      parentID: node === 0 || rng.next() < 0.25 ? null : `t${iteration}-${rng.int(0, node)}`,
     });
   }
   const children = new Map([[null, []]]);
   for (const node of initial) children.set(node.id, []);
-  for (const node of initial) children.get(node.parentId).push(node.id);
+  for (const node of initial) children.get(node.parentID).push(node.id);
   for (const [key, values] of children) children.set(key, rng.shuffle(values));
   const nodes = [];
   const visit = (id) => {
@@ -257,10 +257,10 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   }
 }
 for (const result of [
-  createTree([{ id: 'a', parentId: null }, { id: 'a', parentId: null }]),
-  createTree([{ id: 'a', parentId: 'missing' }]),
-  createTree([{ id: 'a', parentId: 'a' }]),
-  createTree([{ id: 'a', parentId: 'b' }, { id: 'b', parentId: 'a' }]),
+  createTree([{ id: 'a', parentID: null }, { id: 'a', parentID: null }]),
+  createTree([{ id: 'a', parentID: 'missing' }]),
+  createTree([{ id: 'a', parentID: 'a' }]),
+  createTree([{ id: 'a', parentID: 'b' }, { id: 'b', parentID: 'a' }]),
 ]) {
   assert.equal(result.ok, false);
   counts.tree.invalidConstructions += 1;
@@ -350,7 +350,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   for (let node = 0; node < size; node += 1) {
     nodes.push({
       id: `e${iteration}-${node}`,
-      parentId:
+      parentID:
         node === 0 || expansionRng.next() < 0.25
           ? null
           : `e${iteration}-${expansionRng.int(0, node)}`,

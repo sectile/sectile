@@ -23,7 +23,7 @@ assert.equal(parsed.status, 'pass');
 assert.equal(parsed.seed, 0x5ec71e);
 console.log(JSON.stringify({
   status: 'passed',
-  theorySha256: hash(theoryOutput),
-  implementationSha256: hash(first.stdout),
+  theorySHA256: hash(theoryOutput),
+  implementationSHA256: hash(first.stdout),
   seed: parsed.seed,
 }, null, 2));

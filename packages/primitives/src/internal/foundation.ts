@@ -2,7 +2,7 @@ import {
   DEFAULT_MAX_ID_CODE_UNITS,
   type Result,
   type SectileError,
-  type StableId,
+  type StableID,
 } from '../shared.js';
 
 export function ok<T>(value: T): Result<T> {
@@ -39,7 +39,7 @@ export function resourceError(
   };
 }
 
-export function isWellFormedUtf16(value: string): boolean {
+export function isWellFormedUTF16(value: string): boolean {
   for (let index = 0; index < value.length; index += 1) {
     const code = value.charCodeAt(index);
     if (code >= 0xd800 && code <= 0xdbff) {
@@ -53,9 +53,9 @@ export function isWellFormedUtf16(value: string): boolean {
   return true;
 }
 
-export function validateStableId(
+export function validateStableID(
   id: string,
-  maxIdCodeUnits: number = DEFAULT_MAX_ID_CODE_UNITS,
+  maxIDCodeUnits: number = DEFAULT_MAX_ID_CODE_UNITS,
 ): SectileError | null {
   if (typeof id !== 'string') {
     return {
@@ -65,12 +65,12 @@ export function validateStableId(
       details: { receivedType: typeof id },
     };
   }
-  if (!Number.isSafeInteger(maxIdCodeUnits) || maxIdCodeUnits < 1) {
+  if (!Number.isSafeInteger(maxIDCodeUnits) || maxIDCodeUnits < 1) {
     return {
       class: 'construction',
       code: 'invalid-max-id-code-units',
-      message: 'maxIdCodeUnits must be a positive safe integer.',
-      details: { maxIdCodeUnits },
+      message: 'maxIDCodeUnits must be a positive safe integer.',
+      details: { maxIDCodeUnits },
     };
   }
   if (id.length === 0) {
@@ -80,7 +80,7 @@ export function validateStableId(
       message: 'Stable IDs must not be empty.',
     };
   }
-  if (!isWellFormedUtf16(id)) {
+  if (!isWellFormedUTF16(id)) {
     return {
       class: 'construction',
       code: 'ill-formed-id',
@@ -88,12 +88,12 @@ export function validateStableId(
       details: { id },
     };
   }
-  if (id.length > maxIdCodeUnits) {
+  if (id.length > maxIDCodeUnits) {
     return {
       class: 'resource-rejection',
       code: 'id-code-unit-ceiling-exceeded',
-      message: 'Stable ID exceeds maxIdCodeUnits.',
-      details: { idCodeUnits: id.length, maxIdCodeUnits },
+      message: 'Stable ID exceeds maxIDCodeUnits.',
+      details: { idCodeUnits: id.length, maxIDCodeUnits },
     };
   }
   return null;
@@ -136,20 +136,23 @@ export function assertNever(value: never): never {
 }
 
 function toKebabCase(value: string): string {
-  return value.replace(/[A-Z]/gu, (character) => `-${character.toLowerCase()}`);
+  return value
+    .replace(/([a-z0-9])([A-Z])/gu, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/gu, '$1-$2')
+    .toLowerCase();
 }
 
-export function validateUniqueIds<Id extends StableId>(
-  ids: readonly Id[],
-  maxIdCodeUnits: number,
-): Result<readonly Id[]> {
-  const seen = new Set<Id>();
+export function validateUniqueIDs<ID extends StableID>(
+  ids: readonly ID[],
+  maxIDCodeUnits: number,
+): Result<readonly ID[]> {
+  const seen = new Set<ID>();
   for (let index = 0; index < ids.length; index += 1) {
     const id = ids[index];
     if (id === undefined) {
       return fail('construction', 'invalid-id-type', 'Stable IDs must be strings.', { index });
     }
-    const idError = validateStableId(id, maxIdCodeUnits);
+    const idError = validateStableID(id, maxIDCodeUnits);
     if (idError !== null) return { ok: false, error: idError };
     if (seen.has(id)) {
       return fail('construction', 'duplicate-id', 'Stable identities must be unique.', {

@@ -6,7 +6,7 @@ import {
   type ResourceCeilings,
   type Result,
   type ScanOptions,
-  type StableId,
+  type StableID,
 } from './shared.js';
 import {
   fail,
@@ -15,7 +15,7 @@ import {
   ok,
   resourceError,
   validateSafeCeiling,
-  validateStableId,
+  validateStableID,
 } from './internal/foundation.js';
 import { IndexedSequence, type SequenceView } from './internal/optimized-sequence.js';
 import type { Sequence } from './sequence.js';
@@ -33,34 +33,34 @@ export interface GridOptions extends ResourceCeilings {
   readonly maxCells?: number;
 }
 
-export interface Grid<Id extends StableId = StableId> {
+export interface Grid<ID extends StableID = StableID> {
   readonly rowCount: number;
   readonly columnCount: number;
   readonly size: number;
-  cellAt(row: number, column: number): Id | null;
-  positionOf(id: Id): GridPosition | null;
-  row(row: number): Sequence<Id> | null;
-  column(column: number): Sequence<Id> | null;
+  cellAt(row: number, column: number): ID | null;
+  positionOf(id: ID): GridPosition | null;
+  row(row: number): Sequence<ID> | null;
+  column(column: number): Sequence<ID> | null;
   move(
-    current: Id,
+    current: ID,
     direction: GridDirection,
     boundary?: AxisBoundaryPolicy,
-    options?: ScanOptions<Id>,
-  ): MoveResult<Id>;
+    options?: ScanOptions<ID>,
+  ): MoveResult<ID>;
 }
 
-class IndexedGrid<Id extends StableId> implements Grid<Id> {
+class IndexedGrid<ID extends StableID> implements Grid<ID> {
   public readonly rowCount: number;
   public readonly columnCount: number;
   public readonly size: number;
-  readonly #cells: readonly (Id | null)[];
-  readonly #positions: ReadonlyMap<Id, GridPosition>;
+  readonly #cells: readonly (ID | null)[];
+  readonly #positions: ReadonlyMap<ID, GridPosition>;
 
   public constructor(
     rowCount: number,
     columnCount: number,
-    cells: readonly (Id | null)[],
-    positions: ReadonlyMap<Id, GridPosition>,
+    cells: readonly (ID | null)[],
+    positions: ReadonlyMap<ID, GridPosition>,
   ) {
     this.rowCount = rowCount;
     this.columnCount = columnCount;
@@ -70,7 +70,7 @@ class IndexedGrid<Id extends StableId> implements Grid<Id> {
     Object.freeze(this);
   }
 
-  public cellAt(row: number, column: number): Id | null {
+  public cellAt(row: number, column: number): ID | null {
     if (
       !Number.isSafeInteger(row) ||
       !Number.isSafeInteger(column) ||
@@ -84,36 +84,36 @@ class IndexedGrid<Id extends StableId> implements Grid<Id> {
     return this.#cells[row * this.columnCount + column] ?? null;
   }
 
-  public positionOf(id: Id): GridPosition | null {
+  public positionOf(id: ID): GridPosition | null {
     return this.#positions.get(id) ?? null;
   }
 
-  public row(row: number): Sequence<Id> | null {
+  public row(row: number): Sequence<ID> | null {
     if (!Number.isSafeInteger(row) || row < 0 || row >= this.rowCount) return null;
-    const ids: Id[] = [];
+    const ids: ID[] = [];
     for (let column = 0; column < this.columnCount; column += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) ids.push(id);
     }
-    return new IndexedSequence(ids) as SequenceView<Id>;
+    return new IndexedSequence(ids) as SequenceView<ID>;
   }
 
-  public column(column: number): Sequence<Id> | null {
+  public column(column: number): Sequence<ID> | null {
     if (!Number.isSafeInteger(column) || column < 0 || column >= this.columnCount) return null;
-    const ids: Id[] = [];
+    const ids: ID[] = [];
     for (let row = 0; row < this.rowCount; row += 1) {
       const id = this.cellAt(row, column);
       if (id !== null) ids.push(id);
     }
-    return new IndexedSequence(ids) as SequenceView<Id>;
+    return new IndexedSequence(ids) as SequenceView<ID>;
   }
 
   public move(
-    current: Id,
+    current: ID,
     direction: GridDirection,
     boundary: AxisBoundaryPolicy = 'stop',
-    options: ScanOptions<Id> = {},
-  ): MoveResult<Id> {
+    options: ScanOptions<ID> = {},
+  ): MoveResult<ID> {
     const position = this.#positions.get(current);
     if (position === undefined) return { kind: 'none', scanned: 0 };
     const maxScan = normalizeMaxScan(options.maxScan);
@@ -136,7 +136,7 @@ class IndexedGrid<Id extends StableId> implements Grid<Id> {
     const positive = direction === 'right' || direction === 'down';
     const currentAxis = horizontal ? position.column : position.row;
     const axisLength = horizontal ? this.columnCount : this.rowCount;
-    const idAtAxis = (axis: number): Id | null =>
+    const idAtAxis = (axis: number): ID | null =>
       horizontal ? this.cellAt(position.row, axis) : this.cellAt(axis, position.column);
     let scanned = 0;
     let axis = currentAxis + (positive ? 1 : -1);
@@ -167,27 +167,27 @@ class IndexedGrid<Id extends StableId> implements Grid<Id> {
   }
 }
 
-export function createGrid<Id extends StableId>(
-  rows: readonly (readonly (Id | null)[])[],
+export function createGrid<ID extends StableID>(
+  rows: readonly (readonly (ID | null)[])[],
   options: GridOptions = {},
-): Result<Grid<Id>> {
+): Result<Grid<ID>> {
   const maxRows = options.maxRows ?? 10_000;
   const maxColumns = options.maxColumns ?? 10_000;
   const maxItems = options.maxItems ?? 100_000;
   const maxCells = options.maxCells ?? 1_000_000;
-  const maxIdCodeUnits = options.maxIdCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
+  const maxIDCodeUnits = options.maxIDCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
   for (const [value, name] of [
     [maxRows, 'maxRows'],
     [maxColumns, 'maxColumns'],
     [maxItems, 'maxItems'],
     [maxCells, 'maxCells'],
-    [maxIdCodeUnits, 'maxIdCodeUnits'],
+    [maxIDCodeUnits, 'maxIDCodeUnits'],
   ] as const) {
     const error = validateSafeCeiling(value, name);
     if (error !== null) return { ok: false, error };
   }
-  if (maxIdCodeUnits < 1) {
-    return fail('construction', 'invalid-max-id-code-units', 'maxIdCodeUnits must be a positive safe integer.', { maxIdCodeUnits });
+  if (maxIDCodeUnits < 1) {
+    return fail('construction', 'invalid-max-id-code-units', 'maxIDCodeUnits must be a positive safe integer.', { maxIDCodeUnits });
   }
   if (rows.length > maxRows) {
     return fail('resource-rejection', 'row-ceiling-exceeded', 'Grid exceeds maxRows.', {
@@ -223,14 +223,14 @@ export function createGrid<Id extends StableId>(
     });
   }
 
-  const cells: (Id | null)[] = Array.from({ length: cellCount }, () => null);
-  const positions = new Map<Id, GridPosition>();
+  const cells: (ID | null)[] = Array.from({ length: cellCount }, () => null);
+  const positions = new Map<ID, GridPosition>();
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
     const row = rows[rowIndex] ?? [];
     for (let column = 0; column < row.length; column += 1) {
       const id = row[column] ?? null;
       if (id === null) continue;
-      const idError = validateStableId(id, maxIdCodeUnits);
+      const idError = validateStableID(id, maxIDCodeUnits);
       if (idError !== null) return { ok: false, error: idError };
       if (positions.has(id)) {
         return fail('construction', 'duplicate-id', 'Each grid identity must occupy one coordinate.', {
@@ -252,7 +252,7 @@ export function createGrid<Id extends StableId>(
   return ok(new IndexedGrid(rows.length, columnCount, cells, positions));
 }
 
-function gridScanRejected<Id extends StableId>(scanned: number, maxScan: number): MoveResult<Id> {
+function gridScanRejected<ID extends StableID>(scanned: number, maxScan: number): MoveResult<ID> {
   return {
     kind: 'resource-rejected',
     scanned,
@@ -274,5 +274,5 @@ export type {
   MoveResult,
   Result,
   ScanOptions,
-  StableId,
+  StableID,
 } from './shared.js';

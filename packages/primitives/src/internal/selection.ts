@@ -1,31 +1,31 @@
-import type { Result, StableId } from '../shared.js';
+import type { Result, StableID } from '../shared.js';
 import type { CursorDomain } from './cursor.js';
 import { fail, freezeArray, ok } from './foundation.js';
 
 export type SelectionMode = 'single' | 'multiple';
 
-export interface SelectionDomain<Id extends StableId = StableId> extends CursorDomain<Id> {
-  indexOf(id: Id): number | null;
+export interface SelectionDomain<ID extends StableID = StableID> extends CursorDomain<ID> {
+  indexOf(id: ID): number | null;
 }
 
-export interface SelectionState<Id extends StableId = StableId> {
-  readonly selected: readonly Id[];
-  readonly anchor: Id | null;
+export interface SelectionState<ID extends StableID = StableID> {
+  readonly selected: readonly ID[];
+  readonly anchor: ID | null;
   readonly size: number;
-  has(id: Id): boolean;
+  has(id: ID): boolean;
 }
 
-export interface SelectionSnapshotInput<Id extends StableId = StableId> {
-  readonly selected?: readonly Id[];
-  readonly anchor?: Id | null;
+export interface SelectionSnapshotInput<ID extends StableID = StableID> {
+  readonly selected?: readonly ID[];
+  readonly anchor?: ID | null;
 }
 
-class ImmutableSelectionState<Id extends StableId> implements SelectionState<Id> {
-  public readonly selected: readonly Id[];
-  public readonly anchor: Id | null;
-  readonly #selected: ReadonlySet<Id>;
+class ImmutableSelectionState<ID extends StableID> implements SelectionState<ID> {
+  public readonly selected: readonly ID[];
+  public readonly anchor: ID | null;
+  readonly #selected: ReadonlySet<ID>;
 
-  public constructor(selected: readonly Id[], anchor: Id | null) {
+  public constructor(selected: readonly ID[], anchor: ID | null) {
     this.selected = freezeArray(selected);
     this.anchor = anchor;
     this.#selected = new Set(this.selected);
@@ -36,16 +36,16 @@ class ImmutableSelectionState<Id extends StableId> implements SelectionState<Id>
     return this.selected.length;
   }
 
-  public has(id: Id): boolean {
+  public has(id: ID): boolean {
     return this.#selected.has(id);
   }
 }
 
-export function createSelectionState<Id extends StableId>(
-  domain: SelectionDomain<Id>,
+export function createSelectionState<ID extends StableID>(
+  domain: SelectionDomain<ID>,
   mode: SelectionMode,
-  input: SelectionSnapshotInput<Id> = {},
-): Result<SelectionState<Id>> {
+  input: SelectionSnapshotInput<ID> = {},
+): Result<SelectionState<ID>> {
   if (!isSelectionMode(mode)) {
     return fail('construction', 'invalid-selection-mode', 'Selection mode must be single or multiple.', {
       mode,
@@ -84,11 +84,11 @@ export function createSelectionState<Id extends StableId>(
   return ok(selectionFromSet(domain, requested, anchor));
 }
 
-export function reconcileSelection<Id extends StableId>(
-  state: SelectionState<Id>,
-  domain: SelectionDomain<Id>,
+export function reconcileSelection<ID extends StableID>(
+  state: SelectionState<ID>,
+  domain: SelectionDomain<ID>,
   mode: SelectionMode,
-): Result<SelectionState<Id>> {
+): Result<SelectionState<ID>> {
   if (!isSelectionMode(mode)) {
     return fail(
       'transition-rejection',
@@ -116,21 +116,21 @@ export function reconcileSelection<Id extends StableId>(
   return ok(sameSelection(state, result) ? state : result);
 }
 
-export function selectOne<Id extends StableId>(
-  state: SelectionState<Id>,
-  id: Id,
-  domain: SelectionDomain<Id>,
-): SelectionState<Id> {
+export function selectOne<ID extends StableID>(
+  state: SelectionState<ID>,
+  id: ID,
+  domain: SelectionDomain<ID>,
+): SelectionState<ID> {
   if (!domain.contains(id)) return state;
   if (state.size === 1 && state.has(id) && state.anchor === id) return state;
   return new ImmutableSelectionState([id], id);
 }
 
-export function toggleMultipleSelection<Id extends StableId>(
-  state: SelectionState<Id>,
-  id: Id,
-  domain: SelectionDomain<Id>,
-): SelectionState<Id> {
+export function toggleMultipleSelection<ID extends StableID>(
+  state: SelectionState<ID>,
+  id: ID,
+  domain: SelectionDomain<ID>,
+): SelectionState<ID> {
   if (!domain.contains(id)) return state;
   const selected = new Set(state.selected);
   if (selected.has(id)) selected.delete(id);
@@ -138,26 +138,26 @@ export function toggleMultipleSelection<Id extends StableId>(
   return selectionFromSet(domain, selected, id);
 }
 
-export function clearSelection<Id extends StableId>(
-  state: SelectionState<Id>,
-): SelectionState<Id> {
+export function clearSelection<ID extends StableID>(
+  state: SelectionState<ID>,
+): SelectionState<ID> {
   return state.size === 0 && state.anchor === null
     ? state
     : new ImmutableSelectionState([], null);
 }
 
-export function selectInterval<Id extends StableId>(
-  state: SelectionState<Id>,
-  anchor: Id,
-  extent: Id,
-  domain: SelectionDomain<Id>,
+export function selectInterval<ID extends StableID>(
+  state: SelectionState<ID>,
+  anchor: ID,
+  extent: ID,
+  domain: SelectionDomain<ID>,
   additive: boolean,
-): SelectionState<Id> {
+): SelectionState<ID> {
   const anchorIndex = domain.indexOf(anchor);
   const extentIndex = domain.indexOf(extent);
   if (anchorIndex === null || extentIndex === null) return state;
 
-  const selected = additive ? new Set(state.selected) : new Set<Id>();
+  const selected = additive ? new Set(state.selected) : new Set<ID>();
   const start = Math.min(anchorIndex, extentIndex);
   const end = Math.max(anchorIndex, extentIndex);
   for (let index = start; index <= end; index += 1) {
@@ -167,12 +167,12 @@ export function selectInterval<Id extends StableId>(
   return selectionFromSet(domain, selected, anchor);
 }
 
-function selectionFromSet<Id extends StableId>(
-  domain: SelectionDomain<Id>,
-  selected: ReadonlySet<Id>,
-  anchor: Id | null,
-): SelectionState<Id> {
-  const ordered: Id[] = [];
+function selectionFromSet<ID extends StableID>(
+  domain: SelectionDomain<ID>,
+  selected: ReadonlySet<ID>,
+  anchor: ID | null,
+): SelectionState<ID> {
+  const ordered: ID[] = [];
   for (let index = 0; index < domain.size; index += 1) {
     const id = domain.at(index);
     if (id !== null && selected.has(id)) ordered.push(id);
@@ -180,9 +180,9 @@ function selectionFromSet<Id extends StableId>(
   return new ImmutableSelectionState(ordered, anchor);
 }
 
-function sameSelection<Id extends StableId>(
-  left: SelectionState<Id>,
-  right: SelectionState<Id>,
+function sameSelection<ID extends StableID>(
+  left: SelectionState<ID>,
+  right: SelectionState<ID>,
 ): boolean {
   if (left.anchor !== right.anchor || left.selected.length !== right.selected.length) return false;
   return left.selected.every((id, index) => id === right.selected[index]);

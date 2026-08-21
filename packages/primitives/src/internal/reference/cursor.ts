@@ -1,15 +1,15 @@
-import type { StableId } from '../../shared.js';
+import type { StableID } from '../../shared.js';
 import {
   type CursorDomain,
   type CursorFallback,
   type CursorState,
 } from '../cursor.js';
 
-export function reconcileReferenceCursor<Id extends StableId>(
-  state: CursorState<Id>,
-  domain: CursorDomain<Id>,
+export function reconcileReferenceCursor<ID extends StableID>(
+  state: CursorState<ID>,
+  domain: CursorDomain<ID>,
   fallback: CursorFallback,
-): CursorState<Id> {
+): CursorState<ID> {
   let currentExists = false;
   if (state.current !== null) {
     for (let index = 0; index < domain.size; index += 1) {

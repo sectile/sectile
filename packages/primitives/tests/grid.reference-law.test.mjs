@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createGrid } from '../.verification-dist/grid.js';
 import { ReferenceGrid } from '../.verification-dist/internal/reference/grid.js';
-import { canonicalIds, powerset, unwrap } from './support.mjs';
+import { canonicalIDs, powerset, unwrap } from './support.mjs';
 
 function canonicalGrid(rows, columns, mask) {
   let next = 0;
@@ -69,8 +69,8 @@ test('GRD-05..07: movement is axis-only, nearest, eligible, and boundary-explici
         const ids = [];
         for (let index = 0; index < model.size; index += 1) ids.push(`i${index}`);
         const eligibilities = ids.length <= 6 ? [...powerset(ids)] : [ids];
-        for (const eligibleIds of eligibilities) {
-          const eligible = new Set(eligibleIds);
+        for (const eligibleIDs of eligibilities) {
+          const eligible = new Set(eligibleIDs);
           for (const current of ids) {
             for (const direction of ['left', 'right', 'up', 'down']) {
               for (const boundary of ['stop', 'wrap-axis']) {
@@ -120,7 +120,7 @@ test('grid construction normalizes ragged rows and rejects invalid occupancy', (
   assert.equal(grid.row(-1), null);
   assert.equal(grid.column(4), null);
   assert.equal(createGrid([['a'], ['a']]).error.code, 'duplicate-id');
-  assert.equal(createGrid([], { maxIdCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
+  assert.equal(createGrid([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
   assert.equal(createGrid([['a', 'b']], { columnCount: 1 }).error.code, 'column-count-too-small');
   assert.equal(createGrid([['a']], { columnCount: 2, maxCells: 1 }).error.code, 'cell-ceiling-exceeded');
   const rejected = grid.move('a', 'right', 'stop', { eligible: () => false, maxScan: 1 });

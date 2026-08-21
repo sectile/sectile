@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '../.verification-dist/sequence.js';
 import { ReferenceSequence } from '../.verification-dist/internal/reference/sequence.js';
-import { canonicalIds, permutations, powerset, unwrap } from './support.mjs';
+import { canonicalIDs, permutations, powerset, unwrap } from './support.mjs';
 
 test('SEQ-01..03: reference sequence exposes a strict total order with inverse observations', () => {
   let models = 0;
   for (let size = 0; size <= 6; size += 1) {
-    for (const ids of permutations(canonicalIds(size))) {
+    for (const ids of permutations(canonicalIDs(size))) {
       const model = new ReferenceSequence(ids);
       assert.equal(model.size, size);
       ids.forEach((id, index) => {
@@ -28,7 +28,7 @@ test('SEQ-01..03: reference sequence exposes a strict total order with inverse o
 test('SEQ-04..05: projection has identity and composition laws', () => {
   let cases = 0;
   for (let size = 0; size <= 8; size += 1) {
-    const ids = canonicalIds(size);
+    const ids = canonicalIDs(size);
     const model = new ReferenceSequence(ids);
     for (const subset of powerset(ids)) {
       const set = new Set(subset);
@@ -46,10 +46,10 @@ test('SEQ-04..05: projection has identity and composition laws', () => {
 test('SEQ-06..08: movement returns the first eligible directional candidate and obeys boundaries', () => {
   let cases = 0;
   for (let size = 0; size <= 8; size += 1) {
-    const ids = canonicalIds(size);
+    const ids = canonicalIDs(size);
     const model = new ReferenceSequence(ids);
-    for (const eligibleIds of powerset(ids)) {
-      const eligible = new Set(eligibleIds);
+    for (const eligibleIDs of powerset(ids)) {
+      const eligible = new Set(eligibleIDs);
       for (const current of ids) {
         for (const direction of [-1, 1]) {
           for (const boundary of ['stop', 'wrap']) {
@@ -85,7 +85,7 @@ test('SEQ-09: identity renaming commutes with every observation', () => {
 test('sequence construction and scan ceilings use explicit failure classes', () => {
   assert.equal(createSequence(['a', 'a']).ok, false);
   assert.equal(createSequence(['']).ok, false);
-  assert.equal(createSequence([], { maxIdCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
+  assert.equal(createSequence([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
   assert.equal(createSequence(['\ud800']).ok, false);
   assert.equal(createSequence([1]).error.code, 'invalid-id-type');
   const canonicallyEquivalent = unwrap(createSequence(['á', 'a\u0301']));

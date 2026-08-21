@@ -7,12 +7,12 @@ import {
 } from '../.verification-dist/internal/cursor.js';
 import { reconcileReferenceCursor } from '../.verification-dist/internal/reference/cursor.js';
 import { createSequence } from '../.verification-dist/sequence.js';
-import { canonicalIds, unwrap } from './support.mjs';
+import { canonicalIDs, unwrap } from './support.mjs';
 
 test('CUR-01..04: reconciliation preserves valid cursors and applies explicit fallback', () => {
   let cases = 0;
   for (let size = 0; size <= 8; size += 1) {
-    const ids = canonicalIds(size);
+    const ids = canonicalIDs(size);
     const domain = unwrap(createSequence(ids));
     const candidates = [null, ...ids, `outside-${size}`];
     for (const current of candidates) {

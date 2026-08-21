@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "fingerprint": "a637e3c4564478ae7753f30054b629d3ea85e1e1bf5538507db0671f3fc1acd1",
+  "fingerprint": "74223dbab1eeab37debcb8810c9d97dc3042f3bfb91057163a53fa3d91b9f5e7",
   "files": [
     {
       "path": "packages/primitives/dist/index.d.ts",
-      "sha256": "b498c58f14c7d4123fcffb3c8d815d088c7c64a779dadea725f9485dcdfd7b9d"
+      "sha256": "bcbd8cf602e9c971699d4c713d8bc950962196fe0d92850a061f792fdd06168e"
     },
     {
       "path": "packages/primitives/dist/sequence.d.ts",
-      "sha256": "fa566fc1cb5d2fe829a517c8bd6a0969b92bdbad719f259d94b48823bb236335"
+      "sha256": "30d19dcf64250f5db5a5ee99b4cf2e7b01794a9cee81b29c5539c22001389a02"
     },
     {
       "path": "packages/primitives/dist/range.d.ts",
@@ -16,11 +16,11 @@
     },
     {
       "path": "packages/primitives/dist/grid.d.ts",
-      "sha256": "451cf943de750b6cca3a8343e0cab3ad05aaeafbd8695ed3f309a04cac09e88e"
+      "sha256": "d3f3488ed96868bc8bc90bd85592dfb9c8c2ada65f22aae7b03ff5f55bcb7cc6"
     },
     {
       "path": "packages/primitives/dist/tree.d.ts",
-      "sha256": "15ba53535078ab69de153f3cd24c224d74dd11a629766460756a664d3875ff63"
+      "sha256": "8955205c69fa87f7b8b6f485bfc9b7cc05ecd7104f32f7976a5bf5d9deace729"
     }
   ]
 }

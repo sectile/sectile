@@ -16,7 +16,7 @@ const grid = unwrap(createGrid(Array.from({ length: 300 }, (_, row) =>
 )));
 const treeNodes = Array.from({ length: 100_000 }, (_, index) => ({
   id: `n${index}`,
-  parentId: index === 0 ? null : `n${Math.floor((index - 1) / 3)}`,
+  parentID: index === 0 ? null : `n${Math.floor((index - 1) / 3)}`,
 }));
 const tree = unwrap(createTree(treeNodes));
 

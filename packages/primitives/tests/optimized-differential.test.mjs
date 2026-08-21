@@ -174,15 +174,15 @@ function verifyTree(rng, iteration) {
   const nodes = [];
   for (let node = 0; node < size; node += 1) {
     const id = `t${iteration}-${node}`;
-    const parentId = node === 0 || rng.next() < 0.25
+    const parentID = node === 0 || rng.next() < 0.25
       ? null
       : `t${iteration}-${rng.int(0, node)}`;
-    nodes.push({ id, parentId });
+    nodes.push({ id, parentID });
   }
   // Reorder siblings while preserving each parent before children.
   const children = new Map([[null, []]]);
   for (const node of nodes) children.set(node.id, []);
-  for (const node of nodes) children.get(node.parentId).push(node.id);
+  for (const node of nodes) children.get(node.parentID).push(node.id);
   for (const [key, values] of children) children.set(key, rng.shuffle(values));
   const ordered = [];
   const visit = (id) => {
@@ -275,7 +275,7 @@ function verifyExpansion(rng, iteration) {
   for (let node = 0; node < size; node += 1) {
     nodes.push({
       id: `e${iteration}-${node}`,
-      parentId: node === 0 || rng.next() < 0.25 ? null : `e${iteration}-${rng.int(0, node)}`,
+      parentID: node === 0 || rng.next() < 0.25 ? null : `e${iteration}-${rng.int(0, node)}`,
     });
   }
   const tree = unwrap(createTree(nodes));

@@ -24,7 +24,7 @@ export async function listFiles(directory) {
   return result.sort()
 }
 
-export async function readJson(path) {
+export async function readJSON(path) {
   return JSON.parse(await readFile(path, 'utf8'))
 }
 

@@ -19,7 +19,7 @@ import {
   referenceToggleMultipleSelection,
 } from '../.verification-dist/internal/reference/selection.js';
 import { createSequence } from '../.verification-dist/sequence.js';
-import { canonicalIds, permutations, powerset, unwrap } from './support.mjs';
+import { canonicalIDs, permutations, powerset, unwrap } from './support.mjs';
 
 test('SEL-01..07: selection operations preserve domain, cardinality, and algebraic laws', () => {
   let selectionCases = 0;
@@ -27,7 +27,7 @@ test('SEL-01..07: selection operations preserve domain, cardinality, and algebra
   let intervalCases = 0;
 
   for (let size = 0; size <= 8; size += 1) {
-    const ids = canonicalIds(size);
+    const ids = canonicalIDs(size);
     const outside = `outside-${size}`;
     const domain = unwrap(createSequence(ids));
     const previousDomain = unwrap(createSequence([...ids, outside]));
@@ -135,11 +135,11 @@ test('SEL-01..07: selection operations preserve domain, cardinality, and algebra
 test('SEL-08: identity renaming commutes with every selection operation', () => {
   let cases = 0;
   for (let size = 0; size <= 6; size += 1) {
-    const ids = canonicalIds(size);
+    const ids = canonicalIDs(size);
     const sourceDomain = unwrap(createSequence(ids));
-    for (const renamedIds of permutations(ids)) {
-      const targetDomain = unwrap(createSequence(renamedIds));
-      const rename = new Map(ids.map((id, index) => [id, renamedIds[index]]));
+    for (const renamedIDs of permutations(ids)) {
+      const targetDomain = unwrap(createSequence(renamedIDs));
+      const rename = new Map(ids.map((id, index) => [id, renamedIDs[index]]));
       for (const selected of powerset(ids)) {
         const sourceAnchor = ids[0] ?? null;
         const targetAnchor = sourceAnchor === null ? null : rename.get(sourceAnchor);

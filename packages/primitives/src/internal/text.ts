@@ -1,5 +1,5 @@
 import type { ErrorClass, Result } from '../shared.js';
-import { fail, isWellFormedUtf16, ok } from './foundation.js';
+import { fail, isWellFormedUTF16, ok } from './foundation.js';
 
 export type TextSelectionDirection = 'none' | 'forward' | 'backward';
 
@@ -34,7 +34,7 @@ export interface TextEditingState {
 type TextErrorClass = Extract<ErrorClass, 'construction' | 'transition-rejection'>;
 
 export function isWellFormedPlainText(text: string): boolean {
-  return typeof text === 'string' && isWellFormedUtf16(text);
+  return typeof text === 'string' && isWellFormedUTF16(text);
 }
 
 export function isTextCodeUnitBoundary(text: string, offset: number): boolean {
