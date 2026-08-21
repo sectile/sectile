@@ -1,4 +1,4 @@
-import type { TextEditingState, TextSelectionInput } from '@sectile/primitives/text';
+import { isTextCodeUnitBoundary, type TextEditingState, type TextSelectionInput } from '@sectile/primitives/text';
 import type { TextElement, TextInput } from '../text.js';
 
 export interface DOMTextElementBindingOptions {
@@ -12,12 +12,13 @@ export class DOMTextElementBinding {
   readonly #getState: () => TextEditingState;
   readonly #dispatch: (input: TextInput) => boolean;
   readonly #handleBeforeInputEvent: (event: Event) => void;
-  readonly #handleInputEvent: () => void;
+  readonly #handleInputEvent: (event: Event) => void;
   readonly #handleCompositionStart: (event: Event) => void;
   readonly #handleCompositionUpdate: (event: Event) => void;
   readonly #handleCompositionEnd: (event: Event) => void;
   #composing = false;
   #compositionStart = 0;
+  #ignoreNextCompositionInput = false;
 
   public constructor(options: DOMTextElementBindingOptions) {
     this.#element = options.element;
@@ -26,8 +27,15 @@ export class DOMTextElementBinding {
     this.#handleBeforeInputEvent = (event): void => {
       if (this.handleBeforeInput(event as InputEvent)) event.preventDefault();
     };
-    this.#handleInputEvent = (): void => {
-      if (!this.#composing) this.render();
+    this.#handleInputEvent = (event): void => {
+      if (this.#composing) return;
+      const inputEvent = event as InputEvent;
+      const inputType = (inputEvent as Partial<InputEvent>).inputType;
+      const ignoreCompositionTail = this.#ignoreNextCompositionInput
+        && (inputType === 'insertCompositionText' || inputType === undefined);
+      this.#ignoreNextCompositionInput = false;
+      if (ignoreCompositionTail) this.render();
+      else this.#reconcileNativeInput(inputEvent);
     };
     this.#handleCompositionStart = (event): void => {
       this.#startComposition(event as CompositionEvent);
@@ -52,6 +60,7 @@ export class DOMTextElementBinding {
 
   public handleBeforeInput(event: InputEvent): boolean {
     if (this.#composing || event.isComposing) return false;
+    if (event.cancelable === false) return false;
     const snapshot = this.#getState().snapshot;
     let start = this.#element.selectionStart ?? snapshot.selection.startCodeUnitOffset;
     let end = this.#element.selectionEnd ?? snapshot.selection.endCodeUnitOffset;
@@ -100,6 +109,21 @@ export class DOMTextElementBinding {
     this.#element.removeEventListener('compositionend', this.#handleCompositionEnd);
   }
 
+  #reconcileNativeInput(event: InputEvent): void {
+    const snapshot = this.#getState().snapshot;
+    const replacement = minimalReplacement(snapshot.text, this.#element.value);
+    const selection = selectionFromElement(this.#element, snapshot.selection);
+    this.#dispatch({
+      type: 'input',
+      inputType: event.inputType,
+      text: replacement.text,
+      startCodeUnitOffset: replacement.startCodeUnitOffset,
+      endCodeUnitOffset: replacement.endCodeUnitOffset,
+      selection,
+    });
+    this.render();
+  }
+
   #startComposition(event: CompositionEvent): void {
     if (this.#composing) return;
     const snapshot = this.#getState().snapshot;
@@ -139,8 +163,47 @@ export class DOMTextElementBinding {
       });
     }
     this.#composing = false;
+    this.#ignoreNextCompositionInput = true;
     if (this.#dispatch({ type: 'composition-commit' })) this.render();
   }
+}
+
+function minimalReplacement(previous: string, next: string): {
+  readonly startCodeUnitOffset: number;
+  readonly endCodeUnitOffset: number;
+  readonly text: string;
+} {
+  let start = 0;
+  const sharedLength = Math.min(previous.length, next.length);
+  while (start < sharedLength && previous[start] === next[start]) start += 1;
+  while (start > 0 && (!isTextCodeUnitBoundary(previous, start) || !isTextCodeUnitBoundary(next, start))) start -= 1;
+
+  let previousEnd = previous.length;
+  let nextEnd = next.length;
+  while (previousEnd > start && nextEnd > start && previous[previousEnd - 1] === next[nextEnd - 1]) {
+    previousEnd -= 1;
+    nextEnd -= 1;
+  }
+  while (!isTextCodeUnitBoundary(previous, previousEnd) || !isTextCodeUnitBoundary(next, nextEnd)) {
+    previousEnd += 1;
+    nextEnd += 1;
+  }
+  return Object.freeze({
+    startCodeUnitOffset: start,
+    endCodeUnitOffset: previousEnd,
+    text: next.slice(start, nextEnd),
+  });
+}
+
+function selectionFromElement(
+  element: TextElement,
+  fallback: TextEditingState['snapshot']['selection'],
+): TextSelectionInput {
+  const start = element.selectionStart ?? fallback.startCodeUnitOffset;
+  const end = element.selectionEnd ?? fallback.endCodeUnitOffset;
+  return element.selectionDirection === 'backward'
+    ? { anchorCodeUnitOffset: end, focusCodeUnitOffset: start }
+    : { anchorCodeUnitOffset: start, focusCodeUnitOffset: end };
 }
 
 function collapsedSelection(offset: number): TextSelectionInput {

@@ -87,6 +87,23 @@ test('DOM keyboard and text inputs map onto combobox semantics', () => {
       selection: selection(1),
     },
   });
+  assert.deepEqual(toComboboxTextEvent({
+    type: 'input',
+    inputType: 'deleteWordBackward',
+    text: '',
+    startCodeUnitOffset: 5,
+    endCodeUnitOffset: 9,
+    selection: selection(5),
+  }), {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 5,
+      endCodeUnitOffset: 9,
+      text: '',
+      selection: selection(5),
+    },
+  });
 });
 
 test('DOM combobox restores controlled text after each native IME commit', () => {
@@ -122,6 +139,24 @@ test('DOM combobox leaves live native IME text under browser ownership', () => {
   input.emit('compositionend', { data: '한' });
   assert.equal(input.value, '한');
   assert.equal(input.valueWrites, 1);
+});
+
+test('DOM combobox adopts native word deletion through the shared text binding', () => {
+  const input = new FakeTextElement();
+  const connection = unwrap(createCombobox({
+    items: items(),
+    input,
+  }));
+
+  assert.equal(connection.handleBeforeInput(inputEvent('insertText', 'alpha beta')), true);
+  input.value = 'alpha ';
+  input.selectionStart = 6;
+  input.selectionEnd = 6;
+  input.emit('input', { inputType: 'deleteWordBackward' });
+
+  assert.equal(connection.getSnapshot().state.text.snapshot.text, 'alpha ');
+  assert.equal(input.value, 'alpha ');
+  connection.disconnect();
 });
 
 test('DOM combobox delegates option clicks into direct acceptance', () => {
@@ -344,6 +379,7 @@ class FakeTextElement extends FakeElement {
   value = '';
   selectionStart = 0;
   selectionEnd = 0;
+  selectionDirection = 'none';
 
   setSelectionRange(start, end) {
     this.selectionStart = start;

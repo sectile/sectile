@@ -30,6 +30,14 @@ export type TextInput =
       readonly selection: TextSelectionInput;
     }
   | {
+      readonly type: 'input';
+      readonly inputType: string;
+      readonly text: string;
+      readonly startCodeUnitOffset: number;
+      readonly endCodeUnitOffset: number;
+      readonly selection: TextSelectionInput;
+    }
+  | {
       readonly type: 'composition-start';
       readonly text: string;
       readonly startCodeUnitOffset: number;
@@ -120,6 +128,16 @@ export function connectText(options: TextConnectionOptions): TextConnection {
 
 export function toTextEvent(input: TextInput): TextEvent | null {
   if (typeof input !== 'object' || input === null) return null;
+  if (input.type === 'input') {
+    if (typeof input.inputType !== 'string' || typeof input.text !== 'string') return null;
+    return Object.freeze({
+      type: 'replace',
+      startCodeUnitOffset: input.startCodeUnitOffset,
+      endCodeUnitOffset: input.endCodeUnitOffset,
+      text: input.text,
+      selection: input.selection,
+    });
+  }
   if (input.type === 'beforeinput') {
     const deletion = input.inputType === 'deleteContentBackward'
       || input.inputType === 'deleteContentForward'
