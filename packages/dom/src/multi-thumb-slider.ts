@@ -53,7 +53,9 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
   readonly #elements = new Map<ID, HTMLElement>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handlePointer: (event: PointerEvent) => void;
+  readonly #handlePointerUp: (event: PointerEvent) => void;
   readonly #handleFocus: (event: FocusEvent) => void;
+  #draggingThumb: ID | null = null;
 
   public constructor(options: MultiThumbSliderOptions<ID>, thumbs: Sequence<ID>, range: QuantizedRange, runtime: SemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>>) {
     this.#options = options;
@@ -65,12 +67,25 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
       if (semantic !== null && this.handleEvent(semantic)) event.preventDefault();
     };
     this.#handlePointer = (event): void => {
-      const id = this.getSnapshot().state.cursor.current;
-      if (id === null) return;
       const rect = (options.track ?? options.root).getBoundingClientRect();
       if (rect.width <= 0) return;
       const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-      this.handleEvent({ type: 'set-tick', id, tick: Math.round(ratio * range.count) });
+      const tick = Math.round(ratio * range.count);
+      if (event.type === 'pointerdown') {
+        const id = this.#thumbForTarget(event.target) ?? this.#nearestThumb(tick);
+        if (id === null) return;
+        this.#draggingThumb = id;
+        (options.track ?? options.root).setPointerCapture?.(event.pointerId);
+        this.#elements.get(id)?.focus();
+      } else if (this.#draggingThumb === null) {
+        return;
+      }
+      if (this.#draggingThumb !== null && this.handleEvent({ type: 'set-tick', id: this.#draggingThumb, tick })) event.preventDefault();
+    };
+    this.#handlePointerUp = (event): void => {
+      if (this.#draggingThumb === null) return;
+      this.#draggingThumb = null;
+      (options.track ?? options.root).releasePointerCapture?.(event.pointerId);
     };
     this.#handleFocus = (event): void => {
       for (const [id, element] of this.#elements) if (event.target === element) { this.handleEvent({ type: 'focus', id }); return; }
@@ -78,6 +93,9 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     options.root.addEventListener('keydown', this.#handleKeydown);
     options.root.addEventListener('focusin', this.#handleFocus);
     (options.track ?? options.root).addEventListener('pointerdown', this.#handlePointer);
+    (options.track ?? options.root).addEventListener('pointermove', this.#handlePointer);
+    (options.track ?? options.root).addEventListener('pointerup', this.#handlePointerUp);
+    (options.track ?? options.root).addEventListener('pointercancel', this.#handlePointerUp);
     options.root.setAttribute('role', 'group');
   }
   public getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>> { return this.#runtime.getSnapshot(); }
@@ -89,13 +107,29 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
   }
   public setThumbAttributes(element: HTMLElement, id: ID): void { if (this.#thumbs.indexOf(id) !== null) { this.#elements.set(id, element); this.#refreshAttributes(); } }
   public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#refreshAttributes(); this.#options.onUpdate?.(); return true; }
-  public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#handleKeydown); this.#options.root.removeEventListener('focusin', this.#handleFocus); (this.#options.track ?? this.#options.root).removeEventListener('pointerdown', this.#handlePointer); this.#elements.clear(); }
+  public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#handleKeydown); this.#options.root.removeEventListener('focusin', this.#handleFocus); (this.#options.track ?? this.#options.root).removeEventListener('pointerdown', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointermove', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointerup', this.#handlePointerUp); (this.#options.track ?? this.#options.root).removeEventListener('pointercancel', this.#handlePointerUp); this.#elements.clear(); }
+  #thumbForTarget(target: EventTarget | null): ID | null {
+    for (const [id, element] of this.#elements) if (element === target) return id;
+    return null;
+  }
+  #nearestThumb(tick: number): ID | null {
+    const state = this.getSnapshot().state;
+    let nearest = state.cursor.current;
+    let distance = nearest === null ? Number.POSITIVE_INFINITY : Math.abs((state.ticks[this.#thumbs.indexOf(nearest) as number] as number) - tick);
+    for (let index = 0; index < state.ticks.length; index += 1) {
+      const candidateDistance = Math.abs((state.ticks[index] as number) - tick);
+      if (candidateDistance >= distance) continue;
+      nearest = this.#thumbs.at(index);
+      distance = candidateDistance;
+    }
+    return nearest;
+  }
   #refreshAttributes(): void {
     const state = this.getSnapshot().state;
     for (const [id, element] of this.#elements) {
       const index = this.#thumbs.indexOf(id);
       if (index === null) continue;
-      element.setAttribute('role', 'slider'); element.setAttribute('aria-valuemin', '0'); element.setAttribute('aria-valuemax', String(this.range.count)); element.setAttribute('aria-valuenow', String(state.ticks[index])); element.tabIndex = state.cursor.current === id ? 0 : -1;
+      element.setAttribute('role', 'slider'); element.setAttribute('aria-valuemin', '0'); element.setAttribute('aria-valuemax', String(this.range.count)); element.setAttribute('aria-valuenow', String(state.ticks[index])); element.tabIndex = 0;
     }
   }
 }
@@ -105,6 +139,5 @@ function toMultiThumbSliderEvent(event: KeyboardEvent): Extract<MultiThumbSlider
   if (event.key === 'ArrowRight' || event.key === 'ArrowUp') return 'increment';
   if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') return 'decrement';
   if (event.key === 'Home') return 'home'; if (event.key === 'End') return 'end';
-  if (event.key === 'Tab') return event.shiftKey ? 'previous-thumb' : 'next-thumb';
   return null;
 }
