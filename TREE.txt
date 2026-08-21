@@ -47,11 +47,13 @@ sectile/
 │   │   │   ├── calendar.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
-│   │   │   └── slider.ts
+│   │   │   ├── slider.ts
+│   │   │   └── tree-view.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── listbox.test.mjs
-│   │   │   └── slider.test.mjs
+│   │   │   ├── slider.test.mjs
+│   │   │   └── tree-view.test.mjs
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -128,7 +130,8 @@ sectile/
 │   │   │   ├── listbox.ts
 │   │   │   ├── revision.ts
 │   │   │   ├── shared.ts
-│   │   │   └── slider.ts
+│   │   │   ├── slider.ts
+│   │   │   └── tree-view.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
@@ -178,11 +181,13 @@ sectile/
 │       │   ├── calendar.ts
 │       │   ├── index.ts
 │       │   ├── listbox.ts
-│       │   └── slider.ts
+│       │   ├── slider.ts
+│       │   └── tree-view.ts
 │       ├── tests/
 │       │   ├── calendar.test.mjs
 │       │   ├── listbox.test.mjs
-│       │   └── slider.test.mjs
+│       │   ├── slider.test.mjs
+│       │   └── tree-view.test.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -198,7 +203,8 @@ sectile/
 │   └── cross-host/
 │       ├── calendar.test.mjs
 │       ├── listbox.test.mjs
-│       └── slider.test.mjs
+│       ├── slider.test.mjs
+│       └── tree-view.test.mjs
 ├── .gitignore
 ├── .node-version
 ├── package.json

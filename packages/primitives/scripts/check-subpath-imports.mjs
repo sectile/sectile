@@ -18,9 +18,10 @@ try {
     import { createListboxState } from '@sectile/primitives/listbox';
     import { createCalendarState } from '@sectile/primitives/calendar';
     import { createSliderState } from '@sectile/primitives/slider';
+    import { createTreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createSliderState, createRevisionSnapshot]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createSliderState, createTreeViewState, createRevisionSnapshot]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -35,6 +36,7 @@ try {
     import { createListboxState, type ListboxState } from '@sectile/primitives/listbox';
     import { createCalendarState, type CalendarState } from '@sectile/primitives/calendar';
     import { createSliderState, type SliderState } from '@sectile/primitives/slider';
+    import { createTreeViewState, type TreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
     const a: Result<Sequence<string>> = createSequence(['a']);
     const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
@@ -47,7 +49,9 @@ try {
     const g: Result<SliderState> = createSliderState(b.value);
     if (!c.ok) throw new Error(c.error.message);
     const h: Result<CalendarState<string>> = createCalendarState(c.value);
-    void [a, b, c, d, e, f, g, h];
+    if (!d.ok) throw new Error(d.error.message);
+    const i: Result<TreeViewState<string>> = createTreeViewState(d.value);
+    void [a, b, c, d, e, f, g, h, i];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -61,7 +65,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 9, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 10, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

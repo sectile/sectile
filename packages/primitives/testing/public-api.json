@@ -11,6 +11,7 @@
     "./listbox",
     "./calendar",
     "./slider",
+    "./tree-view",
     "./revision",
     "./package.json"
   ],
@@ -22,6 +23,7 @@
     "./listbox",
     "./calendar",
     "./slider",
+    "./tree-view",
     "./revision"
   ],
   "runtimeTargets": {
@@ -32,6 +34,7 @@
     "./listbox": "listbox",
     "./calendar": "calendar",
     "./slider": "slider",
+    "./tree-view": "tree-view",
     "./revision": "revision"
   }
 }

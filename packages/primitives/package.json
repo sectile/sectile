@@ -51,6 +51,11 @@
       "import": "./dist/slider.js",
       "default": "./dist/slider.js"
     },
+    "./tree-view": {
+      "types": "./dist/tree-view.d.ts",
+      "import": "./dist/tree-view.js",
+      "default": "./dist/tree-view.js"
+    },
     "./revision": {
       "types": "./dist/revision.d.ts",
       "import": "./dist/revision.js",

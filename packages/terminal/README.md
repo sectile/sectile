@@ -17,4 +17,4 @@ const controller = result.value;
 
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
 
-Calendar and slider controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects.
+Calendar, slider, and tree-view controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects.
