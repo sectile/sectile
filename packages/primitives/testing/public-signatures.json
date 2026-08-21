@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "a0f054ac19125bd2ac4c9d919434b02bebf6b713b5311a24336293eea26761d0",
+  "fingerprint": "fd221575d5c41648422146835da76e6b69f3f36675141d76c9aa5daef0c74cd0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -16,7 +16,7 @@
     },
     {
       "path": "dist/carousel.d.ts",
-      "sha256": "24c793e15c6a2443870d729d6006811635697ca1320c73cf82b760f16cfc2f08"
+      "sha256": "7a3d2666489773bb123553e1b463a85e0e63d709999f679b7cfc4453062e193d"
     },
     {
       "path": "dist/checkbox.d.ts",

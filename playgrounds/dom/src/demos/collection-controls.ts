@@ -2,7 +2,7 @@ import { createCarousel, type CarouselConnection } from '@sectile/dom/carousel';
 import { createFeed, type FeedConnection } from '@sectile/dom/feed';
 import { createGridControl, type GridConnection } from '@sectile/dom/grid';
 import { unwrap } from '@sectile/primitives/result';
-import { ChevronLeft, ChevronRight, Pause, Play, createElement } from 'lucide';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Pause, Play, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const gridRows = [
@@ -29,21 +29,21 @@ export const gridDemo: DemoDefinition = {
 };
 
 const slides = [
-  { id: 'overview', eyebrow: 'Release 1', title: 'Foundation', detail: 'Primitive state and laws.' },
-  { id: 'adapters', eyebrow: 'Release 2', title: 'Adapters', detail: 'DOM and terminal ownership.' },
-  { id: 'verification', eyebrow: 'Release 3', title: 'Verification', detail: 'Cross-host parity and examples.' },
+  { id: 'overview', title: 'Foundation', detail: 'Primitive state and laws.' },
+  { id: 'adapters', title: 'Adapters', detail: 'DOM and terminal ownership.' },
+  { id: 'verification', title: 'Verification', detail: 'Cross-host parity and examples.' },
 ] as const;
 type SlideID = typeof slides[number]['id'];
 
 export const carouselDemo: DemoDefinition = {
   id: 'carousel', label: 'Carousel', title: 'Carousel',
-  description: 'Slide movement, wrapping boundaries, pause state, announcements, controls, and controlled ownership.',
-  shortcuts: [{ keys: ['←', '→'], label: 'move' }, { keys: ['Home', 'End'], label: 'edges' }, { keys: ['Space'], label: 'pause / resume' }],
+  description: 'Direct slide controls, bounded and wrapping movement, configurable autoplay, orientation, and controlled ownership.',
+  shortcuts: [{ keys: ['Arrows'], label: 'move' }, { keys: ['Home', 'End'], label: 'edges' }, { keys: ['Space'], label: 'pause / resume autoplay' }],
   cases: [
-    { id: 'wrapping', title: 'Wrapping release tour', mount: (context) => mountCarousel(context, { wrap: true, paused: false, controlled: false }) },
-    { id: 'bounded', title: 'Bounded onboarding', mount: (context) => mountCarousel(context, { wrap: false, paused: false, controlled: false }) },
-    { id: 'paused', title: 'Initially paused rotation', mount: (context) => mountCarousel(context, { wrap: true, paused: true, controlled: false }) },
-    { id: 'controlled', title: 'Controlled carousel', mount: (context) => mountCarousel(context, { wrap: true, paused: false, controlled: true }) },
+    { id: 'wrapping', title: 'Arrow-only release tour', mount: (context) => mountCarousel(context, { wrap: true, controlled: false, orientation: 'horizontal', controls: 'arrows-overlay' }) },
+    { id: 'bounded', title: 'Bounded stepper', mount: (context) => mountCarousel(context, { wrap: false, controlled: false, orientation: 'horizontal', controls: 'counter' }) },
+    { id: 'autoplay', title: 'Autoplay with dots', mount: (context) => mountCarousel(context, { wrap: true, controlled: false, orientation: 'horizontal', controls: 'autoplay', autoplayDelayMs: 2800 }) },
+    { id: 'controlled', title: 'Labeled vertical rail', mount: (context) => mountCarousel(context, { wrap: true, controlled: true, orientation: 'vertical', controls: 'rail' }) },
   ],
 };
 
@@ -110,41 +110,103 @@ function mountGrid(context: DemoContext, scenario: {
   return { focus: () => root.querySelector<HTMLElement>('[tabindex="0"]')?.focus(), disconnect: () => connection.disconnect() };
 }
 
-function mountCarousel(context: DemoContext, scenario: { readonly wrap: boolean; readonly paused: boolean; readonly controlled: boolean }): DemoSession {
-  const root = document.createElement('section'); root.className = 'carousel-demo'; root.tabIndex = 0;
+function mountCarousel(context: DemoContext, scenario: {
+  readonly wrap: boolean;
+  readonly controlled: boolean;
+  readonly orientation: 'horizontal' | 'vertical';
+  readonly controls: 'arrows-overlay' | 'counter' | 'autoplay' | 'rail';
+  readonly autoplayDelayMs?: number;
+}): DemoSession {
+  const root = document.createElement('section'); root.className = `carousel-demo ${scenario.orientation} ${scenario.controls}`; root.tabIndex = 0;
   const viewport = document.createElement('div'); viewport.className = 'carousel-viewport';
-  const controls = document.createElement('div'); controls.className = 'carousel-controls';
-  const previous = iconButton(ChevronLeft, 'Previous slide'); const pause = iconButton(scenario.paused ? Play : Pause, 'Pause automatic rotation'); const next = iconButton(ChevronRight, 'Next slide');
-  const announcement = document.createElement('p'); announcement.className = 'demo-copy'; announcement.setAttribute('aria-live', 'polite');
-  controls.append(previous, pause, next); root.append(viewport, controls, announcement); context.surface.append(root);
-  let externalValue: SlideID | null = 'overview'; let externalPaused = scenario.paused; let announced: SlideID | null = null;
+  const toolbar = document.createElement('div'); toolbar.className = 'carousel-toolbar';
+  const hasArrows = scenario.controls !== 'autoplay';
+  const hasIndicators = scenario.controls === 'autoplay' || scenario.controls === 'rail';
+  const hasPosition = scenario.controls === 'counter';
+  const previous = hasArrows ? iconButton(scenario.orientation === 'vertical' ? ChevronUp : ChevronLeft, 'Previous slide') : undefined;
+  const next = hasArrows ? iconButton(scenario.orientation === 'vertical' ? ChevronDown : ChevronRight, 'Next slide') : undefined;
+  const indicators = hasIndicators ? document.createElement('div') : undefined; if (indicators !== undefined) indicators.className = 'carousel-indicators';
+  const position = hasPosition ? document.createElement('span') : undefined; if (position !== undefined) position.className = 'carousel-position';
+  const pause = scenario.autoplayDelayMs === undefined ? undefined : iconButton(Pause, 'Pause automatic rotation');
+  const announcement = document.createElement('p'); announcement.className = 'sr-only'; announcement.setAttribute('aria-live', 'polite');
+  if (scenario.controls === 'autoplay') {
+    const autoplayLabel = document.createElement('span'); autoplayLabel.className = 'carousel-autoplay-label'; autoplayLabel.textContent = 'Every 2.8 seconds';
+    toolbar.append(autoplayLabel); if (indicators !== undefined) toolbar.append(indicators); if (pause !== undefined) toolbar.append(pause);
+  } else {
+    if (previous !== undefined) toolbar.append(previous); if (indicators !== undefined) toolbar.append(indicators); if (position !== undefined) toolbar.append(position); if (next !== undefined) toolbar.append(next);
+  }
+  root.append(viewport, toolbar, announcement); context.surface.append(root);
+
+  const slideElements = new Map<SlideID, HTMLElement>();
+  const indicatorElements = new Map<SlideID, HTMLButtonElement>();
+  for (const [index, slide] of slides.entries()) {
+    const article = document.createElement('article'); article.className = 'carousel-slide'; article.dataset['tone'] = String(index + 1);
+    const title = document.createElement('strong'); title.textContent = slide.title;
+    const detail = document.createElement('p'); detail.textContent = slide.detail;
+    article.append(title, detail); viewport.append(article); slideElements.set(slide.id, article);
+    if (indicators !== undefined) {
+      const indicator = document.createElement('button'); indicator.type = 'button'; indicator.className = scenario.controls === 'rail' ? 'carousel-indicator carousel-indicator-label' : 'carousel-indicator';
+      if (scenario.controls === 'rail') indicator.textContent = slide.title;
+      indicators.append(indicator); indicatorElements.set(slide.id, indicator);
+    }
+  }
+
+  let externalValue: SlideID | null = 'overview'; let externalPaused = false; let announced: SlideID | null = null;
   let connection!: CarouselConnection<SlideID>;
   connection = unwrap(createCarousel({
-    root, previousButton: previous, nextButton: next, pauseButton: pause,
-    slides: slides.map((slide) => slide.id), policies: { wrap: scenario.wrap }, label: 'Sectile release tour',
+    root,
+    ...(previous === undefined ? {} : { previousButton: previous }),
+    ...(next === undefined ? {} : { nextButton: next }),
+    ...(indicators === undefined ? {} : { indicatorGroup: indicators }),
+    ...(pause === undefined ? {} : { pauseButton: pause }),
+    slides: slides.map((slide) => slide.id), policies: { wrap: scenario.wrap }, orientation: scenario.orientation, label: 'Sectile release tour',
+    ...(scenario.autoplayDelayMs === undefined ? {} : { autoplay: { delayMs: scenario.autoplayDelayMs, stopOnInteraction: false } }),
     ...(scenario.controlled ? {
       value: externalValue, paused: externalPaused,
       onValueChange: (value) => { externalValue = value; queueMicrotask(sync); },
       onPausedChange: (value) => { externalPaused = value; queueMicrotask(sync); },
     } : { defaultValue: externalValue, defaultPaused: externalPaused }),
     getSlideLabel: (_id, index, count) => `Release slide ${index + 1} of ${count}`,
+    getIndicatorLabel: (id) => `Go to ${slides.find((slide) => slide.id === id)?.title ?? id}`,
     onAnnounce: (id) => { announced = id; }, onUpdate: render,
   }));
+  for (const slide of slides) {
+    connection.setSlideAttributes(slideElements.get(slide.id)!, slide.id);
+    const indicator = indicatorElements.get(slide.id); if (indicator !== undefined) connection.setIndicatorAttributes(indicator, slide.id);
+  }
   function sync(): void { connection.syncControlledValues({ value: externalValue, paused: externalPaused }); }
   function render(): void {
-    const { revision, state } = connection.getSnapshot(); viewport.replaceChildren();
-    for (const slide of slides) {
-      const article = document.createElement('article'); article.className = 'carousel-slide';
-      const eyebrow = document.createElement('span'); eyebrow.className = 'eyebrow'; eyebrow.textContent = slide.eyebrow;
-      const title = document.createElement('strong'); title.textContent = slide.title;
-      const detail = document.createElement('p'); detail.textContent = slide.detail;
-      article.append(eyebrow, title, detail); connection.setSlideAttributes(article, slide.id); viewport.append(article);
-    }
-    pause.replaceChildren(createElement(state.paused ? Play : Pause, { 'aria-hidden': 'true', height: 17, width: 17 }));
-    announcement.textContent = announced === null ? 'Use the controls or arrow keys.' : `Showing ${announced}.`;
-    context.showState(revision, { current: state.cursor.current, paused: state.paused, wrap: scenario.wrap, ownership: scenario.controlled ? 'controlled' : 'uncontrolled', announced });
+    const { revision, state } = connection.getSnapshot(); const currentPosition = connection.getPosition();
+    if (pause !== undefined) pause.replaceChildren(createElement(state.paused ? Play : Pause, { 'aria-hidden': 'true', height: 17, width: 17 }));
+    if (position !== undefined) position.textContent = currentPosition.index === null ? `0 / ${currentPosition.count}` : `${currentPosition.index + 1} / ${currentPosition.count}`;
+    announcement.textContent = announced === null ? 'Use the controls, slide selectors, or arrow keys.' : `Showing ${announced}.`;
+    context.showState(revision, {
+      current: state.cursor.current,
+      position: currentPosition,
+      paused: state.paused,
+      pauseReasons: state.pauseReasons,
+      autoplayDelayMs: scenario.autoplayDelayMs ?? null,
+      orientation: scenario.orientation,
+      wrap: scenario.wrap,
+      ownership: scenario.controlled ? 'controlled' : 'uncontrolled',
+      announced,
+    });
   }
-  render(); return { focus: () => root.focus(), disconnect: () => connection.disconnect() };
+  render(); return {
+    focus: () => {
+      const selectedIndicator = indicators?.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (selectedIndicator !== undefined && selectedIndicator !== null) {
+        selectedIndicator.focus();
+        return;
+      }
+      if (previous !== undefined) {
+        previous.focus();
+        return;
+      }
+      root.focus();
+    },
+    disconnect: () => connection.disconnect(),
+  };
 }
 
 function mountFeed(context: DemoContext, scenario: { readonly start: number; readonly size: number; readonly load: boolean }): DemoSession {

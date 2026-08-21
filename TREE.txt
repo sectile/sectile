@@ -344,6 +344,7 @@ sectile/
 │       └── tsconfig.json
 ├── playgrounds/
 │   ├── dom/
+│   │   ├── public/
 │   │   ├── src/
 │   │   │   ├── demos/
 │   │   │   │   ├── calendar.ts

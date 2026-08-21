@@ -44,7 +44,7 @@ export const demos = Object.freeze([
   { id: 'menu', label: 'Menu', description: 'commands · disabled · nested · [/] cases', create: (host) => createMenuDemo(host, 'menu') },
   { id: 'menubar', label: 'Menubar', description: 'application · disabled · typeahead · [/] cases', create: (host) => createMenuDemo(host, 'menubar') },
   { id: 'menu-button', label: 'Menu button', description: 'actions · nested · controlled · [/] cases', create: (host) => createMenuDemo(host, 'menu-button') },
-  { id: 'carousel', label: 'Carousel', description: 'wrap · bounded · paused · controlled · [/] cases', create: createCarouselDemo },
+  { id: 'carousel', label: 'Carousel', description: 'wrap · bounded · autoplay · direct select · [/] cases', create: createCarouselDemo },
   { id: 'feed', label: 'Feed', description: 'finite · before/after windows · [/] cases', create: createFeedDemo },
 ]);
 
@@ -102,25 +102,35 @@ function createCarouselDemo(host) {
     ['verification', 'Verification', 'Cross-host parity and examples'],
   ];
   return scenarioDemo(host, [
-    { title: 'Wrapping release tour', wrap: true, paused: false, controlled: false },
-    { title: 'Bounded onboarding', wrap: false, paused: false, controlled: false },
-    { title: 'Initially paused rotation', wrap: true, paused: true, controlled: false },
-    { title: 'Controlled carousel', wrap: true, paused: false, controlled: true },
+    { title: 'Wrapping release tour', wrap: true, controlled: false, orientation: 'horizontal' },
+    { title: 'Bounded onboarding', wrap: false, controlled: false, orientation: 'horizontal' },
+    { title: 'Automatic release tour', wrap: true, controlled: false, orientation: 'horizontal', autoplayDelayMs: 2800 },
+    { title: 'Controlled vertical tour', wrap: true, controlled: true, orientation: 'vertical' },
   ], (scenario) => {
-    let value = 'overview'; let paused = scenario.paused; let announced = null; let connection;
-    connection = unwrap(createCarousel({ slides: slides.map(([id]) => id), policies: { wrap: scenario.wrap }, ...(scenario.controlled ? { value, paused, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onPausedChange: (next) => { paused = next; queueMicrotask(sync); } } : { defaultValue: value, defaultPaused: paused }), onAnnounce: (id) => { announced = id; }, onUpdate: host.render }));
+    let value = 'overview'; let paused = false; let announced = null; let connection;
+    connection = unwrap(createCarousel({
+      slides: slides.map(([id]) => id), policies: { wrap: scenario.wrap }, orientation: scenario.orientation,
+      ...(scenario.autoplayDelayMs === undefined ? {} : { autoplay: { delayMs: scenario.autoplayDelayMs, stopOnInteraction: false } }),
+      ...(scenario.controlled ? { value, paused, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onPausedChange: (next) => { paused = next; queueMicrotask(sync); } } : { defaultValue: value, defaultPaused: paused }),
+      onAnnounce: (id) => { announced = id; }, onUpdate: host.render,
+    }));
     function sync() { connection.syncControlledValues({ value, paused }); }
     return {
-      handle: (input) => connection.handleKeyboardInput(input),
+      handle: (input) => /^[1-3]$/.test(input.key)
+        ? connection.handleEvent({ type: 'focus', id: slides[Number(input.key) - 1][0] })
+        : connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot(); const slide = slides.find(([id]) => id === state.cursor.current) ?? slides[0];
+        const { revision, state } = connection.getSnapshot(); const slide = slides.find(([id]) => id === state.cursor.current) ?? slides[0]; const position = connection.getPosition();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.dim}${scenario.orientation === 'vertical' ? 'up/down' : 'left/right'} · 1/2/3 select · space pause${ansi.reset}`, '',
           `${ansi.cyan}${ansi.bold}${slide[1]}${ansi.reset}`, plain(slide[2], width), '',
-          `${slides.map(([id]) => id === state.cursor.current ? '●' : '○').join(' ')}  ${state.paused ? 'paused' : 'rotating'}`,
-          `current=${state.cursor.current ?? '−'}  wrap=${scenario.wrap}  announced=${announced ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+          `${slides.map(([id], index) => id === state.cursor.current ? `●${index + 1}` : `○${index + 1}`).join(' ')}  ${position.index === null ? 0 : position.index + 1}/${position.count}`,
+          `current=${state.cursor.current ?? '−'}  wrap=${scenario.wrap}  paused=${state.paused || state.pauseReasons.length > 0}`,
+          `autoplay=${scenario.autoplayDelayMs === undefined ? 'off' : `${scenario.autoplayDelayMs}ms`}  announced=${announced ?? '−'}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },
+      disconnect: () => connection.disconnect(),
     };
   });
 }
@@ -231,6 +241,7 @@ function scenarioDemo(host, scenarios, create) {
   return {
     handle(input) {
       if (input.key === '[' || input.key === ']') {
+        session.disconnect?.();
         index = (index + (input.key === ']' ? 1 : -1) + scenarios.length) % scenarios.length;
         session = create(scenarios[index]);
         host.render();
@@ -244,6 +255,7 @@ function scenarioDemo(host, scenarios, create) {
         ...session.lines(width),
       ];
     },
+    disconnect() { session.disconnect?.(); },
   };
 }
 

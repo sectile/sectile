@@ -28,6 +28,7 @@ function run() {
       return;
     }
     if (active !== null && input.ctrlKey && input.key === 'b') {
+      active.session.disconnect?.();
       active = null;
       logs = [];
       render();
@@ -57,6 +58,7 @@ function run() {
   }
 
   function activate(index) {
+    active?.session.disconnect?.();
     menuIndex = index;
     logs = [];
     const definition = demos[index];
@@ -120,6 +122,7 @@ function run() {
   function close() {
     if (closed) return;
     closed = true;
+    active?.session.disconnect?.();
     keyboard.close();
     process.off('SIGINT', close);
     process.off('SIGTERM', close);

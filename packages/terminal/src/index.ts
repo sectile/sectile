@@ -64,7 +64,14 @@ export { createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThum
 export { createMenu, type MenuConnection, type MenuOptions } from './menu.js';
 export { createMenubar, type MenubarConnection, type MenubarOptions } from './menubar.js';
 export { createMenuButton, type MenuButtonConnection, type MenuButtonOptions } from './menu-button.js';
-export { createCarousel, type CarouselConnection, type CarouselOptions } from './carousel.js';
+export {
+  createCarousel,
+  type CarouselAutoplayOptions,
+  type CarouselConnection,
+  type CarouselControlledValues,
+  type CarouselOptions,
+  type CarouselScheduler,
+} from './carousel.js';
 export { createFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
 export { createGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {

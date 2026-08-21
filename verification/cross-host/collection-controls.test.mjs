@@ -20,7 +20,8 @@ test('DOM and terminal carousels preserve boundaries, pause state, and controlle
     const options = { slides: ['a', 'b', 'c'], policies: { wrap: false }, ...(controlled ? { value: 'a', paused: false } : { defaultValue: 'a', defaultPaused: false }) };
     const DOM = unwrap(createDOMCarousel({ ...options, root: new FakeElement() }));
     const terminal = unwrap(createTerminalCarousel(options));
-    assertTrace(DOM, terminal, ['previous', 'next', 'last', 'next', 'toggle-pause']);
+    assertTrace(DOM, terminal, ['previous', 'next', 'last', 'next', 'toggle-pause', { type: 'pause-for', reason: 'hover' }, { type: 'resume-for', reason: 'hover' }]);
+    assert.deepEqual(DOM.getPosition(), terminal.getPosition());
     if (controlled) {
       assert.deepEqual(DOM.syncControlledValues({ value: 'c', paused: true }), terminal.syncControlledValues({ value: 'c', paused: true }));
       assert.deepEqual(DOM.getSnapshot(), terminal.getSnapshot());

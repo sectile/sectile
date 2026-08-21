@@ -160,10 +160,12 @@ Menubar changes directional key meaning; neither duplicates the renderer-neutral
 
 ## Verified composite: carousel
 
-Carousel owns a slide cursor and an independent paused flag. Manual movement remains valid
-while paused; pause controls only whether a host timer dispatches automatic movement. The
-primitive therefore contains no clock. Bounded reference comparison covers wrapping,
-stopped boundaries, direct slide focus, and pause algebra; both hosts witness projection.
+Carousel owns a slide cursor, user-owned pause state, and a set of independent host pause
+reasons. Manual movement remains valid while paused; composed pause reasons prevent hover or
+focus resumption from overriding an explicit user pause. The primitive contains no clock:
+DOM and terminal adapters schedule automatic movement, expose interval configuration, and
+clean up timers. Bounded reference comparison covers wrapping, stopped boundaries, direct
+slide focus, position projection, and pause algebra; both hosts witness projection.
 
 ## Verified composite: feed
 
