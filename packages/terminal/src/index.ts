@@ -62,6 +62,20 @@ export {
   type TreeViewValueChangeDetails,
 } from './tree-view.js';
 export {
+  createTreeGridController,
+  toTreeGridEffect,
+  toTreeGridEvent,
+  type KeyboardInput as TreeGridKeyboardInput,
+  type TreeGridControlledValues,
+  type TreeGridController,
+  type TreeGridControllerOptions,
+  type TreeGridEditModeChangeDetails,
+  type TreeGridEffect,
+  type TreeGridExpandedChangeDetails,
+  type TreeGridHighlightChangeDetails,
+  type TreeGridValueChangeDetails,
+} from './treegrid.js';
+export {
   createTextController,
   toTextEvent,
   type TextControlledValues,

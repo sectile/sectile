@@ -61,6 +61,11 @@
       "import": "./dist/tree-view.js",
       "default": "./dist/tree-view.js"
     },
+    "./treegrid": {
+      "types": "./dist/treegrid.d.ts",
+      "import": "./dist/treegrid.js",
+      "default": "./dist/treegrid.js"
+    },
     "./revision": {
       "types": "./dist/revision.d.ts",
       "import": "./dist/revision.js",

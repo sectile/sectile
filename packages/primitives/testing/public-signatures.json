@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "b51da2844ed265d749ac582596ec0fb69a0bdde42d71fce4213b96822f38f280",
+  "fingerprint": "de36c0879d11815505a7303b4b02359d38cbf7bd8ac04e147e9f1bc059967c4b",
   "files": [
     {
       "path": "dist/calendar.d.ts",
@@ -33,6 +33,10 @@
     {
       "path": "dist/internal/composites/tree-view.d.ts",
       "sha256": "33d48f5c45f11476e02b184d263977cf71e2a4da502c0c5281c83a4c7751ec9e"
+    },
+    {
+      "path": "dist/internal/composites/treegrid.d.ts",
+      "sha256": "54bc4778b625d728df98b529aa8dfd6b6ea86c022c0e98cb329bd41b5e20d357"
     },
     {
       "path": "dist/internal/editing/text.d.ts",
@@ -97,6 +101,10 @@
     {
       "path": "dist/tree-view.d.ts",
       "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
+    },
+    {
+      "path": "dist/treegrid.d.ts",
+      "sha256": "20580bdc7639041d81291ae043aafef0dfb40df83fcebf72900d8a41e8c8cbac"
     }
   ]
 }
