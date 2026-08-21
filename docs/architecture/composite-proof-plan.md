@@ -164,3 +164,11 @@ Carousel owns a slide cursor and an independent paused flag. Manual movement rem
 while paused; pause controls only whether a host timer dispatches automatic movement. The
 primitive therefore contains no clock. Bounded reference comparison covers wrapping,
 stopped boundaries, direct slide focus, and pause algebra; both hosts witness projection.
+
+## Verified composite: feed
+
+Feed is deliberately finite and windowed. Its state is `cursor × window revision × pending
+request direction`; request events emit capabilities without fabricating loaded items, and
+hosts replace the window only through a strictly newer revision. This keeps network and
+stream ownership outside primitives while making duplicate requests and stale windows
+observable. A genuinely unbounded feed remains out of scope until stream theory is added.
