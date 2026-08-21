@@ -1,0 +1,160 @@
+import type { Result, StableID } from '@sectile/primitives';
+import { createSequence, type Sequence } from '@sectile/primitives/sequence';
+import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import {
+  applyToolbarEvent,
+  createToolbarState,
+  type ToolbarCommand,
+  type ToolbarEvent,
+  type ToolbarPolicies,
+  type ToolbarState,
+} from '@sectile/primitives/toolbar';
+import { findDelegatedID } from './internal/delegated-event.js';
+import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import type { KeyboardInput } from './tabs.js';
+
+export type ToolbarEffect<ID extends StableID = StableID> =
+  | { readonly type: 'focus-control'; readonly id: ID }
+  | { readonly type: 'invoke-control'; readonly id: ID };
+
+export interface ToolbarOptions<ID extends StableID = StableID> {
+  readonly root: HTMLElement;
+  readonly items: readonly ID[];
+  readonly policies?: ToolbarPolicies<ID>;
+  readonly highlightedValue?: ID | null;
+  readonly defaultHighlightedValue?: ID | null;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly label?: string;
+  readonly onHighlightedValueChange?: (value: ID | null) => void;
+  readonly onInvoke?: (id: ID) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface ToolbarConnection<ID extends StableID = StableID> {
+  getSnapshot(): RevisionSnapshot<ToolbarState<ID>>;
+  syncControlledValue(value: ID | null): Result<RevisionSnapshot<ToolbarState<ID>>>;
+  setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void;
+  handleEvent(event: ToolbarEvent<ID>): boolean;
+  disconnect(): void;
+}
+
+export function createToolbar<ID extends StableID>(
+  options: ToolbarOptions<ID>,
+): Result<ToolbarConnection<ID>> {
+  const domain = createSequence(options.items);
+  if (!domain.ok) return domain;
+  const controlled = options.highlightedValue !== undefined;
+  const runtime = createSemanticController<
+    ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
+  >({
+    initial: createToolbarState(domain.value, {
+      current: options.highlightedValue !== undefined
+        ? options.highlightedValue
+        : options.defaultHighlightedValue ?? null,
+    }),
+    reducer: (state, event) => applyToolbarEvent(domain.value, state, event, options.policies),
+    reconcile: (previous, proposed) => createToolbarState(domain.value, {
+      current: controlled ? previous.cursor.current : proposed.cursor.current,
+    }),
+    notify: (previous, proposed) => {
+      if (previous.cursor.current !== proposed.cursor.current) {
+        options.onHighlightedValueChange?.(proposed.cursor.current);
+      }
+    },
+    toEffect: (command) => command.type === 'focus'
+      ? Object.freeze({ type: 'focus-control', id: command.id })
+      : Object.freeze({ type: 'invoke-control', id: command.id }),
+  });
+  if (!runtime.ok) return runtime;
+  return { ok: true, value: new DOMToolbarConnection(options, domain.value, runtime.value, controlled) };
+}
+
+export function toToolbarEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+  orientation: 'horizontal' | 'vertical' = 'horizontal',
+): ToolbarEvent<ID> | null {
+  if (input.altKey || input.ctrlKey || input.metaKey) return null;
+  if (input.key === 'Home') return 'first';
+  if (input.key === 'End') return 'last';
+  if (input.key === 'Enter' || input.key === ' ') return 'invoke';
+  if (orientation === 'horizontal' && input.key === 'ArrowRight') return 'next';
+  if (orientation === 'horizontal' && input.key === 'ArrowLeft') return 'previous';
+  if (orientation === 'vertical' && input.key === 'ArrowDown') return 'next';
+  if (orientation === 'vertical' && input.key === 'ArrowUp') return 'previous';
+  return null;
+}
+
+class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID> {
+  readonly #options: ToolbarOptions<ID>;
+  readonly #domain: Sequence<ID>;
+  readonly #runtime: SemanticController<ToolbarState<ID>, ToolbarEvent<ID>, ToolbarEffect<ID>>;
+  readonly #controlled: boolean;
+  readonly #keydown: (event: KeyboardEvent) => void;
+  readonly #click: (event: MouseEvent) => void;
+
+  public constructor(
+    options: ToolbarOptions<ID>, domain: Sequence<ID>,
+    runtime: SemanticController<ToolbarState<ID>, ToolbarEvent<ID>, ToolbarEffect<ID>>,
+    controlled: boolean,
+  ) {
+    this.#options = options;
+    this.#domain = domain;
+    this.#runtime = runtime;
+    this.#controlled = controlled;
+    options.root.setAttribute('role', 'toolbar');
+    options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
+    if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
+    this.#keydown = (event): void => {
+      const semantic = toToolbarEvent<ID>(event, options.orientation);
+      if (semantic === null) return;
+      event.preventDefault();
+      this.handleEvent(semantic);
+    };
+    this.#click = (event): void => {
+      const id = findDelegatedID(event.target, options.root, 'toolbarId');
+      if (id !== null) this.handleEvent({ type: 'invoke', id: id as ID });
+    };
+    options.root.addEventListener('keydown', this.#keydown);
+    options.root.addEventListener('click', this.#click);
+  }
+
+  public getSnapshot(): RevisionSnapshot<ToolbarState<ID>> { return this.#runtime.getSnapshot(); }
+
+  public syncControlledValue(value: ID | null): Result<RevisionSnapshot<ToolbarState<ID>>> {
+    if (!this.#controlled) return { ok: false, error: {
+      class: 'construction', code: 'uncontrolled-controller-sync',
+      message: 'An uncontrolled toolbar cannot be synchronized externally.',
+    } };
+    const result = this.#runtime.replace(createToolbarState(this.#domain, { current: value }));
+    if (result.ok) this.#options.onUpdate?.();
+    return result;
+  }
+
+  public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
+    element.dataset['toolbarId'] = id;
+    element.tabIndex = this.#runtime.getSnapshot().state.cursor.current === id ? 0 : -1;
+    if (disabled) element.setAttribute('aria-disabled', 'true');
+    else element.removeAttribute('aria-disabled');
+  }
+
+  public handleEvent(event: ToolbarEvent<ID>): boolean {
+    const result = this.#runtime.handle(event);
+    if (result.ok) {
+      for (const effect of result.commands) {
+        if (effect.type === 'invoke-control') this.#options.onInvoke?.(effect.id);
+      }
+      queueMicrotask(() => {
+        for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-toolbar-id]')) {
+          if (element.dataset['toolbarId'] === result.snapshot.state.cursor.current) element.focus();
+        }
+      });
+    }
+    this.#options.onUpdate?.();
+    return true;
+  }
+
+  public disconnect(): void {
+    this.#options.root.removeEventListener('keydown', this.#keydown);
+    this.#options.root.removeEventListener('click', this.#click);
+  }
+}

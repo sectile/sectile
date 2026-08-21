@@ -20,6 +20,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createListbox` constructs its sequence and connection, owns terminal key dispatch, and delivers activation. `createListboxController` and `connectListbox` remain available when those layers have separate ownership.
 
+`createTabs`, `createRadioGroup`, and `createToolbar` own terminal key normalization and witness the same semantic transitions as their DOM counterparts without importing DOM behavior.
+
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its terminal connection exposes the current rendered value and owns key dispatch.
 
 `createCalendar` constructs a grid from `rows`; its connection owns key dispatch and page requests.

@@ -18,6 +18,29 @@ export {
   type ListboxValueChangeDetails,
 } from './listbox.js';
 export {
+  createTabs,
+  toTabsEffect,
+  toTabsEvent,
+  type TabsConnection,
+  type TabsEffect,
+  type TabsItemAttributes,
+  type TabsOptions,
+} from './tabs.js';
+export {
+  createRadioGroup,
+  toRadioGroupEvent,
+  type RadioGroupConnection,
+  type RadioGroupEffect,
+  type RadioGroupOptions,
+} from './radio-group.js';
+export {
+  createToolbar,
+  toToolbarEvent,
+  type ToolbarConnection,
+  type ToolbarEffect,
+  type ToolbarOptions,
+} from './toolbar.js';
+export {
   connectCalendar,
   createCalendar,
   createCalendarController,

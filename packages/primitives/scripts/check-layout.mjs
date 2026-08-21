@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises';
 
 await assertEntries('src', {
   directories: ['internal', 'structures'],
-  files: ['calendar.ts', 'combobox.ts', 'index.ts', 'listbox.ts', 'result.ts', 'revision.ts', 'shared.ts', 'slider.ts', 'text.ts', 'tree-grid.ts', 'tree-view.ts'],
+  files: ['calendar.ts', 'combobox.ts', 'index.ts', 'listbox.ts', 'radio-group.ts', 'result.ts', 'revision.ts', 'shared.ts', 'slider.ts', 'tabs.ts', 'text.ts', 'toolbar.ts', 'tree-grid.ts', 'tree-view.ts'],
 });
 await assertEntries('src/internal', {
   directories: ['composites', 'editing', 'kernel', 'reference', 'runtime', 'state'],

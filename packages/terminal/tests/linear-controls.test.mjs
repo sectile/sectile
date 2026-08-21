@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { unwrap } from '@sectile/primitives/result';
+import { createTabs, toTabsEvent } from '../dist/tabs.js';
+import { createRadioGroup, toRadioGroupEvent } from '../dist/radio-group.js';
+import { createToolbar, toToolbarEvent } from '../dist/toolbar.js';
+
+test('terminal tabs, radio group, and toolbar witness distinct linear algebras', () => {
+  const tabs = unwrap(createTabs({
+    items: ['one', 'two'], defaultValue: 'one', defaultHighlightedValue: 'one',
+  }));
+  tabs.handleKeyboardInput({ key: 'right' });
+  assert.deepEqual(tabs.getSnapshot().state.selection.selected, ['one']);
+  tabs.handleKeyboardInput({ key: 'enter' });
+  assert.deepEqual(tabs.getSnapshot().state.selection.selected, ['two']);
+
+  const radio = unwrap(createRadioGroup({
+    items: ['a', 'b'], defaultValue: 'a', defaultHighlightedValue: 'a',
+  }));
+  radio.handleKeyboardInput({ key: 'down' });
+  assert.deepEqual(radio.getSnapshot().state.selection.selected, ['b']);
+
+  const invoked = [];
+  const toolbar = unwrap(createToolbar({
+    items: ['bold', 'italic'], defaultHighlightedValue: 'bold',
+    onInvoke: (id) => invoked.push(id),
+  }));
+  toolbar.handleKeyboardInput({ key: 'right' });
+  toolbar.handleKeyboardInput({ key: 'enter' });
+  assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
+  assert.deepEqual(invoked, ['italic']);
+});
+
+test('terminal linear controls own key normalization', () => {
+  assert.equal(toTabsEvent({ key: 'right' }), 'next');
+  assert.equal(toTabsEvent({ key: 'down' }, 'vertical'), 'next');
+  assert.equal(toRadioGroupEvent({ key: 'space' }), 'check');
+  assert.equal(toToolbarEvent({ key: 'enter' }), 'invoke');
+  assert.equal(toToolbarEvent({ key: 'down' }), null);
+});

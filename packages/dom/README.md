@@ -21,6 +21,8 @@ Use `value` or `highlightedValue` for controlled fields, and synchronize accepte
 
 `createListbox` constructs its sequence and connection, owns DOM keyboard and delegated click dispatch, focus, listbox ARIA, and activation delivery. `createListboxController` and `connectListbox` remain available when those layers have separate ownership.
 
+`createTabs`, `createRadioGroup`, and `createToolbar` own orientation-aware keyboard mapping, delegated pointer events, focus projection, and their matching ARIA roles. Their controlled and uncontrolled values follow the same proposal-then-sync contract.
+
 `createSlider` accepts exact decimal `min`, `max`, and `step` values. Its DOM connection owns keyboard dispatch, pointer dragging on the optional `track`, and synchronized slider ARIA values.
 
 `createCalendar` constructs a grid from `rows`; its connection owns gridcell ARIA, focus, keyboard and delegated click dispatch, and page requests.

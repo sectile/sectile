@@ -60,6 +60,20 @@
     "rejected": 5126,
     "commands": 10550
   },
+  "linearChoice": {
+    "models": 2000,
+    "transitions": 20000,
+    "accepted": 14970,
+    "rejected": 5030,
+    "commands": 12557
+  },
+  "linearAction": {
+    "models": 2000,
+    "transitions": 20000,
+    "accepted": 15009,
+    "rejected": 4991,
+    "commands": 14901
+  },
   "slider": {
     "models": 2000,
     "transitions": 20000,

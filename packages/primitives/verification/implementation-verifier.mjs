@@ -15,6 +15,14 @@ import {
   applyListboxEvent,
 } from '../.verification-dist/internal/composites/listbox.js';
 import {
+  createLinearChoiceState,
+  applyLinearChoiceEvent,
+} from '../.verification-dist/internal/composites/linear-choice.js';
+import {
+  createLinearActionState,
+  applyLinearActionEvent,
+} from '../.verification-dist/internal/composites/linear-action.js';
+import {
   createCalendarState,
   applyCalendarEvent,
 } from '../.verification-dist/internal/composites/calendar.js';
@@ -63,6 +71,14 @@ import {
   createReferenceListboxState,
   applyReferenceListboxEvent,
 } from '../.verification-dist/internal/reference/composites/listbox.js';
+import {
+  createReferenceLinearChoiceState,
+  applyReferenceLinearChoiceEvent,
+} from '../.verification-dist/internal/reference/composites/linear-choice.js';
+import {
+  createReferenceLinearActionState,
+  applyReferenceLinearActionEvent,
+} from '../.verification-dist/internal/reference/composites/linear-action.js';
 import {
   createReferenceCalendarState,
   applyReferenceCalendarEvent,
@@ -142,6 +158,8 @@ const counts = {
     invalidTransitions: 0,
   },
   listbox: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
+  linearChoice: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
+  linearAction: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   slider: { models: 0, transitions: 0, commands: 0 },
   calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
@@ -624,6 +642,84 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.listbox.models += 1;
 }
 
+const linearChoiceRng = createRng(seed ^ 0x1c401ce);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const ids = Array.from(
+    { length: linearChoiceRng.int(0, 40) },
+    (_, index) => `lc${iteration}-${index}`,
+  );
+  const domain = unwrap(createSequence(ids));
+  const selected = ids.length > 0 && linearChoiceRng.bool()
+    ? [linearChoiceRng.pick(ids)]
+    : [];
+  const input = { selected, current: linearChoiceRng.pick([null, ...ids]) };
+  let optimized = unwrap(createLinearChoiceState(domain, input));
+  let reference = createReferenceLinearChoiceState(domain, input);
+  const eligible = new Set(ids.filter(() => linearChoiceRng.bool()));
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    selectionFollowsFocus: linearChoiceRng.bool(),
+    boundary: linearChoiceRng.pick(['stop', 'wrap']),
+    maxScan: linearChoiceRng.int(0, ids.length + 1),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const target = linearChoiceRng.pick([...ids, `missing-${iteration}`]);
+    const event = linearChoiceRng.pick([
+      'next', 'previous', 'first', 'last', 'select', 'activate',
+      { type: 'focus', id: target },
+      { type: 'select', id: target },
+      { type: 'activate', id: target },
+    ]);
+    const left = applyLinearChoiceEvent(domain, optimized, event, policies);
+    const right = applyReferenceLinearChoiceEvent(domain, reference, event, policies);
+    assert.deepEqual(linearChoiceObservation(left), referenceLinearChoiceObservation(right));
+    counts.linearChoice.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.linearChoice.accepted += 1;
+      counts.linearChoice.commands += left.value.commands.length;
+    } else counts.linearChoice.rejected += 1;
+  }
+  counts.linearChoice.models += 1;
+}
+
+const linearActionRng = createRng(seed ^ 0x1ac710);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const ids = Array.from(
+    { length: linearActionRng.int(0, 40) },
+    (_, index) => `la${iteration}-${index}`,
+  );
+  const domain = unwrap(createSequence(ids));
+  const input = { current: linearActionRng.pick([null, ...ids]) };
+  let optimized = unwrap(createLinearActionState(domain, input));
+  let reference = createReferenceLinearActionState(domain, input);
+  const eligible = new Set(ids.filter(() => linearActionRng.bool()));
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    boundary: linearActionRng.pick(['stop', 'wrap']),
+    maxScan: linearActionRng.int(0, ids.length + 1),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const target = linearActionRng.pick([...ids, `missing-${iteration}`]);
+    const event = linearActionRng.pick([
+      'next', 'previous', 'first', 'last', 'invoke',
+      { type: 'focus', id: target }, { type: 'invoke', id: target },
+    ]);
+    const left = applyLinearActionEvent(domain, optimized, event, policies);
+    const right = applyReferenceLinearActionEvent(domain, reference, event, policies);
+    assert.deepEqual(linearActionObservation(left), referenceLinearActionObservation(right));
+    counts.linearAction.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.linearAction.accepted += 1;
+      counts.linearAction.commands += left.value.commands.length;
+    } else counts.linearAction.rejected += 1;
+  }
+  counts.linearAction.models += 1;
+}
+
 const sliderRng = createRng(seed ^ 0x511de);
 for (let iteration = 0; iteration < iterations; iteration += 1) {
   const count = sliderRng.int(0, 81);
@@ -841,3 +937,45 @@ for (let size = 0; size <= 4; size += 1) {
 }
 
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
+
+function linearChoiceObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceLinearChoiceObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}
+
+function linearActionObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceLinearActionObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
+}

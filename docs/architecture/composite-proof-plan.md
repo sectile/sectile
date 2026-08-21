@@ -62,3 +62,25 @@ unless an independent state invariant is demonstrated.
 
 Sharing is an implementation conclusion only after observational equivalence is proved.
 It must not erase role-specific DOM or terminal behavior.
+
+## Verified family: linear controls
+
+`tabs` and `radio-group` are projections of one `linear-choice` machine with state
+`cursor × single-selection`. They differ only by policy and event vocabulary: tabs may
+separate focus from activation, while radio movement always checks the focused item.
+`toolbar` is not a choice projection. Its state is cursor-only and invocation emits a
+command without creating selection authority.
+
+The countermodels are decisive:
+
+- two manual tabs states may have the same cursor and different selected tabs, so cursor
+  alone cannot implement tabs;
+- two toolbars with the same cursor have no distinct selected-value observation, so adding
+  selection would create state the pattern does not own;
+- a flat menu can share cursor movement, but nested menus cannot share the toolbar machine
+  because identical cursors can have different open popup paths and focus-return targets.
+
+Evidence consists of independent array-based references, bounded differential enumeration,
+2,000 seeded random models and 20,000 transitions per shared machine, plus DOM and terminal
+keyboard/direct-target witnesses. The promoted public facades are `tabs`, `radio-group`,
+and `toolbar`; `linear-choice` and `linear-action` remain internal shared mechanisms.
