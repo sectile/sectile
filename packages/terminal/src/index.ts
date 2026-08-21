@@ -23,6 +23,20 @@ export {
   type KeyboardInput as CalendarKeyboardInput,
 } from './calendar.js';
 export {
+  createComboboxController,
+  toComboboxEffect,
+  toComboboxEvent,
+  type ComboboxControlledValues,
+  type ComboboxController,
+  type ComboboxControllerOptions,
+  type ComboboxEffect,
+  type ComboboxHighlightChangeDetails,
+  type ComboboxInputValueChangeDetails,
+  type ComboboxOpenChangeDetails,
+  type ComboboxValueChangeDetails,
+  type KeyboardInput as ComboboxKeyboardInput,
+} from './combobox.js';
+export {
   createSliderController,
   toSliderEffect,
   toSliderEvent,

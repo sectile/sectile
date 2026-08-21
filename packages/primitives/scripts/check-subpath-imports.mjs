@@ -17,11 +17,12 @@ try {
     import { createTree } from '@sectile/primitives/tree';
     import { createListboxState } from '@sectile/primitives/listbox';
     import { createCalendarState } from '@sectile/primitives/calendar';
+    import { createComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState } from '@sectile/primitives/slider';
     import { createTreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createSliderState, createTreeViewState, createRevisionSnapshot]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createRevisionSnapshot]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -35,6 +36,7 @@ try {
     import { createTree, type Tree } from '@sectile/primitives/tree';
     import { createListboxState, type ListboxState } from '@sectile/primitives/listbox';
     import { createCalendarState, type CalendarState } from '@sectile/primitives/calendar';
+    import { createComboboxState, type ComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState, type SliderState } from '@sectile/primitives/slider';
     import { createTreeViewState, type TreeViewState } from '@sectile/primitives/tree-view';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
@@ -51,7 +53,8 @@ try {
     const h: Result<CalendarState<string>> = createCalendarState(c.value);
     if (!d.ok) throw new Error(d.error.message);
     const i: Result<TreeViewState<string>> = createTreeViewState(d.value);
-    void [a, b, c, d, e, f, g, h, i];
+    const j: Result<ComboboxState<string>> = createComboboxState(a.value);
+    void [a, b, c, d, e, f, g, h, i, j];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -65,7 +68,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 10, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 11, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

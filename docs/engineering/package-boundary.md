@@ -16,6 +16,7 @@ Recurring verification requires these canonical exports:
 ./tree
 ./listbox
 ./calendar
+./combobox
 ./slider
 ./tree-view
 ./revision

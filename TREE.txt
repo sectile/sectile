@@ -45,12 +45,14 @@ sectile/
 │   │   │   ├── internal/
 │   │   │   │   └── controller.ts
 │   │   │   ├── calendar.ts
+│   │   │   ├── combobox.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── slider.ts
 │   │   │   └── tree-view.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
+│   │   │   ├── combobox.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   └── tree-view.test.mjs
@@ -126,6 +128,7 @@ sectile/
 │   │   │   │   ├── sequence.ts
 │   │   │   │   └── tree.ts
 │   │   │   ├── calendar.ts
+│   │   │   ├── combobox.ts
 │   │   │   ├── index.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── revision.ts
@@ -179,12 +182,14 @@ sectile/
 │       │   ├── internal/
 │       │   │   └── controller.ts
 │       │   ├── calendar.ts
+│       │   ├── combobox.ts
 │       │   ├── index.ts
 │       │   ├── listbox.ts
 │       │   ├── slider.ts
 │       │   └── tree-view.ts
 │       ├── tests/
 │       │   ├── calendar.test.mjs
+│       │   ├── combobox.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   ├── slider.test.mjs
 │       │   └── tree-view.test.mjs
@@ -202,6 +207,7 @@ sectile/
 ├── verification/
 │   └── cross-host/
 │       ├── calendar.test.mjs
+│       ├── combobox.test.mjs
 │       ├── listbox.test.mjs
 │       ├── slider.test.mjs
 │       └── tree-view.test.mjs

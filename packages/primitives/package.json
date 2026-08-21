@@ -46,6 +46,11 @@
       "import": "./dist/calendar.js",
       "default": "./dist/calendar.js"
     },
+    "./combobox": {
+      "types": "./dist/combobox.d.ts",
+      "import": "./dist/combobox.js",
+      "default": "./dist/combobox.js"
+    },
     "./slider": {
       "types": "./dist/slider.d.ts",
       "import": "./dist/slider.js",

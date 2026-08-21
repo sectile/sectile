@@ -18,3 +18,5 @@ const controller = result.value;
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
 
 Calendar, slider, and tree-view controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects.
+
+The combobox controller witnesses candidate acceptance only; it does not claim text-input, composition, filtering, or popup-navigation behavior.

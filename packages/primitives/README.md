@@ -9,11 +9,14 @@ import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
 import { applyListboxEvent, createListboxState } from '@sectile/primitives/listbox';
 import { applyCalendarEvent, createCalendarState } from '@sectile/primitives/calendar';
+import { applyComboboxEvent, createComboboxState } from '@sectile/primitives/combobox';
 import { applySliderEvent, createSliderState } from '@sectile/primitives/slider';
 import { applyTreeViewEvent, createTreeViewState } from '@sectile/primitives/tree-view';
 import { createRevisionSnapshot } from '@sectile/primitives/revision';
 ```
 
 The root export contains shared types and has no runtime authority. State primitives are pure: adapters create a valid state, apply semantic events, and own the resulting state. Construction returns a typed `Result`; query absence returns `null`; bounded movement reports resource rejection rather than silently choosing a different result.
+
+The combobox facade currently covers candidate acceptance only. Text input, composition, popup navigation, and filtering remain separate authorities.
 
 See the [primitive documentation](../../docs/primitives/README.md).

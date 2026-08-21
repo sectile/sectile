@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fingerprint": "2d1f62a47d0345d34c5c64c409291bce179529b243031ba1501af73b90f32421",
+  "fingerprint": "2b7c69ec829ba1086ed60c8eb9a36bd5642fdcf90c76a2420f6a42789550993f",
   "files": [
     {
       "path": "dist/index.d.ts",
@@ -29,6 +29,10 @@
     {
       "path": "dist/calendar.d.ts",
       "sha256": "f5ed730ad6c2a39de3de1932e70e0be7f8606a28bcbcdeac1121b2289727faa4"
+    },
+    {
+      "path": "dist/combobox.d.ts",
+      "sha256": "8ca3846e8c5c9c38dd79b0403507511672e4ffba8ddf354eb183b9805301c974"
     },
     {
       "path": "dist/slider.d.ts",

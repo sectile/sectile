@@ -10,6 +10,7 @@
     "./tree",
     "./listbox",
     "./calendar",
+    "./combobox",
     "./slider",
     "./tree-view",
     "./revision",
@@ -22,6 +23,7 @@
     "./tree",
     "./listbox",
     "./calendar",
+    "./combobox",
     "./slider",
     "./tree-view",
     "./revision"
@@ -33,6 +35,7 @@
     "./tree": "structures/tree",
     "./listbox": "listbox",
     "./calendar": "calendar",
+    "./combobox": "combobox",
     "./slider": "slider",
     "./tree-view": "tree-view",
     "./revision": "revision"
