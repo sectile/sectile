@@ -43,7 +43,8 @@ sectile/
 │   │   │   └── check-reproducible-build.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
-│   │   │   │   └── controller.ts
+│   │   │   │   ├── controller.ts
+│   │   │   │   └── text-element.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── index.ts
@@ -191,7 +192,8 @@ sectile/
 │       │   └── check-reproducible-build.mjs
 │       ├── src/
 │       │   ├── internal/
-│       │   │   └── controller.ts
+│       │   │   ├── controller.ts
+│       │   │   └── text-input.ts
 │       │   ├── calendar.ts
 │       │   ├── combobox.ts
 │       │   ├── index.ts
