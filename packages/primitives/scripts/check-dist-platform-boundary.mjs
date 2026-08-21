@@ -21,7 +21,10 @@ const forbidden = [
   /from ['"]react/u,
 ];
 for (const path of javascriptFiles) {
-  const source = (await readFile(path, 'utf8')).replace(/^\/\/# sourceMappingURL=.*$/gmu, '');
+  const source = (await readFile(path, 'utf8'))
+    .replace(/\/\*[\s\S]*?\*\//gu, '')
+    .replace(/\/\/.*$/gmu, '')
+    .replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/gu, '');
   for (const pattern of forbidden) assert.equal(pattern.test(source), false, `${path} violates platform boundary: ${pattern}`);
   assert.equal(source.includes('/reference/'), false, `${path} contains reference implementation`);
 }
