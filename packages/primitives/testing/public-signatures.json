@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "bd4b3b43c92886f46d5efd84cd68f5fb525a12a798f0a387508e39456f1cd8af",
+  "fingerprint": "6ec1d1f4d558a3dbc81941015c431f334b258e4b87d8ede6599094e6bce39cb0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -105,6 +105,10 @@
     {
       "path": "dist/listbox.d.ts",
       "sha256": "51d2e4d6493425f097aa661e76c4537935c0a0ef779e19698fbd809d50111e96"
+    },
+    {
+      "path": "dist/multi-thumb-slider.d.ts",
+      "sha256": "8e711e67da0ebe96c885ab623b880e46274ab1a781406de163deedb87c4de24f"
     },
     {
       "path": "dist/radio-group.d.ts",

@@ -129,3 +129,13 @@ authority. Dialog requests initial focus and restoration, alert dialog additiona
 announcement, and tooltip owns neither focus command. Focus containment, inertness, hover
 geometry, and delay timers remain host capabilities. DOM and terminal witnesses verify the
 distinct command projections and escape handling.
+
+## Verified composite: multi-thumb slider
+
+Multi-thumb slider owns a stable thumb sequence and one atomic tick vector. With crossing
+disabled, every adjacent pair preserves ordering and the configured minimum gap. A move
+clamps against both the range and neighboring thumbs, so independent slider machines cannot
+represent the invariant without an external coordinator. Bounded differential comparison
+against an independent vector reference covers every valid two-thumb state, active thumb,
+movement event, direct focus, and direct tick assignment. DOM and terminal witnesses expose
+the same controlled/uncontrolled transitions without taking ownership of the constraint.

@@ -60,6 +60,7 @@ export { createSpinbutton, toSpinbuttonEvent, type SpinbuttonConnection, type Sp
 export { createDialog, type DialogConnection, type DialogOptions } from './dialog.js';
 export { createAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
 export { createTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';
+export { createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderOptions } from './multi-thumb-slider.js';
 export {
   connectCalendar,
   createCalendar,
