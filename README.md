@@ -2,9 +2,9 @@
 
 Sectile is a pnpm monorepo for deterministic, renderer-neutral interaction semantics and host adapters. The current workspace contains:
 
-- `@sectile/primitives`: canonical structures, listbox semantics, and revision control;
-- `@sectile/dom`: DOM keyboard and effect mappings;
-- `@sectile/terminal`: terminal keyboard and effect mappings.
+- `@sectile/primitives`: canonical structures, composite semantics, and revision control;
+- `@sectile/dom`: controlled/uncontrolled DOM interaction controllers;
+- `@sectile/terminal`: controlled/uncontrolled terminal interaction controllers.
 
 Each package owns its source, build, tests, and package-specific verification. The workspace root only orchestrates package scripts, enforces package boundaries, and runs true cross-package verification.
 
