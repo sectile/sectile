@@ -52,5 +52,12 @@
     "stableTransitions": 2000,
     "compositionTransitions": 8000,
     "invalidTransitions": 2000
+  },
+  "listbox": {
+    "models": 2000,
+    "transitions": 20000,
+    "accepted": 18375,
+    "rejected": 1625,
+    "commands": 9698
   }
 }

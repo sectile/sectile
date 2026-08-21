@@ -11,6 +11,10 @@ import {
   toggleExpansion,
 } from '../packages/primitives/.verification-dist/internal/expansion.js';
 import {
+  createListboxState,
+  stepListbox,
+} from '../packages/primitives/.verification-dist/internal/composites/listbox.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -34,6 +38,10 @@ import {
   referenceSetExpansionOpen,
   referenceToggleExpansion,
 } from '../packages/primitives/.verification-dist/internal/reference/expansion.js';
+import {
+  createReferenceListboxState,
+  referenceStepListbox,
+} from '../packages/primitives/.verification-dist/internal/reference/composites/listbox.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -76,6 +84,7 @@ const counts = {
     compositionTransitions: 0,
     invalidTransitions: 0,
   },
+  listbox: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
 };
 
 for (let iteration = 0; iteration < iterations; iteration += 1) {
@@ -505,10 +514,72 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   counts.text.models += 1;
 }
 
+const listboxRng = createRng(seed ^ 0x1157b0);
+for (let iteration = 0; iteration < iterations; iteration += 1) {
+  const ids = listboxRng.shuffle(
+    Array.from({ length: listboxRng.int(0, 40) }, (_, index) => `b${iteration}-${index}`),
+  );
+  const domain = unwrap(createSequence(ids));
+  const eligible = new Set(ids.filter(() => listboxRng.bool()));
+  const input = {
+    current: listboxRng.pick([null, ...ids]),
+    selected: ids.filter(() => listboxRng.bool()),
+    anchor: listboxRng.pick([null, ...ids]),
+  };
+  let optimized = unwrap(createListboxState(domain, input));
+  let reference = createReferenceListboxState(domain, input);
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    selectionFollowsFocus: listboxRng.bool(),
+    boundary: listboxRng.pick(['stop', 'wrap']),
+    maxScan: listboxRng.int(0, ids.length + 1),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const event = listboxRng.pick(['next', 'previous', 'toggle', 'activate', 'clear']);
+    const left = stepListbox(domain, optimized, event, policies);
+    const right = referenceStepListbox(domain, reference, event, policies);
+    assert.deepEqual(listboxResultObservation(left), referenceListboxResultObservation(right));
+    counts.listbox.transitions += 1;
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+      counts.listbox.accepted += 1;
+      counts.listbox.commands += left.value.commands.length;
+    } else {
+      counts.listbox.rejected += 1;
+    }
+  }
+  counts.listbox.models += 1;
+}
+
 process.stdout.write(`${JSON.stringify({ status: 'pass', seed, iterationsPerStructure: iterations, ...counts }, null, 2)}\n`);
 
 function selectionObservation(state) {
   return { selected: state.selected, anchor: state.anchor };
+}
+
+function listboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceListboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 
 function textObservation(state) {

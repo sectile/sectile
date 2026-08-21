@@ -12,6 +12,10 @@ import {
   toggleExpansion,
 } from '../.verification-dist/internal/expansion.js';
 import {
+  createListboxState,
+  stepListbox,
+} from '../.verification-dist/internal/composites/listbox.js';
+import {
   clearSelection,
   createSelectionState,
   reconcileSelection,
@@ -35,6 +39,10 @@ import {
   referenceSetExpansionOpen,
   referenceToggleExpansion,
 } from '../.verification-dist/internal/reference/expansion.js';
+import {
+  createReferenceListboxState,
+  referenceStepListbox,
+} from '../.verification-dist/internal/reference/composites/listbox.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,
@@ -72,6 +80,7 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySelection(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyExpansion(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyText(rng);
+  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyListbox(rng, iteration);
 });
 
 function verifySequence(rng, iteration) {
@@ -401,6 +410,61 @@ function verifyText(rng) {
     textObservation(unwrap(cancelTextComposition(updated))),
     textObservation(referenceCancelTextComposition(referenceUpdated)),
   );
+}
+
+function verifyListbox(rng, iteration) {
+  const ids = rng.shuffle(
+    Array.from({ length: rng.int(0, 40) }, (_, index) => `b${iteration}-${index}`),
+  );
+  const domain = unwrap(createSequence(ids));
+  const eligible = new Set(ids.filter(() => rng.bool()));
+  const input = {
+    current: rng.pick([null, ...ids]),
+    selected: ids.filter(() => rng.bool()),
+    anchor: rng.pick([null, ...ids]),
+  };
+  let optimized = unwrap(createListboxState(domain, input));
+  let reference = createReferenceListboxState(domain, input);
+  const policies = {
+    eligible: (id) => eligible.has(id),
+    selectionFollowsFocus: rng.bool(),
+    boundary: rng.pick(['stop', 'wrap']),
+    maxScan: rng.int(0, ids.length + 1),
+  };
+  for (let step = 0; step < 10; step += 1) {
+    const event = rng.pick(['next', 'previous', 'toggle', 'activate', 'clear']);
+    const left = stepListbox(domain, optimized, event, policies);
+    const right = referenceStepListbox(domain, reference, event, policies);
+    assert.deepEqual(listboxResultObservation(left), referenceListboxResultObservation(right));
+    if (left.ok && right.ok) {
+      optimized = left.value.state;
+      reference = right.value.state;
+    }
+  }
+}
+
+function listboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.error.class, errorCode: result.error.code };
+}
+
+function referenceListboxResultObservation(result) {
+  return result.ok
+    ? {
+        ok: true,
+        current: result.value.state.cursor.current,
+        selected: result.value.state.selection.selected,
+        anchor: result.value.state.selection.anchor,
+        commands: result.value.commands,
+      }
+    : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode };
 }
 
 function textObservation(state) {

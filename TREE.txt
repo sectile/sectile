@@ -42,7 +42,11 @@ sectile/
 │   └── primitives/
 │       ├── src/
 │       │   ├── internal/
+│       │   │   ├── composites/
+│       │   │   │   └── listbox.ts
 │       │   │   ├── reference/
+│       │   │   │   ├── composites/
+│       │   │   │   │   └── listbox.ts
 │       │   │   │   ├── cursor.ts
 │       │   │   │   ├── expansion.ts
 │       │   │   │   ├── grid.ts
@@ -68,6 +72,7 @@ sectile/
 │       │   ├── cursor.reference-law.test.mjs
 │       │   ├── expansion.reference-law.test.mjs
 │       │   ├── grid.reference-law.test.mjs
+│       │   ├── listbox.reference-law.test.mjs
 │       │   ├── optimized-differential.test.mjs
 │       │   ├── range.reference-law.test.mjs
 │       │   ├── selection.reference-law.test.mjs
