@@ -17,7 +17,7 @@ const controller = result.value;
 
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
 
-Calendar, slider, tree-view, and treegrid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Treegrid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
+Calendar, slider, tree-view, and tree-grid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Tree-grid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 
 The text controller maps explicit `beforeinput` ranges and composition phases through `@sectile/dom/text`. It controls or owns the complete editing state so an active IME composition remains atomic.
 

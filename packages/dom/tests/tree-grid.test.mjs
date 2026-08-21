@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/treegrid';
+import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
-} from '../dist/treegrid.js';
+} from '../dist/tree-grid.js';
 
-test('DOM keys map onto treegrid navigation and edit modes', () => {
+test('DOM keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'ArrowDown' }), 'down');
   assert.equal(toTreeGridEvent({ key: 'ArrowRight', altKey: true }), 'expand');
   assert.equal(toTreeGridEvent({ key: 'ArrowLeft', altKey: true }), 'collapse');
@@ -21,7 +21,7 @@ test('DOM keys map onto treegrid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'ArrowRight', ctrlKey: true }), null);
 });
 
-test('DOM treegrid commands project into focus and cell edit effects', () => {
+test('DOM tree-grid commands project into focus and cell edit effects', () => {
   assert.deepEqual(toTreeGridEffect({ type: 'focus', id: 'a' }), {
     type: 'focus-element',
     id: 'a',
@@ -40,7 +40,7 @@ test('DOM treegrid commands project into focus and cell edit effects', () => {
   });
 });
 
-test('uncontrolled DOM treegrid owns expansion, highlight, selection, and edit mode', () => {
+test('uncontrolled DOM tree-grid owns expansion, highlight, selection, and edit mode', () => {
   const controller = unwrap(createTreeGridController({
     model: model(),
     defaultHighlightedValue: 'root-name',
@@ -72,7 +72,7 @@ test('uncontrolled DOM treegrid owns expansion, highlight, selection, and edit m
   assert.deepEqual(committed.commands, [{ type: 'commit-cell-edit', id: 'child-name' }]);
 });
 
-test('controlled DOM treegrid emits proposals until every controlled field is synchronized', () => {
+test('controlled DOM tree-grid emits proposals until every controlled field is synchronized', () => {
   const expansions = [];
   const highlights = [];
   const values = [];

@@ -10,4 +10,4 @@ export {
   type TreeGridState,
   type TreeGridStateInput,
   type TreeGridUpdate,
-} from './internal/composites/treegrid.js';
+} from './internal/composites/tree-grid.js';

@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/treegrid';
+import { createTreeGridModel } from '@sectile/primitives/tree-grid';
 import {
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
-} from '../dist/treegrid.js';
+} from '../dist/tree-grid.js';
 
-test('terminal keys map onto treegrid navigation and edit modes', () => {
+test('terminal keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'down' }), 'down');
   assert.equal(toTreeGridEvent({ key: 'expand' }), 'expand');
   assert.equal(toTreeGridEvent({ key: 'collapse' }), 'collapse');
@@ -20,7 +20,7 @@ test('terminal keys map onto treegrid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'right' }, 'editing'), null);
 });
 
-test('terminal treegrid commands project into highlight and cell edit effects', () => {
+test('terminal tree-grid commands project into highlight and cell edit effects', () => {
   assert.deepEqual(toTreeGridEffect({ type: 'focus', id: 'a' }), {
     type: 'move-highlight',
     id: 'a',
@@ -39,7 +39,7 @@ test('terminal treegrid commands project into highlight and cell edit effects', 
   });
 });
 
-test('uncontrolled terminal treegrid owns all semantic state', () => {
+test('uncontrolled terminal tree-grid owns all semantic state', () => {
   const controller = unwrap(createTreeGridController({
     model: model(),
     defaultHighlightedValue: 'root-name',
@@ -61,7 +61,7 @@ test('uncontrolled terminal treegrid owns all semantic state', () => {
   assert.deepEqual(cancelled.commands, [{ type: 'cancel-cell-edit', id: 'child-name' }]);
 });
 
-test('terminal treegrid supports mixed controlled state and rejects unsupported input atomically', () => {
+test('terminal tree-grid supports mixed controlled state and rejects unsupported input atomically', () => {
   const values = [];
   const controller = unwrap(createTreeGridController({
     model: model(),

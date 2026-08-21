@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTreeGridController as createDOMTreeGridController } from '@sectile/dom/treegrid';
+import { createTreeGridController as createDOMTreeGridController } from '@sectile/dom/tree-grid';
 import { createGrid } from '@sectile/primitives/grid';
 import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/treegrid';
-import { createTreeGridController as createTerminalTreeGridController } from '@sectile/terminal/treegrid';
+import { createTreeGridModel } from '@sectile/primitives/tree-grid';
+import { createTreeGridController as createTerminalTreeGridController } from '@sectile/terminal/tree-grid';
 
 const INPUTS = [
   [{ key: 'ArrowDown' }, { key: 'down' }],
@@ -18,7 +18,7 @@ const INPUTS = [
   [{ key: 'Escape' }, { key: 'escape' }],
 ];
 
-test('DOM and terminal treegrid controllers produce equivalent semantic traces', () => {
+test('DOM and terminal tree-grid controllers produce equivalent semantic traces', () => {
   const options = {
     model: fixtureModel(),
     defaultHighlightedValue: 'root-name',
@@ -33,7 +33,7 @@ test('DOM and terminal treegrid controllers produce equivalent semantic traces',
   }
 });
 
-test('DOM and terminal treegrid controllers remain equivalent across 20,000 transitions', () => {
+test('DOM and terminal tree-grid controllers remain equivalent across 20,000 transitions', () => {
   const rng = random(0x7ee6);
   const options = {
     model: fixtureModel(),

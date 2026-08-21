@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "de36c0879d11815505a7303b4b02359d38cbf7bd8ac04e147e9f1bc059967c4b",
+  "fingerprint": "5c046356461fb8a9f69152b430c34016b2b0309a76ee5e750a94d5443eb7721a",
   "files": [
     {
       "path": "dist/calendar.d.ts",
@@ -31,12 +31,12 @@
       "sha256": "b775df765f0cec04d9bedb4ed4ba2655d748f264e83193e3f0314319345baf6f"
     },
     {
-      "path": "dist/internal/composites/tree-view.d.ts",
-      "sha256": "33d48f5c45f11476e02b184d263977cf71e2a4da502c0c5281c83a4c7751ec9e"
+      "path": "dist/internal/composites/tree-grid.d.ts",
+      "sha256": "54bc4778b625d728df98b529aa8dfd6b6ea86c022c0e98cb329bd41b5e20d357"
     },
     {
-      "path": "dist/internal/composites/treegrid.d.ts",
-      "sha256": "54bc4778b625d728df98b529aa8dfd6b6ea86c022c0e98cb329bd41b5e20d357"
+      "path": "dist/internal/composites/tree-view.d.ts",
+      "sha256": "33d48f5c45f11476e02b184d263977cf71e2a4da502c0c5281c83a4c7751ec9e"
     },
     {
       "path": "dist/internal/editing/text.d.ts",
@@ -99,12 +99,12 @@
       "sha256": "aff65f99c95f52b7121e1deba149665b7e126690317719fd005c934de878bb93"
     },
     {
-      "path": "dist/tree-view.d.ts",
-      "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
+      "path": "dist/tree-grid.d.ts",
+      "sha256": "732ac85f17ff6e7fbcae3663f1cef8ecf7b5e0113e932b6ccb07217b4dc12212"
     },
     {
-      "path": "dist/treegrid.d.ts",
-      "sha256": "20580bdc7639041d81291ae043aafef0dfb40df83fcebf72900d8a41e8c8cbac"
+      "path": "dist/tree-view.d.ts",
+      "sha256": "de966657bda3823fa06f64246cca9902adcf8e6d114f27590daa26e4e9439969"
     }
   ]
 }

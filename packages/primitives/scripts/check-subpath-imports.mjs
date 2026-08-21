@@ -20,7 +20,7 @@ try {
     import { createComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState } from '@sectile/primitives/slider';
     import { createTreeViewState } from '@sectile/primitives/tree-view';
-    import { createTreeGridModel } from '@sectile/primitives/treegrid';
+    import { createTreeGridModel } from '@sectile/primitives/tree-grid';
     import { createRevisionSnapshot } from '@sectile/primitives/revision';
     import { createTextEditingState } from '@sectile/primitives/text';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
@@ -41,7 +41,7 @@ try {
     import { createComboboxState, type ComboboxState } from '@sectile/primitives/combobox';
     import { createSliderState, type SliderState } from '@sectile/primitives/slider';
     import { createTreeViewState, type TreeViewState } from '@sectile/primitives/tree-view';
-    import { createTreeGridModel, type TreeGridModel } from '@sectile/primitives/treegrid';
+    import { createTreeGridModel, type TreeGridModel } from '@sectile/primitives/tree-grid';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/primitives/revision';
     import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
     const a: Result<Sequence<string>> = createSequence(['a']);

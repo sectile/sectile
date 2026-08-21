@@ -74,7 +74,7 @@ export {
   type TreeGridExpandedChangeDetails,
   type TreeGridHighlightChangeDetails,
   type TreeGridValueChangeDetails,
-} from './treegrid.js';
+} from './tree-grid.js';
 export {
   createTextController,
   toTextEvent,

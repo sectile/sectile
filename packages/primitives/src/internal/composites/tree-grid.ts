@@ -122,8 +122,8 @@ export function createTreeGridModel<RowID extends StableID, CellID extends Stabl
   if (rowIDs.length !== grid.rowCount || rowIDs.length !== tree.size) {
     return fail(
       'construction',
-      'treegrid-row-count-mismatch',
-      'Treegrid must map every tree row to exactly one grid row.',
+      'tree-grid-row-count-mismatch',
+      'Tree-grid must map every tree row to exactly one grid row.',
       { mappedRows: rowIDs.length, gridRows: grid.rowCount, treeRows: tree.size },
     );
   }
@@ -133,15 +133,15 @@ export function createTreeGridModel<RowID extends StableID, CellID extends Stabl
     if (id === undefined || !tree.has(id)) {
       return fail(
         'construction',
-        'treegrid-row-outside-tree',
-        'Every mapped treegrid row must exist in the tree.',
+        'tree-grid-row-outside-tree',
+        'Every mapped tree-grid row must exist in the tree.',
         { index, id },
       );
     }
     if (seen.has(id)) {
       return fail(
         'construction',
-        'duplicate-treegrid-row',
+        'duplicate-tree-grid-row',
         'Each tree row must map to one grid row.',
         { index, id },
       );
@@ -161,8 +161,8 @@ export function createTreeGridState<RowID extends StableID, CellID extends Stabl
   if (current !== null && !visible.contains(current)) {
     return fail(
       'construction',
-      'treegrid-cursor-hidden',
-      'Treegrid cursor must belong to a visible row.',
+      'tree-grid-cursor-hidden',
+      'Tree-grid cursor must belong to a visible row.',
       { current },
     );
   }
@@ -172,16 +172,16 @@ export function createTreeGridState<RowID extends StableID, CellID extends Stabl
   if (!isTreeGridEditMode(editMode)) {
     return fail(
       'construction',
-      'invalid-treegrid-edit-mode',
-      'Treegrid edit mode must be navigation or editing.',
+      'invalid-tree-grid-edit-mode',
+      'Tree-grid edit mode must be navigation or editing.',
       { editMode },
     );
   }
   if (editMode === 'editing' && current === null) {
     return fail(
       'construction',
-      'treegrid-edit-without-cursor',
-      'Treegrid editing requires a current cell.',
+      'tree-grid-edit-without-cursor',
+      'Tree-grid editing requires a current cell.',
     );
   }
   return ok(treeGridState(
@@ -206,8 +206,8 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
   if (!isTreeGridEvent(event)) {
     return fail(
       'transition-rejection',
-      'invalid-treegrid-event',
-      'Treegrid event is not part of the accepted event vocabulary.',
+      'invalid-tree-grid-event',
+      'Tree-grid event is not part of the accepted event vocabulary.',
       { event },
     );
   }
@@ -215,8 +215,8 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
   if (boundary !== 'stop' && boundary !== 'wrap-axis') {
     return fail(
       'transition-rejection',
-      'invalid-treegrid-boundary',
-      'Treegrid boundary must be stop or wrap-axis.',
+      'invalid-tree-grid-boundary',
+      'Tree-grid boundary must be stop or wrap-axis.',
       { boundary },
     );
   }
@@ -224,7 +224,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     return fail(
       'transition-rejection',
       'invalid-eligibility-policy',
-      'Treegrid eligibility policy must be a function.',
+      'Tree-grid eligibility policy must be a function.',
     );
   }
 
@@ -237,8 +237,8 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     if (state.editMode !== 'editing' || current === null) {
       return fail(
         'transition-rejection',
-        'treegrid-not-editing',
-        'Treegrid can only finish an active edit.',
+        'tree-grid-not-editing',
+        'Tree-grid can only finish an active edit.',
       );
     }
     return createMachineUpdate(
@@ -250,14 +250,14 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     if (event === 'start-edit') return createMachineUpdate(normalized);
     return fail(
       'transition-rejection',
-      'treegrid-edit-active',
-      'Treegrid navigation is suspended while a cell edit is active.',
+      'tree-grid-edit-active',
+      'Tree-grid navigation is suspended while a cell edit is active.',
       { event },
     );
   }
   if (event === 'start-edit') {
     if (current === null) {
-      return fail('transition-rejection', 'no-cursor', 'Treegrid editing requires a cursor.');
+      return fail('transition-rejection', 'no-cursor', 'Tree-grid editing requires a cursor.');
     }
     return createMachineUpdate(
       treeGridState(expansion, state.cursor, state.selection, 'editing'),
@@ -266,7 +266,7 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
   }
   if (event === 'select') {
     if (current === null) {
-      return fail('transition-rejection', 'no-cursor', 'Treegrid selection requires a cursor.');
+      return fail('transition-rejection', 'no-cursor', 'Tree-grid selection requires a cursor.');
     }
     const selection = selectOne(state.selection, current, domain);
     return createMachineUpdate(
@@ -362,38 +362,38 @@ function validateTreeGridState<CellID extends StableID>(
   if (!isTreeGridEditMode(state.editMode)) {
     return {
       class: 'transition-rejection',
-      code: 'invalid-treegrid-edit-mode',
-      message: 'Treegrid edit mode must be navigation or editing.',
+      code: 'invalid-tree-grid-edit-mode',
+      message: 'Tree-grid edit mode must be navigation or editing.',
     };
   }
   if (state.cursor.current !== null && !visible.contains(state.cursor.current)) {
     return {
       class: 'transition-rejection',
-      code: 'treegrid-cursor-hidden',
-      message: 'Treegrid cursor must remain on a visible row.',
+      code: 'tree-grid-cursor-hidden',
+      message: 'Tree-grid cursor must remain on a visible row.',
       details: { current: state.cursor.current },
     };
   }
   if (state.editMode === 'editing' && state.cursor.current === null) {
     return {
       class: 'transition-rejection',
-      code: 'treegrid-edit-without-cursor',
-      message: 'Treegrid editing requires a current cell.',
+      code: 'tree-grid-edit-without-cursor',
+      message: 'Tree-grid editing requires a current cell.',
     };
   }
   if (state.selection.size > 1 || state.selection.selected.length !== state.selection.size) {
     return {
       class: 'transition-rejection',
-      code: 'invalid-treegrid-selection',
-      message: 'Treegrid selection must contain at most one identity.',
+      code: 'invalid-tree-grid-selection',
+      message: 'Tree-grid selection must contain at most one identity.',
     };
   }
   for (const id of state.selection.selected) {
     if (!domain.contains(id) || !state.selection.has(id)) {
       return {
         class: 'transition-rejection',
-        code: 'treegrid-selection-outside-grid',
-        message: 'Treegrid selection must agree with the cell grid.',
+        code: 'tree-grid-selection-outside-grid',
+        message: 'Tree-grid selection must agree with the cell grid.',
         details: { id },
       };
     }
@@ -401,8 +401,8 @@ function validateTreeGridState<CellID extends StableID>(
   if (state.selection.anchor !== null && !domain.contains(state.selection.anchor)) {
     return {
       class: 'transition-rejection',
-      code: 'treegrid-anchor-outside-grid',
-      message: 'Treegrid selection anchor must exist in the cell grid.',
+      code: 'tree-grid-anchor-outside-grid',
+      message: 'Tree-grid selection anchor must exist in the cell grid.',
       details: { anchor: state.selection.anchor },
     };
   }

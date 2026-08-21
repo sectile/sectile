@@ -18,10 +18,10 @@
 - [x] Implement internal slider composition with bounded tick transitions and independent law evidence.
 - [x] Implement internal calendar composition with grid navigation and external page authority.
 - [x] Implement internal tree-view composition with visible navigation and expansion/selection authority.
-- [x] Implement treegrid composition with authoritative row/cell mapping, expansion, single selection, and explicit edit mode.
+- [x] Implement tree-grid composition with authoritative row/cell mapping, expansion, single selection, and explicit edit mode.
 - [x] Implement combobox text editing, committed-query filtering, popup navigation, and composition-safe acceptance.
 - [x] Implement the revisioned machine wrapper with stale-input and exactly-once evidence.
-- [x] Verify listbox, slider, calendar, tree-view, treegrid, and full combobox input through independent DOM and terminal controllers.
+- [x] Verify listbox, slider, calendar, tree-view, tree-grid, and full combobox input through independent DOM and terminal controllers.
 - [x] Promote each composite facade only in the same transaction as its two host witnesses.
 - [x] Support controlled and uncontrolled state ownership in every host controller.
 - [x] Promote the text facade with independent DOM and terminal text-input witnesses.

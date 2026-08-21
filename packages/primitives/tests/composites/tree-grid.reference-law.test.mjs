@@ -5,11 +5,11 @@ import {
   applyTreeGridEvent,
   createTreeGridModel,
   createTreeGridState,
-} from '../../.verification-dist/internal/composites/treegrid.js';
+} from '../../.verification-dist/internal/composites/tree-grid.js';
 import {
   applyReferenceTreeGridEvent,
   createReferenceTreeGridState,
-} from '../../.verification-dist/internal/reference/composites/treegrid.js';
+} from '../../.verification-dist/internal/reference/composites/tree-grid.js';
 import { createGrid } from '../../.verification-dist/structures/grid.js';
 import { createTree } from '../../.verification-dist/structures/tree.js';
 import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
@@ -27,7 +27,7 @@ const EVENTS = [
   'cancel-edit',
 ];
 
-test('treegrid composition matches its independent reference across bounded row trees and cell grids', () => {
+test('tree-grid composition matches its independent reference across bounded row trees and cell grids', () => {
   let models = 0;
   let transitions = 0;
   for (let size = 0; size <= 3; size += 1) {
@@ -87,7 +87,7 @@ test('treegrid composition matches its independent reference across bounded row 
   assert.equal(transitions, 276_720);
 });
 
-test('treegrid keeps expansion, cell movement, selection, and editing distinct', () => {
+test('tree-grid keeps expansion, cell movement, selection, and editing distinct', () => {
   const tree = unwrap(createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
@@ -117,14 +117,14 @@ test('treegrid keeps expansion, cell movement, selection, and editing distinct',
   const editing = unwrap(applyTreeGridEvent(model, selected.state, 'start-edit'));
   assert.equal(editing.state.editMode, 'editing');
   assert.deepEqual(editing.commands, [{ type: 'begin-edit', id: 'child-value' }]);
-  assert.equal(applyTreeGridEvent(model, editing.state, 'left').error.code, 'treegrid-edit-active');
+  assert.equal(applyTreeGridEvent(model, editing.state, 'left').error.code, 'tree-grid-edit-active');
 
   const committed = unwrap(applyTreeGridEvent(model, editing.state, 'commit-edit'));
   assert.equal(committed.state.editMode, 'navigation');
   assert.deepEqual(committed.commands, [{ type: 'commit-edit', id: 'child-value' }]);
 });
 
-test('treegrid validates mapping and rejects malformed state atomically', () => {
+test('tree-grid validates mapping and rejects malformed state atomically', () => {
   const tree = unwrap(createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
@@ -135,15 +135,15 @@ test('treegrid validates mapping and rejects malformed state atomically', () => 
   ]));
   assert.equal(
     createTreeGridModel(tree, grid, ['root']).error.code,
-    'treegrid-row-count-mismatch',
+    'tree-grid-row-count-mismatch',
   );
   assert.equal(
     createTreeGridModel(tree, grid, ['root', 'root']).error.code,
-    'duplicate-treegrid-row',
+    'duplicate-tree-grid-row',
   );
   assert.equal(
     createTreeGridModel(tree, grid, ['root', 'missing']).error.code,
-    'treegrid-row-outside-tree',
+    'tree-grid-row-outside-tree',
   );
 
   const reversed = unwrap(createTreeGridModel(tree, grid, ['child', 'root']));
@@ -151,18 +151,18 @@ test('treegrid validates mapping and rejects malformed state atomically', () => 
   assert.equal(reversed.rowIndexOf('root'), 1);
 
   const model = unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
-  assert.equal(createTreeGridState(model, { current: 'c' }).error.code, 'treegrid-cursor-hidden');
+  assert.equal(createTreeGridState(model, { current: 'c' }).error.code, 'tree-grid-cursor-hidden');
   assert.equal(
     createTreeGridState(model, { editMode: 'editing' }).error.code,
-    'treegrid-edit-without-cursor',
+    'tree-grid-edit-without-cursor',
   );
   const start = unwrap(createTreeGridState(model));
   assert.equal(applyTreeGridEvent(model, start, 'select').error.code, 'no-cursor');
-  assert.equal(applyTreeGridEvent(model, start, 'commit-edit').error.code, 'treegrid-not-editing');
-  assert.equal(applyTreeGridEvent(model, start, 'unknown').error.code, 'invalid-treegrid-event');
+  assert.equal(applyTreeGridEvent(model, start, 'commit-edit').error.code, 'tree-grid-not-editing');
+  assert.equal(applyTreeGridEvent(model, start, 'unknown').error.code, 'invalid-tree-grid-event');
   assert.equal(
     applyTreeGridEvent(model, start, 'right', { boundary: 'wrap' }).error.code,
-    'invalid-treegrid-boundary',
+    'invalid-tree-grid-boundary',
   );
 
   const current = unwrap(createTreeGridState(model, { current: 'a' }));
@@ -177,7 +177,7 @@ test('treegrid validates mapping and rejects malformed state atomically', () => 
   });
   const rejected = applyTreeGridEvent(model, hidden, 'down');
   assert.equal(rejected.ok, false);
-  assert.equal(rejected.error.code, 'treegrid-cursor-hidden');
+  assert.equal(rejected.error.code, 'tree-grid-cursor-hidden');
   assert.equal(hidden.cursor.current, 'c');
 });
 

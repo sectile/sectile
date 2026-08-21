@@ -9,7 +9,7 @@ import type {
   TreeGridState,
   TreeGridStateInput,
   TreeGridUpdate,
-} from '../../composites/treegrid.js';
+} from '../../composites/tree-grid.js';
 import { ReferenceSelectionState, referenceSelectOne } from '../state/selection.js';
 
 interface ReferenceTreeGridRejection {
@@ -63,33 +63,33 @@ export function applyReferenceTreeGridEvent<
   event: TreeGridEvent,
   policies: TreeGridPolicies<CellID> = {},
 ): ReferenceTreeGridResult<RowID, CellID> {
-  if (!referenceEditMode(state.editMode)) return rejected('invalid-treegrid-edit-mode');
+  if (!referenceEditMode(state.editMode)) return rejected('invalid-tree-grid-edit-mode');
   const expansion = referenceExpansion(model, state.expansion.ids);
   const visible = referenceVisibleCells(model, expansion);
   const cells = referenceCells(model);
   const current = state.cursor.current;
-  if (current !== null && !visible.includes(current)) return rejected('treegrid-cursor-hidden');
+  if (current !== null && !visible.includes(current)) return rejected('tree-grid-cursor-hidden');
   if (state.editMode === 'editing' && current === null) {
-    return rejected('treegrid-edit-without-cursor');
+    return rejected('tree-grid-edit-without-cursor');
   }
   if (
     state.selection.size > 1 ||
     state.selection.selected.length !== state.selection.size
   ) {
-    return rejected('invalid-treegrid-selection');
+    return rejected('invalid-tree-grid-selection');
   }
   if (
     state.selection.selected.some((id) => !cells.includes(id) || !state.selection.has(id))
   ) {
-    return rejected('treegrid-selection-outside-grid');
+    return rejected('tree-grid-selection-outside-grid');
   }
   if (state.selection.anchor !== null && !cells.includes(state.selection.anchor)) {
-    return rejected('treegrid-anchor-outside-grid');
+    return rejected('tree-grid-anchor-outside-grid');
   }
-  if (!referenceEvent(event)) return rejected('invalid-treegrid-event');
+  if (!referenceEvent(event)) return rejected('invalid-tree-grid-event');
   const boundary = policies.boundary ?? 'stop';
   if (boundary !== 'stop' && boundary !== 'wrap-axis') {
-    return rejected('invalid-treegrid-boundary');
+    return rejected('invalid-tree-grid-boundary');
   }
   if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
     return rejected('invalid-eligibility-policy');
@@ -100,14 +100,14 @@ export function applyReferenceTreeGridEvent<
     : referenceState(expansion, current, state.selection, state.editMode);
 
   if (event === 'commit-edit' || event === 'cancel-edit') {
-    if (state.editMode !== 'editing' || current === null) return rejected('treegrid-not-editing');
+    if (state.editMode !== 'editing' || current === null) return rejected('tree-grid-not-editing');
     return accepted(
       referenceState(expansion, current, state.selection, 'navigation'),
       [{ type: event, id: current }],
     );
   }
   if (state.editMode === 'editing') {
-    return event === 'start-edit' ? accepted(normalized) : rejected('treegrid-edit-active');
+    return event === 'start-edit' ? accepted(normalized) : rejected('tree-grid-edit-active');
   }
   if (event === 'start-edit') {
     if (current === null) return rejected('no-cursor');

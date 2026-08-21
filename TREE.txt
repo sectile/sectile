@@ -50,16 +50,16 @@ sectile/
 │   │   │   ├── listbox.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── text.ts
-│   │   │   ├── tree-view.ts
-│   │   │   └── treegrid.ts
+│   │   │   ├── tree-grid.ts
+│   │   │   └── tree-view.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── text.test.mjs
-│   │   │   ├── tree-view.test.mjs
-│   │   │   └── treegrid.test.mjs
+│   │   │   ├── tree-grid.test.mjs
+│   │   │   └── tree-view.test.mjs
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -94,8 +94,8 @@ sectile/
 │   │   │   │   │   ├── combobox.ts
 │   │   │   │   │   ├── listbox.ts
 │   │   │   │   │   ├── slider.ts
-│   │   │   │   │   ├── tree-view.ts
-│   │   │   │   │   └── treegrid.ts
+│   │   │   │   │   ├── tree-grid.ts
+│   │   │   │   │   └── tree-view.ts
 │   │   │   │   ├── editing/
 │   │   │   │   │   └── text.ts
 │   │   │   │   ├── kernel/
@@ -109,8 +109,8 @@ sectile/
 │   │   │   │   │   │   ├── combobox.ts
 │   │   │   │   │   │   ├── listbox.ts
 │   │   │   │   │   │   ├── slider.ts
-│   │   │   │   │   │   ├── tree-view.ts
-│   │   │   │   │   │   └── treegrid.ts
+│   │   │   │   │   │   ├── tree-grid.ts
+│   │   │   │   │   │   └── tree-view.ts
 │   │   │   │   │   ├── editing/
 │   │   │   │   │   │   └── text.ts
 │   │   │   │   │   ├── state/
@@ -141,8 +141,8 @@ sectile/
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── text.ts
-│   │   │   ├── tree-view.ts
-│   │   │   └── treegrid.ts
+│   │   │   ├── tree-grid.ts
+│   │   │   └── tree-view.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
@@ -155,8 +155,8 @@ sectile/
 │   │   │   │   ├── combobox.reference-law.test.mjs
 │   │   │   │   ├── listbox.reference-law.test.mjs
 │   │   │   │   ├── slider.reference-law.test.mjs
-│   │   │   │   ├── tree-view.reference-law.test.mjs
-│   │   │   │   └── treegrid.reference-law.test.mjs
+│   │   │   │   ├── tree-grid.reference-law.test.mjs
+│   │   │   │   └── tree-view.reference-law.test.mjs
 │   │   │   ├── differential/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
@@ -196,16 +196,16 @@ sectile/
 │       │   ├── listbox.ts
 │       │   ├── slider.ts
 │       │   ├── text.ts
-│       │   ├── tree-view.ts
-│       │   └── treegrid.ts
+│       │   ├── tree-grid.ts
+│       │   └── tree-view.ts
 │       ├── tests/
 │       │   ├── calendar.test.mjs
 │       │   ├── combobox.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   ├── slider.test.mjs
 │       │   ├── text.test.mjs
-│       │   ├── tree-view.test.mjs
-│       │   └── treegrid.test.mjs
+│       │   ├── tree-grid.test.mjs
+│       │   └── tree-view.test.mjs
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -224,8 +224,8 @@ sectile/
 │       ├── listbox.test.mjs
 │       ├── slider.test.mjs
 │       ├── text.test.mjs
-│       ├── tree-view.test.mjs
-│       └── treegrid.test.mjs
+│       ├── tree-grid.test.mjs
+│       └── tree-view.test.mjs
 ├── .gitignore
 ├── .node-version
 ├── package.json

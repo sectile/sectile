@@ -14,7 +14,7 @@ import {
   type TreeGridModel,
   type TreeGridPolicies,
   type TreeGridState,
-} from '@sectile/primitives/treegrid';
+} from '@sectile/primitives/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 
 export interface KeyboardInput {
@@ -234,7 +234,7 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
         code: 'unsupported-terminal-key',
-        message: 'Terminal keyboard input does not map to a treegrid semantic event.',
+        message: 'Terminal keyboard input does not map to a tree-grid semantic event.',
         details: { key: input.key },
       });
     }
@@ -325,24 +325,24 @@ function controlledInputError<RowID extends StableID, CellID extends StableID>(
   editModeControlled: boolean,
   values: TreeGridControlledValues<RowID, CellID>,
 ): SectileError | null {
-  return fieldError(valueControlled, values.value !== undefined, 'value', 'treegrid selection')
+  return fieldError(valueControlled, values.value !== undefined, 'value', 'tree-grid selection')
     ?? fieldError(
       expandedControlled,
       values.expandedValue !== undefined,
       'expanded-value',
-      'treegrid expansion',
+      'tree-grid expansion',
     )
     ?? fieldError(
       highlightControlled,
       values.highlightedValue !== undefined,
       'highlighted-value',
-      'treegrid highlight',
+      'tree-grid highlight',
     )
     ?? fieldError(
       editModeControlled,
       values.editMode !== undefined,
       'edit-mode',
-      'treegrid edit mode',
+      'tree-grid edit mode',
     );
 }
 

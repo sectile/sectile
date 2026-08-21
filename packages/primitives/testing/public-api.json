@@ -13,7 +13,7 @@
     "./combobox",
     "./slider",
     "./tree-view",
-    "./treegrid",
+    "./tree-grid",
     "./revision",
     "./text",
     "./package.json"
@@ -28,7 +28,7 @@
     "./combobox",
     "./slider",
     "./tree-view",
-    "./treegrid",
+    "./tree-grid",
     "./revision",
     "./text"
   ],
@@ -42,7 +42,7 @@
     "./combobox": "combobox",
     "./slider": "slider",
     "./tree-view": "tree-view",
-    "./treegrid": "treegrid",
+    "./tree-grid": "tree-grid",
     "./revision": "revision",
     "./text": "text"
   }
