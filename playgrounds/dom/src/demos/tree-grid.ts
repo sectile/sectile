@@ -98,6 +98,11 @@ export const treeGridDemo: DemoDefinition = {
             disclosure.textContent = tree.isLeaf(rowID) === false
               ? state.expansion.has(rowID) ? '▾' : '▸'
               : '·';
+            if (tree.isLeaf(rowID) === false) {
+              connection.setDisclosureAttributes(disclosure, rowID);
+            } else {
+              disclosure.setAttribute('aria-hidden', 'true');
+            }
             const text = document.createElement('span');
             text.textContent = values.get(cellID) ?? '';
             label.append(disclosure, text);

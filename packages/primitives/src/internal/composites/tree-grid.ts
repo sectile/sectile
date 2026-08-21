@@ -26,14 +26,21 @@ import {
 
 export type TreeGridEditMode = 'navigation' | 'editing';
 
-export type TreeGridEvent =
+export type TreeGridEvent<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+> =
   | GridDirection
   | 'expand'
   | 'collapse'
   | 'select'
   | 'start-edit'
   | 'commit-edit'
-  | 'cancel-edit';
+  | 'cancel-edit'
+  | { readonly type: 'focus'; readonly id: CellID }
+  | { readonly type: 'select'; readonly id: CellID }
+  | { readonly type: 'start-edit'; readonly id: CellID }
+  | { readonly type: 'set-expanded'; readonly id: RowID; readonly open: boolean };
 
 export type TreeGridCommand<CellID extends StableID = StableID> =
   | { readonly type: 'focus'; readonly id: CellID }
@@ -195,7 +202,7 @@ export function createTreeGridState<RowID extends StableID, CellID extends Stabl
 export function applyTreeGridEvent<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
   state: TreeGridState<RowID, CellID>,
-  event: TreeGridEvent,
+  event: TreeGridEvent<RowID, CellID>,
   policies: TreeGridPolicies<CellID> = {},
 ): Result<TreeGridUpdate<RowID, CellID>> {
   const expansion = createExpansionState(model.tree, state.expansion.ids);
@@ -232,6 +239,55 @@ export function applyTreeGridEvent<RowID extends StableID, CellID extends Stable
     ? state
     : treeGridState(expansion, state.cursor, state.selection, state.editMode);
   const current = state.cursor.current;
+
+  if (typeof event === 'object') {
+    if (event.type === 'set-expanded') {
+      if (!model.tree.has(event.id)) {
+        return fail(
+          'transition-rejection',
+          'tree-grid-row-outside-tree',
+          'Direct tree-grid expansion requires a row in the tree.',
+          { id: event.id },
+        );
+      }
+      const nextExpansion = setExpansionOpen(expansion, event.id, event.open, model.tree);
+      const nextVisible = visibleCells(model, nextExpansion);
+      const rowIndex = model.rowIndexOf(event.id);
+      const target = current === null || nextVisible.contains(current)
+        ? current
+        : (rowIndex === null ? null : model.grid.row(rowIndex)?.at(0) ?? null);
+      return createMachineUpdate(
+        treeGridState(nextExpansion, createCursorState(target), state.selection, 'navigation'),
+        target === null || target === current ? [] : [{ type: 'focus', id: target }],
+      );
+    }
+    if (!visible.contains(event.id) || policies.eligible?.(event.id) === false) {
+      return fail(
+        'transition-rejection',
+        'tree-grid-target-unavailable',
+        'Direct tree-grid cell events require an eligible visible cell.',
+        { id: event.id },
+      );
+    }
+    const cursor = createCursorState(event.id);
+    if (event.type === 'focus') {
+      return createMachineUpdate(
+        treeGridState(expansion, cursor, state.selection, 'navigation'),
+        [{ type: 'focus', id: event.id }],
+      );
+    }
+    const selection = selectOne(state.selection, event.id, domain);
+    if (event.type === 'select') {
+      return createMachineUpdate(
+        treeGridState(expansion, cursor, selection, 'navigation'),
+        [{ type: 'focus', id: event.id }],
+      );
+    }
+    return createMachineUpdate(
+      treeGridState(expansion, cursor, selection, 'editing'),
+      [{ type: 'focus', id: event.id }, { type: 'begin-edit', id: event.id }],
+    );
+  }
 
   if (event === 'commit-edit' || event === 'cancel-edit') {
     if (state.editMode !== 'editing' || current === null) {
@@ -429,8 +485,10 @@ function isTreeGridEditMode(value: string): value is TreeGridEditMode {
   return value === 'navigation' || value === 'editing';
 }
 
-function isTreeGridEvent(value: string): value is TreeGridEvent {
-  return [
+function isTreeGridEvent<RowID extends StableID, CellID extends StableID>(
+  value: unknown,
+): value is TreeGridEvent<RowID, CellID> {
+  if (typeof value === 'string') return [
     'left',
     'right',
     'up',
@@ -442,4 +500,8 @@ function isTreeGridEvent(value: string): value is TreeGridEvent {
     'commit-edit',
     'cancel-edit',
   ].includes(value);
+  return typeof value === 'object' && value !== null
+    && 'type' in value && 'id' in value && typeof value.id === 'string'
+    && (value.type === 'focus' || value.type === 'select' || value.type === 'start-edit'
+      || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }

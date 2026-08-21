@@ -9,7 +9,8 @@ export type SliderEvent =
   | 'page-up'
   | 'page-down'
   | 'home'
-  | 'end';
+  | 'end'
+  | { readonly type: 'set-tick'; readonly tick: number };
 
 export interface SliderState {
   readonly tick: number;
@@ -71,6 +72,19 @@ export function applySliderEvent(
     );
   }
 
+  if (typeof event === 'object') {
+    if (!isSliderTick(range, event.tick)) {
+      return fail(
+        'transition-rejection',
+        'slider-tick-outside-range',
+        'Direct slider input requires a tick inside the quantized range.',
+        { tick: event.tick, count: range.count },
+      );
+    }
+    if (event.tick === state.tick) return createMachineUpdate(state);
+    return createMachineUpdate(sliderState(event.tick), [{ type: 'announce-tick', tick: event.tick }]);
+  }
+
   let tick: number;
   switch (event) {
     case 'increment':
@@ -102,15 +116,17 @@ function isSliderTick(range: QuantizedRange, tick: number): boolean {
   return Number.isSafeInteger(tick) && tick >= 0 && tick <= range.count;
 }
 
-function isSliderEvent(value: string): value is SliderEvent {
-  return (
+function isSliderEvent(value: unknown): value is SliderEvent {
+  return typeof value === 'string' ? (
     value === 'increment' ||
     value === 'decrement' ||
     value === 'page-up' ||
     value === 'page-down' ||
     value === 'home' ||
     value === 'end'
-  );
+  ) : typeof value === 'object' && value !== null
+    && 'type' in value && value.type === 'set-tick'
+    && 'tick' in value && typeof value.tick === 'number';
 }
 
 function sliderState(tick: number): SliderState {

@@ -28,6 +28,29 @@ const EVENTS = [
   'cancel-edit',
 ];
 
+test('tree-grid direct events target cells, editing, and row expansion', () => {
+  const model = unwrap(createTreeGridModelFromRows([
+    { id: 'root', parentID: null, cells: ['root-name'] },
+    { id: 'child', parentID: 'root', cells: ['child-name'] },
+  ]));
+  const state = unwrap(createTreeGridState(model, { expanded: ['root'] }));
+  const selected = unwrap(applyTreeGridEvent(model, state, { type: 'select', id: 'child-name' }));
+  assert.equal(selected.state.cursor.current, 'child-name');
+  assert.deepEqual(selected.state.selection.selected, ['child-name']);
+  const editing = unwrap(applyTreeGridEvent(
+    model,
+    selected.state,
+    { type: 'start-edit', id: 'child-name' },
+  ));
+  assert.equal(editing.state.editMode, 'editing');
+  const collapsed = unwrap(applyTreeGridEvent(
+    model,
+    selected.state,
+    { type: 'set-expanded', id: 'root', open: false },
+  ));
+  assert.equal(collapsed.state.cursor.current, 'root-name');
+});
+
 test('tree-grid row input constructs and validates its tree, grid, and mapping atomically', () => {
   const result = createTreeGridModelFromRows([
     { id: 'root', parentID: null, cells: ['root-name', 'root-status'] },

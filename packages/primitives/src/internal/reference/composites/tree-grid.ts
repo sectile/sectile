@@ -60,7 +60,7 @@ export function applyReferenceTreeGridEvent<
 >(
   model: TreeGridModel<RowID, CellID>,
   state: TreeGridState<RowID, CellID>,
-  event: TreeGridEvent,
+  event: TreeGridEvent<RowID, CellID>,
   policies: TreeGridPolicies<CellID> = {},
 ): ReferenceTreeGridResult<RowID, CellID> {
   if (!referenceEditMode(state.editMode)) return rejected('invalid-tree-grid-edit-mode');
@@ -98,6 +98,43 @@ export function applyReferenceTreeGridEvent<
   const normalized = sameExpansion(expansion, state.expansion)
     ? state
     : referenceState(expansion, current, state.selection, state.editMode);
+
+  if (typeof event === 'object') {
+    if (event.type === 'set-expanded') {
+      if (!model.tree.has(event.id)) return rejected('tree-grid-row-outside-tree');
+      const requested = event.open
+        ? [...expansion.ids, event.id]
+        : expansion.ids.filter((id) => id !== event.id);
+      const nextExpansion = referenceExpansion(model, requested);
+      const nextVisible = referenceVisibleCells(model, nextExpansion);
+      const rowIndex = model.rowIndexOf(event.id);
+      const target = current === null || nextVisible.includes(current)
+        ? current
+        : (rowIndex === null ? null : model.grid.row(rowIndex)?.at(0) ?? null);
+      return accepted(
+        referenceState(nextExpansion, target, state.selection, 'navigation'),
+        target === null || target === current ? [] : [{ type: 'focus', id: target }],
+      );
+    }
+    if (!visible.includes(event.id) || policies.eligible?.(event.id) === false) {
+      return rejected('tree-grid-target-unavailable');
+    }
+    if (event.type === 'focus') {
+      return accepted(referenceState(expansion, event.id, state.selection, 'navigation'), [
+        { type: 'focus', id: event.id },
+      ]);
+    }
+    const selection = referenceSelectOne(state.selection, event.id, referenceDomain(cells));
+    if (event.type === 'select') {
+      return accepted(referenceState(expansion, event.id, selection, 'navigation'), [
+        { type: 'focus', id: event.id },
+      ]);
+    }
+    return accepted(referenceState(expansion, event.id, selection, 'editing'), [
+      { type: 'focus', id: event.id },
+      { type: 'begin-edit', id: event.id },
+    ]);
+  }
 
   if (event === 'commit-edit' || event === 'cancel-edit') {
     if (state.editMode !== 'editing' || current === null) return rejected('tree-grid-not-editing');
@@ -336,8 +373,10 @@ function referenceEditMode(value: string): value is TreeGridEditMode {
   return value === 'navigation' || value === 'editing';
 }
 
-function referenceEvent(value: string): value is TreeGridEvent {
-  return [
+function referenceEvent<RowID extends StableID, CellID extends StableID>(
+  value: unknown,
+): value is TreeGridEvent<RowID, CellID> {
+  if (typeof value === 'string') return [
     'left',
     'right',
     'up',
@@ -349,4 +388,8 @@ function referenceEvent(value: string): value is TreeGridEvent {
     'commit-edit',
     'cancel-edit',
   ].includes(value);
+  return typeof value === 'object' && value !== null
+    && 'type' in value && 'id' in value && typeof value.id === 'string'
+    && (value.type === 'focus' || value.type === 'select' || value.type === 'start-edit'
+      || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }

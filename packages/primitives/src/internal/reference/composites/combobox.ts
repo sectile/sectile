@@ -84,7 +84,7 @@ export function referenceApplyComboboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
-  event: ComboboxEvent,
+  event: ComboboxEvent<ID>,
   policies: ComboboxPolicies<ID> = {},
 ): ReferenceComboboxResult<ID> {
   if (policies.matches !== undefined && typeof policies.matches !== 'function') {
@@ -92,6 +92,22 @@ export function referenceApplyComboboxEvent<ID extends StableID>(
   }
   const boundary = policies.boundary ?? 'stop';
   if (boundary !== 'stop' && boundary !== 'wrap') return rejected('invalid-combobox-boundary');
+  if (typeof event === 'object' && event !== null && event.type === 'accept') {
+    const eligible = referenceEligible(
+      domain,
+      labels,
+      referenceCommittedQuery(state.text),
+      policies.matches,
+    );
+    if (typeof eligible === 'string') return rejected(eligible);
+    if (!eligible.has(event.id)) return rejected('combobox-candidate-unavailable');
+    return referenceAcceptCombobox(domain, labels, referenceState(
+      state.text,
+      state.popupOpen,
+      event.id,
+      state.selection,
+    ));
+  }
   if (typeof event === 'object' && event !== null && event.type === 'text') {
     const text = referenceApplyTextEvent(state.text, event.event);
     if (typeof text === 'string') return rejected(text);

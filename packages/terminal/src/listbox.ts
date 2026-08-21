@@ -62,7 +62,7 @@ export interface ListboxController<ID extends StableID = StableID> {
 }
 
 export interface ListboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ListboxEvent;
+  readonly event: ListboxEvent<ID>;
   readonly result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
@@ -117,7 +117,9 @@ export function connectListbox<ID extends StableID>(
   return new TerminalListboxConnection(options);
 }
 
-export function toListboxEvent(input: KeyboardInput): ListboxEvent | null {
+export function toListboxEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): ListboxEvent<ID> | null {
   if (input.key === 'down') return 'next';
   if (input.key === 'up') return 'previous';
   if (input.key === 'space') return 'toggle';
@@ -160,7 +162,7 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
-    const event = toListboxEvent(input);
+    const event = toListboxEvent<ID>(input);
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     if (result.ok) {
@@ -240,7 +242,7 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
-    const event = toListboxEvent(input);
+    const event = toListboxEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',

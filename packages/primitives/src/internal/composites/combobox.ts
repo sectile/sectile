@@ -19,12 +19,13 @@ import {
   type SelectionState,
 } from '../state/selection.js';
 
-export type ComboboxEvent =
+export type ComboboxEvent<ID extends StableID = StableID> =
   | 'next'
   | 'previous'
   | 'close'
   | 'accept'
-  | { readonly type: 'text'; readonly event: TextEvent };
+  | { readonly type: 'text'; readonly event: TextEvent }
+  | { readonly type: 'accept'; readonly id: ID };
 
 export type ComboboxCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus'; readonly id: ID }
@@ -87,7 +88,7 @@ export function applyComboboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
-  event: ComboboxEvent,
+  event: ComboboxEvent<ID>,
   policies: ComboboxPolicies<ID> = {},
 ): Result<ComboboxUpdate<ID>> {
   const policyValidation = validatePolicies(policies);
@@ -102,6 +103,29 @@ export function applyComboboxEvent<ID extends StableID>(
       event.event,
       policies,
     );
+  }
+  if (isDirectAcceptEvent(event)) {
+    const eligible = resolveEligible(
+      domain,
+      labels,
+      committedQuery(current.text),
+      policies.matches,
+    );
+    if (!eligible.ok) return eligible;
+    if (!eligible.value.has(event.id)) {
+      return fail(
+        'transition-rejection',
+        'combobox-candidate-unavailable',
+        'Direct combobox acceptance requires a matching candidate.',
+        { id: event.id },
+      );
+    }
+    return acceptComboboxCandidate(domain, labels, comboboxState(
+      current.text,
+      current.popupOpen,
+      createCursorState(event.id),
+      current.selection,
+    ));
   }
   if (!isComboboxEvent(event)) {
     return fail(
@@ -340,11 +364,21 @@ function comboboxState<ID extends StableID>(
   return Object.freeze({ text, popupOpen, cursor, selection });
 }
 
-function isTextEvent(event: ComboboxEvent): event is Extract<ComboboxEvent, object> {
+function isTextEvent<ID extends StableID>(
+  event: ComboboxEvent<ID>,
+): event is Extract<ComboboxEvent<ID>, { readonly type: 'text' }> {
   return isObject(event) && event.type === 'text';
 }
 
-function isComboboxEvent(event: ComboboxEvent): event is Exclude<ComboboxEvent, object> {
+function isDirectAcceptEvent<ID extends StableID>(
+  event: ComboboxEvent<ID>,
+): event is Extract<ComboboxEvent<ID>, { readonly type: 'accept' }> {
+  return isObject(event) && event.type === 'accept';
+}
+
+function isComboboxEvent<ID extends StableID>(
+  event: ComboboxEvent<ID>,
+): event is Extract<ComboboxEvent<ID>, string> {
   return event === 'next'
     || event === 'previous'
     || event === 'close'

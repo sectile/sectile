@@ -14,6 +14,23 @@ import { canonicalIDs, powerset, unwrap } from '../support.mjs';
 
 const EVENTS = ['next', 'previous', 'toggle', 'activate', 'clear'];
 
+test('listbox direct events target an eligible identity atomically', () => {
+  const domain = unwrap(createSequence(['a', 'b']));
+  const state = unwrap(createListboxState(domain, { current: 'a' }));
+  const activated = unwrap(applyListboxEvent(domain, state, { type: 'activate', id: 'b' }));
+  assert.equal(activated.state.cursor.current, 'b');
+  assert.deepEqual(activated.state.selection.selected, ['b']);
+  assert.deepEqual(activated.commands, [
+    { type: 'focus', id: 'b' },
+    { type: 'activate', id: 'b' },
+  ]);
+  assert.equal(
+    applyListboxEvent(domain, state, { type: 'focus', id: 'b' }, { eligible: () => false })
+      .error.code,
+    'listbox-target-unavailable',
+  );
+});
+
 test('listbox composition is deterministic, failure-atomic, and preserves cursor/selection authority', () => {
   let states = 0;
   let transitions = 0;

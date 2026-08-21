@@ -14,6 +14,24 @@ import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
 
 const EVENTS = ['next', 'previous', 'right', 'left', 'toggle-select'];
 
+test('tree-view direct events target visible nodes and expansion', () => {
+  const tree = unwrap(createTree([
+    { id: 'root', parentID: null },
+    { id: 'child', parentID: 'root' },
+  ]));
+  const state = unwrap(createTreeViewState(tree, { expanded: ['root'], current: 'root' }));
+  const selected = unwrap(applyTreeViewEvent(tree, state, { type: 'toggle-select', id: 'child' }));
+  assert.equal(selected.state.cursor.current, 'child');
+  assert.deepEqual(selected.state.selection.selected, ['child']);
+  const collapsed = unwrap(applyTreeViewEvent(
+    tree,
+    selected.state,
+    { type: 'set-expanded', id: 'root', open: false },
+  ));
+  assert.deepEqual(collapsed.state.expansion.ids, []);
+  assert.equal(collapsed.state.cursor.current, 'root');
+});
+
 test('tree-view composition matches accepted exhaustive transition counts', () => {
   let states = 0;
   let transitions = 0;

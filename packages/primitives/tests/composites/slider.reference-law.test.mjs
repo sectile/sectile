@@ -14,6 +14,18 @@ import { unwrap } from '../support.mjs';
 
 const EVENTS = ['increment', 'decrement', 'page-up', 'page-down', 'home', 'end'];
 
+test('slider direct events set an exact bounded tick', () => {
+  const range = quantizedRange(4);
+  const state = unwrap(createSliderState(range, 0));
+  const set = unwrap(applySliderEvent(range, state, { type: 'set-tick', tick: 3 }));
+  assert.equal(set.state.tick, 3);
+  assert.deepEqual(set.commands, [{ type: 'announce-tick', tick: 3 }]);
+  assert.equal(
+    applySliderEvent(range, state, { type: 'set-tick', tick: 5 }).error.code,
+    'slider-tick-outside-range',
+  );
+});
+
 test('slider composition is deterministic, bounded, and matches its independent reference', () => {
   let states = 0;
   let transitions = 0;

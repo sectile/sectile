@@ -44,6 +44,16 @@ test('DOM keys map onto calendar semantic events', () => {
   assert.equal(toCalendarEvent({ key: 'ArrowRight', ctrlKey: true }), null);
 });
 
+test('DOM calendar delegates cell clicks into direct selection', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createCalendar({ rows: [['a', 'b']], root }));
+  const cell = new FakeElement();
+  connection.setCellAttributes(cell, { id: 'b', rowIndex: 1, columnIndex: 2 });
+  root.emit('click', { target: cell });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
+});
+
 test('DOM calendar commands project into focus and page effects', () => {
   assert.deepEqual(toCalendarEffect({ type: 'focus', id: 'a' }), {
     type: 'focus-element',
@@ -119,6 +129,10 @@ class FakeElement {
 
   removeEventListener(type, listener) {
     this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event = {}) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
   }
 
   setAttribute(name, value) {

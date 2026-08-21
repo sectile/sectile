@@ -56,34 +56,34 @@
   "listbox": {
     "models": 2000,
     "transitions": 20000,
-    "accepted": 18375,
-    "rejected": 1625,
-    "commands": 9698
+    "accepted": 14874,
+    "rejected": 5126,
+    "commands": 10550
   },
   "slider": {
     "models": 2000,
     "transitions": 20000,
-    "commands": 13806
+    "commands": 15059
   },
   "calendar": {
     "models": 2000,
     "transitions": 20000,
-    "accepted": 16949,
-    "rejected": 3051,
-    "commands": 7930
+    "accepted": 15665,
+    "rejected": 4335,
+    "commands": 7595
   },
   "treeView": {
     "models": 2000,
     "transitions": 20000,
-    "accepted": 19757,
-    "rejected": 243,
-    "commands": 8001
+    "accepted": 16672,
+    "rejected": 3328,
+    "commands": 7633
   },
   "combobox": {
     "models": 2000,
-    "accepted": 911,
-    "rejected": 1089,
-    "commands": 911
+    "accepted": 883,
+    "rejected": 1117,
+    "commands": 883
   },
   "revision": {
     "cases": 124

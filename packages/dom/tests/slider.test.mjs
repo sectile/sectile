@@ -47,6 +47,20 @@ test('DOM keys map onto slider semantic events', () => {
   assert.equal(toSliderEvent({ key: 'ArrowRight', metaKey: true }), null);
 });
 
+test('DOM slider maps pointer position onto an exact tick', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createSlider({
+    min: '0',
+    max: '1',
+    step: '0.25',
+    root,
+  }));
+  root.emit('pointerdown', pointerEvent(75));
+  root.emit('pointerup', pointerEvent(75));
+  assert.equal(connection.getSnapshot().state.tick, 3);
+  assert.equal(connection.getValue(), '0.75');
+});
+
 test('DOM slider commands project into range effects', () => {
   assert.deepEqual(toSliderEffect({ type: 'announce-tick', tick: 3 }), {
     type: 'set-range-value',
@@ -103,6 +117,10 @@ function keyboardEvent(key) {
   return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
 }
 
+function pointerEvent(clientX) {
+  return { type: 'pointerdown', clientX, pointerId: 1, preventDefault() {} };
+}
+
 class FakeElement {
   attributes = new Map();
   listeners = new Map();
@@ -117,6 +135,19 @@ class FakeElement {
   removeEventListener(type, listener) {
     this.listeners.get(type)?.delete(listener);
   }
+
+  emit(type, event = {}) {
+    event.type = type;
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+
+  getBoundingClientRect() {
+    return { left: 0, width: 100 };
+  }
+
+  setPointerCapture() {}
+
+  releasePointerCapture() {}
 
   setAttribute(name, value) {
     this.attributes.set(name, value);

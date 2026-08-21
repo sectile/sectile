@@ -18,6 +18,25 @@ import {
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { unwrap } from '../support.mjs';
 
+test('combobox direct acceptance targets an eligible candidate', () => {
+  const domain = unwrap(createSequence(['a', 'b']));
+  const labels = new Map([['a', 'Alpha'], ['b', 'Beta']]);
+  const state = unwrap(createComboboxState(
+    domain,
+    unwrap(createTextEditingState()),
+    { popupOpen: true },
+  ));
+  const accepted = unwrap(applyComboboxEvent(
+    domain,
+    labels,
+    state,
+    { type: 'accept', id: 'b' },
+  ));
+  assert.equal(accepted.state.text.snapshot.text, 'Beta');
+  assert.deepEqual(accepted.state.selection.selected, ['b']);
+  assert.deepEqual(accepted.commands, [{ type: 'accept', id: 'b' }]);
+});
+
 test('combobox acceptance matches all accepted authority cases', () => {
   let cases = 0;
   for (let size = 0; size <= 4; size += 1) {

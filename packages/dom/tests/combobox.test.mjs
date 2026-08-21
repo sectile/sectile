@@ -89,6 +89,24 @@ test('DOM keyboard and text inputs map onto combobox semantics', () => {
   });
 });
 
+test('DOM combobox delegates option clicks into direct acceptance', () => {
+  const input = new FakeTextElement();
+  const popup = new FakeElement();
+  const accepted = [];
+  const connection = unwrap(createCombobox({
+    items: items(),
+    input,
+    popup,
+    onAccept: (id) => accepted.push(id),
+  }));
+  const item = new FakeElement();
+  connection.setItemAttributes(item, { id: 'b' });
+  popup.emit('click', { target: item });
+  assert.deepEqual(accepted, ['b']);
+  assert.equal(input.value, 'Beta');
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
+});
+
 test('DOM combobox commands project into active-descendant and acceptance effects', () => {
   assert.deepEqual(toComboboxEffect({ type: 'focus', id: 'a' }), {
     type: 'set-active-descendant',

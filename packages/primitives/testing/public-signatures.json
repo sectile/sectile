@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "229dbab973746655f4831684bc2c5447061c432bb82d1a5895d4abd1cf8ebf6f",
+  "fingerprint": "63f33efbac42664f143abe18ef7dc304701a4edd47119bb8b7c1a18f3ac29475",
   "files": [
     {
       "path": "dist/calendar.d.ts",
@@ -8,7 +8,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "97022a1697932370e74ac375f2586e10dcc804e6011f84adfce342c91a95a7f7"
+      "sha256": "7c5148ec90d2f57a0a045bcd2afc154cac6410d75a4564e8944c7c6b5b4e1c51"
     },
     {
       "path": "dist/index.d.ts",
@@ -16,27 +16,27 @@
     },
     {
       "path": "dist/internal/composites/calendar.d.ts",
-      "sha256": "66332bbe6e6db515b085ee28093568fe315f2c9d9e474f4214aa339d4dcb6084"
+      "sha256": "8976ac7421b482e2cfdb03b53bfb91ce4d08fd752b0af99a52e42dae28b3cb17"
     },
     {
       "path": "dist/internal/composites/combobox.d.ts",
-      "sha256": "5981b20f81a581d483c5b1c4b94c7c6126095be27f05ffd05d9b4e0d2c57e43f"
+      "sha256": "de87d5b499dd2dc62962e41084e0157d31e6d9675812371082778a6e9b716714"
     },
     {
       "path": "dist/internal/composites/listbox.d.ts",
-      "sha256": "af19938c7502081154e31d24b9b1eb683b9ce1402f2e424799515e1800d22d07"
+      "sha256": "8be9d8c65e559e1ee8d23944d9d24be22a487a4d4d2eee16eed955a10c5bf6bd"
     },
     {
       "path": "dist/internal/composites/slider.d.ts",
-      "sha256": "b775df765f0cec04d9bedb4ed4ba2655d748f264e83193e3f0314319345baf6f"
+      "sha256": "d804461815995464a65215fb020113ec59507445ef3ef38d0e025957864d3820"
     },
     {
       "path": "dist/internal/composites/tree-grid.d.ts",
-      "sha256": "54bc4778b625d728df98b529aa8dfd6b6ea86c022c0e98cb329bd41b5e20d357"
+      "sha256": "7c4a3827dffb86be159865a8279ae6cc52ca37006d5a81454d508f83f7cce30a"
     },
     {
       "path": "dist/internal/composites/tree-view.d.ts",
-      "sha256": "33d48f5c45f11476e02b184d263977cf71e2a4da502c0c5281c83a4c7751ec9e"
+      "sha256": "fc80388a989e2e2a9c14008f9a70b2b293b7ad8d6b8491045f9f0bcf82d352cd"
     },
     {
       "path": "dist/internal/editing/text.d.ts",

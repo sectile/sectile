@@ -49,6 +49,24 @@ test('DOM keys map onto tree-view semantic events', () => {
   assert.equal(toTreeViewEvent({ key: 'ArrowDown', altKey: true }), null);
 });
 
+test('DOM tree-view delegates disclosure and item clicks', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createTreeView({
+    nodes: nodes(),
+    root,
+    defaultHighlightedValue: 'root',
+  }));
+  const disclosure = new FakeElement();
+  connection.setDisclosureAttributes(disclosure, 'root');
+  root.emit('click', { target: disclosure });
+  assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
+  const item = new FakeElement();
+  connection.setItemAttributes(item, { id: 'child-a' });
+  root.emit('click', { target: item });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'child-a');
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-a']);
+});
+
 test('DOM tree-view commands project into focus effects', () => {
   assert.deepEqual(toTreeViewEffect({ type: 'focus', id: 'root' }), {
     type: 'focus-element',
@@ -134,6 +152,10 @@ class FakeElement {
 
   removeEventListener(type, listener) {
     this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event = {}) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
   }
 
   setAttribute(name, value) {

@@ -14,6 +14,20 @@ import { powerset, unwrap } from '../support.mjs';
 
 const EVENTS = ['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page'];
 
+test('calendar direct selection targets an eligible cell', () => {
+  const grid = unwrap(createGrid([['a', 'b']]));
+  const state = unwrap(createCalendarState(grid));
+  const selected = unwrap(applyCalendarEvent(grid, state, { type: 'select', id: 'b' }));
+  assert.equal(selected.state.cursor.current, 'b');
+  assert.deepEqual(selected.state.selection.selected, ['b']);
+  assert.deepEqual(selected.commands, [{ type: 'focus', id: 'b' }]);
+  assert.equal(
+    applyCalendarEvent(grid, state, { type: 'select', id: 'b' }, { eligible: () => false })
+      .error.code,
+    'calendar-target-unavailable',
+  );
+});
+
 test('calendar composition matches its reference across bounded grid views', () => {
   let models = 0;
   let transitions = 0;

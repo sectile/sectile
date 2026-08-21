@@ -100,7 +100,7 @@ export interface TreeGridTransitionDetails<
   RowID extends StableID = StableID,
   CellID extends StableID = StableID,
 > {
-  readonly event: TreeGridEvent;
+  readonly event: TreeGridEvent<RowID, CellID>;
   readonly result: RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
 }
 
@@ -172,10 +172,13 @@ export function connectTreeGrid<RowID extends StableID, CellID extends StableID>
   return new TerminalTreeGridConnection(options);
 }
 
-export function toTreeGridEvent(
+export function toTreeGridEvent<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+>(
   input: KeyboardInput,
   editMode: TreeGridEditMode = 'navigation',
-): TreeGridEvent | null {
+): TreeGridEvent<RowID, CellID> | null {
   if (input.ctrlKey === true) return null;
   if (editMode === 'editing') {
     if (input.key === 'enter') return 'commit-edit';
@@ -243,7 +246,7 @@ class TerminalTreeGridConnection<RowID extends StableID, CellID extends StableID
       }
     }
 
-    const event = toTreeGridEvent(input, snapshot.state.editMode);
+    const event = toTreeGridEvent<RowID, CellID>(input, snapshot.state.editMode);
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     if (result.ok) this.#applyEffects(result.commands);
@@ -366,7 +369,7 @@ class TerminalTreeGridController<RowID extends StableID, CellID extends StableID
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>> {
-    const event = toTreeGridEvent(input, this.#snapshot.state.editMode);
+    const event = toTreeGridEvent<RowID, CellID>(input, this.#snapshot.state.editMode);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',

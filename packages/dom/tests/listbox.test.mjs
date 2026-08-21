@@ -53,6 +53,23 @@ test('DOM keyboard inputs map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'Tab' }), null);
 });
 
+test('DOM listbox delegates option clicks into direct activation', () => {
+  const root = new FakeElement();
+  const activations = [];
+  const connection = unwrap(createListbox({
+    items: ['a', 'b'],
+    root,
+    defaultHighlightedValue: 'a',
+    onActivate: (id) => activations.push(id),
+  }));
+  const item = new FakeElement();
+  connection.setItemAttributes(item, { id: 'b' });
+  root.emit('click', { target: item });
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
+  assert.deepEqual(activations, ['b']);
+});
+
 test('DOM commands project into DOM-specific effects', () => {
   assert.deepEqual(toListboxEffect({ type: 'focus', id: 'a' }), {
     type: 'focus-element',
@@ -166,6 +183,10 @@ class FakeElement {
 
   removeEventListener(type, listener) {
     this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type, event = {}) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
   }
 
   setAttribute(name, value) {

@@ -95,6 +95,27 @@ test('DOM keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'ArrowRight', ctrlKey: true }), null);
 });
 
+test('DOM tree-grid delegates disclosure, cell click, and double-click editing', () => {
+  const root = new FakeElement();
+  const connection = unwrap(createTreeGrid({
+    rows: modelRows(),
+    root,
+    defaultHighlightedValue: 'root-name',
+    getCellValue: () => '',
+    setCellValue: () => {},
+  }));
+  const disclosure = new FakeElement();
+  connection.setDisclosureAttributes(disclosure, 'root');
+  root.emit('click', { target: disclosure });
+  assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
+  const cell = new FakeElement();
+  connection.setCellAttributes(cell, { id: 'child-name', columnIndex: 1 });
+  root.emit('click', { target: cell, timeStamp: 100 });
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-name']);
+  root.emit('click', { target: cell, timeStamp: 200 });
+  assert.equal(connection.getSnapshot().state.editMode, 'editing');
+});
+
 test('DOM tree-grid commands project into focus and cell edit effects', () => {
   assert.deepEqual(toTreeGridEffect({ type: 'focus', id: 'a' }), {
     type: 'focus-element',

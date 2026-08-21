@@ -67,7 +67,7 @@ export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
 }
 
 export interface CalendarTransitionDetails<ID extends StableID = StableID> {
-  readonly event: CalendarEvent;
+  readonly event: CalendarEvent<ID>;
   readonly result: RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
 }
 
@@ -126,7 +126,9 @@ export function connectCalendar<ID extends StableID>(
   return new TerminalCalendarConnection(options);
 }
 
-export function toCalendarEvent(input: KeyboardInput): CalendarEvent | null {
+export function toCalendarEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): CalendarEvent<ID> | null {
   if (input.key === 'left') return 'left';
   if (input.key === 'right') return 'right';
   if (input.key === 'up') return 'up';
@@ -173,7 +175,7 @@ class TerminalCalendarConnection<ID extends StableID> implements CalendarConnect
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
-    const event = toCalendarEvent(input);
+    const event = toCalendarEvent<ID>(input);
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     if (result.ok) {
@@ -247,7 +249,7 @@ class TerminalCalendarController<ID extends StableID> implements CalendarControl
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>> {
-    const event = toCalendarEvent(input);
+    const event = toCalendarEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',

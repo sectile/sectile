@@ -39,7 +39,7 @@ export function createReferenceCalendarState<ID extends StableID>(
 export function applyReferenceCalendarEvent<ID extends StableID>(
   grid: Grid<ID>,
   state: CalendarState<ID>,
-  event: CalendarEvent,
+  event: CalendarEvent<ID>,
   policies: CalendarPolicies<ID> = {},
 ): ReferenceCalendarResult<ID> {
   const ids = referenceIDs(grid);
@@ -52,6 +52,16 @@ export function applyReferenceCalendarEvent<ID extends StableID>(
   }
   if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
     return rejected('transition-rejection', 'invalid-eligibility-policy');
+  }
+  if (typeof event === 'object') {
+    if (!ids.includes(event.id) || policies.eligible?.(event.id) === false) {
+      return rejected('transition-rejection', 'calendar-target-unavailable');
+    }
+    const domain = referenceDomain(ids);
+    return accepted(
+      referenceState(event.id, referenceSelectOne(state.selection, event.id, domain)),
+      [{ type: 'focus', id: event.id }],
+    );
   }
   if (event === 'previous-page' || event === 'next-page') {
     return accepted(state, [{
@@ -188,6 +198,10 @@ function rejected(
   return { ok: false, errorClass, errorCode };
 }
 
-function referenceEvent(value: string): value is CalendarEvent {
-  return ['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page'].includes(value);
+function referenceEvent<ID extends StableID>(value: unknown): value is CalendarEvent<ID> {
+  return typeof value === 'string'
+    ? ['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page'].includes(value)
+    : typeof value === 'object' && value !== null
+      && 'type' in value && value.type === 'select'
+      && 'id' in value && typeof value.id === 'string';
 }

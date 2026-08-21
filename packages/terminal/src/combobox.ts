@@ -101,7 +101,7 @@ export interface ComboboxItem<ID extends StableID = StableID> {
 }
 
 export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ComboboxEvent;
+  readonly event: ComboboxEvent<ID>;
   readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
@@ -171,7 +171,9 @@ export function connectCombobox<ID extends StableID>(
   return new TerminalComboboxConnection(options);
 }
 
-export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
+export function toComboboxEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): ComboboxEvent<ID> | null {
   if (input.key === 'down') return 'next';
   if (input.key === 'up') return 'previous';
   if (input.key === 'escape') return 'close';
@@ -179,7 +181,9 @@ export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
   return null;
 }
 
-export function toComboboxTextEvent(input: TextInput): ComboboxEvent | null {
+export function toComboboxTextEvent<ID extends StableID = StableID>(
+  input: TextInput,
+): ComboboxEvent<ID> | null {
   const event = toTextEvent(input);
   return event === null ? null : Object.freeze({ type: 'text', event });
 }
@@ -226,7 +230,7 @@ class TerminalComboboxConnection<ID extends StableID> implements ComboboxConnect
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
-    const keyboardEvent = toComboboxEvent(input);
+    const keyboardEvent = toComboboxEvent<ID>(input);
     if (keyboardEvent !== null) {
       const result = this.#controller.handleKeyboardInput(input);
       if (result.ok) this.#applyEffects(result.commands);
@@ -236,7 +240,7 @@ class TerminalComboboxConnection<ID extends StableID> implements ComboboxConnect
     }
     const textInput = toTerminalTextInput(this.#controller.getSnapshot().state.text, input);
     if (textInput === null) return false;
-    const event = toComboboxTextEvent(textInput);
+    const event = toComboboxTextEvent<ID>(textInput);
     const result = this.#controller.handleTextInput(textInput);
     if (result.ok) this.#applyEffects(result.commands);
     if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
@@ -332,7 +336,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const event = toComboboxEvent(input);
+    const event = toComboboxEvent<ID>(input);
     return event === null
       ? rejectRevisionInput(this.#snapshot, {
           class: 'transition-rejection',
@@ -347,7 +351,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     input: TextInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const event = toComboboxTextEvent(input);
+    const event = toComboboxTextEvent<ID>(input);
     return event === null
       ? rejectRevisionInput(this.#snapshot, {
           class: 'transition-rejection',
@@ -358,7 +362,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   }
 
   #applyEvent(
-    event: ComboboxEvent,
+    event: ComboboxEvent<ID>,
     expectedRevision: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const result = applyControllerEvent(

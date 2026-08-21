@@ -1,6 +1,6 @@
 import { createListbox } from '@sectile/dom/listbox';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
 
 const items = [
   { id: 'alpha', label: 'Alpha release', detail: 'Stable channel' },
@@ -32,7 +32,7 @@ export const listboxDemo: DemoDefinition = {
       onActivate: (id) => { activated = id; },
       onTransition: ({ event, result }) => context.record({
         revision: result.snapshot.revision,
-        event,
+        event: eventLabel(event),
         accepted: result.ok,
         effects: effectLabels(result.commands),
       }),

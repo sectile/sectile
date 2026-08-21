@@ -16,6 +16,7 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { findDelegatedID } from './internal/delegated-event.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -63,10 +64,14 @@ export interface ListboxController<ID extends StableID = StableID> {
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
+  handleEvent(
+    event: ListboxEvent<ID>,
+    expectedRevision?: number,
+  ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
 export interface ListboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ListboxEvent;
+  readonly event: ListboxEvent<ID>;
   readonly result: RevisionResult<ListboxState<ID>, ListboxEffect<ID>>;
 }
 
@@ -90,6 +95,7 @@ export interface ListboxConnection<ID extends StableID = StableID> {
   ): Result<RevisionSnapshot<ListboxState<ID>>>;
   setListboxAttributes(label?: string): void;
   setItemAttributes(element: HTMLElement, attributes: ListboxItemAttributes<ID>): void;
+  handleEvent(event: ListboxEvent<ID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   focusCurrent(): void;
   disconnect(): void;
@@ -131,7 +137,9 @@ export function connectListbox<ID extends StableID>(
   return new DOMListboxConnection(options);
 }
 
-export function toListboxEvent(input: KeyboardInput): ListboxEvent | null {
+export function toListboxEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): ListboxEvent<ID> | null {
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
   if (input.key === 'ArrowDown') return 'next';
   if (input.key === 'ArrowUp') return 'previous';
@@ -156,6 +164,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #onTransition: ((details: ListboxTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
+  readonly #handleClick: (event: MouseEvent) => void;
 
   public constructor(options: ListboxConnectionOptions<ID>) {
     this.#controller = options.controller;
@@ -166,7 +175,12 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
+    this.#handleClick = (event): void => {
+      const id = findDelegatedID(event.target, this.#root, 'listboxId');
+      if (id !== null) this.handleEvent({ type: 'activate', id: id as ID });
+    };
     this.#root.addEventListener('keydown', this.#handleKeydown);
+    this.#root.addEventListener('click', this.#handleClick);
   }
 
   public getSnapshot(): RevisionSnapshot<ListboxState<ID>> {
@@ -212,11 +226,15 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
-    const semanticEvent = toListboxEvent(input);
+    const semanticEvent = toListboxEvent<ID>(input);
     if (semanticEvent === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
+    return this.handleEvent(semanticEvent);
+  }
+
+  public handleEvent(event: ListboxEvent<ID>): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
-    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onTransition?.(Object.freeze({ event, result }));
     this.#onUpdate?.();
     this.focusCurrent();
     return true;
@@ -239,6 +257,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
 
   public disconnect(): void {
     this.#root.removeEventListener('keydown', this.#handleKeydown);
+    this.#root.removeEventListener('click', this.#handleClick);
   }
 
   #applyEffects(effects: readonly ListboxEffect<ID>[]): void {
@@ -314,7 +333,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
-    const event = toListboxEvent(input);
+    const event = toListboxEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
@@ -323,6 +342,13 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
         details: { key: input.key },
       });
     }
+    return this.handleEvent(event, expectedRevision);
+  }
+
+  public handleEvent(
+    event: ListboxEvent<ID>,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -362,6 +388,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     }
   }
 }
+
 
 function controlledState<ID extends StableID>(
   domain: Sequence<ID>,

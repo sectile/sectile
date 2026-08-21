@@ -1,6 +1,6 @@
 import { createSlider } from '@sectile/dom/slider';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
 
 export const sliderDemo: DemoDefinition = {
   id: 'slider',
@@ -36,10 +36,11 @@ export const sliderDemo: DemoDefinition = {
       page: 4,
       defaultValue: 8,
       root,
+      track,
       label: 'Deployment traffic percentage',
       onTransition: ({ event, result }) => context.record({
         revision: result.snapshot.revision,
-        event,
+        event: eventLabel(event),
         accepted: result.ok,
         effects: effectLabels(result.commands),
       }),

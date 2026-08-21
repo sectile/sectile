@@ -20,6 +20,7 @@ import {
 } from '../.verification-dist/internal/composites/calendar.js';
 import {
   acceptComboboxCandidate,
+  applyComboboxEvent,
   createComboboxState,
 } from '../.verification-dist/internal/composites/combobox.js';
 import {
@@ -68,6 +69,7 @@ import {
 } from '../.verification-dist/internal/reference/composites/calendar.js';
 import {
   createReferenceComboboxState,
+  referenceApplyComboboxEvent,
   referenceAcceptCombobox,
 } from '../.verification-dist/internal/reference/composites/combobox.js';
 import {
@@ -595,7 +597,17 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     maxScan: listboxRng.int(0, ids.length + 1),
   };
   for (let step = 0; step < 10; step += 1) {
-    const event = listboxRng.pick(['next', 'previous', 'toggle', 'activate', 'clear']);
+    const target = listboxRng.pick([...ids, `missing-${iteration}`]);
+    const event = listboxRng.pick([
+      'next',
+      'previous',
+      'toggle',
+      'activate',
+      'clear',
+      { type: 'focus', id: target },
+      { type: 'toggle', id: target },
+      { type: 'activate', id: target },
+    ]);
     const left = applyListboxEvent(domain, optimized, event, policies);
     const right = applyReferenceListboxEvent(domain, reference, event, policies);
     assert.deepEqual(listboxResultObservation(left), referenceListboxResultObservation(right));
@@ -620,6 +632,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   let optimized = unwrap(createSliderState(range, initial));
   let reference = createReferenceSliderState(range, initial);
   for (let step = 0; step < 10; step += 1) {
+    const target = sliderRng.int(-1, count + 2);
     const event = sliderRng.pick([
       'increment',
       'decrement',
@@ -627,6 +640,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
       'page-down',
       'home',
       'end',
+      { type: 'set-tick', tick: target },
     ]);
     const page = sliderRng.int(1, count + 4);
     const left = applySliderEvent(range, optimized, event, page);
@@ -667,6 +681,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     maxScan: calendarRng.int(0, Math.max(rowCount, columnCount) + 2),
   };
   for (let step = 0; step < 10; step += 1) {
+    const target = calendarRng.pick([...ids, `missing-${iteration}`]);
     const event = calendarRng.pick([
       'left',
       'right',
@@ -675,6 +690,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
       'select',
       'previous-page',
       'next-page',
+      { type: 'select', id: target },
     ]);
     const left = applyCalendarEvent(grid, optimized, event, policies);
     const right = applyReferenceCalendarEvent(grid, reference, event, policies);
@@ -719,7 +735,18 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   let optimized = unwrap(createTreeViewState(tree, input));
   let reference = createReferenceTreeViewState(tree, input);
   for (let step = 0; step < 10; step += 1) {
-    const event = treeViewRng.pick(['next', 'previous', 'right', 'left', 'toggle-select']);
+    const target = treeViewRng.pick([...ids, `missing-${iteration}`]);
+    const branch = treeViewRng.pick([...branches, `missing-${iteration}`]);
+    const event = treeViewRng.pick([
+      'next',
+      'previous',
+      'right',
+      'left',
+      'toggle-select',
+      { type: 'focus', id: target },
+      { type: 'toggle-select', id: target },
+      { type: 'set-expanded', id: branch, open: treeViewRng.bool() },
+    ]);
     const left = applyTreeViewEvent(tree, optimized, event);
     const right = applyReferenceTreeViewEvent(tree, reference, event);
     assert.deepEqual(treeViewResultObservation(left), referenceTreeViewResultObservation(right));
@@ -758,8 +785,14 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   const input = { popupOpen: true, current: comboboxRng.pick([null, ...ids]) };
   const optimized = unwrap(createComboboxState(domain, text, input));
   const reference = createReferenceComboboxState(domain, text, input);
-  const left = acceptComboboxCandidate(domain, labels, optimized);
-  const right = referenceAcceptCombobox(domain, labels, reference);
+  const target = comboboxRng.pick([...ids, `missing-${iteration}`]);
+  const direct = comboboxRng.bool();
+  const left = direct
+    ? applyComboboxEvent(domain, labels, optimized, { type: 'accept', id: target })
+    : acceptComboboxCandidate(domain, labels, optimized);
+  const right = direct
+    ? referenceApplyComboboxEvent(domain, labels, reference, { type: 'accept', id: target })
+    : referenceAcceptCombobox(domain, labels, reference);
   assert.deepEqual(comboboxResultObservation(left), referenceComboboxResultObservation(right));
   if (left.ok && right.ok) {
     counts.combobox.accepted += 1;

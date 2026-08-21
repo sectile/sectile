@@ -70,7 +70,7 @@ export interface TreeViewController<ID extends StableID = StableID> {
 }
 
 export interface TreeViewTransitionDetails<ID extends StableID = StableID> {
-  readonly event: TreeViewEvent;
+  readonly event: TreeViewEvent<ID>;
   readonly result: RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>>;
 }
 
@@ -126,7 +126,9 @@ export function connectTreeView<ID extends StableID>(
   return new TerminalTreeViewConnection(options);
 }
 
-export function toTreeViewEvent(input: KeyboardInput): TreeViewEvent | null {
+export function toTreeViewEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): TreeViewEvent<ID> | null {
   if (input.key === 'down') return 'next';
   if (input.key === 'up') return 'previous';
   if (input.key === 'right') return 'right';
@@ -167,7 +169,7 @@ class TerminalTreeViewConnection<ID extends StableID> implements TreeViewConnect
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {
-    const event = toTreeViewEvent(input);
+    const event = toTreeViewEvent<ID>(input);
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     this.#onTransition?.(Object.freeze({ event, result }));
@@ -242,7 +244,7 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
-    const event = toTreeViewEvent(input);
+    const event = toTreeViewEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',

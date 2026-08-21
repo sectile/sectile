@@ -13,7 +13,15 @@ import {
   type SelectionState,
 } from '../state/selection.js';
 
-export type ListboxEvent = 'next' | 'previous' | 'toggle' | 'activate' | 'clear';
+export type ListboxEvent<ID extends StableID = StableID> =
+  | 'next'
+  | 'previous'
+  | 'toggle'
+  | 'activate'
+  | 'clear'
+  | { readonly type: 'focus'; readonly id: ID }
+  | { readonly type: 'toggle'; readonly id: ID }
+  | { readonly type: 'activate'; readonly id: ID };
 
 export type ListboxCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus'; readonly id: ID }
@@ -62,7 +70,7 @@ export function createListboxState<ID extends StableID>(
 export function applyListboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   state: ListboxState<ID>,
-  event: ListboxEvent,
+  event: ListboxEvent<ID>,
   policies: ListboxPolicies<ID> = {},
 ): Result<ListboxUpdate<ID>> {
   const stateError = validateListboxState(domain, state);
@@ -98,6 +106,36 @@ export function applyListboxEvent<ID extends StableID>(
       'transition-rejection',
       'invalid-eligibility-policy',
       'Listbox eligibility policy must be a function.',
+    );
+  }
+
+  if (typeof event === 'object') {
+    if (!domain.contains(event.id) || policies.eligible?.(event.id) === false) {
+      return fail(
+        'transition-rejection',
+        'listbox-target-unavailable',
+        'Direct listbox events require an eligible identity in the domain.',
+        { id: event.id },
+      );
+    }
+    if (event.type === 'focus') {
+      const selection = selectionFollowsFocus
+        ? selectOne(state.selection, event.id, domain)
+        : state.selection;
+      return createMachineUpdate(
+        listboxState(createCursorState(event.id), selection),
+        [{ type: 'focus', id: event.id }],
+      );
+    }
+    if (event.type === 'toggle') {
+      return createMachineUpdate(listboxState(
+        createCursorState(event.id),
+        toggleMultipleSelection(state.selection, event.id, domain),
+      ), [{ type: 'focus', id: event.id }]);
+    }
+    return createMachineUpdate(
+      listboxState(createCursorState(event.id), selectOne(state.selection, event.id, domain)),
+      [{ type: 'focus', id: event.id }, { type: 'activate', id: event.id }],
     );
   }
 
@@ -242,12 +280,15 @@ function noCursor<ID extends StableID>(): Result<ListboxUpdate<ID>> {
   );
 }
 
-function isListboxEvent(value: string): value is ListboxEvent {
-  return (
+function isListboxEvent<ID extends StableID>(value: unknown): value is ListboxEvent<ID> {
+  return typeof value === 'string' ? (
     value === 'next' ||
     value === 'previous' ||
     value === 'toggle' ||
     value === 'activate' ||
     value === 'clear'
-  );
+  ) : typeof value === 'object' && value !== null
+    && 'type' in value && 'id' in value
+    && (value.type === 'focus' || value.type === 'toggle' || value.type === 'activate')
+    && typeof value.id === 'string';
 }

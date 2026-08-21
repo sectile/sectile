@@ -66,7 +66,7 @@ export function applyComboboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   labels: ReadonlyMap<ID, string>,
   state: ComboboxState<ID>,
-  event: ComboboxEvent,
+  event: ComboboxEvent<ID>,
   policies: ComboboxPolicies<ID> = {},
 ): Result<ComboboxUpdate<ID>> {
   return applyInternalComboboxEvent(domain, labels, state, event, policies);

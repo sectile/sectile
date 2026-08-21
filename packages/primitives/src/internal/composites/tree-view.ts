@@ -15,7 +15,15 @@ import {
   type SelectionState,
 } from '../state/selection.js';
 
-export type TreeViewEvent = 'next' | 'previous' | 'right' | 'left' | 'toggle-select';
+export type TreeViewEvent<ID extends StableID = StableID> =
+  | 'next'
+  | 'previous'
+  | 'right'
+  | 'left'
+  | 'toggle-select'
+  | { readonly type: 'focus'; readonly id: ID }
+  | { readonly type: 'toggle-select'; readonly id: ID }
+  | { readonly type: 'set-expanded'; readonly id: ID; readonly open: boolean };
 
 export interface TreeViewCommand<ID extends StableID = StableID> {
   readonly type: 'focus';
@@ -62,7 +70,7 @@ export function createTreeViewState<ID extends StableID>(
 export function applyTreeViewEvent<ID extends StableID>(
   tree: Tree<ID>,
   state: TreeViewState<ID>,
-  event: TreeViewEvent,
+  event: TreeViewEvent<ID>,
 ): Result<TreeViewUpdate<ID>> {
   if (!isTreeViewEvent(event)) {
     return fail(
@@ -80,6 +88,45 @@ export function applyTreeViewEvent<ID extends StableID>(
     ? state
     : treeViewState(expansion, state.cursor, state.selection);
   const current = state.cursor.current;
+
+  if (typeof event === 'object') {
+    if (!tree.has(event.id)) {
+      return fail(
+        'transition-rejection',
+        'tree-view-target-outside-tree',
+        'Direct tree-view events require an identity in the tree.',
+        { id: event.id },
+      );
+    }
+    if (event.type === 'set-expanded') {
+      const nextExpansion = setExpansionOpen(expansion, event.id, event.open, tree);
+      const nextVisible = tree.visible(nextExpansion);
+      const target = current !== null && nextVisible.contains(current) ? current : event.id;
+      return createMachineUpdate(
+        treeViewState(nextExpansion, createCursorState(target), state.selection),
+        target === current ? [] : [{ type: 'focus', id: target }],
+      );
+    }
+    if (!visible.contains(event.id)) {
+      return fail(
+        'transition-rejection',
+        'tree-view-target-hidden',
+        'Direct tree-view focus and selection require a visible identity.',
+        { id: event.id },
+      );
+    }
+    if (event.type === 'focus') {
+      return createMachineUpdate(
+        treeViewState(expansion, createCursorState(event.id), state.selection),
+        [{ type: 'focus', id: event.id }],
+      );
+    }
+    return createMachineUpdate(treeViewState(
+      expansion,
+      createCursorState(event.id),
+      toggleMultipleSelection(state.selection, event.id, tree.preorder()),
+    ), [{ type: 'focus', id: event.id }]);
+  }
 
   if (event === 'next' || event === 'previous') {
     const target = current === null
@@ -205,6 +252,12 @@ function treeViewState<ID extends StableID>(
   return Object.freeze({ expansion, cursor, selection });
 }
 
-function isTreeViewEvent(value: string): value is TreeViewEvent {
-  return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
+function isTreeViewEvent<ID extends StableID>(value: unknown): value is TreeViewEvent<ID> {
+  if (typeof value === 'string') {
+    return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
+  }
+  return typeof value === 'object' && value !== null && 'type' in value && 'id' in value
+    && typeof value.id === 'string'
+    && (value.type === 'focus' || value.type === 'toggle-select'
+      || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }

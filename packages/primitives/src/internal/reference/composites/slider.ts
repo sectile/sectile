@@ -41,7 +41,12 @@ export function applyReferenceSliderEvent(
   }
 
   let tick = state.tick;
-  if (event === 'increment') tick += 1;
+  if (typeof event === 'object') {
+    if (!referenceTickExists(range, event.tick)) {
+      return referenceRejected('slider-tick-outside-range');
+    }
+    tick = event.tick;
+  } else if (event === 'increment') tick += 1;
   else if (event === 'decrement') tick -= 1;
   else if (event === 'page-up') tick += page;
   else if (event === 'page-down') tick -= page;
@@ -60,15 +65,17 @@ function referenceTickExists(range: QuantizedRange, tick: number): boolean {
   return Number.isSafeInteger(tick) && range.valueAt(tick) !== null;
 }
 
-function referenceEventExists(value: string): value is SliderEvent {
-  return (
+function referenceEventExists(value: unknown): value is SliderEvent {
+  return typeof value === 'string' ? (
     value === 'increment' ||
     value === 'decrement' ||
     value === 'page-up' ||
     value === 'page-down' ||
     value === 'home' ||
     value === 'end'
-  );
+  ) : typeof value === 'object' && value !== null
+    && 'type' in value && value.type === 'set-tick'
+    && 'tick' in value && typeof value.tick === 'number';
 }
 
 function referenceState(tick: number): SliderState {

@@ -18,7 +18,12 @@ import {
   type SelectionState,
 } from '../state/selection.js';
 
-export type CalendarEvent = GridDirection | 'select' | 'previous-page' | 'next-page';
+export type CalendarEvent<ID extends StableID = StableID> =
+  | GridDirection
+  | 'select'
+  | 'previous-page'
+  | 'next-page'
+  | { readonly type: 'select'; readonly id: ID };
 
 export type CalendarCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus'; readonly id: ID }
@@ -67,7 +72,7 @@ export function createCalendarState<ID extends StableID>(
 export function applyCalendarEvent<ID extends StableID>(
   grid: Grid<ID>,
   state: CalendarState<ID>,
-  event: CalendarEvent,
+  event: CalendarEvent<ID>,
   policies: CalendarPolicies<ID> = {},
 ): Result<CalendarUpdate<ID>> {
   const domain = calendarDomain(grid);
@@ -98,6 +103,23 @@ export function applyCalendarEvent<ID extends StableID>(
     );
   }
 
+  if (typeof event === 'object') {
+    if (!domain.contains(event.id) || policies.eligible?.(event.id) === false) {
+      return fail(
+        'transition-rejection',
+        'calendar-target-unavailable',
+        'Direct calendar selection requires an eligible identity in the grid.',
+        { id: event.id },
+      );
+    }
+    return createMachineUpdate(
+      calendarState(
+        createCursorState(event.id),
+        selectOne(state.selection, event.id, domain),
+      ),
+      [{ type: 'focus', id: event.id }],
+    );
+  }
   if (event === 'previous-page' || event === 'next-page') {
     return createMachineUpdate(state, [{
       type: 'request-page',
@@ -203,8 +225,8 @@ function calendarState<ID extends StableID>(
   return Object.freeze({ cursor, selection });
 }
 
-function isCalendarEvent(value: string): value is CalendarEvent {
-  return (
+function isCalendarEvent<ID extends StableID>(value: unknown): value is CalendarEvent<ID> {
+  return typeof value === 'string' ? (
     value === 'left' ||
     value === 'right' ||
     value === 'up' ||
@@ -212,5 +234,7 @@ function isCalendarEvent(value: string): value is CalendarEvent {
     value === 'select' ||
     value === 'previous-page' ||
     value === 'next-page'
-  );
+  ) : typeof value === 'object' && value !== null
+    && 'type' in value && value.type === 'select'
+    && 'id' in value && typeof value.id === 'string';
 }

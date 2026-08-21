@@ -26,6 +26,7 @@ import {
 import { toTextEvent, type TextInput } from './text.js';
 import type { TextElement } from './text.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { findDelegatedID } from './internal/delegated-event.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -99,6 +100,10 @@ export interface ComboboxController<ID extends StableID = StableID> {
     input: TextInput,
     expectedRevision?: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
+  handleEvent(
+    event: ComboboxEvent<ID>,
+    expectedRevision?: number,
+  ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
 export interface ComboboxItem<ID extends StableID = StableID> {
@@ -107,7 +112,7 @@ export interface ComboboxItem<ID extends StableID = StableID> {
 }
 
 export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
-  readonly event: ComboboxEvent;
+  readonly event: ComboboxEvent<ID>;
   readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
@@ -136,6 +141,7 @@ export interface ComboboxConnection<ID extends StableID = StableID> {
   setInputAttributes(label?: string): void;
   setPopupAttributes(label?: string): void;
   setItemAttributes(element: HTMLElement, attributes: ComboboxItemAttributes<ID>): void;
+  handleEvent(event: ComboboxEvent<ID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   handleBeforeInput(event: InputEvent): boolean;
   render(): void;
@@ -190,7 +196,9 @@ export function connectCombobox<ID extends StableID>(
   return new DOMComboboxConnection(options);
 }
 
-export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
+export function toComboboxEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): ComboboxEvent<ID> | null {
   if (input.isComposing === true) return null;
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
   if (input.key === 'ArrowDown') return 'next';
@@ -200,7 +208,9 @@ export function toComboboxEvent(input: KeyboardInput): ComboboxEvent | null {
   return null;
 }
 
-export function toComboboxTextEvent(input: TextInput): ComboboxEvent | null {
+export function toComboboxTextEvent<ID extends StableID = StableID>(
+  input: TextInput,
+): ComboboxEvent<ID> | null {
   const event = toTextEvent(input);
   return event === null ? null : Object.freeze({ type: 'text', event });
 }
@@ -225,6 +235,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   readonly #onUpdate: (() => void) | undefined;
   readonly #binding: DOMTextElementBinding;
   readonly #handleKeydown: (event: Event) => void;
+  readonly #handleClick: (event: MouseEvent) => void;
 
   public constructor(options: ComboboxConnectionOptions<ID>) {
     this.#controller = options.controller;
@@ -245,7 +256,13 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault();
     };
+    this.#handleClick = (event): void => {
+      if (this.#popup === undefined) return;
+      const id = findDelegatedID(event.target, this.#popup, 'comboboxId');
+      if (id !== null) this.handleEvent({ type: 'accept', id: id as ID });
+    };
     this.#input.addEventListener('keydown', this.#handleKeydown);
+    this.#popup?.addEventListener('click', this.#handleClick);
     this.render();
   }
 
@@ -311,11 +328,15 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       metaKey: event.metaKey,
       isComposing: event.isComposing || this.#binding.isComposing,
     };
-    const semanticEvent = toComboboxEvent(input);
+    const semanticEvent = toComboboxEvent<ID>(input);
     if (semanticEvent === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
+    return this.handleEvent(semanticEvent);
+  }
+
+  public handleEvent(event: ComboboxEvent<ID>): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
-    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onTransition?.(Object.freeze({ event, result }));
     this.render();
     this.#onUpdate?.();
     return true;
@@ -334,13 +355,16 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   public disconnect(): void {
     this.#binding.disconnect();
     this.#input.removeEventListener('keydown', this.#handleKeydown);
+    this.#popup?.removeEventListener('click', this.#handleClick);
   }
 
   #dispatchTextInput(
     input: TextInput,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const event = toComboboxTextEvent(input);
-    const result = this.#controller.handleTextInput(input);
+    const event = toComboboxTextEvent<ID>(input);
+    const result = event === null
+      ? this.#controller.handleTextInput(input)
+      : this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
     if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
     this.#onUpdate?.();
@@ -435,7 +459,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const event = toComboboxEvent(input);
+    const event = toComboboxEvent<ID>(input);
     return event === null
       ? rejectRevisionInput(this.#snapshot, {
           class: 'transition-rejection',
@@ -443,26 +467,26 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
           message: 'DOM keyboard input does not map to a combobox semantic event.',
           details: { key: input.key },
         })
-      : this.#applyEvent(event, expectedRevision);
+      : this.handleEvent(event, expectedRevision);
   }
 
   public handleTextInput(
     input: TextInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
-    const event = toComboboxTextEvent(input);
+    const event = toComboboxTextEvent<ID>(input);
     return event === null
       ? rejectRevisionInput(this.#snapshot, {
           class: 'transition-rejection',
           code: 'unsupported-dom-text-input',
           message: 'DOM text input does not map to a combobox semantic event.',
         })
-      : this.#applyEvent(event, expectedRevision);
+      : this.handleEvent(event, expectedRevision);
   }
 
-  #applyEvent(
-    event: ComboboxEvent,
-    expectedRevision: number,
+  public handleEvent(
+    event: ComboboxEvent<ID>,
+    expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const result = applyControllerEvent(
       this.#snapshot,

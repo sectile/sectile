@@ -38,7 +38,7 @@ export function createReferenceTreeViewState<ID extends StableID>(
 export function applyReferenceTreeViewEvent<ID extends StableID>(
   tree: Tree<ID>,
   state: TreeViewState<ID>,
-  event: TreeViewEvent,
+  event: TreeViewEvent<ID>,
 ): ReferenceTreeViewResult<ID> {
   if (!referenceEvent(event)) return rejected('invalid-tree-view-event');
   const expansion = referenceExpansion(tree, state.expansion.ids);
@@ -48,6 +48,37 @@ export function applyReferenceTreeViewEvent<ID extends StableID>(
   const normalized = sameExpansion(expansion, state.expansion)
     ? state
     : referenceState(expansion, current, state.selection);
+
+  if (typeof event === 'object') {
+    if (!tree.has(event.id)) return rejected('tree-view-target-outside-tree');
+    if (event.type === 'set-expanded') {
+      const requested = event.open
+        ? [...expansion.ids, event.id]
+        : expansion.ids.filter((id) => id !== event.id);
+      const nextExpansion = referenceExpansion(tree, requested);
+      const target = current !== null && referenceVisible(tree, nextExpansion).includes(current)
+        ? current
+        : event.id;
+      return accepted(
+        referenceState(nextExpansion, target, state.selection),
+        target === current ? [] : [{ type: 'focus', id: target }],
+      );
+    }
+    if (!visible.includes(event.id)) return rejected('tree-view-target-hidden');
+    if (event.type === 'focus') {
+      return accepted(referenceState(expansion, event.id, state.selection), [
+        { type: 'focus', id: event.id },
+      ]);
+    }
+    const selection = referenceToggleMultipleSelection(
+      state.selection,
+      event.id,
+      referenceDomain(tree.preorder().ids),
+    );
+    return accepted(referenceState(expansion, event.id, selection), [
+      { type: 'focus', id: event.id },
+    ]);
+  }
 
   if (event === 'next' || event === 'previous') {
     const currentIndex = current === null ? null : visible.indexOf(current);
@@ -158,6 +189,12 @@ function rejected(errorCode: string): ReferenceTreeViewRejection {
   return { ok: false, errorClass: 'transition-rejection', errorCode };
 }
 
-function referenceEvent(value: string): value is TreeViewEvent {
-  return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
+function referenceEvent<ID extends StableID>(value: unknown): value is TreeViewEvent<ID> {
+  if (typeof value === 'string') {
+    return ['next', 'previous', 'right', 'left', 'toggle-select'].includes(value);
+  }
+  return typeof value === 'object' && value !== null && 'type' in value && 'id' in value
+    && typeof value.id === 'string'
+    && (value.type === 'focus' || value.type === 'toggle-select'
+      || (value.type === 'set-expanded' && 'open' in value && typeof value.open === 'boolean'));
 }

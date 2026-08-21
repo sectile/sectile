@@ -15,6 +15,7 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { findDelegatedID } from './internal/delegated-event.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -63,6 +64,10 @@ export interface CalendarController<ID extends StableID = StableID> {
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
+  handleEvent(
+    event: CalendarEvent<ID>,
+    expectedRevision?: number,
+  ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
 }
 
 export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
@@ -71,7 +76,7 @@ export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
 }
 
 export interface CalendarTransitionDetails<ID extends StableID = StableID> {
-  readonly event: CalendarEvent;
+  readonly event: CalendarEvent<ID>;
   readonly result: RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
 }
 
@@ -98,6 +103,7 @@ export interface CalendarConnection<ID extends StableID = StableID> {
   ): Result<RevisionSnapshot<CalendarState<ID>>>;
   setCalendarAttributes(label?: string): void;
   setCellAttributes(element: HTMLElement, attributes: CalendarCellAttributes<ID>): void;
+  handleEvent(event: CalendarEvent<ID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   focusCurrent(): void;
   disconnect(): void;
@@ -142,7 +148,9 @@ export function connectCalendar<ID extends StableID>(
   return new DOMCalendarConnection(options);
 }
 
-export function toCalendarEvent(input: KeyboardInput): CalendarEvent | null {
+export function toCalendarEvent<ID extends StableID = StableID>(
+  input: KeyboardInput,
+): CalendarEvent<ID> | null {
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
   if (input.key === 'ArrowLeft') return 'left';
   if (input.key === 'ArrowRight') return 'right';
@@ -170,6 +178,7 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
   readonly #onTransition: ((details: CalendarTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
+  readonly #handleClick: (event: MouseEvent) => void;
 
   public constructor(options: CalendarConnectionOptions<ID>) {
     this.#controller = options.controller;
@@ -181,7 +190,12 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
+    this.#handleClick = (event): void => {
+      const id = findDelegatedID(event.target, this.#root, 'calendarId');
+      if (id !== null) this.handleEvent({ type: 'select', id: id as ID });
+    };
     this.#root.addEventListener('keydown', this.#handleKeydown);
+    this.#root.addEventListener('click', this.#handleClick);
   }
 
   public getSnapshot(): RevisionSnapshot<CalendarState<ID>> {
@@ -229,11 +243,15 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
-    const semanticEvent = toCalendarEvent(input);
+    const semanticEvent = toCalendarEvent<ID>(input);
     if (semanticEvent === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
+    return this.handleEvent(semanticEvent);
+  }
+
+  public handleEvent(event: CalendarEvent<ID>): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
-    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onTransition?.(Object.freeze({ event, result }));
     this.#onUpdate?.();
     this.focusCurrent();
     return true;
@@ -256,6 +274,7 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
 
   public disconnect(): void {
     this.#root.removeEventListener('keydown', this.#handleKeydown);
+    this.#root.removeEventListener('click', this.#handleClick);
   }
 
   #applyEffects(effects: readonly CalendarEffect<ID>[]): void {
@@ -325,7 +344,7 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>> {
-    const event = toCalendarEvent(input);
+    const event = toCalendarEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
@@ -334,6 +353,13 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
         details: { key: input.key },
       });
     }
+    return this.handleEvent(event, expectedRevision);
+  }
+
+  public handleEvent(
+    event: CalendarEvent<ID>,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -372,6 +398,7 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     }
   }
 }
+
 
 function controlledState<ID extends StableID>(
   grid: Grid<ID>,

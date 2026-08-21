@@ -48,12 +48,36 @@ export function createReferenceListboxState<ID extends StableID>(
 export function applyReferenceListboxEvent<ID extends StableID>(
   domain: Sequence<ID>,
   state: ListboxState<ID>,
-  event: ListboxEvent,
+  event: ListboxEvent<ID>,
   policies: ListboxPolicies<ID> = {},
 ): ReferenceListboxResult<ID> {
   const boundary = policies.boundary ?? 'stop';
   const selectionFollowsFocus = policies.selectionFollowsFocus ?? false;
   const eligible = policies.eligible ?? (() => true);
+
+  if (typeof event === 'object') {
+    if (referenceIndexOf(domain, event.id) === null || !eligible(event.id)) {
+      return referenceRejected('transition-rejection', 'listbox-target-unavailable');
+    }
+    if (event.type === 'focus') {
+      const selection = selectionFollowsFocus
+        ? referenceSelectOne(state.selection, event.id, domain)
+        : state.selection;
+      return referenceAccepted(referenceState(event.id, selection), [
+        { type: 'focus', id: event.id },
+      ]);
+    }
+    if (event.type === 'toggle') {
+      return referenceAccepted(referenceState(
+        event.id,
+        referenceToggleMultipleSelection(state.selection, event.id, domain),
+      ), [{ type: 'focus', id: event.id }]);
+    }
+    return referenceAccepted(
+      referenceState(event.id, referenceSelectOne(state.selection, event.id, domain)),
+      [{ type: 'focus', id: event.id }, { type: 'activate', id: event.id }],
+    );
+  }
 
   if (event === 'next' || event === 'previous') {
     const direction = event === 'next' ? 1 : -1;

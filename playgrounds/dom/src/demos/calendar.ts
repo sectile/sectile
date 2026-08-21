@@ -1,6 +1,6 @@
 import { createCalendar } from '@sectile/dom/calendar';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
 
 const weeks = [
   ['18', '19', '20', '21', '22', '23', '24'],
@@ -35,7 +35,7 @@ export const calendarDemo: DemoDefinition = {
       onPageRequest: ({ direction }) => { pageRequest = direction < 0 ? 'previous' : 'next'; },
       onTransition: ({ event, result }) => context.record({
         revision: result.snapshot.revision,
-        event,
+        event: eventLabel(event),
         accepted: result.ok,
         effects: effectLabels(result.commands),
       }),

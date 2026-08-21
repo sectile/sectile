@@ -1,6 +1,6 @@
 import { createTreeView } from '@sectile/dom/tree-view';
 import { unwrap } from '@sectile/primitives/result';
-import { effectLabels, type DemoDefinition } from '../playground.js';
+import { effectLabels, eventLabel, type DemoDefinition } from '../playground.js';
 
 const nodes = [
   { id: 'src', parentID: null },
@@ -37,7 +37,7 @@ export const treeViewDemo: DemoDefinition = {
       defaultHighlightedValue: 'src',
       onTransition: ({ event, result }) => context.record({
         revision: result.snapshot.revision,
-        event,
+        event: eventLabel(event),
         accepted: result.ok,
         effects: effectLabels(result.commands),
       }),
@@ -62,6 +62,8 @@ export const treeViewDemo: DemoDefinition = {
         const disclosure = document.createElement('span');
         disclosure.className = 'disclosure';
         disclosure.textContent = leaf ? '·' : state.expansion.has(id) ? '▾' : '▸';
+        if (!leaf) connection.setDisclosureAttributes(disclosure, id);
+        else disclosure.setAttribute('aria-hidden', 'true');
         const label = document.createElement('span');
         label.textContent = labels.get(id) ?? id;
         item.append(disclosure, label);

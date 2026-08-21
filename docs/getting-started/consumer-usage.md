@@ -24,7 +24,7 @@ range.valueAt(3); // "0"
 
 Logical grids preserve empty coordinates. Trees preserve input root and sibling order. Query absence is `null`; malformed construction is a typed error; a scan ceiling reached before the answer is known is a resource rejection.
 
-Host packages expose connections for wiring semantic controllers without reimplementing host details. `@sectile/dom/tree-grid` owns DOM keyboard events, IME-safe Enter handling, ARIA attributes, edit rollback, and focus. `@sectile/terminal/node` turns a Node TTY into normalized keyboard input, including common Alt-key variants; `@sectile/terminal/tree-grid` owns terminal edit buffering, and `@sectile/terminal/layout` fits text by displayed Unicode width.
+Host packages expose connections for wiring semantic controllers without reimplementing host details. DOM connections own keyboard and pointer translation, delegated item targeting, ARIA attributes, IME-safe Enter handling, edit rollback, and focus. `@sectile/terminal/node` turns a Node TTY into normalized keyboard input, including common Alt-key variants; `@sectile/terminal/tree-grid` owns terminal edit buffering, and `@sectile/terminal/layout` fits text by displayed Unicode width.
 
 The application still owns its data and presentation. It supplies cell getters and setters to a connection, renders its chosen markup or terminal rows, and reacts to the connection's transition callback when it needs logging or external synchronization.
 

@@ -56,6 +56,10 @@ export interface SliderController {
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<SliderState, SliderEffect>;
+  handleEvent(
+    event: SliderEvent,
+    expectedRevision?: number,
+  ): RevisionResult<SliderState, SliderEffect>;
 }
 
 export interface SliderTransitionDetails {
@@ -66,6 +70,7 @@ export interface SliderTransitionDetails {
 export interface SliderConnectionOptions {
   readonly controller: SliderController;
   readonly root: HTMLElement;
+  readonly track?: HTMLElement;
   readonly label?: string;
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
@@ -77,6 +82,7 @@ export interface SliderConnection {
   getValue(): string;
   syncControlledValues(values: SliderControlledValues): Result<RevisionSnapshot<SliderState>>;
   refreshAttributes(): void;
+  handleEvent(event: SliderEvent): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   disconnect(): void;
 }
@@ -126,22 +132,50 @@ class DOMSliderConnection implements SliderConnection {
   public readonly range: QuantizedRange;
   readonly #controller: SliderController;
   readonly #root: HTMLElement;
+  readonly #track: HTMLElement;
   readonly #label: string | undefined;
   readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
+  readonly #handlePointer: (event: PointerEvent) => void;
+  readonly #handlePointerUp: (event: PointerEvent) => void;
+  #dragging = false;
 
   public constructor(options: SliderConnectionOptions) {
     this.#controller = options.controller;
     this.range = options.controller.range;
     this.#root = options.root;
+    this.#track = options.track ?? options.root;
     this.#label = options.label;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
+    this.#handlePointer = (event): void => {
+      if (event.type === 'pointerdown') {
+        this.#dragging = true;
+        this.#track.setPointerCapture?.(event.pointerId);
+      } else if (!this.#dragging) {
+        return;
+      }
+      const rect = this.#track.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      const tick = Math.round(ratio * this.range.count);
+      const semanticEvent: SliderEvent = { type: 'set-tick', tick };
+      if (this.handleEvent(semanticEvent)) event.preventDefault();
+    };
+    this.#handlePointerUp = (event): void => {
+      if (!this.#dragging) return;
+      this.#dragging = false;
+      this.#track.releasePointerCapture?.(event.pointerId);
+    };
     this.#root.addEventListener('keydown', this.#handleKeydown);
+    this.#track.addEventListener('pointerdown', this.#handlePointer);
+    this.#track.addEventListener('pointermove', this.#handlePointer);
+    this.#track.addEventListener('pointerup', this.#handlePointerUp);
+    this.#track.addEventListener('pointercancel', this.#handlePointerUp);
     this.refreshAttributes();
   }
 
@@ -185,15 +219,23 @@ class DOMSliderConnection implements SliderConnection {
     };
     const semanticEvent = toSliderEvent(input);
     if (semanticEvent === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
+    return this.handleEvent(semanticEvent);
+  }
+
+  public handleEvent(event: SliderEvent): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) this.refreshAttributes();
-    this.#onTransition?.(Object.freeze({ event: semanticEvent, result }));
+    this.#onTransition?.(Object.freeze({ event, result }));
     this.#onUpdate?.();
     return true;
   }
 
   public disconnect(): void {
     this.#root.removeEventListener('keydown', this.#handleKeydown);
+    this.#track.removeEventListener('pointerdown', this.#handlePointer);
+    this.#track.removeEventListener('pointermove', this.#handlePointer);
+    this.#track.removeEventListener('pointerup', this.#handlePointerUp);
+    this.#track.removeEventListener('pointercancel', this.#handlePointerUp);
   }
 }
 
@@ -248,6 +290,13 @@ class DOMSliderController implements SliderController {
         details: { key: input.key },
       });
     }
+    return this.handleEvent(event, expectedRevision);
+  }
+
+  public handleEvent(
+    event: SliderEvent,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<SliderState, SliderEffect> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,

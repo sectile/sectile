@@ -18,6 +18,7 @@ import {
   type TreeGridState,
 } from '@sectile/primitives/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { findDelegatedID } from './internal/delegated-event.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -96,13 +97,17 @@ export interface TreeGridController<
     input: KeyboardInput,
     expectedRevision?: number,
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
+  handleEvent(
+    event: TreeGridEvent<RowID, CellID>,
+    expectedRevision?: number,
+  ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
 }
 
 export interface TreeGridTransitionDetails<
   RowID extends StableID = StableID,
   CellID extends StableID = StableID,
 > {
-  readonly event: TreeGridEvent;
+  readonly event: TreeGridEvent<RowID, CellID>;
   readonly result: RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>>;
 }
 
@@ -149,7 +154,9 @@ export interface TreeGridConnection<
     element: HTMLElement,
     attributes: TreeGridCellAttributes<CellID>,
   ): void;
+  setDisclosureAttributes(element: HTMLElement, id: RowID): void;
   bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void;
+  handleEvent(event: TreeGridEvent<RowID, CellID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   focusCurrent(): void;
   disconnect(): void;
@@ -200,10 +207,13 @@ export function connectTreeGrid<RowID extends StableID, CellID extends StableID>
   return new DOMTreeGridConnection(options);
 }
 
-export function toTreeGridEvent(
+export function toTreeGridEvent<
+  RowID extends StableID = StableID,
+  CellID extends StableID = StableID,
+>(
   input: KeyboardInput,
   editMode: TreeGridEditMode = 'navigation',
-): TreeGridEvent | null {
+): TreeGridEvent<RowID, CellID> | null {
   if (input.isComposing === true) return null;
   if (input.ctrlKey === true || input.metaKey === true) return null;
   if (editMode === 'editing') {
@@ -254,6 +264,9 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
+  readonly #handleClick: (event: MouseEvent) => void;
+  readonly #handleDoubleClick: (event: MouseEvent) => void;
+  #lastCellClick: { readonly id: CellID; readonly time: number } | null = null;
   #editBaseline: { readonly id: CellID; readonly value: string } | null = null;
   #composing = false;
   #commitAfterComposition = false;
@@ -269,7 +282,40 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
+    this.#handleClick = (event): void => {
+      const disclosureID = findDelegatedID(event.target, this.#root, 'treeGridDisclosureId');
+      if (disclosureID !== null) {
+        const id = disclosureID as RowID;
+        const expanded = this.#controller.getSnapshot().state.expansion.has(id);
+        this.handleEvent({ type: 'set-expanded', id, open: !expanded });
+        return;
+      }
+      const id = findDelegatedID(event.target, this.#root, 'cellId');
+      if (id === null || this.#controller.getSnapshot().state.editMode === 'editing') return;
+      const cellID = id as CellID;
+      const time = Number.isFinite(event.timeStamp) ? event.timeStamp : Date.now();
+      if (
+        this.#lastCellClick?.id === cellID
+        && time - this.#lastCellClick.time >= 0
+        && time - this.#lastCellClick.time <= 500
+      ) {
+        this.#lastCellClick = null;
+        this.handleEvent({ type: 'start-edit', id: cellID });
+        return;
+      }
+      this.#lastCellClick = Object.freeze({ id: cellID, time });
+      this.handleEvent({ type: 'select', id: cellID });
+    };
+    this.#handleDoubleClick = (event): void => {
+      const id = findDelegatedID(event.target, this.#root, 'cellId');
+      const state = this.#controller.getSnapshot().state;
+      if (id !== null && !(state.editMode === 'editing' && state.cursor.current === id)) {
+        this.handleEvent({ type: 'start-edit', id: id as CellID });
+      }
+    };
     this.#root.addEventListener('keydown', this.#handleKeydown);
+    this.#root.addEventListener('click', this.#handleClick);
+    this.#root.addEventListener('dblclick', this.#handleDoubleClick);
   }
 
   public getSnapshot(): RevisionSnapshot<TreeGridState<RowID, CellID>> {
@@ -315,6 +361,11 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-colindex', String(attributes.columnIndex));
     element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
+  }
+
+  public setDisclosureAttributes(element: HTMLElement, id: RowID): void {
+    element.dataset['treeGridDisclosureId'] = String(id);
+    element.setAttribute('aria-hidden', 'true');
   }
 
   public bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void {
@@ -379,12 +430,21 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
 
   public disconnect(): void {
     this.#root.removeEventListener('keydown', this.#handleKeydown);
+    this.#root.removeEventListener('click', this.#handleClick);
+    this.#root.removeEventListener('dblclick', this.#handleDoubleClick);
   }
 
   #dispatchKeyboardInput(input: KeyboardInput): boolean {
-    const event = toTreeGridEvent(input, this.#controller.getSnapshot().state.editMode);
+    const event = toTreeGridEvent<RowID, CellID>(
+      input,
+      this.#controller.getSnapshot().state.editMode,
+    );
     if (event === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
+    return this.handleEvent(event);
+  }
+
+  public handleEvent(event: TreeGridEvent<RowID, CellID>): boolean {
+    const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
     this.#onTransition?.(Object.freeze({ event, result }));
     this.#onUpdate?.();
@@ -491,7 +551,7 @@ class DOMTreeGridController<RowID extends StableID, CellID extends StableID>
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>> {
-    const event = toTreeGridEvent(input, this.#snapshot.state.editMode);
+    const event = toTreeGridEvent<RowID, CellID>(input, this.#snapshot.state.editMode);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {
         class: 'transition-rejection',
@@ -500,6 +560,13 @@ class DOMTreeGridController<RowID extends StableID, CellID extends StableID>
         details: { key: input.key },
       });
     }
+    return this.handleEvent(event, expectedRevision);
+  }
+
+  public handleEvent(
+    event: TreeGridEvent<RowID, CellID>,
+    expectedRevision = this.#snapshot.revision,
+  ): RevisionResult<TreeGridState<RowID, CellID>, TreeGridEffect<CellID>> {
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
