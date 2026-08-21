@@ -11,7 +11,7 @@ The default `pnpm verify` gate first runs each package's own `verify` script in 
 7. package footprint validation;
 8. deterministic implementation verifier replay.
 
-`pnpm verify:theory` delegates to the package that owns the Python theory model. `pnpm verify:reproducible-build` delegates reproducibility checks to every package that declares one. The DOM and terminal packages test their host mappings independently; the root cross-host suite compares 40,000 transitions through their exported package subpaths.
+`pnpm verify:theory` delegates to the package that owns the Python theory model. `pnpm verify:reproducible-build` delegates reproducibility checks to every package that declares one. The DOM and terminal packages test their host mappings independently; the root cross-host suite compares 160,000 operations through their exported package subpaths.
 
 The law registry contains all 37 currently public structure laws. Each law has an evidence file, and the optimized implementation has a separate differential evidence file.
 

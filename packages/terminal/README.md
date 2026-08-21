@@ -17,7 +17,7 @@ const controller = result.value;
 
 Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
 
-Calendar, slider, and tree-view controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects.
+Calendar, slider, tree-view, and treegrid controllers follow the same ownership contract through their package subpaths. Calendar page changes remain external `request-page` effects. Treegrid exposes expansion, highlight, selection, and edit mode as independently controlled or uncontrolled fields.
 
 The text controller maps explicit insert, replace, and delete ranges through `@sectile/terminal/text`. Terminal input has no implicit composition phase; a host that supports one must expose it explicitly before the adapter contract expands.
 

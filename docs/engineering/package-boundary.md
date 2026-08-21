@@ -19,6 +19,7 @@ Recurring verification requires these canonical exports:
 ./combobox
 ./slider
 ./tree-view
+./treegrid
 ./revision
 ./text
 ./package.json

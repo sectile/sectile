@@ -3,7 +3,7 @@
 Foundational structure research and the internal state/data theories are closed for the declared scope. The current implementation state is:
 
 1. `sequence`, `range`, `grid`, and `tree` are public canonical structures;
-2. `listbox`, `slider`, `calendar`, `tree-view`, and full editable combobox behavior are public pure facades;
+2. `listbox`, `slider`, `calendar`, `tree-view`, `treegrid`, and full editable combobox behavior are public pure facades;
 3. every public composite has independent revisioned DOM and terminal controller witnesses;
 4. text editing is public with independent DOM and terminal input-normalization witnesses;
 5. `cursor`, `selection`, and `expansion` remain internal until their own direct usage-evidence gates are met.
