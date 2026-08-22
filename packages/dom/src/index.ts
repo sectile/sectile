@@ -210,3 +210,7 @@ export {
   type TextTransitionDetails,
   type TextValueChangeDetails,
 } from './text.js';
+export { createDateField, tryCreateDateField, type DateFieldConnection, type DateFieldControlledValues, type DateFieldOptions } from './date-field.js';
+export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type TimeFieldControlledValues, type TimeFieldOptions } from './time-field.js';
+export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
+export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "25b59baeeb972c47c315a89c57eca13ea57f313fd273e04d838aec325a249056",
+  "fingerprint": "bb6a20e6fe65cb96fd35496b93370f529f803ac4509359abacc37eeeecb5d76b",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -31,6 +31,18 @@
       "sha256": "7c5148ec90d2f57a0a045bcd2afc154cac6410d75a4564e8944c7c6b5b4e1c51"
     },
     {
+      "path": "dist/date-field.d.ts",
+      "sha256": "bed51e2476b8a2d313a0405db390a2ab82a4e21445e4f4cdd386e56ad70babba"
+    },
+    {
+      "path": "dist/date-picker.d.ts",
+      "sha256": "1a953bc12b9c82500ca7d404c9a09be86c994f83ec86e443f3f36f6a14447086"
+    },
+    {
+      "path": "dist/date-range-picker.d.ts",
+      "sha256": "1aadcd692dabd9e0e868971461ec949438d5fa7f88b90120bbf77a87a781cf23"
+    },
+    {
       "path": "dist/dialog.d.ts",
       "sha256": "b6f3aa14727dd3b295be945a06a898c5bbad2ecee7d30dea418daffaa6cc8471"
     },
@@ -44,7 +56,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "872041df88dc4f231993737a2441d6b698d4d890606eab4c7af9989ebfcd3d4c"
+      "sha256": "6deebe7740ca64d35caa1db3781593b574050178e2aef0cb5426f09c032ce694"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -233,6 +245,10 @@
     {
       "path": "dist/text.d.ts",
       "sha256": "aff65f99c95f52b7121e1deba149665b7e126690317719fd005c934de878bb93"
+    },
+    {
+      "path": "dist/time-field.d.ts",
+      "sha256": "73d6ce41d84b06a0acc2a73f4c9647a54517ec078179fb04a26843ba87135009"
     },
     {
       "path": "dist/toggle-button.d.ts",

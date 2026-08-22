@@ -1,6 +1,8 @@
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
 import { createCalculatorExpression } from '@sectile/core/number-field';
+import { createDateValue, createDateRange, formatDateValue } from '@sectile/core/date-field';
+import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
@@ -13,6 +15,10 @@ import { createSlider } from '@sectile/terminal/slider';
 import { createText } from '@sectile/terminal/text';
 import { createNumberField } from '@sectile/terminal/number-field';
 import { createQuantityField } from '@sectile/terminal/quantity-field';
+import { createDateField } from '@sectile/terminal/date-field';
+import { createTimeField } from '@sectile/terminal/time-field';
+import { createDatePicker } from '@sectile/terminal/date-picker';
+import { createDateRangePicker } from '@sectile/terminal/date-range-picker';
 import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
@@ -50,6 +56,10 @@ export const demos = Object.freeze([
   { id: 'spin-button', label: 'Spin Button', description: 'decimal step · invalid draft · controlled · [/] cases', readOnly: true, create: createSpinButtonDemo },
   { id: 'number-field', label: 'Number field', description: 'exact decimal · expressions · caret · controlled · [/] cases', readOnly: true, create: createNumberFieldDemo },
   { id: 'quantity-field', label: 'Quantity field', description: 'units · affine conversion · expressions · { } cases', readOnly: true, create: createQuantityFieldDemo },
+  { id: 'date-field', label: 'Date field', description: 'calendar value · caret segments · commit · [/] cases', readOnly: true, create: createDateFieldDemo },
+  { id: 'time-field', label: 'Time field', description: 'wall-clock value · caret segments · commit · [/] cases', readOnly: true, create: createTimeFieldDemo },
+  { id: 'date-picker', label: 'Date picker', description: 'month grid · bounds · single selection · [/] cases', readOnly: true, create: createDatePickerDemo },
+  { id: 'date-range-picker', label: 'Date range picker', description: 'range anchor · inclusive selection · [/] cases', readOnly: true, create: createDateRangePickerDemo },
   { id: 'dialog', label: 'Dialog', description: 'modal · non-modal · controlled · [/] cases', create: (host) => createPopupDemo(host, 'dialog') },
   { id: 'alert-dialog', label: 'Alert dialog', description: 'destructive · unsaved · controlled · [/] cases', create: (host) => createPopupDemo(host, 'alert-dialog') },
   { id: 'tooltip', label: 'Tooltip', description: 'closed · open · controlled · [/] cases', create: (host) => createPopupDemo(host, 'tooltip') },
@@ -957,6 +967,109 @@ function createQuantityFieldDemo(host) {
     };
   }, { previousCaseKey: '{', nextCaseKey: '}' });
 }
+
+function createDateFieldDemo(host) {
+  const value = unwrap(createDateValue(2026, 8, 22));
+  return scenarioDemo(host, [
+    { title: 'Calendar date', value, controlled: false, policies: {}, detail: 'timezone-free YYYY-MM-DD' },
+    { title: 'Booking deadline', value, controlled: false, policies: { min: unwrap(createDateValue(2026, 8, 18)), max: unwrap(createDateValue(2026, 9, 30)) }, detail: 'bounded calendar value' },
+    { title: 'Controlled date', value, controlled: true, policies: {}, detail: 'external value ownership' },
+  ], (scenario) => createTerminalTemporalField(host, scenario, 'date'));
+}
+
+function createTimeFieldDemo(host) {
+  const morning = unwrap(createTimeValue(9, 30));
+  return scenarioDemo(host, [
+    { title: 'Wall-clock time', value: morning, controlled: false, policies: {}, detail: '24-hour HH:mm' },
+    { title: '15-minute schedule', value: unwrap(createTimeValue(10, 15)), controlled: false, policies: { step: { minute: 15 } }, detail: 'segment-aware stepping' },
+    { title: 'Controlled time', value: unwrap(createTimeValue(14, 0)), controlled: true, policies: {}, detail: 'external value ownership' },
+  ], (scenario) => createTerminalTemporalField(host, scenario, 'time'));
+}
+
+function createTerminalTemporalField(host, scenario, kind) {
+  let external = scenario.value;
+  let connection;
+  const create = kind === 'date' ? createDateField : createTimeField;
+  const format = kind === 'date' ? formatDateValue : formatTimeValue;
+  connection = create({
+    ...scenario.interaction,
+    policies: scenario.policies,
+    ...(scenario.controlled ? { value: external, onValueChange: (value) => { external = value; queueMicrotask(sync); } } : { defaultValue: external }),
+    onUpdate: host.render,
+  });
+  function sync() { connection.syncControlledValues({ value: external }); }
+  return {
+    handle: (input) => connection.handleKeyboardInput(input),
+    lines(width) {
+      const { revision, state } = connection.getSnapshot(); const text = connection.getText(); const caret = connection.getCaret();
+      return [
+        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.dim}${scenario.detail} · ↑/↓ segment · Enter commit · Escape cancel${ansi.reset}`,
+        '', plain(`${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`, Math.max(1, width - 2)), '',
+        `value=${state.value === null ? '−' : format(state.value)}  caret=${caret}`,
+        `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+      ];
+    },
+  };
+}
+
+function createDatePickerDemo(host) {
+  return scenarioDemo(host, [
+    { title: 'Release date', controlled: false, weekdaysOnly: false },
+    { title: 'Weekday booking', controlled: false, weekdaysOnly: true },
+    { title: 'Controlled picker', controlled: true, weekdaysOnly: false },
+  ], (scenario) => createTerminalPicker(host, scenario, false));
+}
+
+function createDateRangePickerDemo(host) {
+  return scenarioDemo(host, [
+    { title: 'Deployment window', controlled: false, bounded: false },
+    { title: 'Quarter availability', controlled: false, bounded: true },
+    { title: 'Controlled range', controlled: true, bounded: false },
+  ], (scenario) => createTerminalPicker(host, scenario, true));
+}
+
+function createTerminalPicker(host, scenario, range) {
+  const initial = unwrap(createDateValue(2026, 8, 22));
+  let externalValue = range ? unwrap(createDateRange(unwrap(createDateValue(2026, 8, 18)), initial)) : initial;
+  let externalHighlight = initial; let externalOpen = true; let connection;
+  const policies = {
+    ...(scenario.weekdaysOnly ? { unavailable: (value) => terminalISOWeekday(value) >= 6 } : {}),
+    ...(scenario.bounded ? { min: unwrap(createDateValue(2026, 8, 1)), max: unwrap(createDateValue(2026, 10, 31)) } : {}),
+  };
+  const create = range ? createDateRangePicker : createDatePicker;
+  connection = create({
+    ...scenario.interaction, policies,
+    ...(scenario.controlled
+      ? { value: externalValue, highlightedValue: externalHighlight, open: externalOpen,
+          onValueChange: (value) => { externalValue = value; queueMicrotask(sync); },
+          onHighlightedValueChange: range ? undefined : (value) => { externalHighlight = value; queueMicrotask(sync); },
+          onOpenChange: (open) => { externalOpen = open; queueMicrotask(sync); } }
+      : { defaultValue: externalValue, defaultHighlightedValue: externalHighlight, defaultOpen: true }),
+    onUpdate: host.render,
+  });
+  function sync() { const state = connection.getSnapshot().state; if (range) externalHighlight = state.calendar.highlighted; connection.syncControlledValues({ value: externalValue, highlightedValue: externalHighlight, open: externalOpen }); }
+  return {
+    handle: (input) => connection.handleKeyboardInput(input),
+    lines(width) {
+      const { revision, state } = connection.getSnapshot(); const calendar = range ? state.calendar : state; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
+      const selected = range ? state.value : state.value;
+      return [
+        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.dim}arrows move · Page Up/Down month · Enter select · Escape close${ansi.reset}`, '',
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
+        ...month.map((week) => week.map((value) => terminalCell(String(value.day), cellWidth, { current: sameTerminalDate(value, calendar.highlighted), selected: range ? selected !== null && compareTerminalDate(selected.start, value) <= 0 && compareTerminalDate(value, selected.end) <= 0 : selected !== null && sameTerminalDate(selected, value) })).join(' ')),
+        '', range ? `range=${selected === null ? '−' : `${formatDateValue(selected.start)} → ${formatDateValue(selected.end)}`}  anchor=${state.anchor === null ? '−' : formatDateValue(state.anchor)}` : `value=${selected === null ? '−' : formatDateValue(selected)}`,
+        `highlighted=${formatDateValue(calendar.highlighted)}  open=${calendar.open}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+      ];
+    },
+  };
+}
+
+function terminalMonthLabel(view) { return `${terminalCalendarMonthFormatter.format(new Date(view.year, view.month - 1, 1))}`; }
+function terminalISOWeekday(value) { return ((new Date(Date.UTC(value.year, value.month - 1, value.day)).getUTCDay() + 6) % 7) + 1; }
+function compareTerminalDate(left, right) { const a = `${left.year.toString().padStart(4, '0')}-${left.month.toString().padStart(2, '0')}-${left.day.toString().padStart(2, '0')}`; const b = `${right.year.toString().padStart(4, '0')}-${right.month.toString().padStart(2, '0')}-${right.day.toString().padStart(2, '0')}`; return a < b ? -1 : a > b ? 1 : 0; }
+function sameTerminalDate(left, right) { return compareTerminalDate(left, right) === 0; }
 
 function numberFieldEditing(text) {
   return unwrap(createTextEditingState(text, {

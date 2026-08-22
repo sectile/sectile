@@ -1,4 +1,4 @@
-import { demos } from './demos/index.js';
+import { demoGroups, demos } from './demos/index.js';
 import { createElement, RotateCcw } from 'lucide';
 import type { DemoCaseDefinition, DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
 import './styles.css';
@@ -32,25 +32,46 @@ window.addEventListener('hashchange', () => {
 
 function renderNavigation(): void {
   let activeLink: HTMLAnchorElement | null = null;
-  nav.replaceChildren(...demos.map((demo) => {
-    const link = document.createElement('a');
-    link.href = `#${demo.id}`;
-    link.textContent = demo.label;
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (demo.id !== activeID) {
-        history.pushState(null, '', link.href);
-        activeID = demo.id;
-        renderNavigation();
-        mountActiveDemo();
+  nav.replaceChildren(...demoGroups.map((group) => {
+    const section = document.createElement('section');
+    section.className = 'demo-nav-group';
+    section.dataset['active'] = String(group.demos.some((demo) => demo.id === activeID));
+    const headingID = `demo-nav-${group.id}`;
+    const heading = document.createElement('h2');
+    heading.id = headingID;
+    heading.className = 'demo-nav-heading';
+    const label = document.createElement('span');
+    label.textContent = group.label;
+    const count = document.createElement('span');
+    count.className = 'demo-nav-count';
+    count.textContent = String(group.demos.length);
+    count.setAttribute('aria-label', `${group.demos.length} components`);
+    heading.append(label, count);
+    const links = document.createElement('div');
+    links.className = 'demo-nav-links';
+    links.setAttribute('aria-labelledby', headingID);
+    links.append(...group.demos.map((demo) => {
+      const link = document.createElement('a');
+      link.href = `#${demo.id}`;
+      link.textContent = demo.label;
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (demo.id !== activeID) {
+          history.pushState(null, '', link.href);
+          activeID = demo.id;
+          renderNavigation();
+          mountActiveDemo();
+        }
+        requestAnimationFrame(() => window.scrollTo(0, 0));
+      });
+      if (demo.id === activeID) {
+        link.setAttribute('aria-current', 'page');
+        activeLink = link;
       }
-      requestAnimationFrame(() => window.scrollTo(0, 0));
-    });
-    if (demo.id === activeID) {
-      link.setAttribute('aria-current', 'page');
-      activeLink = link;
-    }
-    return link;
+      return link;
+    }));
+    section.append(heading, links);
+    return section;
   }));
   requestAnimationFrame(() => {
     if (activeLink === null) return;

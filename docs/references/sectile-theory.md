@@ -3836,6 +3836,24 @@ target = (canonical - target.offset) / target.scale
 
 ---
 
+## Date and Time Value
+
+`DateValue`와 `TimeValue`는 instant가 아닌 달력·벽시계 값이다. `DateValue`는 ISO 8601 proleptic Gregorian의 `year/month/day`, `TimeValue`는 24시간제 하루 안의 `hour/minute/second/millisecond`만 소유한다. 둘 다 time zone, UTC offset, locale, daylight-saving transition을 저장하지 않는다. 이 분리는 Temporal의 `PlainDate`·`PlainTime`과 같은 의미 경계다.[R27]
+
+```text
+DateValue = year × month × day
+TimeValue = hour × minute × second × millisecond
+DateRange = { start, end } where start ≤ end
+```
+
+날짜 비교와 증감은 host `Date` 객체 없이 정수 Gregorian 연산으로 결정한다. 월·연도 증감에서 대상 월에 같은 day가 없으면 그 달의 마지막 날로 clamp한다. day 증감은 달과 연도 경계를 넘는다. 시간 증감은 24시간 안에서 wrap한다. 달력 날짜를 instant로 바꾸거나 time zone을 적용하는 일은 정책 또는 상위 application 책임이다.
+
+DateField와 TimeField는 committed value와 `TextEditingState`를 분리한다. 입력 중 draft, selection, caret, IME composition은 Text theory를 그대로 사용한다. commit만 strict ISO text를 값으로 바꾸며 실패 시 기존 값과 command를 보존한다. 위·아래 입력은 caret이 속한 segment를 증감한다. 일반 text editing key는 가로채지 않는다.
+
+DatePicker는 date value, highlighted date, visible month, popup open state를 합성한다. Calendar grid는 보이는 날짜와 logical focus만 투영한다. 선택값은 현재 월 밖에도 존재할 수 있으므로 Calendar의 visible ID selection에 저장하지 않는다. DateRangePicker는 첫 선택을 anchor로, 두 번째 선택을 inclusive range로 commit하며 역방향 선택은 정방향 range로 정규화한다. 키보드 의미와 dialog focus 복원은 APG date picker dialog 계약을 따른다.[R28]
+
+locale별 숫자·월 이름 formatting, 비-Gregorian calendar, time zone conversion, recurrence는 현재 core 범위 밖이다.
+
 ## 참고문헌
 
 [R1] Barbara Liskov and Stephen Zilles. “Programming with Abstract Data Types.” SIGPLAN Symposium on Very High Level Languages, 1974. https://doi.org/10.1145/800233.807045
@@ -3889,3 +3907,7 @@ target = (canonical - target.offset) / target.scale
 [R25] W3C WAI. “Slider Multi-Thumb Pattern.” https://www.w3.org/WAI/ARIA/apg/patterns/slider-multithumb/
 
 [R26] W3C WAI. “Treegrid Pattern.” https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/
+
+[R27] TC39. “Temporal: PlainDate and PlainTime.” https://tc39.es/proposal-temporal/docs/
+
+[R28] W3C WAI. “Date Picker Dialog Example.” https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/

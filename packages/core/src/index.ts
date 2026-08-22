@@ -32,6 +32,41 @@ export type {
   NumericExpressionResult,
 } from './number-field.js';
 export type {
+  DateFieldCommand,
+  DateFieldEvent,
+  DateFieldPolicies,
+  DateFieldState,
+  DateFieldUpdate,
+  DateRange,
+  DateSegment,
+  DateValue,
+} from './date-field.js';
+export type {
+  TimeFieldCommand,
+  TimeFieldEvent,
+  TimeFieldPolicies,
+  TimeFieldState,
+  TimeFieldUpdate,
+  TimeSegment,
+  TimeValue,
+} from './time-field.js';
+export type {
+  DatePickerCommand,
+  DatePickerEvent,
+  DatePickerPolicies,
+  DatePickerState,
+  DatePickerStateInput,
+  DatePickerUpdate,
+  DatePickerView,
+} from './date-picker.js';
+export type {
+  DateRangePickerCommand,
+  DateRangePickerEvent,
+  DateRangePickerState,
+  DateRangePickerStateInput,
+  DateRangePickerUpdate,
+} from './date-range-picker.js';
+export type {
   Dimension,
   UnitConversion,
   UnitConversionOptions,

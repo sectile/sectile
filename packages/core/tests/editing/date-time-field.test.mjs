@@ -1,0 +1,105 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  addDateDays,
+  addDateMonths,
+  applyDateFieldEvent,
+  createDateFieldState,
+  createDateRange,
+  createDateValue,
+  dateDayOfWeek,
+  formatDateValue,
+  parseDateValue,
+} from '../../.verification-dist/date-field.js';
+import {
+  addTimeMilliseconds,
+  applyTimeFieldEvent,
+  createTimeFieldState,
+  createTimeValue,
+  formatTimeValue,
+  parseTimeValue,
+} from '../../.verification-dist/time-field.js';
+
+const date = (year, month, day) => createDateValue(year, month, day).value;
+const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond).value;
+
+test('date values are strict Gregorian calendar values without host time', () => {
+  assert.equal(createDateValue(2024, 2, 29).ok, true);
+  assert.equal(createDateValue(2023, 2, 29).error.code, 'invalid-date-day');
+  assert.equal(parseDateValue('2026-08-22').ok, true);
+  assert.equal(parseDateValue('2026-8-22').error.code, 'invalid-date-format');
+  assert.equal(formatDateValue(date(2026, 8, 22)), '2026-08-22');
+  assert.equal(dateDayOfWeek(date(1970, 1, 1)), 4);
+});
+
+test('date arithmetic clamps month fields and crosses calendar boundaries exactly', () => {
+  assert.equal(formatDateValue(addDateMonths(date(2024, 1, 31), 1).value), '2024-02-29');
+  assert.equal(formatDateValue(addDateDays(date(2024, 2, 28), 2).value), '2024-03-01');
+  assert.equal(formatDateValue(addDateDays(date(2024, 3, 1), -2).value), '2024-02-28');
+  assert.equal(createDateRange(date(2026, 8, 22), date(2026, 8, 21)).error.code, 'inverted-date-range');
+});
+
+test('date field preserves drafts, commits atomically, and adjusts the active segment', () => {
+  let state = createDateFieldState(date(2024, 1, 31)).value;
+  state = applyDateFieldEvent(state, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 5, endCodeUnitOffset: 7, text: '02', selection: { anchorCodeUnitOffset: 7, focusCodeUnitOffset: 7 } },
+  }).value.state;
+  assert.equal(state.value.month, 1);
+  assert.equal(applyDateFieldEvent(state, 'commit').error.code, 'invalid-date-day');
+
+  state = createDateFieldState(date(2024, 1, 31), createDateFieldState(date(2024, 1, 31)).value.inputState).value;
+  state = applyDateFieldEvent(state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 5, endCodeUnitOffset: 5, text: '', selection: { anchorCodeUnitOffset: 5, focusCodeUnitOffset: 5 } } }).value.state;
+  const incremented = applyDateFieldEvent(state, 'increment-segment');
+  assert.equal(formatDateValue(incremented.value.state.value), '2024-02-29');
+  assert.deepEqual(incremented.value.state.inputState.snapshot.selection, {
+    anchorCodeUnitOffset: 5,
+    direction: 'forward',
+    endCodeUnitOffset: 7,
+    focusCodeUnitOffset: 7,
+    startCodeUnitOffset: 5,
+  });
+
+  const oversized = applyDateFieldEvent(state, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 10, text: '2024-01-311', selection: { anchorCodeUnitOffset: 11, focusCodeUnitOffset: 11 } },
+  });
+  assert.equal(oversized.error.code, 'date-field-draft-too-long');
+
+  const invalidDraft = applyDateFieldEvent(state, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: 'not-a-date', selection: { anchorCodeUnitOffset: 10, focusCodeUnitOffset: 10 } },
+  }).value.state;
+  const rejectedStep = applyDateFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(rejectedStep.error.code, 'invalid-date-format');
+  assert.equal(formatDateValue(invalidDraft.value), '2024-01-31');
+});
+
+test('time values use a 24-hour wall clock and wrap inside one day', () => {
+  assert.equal(formatTimeValue(time(9, 5)), '09:05');
+  assert.equal(formatTimeValue(time(9, 5, 7, 25)), '09:05:07.025');
+  assert.equal(parseTimeValue('24:00').error.code, 'invalid-time-hour');
+  assert.equal(formatTimeValue(addTimeMilliseconds(time(23, 59, 59, 999), 1).value), '00:00');
+});
+
+test('time field commits, bounds, and adjusts its caret segment', () => {
+  let state = createTimeFieldState(time(10, 30)).value;
+  state = applyTimeFieldEvent(state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 3, endCodeUnitOffset: 3, text: '', selection: { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 3 } } }).value.state;
+  const next = applyTimeFieldEvent(state, 'increment-segment', { step: { minute: 15 } });
+  assert.equal(formatTimeValue(next.value.state.value), '10:45');
+  assert.equal(applyTimeFieldEvent(next.value.state, { type: 'set-value', value: time(8, 0) }, { min: time(9, 0) }).error.code, 'time-field-value-below-minimum');
+
+  const oversized = applyTimeFieldEvent(state, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 5, text: '10:30:00.0000', selection: { anchorCodeUnitOffset: 13, focusCodeUnitOffset: 13 } },
+  });
+  assert.equal(oversized.error.code, 'time-field-draft-too-long');
+
+  const invalidDraft = applyTimeFieldEvent(state, {
+    type: 'text',
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: '12:30asdf', selection: { anchorCodeUnitOffset: 9, focusCodeUnitOffset: 9 } },
+  }).value.state;
+  const rejectedStep = applyTimeFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(rejectedStep.error.code, 'invalid-time-format');
+  assert.equal(formatTimeValue(invalidDraft.value), '10:30');
+});
