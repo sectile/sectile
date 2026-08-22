@@ -19,6 +19,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
+import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 
 export interface PopupConnection {
@@ -47,8 +48,16 @@ export interface PopupFactoryOptions {
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
   readonly align?: 'start' | 'center' | 'end';
   readonly sideOffset?: number;
-  readonly collisionPadding?: number;
+  readonly collisionPadding?: Padding;
+  readonly collisionBoundary?: Boundary;
+  readonly avoidCollisions?: boolean;
+  readonly arrowPadding?: Padding;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: Strategy;
+  readonly middleware?: Middleware[];
+  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly onOpenChange: (open: boolean) => void;
+  readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate: () => void;
 }
 
@@ -78,7 +87,14 @@ export interface PopupRootProps {
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
   readonly align?: 'start' | 'center' | 'end';
   readonly sideOffset?: number;
-  readonly collisionPadding?: number;
+  readonly collisionPadding?: Padding;
+  readonly collisionBoundary?: Boundary;
+  readonly avoidCollisions?: boolean;
+  readonly arrowPadding?: Padding;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: Strategy;
+  readonly middleware?: Middleware[];
+  readonly autoUpdate?: boolean | AutoUpdateOptions;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
@@ -143,9 +159,19 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
       align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
       sideOffset: { type: Number, default: 8 },
-      collisionPadding: { type: Number, default: 8 },
+      collisionPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
+      collisionBoundary: { type: [String, Object, Array] as PropType<Boundary>, default: undefined },
+      avoidCollisions: { type: Boolean, default: true },
+      arrowPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
+      hideWhenDetached: { type: Boolean, default: true },
+      strategy: { type: String as PropType<Strategy>, default: 'fixed' },
+      middleware: { type: Array as PropType<Middleware[]>, default: undefined },
+      autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
     },
-    emits: { 'update:open': (_open: boolean): boolean => true },
+    emits: {
+      'update:open': (_open: boolean): boolean => true,
+      'position-change': (_position: ComputePositionReturn): boolean => true,
+    },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const controlled = props.open !== undefined;
@@ -191,10 +217,18 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           align: props.align,
           sideOffset: props.sideOffset,
           collisionPadding: props.collisionPadding,
+          ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
+          avoidCollisions: props.avoidCollisions,
+          arrowPadding: props.arrowPadding,
+          hideWhenDetached: props.hideWhenDetached,
+          strategy: props.strategy,
+          ...(props.middleware === undefined ? {} : { middleware: props.middleware }),
+          ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
           onOpenChange: (next) => {
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
           },
+          onPositionChange: (position) => { emit('position-change', position); },
           onUpdate: update,
         });
         update();

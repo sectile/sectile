@@ -18,7 +18,7 @@ import { DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeR
 import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
 import { DialogClose, DialogContent, DialogDescription, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
 import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
-import { TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
 import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '@sectile/vue/multi-thumb-slider';
 import { MenuItem, MenuRoot, MenuSeparator, MenuSubContent } from '@sectile/vue/menu';
 import { MenubarContent, MenubarItem, MenubarRoot, MenubarSeparator } from '@sectile/vue/menubar';
@@ -67,7 +67,7 @@ const parts: Record<string, readonly string[]> = {
   'date-range-picker': ['DateRangePickerRoot', 'DateRangePickerStartInput', 'DateRangePickerEndInput', 'DateRangePickerContent'],
   'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerInput', 'DateTimePickerTimeInput'], 'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartInput', 'DateTimeRangePickerEndInput'],
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
-  tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
+  tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarSubContent'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
@@ -152,7 +152,7 @@ const sliderValues = computed(() => isAlternate.value ? [20, 50, 80] : [25, 75])
 
       <DialogRoot v-else-if="component === 'dialog'" :default-open="isAlternate"><DialogTrigger>Open details</DialogTrigger><DialogContent class="catalog-dialog"><DialogTitle>Deployment</DialogTitle><DialogDescription>Review the release before continuing.</DialogDescription><DialogClose>Close</DialogClose></DialogContent></DialogRoot>
       <AlertDialogRoot v-else-if="component === 'alert-dialog'" :default-open="isAlternate"><AlertDialogTrigger>Delete project</AlertDialogTrigger><AlertDialogContent class="catalog-dialog"><AlertDialogTitle>Delete project?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription><AlertDialogClose>Cancel</AlertDialogClose></AlertDialogContent></AlertDialogRoot>
-      <TooltipRoot v-else-if="component === 'tooltip'" :default-open="isAlternate"><TooltipTrigger>Keyboard shortcut</TooltipTrigger><TooltipContent class="catalog-tooltip">Open commands with ⌘K</TooltipContent></TooltipRoot>
+      <TooltipRoot v-else-if="component === 'tooltip'" :default-open="isAlternate" :side="isConstrained ? 'right' : 'top'"><TooltipTrigger>Keyboard shortcut</TooltipTrigger><TooltipContent class="catalog-tooltip"><TooltipArrow class="catalog-tooltip-arrow" />Open commands with ⌘K</TooltipContent></TooltipRoot>
 
       <MultiThumbSliderRoot v-else-if="component === 'multi-thumb-slider'" :thumbs="sliderThumbs" :default-value="sliderValues" class="catalog-slider"><MultiThumbSliderTrack class="catalog-slider-track"><MultiThumbSliderRange class="catalog-slider-range" /><MultiThumbSliderThumb v-for="thumb in sliderThumbs" :key="thumb" :value="thumb" :aria-label="thumb" class="catalog-slider-thumb" /></MultiThumbSliderTrack></MultiThumbSliderRoot>
 

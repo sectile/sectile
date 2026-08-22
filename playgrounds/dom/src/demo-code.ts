@@ -403,9 +403,12 @@ window.addEventListener('pagehide', () => dialog.disconnect(), { once: true })`)
 
   tooltip: example('tooltip', 'createTooltip', `const trigger = required<HTMLButtonElement>('[data-tooltip-trigger]')
 const tooltipElement = required<HTMLElement>('[data-tooltip]')
+const arrow = required<HTMLElement>('[data-tooltip-arrow]')
 const tooltip = createTooltip({
   root: tooltipElement,
   trigger,
+  arrow,
+  side: 'top',
   id: 'keyboard-help',
 })
 

@@ -226,10 +226,13 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   </AlertDialogRoot>`,
   ),
   tooltip: sfc(
-    'TooltipRoot, TooltipTrigger, TooltipContent',
-    `  <TooltipRoot>
+    'TooltipRoot, TooltipTrigger, TooltipContent, TooltipArrow',
+    `  <TooltipRoot side="top">
     <TooltipTrigger>Hover or focus</TooltipTrigger>
-    <TooltipContent>Keyboard shortcut: ⌘K</TooltipContent>
+    <TooltipContent>
+      <TooltipArrow />
+      Keyboard shortcut: ⌘K
+    </TooltipContent>
   </TooltipRoot>`,
   ),
   'multi-thumb-slider': sfc(

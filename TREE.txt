@@ -265,6 +265,7 @@ sectile/
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── disabled-items.ts
 │   │   │   │   ├── facade.ts
+│   │   │   │   ├── floating-position.ts
 │   │   │   │   ├── interaction.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
@@ -342,6 +343,7 @@ sectile/
 │   │   │   ├── menu.test.mjs
 │   │   │   ├── multi-thumb-slider.test.mjs
 │   │   │   ├── number-field.test.mjs
+│   │   │   ├── popover-positioning.test.mjs
 │   │   │   ├── popup-controls.test.mjs
 │   │   │   ├── quantity-field.test.mjs
 │   │   │   ├── slider.test.mjs

@@ -1,15 +1,52 @@
 import { applyPopoverEvent, createPopoverState, type PopoverCommand, type PopoverEvent, type PopoverState } from '@sectile/core/popover';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
+import {
+  type AutoUpdateOptions,
+  type Boundary,
+  type ComputePositionConfig,
+  type ComputePositionReturn,
+  type Padding,
+  type ReferenceElement,
+  type Strategy,
+} from '@floating-ui/dom';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFloatingPosition, type FloatingPositionConnection } from './internal/floating-position.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+
+export {
+  arrow,
+  autoPlacement,
+  flip,
+  hide,
+  inline,
+  limitShift,
+  offset,
+  shift,
+  size,
+  type ArrowOptions,
+  type AutoUpdateOptions,
+  type AutoPlacementOptions,
+  type Boundary,
+  type ComputePositionReturn,
+  type FlipOptions,
+  type HideOptions,
+  type InlineOptions,
+  type Middleware,
+  type OffsetOptions,
+  type Padding,
+  type ReferenceElement,
+  type ShiftOptions,
+  type SizeOptions,
+  type Strategy,
+} from '@floating-ui/dom';
 
 export type PopoverSide = 'top' | 'right' | 'bottom' | 'left';
 export type PopoverAlign = 'start' | 'center' | 'end';
 export interface PopoverOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
-  readonly anchor?: HTMLElement;
+  readonly anchor?: ReferenceElement;
   readonly arrow?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
@@ -25,8 +62,18 @@ export interface PopoverOptions {
   readonly side?: PopoverSide;
   readonly align?: PopoverAlign;
   readonly sideOffset?: number;
-  readonly collisionPadding?: number;
+  readonly collisionPadding?: Padding;
+  readonly collisionBoundary?: Boundary;
+  readonly avoidCollisions?: boolean;
+  readonly arrowPadding?: Padding;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: Strategy;
+  /** Replaces the built-in offset, flip, shift, size, arrow, and hide middleware. */
+  readonly middleware?: ComputePositionConfig['middleware'];
+  /** Set to false to position only when updatePosition is called. */
+  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onInitialFocus?: () => void;
   readonly onFocusRestore?: () => void;
   readonly onUpdate?: () => void;
@@ -77,17 +124,27 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
 
 class PositionedPopover implements PopoverConnection {
   readonly #popup: DOMPopupConnection<PopoverState, PopoverEvent>;
-  readonly #options: PopoverOptions;
-  readonly #reposition: () => void;
+  readonly #position: FloatingPositionConnection;
 
   public constructor(popup: DOMPopupConnection<PopoverState, PopoverEvent>, options: PopoverOptions) {
     this.#popup = popup;
-    this.#options = options;
-    this.#reposition = (): void => this.updatePosition();
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', this.#reposition);
-      window.addEventListener('scroll', this.#reposition, true);
-    }
+    this.#position = createFloatingPosition({
+      root: options.root,
+      reference: options.anchor ?? options.trigger,
+      ...(options.arrow === undefined ? {} : { arrow: options.arrow }),
+      side: options.side,
+      align: options.align,
+      sideOffset: options.sideOffset,
+      collisionPadding: options.collisionPadding,
+      collisionBoundary: options.collisionBoundary,
+      avoidCollisions: options.avoidCollisions,
+      arrowPadding: options.arrowPadding,
+      hideWhenDetached: options.hideWhenDetached,
+      strategy: options.strategy,
+      middleware: options.middleware,
+      autoUpdate: options.autoUpdate,
+      onPositionChange: options.onPositionChange,
+    });
   }
   public getSnapshot() { return this.#popup.getSnapshot(); }
   public syncControlledValue(open: boolean) { return this.#popup.syncControlledValue(open); }
@@ -95,56 +152,7 @@ class PositionedPopover implements PopoverConnection {
   public refresh(): void { this.#popup.refresh(); this.updatePosition(); }
   public disconnect(): void {
     this.#popup.disconnect();
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('resize', this.#reposition);
-      window.removeEventListener('scroll', this.#reposition, true);
-    }
+    this.#position.disconnect();
   }
-  public updatePosition(): void {
-    if (this.#options.root.hidden) return;
-    const anchor = this.#options.anchor ?? this.#options.trigger;
-    if (anchor === undefined || typeof anchor.getBoundingClientRect !== 'function' || typeof window === 'undefined') return;
-    const root = this.#options.root;
-    const anchorRect = anchor.getBoundingClientRect();
-    const rootRect = root.getBoundingClientRect();
-    const padding = this.#options.collisionPadding ?? 8;
-    const offset = this.#options.sideOffset ?? 8;
-    const preferred = this.#options.side ?? 'bottom';
-    const side = chooseSide(preferred, anchorRect, rootRect, offset, padding);
-    const align = this.#options.align ?? 'center';
-    const point = place(side, align, anchorRect, rootRect, offset);
-    const left = clamp(point.left, padding, Math.max(padding, window.innerWidth - rootRect.width - padding));
-    const top = clamp(point.top, padding, Math.max(padding, window.innerHeight - rootRect.height - padding));
-    root.style.position = 'fixed';
-    root.style.left = `${left}px`;
-    root.style.top = `${top}px`;
-    root.dataset['side'] = side;
-    root.dataset['align'] = align;
-    if (this.#options.arrow !== undefined) this.#options.arrow.dataset['side'] = side;
-  }
+  public updatePosition(): void { this.#position.update(); }
 }
-
-function chooseSide(preferred: PopoverSide, anchor: DOMRect, content: DOMRect, offset: number, padding: number): PopoverSide {
-  const available = {
-    top: anchor.top - padding,
-    right: window.innerWidth - anchor.right - padding,
-    bottom: window.innerHeight - anchor.bottom - padding,
-    left: anchor.left - padding,
-  };
-  const required = preferred === 'top' || preferred === 'bottom' ? content.height + offset : content.width + offset;
-  if (available[preferred] >= required) return preferred;
-  const opposite: Record<PopoverSide, PopoverSide> = { top: 'bottom', right: 'left', bottom: 'top', left: 'right' };
-  const fallback = opposite[preferred];
-  return available[fallback] > available[preferred] ? fallback : preferred;
-}
-
-function place(side: PopoverSide, align: PopoverAlign, anchor: DOMRect, content: DOMRect, offset: number): { left: number; top: number } {
-  const crossX = align === 'start' ? anchor.left : align === 'end' ? anchor.right - content.width : anchor.left + (anchor.width - content.width) / 2;
-  const crossY = align === 'start' ? anchor.top : align === 'end' ? anchor.bottom - content.height : anchor.top + (anchor.height - content.height) / 2;
-  if (side === 'top') return { left: crossX, top: anchor.top - content.height - offset };
-  if (side === 'bottom') return { left: crossX, top: anchor.bottom + offset };
-  if (side === 'left') return { left: anchor.left - content.width - offset, top: crossY };
-  return { left: anchor.right + offset, top: crossY };
-}
-
-function clamp(value: number, minimum: number, maximum: number): number { return Math.min(maximum, Math.max(minimum, value)); }

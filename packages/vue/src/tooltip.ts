@@ -29,7 +29,13 @@ export const TooltipRoot = parts.Root;
 export const TooltipTrigger = parts.Trigger;
 export const TooltipPortal = parts.Portal;
 export const TooltipContent = parts.Content;
-export type TooltipRootProps = Pick<PopupRootProps, 'open' | 'defaultOpen' | 'disabled'>;
+export const TooltipArrow = parts.Arrow;
+export type TooltipRootProps = Pick<PopupRootProps,
+  | 'open' | 'defaultOpen' | 'disabled'
+  | 'side' | 'align' | 'sideOffset'
+  | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions'
+  | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'middleware' | 'autoUpdate'
+>;
 export type TooltipRootSlotProps = PopupRootSlotProps;
 export type TooltipPartProps = PopupPartProps;
 export type TooltipPortalProps = PopupPortalProps;

@@ -43,9 +43,9 @@ export const tooltipDemo: DemoDefinition = {
   description: 'Focus and hover disclosure with description linkage, Escape dismissal, and controlled ownership.',
   shortcuts: [{ keys: ['Focus', 'Hover'], label: 'show' }, { keys: ['Esc'], label: 'hide' }],
   cases: [
-    { id: 'focus-hover', title: 'Help tooltip', mount: (context) => mountTooltip(context, 'Explains the current setting.', false, false) },
-    { id: 'initially-open', title: 'Initially visible', mount: (context) => mountTooltip(context, 'Visible until focus and pointer leave.', true, false) },
-    { id: 'controlled', title: 'Controlled tooltip', mount: (context) => mountTooltip(context, 'The application owns visibility.', false, true) },
+    { id: 'focus-hover', title: 'Help tooltip', mount: (context) => mountTooltip(context, 'Explains the current setting.', 'top', false, false) },
+    { id: 'initially-open', title: 'Initially visible', mount: (context) => mountTooltip(context, 'Visible until focus and pointer leave.', 'bottom', true, false) },
+    { id: 'controlled', title: 'Controlled tooltip', mount: (context) => mountTooltip(context, 'The application owns visibility.', 'right', false, true) },
   ],
 };
 
@@ -107,9 +107,10 @@ function mountPopover(context: DemoContext, side: PopoverSide, controlled: boole
   let external = false; let connection!: PopoverConnection;
   connection = createPopover({
     root: content, trigger, arrow, side, align: side === 'right' ? 'start' : 'center',
+    collisionBoundary: context.surface,
     ...context.interaction, labelledBy: title.id, describedBy: description.id,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
-    onUpdate: render,
+    onUpdate: render, onPositionChange: render,
   });
   close.addEventListener('click', () => connection.handleEvent('close'));
   function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, side: content.dataset['side'] ?? side, align: content.dataset['align'] ?? 'center', ownership: controlled ? 'controlled' : 'uncontrolled' }); }
@@ -117,19 +118,22 @@ function mountPopover(context: DemoContext, side: PopoverSide, controlled: boole
   return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
 }
 
-function mountTooltip(context: DemoContext, copy: string, initial: boolean, controlled: boolean): DemoSession {
+function mountTooltip(context: DemoContext, copy: string, side: PopoverSide, initial: boolean, controlled: boolean): DemoSession {
   const root = document.createElement('div'); root.className = 'tooltip-demo';
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'icon-control secondary'; trigger.setAttribute('aria-label', 'Help'); trigger.append(createElement(HelpCircle, { 'aria-hidden': 'true', height: 18, width: 18 }));
-  const tooltip = document.createElement('span'); tooltip.className = 'tooltip-popup'; tooltip.textContent = copy;
+  const tooltip = document.createElement('span'); tooltip.className = 'tooltip-popup';
+  const arrow = document.createElement('span'); arrow.className = 'tooltip-arrow'; arrow.setAttribute('aria-hidden', 'true');
+  tooltip.append(arrow, copy);
   root.append(trigger, tooltip); context.surface.append(root);
   let external = initial; let connection!: TooltipConnection;
   connection = createTooltip({
-    root: tooltip, trigger, id: `tooltip-${context.instanceID}-${controlled ? 'controlled' : initial ? 'open' : 'help'}`,
+    root: tooltip, trigger, arrow, side, collisionBoundary: context.surface,
+    id: `tooltip-${context.instanceID}-${controlled ? 'controlled' : initial ? 'open' : 'help'}`,
     ...context.interaction,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : { defaultOpen: initial }),
-    onUpdate: render,
+    onUpdate: render, onPositionChange: render,
   });
-  function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, describedBy: trigger.getAttribute('aria-describedby'), ownership: controlled ? 'controlled' : 'uncontrolled' }); }
+  function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, side: tooltip.dataset['side'] ?? side, describedBy: trigger.getAttribute('aria-describedby'), ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render();
   return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
 }
