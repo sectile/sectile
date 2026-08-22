@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import { unwrap } from '@sectile/core/result';
 import { createDateRange, createDateValue, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
-import { createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field';
+import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
 import { createDateField } from '../dist/date-field.js';
 import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDatePicker } from '../dist/date-picker.js';
 import { createDateRangePicker } from '../dist/date-range-picker.js';
+import { createDateTimePicker } from '../dist/date-time-picker.js';
+import { createDateTimeRangePicker } from '../dist/date-time-range-picker.js';
 import { createTimeField } from '../dist/time-field.js';
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
@@ -37,6 +39,26 @@ test('DOM date picker composes an editable date field with calendar selection', 
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2024-02-12');
   assert.equal(input.readOnly, false);
+});
+
+test('DOM date picker can keep an inline calendar open while value remains uncontrolled', () => {
+  const root = new FakeElement();
+  let closeRequests = 0;
+  const picker = createDatePicker({
+    root,
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    defaultValue: unwrap(createDateValue(2026, 8, 22)),
+    open: true,
+    onOpenChange: (open) => { if (!open) closeRequests += 1; },
+  });
+
+  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 25)) });
+
+  assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-08-25');
+  assert.equal(picker.getSnapshot().state.open, true);
+  assert.equal(root.hidden, false);
+  assert.equal(closeRequests, 1);
 });
 
 test('DOM controlled range picker exposes highlight changes and stays open after commit', () => {
@@ -69,6 +91,49 @@ test('DOM controlled range picker exposes highlight changes and stays open after
   assert.equal(formatDateValue(picker.getSnapshot().state.calendar.highlighted), '2026-08-28');
   assert.equal(picker.getSnapshot().state.calendar.open, true);
   assert.equal(open, true);
+});
+
+test('DOM date-time picker keeps the wall-clock time when a calendar date is selected', () => {
+  const input = new FakeInput();
+  const picker = createDateTimePicker({
+    root: new FakeElement(),
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    input,
+    defaultValue: unwrap(createDateTimeValue(
+      unwrap(createDateValue(2026, 8, 22)),
+      unwrap(createTimeValue(16, 30)),
+    )),
+    defaultOpen: true,
+  });
+
+  picker.handleEvent({ type: 'select-date', value: unwrap(createDateValue(2026, 8, 25)) });
+
+  assert.equal(formatDateTimeValue(picker.getSnapshot().state.value), '2026-08-25T16:30');
+  assert.equal(input.value, '2026-08-25T16:30');
+  assert.equal(picker.getSnapshot().state.calendar.open, true);
+});
+
+test('DOM date-time range picker updates independent endpoint times', () => {
+  const initial = unwrap(createDateTimeRange(
+    unwrap(createDateTimeValue(unwrap(createDateValue(2026, 8, 25)), unwrap(createTimeValue(9, 0)))),
+    unwrap(createDateTimeValue(unwrap(createDateValue(2026, 8, 28)), unwrap(createTimeValue(17, 0)))),
+  ));
+  const picker = createDateTimeRangePicker({
+    root: new FakeElement(),
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    defaultValue: initial,
+    defaultOpen: true,
+  });
+
+  picker.handleEvent({ type: 'set-start-time', value: unwrap(createTimeValue(10, 15)) });
+  picker.handleEvent({ type: 'set-end-time', value: unwrap(createTimeValue(18, 45)) });
+
+  assert.equal(
+    formatDateTimeRange(picker.getSnapshot().state.value),
+    '2026-08-25T10:15/2026-08-28T18:45',
+  );
 });
 
 test('DOM date field exposes invalid drafts and restores the committed value on blur', () => {
