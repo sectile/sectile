@@ -20,12 +20,12 @@ interface CheckboxScenario {
 const resetEpoch = ref(0);
 const scenarios: readonly CheckboxScenario[] = [
   {
-    id: 'mixed',
+    id: 'indeterminate',
     title: 'Partial group selection',
     label: 'Select deployment channels',
     helper: '2 of 3 channels selected',
     description: 'Indeterminate represents a parent whose children are only partly selected.',
-    initialValue: 'mixed',
+    initialValue: 'indeterminate',
   },
   {
     id: 'binary',

@@ -115,6 +115,7 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .checked-control-label strong { color: #e7edf7; font-size: 0.94rem; line-height: 1.3; }
 .checked-control-label small { color: #8493a9; font-size: 0.76rem; line-height: 1.35; }
 .checkbox-marker { display: grid; width: 1.3rem; height: 1.3rem; place-items: center; border: 1px solid #60708a; border-radius: 0.3rem; color: #071412; background: #0b121e; }
+.checkbox-indicator { display: grid; place-items: center; }
 [data-scope="checkbox"][data-part="root"][data-state="checked"] .checkbox-marker { border-color: #5eead4; background: #5eead4; }
 [data-scope="checkbox"][data-part="root"][data-state="indeterminate"] .checkbox-marker { border-color: #8b9aff; color: #fff; background: #6578ef; }
 .checkbox-status { align-self: center; padding: 0.28rem 0.55rem; border: 1px solid #344158; border-radius: 99rem; color: #aab6c8; background: #101826; font-size: 0.82rem; white-space: nowrap; }

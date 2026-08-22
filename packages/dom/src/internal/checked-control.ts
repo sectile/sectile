@@ -32,6 +32,7 @@ export interface DOMCheckedControlOptions<State, Event, Command, Value> {
   readonly format: (value: Value) => string; readonly onChange: ((value: Value) => void) | undefined; readonly onUpdate: (() => void) | undefined;
   readonly interaction?: InteractionStateInput;
   readonly supportsReadOnly?: boolean;
+  readonly applyValue?: (element: HTMLElement, value: Value) => void;
 }
 export interface CheckedControlAttributes {
   readonly role: string | undefined;
@@ -122,9 +123,10 @@ class DOMCheckedControlImpl<State, Event, Command, Value> implements DOMCheckedC
   }
   public handleEvent(event: Event): boolean { const accepted = this.#controller.handleEvent(event); this.updateAttributes(); if (accepted) this.#options.onUpdate?.(); return accepted; }
   public updateAttributes(): void {
+    const value = this.#options.read(this.#controller.getSnapshot().state);
     applyCheckedControlAttributes(this.#options.element, getCheckedControlAttributes({
       attribute: this.#options.attribute,
-      value: this.#options.read(this.#controller.getSnapshot().state),
+      value,
       format: this.#options.format,
       native: true,
       nativeReadOnly: true,
@@ -133,6 +135,7 @@ class DOMCheckedControlImpl<State, Event, Command, Value> implements DOMCheckedC
       ...(this.#options.interaction?.readOnly === undefined ? {} : { readOnly: this.#options.interaction.readOnly }),
       ...(this.#options.supportsReadOnly === undefined ? {} : { supportsReadOnly: this.#options.supportsReadOnly }),
     }));
+    this.#options.applyValue?.(this.#options.element, value);
   }
   public disconnect(): void { this.#options.element.removeEventListener('click', this.#click); }
 }

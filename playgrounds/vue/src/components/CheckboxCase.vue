@@ -41,10 +41,10 @@ const state = computed<Readonly<Record<string, unknown>>>(() => ({
   ownership: props.controlled ? 'controlled' : 'uncontrolled',
   asChild: props.asChild,
 }));
-const status = computed(() => value.value === 'mixed'
+const status = computed(() => value.value === 'indeterminate'
   ? 'Partially selected'
   : value.value ? 'Checked' : 'Unchecked');
-const preview = computed(() => value.value === 'mixed'
+const preview = computed(() => value.value === 'indeterminate'
   ? 'Some deployment channels are included.'
   : value.value ? 'The option is active.' : 'The option is inactive.');
 const sourceCode = computed(() => checkboxSource({
@@ -84,17 +84,16 @@ function handleUpdate(next: CheckboxValue): void {
           :disabled="disabled"
           :readonly="readonly"
           :as-child="asChild"
-          :policies="{ allowMixed: true }"
           class="checkbox-control"
           @update:model-value="handleUpdate"
         >
           <button v-if="asChild" type="button" class="consumer-checkbox">
-            <CheckboxIndicator force-mount class="checkbox-marker">
-              <template #default="{ checked }">
-                <Minus v-if="checked === 'mixed'" :size="15" :stroke-width="2.4" />
+            <span class="checkbox-marker" aria-hidden="true">
+              <CheckboxIndicator v-slot="{ checked }" class="checkbox-indicator">
+                <Minus v-if="checked === 'indeterminate'" :size="15" :stroke-width="2.4" />
                 <Check v-else-if="checked" :size="15" :stroke-width="2.4" />
-              </template>
-            </CheckboxIndicator>
+              </CheckboxIndicator>
+            </span>
             <span class="checked-control-label">
               <strong>{{ label }}</strong>
               <small>{{ helper }}</small>
@@ -102,12 +101,12 @@ function handleUpdate(next: CheckboxValue): void {
           </button>
 
           <template v-else>
-            <CheckboxIndicator force-mount class="checkbox-marker">
-              <template #default="{ checked }">
-                <Minus v-if="checked === 'mixed'" :size="15" :stroke-width="2.4" />
+            <span class="checkbox-marker" aria-hidden="true">
+              <CheckboxIndicator v-slot="{ checked }" class="checkbox-indicator">
+                <Minus v-if="checked === 'indeterminate'" :size="15" :stroke-width="2.4" />
                 <Check v-else-if="checked" :size="15" :stroke-width="2.4" />
-              </template>
-            </CheckboxIndicator>
+              </CheckboxIndicator>
+            </span>
             <span class="checked-control-label">
               <strong>{{ label }}</strong>
               <small>{{ helper }}</small>
@@ -123,7 +122,7 @@ function handleUpdate(next: CheckboxValue): void {
 
 <script lang="ts">
 interface CheckboxSourceOptions {
-  readonly initialValue: boolean | 'mixed';
+  readonly initialValue: boolean | 'indeterminate';
   readonly controlled: boolean;
   readonly disabled: boolean;
   readonly: boolean;
@@ -150,8 +149,8 @@ function checkboxSource(options: CheckboxSourceOptions): string {
     options.readonly ? 'readonly' : '',
     options.asChild ? 'as-child' : '',
   ].filter(Boolean).map((flag) => `\n    ${flag}`).join('');
-  const content = `\n    <CheckboxIndicator force-mount>\n      <template #default="{ checked }">\n        <Minus v-if="checked === 'mixed'" :size="15" />\n        <Check v-else-if="checked" :size="15" />\n      </template>\n    </CheckboxIndicator>\n    <span>Deployment channels</span>`;
+  const content = `\n    <span class="checkbox-marker">\n      <CheckboxIndicator v-slot="{ checked }">\n        <Minus v-if="checked === 'indeterminate'" :size="15" />\n        <Check v-else-if="checked" :size="15" />\n      </CheckboxIndicator>\n    </span>\n    <span>Deployment channels</span>`;
 
-  return `<script setup lang="ts">\n${imports}${setup}\n<\/script>\n\n<template>\n  <CheckboxRoot\n    ${valueBinding}\n    :policies="{ allowMixed: true }"${flags}\n  >${options.asChild ? `\n    <button type="button">${content}\n    </button>` : content}\n  </CheckboxRoot>\n</template>`;
+  return `<script setup lang="ts">\n${imports}${setup}\n<\/script>\n\n<template>\n  <CheckboxRoot\n    ${valueBinding}${flags}\n  >${options.asChild ? `\n    <button type="button">${content}\n    </button>` : content}\n  </CheckboxRoot>\n</template>`;
 }
 </script>

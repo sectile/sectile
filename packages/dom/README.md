@@ -8,6 +8,8 @@ DOM bindings for Sectile interaction semantics.
 - Project ARIA state, focus requests, visibility, and element attributes
 - Own controlled or uncontrolled runtime synchronization
 - Preserve native text editing and IME behavior
+- Delegate form, focus, and keyboard behavior to native elements where HTML already
+  defines it, while projecting the state those elements need
 
 The package does not provide markup, components, styles, themes, or application data. Consumers choose the rendered structure and bind it to a Sectile connection.
 

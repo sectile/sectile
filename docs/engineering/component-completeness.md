@@ -21,6 +21,9 @@ The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
 8. **Terminal scenarios** — the terminal playground demonstrates the same semantic
    variants plus terminal-specific input behavior.
 9. **Cross-host parity** — both adapters witness the same renderer-neutral transitions.
+10. **Framework ergonomics** — framework packages expose the conventions of their
+    host (`v-model`, HTML form props, native focus and keyboard behavior) and keep
+    core policies and host wiring behind the component boundary.
 
 `verification/component-completeness.json` is the machine-readable inventory. Existing
 gaps are an explicit migration baseline. The checker rejects an unlisted public subpath,

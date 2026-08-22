@@ -7,7 +7,7 @@ import { CheckboxIndicator, CheckboxRoot } from '../dist/checkbox.js';
 test('Vue checkbox renders semantic state and forwards styling hooks during SSR', async () => {
   const app = createSSRApp({
     render: () => h(CheckboxRoot, {
-      defaultValue: 'mixed',
+      defaultValue: 'indeterminate',
       class: 'release-checkbox',
     }, {
       default: () => [
@@ -32,7 +32,7 @@ test('Vue checkbox exposes one canonical tri-state slot value', async () => {
   let rootSlot;
   let indicatorSlot;
   const app = createSSRApp({
-    render: () => h(CheckboxRoot, { defaultValue: 'mixed' }, {
+    render: () => h(CheckboxRoot, { defaultValue: 'indeterminate' }, {
       default: (props) => {
         rootSlot = props;
         return h(CheckboxIndicator, null, {
@@ -47,7 +47,7 @@ test('Vue checkbox exposes one canonical tri-state slot value', async () => {
 
   await renderToString(app);
   const expected = {
-    checked: 'mixed',
+    checked: 'indeterminate',
     isChecked: false,
     isIndeterminate: true,
     disabled: false,
@@ -126,6 +126,37 @@ test('Vue checkbox owns uncontrolled state and rejects disabled input', async ()
   disabledButton.props.onClick({ defaultPrevented: false });
   await nextTick();
   assert.equal(disabledButton.props['aria-checked'], 'false');
+});
+
+test('Vue checkbox renders a native form control from DOM projections', async () => {
+  const renderer = createTestRenderer();
+  const app = renderer.createApp({
+    render: () => h(CheckboxRoot, {
+      defaultValue: 'indeterminate',
+      name: 'terms',
+      value: 'accepted',
+      required: true,
+    }, () => 'Terms'),
+  });
+  const container = createHostNode('root');
+  app.mount(container);
+  const button = container.children.find((child) => child.type === 'button');
+  const input = container.children.find((child) => child.type === 'input');
+
+  assert.equal(button.props['aria-checked'], 'mixed');
+  assert.equal(button.props['aria-required'], 'true');
+  assert.equal(input.props.type, 'checkbox');
+  assert.equal(input.props.name, 'terms');
+  assert.equal(input.props.value, 'accepted');
+  assert.equal(input.props.checked, false);
+  assert.equal(input.props.indeterminate, true);
+  assert.equal(input.props.required, true);
+  assert.equal(input.props.tabIndex, -1);
+
+  button.props.onClick({ defaultPrevented: false });
+  await nextTick();
+  assert.equal(input.props.checked, true);
+  assert.equal(input.props.indeterminate, false);
 });
 
 function createTestRenderer() {
