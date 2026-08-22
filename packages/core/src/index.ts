@@ -47,6 +47,7 @@ export type {
   DateTimeFieldPolicies,
   DateTimeFieldState,
   DateTimeFieldUpdate,
+  DateTimeRange,
   DateTimeSegment,
   DateTimeValue,
 } from './date-time-field.js';
@@ -75,6 +76,22 @@ export type {
   DateRangePickerStateInput,
   DateRangePickerUpdate,
 } from './date-range-picker.js';
+export type {
+  DateTimePickerCommand,
+  DateTimePickerEvent,
+  DateTimePickerPolicies,
+  DateTimePickerState,
+  DateTimePickerStateInput,
+  DateTimePickerUpdate,
+} from './date-time-picker.js';
+export type {
+  DateTimeRangePickerCommand,
+  DateTimeRangePickerEvent,
+  DateTimeRangePickerPolicies,
+  DateTimeRangePickerState,
+  DateTimeRangePickerStateInput,
+  DateTimeRangePickerUpdate,
+} from './date-time-range-picker.js';
 export type {
   Dimension,
   UnitConversion,

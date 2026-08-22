@@ -30,6 +30,11 @@ export interface DateTimeValue {
   readonly time: TimeValue;
 }
 
+export interface DateTimeRange {
+  readonly start: DateTimeValue;
+  readonly end: DateTimeValue;
+}
+
 export type DateTimeSegment =
   | 'year'
   | 'month'
@@ -109,6 +114,28 @@ export function compareDateTimeValues(left: DateTimeValue, right: DateTimeValue)
   const leftTime = timeToMilliseconds(left.time);
   const rightTime = timeToMilliseconds(right.time);
   return leftTime < rightTime ? -1 : leftTime > rightTime ? 1 : 0;
+}
+
+export function createDateTimeRange(
+  start: DateTimeValue,
+  end: DateTimeValue,
+): Result<DateTimeRange> {
+  const validStart = createDateTimeValue(start.date, start.time);
+  if (!validStart.ok) return validStart;
+  const validEnd = createDateTimeValue(end.date, end.time);
+  if (!validEnd.ok) return validEnd;
+  if (compareDateTimeValues(validStart.value, validEnd.value) > 0) {
+    return fail(
+      'construction',
+      'inverted-date-time-range',
+      'Date-time range start must not follow its end.',
+    );
+  }
+  return ok(Object.freeze({ start: validStart.value, end: validEnd.value }));
+}
+
+export function formatDateTimeRange(value: DateTimeRange): string {
+  return `${formatDateTimeValue(value.start)}/${formatDateTimeValue(value.end)}`;
 }
 
 export function addDateTimeMilliseconds(value: DateTimeValue, amount: number): Result<DateTimeValue> {

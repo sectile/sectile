@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
+import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
 import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
+import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
+import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
+import { createTimeValue } from '../../.verification-dist/time-field.js';
 
 const date = (year, month, day) => createDateValue(year, month, day).value;
 
@@ -39,4 +43,40 @@ test('range picker keeps an anchor, normalizes direction, and stays open', () =>
   assert.equal(formatDateValue(completed.value.state.value.end), '2026-08-22');
   assert.equal(completed.value.state.calendar.open, true);
   assert.equal(completed.value.commands.some(({ type }) => type === 'open-changed'), false);
+});
+
+test('date-time picker combines calendar selection with its wall-clock time', () => {
+  let state = createDateTimePickerState({
+    value: createDateTimeValue(date(2026, 8, 22), createTimeValue(16, 30).value).value,
+    calendar: { open: true },
+  }).value;
+  state = applyDateTimePickerEvent(state, { type: 'select-date', value: date(2026, 8, 25) }).value.state;
+  assert.equal(formatDateTimeValue(state.value), '2026-08-25T16:30');
+  assert.equal(state.calendar.open, true);
+  state = applyDateTimePickerEvent(state, { type: 'set-time', value: createTimeValue(18, 45).value }).value.state;
+  assert.equal(formatDateTimeValue(state.value), '2026-08-25T18:45');
+});
+
+test('date-time range picker owns independent endpoint times', () => {
+  let state = createDateTimeRangePickerState({
+    startTime: createTimeValue(9, 15).value,
+    endTime: createTimeValue(17, 45).value,
+    calendar: { highlighted: date(2026, 8, 22), open: true },
+  }).value;
+  state = applyDateTimeRangePickerEvent(state, { type: 'select-date', value: date(2026, 8, 25) }).value.state;
+  const completed = applyDateTimeRangePickerEvent(state, { type: 'select-date', value: date(2026, 8, 28) });
+  assert.equal(formatDateTimeRange(completed.value.state.value), '2026-08-25T09:15/2026-08-28T17:45');
+  assert.equal(completed.value.state.calendar.open, true);
+});
+
+test('date-time range picker rejects an inverted same-day time range', () => {
+  let state = createDateTimeRangePickerState({
+    startTime: createTimeValue(18, 0).value,
+    endTime: createTimeValue(9, 0).value,
+    calendar: { highlighted: date(2026, 8, 22), open: true },
+  }).value;
+  state = applyDateTimeRangePickerEvent(state, 'select-highlighted').value.state;
+  const rejected = applyDateTimeRangePickerEvent(state, 'select-highlighted');
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'inverted-date-time-range');
 });
