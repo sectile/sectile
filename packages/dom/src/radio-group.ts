@@ -185,12 +185,14 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
 
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
     const state = this.#runtime.getSnapshot().state;
+    const unavailable = this.#options.disabled === true || disabled || this.#disabledItems.has(id);
     element.dataset['radioGroupId'] = id;
     element.setAttribute('role', 'radio');
     element.setAttribute('aria-checked', String(state.selection.has(id)));
-    element.tabIndex = state.cursor.current === id ? 0 : -1;
-    if (disabled || this.#disabledItems.has(id)) element.setAttribute('aria-disabled', 'true');
+    element.tabIndex = !unavailable && state.cursor.current === id ? 0 : -1;
+    if (unavailable) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
+    if ('disabled' in element) (element as HTMLButtonElement).disabled = unavailable;
   }
 
   public handleEvent(event: RadioGroupEvent<ID>): boolean {

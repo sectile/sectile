@@ -81,6 +81,26 @@ test('DOM linear controls derive eligibility and ARIA from disabledItems', () =>
   assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
 });
 
+test('DOM radio group removes globally disabled controls from native interaction', () => {
+  const root = new FakeElement();
+  const radio = createRadioGroup({
+    root,
+    items: ['a', 'b'],
+    defaultValue: 'a',
+    defaultHighlightedValue: 'a',
+    disabled: true,
+  });
+  const item = new FakeElement();
+
+  radio.setItemAttributes(item, 'a');
+
+  assert.equal(root.attributes.get('aria-disabled'), 'true');
+  assert.equal(item.attributes.get('aria-disabled'), 'true');
+  assert.equal(item.tabIndex, -1);
+  assert.equal(item.disabled, true);
+  radio.disconnect();
+});
+
 function keyboardEvent(key) {
   return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
 }
@@ -91,6 +111,7 @@ class FakeElement {
   listeners = new Map();
   tabIndex = -1;
   hidden = false;
+  disabled = false;
 
   addEventListener(type, listener) {
     const listeners = this.listeners.get(type) ?? new Set();

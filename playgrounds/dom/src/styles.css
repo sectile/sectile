@@ -32,7 +32,7 @@ button {
   cursor: pointer;
 }
 
-button:hover { background: #6377f1; }
+button:hover:not(:disabled) { background: #6377f1; }
 button.secondary { border-color: #364155; color: #bdc8dc; background: #141b28; }
 .button-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; line-height: 1.2; }
 .button-with-icon svg { flex: 0 0 auto; }
@@ -295,7 +295,7 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .rating-summary { color: #e9eff8; font-size: 1.1rem; }
 .rating-stars { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.18rem; outline: none; }
 .rating-star { display: grid; padding: 0.35rem; border: 0; color: #44516a; background: transparent; place-items: center; }
-.rating-star:hover,
+.rating-star:hover:not(:disabled),
 .rating-star.filled { color: #f5c85b; background: transparent; }
 .rating-star.current { color: #ffd978; transform: translateY(-1px); }
 .rating-star svg { fill: currentColor; stroke-width: 1.5; }
