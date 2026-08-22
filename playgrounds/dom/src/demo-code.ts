@@ -113,9 +113,13 @@ window.addEventListener('pagehide', () => cascade.disconnect(), { once: true })`
 
   'color-picker': example('color-picker', 'createColorPicker', `const root = required<HTMLElement>('[data-color-picker]')
 const picker = createColorPicker({ root, defaultValue: '#5b6df680', allowAlpha: true })
-picker.setNativeInputAttributes(required<HTMLInputElement>('[data-native-color]'))
+picker.setAreaAttributes(required<HTMLElement>('[data-color-area]'))
+picker.setAreaThumbAttributes(required<HTMLElement>('[data-color-area-thumb]'))
+picker.setHueInputAttributes(required<HTMLInputElement>('[data-color-hue]'))
+picker.setAlphaInputAttributes(required<HTMLInputElement>('[data-color-alpha]'))
 picker.setTextInputAttributes(required<HTMLInputElement>('[data-color-text]'))
-picker.setChannelInputAttributes(required<HTMLInputElement>('[data-alpha]'), 'alpha')
+picker.setCoordinateSliderAttributes(required<HTMLInputElement>('[data-red-slider]'), 'rgb', 'red')
+picker.setCoordinateInputAttributes(required<HTMLInputElement>('[data-cyan]'), 'cmyk', 'cyan')
 picker.setSwatchAttributes(required<HTMLElement>('[data-swatch]'))
 
 window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),

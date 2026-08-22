@@ -18,3 +18,9 @@ test('terminal read-only color picker rejects value mutation', () => {
   const picker = createColorPicker({ defaultValue: '#000000', readOnly: true });
   assert.equal(picker.handleKeyboardInput({ key: 'up' }), false); assert.equal(picker.getCSSColor(), 'rgb(0, 0, 0)');
 });
+
+test('terminal color picker accepts and projects OKLCH through the shared core format', () => {
+  const picker = createColorPicker({ defaultValue: 'oklch(62.7955% 0.25768 29.2339)', defaultFormat: 'oklch' });
+  assert.deepEqual(picker.getSnapshot().state.value, { red: 255, green: 0, blue: 0, alpha: 255 });
+  assert.equal(picker.getText(), 'oklch(62.8% 0.2577 29.23)');
+});

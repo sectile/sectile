@@ -311,7 +311,7 @@ export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConne
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
 export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
 export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
-export { createColorPicker, tryCreateColorPicker, type ColorPickerConnection, type ColorPickerOptions } from './color-picker.js';
+export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
 export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
 export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
 export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';
