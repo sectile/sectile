@@ -25,13 +25,11 @@ window.addEventListener('hashchange', () => {
   const nextID = demoIDFromHash();
   if (nextID === activeID) return;
   activeID = nextID;
-  renderNavigation();
+  updateNavigationSelection();
   mountActiveDemo();
-  requestAnimationFrame(() => window.scrollTo(0, 0));
 });
 
 function renderNavigation(): void {
-  let activeLink: HTMLAnchorElement | null = null;
   nav.replaceChildren(...demoGroups.map((group) => {
     const section = document.createElement('section');
     section.className = 'demo-nav-group';
@@ -59,30 +57,41 @@ function renderNavigation(): void {
         if (demo.id !== activeID) {
           history.pushState(null, '', link.href);
           activeID = demo.id;
-          renderNavigation();
+          updateNavigationSelection();
           mountActiveDemo();
         }
-        requestAnimationFrame(() => window.scrollTo(0, 0));
       });
       if (demo.id === activeID) {
         link.setAttribute('aria-current', 'page');
-        activeLink = link;
       }
       return link;
     }));
     section.append(heading, links);
     return section;
   }));
-  requestAnimationFrame(() => {
-    if (activeLink === null) return;
-    nav.scrollTop = Math.max(0, activeLink.offsetTop - (nav.clientHeight - activeLink.clientHeight) / 2);
-  });
+}
+
+function updateNavigationSelection(): void {
+  for (const group of nav.querySelectorAll<HTMLElement>('.demo-nav-group')) {
+    let groupActive = false;
+    for (const link of group.querySelectorAll<HTMLAnchorElement>('.demo-nav-links a')) {
+      const current = link.getAttribute('href') === `#${activeID}`;
+      if (current) {
+        link.setAttribute('aria-current', 'page');
+        groupActive = true;
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    }
+    group.dataset['active'] = String(groupActive);
+  }
 }
 
 function mountActiveDemo(): void {
+  const viewportX = window.scrollX;
+  const viewportY = window.scrollY;
   for (const session of sessions) session.disconnect();
   sessions = [];
-  workspace.replaceChildren();
 
   const demo = demos.find((candidate) => candidate.id === activeID) ?? demos[0];
   if (demo === undefined) throw new Error('The DOM playground needs at least one demo.');
@@ -98,10 +107,13 @@ function mountActiveDemo(): void {
     title: demo.title,
     mount: demo.mount,
   }];
-  for (const demoCase of cases) mountDemoCase(demoCase);
+  const nextWorkspace = document.createDocumentFragment();
+  for (const demoCase of cases) mountDemoCase(demoCase, nextWorkspace);
+  workspace.replaceChildren(nextWorkspace);
+  window.scrollTo(viewportX, viewportY);
 }
 
-function mountDemoCase(demoCase: DemoCaseDefinition): void {
+function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): void {
   const card = document.createElement('article');
   card.className = 'example-card';
   card.dataset['case'] = demoCase.id;
@@ -140,7 +152,7 @@ function mountDemoCase(demoCase: DemoCaseDefinition): void {
   logSection.append(createPanelHeading('Events & effects'), eventLog);
   inspector.append(stateSection, logSection);
   card.append(main, inspector);
-  workspace.append(card);
+  target.append(card);
 
   let logEntries: LogEntry[] = [];
   const context: DemoContext = {
