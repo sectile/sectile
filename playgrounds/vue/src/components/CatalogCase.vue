@@ -13,8 +13,8 @@ import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '@sectile/vue/toolbar
 import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerNext, DatePickerPrevious, DatePickerRoot, DatePickerTrigger } from '@sectile/vue/date-picker';
 import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '@sectile/vue/date-range-picker';
-import { DateTimePickerInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '@sectile/vue/date-time-picker';
-import { DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
+import { DateTimePickerCell, DateTimePickerContent, DateTimePickerGrid, DateTimePickerInput, DateTimePickerNext, DateTimePickerPrevious, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '@sectile/vue/date-time-picker';
+import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerNext, DateTimeRangePickerPrevious, DateTimeRangePickerRoot, DateTimeRangePickerStartInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
 import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
 import { DialogClose, DialogContent, DialogDescription, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
 import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
@@ -54,6 +54,7 @@ const date = Object.freeze({ year: 2026, month: 8, day: 22 });
 const dateRange = Object.freeze({ start: date, end: Object.freeze({ year: 2026, month: 8, day: 25 }) });
 const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 }) });
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
+const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const treeNodes = [{ id: 'workspace', parentID: null }, { id: 'src', parentID: 'workspace' }, { id: 'tests', parentID: 'workspace' }];
 const treeGridRows = [{ id: 'workspace', parentID: null, cells: ['workspace-name', 'workspace-status'] }, { id: 'src', parentID: 'workspace', cells: ['src-name', 'src-status'] }];
 const cellValues = new Map([['workspace-name', 'Workspace'], ['workspace-status', 'Ready'], ['src-name', 'Source'], ['src-status', 'Active']]);
@@ -65,7 +66,8 @@ const parts: Record<string, readonly string[]> = {
   grid: ['GridRoot', 'GridRow', 'GridCell'], toolbar: ['ToolbarRoot', 'ToolbarItem', 'ToolbarSeparator'], 'window-splitter': ['WindowSplitterRoot', 'WindowSplitterPane', 'WindowSplitterHandle'],
   'date-picker': ['DatePickerRoot', 'DatePickerTrigger', 'DatePickerInput', 'DatePickerContent', 'DatePickerGrid', 'DatePickerCell'],
   'date-range-picker': ['DateRangePickerRoot', 'DateRangePickerStartInput', 'DateRangePickerEndInput', 'DateRangePickerContent'],
-  'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerInput', 'DateTimePickerTimeInput'], 'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartInput', 'DateTimeRangePickerEndInput'],
+  'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerInput', 'DateTimePickerTimeInput', 'DateTimePickerTrigger', 'DateTimePickerContent', 'DateTimePickerGrid', 'DateTimePickerCell'],
+  'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartInput', 'DateTimeRangePickerEndInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell'],
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarSubContent'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
@@ -145,8 +147,15 @@ const sliderValues = computed(() => isAlternate.value ? [20, 50, 80] : [25, 75])
         <DateRangePickerContent><DateRangePickerGrid class="catalog-calendar"><DateRangePickerCell v-for="day in month.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateRangePickerCell></DateRangePickerGrid></DateRangePickerContent>
       </DateRangePickerRoot>
 
-      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" :default-value="dateTime" class="catalog-inline"><DateTimePickerInput class="catalog-input" /><DateTimePickerTimeInput class="catalog-input" /><DateTimePickerTrigger>Calendar</DateTimePickerTrigger></DateTimePickerRoot>
-      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="dateTimeRange" class="catalog-stack"><div class="catalog-inline"><DateTimeRangePickerStartInput class="catalog-input" /><DateTimeRangePickerStartTimeInput class="catalog-input" /></div><div class="catalog-inline"><DateTimeRangePickerEndInput class="catalog-input" /><DateTimeRangePickerEndTimeInput class="catalog-input" /><DateTimeRangePickerTrigger>Calendar</DateTimeRangePickerTrigger></div></DateTimeRangePickerRoot>
+      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" :default-value="dateTime" v-slot="{ month }" class="catalog-stack">
+        <div class="catalog-inline"><DateTimePickerInput class="catalog-input" /><DateTimePickerTimeInput class="catalog-input" /><DateTimePickerTrigger>Calendar</DateTimePickerTrigger></div>
+        <DateTimePickerContent class="catalog-popup"><div class="catalog-inline"><DateTimePickerPrevious>‹</DateTimePickerPrevious><DateTimePickerNext>›</DateTimePickerNext></div><DateTimePickerGrid class="catalog-calendar"><DateTimePickerCell v-for="day in month.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateTimePickerCell></DateTimePickerGrid></DateTimePickerContent>
+      </DateTimePickerRoot>
+      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isAlternate ? sameDayDateTimeRange : dateTimeRange" v-slot="{ month }" class="catalog-stack">
+        <div class="catalog-inline"><DateTimeRangePickerStartInput class="catalog-input" /><DateTimeRangePickerStartTimeInput class="catalog-input" /></div>
+        <div class="catalog-inline"><DateTimeRangePickerEndInput class="catalog-input" /><DateTimeRangePickerEndTimeInput class="catalog-input" /><DateTimeRangePickerTrigger>Calendar</DateTimeRangePickerTrigger></div>
+        <DateTimeRangePickerContent class="catalog-popup"><div class="catalog-inline"><DateTimeRangePickerPrevious>‹</DateTimeRangePickerPrevious><DateTimeRangePickerNext>›</DateTimeRangePickerNext></div><DateTimeRangePickerGrid class="catalog-calendar"><DateTimeRangePickerCell v-for="day in month.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateTimeRangePickerCell></DateTimeRangePickerGrid></DateTimeRangePickerContent>
+      </DateTimeRangePickerRoot>
 
       <QuantityFieldRoot v-else-if="component === 'quantity-field'" :policies="quantityPolicies" :default-value="{ value: isAlternate ? '2.5' : '1.25', unit: 'metre' }" :default-display-unit="isAlternate ? 'metre' : 'centimetre'" class="catalog-inline"><QuantityFieldInput class="catalog-input" /><QuantityFieldUnitSelect class="catalog-select" /><QuantityFieldValue /></QuantityFieldRoot>
 

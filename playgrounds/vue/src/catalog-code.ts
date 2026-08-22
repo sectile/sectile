@@ -159,11 +159,24 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
 }`,
   ),
   'date-time-picker': sfc(
-    'DateTimePickerRoot, DateTimePickerInput, DateTimePickerTimeInput, DateTimePickerTrigger',
-    `  <DateTimePickerRoot :default-value="initialValue">
+    'DateTimePickerRoot, DateTimePickerInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPrevious, DateTimePickerNext, DateTimePickerGrid, DateTimePickerCell',
+    `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ month }">
     <DateTimePickerInput />
     <DateTimePickerTimeInput />
     <DateTimePickerTrigger>Choose date and time</DateTimePickerTrigger>
+    <DateTimePickerContent>
+      <DateTimePickerPrevious>Previous month</DateTimePickerPrevious>
+      <DateTimePickerNext>Next month</DateTimePickerNext>
+      <DateTimePickerGrid>
+        <DateTimePickerCell
+          v-for="day in month.flat()"
+          :key="[day.year, day.month, day.day].join('-')"
+          :value="day"
+        >
+          {{ day.day }}
+        </DateTimePickerCell>
+      </DateTimePickerGrid>
+    </DateTimePickerContent>
   </DateTimePickerRoot>`,
     `const initialValue = {
   date: { year: 2026, month: 8, day: 22 },
@@ -171,13 +184,26 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
 }`,
   ),
   'date-time-range-picker': sfc(
-    'DateTimeRangePickerRoot, DateTimeRangePickerStartInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger',
-    `  <DateTimeRangePickerRoot :default-value="initialRange">
+    'DateTimeRangePickerRoot, DateTimeRangePickerStartInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPrevious, DateTimeRangePickerNext, DateTimeRangePickerGrid, DateTimeRangePickerCell',
+    `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ month }">
     <DateTimeRangePickerStartInput />
     <DateTimeRangePickerStartTimeInput />
     <DateTimeRangePickerEndInput />
     <DateTimeRangePickerEndTimeInput />
     <DateTimeRangePickerTrigger>Choose range</DateTimeRangePickerTrigger>
+    <DateTimeRangePickerContent>
+      <DateTimeRangePickerPrevious>Previous month</DateTimeRangePickerPrevious>
+      <DateTimeRangePickerNext>Next month</DateTimeRangePickerNext>
+      <DateTimeRangePickerGrid>
+        <DateTimeRangePickerCell
+          v-for="day in month.flat()"
+          :key="[day.year, day.month, day.day].join('-')"
+          :value="day"
+        >
+          {{ day.day }}
+        </DateTimeRangePickerCell>
+      </DateTimeRangePickerGrid>
+    </DateTimeRangePickerContent>
   </DateTimeRangePickerRoot>`,
     `const initialRange = {
   start: {

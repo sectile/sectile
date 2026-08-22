@@ -5,8 +5,8 @@ import { createSSRApp, h } from 'vue';
 import { CalendarCell, CalendarRoot } from '../dist/calendar.js';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerRoot, DatePickerTrigger } from '../dist/date-picker.js';
 import { DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput } from '../dist/date-range-picker.js';
-import { DateTimePickerInput, DateTimePickerRoot, DateTimePickerTimeInput } from '../dist/date-time-picker.js';
-import { DateTimeRangePickerEndTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartTimeInput } from '../dist/date-time-range-picker.js';
+import { DateTimePickerCell, DateTimePickerContent, DateTimePickerGrid, DateTimePickerInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '../dist/date-time-picker.js';
+import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerRoot, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '../dist/date-time-range-picker.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
@@ -42,4 +42,23 @@ test('Vue range and date-time pickers expose native endpoint inputs', async () =
   assert.match(dateTime, /data-part="time-input"/);
   assert.match(dateTimeRange, /data-part="start-time-input"/);
   assert.match(dateTimeRange, /data-part="end-time-input"/);
+});
+
+test('Vue date-time pickers keep their calendar composition available', async () => {
+  const time = { hour: 10, minute: 30 };
+  const end = { year: 2026, month: 8, day: 24 };
+  const dateTime = await render(() => h(DateTimePickerRoot, { defaultValue: { date, time }, defaultOpen: true }, {
+    default: ({ month }) => [h(DateTimePickerTrigger), h(DateTimePickerContent, null, {
+      default: () => h(DateTimePickerGrid, null, { default: () => month.flat().map((value) => h(DateTimePickerCell, { value })) }),
+    })],
+  }));
+  const dateTimeRange = await render(() => h(DateTimeRangePickerRoot, { defaultValue: { start: { date, time }, end: { date: end, time } }, defaultOpen: true }, {
+    default: ({ month }) => [h(DateTimeRangePickerTrigger), h(DateTimeRangePickerContent, null, {
+      default: () => h(DateTimeRangePickerGrid, null, { default: () => month.flat().map((value) => h(DateTimeRangePickerCell, { value })) }),
+    })],
+  }));
+  assert.match(dateTime, /aria-haspopup="dialog"/);
+  assert.match(dateTime, /role="grid"/);
+  assert.match(dateTimeRange, /aria-haspopup="dialog"/);
+  assert.match(dateTimeRange, /role="grid"/);
 });
