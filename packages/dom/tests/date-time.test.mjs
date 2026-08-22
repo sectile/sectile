@@ -136,7 +136,7 @@ test('DOM date-time picker keeps the wall-clock time when a calendar date is sel
     root: new FakeElement(),
     grid: new FakeElement(),
     trigger: new FakeElement(),
-    input,
+    dateTimeInput: input,
     defaultValue: unwrap(createDateTimeValue(
       unwrap(createDateValue(2026, 8, 22)),
       unwrap(createTimeValue(16, 30)),

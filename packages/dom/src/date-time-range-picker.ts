@@ -3,7 +3,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/core/date-field';
 import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/core/date-time-field';
-import { createDatePickerMonth, datePickerID, isDatePickerValueAvailable } from '@sectile/core/date-picker';
+import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/core/date-picker';
 import {
   applyDateTimeRangePickerEvent,
   createDateTimeRangePickerState,
@@ -17,14 +17,17 @@ import type { TimeValue } from '@sectile/core/time-field';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 
 export interface DateTimeRangePickerOptions {
   readonly root: HTMLElement;
   readonly grid: HTMLElement;
   readonly trigger: HTMLElement;
-  readonly startInput?: HTMLInputElement;
-  readonly endInput?: HTMLInputElement;
+  readonly startDateTimeInput?: HTMLInputElement;
+  readonly endDateTimeInput?: HTMLInputElement;
+  readonly startDateInput?: HTMLInputElement;
+  readonly endDateInput?: HTMLInputElement;
   readonly startTimeInput?: HTMLInputElement;
   readonly endTimeInput?: HTMLInputElement;
   readonly policies?: DateTimeRangePickerPolicies;
@@ -53,6 +56,8 @@ export interface DateTimeRangePickerControlledValues {
 export interface DateTimeRangePickerConnection {
   getSnapshot(): RevisionSnapshot<DateTimeRangePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
+  getWeek(): readonly DateValue[];
+  getYear(): readonly (readonly DatePickerMonthValue[])[];
   syncControlledValues(values: DateTimeRangePickerControlledValues): Result<RevisionSnapshot<DateTimeRangePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DateTimeRangePickerEvent): boolean;
@@ -139,6 +144,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #startTimeField: FacadeConnection<TimeFieldConnection> | null;
   readonly #endTimeField: FacadeConnection<TimeFieldConnection> | null;
+  readonly #startDateField: FacadeConnection<DateFieldConnection> | null;
+  readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
@@ -170,6 +177,28 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.runtime = runtime;
     this.controls = controls;
     const state = runtime.getSnapshot().state;
+    this.#startDateField = options.startDateInput === undefined ? null : createDateField({
+      input: options.startDateInput,
+      defaultValue: state.value?.start.date ?? null,
+      ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
+      ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      required: true,
+      onValueChange: (value) => {
+        if (!this.#syncingFields && value !== null) this.handleEvent({ type: 'set-start-date', value });
+      },
+    });
+    this.#endDateField = options.endDateInput === undefined ? null : createDateField({
+      input: options.endDateInput,
+      defaultValue: state.value?.end.date ?? null,
+      ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
+      ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      required: true,
+      onValueChange: (value) => {
+        if (!this.#syncingFields && value !== null) this.handleEvent({ type: 'set-end-date', value });
+      },
+    });
     this.#startTimeField = options.startTimeInput === undefined ? null : createTimeField({
       input: options.startTimeInput,
       defaultValue: state.startTime,
@@ -210,6 +239,15 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     return unwrap(createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn));
   }
 
+  public getWeek(): readonly DateValue[] {
+    const state = this.getSnapshot().state.calendar;
+    return unwrap(createDatePickerWeek(state.highlighted, this.options.policies?.date?.weekStartsOn));
+  }
+
+  public getYear(): readonly (readonly DatePickerMonthValue[])[] {
+    return unwrap(createDatePickerYear(this.getSnapshot().state.calendar.view.year));
+  }
+
   public syncControlledValues(
     values: DateTimeRangePickerControlledValues,
   ): Result<RevisionSnapshot<DateTimeRangePickerState>> {
@@ -232,6 +270,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       calendar: {
         highlighted,
         view: { year: highlighted.year, month: highlighted.month },
+        viewMode: state.calendar.viewMode,
         open: this.controls.open ? values.open as boolean : state.calendar.open,
       },
     }));
@@ -274,8 +313,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     for (const [input, value] of [
-      [this.options.startInput, state.value?.start],
-      [this.options.endInput, state.value?.end],
+      [this.options.startDateTimeInput, state.value?.start],
+      [this.options.endDateTimeInput, state.value?.end],
     ] as const) {
       if (input !== undefined) {
         input.value = value === undefined ? '' : formatDateTimeValue(value);
@@ -284,6 +323,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       }
     }
     this.#syncingFields = true;
+    syncDateField(this.#startDateField, state.value?.start.date ?? null);
+    syncDateField(this.#endDateField, state.value?.end.date ?? null);
     syncTimeField(this.#startTimeField, state.startTime);
     syncTimeField(this.#endTimeField, state.endTime);
     this.#syncingFields = false;
@@ -292,6 +333,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   public disconnect(): void {
     this.#startTimeField?.disconnect();
     this.#endTimeField?.disconnect();
+    this.#startDateField?.disconnect();
+    this.#endDateField?.disconnect();
     this.options.trigger.removeEventListener('click', this.#trigger);
     this.options.grid.removeEventListener('keydown', this.#keydown);
     this.options.grid.removeEventListener('click', this.#click);
@@ -330,6 +373,14 @@ function syncTimeField(field: FacadeConnection<TimeFieldConnection> | null, valu
     || current.second !== value.second
     || current.millisecond !== value.millisecond
   ) {
+    field.handleEvent({ type: 'set-value', value });
+  }
+}
+
+function syncDateField(field: FacadeConnection<DateFieldConnection> | null, value: DateValue | null): void {
+  if (field === null) return;
+  const current = field.getValue();
+  if (current === null ? value !== null : value === null || compareDateValues(current, value) !== 0) {
     field.handleEvent({ type: 'set-value', value });
   }
 }

@@ -162,6 +162,7 @@ class TerminalDateTimePicker implements DateTimePickerConnection {
       calendar: {
         highlighted,
         view: { year: highlighted.year, month: highlighted.month },
+        viewMode: state.calendar.viewMode,
         open: this.controls.open ? values.open as boolean : state.calendar.open,
       },
     }));

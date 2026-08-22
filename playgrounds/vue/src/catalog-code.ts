@@ -123,85 +123,217 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   </WindowSplitterRoot>`,
   ),
   'date-picker': sfc(
-    'DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPrevious, DatePickerNext, DatePickerGrid, DatePickerCell',
-    `  <DatePickerRoot :default-value="initialDate" v-slot="{ month }">
-    <DatePickerInput />
-    <DatePickerTrigger>Choose date</DatePickerTrigger>
-    <DatePickerContent>
-      <DatePickerPrevious>Previous month</DatePickerPrevious>
-      <DatePickerNext>Next month</DatePickerNext>
-      <DatePickerGrid>
-        <DatePickerCell v-for="day in month.flat()" :key="day.day" :value="day">
+    'DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPreviousWeek, DatePickerPreviousMonth, DatePickerPreviousYear, DatePickerNextWeek, DatePickerNextMonth, DatePickerNextYear, DatePickerWeekViewTrigger, DatePickerMonthViewTrigger, DatePickerYearViewTrigger, DatePickerGrid, DatePickerCell, DatePickerMonthCell',
+    `  <DatePickerRoot :default-value="initialDate" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    <div class="catalog-inline">
+      <DatePickerInput class="catalog-input" />
+      <DatePickerTrigger>Calendar</DatePickerTrigger>
+    </div>
+    <DatePickerContent class="catalog-popup catalog-picker-popup">
+      <div class="catalog-picker-toolbar">
+        <div class="catalog-inline">
+          <DatePickerPreviousWeek v-if="viewMode === 'week'">‹</DatePickerPreviousWeek>
+          <DatePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DatePickerPreviousMonth>
+          <DatePickerPreviousYear v-else>‹</DatePickerPreviousYear>
+          <strong>{{ viewMode === 'year' ? view.year : monthNames[view.month - 1] + ' ' + view.year }}</strong>
+          <DatePickerNextWeek v-if="viewMode === 'week'">›</DatePickerNextWeek>
+          <DatePickerNextMonth v-else-if="viewMode === 'month'">›</DatePickerNextMonth>
+          <DatePickerNextYear v-else>›</DatePickerNextYear>
+        </div>
+        <div class="catalog-view-switch">
+          <DatePickerWeekViewTrigger>Week</DatePickerWeekViewTrigger>
+          <DatePickerMonthViewTrigger>Month</DatePickerMonthViewTrigger>
+          <DatePickerYearViewTrigger>Year</DatePickerYearViewTrigger>
+        </div>
+      </div>
+
+      <DatePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode">
+        <DatePickerCell
+          v-for="day in dates.flat()"
+          :key="[day.year, day.month, day.day].join('-')"
+          :value="day"
+        >
           {{ day.day }}
         </DatePickerCell>
       </DatePickerGrid>
+      <DatePickerGrid v-else class="catalog-month-grid">
+        <DatePickerMonthCell
+          v-for="month in months.flat()"
+          :key="[month.year, month.month].join('-')"
+          :value="month"
+        >
+          {{ monthNames[month.month - 1] }}
+        </DatePickerMonthCell>
+      </DatePickerGrid>
     </DatePickerContent>
   </DatePickerRoot>`,
-    `const initialDate = { year: 2026, month: 8, day: 22 }`,
+    `const initialDate = { year: 2026, month: 8, day: 22 }
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'date-range-picker': sfc(
-    'DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerGrid, DateRangePickerCell',
-    `  <DateRangePickerRoot :default-value="initialRange" v-slot="{ month }">
-    <DateRangePickerStartInput />
-    <DateRangePickerEndInput />
-    <DateRangePickerTrigger>Choose range</DateRangePickerTrigger>
-    <DateRangePickerContent>
-      <DateRangePickerGrid>
-        <DateRangePickerCell v-for="day in month.flat()" :key="day.day" :value="day">
+    'DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerPreviousWeek, DateRangePickerPreviousMonth, DateRangePickerPreviousYear, DateRangePickerNextWeek, DateRangePickerNextMonth, DateRangePickerNextYear, DateRangePickerWeekViewTrigger, DateRangePickerMonthViewTrigger, DateRangePickerYearViewTrigger, DateRangePickerGrid, DateRangePickerCell, DateRangePickerMonthCell',
+    `  <DateRangePickerRoot :default-value="initialRange" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    <div class="catalog-inline">
+      <DateRangePickerStartInput class="catalog-input" />
+      <DateRangePickerEndInput class="catalog-input" />
+      <DateRangePickerTrigger>Calendar</DateRangePickerTrigger>
+    </div>
+    <DateRangePickerContent class="catalog-popup catalog-picker-popup">
+      <div class="catalog-picker-toolbar">
+        <div class="catalog-inline">
+          <DateRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateRangePickerPreviousWeek>
+          <DateRangePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateRangePickerPreviousMonth>
+          <DateRangePickerPreviousYear v-else>‹</DateRangePickerPreviousYear>
+          <strong>{{ viewMode === 'year' ? view.year : monthNames[view.month - 1] + ' ' + view.year }}</strong>
+          <DateRangePickerNextWeek v-if="viewMode === 'week'">›</DateRangePickerNextWeek>
+          <DateRangePickerNextMonth v-else-if="viewMode === 'month'">›</DateRangePickerNextMonth>
+          <DateRangePickerNextYear v-else>›</DateRangePickerNextYear>
+        </div>
+        <div class="catalog-view-switch">
+          <DateRangePickerWeekViewTrigger>Week</DateRangePickerWeekViewTrigger>
+          <DateRangePickerMonthViewTrigger>Month</DateRangePickerMonthViewTrigger>
+          <DateRangePickerYearViewTrigger>Year</DateRangePickerYearViewTrigger>
+        </div>
+      </div>
+
+      <DateRangePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode">
+        <DateRangePickerCell
+          v-for="day in dates.flat()"
+          :key="[day.year, day.month, day.day].join('-')"
+          :value="day"
+        >
           {{ day.day }}
         </DateRangePickerCell>
+      </DateRangePickerGrid>
+      <DateRangePickerGrid v-else class="catalog-month-grid">
+        <DateRangePickerMonthCell
+          v-for="month in months.flat()"
+          :key="[month.year, month.month].join('-')"
+          :value="month"
+        >
+          {{ monthNames[month.month - 1] }}
+        </DateRangePickerMonthCell>
       </DateRangePickerGrid>
     </DateRangePickerContent>
   </DateRangePickerRoot>`,
     `const initialRange = {
   start: { year: 2026, month: 8, day: 22 },
   end: { year: 2026, month: 8, day: 25 },
-}`,
+}
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'date-time-picker': sfc(
-    'DateTimePickerRoot, DateTimePickerInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPrevious, DateTimePickerNext, DateTimePickerGrid, DateTimePickerCell',
-    `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ month }">
-    <DateTimePickerInput />
-    <DateTimePickerTimeInput />
-    <DateTimePickerTrigger>Choose date and time</DateTimePickerTrigger>
-    <DateTimePickerContent>
-      <DateTimePickerPrevious>Previous month</DateTimePickerPrevious>
-      <DateTimePickerNext>Next month</DateTimePickerNext>
-      <DateTimePickerGrid>
+    'DateTimePickerRoot, DateTimePickerDateInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPreviousWeek, DateTimePickerPreviousMonth, DateTimePickerPreviousYear, DateTimePickerNextWeek, DateTimePickerNextMonth, DateTimePickerNextYear, DateTimePickerWeekViewTrigger, DateTimePickerMonthViewTrigger, DateTimePickerYearViewTrigger, DateTimePickerGrid, DateTimePickerCell, DateTimePickerMonthCell',
+    `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    <div class="catalog-range-fields">
+      <label class="catalog-field">
+        <span>Date</span>
+        <DateTimePickerDateInput class="catalog-input" />
+      </label>
+      <label class="catalog-field">
+        <span>Time</span>
+        <DateTimePickerTimeInput class="catalog-input" />
+      </label>
+      <DateTimePickerTrigger>Calendar</DateTimePickerTrigger>
+    </div>
+    <DateTimePickerContent class="catalog-popup catalog-picker-popup">
+      <div class="catalog-picker-toolbar">
+        <div class="catalog-inline">
+          <DateTimePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimePickerPreviousWeek>
+          <DateTimePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateTimePickerPreviousMonth>
+          <DateTimePickerPreviousYear v-else>‹</DateTimePickerPreviousYear>
+          <strong>{{ viewMode === 'year' ? view.year : monthNames[view.month - 1] + ' ' + view.year }}</strong>
+          <DateTimePickerNextWeek v-if="viewMode === 'week'">›</DateTimePickerNextWeek>
+          <DateTimePickerNextMonth v-else-if="viewMode === 'month'">›</DateTimePickerNextMonth>
+          <DateTimePickerNextYear v-else>›</DateTimePickerNextYear>
+        </div>
+        <div class="catalog-view-switch">
+          <DateTimePickerWeekViewTrigger>Week</DateTimePickerWeekViewTrigger>
+          <DateTimePickerMonthViewTrigger>Month</DateTimePickerMonthViewTrigger>
+          <DateTimePickerYearViewTrigger>Year</DateTimePickerYearViewTrigger>
+        </div>
+      </div>
+
+      <DateTimePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode">
         <DateTimePickerCell
-          v-for="day in month.flat()"
+          v-for="day in dates.flat()"
           :key="[day.year, day.month, day.day].join('-')"
           :value="day"
         >
           {{ day.day }}
         </DateTimePickerCell>
       </DateTimePickerGrid>
+      <DateTimePickerGrid v-else class="catalog-month-grid">
+        <DateTimePickerMonthCell
+          v-for="month in months.flat()"
+          :key="[month.year, month.month].join('-')"
+          :value="month"
+        >
+          {{ monthNames[month.month - 1] }}
+        </DateTimePickerMonthCell>
+      </DateTimePickerGrid>
     </DateTimePickerContent>
   </DateTimePickerRoot>`,
     `const initialValue = {
   date: { year: 2026, month: 8, day: 22 },
   time: { hour: 9, minute: 30, second: 0, millisecond: 0 },
-}`,
+}
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'date-time-range-picker': sfc(
-    'DateTimeRangePickerRoot, DateTimeRangePickerStartInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPrevious, DateTimeRangePickerNext, DateTimeRangePickerGrid, DateTimeRangePickerCell',
-    `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ month }">
-    <DateTimeRangePickerStartInput />
-    <DateTimeRangePickerStartTimeInput />
-    <DateTimeRangePickerEndInput />
-    <DateTimeRangePickerEndTimeInput />
-    <DateTimeRangePickerTrigger>Choose range</DateTimeRangePickerTrigger>
-    <DateTimeRangePickerContent>
-      <DateTimeRangePickerPrevious>Previous month</DateTimeRangePickerPrevious>
-      <DateTimeRangePickerNext>Next month</DateTimeRangePickerNext>
-      <DateTimeRangePickerGrid>
+    'DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousMonth, DateTimeRangePickerPreviousYear, DateTimeRangePickerNextWeek, DateTimeRangePickerNextMonth, DateTimeRangePickerNextYear, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerMonthViewTrigger, DateTimeRangePickerYearViewTrigger, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerMonthCell',
+    `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    <div class="catalog-range-fields">
+      <label class="catalog-endpoint">
+        <span>Start</span>
+        <DateTimeRangePickerStartDateInput class="catalog-input" />
+        <DateTimeRangePickerStartTimeInput class="catalog-input catalog-time-input" />
+      </label>
+      <label class="catalog-endpoint">
+        <span>End</span>
+        <DateTimeRangePickerEndDateInput class="catalog-input" />
+        <DateTimeRangePickerEndTimeInput class="catalog-input catalog-time-input" />
+      </label>
+      <DateTimeRangePickerTrigger>Calendar</DateTimeRangePickerTrigger>
+    </div>
+    <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup">
+      <div class="catalog-picker-toolbar">
+        <div class="catalog-inline">
+          <DateTimeRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimeRangePickerPreviousWeek>
+          <DateTimeRangePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateTimeRangePickerPreviousMonth>
+          <DateTimeRangePickerPreviousYear v-else>‹</DateTimeRangePickerPreviousYear>
+          <strong>{{ viewMode === 'year' ? view.year : monthNames[view.month - 1] + ' ' + view.year }}</strong>
+          <DateTimeRangePickerNextWeek v-if="viewMode === 'week'">›</DateTimeRangePickerNextWeek>
+          <DateTimeRangePickerNextMonth v-else-if="viewMode === 'month'">›</DateTimeRangePickerNextMonth>
+          <DateTimeRangePickerNextYear v-else>›</DateTimeRangePickerNextYear>
+        </div>
+        <div class="catalog-view-switch">
+          <DateTimeRangePickerWeekViewTrigger>Week</DateTimeRangePickerWeekViewTrigger>
+          <DateTimeRangePickerMonthViewTrigger>Month</DateTimeRangePickerMonthViewTrigger>
+          <DateTimeRangePickerYearViewTrigger>Year</DateTimeRangePickerYearViewTrigger>
+        </div>
+      </div>
+
+      <DateTimeRangePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode">
         <DateTimeRangePickerCell
-          v-for="day in month.flat()"
+          v-for="day in dates.flat()"
           :key="[day.year, day.month, day.day].join('-')"
           :value="day"
         >
           {{ day.day }}
         </DateTimeRangePickerCell>
+      </DateTimeRangePickerGrid>
+      <DateTimeRangePickerGrid v-else class="catalog-month-grid">
+        <DateTimeRangePickerMonthCell
+          v-for="month in months.flat()"
+          :key="[month.year, month.month].join('-')"
+          :value="month"
+        >
+          {{ monthNames[month.month - 1] }}
+        </DateTimeRangePickerMonthCell>
       </DateTimeRangePickerGrid>
     </DateTimeRangePickerContent>
   </DateTimeRangePickerRoot>`,
@@ -214,7 +346,9 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
     date: { year: 2026, month: 8, day: 25 },
     time: { hour: 17, minute: 30, second: 0, millisecond: 0 },
   },
-}`,
+}
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'quantity-field': sfc(
     'QuantityFieldRoot, QuantityFieldInput, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies',

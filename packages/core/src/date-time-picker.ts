@@ -13,6 +13,7 @@ import {
   isDatePickerValueAvailable,
   type DatePickerPolicies,
   type DatePickerState,
+  type DatePickerViewMode,
 } from './date-picker.js';
 import {
   compareTimeValues,
@@ -42,7 +43,10 @@ export type DateTimePickerEvent =
   | 'start-of-week'
   | 'end-of-week'
   | 'select-highlighted'
+  | { readonly type: 'set-view-mode'; readonly value: DatePickerViewMode }
+  | { readonly type: 'select-month'; readonly value: { readonly year: number; readonly month: number } }
   | { readonly type: 'select-date'; readonly value: DateValue }
+  | { readonly type: 'set-date'; readonly value: DateValue }
   | { readonly type: 'set-time'; readonly value: TimeValue }
   | { readonly type: 'set-value'; readonly value: DateTimeValue | null };
 
@@ -50,6 +54,7 @@ export type DateTimePickerCommand =
   | { readonly type: 'value-committed'; readonly value: DateTimeValue | null }
   | { readonly type: 'time-changed'; readonly value: TimeValue }
   | { readonly type: 'highlight-changed'; readonly value: DateValue }
+  | { readonly type: 'view-mode-changed'; readonly value: DatePickerViewMode }
   | { readonly type: 'open-changed'; readonly open: boolean };
 
 export interface DateTimePickerPolicies {
@@ -126,7 +131,7 @@ export function applyDateTimePickerEvent(
   if (event === 'select-highlighted') {
     return selectDate(valid.value, valid.value.calendar.highlighted, policies);
   }
-  if (typeof event === 'object' && event.type === 'select-date') {
+  if (typeof event === 'object' && (event.type === 'select-date' || event.type === 'set-date')) {
     return selectDate(valid.value, event.value, policies);
   }
 
@@ -135,7 +140,7 @@ export function applyDateTimePickerEvent(
   return createMachineUpdate(
     Object.freeze({ value: valid.value.value, time: valid.value.time, calendar: update.value.state }),
     update.value.commands.flatMap((command): DateTimePickerCommand[] =>
-      command.type === 'highlight-changed' || command.type === 'open-changed' ? [command] : []),
+      command.type === 'highlight-changed' || command.type === 'view-mode-changed' || command.type === 'open-changed' ? [command] : []),
   );
 }
 
@@ -181,6 +186,7 @@ function commitValue(
     value: null,
     highlighted: value.value.date,
     view: { year: value.value.date.year, month: value.value.date.month },
+    viewMode: state.calendar.viewMode,
     open: state.calendar.open,
   });
   if (!calendar.ok) return calendar;

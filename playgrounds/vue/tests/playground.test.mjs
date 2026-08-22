@@ -58,6 +58,19 @@ test('Vue playground catalogs every public DOM component', async () => {
     );
   }
   assert.doesNotMatch(catalogCodeSource, /item\.type === 'page' \? item\.page : '…'/);
+
+  for (const prefix of ['DatePicker', 'DateRangePicker', 'DateTimePicker', 'DateTimeRangePicker']) {
+    assert.match(catalogCodeSource, new RegExp(`${prefix}PreviousWeek`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}PreviousMonth`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}PreviousYear`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}NextWeek`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}NextMonth`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}NextYear`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}WeekViewTrigger`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}MonthViewTrigger`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}YearViewTrigger`));
+    assert.match(catalogCodeSource, new RegExp(`${prefix}MonthCell`));
+  }
 });
 
 test('Vue playground composes Checkbox through its public package subpath', () => {

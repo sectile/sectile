@@ -101,7 +101,7 @@ function selectDate(state: DateRangePickerState, requested: DateValue, policies:
   const end = compareDateValues(state.anchor, valid.value) <= 0 ? valid.value : state.anchor;
   const range = createDateRange(start, end);
   if (!range.ok) return range;
-  const calendar = createDatePickerState({ value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, open: state.calendar.open });
+  const calendar = createDatePickerState({ value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, viewMode: state.calendar.viewMode, open: state.calendar.open });
   if (!calendar.ok) return calendar;
   return createMachineUpdate(Object.freeze({ value: range.value, anchor: null, calendar: calendar.value }), [
     { type: 'range-committed', value: range.value },

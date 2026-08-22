@@ -3,7 +3,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/core/date-field';
 import { compareDateTimeValues, type DateTimeValue } from '@sectile/core/date-time-field';
-import { createDatePickerMonth, datePickerID, isDatePickerValueAvailable } from '@sectile/core/date-picker';
+import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/core/date-picker';
 import {
   applyDateTimePickerEvent,
   createDateTimePickerState,
@@ -17,6 +17,7 @@ import type { TimeValue } from '@sectile/core/time-field';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDateTimeField, type DateTimeFieldConnection } from './date-time-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 
@@ -24,7 +25,8 @@ export interface DateTimePickerOptions {
   readonly root: HTMLElement;
   readonly grid: HTMLElement;
   readonly trigger: HTMLElement;
-  readonly input?: HTMLInputElement;
+  readonly dateTimeInput?: HTMLInputElement;
+  readonly dateInput?: HTMLInputElement;
   readonly timeInput?: HTMLInputElement;
   readonly policies?: DateTimePickerPolicies;
   readonly value?: DateTimeValue | null;
@@ -52,6 +54,8 @@ export interface DateTimePickerControlledValues {
 export interface DateTimePickerConnection {
   getSnapshot(): RevisionSnapshot<DateTimePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
+  getWeek(): readonly DateValue[];
+  getYear(): readonly (readonly DatePickerMonthValue[])[];
   syncControlledValues(values: DateTimePickerControlledValues): Result<RevisionSnapshot<DateTimePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DateTimePickerEvent): boolean;
@@ -139,7 +143,8 @@ class DOMDateTimePicker implements DateTimePickerConnection {
   readonly options: DateTimePickerOptions;
   readonly runtime: SemanticController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
-  readonly #field: FacadeConnection<DateTimeFieldConnection> | null;
+  readonly #dateTimeField: FacadeConnection<DateTimeFieldConnection> | null;
+  readonly #dateField: FacadeConnection<DateFieldConnection> | null;
   readonly #timeField: FacadeConnection<TimeFieldConnection> | null;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
@@ -172,8 +177,8 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     this.runtime = runtime;
     this.controls = controls;
     const state = runtime.getSnapshot().state;
-    this.#field = options.input === undefined ? null : createDateTimeField({
-      input: options.input,
+    this.#dateTimeField = options.dateTimeInput === undefined ? null : createDateTimeField({
+      input: options.dateTimeInput,
       defaultValue: state.value,
       policies: {
         ...(options.policies?.min === undefined ? {} : { min: options.policies.min }),
@@ -187,6 +192,18 @@ class DOMDateTimePicker implements DateTimePickerConnection {
       ...(options.label === undefined ? {} : { label: options.label }),
       onValueChange: (value) => {
         if (!this.#syncingFields) this.handleEvent({ type: 'set-value', value });
+      },
+    });
+    this.#dateField = options.dateInput === undefined ? null : createDateField({
+      input: options.dateInput,
+      defaultValue: state.value?.date ?? null,
+      ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
+      ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      ...(options.required === undefined ? {} : { required: options.required }),
+      ...(options.label === undefined ? {} : { label: options.label }),
+      onValueChange: (value) => {
+        if (!this.#syncingFields && value !== null) this.handleEvent({ type: 'set-date', value });
       },
     });
     this.#timeField = options.timeInput === undefined ? null : createTimeField({
@@ -218,6 +235,15 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     return unwrap(createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn));
   }
 
+  public getWeek(): readonly DateValue[] {
+    const state = this.getSnapshot().state.calendar;
+    return unwrap(createDatePickerWeek(state.highlighted, this.options.policies?.date?.weekStartsOn));
+  }
+
+  public getYear(): readonly (readonly DatePickerMonthValue[])[] {
+    return unwrap(createDatePickerYear(this.getSnapshot().state.calendar.view.year));
+  }
+
   public syncControlledValues(
     values: DateTimePickerControlledValues,
   ): Result<RevisionSnapshot<DateTimePickerState>> {
@@ -238,6 +264,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
       calendar: {
         highlighted,
         view: { year: highlighted.year, month: highlighted.month },
+        viewMode: state.calendar.viewMode,
         open: this.controls.open ? values.open as boolean : state.calendar.open,
       },
     }));
@@ -282,8 +309,11 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     this.#syncingFields = true;
-    if (this.#field !== null && compareNullable(this.#field.getValue(), state.value) !== 0) {
-      this.#field.handleEvent({ type: 'set-value', value: state.value });
+    if (this.#dateTimeField !== null && compareNullable(this.#dateTimeField.getValue(), state.value) !== 0) {
+      this.#dateTimeField.handleEvent({ type: 'set-value', value: state.value });
+    }
+    if (this.#dateField !== null && compareDateNullable(this.#dateField.getValue(), state.value?.date ?? null) !== 0) {
+      this.#dateField.handleEvent({ type: 'set-value', value: state.value?.date ?? null });
     }
     if (this.#timeField !== null && compareTime(this.#timeField.getValue(), state.time) !== 0) {
       this.#timeField.handleEvent({ type: 'set-value', value: state.time });
@@ -292,7 +322,8 @@ class DOMDateTimePicker implements DateTimePickerConnection {
   }
 
   public disconnect(): void {
-    this.#field?.disconnect();
+    this.#dateTimeField?.disconnect();
+    this.#dateField?.disconnect();
     this.#timeField?.disconnect();
     this.options.trigger.removeEventListener('click', this.#trigger);
     this.options.grid.removeEventListener('keydown', this.#keydown);
@@ -325,4 +356,8 @@ function compareTime(left: TimeValue | null, right: TimeValue): number {
     || left.minute - right.minute
     || left.second - right.second
     || left.millisecond - right.millisecond;
+}
+
+function compareDateNullable(left: DateValue | null, right: DateValue | null): number {
+  return left === null ? right === null ? 0 : -1 : right === null ? 1 : compareDateValues(left, right);
 }

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
 import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
-import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState } from '../../.verification-dist/date-picker.js';
+import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState, createDatePickerWeek, createDatePickerYear } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
@@ -26,6 +26,35 @@ test('date picker month projection is a stable six by seven grid', () => {
   assert.equal(month.every((row) => row.length === 7), true);
   assert.equal(formatDateValue(month[0][0]), '2026-07-27');
   assert.equal(formatDateValue(month[5][6]), '2026-09-06');
+});
+
+test('date picker exposes week and year projections', () => {
+  const week = createDatePickerWeek(date(2026, 8, 22)).value;
+  const year = createDatePickerYear(2026).value;
+  assert.deepEqual(week.map(formatDateValue), ['2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21', '2026-08-22', '2026-08-23']);
+  assert.equal(year.length, 4);
+  assert.deepEqual(year.flat(), Array.from({ length: 12 }, (_, index) => ({ year: 2026, month: index + 1 })));
+});
+
+test('date picker changes view mode and selects a month without committing a date', () => {
+  let state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year', open: true }).value;
+  const selected = applyDatePickerEvent(state, { type: 'select-month', value: { year: 2026, month: 2 } });
+  state = selected.value.state;
+  assert.equal(state.viewMode, 'month');
+  assert.equal(formatDateValue(state.highlighted), '2026-02-28');
+  assert.equal(state.value, null);
+  assert.deepEqual(selected.value.commands.map(({ type }) => type), ['highlight-changed', 'view-mode-changed']);
+  const week = applyDatePickerEvent(state, { type: 'set-view-mode', value: 'week' });
+  assert.equal(week.value.state.viewMode, 'week');
+});
+
+test('date picker month selection never escapes an unavailable month', () => {
+  const state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year' }).value;
+  const selected = applyDatePickerEvent(state, { type: 'select-month', value: { year: 2026, month: 2 } }, {
+    unavailable: (value) => value.year === 2026 && value.month === 2,
+  });
+  assert.equal(selected.ok, false);
+  assert.equal(selected.error.code, 'date-picker-month-unavailable');
 });
 
 test('date picker skips unavailable dates under a bounded scan', () => {

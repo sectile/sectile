@@ -68,6 +68,8 @@ export type {
   DatePickerStateInput,
   DatePickerUpdate,
   DatePickerView,
+  DatePickerViewMode,
+  DatePickerMonthValue,
 } from './date-picker.js';
 export type {
   DateRangePickerCommand,

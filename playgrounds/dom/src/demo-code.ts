@@ -760,7 +760,7 @@ const picker = createDateTimePicker({
   root,
   grid,
   trigger: required('[data-date-trigger]'),
-  input: required<HTMLInputElement>('[data-date-input]'),
+  dateInput: required<HTMLInputElement>('[data-date-input]'),
   timeInput: required<HTMLInputElement>('[data-time-input]'),
   defaultValue: {
     date: { year: 2026, month: 8, day: 22 },
@@ -768,16 +768,23 @@ const picker = createDateTimePicker({
   },
 })
 
+for (const week of picker.getMonth()) for (const value of week) {
+  const cell = document.createElement('button')
+  cell.textContent = String(value.day)
+  picker.setCellAttributes(cell, value)
+  grid.append(cell)
+}
 window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
 
   'date-time-range-picker': example('date-time-range-picker', 'createDateTimeRangePicker', `const root = required<HTMLElement>('[data-date-time-range-picker]')
+const grid = required<HTMLElement>('[data-date-grid]')
 const picker = createDateTimeRangePicker({
   root,
-  grid: required('[data-date-grid]'),
+  grid,
   trigger: required('[data-date-trigger]'),
-  startInput: required<HTMLInputElement>('[data-start-date]'),
+  startDateInput: required<HTMLInputElement>('[data-start-date]'),
   startTimeInput: required<HTMLInputElement>('[data-start-time]'),
-  endInput: required<HTMLInputElement>('[data-end-date]'),
+  endDateInput: required<HTMLInputElement>('[data-end-date]'),
   endTimeInput: required<HTMLInputElement>('[data-end-time]'),
   defaultValue: {
     start: {
@@ -791,5 +798,11 @@ const picker = createDateTimeRangePicker({
   },
 })
 
+for (const week of picker.getMonth()) for (const value of week) {
+  const cell = document.createElement('button')
+  cell.textContent = String(value.day)
+  picker.setCellAttributes(cell, value)
+  grid.append(cell)
+}
 window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
 });

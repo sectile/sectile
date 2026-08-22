@@ -15,6 +15,7 @@ import {
   isDatePickerValueAvailable,
   type DatePickerPolicies,
   type DatePickerState,
+  type DatePickerViewMode,
 } from './date-picker.js';
 import {
   compareTimeValues,
@@ -47,7 +48,11 @@ export type DateTimeRangePickerEvent =
   | 'start-of-week'
   | 'end-of-week'
   | 'select-highlighted'
+  | { readonly type: 'set-view-mode'; readonly value: DatePickerViewMode }
+  | { readonly type: 'select-month'; readonly value: { readonly year: number; readonly month: number } }
   | { readonly type: 'select-date'; readonly value: DateValue }
+  | { readonly type: 'set-start-date'; readonly value: DateValue }
+  | { readonly type: 'set-end-date'; readonly value: DateValue }
   | { readonly type: 'set-start-time'; readonly value: TimeValue }
   | { readonly type: 'set-end-time'; readonly value: TimeValue }
   | { readonly type: 'set-value'; readonly value: DateTimeRange | null };
@@ -58,6 +63,7 @@ export type DateTimeRangePickerCommand =
   | { readonly type: 'start-time-changed'; readonly value: TimeValue }
   | { readonly type: 'end-time-changed'; readonly value: TimeValue }
   | { readonly type: 'highlight-changed'; readonly value: DateValue }
+  | { readonly type: 'view-mode-changed'; readonly value: DatePickerViewMode }
   | { readonly type: 'open-changed'; readonly open: boolean };
 
 export interface DateTimeRangePickerPolicies {
@@ -150,6 +156,12 @@ export function applyDateTimeRangePickerEvent(
   if (typeof event === 'object' && event.type === 'set-end-time') {
     return setEndpointTime(valid.value, 'end', event.value, policies);
   }
+  if (typeof event === 'object' && event.type === 'set-start-date') {
+    return setEndpointDate(valid.value, 'start', event.value, policies);
+  }
+  if (typeof event === 'object' && event.type === 'set-end-date') {
+    return setEndpointDate(valid.value, 'end', event.value, policies);
+  }
   if (event === 'select-highlighted') {
     return selectDate(valid.value, valid.value.calendar.highlighted, policies);
   }
@@ -162,7 +174,7 @@ export function applyDateTimeRangePickerEvent(
   return createMachineUpdate(
     Object.freeze({ ...valid.value, calendar: update.value.state }),
     update.value.commands.flatMap((command): DateTimeRangePickerCommand[] =>
-      command.type === 'highlight-changed' || command.type === 'open-changed' ? [command] : []),
+      command.type === 'highlight-changed' || command.type === 'view-mode-changed' || command.type === 'open-changed' ? [command] : []),
   );
 }
 
@@ -181,6 +193,7 @@ function selectDate(
       value: null,
       highlighted: date.value,
       view: { year: date.value.year, month: date.value.month },
+      viewMode: state.calendar.viewMode,
       open: true,
     });
     if (!calendar.ok) return calendar;
@@ -233,6 +246,23 @@ function setEndpointTime(
   return range.ok ? commitRange(state, range.value, policies) : range;
 }
 
+function setEndpointDate(
+  state: DateTimeRangePickerState,
+  endpoint: 'start' | 'end',
+  requested: DateValue,
+  policies: DateTimeRangePickerPolicies,
+): Result<DateTimeRangePickerUpdate> {
+  const date = createDateValue(requested.year, requested.month, requested.day);
+  if (!date.ok) return invalidTransition(date);
+  const fallback = state.value === null ? date.value : endpoint === 'start' ? state.value.end.date : state.value.start.date;
+  const start = createDateTimeValue(endpoint === 'start' ? date.value : fallback, state.startTime);
+  if (!start.ok) return start;
+  const end = createDateTimeValue(endpoint === 'end' ? date.value : fallback, state.endTime);
+  if (!end.ok) return end;
+  const range = createDateTimeRange(start.value, end.value);
+  return range.ok ? commitRange(state, range.value, policies, date.value) : range;
+}
+
 function commitRange(
   state: DateTimeRangePickerState,
   requested: DateTimeRange | null,
@@ -262,6 +292,7 @@ function commitRange(
     value: null,
     highlighted: selectedHighlight,
     view: { year: selectedHighlight.year, month: selectedHighlight.month },
+    viewMode: state.calendar.viewMode,
     open: state.calendar.open,
   });
   if (!calendar.ok) return calendar;
