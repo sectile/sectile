@@ -5,9 +5,10 @@ import {
 import { createMenu, type MenuConnection, type MenuItemDefinition, type MenuPolicies } from '@sectile/dom/menu';
 import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
+import { createNavigationMenu } from '@sectile/dom/navigation-menu';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
-type MenuKind = 'menu' | 'menu-button' | 'menubar';
+type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
 export interface MenuRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
   readonly disabledItems?: readonly string[];
@@ -50,7 +51,7 @@ const commonProps = {
 
 function createRoot(kind: MenuKind, providerOnly = false) {
   return defineComponent({
-    name: kind === 'menu-button' ? 'SectileMenuButtonRoot' : kind === 'menubar' ? 'SectileMenubarRoot' : 'SectileMenuRoot',
+    name: kind === 'menu-button' ? 'SectileMenuButtonRoot' : kind === 'menubar' ? 'SectileMenubarRoot' : kind === 'navigation-menu' ? 'SectileNavigationMenuRoot' : 'SectileMenuRoot',
     inheritAttrs: false,
     props: { ...commonProps, open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false } },
     emits: { 'update:open': (_value: boolean): boolean => true, invoke: (_value: string): boolean => true },
@@ -88,7 +89,7 @@ function createRoot(kind: MenuKind, providerOnly = false) {
         };
         connection.value = kind === 'menu-button'
           ? createMenuButton({ ...options, trigger: trigger.value as HTMLElement, ...(controlled ? { open: props.open as boolean } : { defaultOpen: open.value }) })
-          : kind === 'menubar' ? createMenubar(options) : createMenu(options);
+          : kind === 'menubar' ? createMenubar(options) : kind === 'navigation-menu' ? createNavigationMenu(options) : createMenu(options);
         refreshParts(); refresh();
       };
       provide<Context>(key, {
@@ -104,8 +105,8 @@ function createRoot(kind: MenuKind, providerOnly = false) {
         if (providerOnly) return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
         return h(Primitive, mergeProps(attrs, {
           as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
-          role: kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': props.label,
-          'data-scope': kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
+          role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': props.label,
+          'data-scope': kind === 'navigation-menu' ? 'navigation-menu' : kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
         }), { default: () => slots['default']?.(state.value) });
       };
     },
@@ -114,6 +115,7 @@ function createRoot(kind: MenuKind, providerOnly = false) {
 
 export const MenuRoot = createRoot('menu');
 export const MenubarRoot = createRoot('menubar');
+export const NavigationMenuRoot = createRoot('navigation-menu');
 export const MenuButtonRoot = createRoot('menu-button', true);
 
 export const MenuButtonTrigger = defineComponent({
@@ -143,8 +145,8 @@ export const MenuItem = defineComponent({
   slots: Object as SlotsType<{ default: (props: MenuItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuItem'); const state = computed<MenuItemSlotProps>(() => ({ value: props.value, highlighted: root.state.value.highlightedValue === props.value, open: root.state.value.openPath.includes(props.value), disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value); },
-    role: 'menuitem', 'aria-disabled': state.value.disabled ? 'true' : undefined, 'data-sectile-menu-id': props.value,
-    'data-scope': root.kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'item', 'data-highlighted': state.value.highlighted ? '' : undefined,
+    role: root.kind === 'navigation-menu' ? undefined : 'menuitem', 'aria-disabled': state.value.disabled ? 'true' : undefined, 'data-sectile-menu-id': props.value,
+    'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : root.kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'item', 'data-highlighted': state.value.highlighted ? '' : undefined,
     'data-state': state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(state.value) }); },
 });
@@ -155,8 +157,8 @@ export const MenuSubContent = defineComponent({
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuSubContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerSubmenu(node, props.for); },
-    role: 'menu', hidden: !root.state.value.openPath.includes(props.for), 'data-sectile-submenu-for': props.for,
-    'data-scope': 'menu', 'data-part': 'sub-content', 'data-state': root.state.value.openPath.includes(props.for) ? 'open' : 'closed',
+    role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.state.value.openPath.includes(props.for), 'data-sectile-submenu-for': props.for,
+    'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': root.state.value.openPath.includes(props.for) ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 

@@ -286,6 +286,21 @@ export {
   type MenuSubContentProps,
 } from './menu.js';
 export {
+  NavigationMenuContent,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuRoot,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+  type NavigationMenuContentProps,
+  type NavigationMenuItemProps,
+  type NavigationMenuItemSlotProps,
+  type NavigationMenuRootProps,
+  type NavigationMenuRootSlotProps,
+} from './navigation-menu.js';
+export {
   SelectContent,
   SelectItem,
   SelectItemIndicator,

@@ -4,6 +4,7 @@ import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
 import { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } from '../dist/combobox.js';
 import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuRoot, MenubarRoot } from '../dist/menu.js';
+import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '../dist/navigation-menu.js';
 import { SelectContent, SelectItem, SelectItemIndicator, SelectRoot, SelectTrigger, SelectValue } from '../dist/select.js';
 import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '../dist/toolbar.js';
 
@@ -44,6 +45,21 @@ test('Vue menu variants preserve menu, menu button, and menubar roles', async ()
   assert.match(button, /aria-haspopup="menu"/);
   assert.match(button, /data-part="content"/);
   assert.match(bar, /role="menubar"/);
+});
+
+test('Vue navigation menu preserves navigation, list, trigger, content, and native link composition', async () => {
+  const items = [{ id: 'products', parentID: null }, { id: 'overview', parentID: 'products' }, { id: 'docs', parentID: null }];
+  const html = await render(() => h(NavigationMenuRoot, { items, label: 'Primary' }, { default: () => h(NavigationMenuList, null, { default: () => [
+    h(NavigationMenuItem, null, { default: () => [
+      h(NavigationMenuTrigger, { value: 'products', as: 'button' }, { default: () => 'Products' }),
+      h(NavigationMenuContent, { for: 'products' }, { default: () => h(NavigationMenuLink, { value: 'overview', as: 'a', href: '/overview' }, { default: () => 'Overview' }) }),
+    ] }),
+    h(NavigationMenuItem, null, { default: () => h(NavigationMenuLink, { value: 'docs', as: 'a', href: '/docs' }, { default: () => 'Docs' }) }),
+  ] }) }));
+  assert.match(html, /role="navigation"/);
+  assert.match(html, /aria-label="Primary"/);
+  assert.match(html, /href="\/docs"/);
+  assert.doesNotMatch(html, /role="menuitem"/);
 });
 
 test('Vue toolbar uses roving-control structure without styling', async () => {

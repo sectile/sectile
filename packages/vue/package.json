@@ -201,6 +201,11 @@
       "import": "./dist/menubar.js",
       "default": "./dist/menubar.js"
     },
+    "./navigation-menu": {
+      "types": "./dist/navigation-menu.d.ts",
+      "import": "./dist/navigation-menu.js",
+      "default": "./dist/navigation-menu.js"
+    },
     "./select": {
       "types": "./dist/select.d.ts",
       "import": "./dist/select.js",

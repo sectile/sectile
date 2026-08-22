@@ -290,6 +290,29 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   { id: 'duplicate', parentID: null },
 ]`,
   ),
+  'navigation-menu': sfc(
+    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink',
+    `  <NavigationMenuRoot :items="items" label="Primary">
+    <NavigationMenuList>
+      <NavigationMenuItem>
+        <NavigationMenuTrigger value="products" as="button">Products</NavigationMenuTrigger>
+        <NavigationMenuContent for="products">
+          <NavigationMenuLink value="overview" as="a" href="/overview">Overview</NavigationMenuLink>
+          <NavigationMenuLink value="components" as="a" href="/components">Components</NavigationMenuLink>
+        </NavigationMenuContent>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink value="docs" as="a" href="/docs">Documentation</NavigationMenuLink>
+      </NavigationMenuItem>
+    </NavigationMenuList>
+  </NavigationMenuRoot>`,
+    `const items = [
+  { id: 'products', parentID: null },
+  { id: 'overview', parentID: 'products' },
+  { id: 'components', parentID: 'products' },
+  { id: 'docs', parentID: null },
+]`,
+  ),
   carousel: sfc(
     'CarouselRoot, CarouselTrack, CarouselSlide, CarouselPrevious, CarouselNext, CarouselPause, CarouselIndicatorGroup, CarouselIndicator',
     `  <CarouselRoot :slides="slides" default-value="foundation">

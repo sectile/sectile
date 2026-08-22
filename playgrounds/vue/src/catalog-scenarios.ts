@@ -39,6 +39,7 @@ export const catalogScenarios: Readonly<Record<string, readonly CatalogScenario[
   menu: scenarios('menu', ['Nested commands', 'Open child commands only from their parent item.'], ['Flat commands', 'A shallower command set uses the same menu navigation.']),
   menubar: scenarios('menubar', ['Application menu', 'Top-level menus open below their owning menubar item.'], ['Compact menubar', 'A reduced command set preserves horizontal menu navigation.']),
   'menu-button': scenarios('menu-button', ['Quick actions', 'A button owns a transient command popup.'], ['Open actions', 'An initially open popup demonstrates anchored overlay placement.']),
+  'navigation-menu': scenarios('navigation-menu', ['Product navigation', 'Native links and disclosure triggers share a horizontal navigation surface.'], ['Compact navigation', 'A smaller navigation surface preserves native link semantics and keyboard movement.']),
   carousel: scenarios('carousel', ['Release tour', 'Previous and next controls move through one visible slide.'], ['Direct selection', 'Indicators provide direct slide selection alongside arrows.']),
   feed: scenarios('feed', ['Activity timeline', 'Navigate a finite ordered stream of activity entries.'], ['Recent activity', 'A smaller window demonstrates newer and earlier boundaries.']),
   calendar: scenarios('calendar', ['Monthly calendar', 'Navigate and select dates in a complete six-week month grid.'], ['Compact week', 'A single visible week uses the same calendar state model.']),

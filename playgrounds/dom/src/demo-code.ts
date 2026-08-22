@@ -262,6 +262,23 @@ for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
 }
 window.addEventListener('pagehide', () => menubar.disconnect(), { once: true })`),
 
+  'navigation-menu': example('navigation-menu', 'createNavigationMenu', `const items = [
+  { id: 'products', parentID: null },
+  { id: 'overview', parentID: 'products' },
+  { id: 'components', parentID: 'products' },
+  { id: 'docs', parentID: null },
+] as const
+const root = required<HTMLElement>('[data-navigation-menu]')
+const navigation = createNavigationMenu({ root, items, label: 'Primary' })
+
+for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
+  navigation.setItemAttributes(item, item.dataset.value as typeof items[number]['id'])
+}
+for (const panel of root.querySelectorAll<HTMLElement>('[data-panel-for]')) {
+  navigation.setSubmenuAttributes(panel, panel.dataset.panelFor as typeof items[number]['id'])
+}
+window.addEventListener('pagehide', () => navigation.disconnect(), { once: true })`),
+
   'menu-button': example('menu-button', 'createMenuButton', `const items = [
   { id: 'edit', parentID: null },
   { id: 'duplicate', parentID: null },

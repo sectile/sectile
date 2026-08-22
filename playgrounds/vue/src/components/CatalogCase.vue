@@ -23,6 +23,7 @@ import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, Mul
 import { MenuItem, MenuRoot, MenuSeparator, MenuSubContent } from '@sectile/vue/menu';
 import { MenubarContent, MenubarItem, MenubarRoot, MenubarSeparator } from '@sectile/vue/menubar';
 import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuButtonItem } from '@sectile/vue/menu-button';
+import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '@sectile/vue/navigation-menu';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPause, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '@sectile/vue/carousel';
 import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '@sectile/vue/feed';
 import { CalendarCell, CalendarRoot } from '@sectile/vue/calendar';
@@ -68,6 +69,7 @@ const parts: Record<string, readonly string[]> = {
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarSubContent'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
+  'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
   'tree-view': ['TreeViewRoot', 'TreeViewItem', 'TreeViewDisclosure', 'TreeViewGroup'], 'tree-grid': ['TreeGridRoot', 'TreeGridRow', 'TreeGridCell', 'TreeGridEditor'],
 };
@@ -157,6 +159,12 @@ const sliderValues = computed(() => isAlternate.value ? [20, 50, 80] : [25, 75])
       <MenuRoot v-else-if="component === 'menu'" :items="menuItems" class="catalog-menu"><MenuItem value="file">File ›</MenuItem><MenuSubContent for="file" class="catalog-submenu"><MenuItem value="new">New</MenuItem><MenuItem value="open">Open</MenuItem></MenuSubContent><MenuSeparator /><MenuItem value="help">Help</MenuItem></MenuRoot>
       <MenubarRoot v-else-if="component === 'menubar'" :items="menuItems" class="catalog-menubar"><MenubarItem value="file">File</MenubarItem><MenubarContent for="file" class="catalog-submenu"><MenubarItem value="new">New</MenubarItem><MenubarSeparator /><MenubarItem value="open">Open</MenubarItem></MenubarContent><MenubarItem value="help">Help</MenubarItem></MenubarRoot>
       <MenuButtonRoot v-else-if="component === 'menu-button'" :items="menuItems" :default-open="isAlternate"><MenuButtonTrigger>Actions</MenuButtonTrigger><MenuButtonContent class="catalog-popup"><MenuButtonItem value="file">File</MenuButtonItem><MenuButtonItem value="help">Help</MenuButtonItem></MenuButtonContent></MenuButtonRoot>
+      <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="menuItems" label="Primary" class="catalog-navigation-menu">
+        <NavigationMenuList class="catalog-navigation-list">
+          <NavigationMenuItem><NavigationMenuTrigger value="file" as="button">Products</NavigationMenuTrigger><NavigationMenuContent for="file" class="catalog-submenu"><NavigationMenuLink value="new" as="a" href="#new">New releases</NavigationMenuLink><NavigationMenuLink value="open" as="a" href="#open">Open source</NavigationMenuLink></NavigationMenuContent></NavigationMenuItem>
+          <NavigationMenuItem><NavigationMenuLink value="help" as="a" href="#docs">Documentation</NavigationMenuLink></NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenuRoot>
 
       <CarouselRoot v-else-if="component === 'carousel'" :slides="items" :default-value="isAlternate ? 'beta' : 'alpha'" :wrap="!isConstrained" class="catalog-carousel"><CarouselTrack><CarouselSlide v-for="item in items" :key="item" :value="item" class="catalog-slide">Release {{ item }}</CarouselSlide></CarouselTrack><div class="catalog-inline"><CarouselPrevious>‹</CarouselPrevious><CarouselNext>›</CarouselNext><CarouselPause v-if="isConstrained">Pause</CarouselPause></div><CarouselIndicatorGroup v-if="isAlternate" class="catalog-inline"><CarouselIndicator v-for="item in items" :key="item" :value="item" :aria-label="`Go to ${item}`">{{ items.indexOf(item) + 1 }}</CarouselIndicator></CarouselIndicatorGroup></CarouselRoot>
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createMenuButton } from '../dist/menu-button.js';
 import { createMenubar } from '../dist/menubar.js';
+import { createNavigationMenu } from '../dist/navigation-menu.js';
 
 test('DOM menu button owns trigger, nested popup path, and invocation', () => {
   const root = new FakeElement();
@@ -132,6 +133,32 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   assert.equal(submenu.dataset.placement, 'bottom-start');
   assert.equal(submenu.style.left, '100px');
   assert.equal(submenu.style.top, '104px');
+});
+
+test('DOM navigation menu preserves native navigation roles and toggles panels', () => {
+  const root = new FakeElement();
+  const products = new FakeElement();
+  const overview = new FakeElement();
+  const panel = new FakeElement();
+  const navigation = createNavigationMenu({
+    root,
+    items: [{ id: 'products', parentID: null }, { id: 'overview', parentID: 'products' }],
+    defaultHighlightedValue: 'products',
+    label: 'Primary',
+  });
+
+  navigation.setItemAttributes(products, 'products');
+  navigation.setItemAttributes(overview, 'overview');
+  navigation.setSubmenuAttributes(panel, 'products');
+  assert.equal(root.attributes.get('role'), 'navigation');
+  assert.equal(products.attributes.has('role'), false);
+  assert.equal(panel.hidden, true);
+
+  navigation.handleEvent('open-submenu');
+  assert.equal(panel.hidden, false);
+  assert.equal(panel.attributes.has('role'), false);
+  navigation.handleEvent('escape');
+  assert.equal(panel.hidden, true);
 });
 
 class FakeView {

@@ -162,6 +162,7 @@ export { createTooltip, tryCreateTooltip, type TooltipConnection, type TooltipOp
 export { createMultiThumbSlider, tryCreateMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderOptions } from './multi-thumb-slider.js';
 export { createMenu, tryCreateMenu, type MenuConnection, type MenuOptions } from './menu.js';
 export { createMenubar, tryCreateMenubar, type MenubarConnection, type MenubarOptions } from './menubar.js';
+export { createNavigationMenu, tryCreateNavigationMenu, type NavigationMenuConnection, type NavigationMenuOptions } from './navigation-menu.js';
 export { createMenuButton, tryCreateMenuButton, type MenuButtonConnection, type MenuButtonOptions } from './menu-button.js';
 export {
   createCarousel, tryCreateCarousel,

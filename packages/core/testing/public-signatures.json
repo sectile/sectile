@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "4743074ed86398afca975bf222f549349855c4ebd38043988619dd70e6990a2e",
+  "fingerprint": "ce07046097f4b8298d7941491fe87f28750081966a53f30ddce639424a1e5b0f",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -173,6 +173,10 @@
     {
       "path": "dist/multi-thumb-slider.d.ts",
       "sha256": "8e711e67da0ebe96c885ab623b880e46274ab1a781406de163deedb87c4de24f"
+    },
+    {
+      "path": "dist/navigation-menu.d.ts",
+      "sha256": "639f078aecacb455b76eb55f18255416b1d30295c0a3b1956c68fe1ca37aaed2"
     },
     {
       "path": "dist/number-field.d.ts",

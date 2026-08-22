@@ -12,7 +12,7 @@ import { radioGroupDemo, tabsDemo, toolbarDemo } from './linear-controls.js';
 import { accordionDemo, disclosureDemo } from './expansion-controls.js';
 import { spinButtonDemo, windowSplitterDemo } from './range-controls.js';
 import { alertDialogDemo, dialogDemo, popoverDemo, tooltipDemo } from './popup-controls.js';
-import { menuButtonDemo, menuDemo, menubarDemo } from './menu-controls.js';
+import { menuButtonDemo, menuDemo, menubarDemo, navigationMenuDemo } from './menu-controls.js';
 import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo, toggleGroupDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { numberFieldDemo } from './number-field.js';
@@ -41,6 +41,7 @@ const rawDemos: readonly DemoDefinition[] = [
   menuDemo,
   menubarDemo,
   menuButtonDemo,
+  navigationMenuDemo,
   calendarDemo,
   treeViewDemo,
   textDemo,
@@ -100,7 +101,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
   {
     id: 'navigation',
     label: 'Navigation',
-    demoIDs: ['carousel', 'menu', 'menu-button', 'menubar', 'pagination', 'tabs', 'toolbar'],
+    demoIDs: ['carousel', 'menu', 'menu-button', 'menubar', 'navigation-menu', 'pagination', 'tabs', 'toolbar'],
   },
   {
     id: 'collection',

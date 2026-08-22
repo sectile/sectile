@@ -548,6 +548,12 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .menu-demo.menu-button { justify-items: center; }
 .menu-button > .menu-surface { position: fixed; z-index: 20; width: min(18rem, calc(100vw - 1rem)); max-height: calc(100vh - 1rem); overflow: auto; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.42); }
 .submenu-surface { position: fixed; z-index: 20; width: min(15rem, calc(100vw - 1rem)); max-height: calc(100vh - 1rem); overflow: auto; flex-direction: column; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.42); }
+.navigation-menu-demo { position: relative; width: min(38rem, 100%); margin: 0 auto; }
+.navigation-menu-list { display: flex; align-items: center; gap: 0.35rem; margin: 0; padding: 0.45rem; list-style: none; border: 1px solid #2b3548; border-radius: 0.85rem; background: #0c1320; }
+.navigation-menu-link { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 2.5rem; padding: 0.55rem 0.8rem; color: #c9d4e6; text-decoration: none; border: 0; border-radius: 0.55rem; background: transparent; }
+.navigation-menu-link:hover, .navigation-menu-link.current { color: #f4f7ff; background: #1d2940; }
+.navigation-menu-panel { position: fixed; z-index: 20; display: grid; grid-template-columns: repeat(2, minmax(8rem, 1fr)); gap: 0.4rem; width: min(24rem, calc(100vw - 1rem)); padding: 0.65rem; border: 1px solid #344158; border-radius: 0.85rem; background: #0d1522; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.42); }
+.navigation-menu-panel[hidden] { display: none; }
 .menu-item { display: flex; min-height: 2.6rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.55rem 0.7rem; border-color: transparent; color: #c4cede; background: transparent; text-align: left; }
 .menu-item[data-submenu-placement="left-start"] svg { transform: rotate(180deg); }
 .menu-item:hover, .menu-item.current { border-color: #5368eb; color: #fff; background: #1b2642; }

@@ -281,6 +281,9 @@ textarea.text-field { min-height: 8rem; }
 .catalog-slider-range { position: absolute; inset-block: 0; left: var(--sectile-range-start); right: calc(100% - var(--sectile-range-end)); border-radius: inherit; background: #6377f1; }
 .catalog-slider-thumb { position: absolute; top: 50%; left: var(--sectile-thumb-percentage); width: 1.2rem; height: 1.2rem; border: 0.2rem solid #111827; border-radius: 50%; padding: 0; background: #a9b7ff; transform: translate(-50%, -50%); }
 .catalog-menu, .catalog-menubar { display: flex; position: relative; gap: 0.35rem; padding: 0.5rem; border: 1px solid #344158; border-radius: 0.75rem; background: #0d1522; }
+.catalog-navigation-menu { position: relative; width: min(36rem, 100%); }
+.catalog-navigation-list { display: flex; align-items: center; gap: 0.35rem; margin: 0; padding: 0.5rem; list-style: none; border: 1px solid #344158; border-radius: 0.75rem; background: #0d1522; }
+.catalog-navigation-list > li > a, .catalog-navigation-list > li > button { display: inline-flex; min-height: 2.5rem; align-items: center; padding: 0.55rem 0.8rem; color: #dce5f2; text-decoration: none; border: 0; border-radius: 0.5rem; background: transparent; }
 .catalog-menu { flex-direction: column; }
 .catalog-submenu { position: absolute; top: 100%; left: 0; display: grid; min-width: 10rem; gap: 0.3rem; }
 .catalog-carousel { display: grid; gap: 0.8rem; }

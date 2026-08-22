@@ -1,6 +1,7 @@
 import { createMenu, type MenuConnection } from '@sectile/dom/menu';
 import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
+import { createNavigationMenu } from '@sectile/dom/navigation-menu';
 import type { StableID } from '@sectile/core';
 import { ChevronDown, ChevronRight, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
@@ -37,6 +38,29 @@ export const menuButtonDemo: DemoDefinition = definition('menu-button', 'Menu bu
   { id: 'nested', title: 'Nested actions', items: nestedItems, disabled: ['paste'] },
   { id: 'controlled', title: 'Controlled menu', items: basicItems, disabled: [], controlled: true },
 ]);
+
+const navigationItems = [
+  { id: 'products', parentID: null, label: 'Products' },
+  { id: 'overview', parentID: 'products', label: 'Overview' },
+  { id: 'components', parentID: 'products', label: 'Components' },
+  { id: 'docs', parentID: null, label: 'Documentation' },
+  { id: 'github', parentID: null, label: 'GitHub' },
+] as const;
+
+export const navigationMenuDemo: DemoDefinition = {
+  id: 'navigation-menu', label: 'Navigation Menu', title: 'Navigation Menu',
+  description: 'Native navigation links with disclosure panels, horizontal keyboard movement, and collision-aware placement.',
+  shortcuts: [
+    { keys: ['←', '→'], label: 'move between top-level items' },
+    { keys: ['↓'], label: 'open panel' },
+    { keys: ['Esc'], label: 'close panel' },
+  ],
+  cases: [
+    { id: 'product', title: 'Product navigation', mount: (context) => mountNavigationMenu(context, []) },
+    { id: 'links', title: 'Native links', mount: (context) => mountNavigationMenu(context, [], true) },
+    { id: 'disabled', title: 'Unavailable section', mount: (context) => mountNavigationMenu(context, ['products']) },
+  ],
+};
 
 function definition(id: 'menu' | 'menubar' | 'menu-button', label: string, cases: readonly MenuCase[]): DemoDefinition {
   return {
@@ -108,4 +132,40 @@ function mountMenu(context: DemoContext, kind: 'menu' | 'menubar' | 'menu-button
   }
   render();
   return { focus: () => (kind === 'menu-button' ? trigger : root).focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountNavigationMenu(context: DemoContext, disabledItems: readonly string[], linksOnly = false): DemoSession {
+  const root = document.createElement('nav'); root.className = 'navigation-menu-demo';
+  const list = document.createElement('ul'); list.className = 'navigation-menu-list'; root.append(list); context.surface.append(root);
+  const elements = new Map<string, HTMLElement>();
+  const panel = document.createElement('div'); panel.className = 'navigation-menu-panel';
+  for (const item of navigationItems) {
+    if (linksOnly && item.parentID !== null) continue;
+    const container = document.createElement('li');
+    const hasChildren = navigationItems.some((candidate) => candidate.parentID === item.id);
+    const element = hasChildren ? document.createElement('button') : document.createElement('a');
+    if (element instanceof HTMLButtonElement) element.type = 'button';
+    if (element instanceof HTMLAnchorElement) element.href = `#navigation-${item.id}`;
+    element.className = 'navigation-menu-link'; element.textContent = item.label;
+    if (hasChildren) element.append(createElement(ChevronDown, { 'aria-hidden': 'true', height: 15, width: 15 }));
+    container.append(element); elements.set(item.id, element);
+    if (item.parentID === null) list.append(container); else panel.append(element);
+  }
+  if (!linksOnly) root.append(panel);
+  let invoked: string | null = null;
+  const activeItems = linksOnly ? navigationItems.filter((item) => item.parentID === null).map((item) => ({ id: item.id, parentID: null })) : navigationItems.map(({ id, parentID }) => ({ id, parentID }));
+  const connection = createNavigationMenu({
+    root, items: activeItems, disabledItems, defaultHighlightedValue: activeItems[0]?.id ?? null,
+    label: 'Primary', typeahead: { textValue: (id) => navigationItems.find((item) => item.id === id)?.label ?? id },
+    onInvoke: (id) => { invoked = id; }, onUpdate: render,
+  });
+  for (const [id, element] of elements) connection.setItemAttributes(element, id);
+  if (!linksOnly) connection.setSubmenuAttributes(panel, 'products');
+  function render(): void {
+    const { revision, state } = connection.getSnapshot();
+    for (const [id, element] of elements) element.classList.toggle('current', state.cursor.current === id);
+    context.showState(revision, { current: state.cursor.current, openPath: state.openPath, invoked, disabled: disabledItems, semantics: 'native-navigation' });
+  }
+  render();
+  return { focus: () => elements.get(activeItems[0]?.id ?? '')?.focus(), disconnect: () => connection.disconnect() };
 }
