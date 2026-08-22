@@ -13,6 +13,7 @@ import {
 } from '@sectile/primitives/carousel';
 import type { RevisionSnapshot } from '@sectile/primitives/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface CarouselScheduler {
   schedule(callback: () => void, delayMs: number): unknown;
@@ -34,6 +35,7 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly defaultValue?: ID | null;
   readonly paused?: boolean;
   readonly defaultPaused?: boolean;
+  readonly disabled?: boolean;
   readonly policies?: CarouselPolicies;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly autoplay?: boolean | CarouselAutoplayOptions;
@@ -99,6 +101,7 @@ export function createCarousel<ID extends StableID>(options: CarouselOptions<ID>
       if (previous.paused !== proposed.paused) options.onPausedChange?.(proposed.paused);
     },
     toEffect: (command) => command,
+    interaction: options,
   });
   return runtime.ok
     ? { ok: true, value: new DOMCarousel(options, slides.value, runtime.value, autoplay.value, valueControlled, pausedControlled) }
@@ -173,6 +176,10 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
     };
 
     options.root.addEventListener('keydown', this.#keydown);
+    setInteractionAttributes(options.root, options);
+    if (options.previousButton !== undefined) setInteractionAttributes(options.previousButton, options, { native: true });
+    if (options.nextButton !== undefined) setInteractionAttributes(options.nextButton, options, { native: true });
+    if (options.pauseButton !== undefined) setInteractionAttributes(options.pauseButton, options, { native: true });
     options.previousButton?.addEventListener('click', this.#previous);
     options.nextButton?.addEventListener('click', this.#next);
     options.pauseButton?.addEventListener('click', this.#pause);

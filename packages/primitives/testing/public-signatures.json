@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "fd221575d5c41648422146835da76e6b69f3f36675141d76c9aa5daef0c74cd0",
+  "fingerprint": "80de171b45f732b729a9b674630efb00ec54ef7c9b8f842ad984741fd190159a",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -17,6 +17,10 @@
     {
       "path": "dist/carousel.d.ts",
       "sha256": "7a3d2666489773bb123553e1b463a85e0e63d709999f679b7cfc4453062e193d"
+    },
+    {
+      "path": "dist/checkbox-group.d.ts",
+      "sha256": "c2bd1f83a5b4629a4ef8cde2a5eedb0841ada6297993b08df8684535112e68c1"
     },
     {
       "path": "dist/checkbox.d.ts",
@@ -40,7 +44,11 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "bcbd8cf602e9c971699d4c713d8bc950962196fe0d92850a061f792fdd06168e"
+      "sha256": "6e533d2c30e975ab27d6135c016248a64c0624fbbc8cb02bd3468a0cd26d79a6"
+    },
+    {
+      "path": "dist/interaction.d.ts",
+      "sha256": "562de62190ac0d4ca678857216dc12c6c303d05617196bf7e3b0be67b6585e11"
     },
     {
       "path": "dist/internal/composites/calendar.d.ts",
@@ -91,6 +99,10 @@
       "sha256": "1c976155f2fc8905a2660057bb96eb3df7c70ff1bda9be7e1a0c523ae2e380c7"
     },
     {
+      "path": "dist/internal/kernel/decimal.d.ts",
+      "sha256": "2a53b6a11e3238dbae6d1d3f899f25713632c5165c8b125eadd5f501f131c325"
+    },
+    {
       "path": "dist/internal/kernel/machine.d.ts",
       "sha256": "0f85493845e5da85fb2c0957f15c4de1a269fb57cea9c057c7e49a486b621583"
     },
@@ -139,8 +151,24 @@
       "sha256": "8e711e67da0ebe96c885ab623b880e46274ab1a781406de163deedb87c4de24f"
     },
     {
+      "path": "dist/number-field.d.ts",
+      "sha256": "2a53aa4477c5aaf3eb8828577f2536701c3316b8000d2c46adea8d08a6623b52"
+    },
+    {
+      "path": "dist/pagination.d.ts",
+      "sha256": "9a398b108a015616442609af54e0cee9d2d4a3d0e30bfcd9f84e3baa2ad7f278"
+    },
+    {
+      "path": "dist/pin-input.d.ts",
+      "sha256": "fcb9c38a8023d8c8ed2ca4b4866dcbba0e9331b316172c260db18e10298961c5"
+    },
+    {
       "path": "dist/radio-group.d.ts",
       "sha256": "9743ce028ac05de24cf3fb5a7b05861dd6c959dfce57c5e61a8959bd50be77ae"
+    },
+    {
+      "path": "dist/rating.d.ts",
+      "sha256": "5e79d255295aed672717099473d74947ec43c7ee7fe04bf88a5bb88c022e0092"
     },
     {
       "path": "dist/result.d.ts",
@@ -149,6 +177,10 @@
     {
       "path": "dist/revision.d.ts",
       "sha256": "605aaf5d999c37b9e2d849576c270c746d14d0b460c642de64e0ab58d4665af1"
+    },
+    {
+      "path": "dist/select.d.ts",
+      "sha256": "b3fcfa556bf9b7e643d514da8f5dd9751df7fd34582b31807569868aed23c9a6"
     },
     {
       "path": "dist/shared.d.ts",
@@ -160,7 +192,11 @@
     },
     {
       "path": "dist/spin-button.d.ts",
-      "sha256": "bf6cf423f5f90c56f5cf67cfffcde146005a50d03bb63209aa07d14ebc1d0f9b"
+      "sha256": "e49a1d572a7b39ed9734b467b03efd36e4bcd0e31e618dcd012a13cc3d91902b"
+    },
+    {
+      "path": "dist/stepper.d.ts",
+      "sha256": "9e4e6426eade55861ee90aaa2c3836333dda26285b60eae4c67ade5662f3eaef"
     },
     {
       "path": "dist/structures/grid.d.ts",
@@ -185,6 +221,10 @@
     {
       "path": "dist/tabs.d.ts",
       "sha256": "9fc704b11f985e2715e3254c4b7101ef9efe5da75751ceb57e42bbe23c61f5f8"
+    },
+    {
+      "path": "dist/tags-input.d.ts",
+      "sha256": "c8a18b4220b919bea9560ed532aa5162359f790ec568cc65eeaf6ac6adfe6441"
     },
     {
       "path": "dist/text.d.ts",

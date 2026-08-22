@@ -1,5 +1,10 @@
 import type { Result } from '@sectile/primitives';
 import {
+  createInteractionState,
+  requireInteraction,
+  type InteractionStateInput,
+} from '@sectile/primitives/interaction';
+import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type EventReducer,
@@ -21,12 +26,16 @@ export interface SemanticControllerOptions<State, Event, Command, Effect> {
   readonly reconcile?: (previous: State, proposed: State) => Result<State>;
   readonly notify?: (previous: State, proposed: State) => void;
   readonly toEffect: (command: Command) => Effect;
+  readonly interaction?: InteractionStateInput | undefined;
+  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
 }
 
 export function createSemanticController<State, Event, Command, Effect>(
   options: SemanticControllerOptions<State, Event, Command, Effect>,
 ): Result<SemanticController<State, Event, Effect>> {
   if (!options.initial.ok) return options.initial;
+  const interaction = createInteractionState(options.interaction);
+  if (!interaction.ok) return interaction;
   const snapshot = createRevisionSnapshot(options.initial.value);
   if (!snapshot.ok) return snapshot;
   let current = snapshot.value;
@@ -43,6 +52,11 @@ export function createSemanticController<State, Event, Command, Effect>(
         event: Event,
         expectedRevision = current.revision,
       ): RevisionResult<State, Effect> => {
+        const permitted = requireInteraction(
+          interaction.value,
+          options.interactionIntent?.(event) ?? 'mutate',
+        );
+        if (!permitted.ok) return rejectRevisionInput(current, permitted.error);
         const result = applyControllerEvent(
           current,
           expectedRevision,

@@ -83,6 +83,7 @@ function mountGrid(context: DemoContext, scenario: {
   let connection!: GridConnection<GridID>;
   connection = unwrap(createGridControl({
     root, rows: gridRows, label: 'Release ownership matrix', disabledItems: scenario.disabled,
+    ...context.interaction,
     policies: { boundary: scenario.boundary },
     ...(scenario.controlled ? {
       value: externalValue, highlightedValue: externalHighlight, editMode: externalEdit,
@@ -158,6 +159,7 @@ function mountCarousel(context: DemoContext, scenario: {
   let connection!: CarouselConnection<SlideID>;
   connection = unwrap(createCarousel({
     root,
+    ...context.interaction,
     ...(previous === undefined ? {} : { previousButton: previous }),
     ...(next === undefined ? {} : { nextButton: next }),
     ...(indicators === undefined ? {} : { indicatorGroup: indicators }),
@@ -232,6 +234,7 @@ function mountFeed(context: DemoContext, scenario: {
   let connection!: FeedConnection<FeedID>;
   connection = unwrap(createFeed({
     root,
+    ...context.interaction,
     items: windowIDs,
     revision,
     label: 'Release activity timeline',

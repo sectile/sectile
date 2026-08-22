@@ -67,6 +67,8 @@ function run() {
       render,
       record: ({ event, result }) => record(eventLabel(event), result),
       recordText: ({ input, result }) => record(input.type, result),
+      readOnly: definition.readOnly === true,
+      readOnlyCase: definition.readOnlyCase ?? 0,
     };
     active = { definition, session: definition.create(host) };
     render();

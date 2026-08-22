@@ -4,6 +4,7 @@ import { createSequence, type Sequence } from '@sectile/primitives/sequence';
 import type { RevisionSnapshot } from '@sectile/primitives/revision';
 import { applyMultiThumbSliderEvent, createMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/primitives/multi-thumb-slider';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends BoundedRangeInput {
   readonly root: HTMLElement;
@@ -12,6 +13,8 @@ export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends
   readonly values?: readonly number[];
   readonly defaultValues?: readonly number[];
   readonly defaultHighlightedValue?: ID | null;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly policies?: MultiThumbSliderPolicies;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly label?: string;
@@ -45,6 +48,8 @@ export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbS
       if (previous.ticks.some((tick, index) => tick !== proposed.ticks[index])) options.onValuesChange?.(proposed.ticks);
     },
     toEffect: (command) => command,
+    interaction: options,
+    interactionIntent: multiThumbIntent,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMMultiThumbSlider(options, thumbs.value, range.value, runtime.value) };
@@ -107,6 +112,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     (options.track ?? options.root).addEventListener('pointerup', this.#handlePointerUp);
     (options.track ?? options.root).addEventListener('pointercancel', this.#handlePointerUp);
     options.root.setAttribute('role', 'group');
+    setInteractionAttributes(options.root, options);
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
   }
   public getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>> { return this.#runtime.getSnapshot(); }
@@ -118,7 +124,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     return result;
   }
   public setThumbAttributes(element: HTMLElement, id: ID): void { if (this.#thumbs.indexOf(id) !== null) { this.#elements.set(id, element); this.#refreshAttributes(); } }
-  public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#refreshAttributes(); this.#options.onUpdate?.(); return true; }
+  public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refreshAttributes(); this.#options.onUpdate?.(); } return result.ok; }
   public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#handleKeydown); this.#options.root.removeEventListener('focusin', this.#handleFocus); (this.#options.track ?? this.#options.root).removeEventListener('pointerdown', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointermove', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointerup', this.#handlePointerUp); (this.#options.track ?? this.#options.root).removeEventListener('pointercancel', this.#handlePointerUp); this.#elements.clear(); }
   #thumbForTarget(target: EventTarget | null): ID | null {
     for (const [id, element] of this.#elements) if (element === target) return id;
@@ -151,6 +157,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
         : (state.ticks[index + 1] as number) - gap;
       const value = this.range.valueAt(tick) as string;
       element.setAttribute('role', 'slider');
+      setInteractionAttributes(element, this.#options, { readOnly: true });
       element.setAttribute('aria-valuemin', this.range.valueAt(lowerTick) as string);
       element.setAttribute('aria-valuemax', this.range.valueAt(upperTick) as string);
       element.setAttribute('aria-valuenow', value);
@@ -162,6 +169,8 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     }
   }
 }
+
+function multiThumbIntent<ID extends StableID>(event: MultiThumbSliderEvent<ID>): 'navigate' | 'mutate' { if (typeof event === 'object') return event.type === 'focus' ? 'navigate' : 'mutate'; return event === 'next-thumb' || event === 'previous-thumb' ? 'navigate' : 'mutate'; }
 
 function toMultiThumbSliderEvent(event: KeyboardEvent): Extract<MultiThumbSliderEvent, string> | null {
   if (event.altKey || event.ctrlKey || event.metaKey) return null;

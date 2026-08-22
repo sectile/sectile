@@ -47,6 +47,7 @@ function mountAccordion(context: DemoContext, options: {
   let connection!: AccordionConnection<AccordionID>;
   connection = unwrap(createAccordion({
     root,
+    ...context.interaction,
     items: accordionItems.map((item) => item.id),
     policies: { expansion: options.expansion, collapsible: options.collapsible },
     ...(options.disabledItems === undefined ? {} : { disabledItems: options.disabledItems }),
@@ -68,7 +69,7 @@ function mountAccordion(context: DemoContext, options: {
       const section = document.createElement('section');
       const header = document.createElement('button');
       header.type = 'button';
-      header.id = `accordion-header-${options.expansion}-${item.id}`;
+      header.id = `accordion-header-${context.instanceID}-${options.expansion}-${item.id}`;
       header.className = 'accordion-header';
       const label = document.createElement('span');
       label.className = 'accordion-label';
@@ -83,7 +84,7 @@ function mountAccordion(context: DemoContext, options: {
       chevron.classList.add('expansion-chevron');
       header.append(label, chevron);
       const panel = document.createElement('div');
-      panel.id = `accordion-panel-${options.expansion}-${item.id}`;
+      panel.id = `accordion-panel-${context.instanceID}-${options.expansion}-${item.id}`;
       panel.className = 'accordion-panel';
       const panelCopy = document.createElement('p');
       panelCopy.textContent = item.panel;
@@ -143,7 +144,8 @@ function mountDisclosure(context: DemoContext, initial: boolean, controlled: boo
   connection = unwrap(createDisclosure({
     trigger,
     panel,
-    panelID: `disclosure-panel-${controlled ? 'controlled' : initial ? 'open' : 'closed'}`,
+    ...context.interaction,
+    panelID: `disclosure-panel-${context.instanceID}-${controlled ? 'controlled' : initial ? 'open' : 'closed'}`,
     ...(controlled ? {
       open: external,
       onOpenChange: (open) => {

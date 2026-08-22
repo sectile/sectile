@@ -3,6 +3,8 @@ export interface ExactDecimal {
   readonly scale: number;
 }
 
+export type DecimalRounding = 'half-even' | 'half-up' | 'toward-zero';
+
 const DECIMAL = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))$/u;
 
 export function parseDecimal(value: string): ExactDecimal | null {
@@ -68,6 +70,17 @@ export function subtractDecimal(left: ExactDecimal, right: ExactDecimal): ExactD
   return normalizeDecimal({ coefficient: a - b, scale });
 }
 
+export function negateDecimal(value: ExactDecimal): ExactDecimal {
+  return Object.freeze({ coefficient: -value.coefficient, scale: value.scale });
+}
+
+export function multiplyDecimal(left: ExactDecimal, right: ExactDecimal): ExactDecimal {
+  return normalizeDecimal({
+    coefficient: left.coefficient * right.coefficient,
+    scale: left.scale + right.scale,
+  });
+}
+
 export function multiplyDecimalByInteger(value: ExactDecimal, factor: bigint): ExactDecimal {
   return normalizeDecimal({ coefficient: value.coefficient * factor, scale: value.scale });
 }
@@ -82,6 +95,38 @@ export function decimalQuotient(
   return denominatorInteger < 0n
     ? [-numeratorInteger, -denominatorInteger]
     : [numeratorInteger, denominatorInteger];
+}
+
+export function divideDecimal(
+  numerator: ExactDecimal,
+  denominator: ExactDecimal,
+  scale: number,
+  rounding: DecimalRounding,
+): ExactDecimal | null {
+  if (!Number.isSafeInteger(scale) || scale < 0) {
+    throw new RangeError('division scale must be a non-negative safe integer');
+  }
+  if (!isDecimalRounding(rounding)) {
+    throw new RangeError('unsupported decimal rounding policy');
+  }
+  if (denominator.coefficient === 0n) return null;
+  const [rawNumerator, rawDenominator] = decimalQuotient(numerator, denominator);
+  const negative = rawNumerator < 0n;
+  const absoluteNumerator = negative ? -rawNumerator : rawNumerator;
+  const scaled = absoluteNumerator * pow10(scale);
+  let coefficient = scaled / rawDenominator;
+  const remainder = scaled % rawDenominator;
+  if (rounding !== 'toward-zero' && remainder !== 0n) {
+    const comparison = remainder * 2n - rawDenominator;
+    if (
+      comparison > 0n
+      || (comparison === 0n && rounding === 'half-up')
+      || (comparison === 0n && rounding === 'half-even' && coefficient % 2n !== 0n)
+    ) {
+      coefficient += 1n;
+    }
+  }
+  return normalizeDecimal({ coefficient: negative ? -coefficient : coefficient, scale });
 }
 
 export function greatestCommonDivisor(left: bigint, right: bigint): bigint {
@@ -110,4 +155,8 @@ export function pow10(exponent: number): bigint {
     throw new RangeError('decimal scale must be a non-negative safe integer');
   }
   return 10n ** BigInt(exponent);
+}
+
+function isDecimalRounding(value: string): value is DecimalRounding {
+  return value === 'half-even' || value === 'half-up' || value === 'toward-zero';
 }

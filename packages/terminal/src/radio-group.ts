@@ -17,6 +17,8 @@ export type RadioGroupEffect<ID extends StableID = StableID> =
   { readonly type: 'move-radio-highlight'; readonly id: ID };
 
 export interface RadioGroupOptions<ID extends StableID = StableID> {
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly items: readonly ID[];
   readonly policies?: RadioGroupPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -57,6 +59,8 @@ export function createRadioGroup<ID extends StableID>(
   const runtime = createSemanticController<
     RadioGroupState<ID>, RadioGroupEvent<ID>, RadioGroupCommand<ID>, RadioGroupEffect<ID>
   >({
+    interaction: options,
+    interactionIntent: radioGroupIntent,
     initial: createRadioGroupState(domain.value, {
       selected: selected(options.value ?? options.defaultValue ?? null),
       current: options.highlightedValue !== undefined
@@ -65,7 +69,9 @@ export function createRadioGroup<ID extends StableID>(
     }),
     reducer: (state, event) => applyRadioGroupEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createRadioGroupState(domain.value, {
-      selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
+      selected: valueControlled || options.readOnly === true
+        ? previous.selection.selected
+        : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -140,9 +146,9 @@ class TerminalRadioGroupConnection<ID extends StableID> implements RadioGroupCon
   }
 
   public handleEvent(event: RadioGroupEvent<ID>): boolean {
-    this.#runtime.handle(event);
-    this.#options.onUpdate?.();
-    return true;
+    const result = this.#runtime.handle(event);
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
@@ -150,6 +156,12 @@ class TerminalRadioGroupConnection<ID extends StableID> implements RadioGroupCon
     if (event === null) return false;
     return this.handleEvent(event);
   }
+}
+
+function radioGroupIntent<ID extends StableID>(event: RadioGroupEvent<ID>): 'navigate' | 'mutate' {
+  return event === 'check' || (typeof event === 'object' && event.type === 'check')
+    ? 'mutate'
+    : 'navigate';
 }
 
 function selected<ID extends StableID>(value: ID | null): readonly ID[] {

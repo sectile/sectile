@@ -12,6 +12,7 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =
@@ -20,6 +21,7 @@ export type ToolbarEffect<ID extends StableID = StableID> =
 
 export interface ToolbarOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
+  readonly disabled?: boolean;
   readonly items: readonly ID[];
   readonly policies?: ToolbarPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -56,6 +58,7 @@ export function createToolbar<ID extends StableID>(
   const runtime = createSemanticController<
     ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
   >({
+    interaction: options,
     initial: createToolbarState(domain.value, {
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
@@ -114,6 +117,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
     this.#controlled = controlled;
     this.#disabledItems = disabledItems;
     options.root.setAttribute('role', 'toolbar');
+    setInteractionAttributes(options.root, options);
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     this.#keydown = (event): void => {
@@ -161,8 +165,8 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
         }
       });
     }
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public disconnect(): void {

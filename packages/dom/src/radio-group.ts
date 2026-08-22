@@ -12,6 +12,7 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
 
 export type RadioGroupEffect<ID extends StableID = StableID> =
@@ -19,6 +20,8 @@ export type RadioGroupEffect<ID extends StableID = StableID> =
 
 export interface RadioGroupOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly items: readonly ID[];
   readonly policies?: RadioGroupPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -61,6 +64,8 @@ export function createRadioGroup<ID extends StableID>(
   const runtime = createSemanticController<
     RadioGroupState<ID>, RadioGroupEvent<ID>, RadioGroupCommand<ID>, RadioGroupEffect<ID>
   >({
+    interaction: options,
+    interactionIntent: radioGroupIntent,
     initial: createRadioGroupState(domain.value, {
       selected: selected(options.value ?? options.defaultValue ?? null),
       current: options.highlightedValue !== undefined
@@ -69,7 +74,9 @@ export function createRadioGroup<ID extends StableID>(
     }),
     reducer: (state, event) => applyRadioGroupEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createRadioGroupState(domain.value, {
-      selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
+      selected: valueControlled || options.readOnly === true
+        ? previous.selection.selected
+        : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -123,6 +130,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#disabledItems = disabledItems;
     options.root.setAttribute('role', 'radiogroup');
+    setInteractionAttributes(options.root, options, { readOnly: true });
     options.root.setAttribute('aria-orientation', options.orientation ?? 'vertical');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     this.#keydown = (event): void => {
@@ -178,14 +186,20 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
         if (element.dataset['radioGroupId'] === result.snapshot.state.cursor.current) element.focus();
       }
     });
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public disconnect(): void {
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
   }
+}
+
+function radioGroupIntent<ID extends StableID>(event: RadioGroupEvent<ID>): 'navigate' | 'mutate' {
+  return event === 'check' || (typeof event === 'object' && event.type === 'check')
+    ? 'mutate'
+    : 'navigate';
 }
 
 function selected<ID extends StableID>(value: ID | null): readonly ID[] {

@@ -1,4 +1,5 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   applyComboboxEvent,
   createComboboxState,
@@ -65,6 +66,8 @@ export interface ComboboxControllerOptions<ID extends StableID = StableID> {
   readonly defaultOpen?: boolean;
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onValueChange?: (change: ComboboxValueChangeDetails<ID>) => void;
   readonly onInputStateChange?: (change: ComboboxInputStateChangeDetails) => void;
   readonly onOpenChange?: (change: ComboboxOpenChangeDetails) => void;
@@ -107,6 +110,8 @@ export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
 
 export interface ComboboxConnectionOptions<ID extends StableID = StableID> {
   readonly controller: ComboboxController<ID>;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onAccept?: (id: ID) => void;
   readonly onTransition?: (details: ComboboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
@@ -151,7 +156,9 @@ export function createComboboxController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalComboboxController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new TerminalComboboxController(options, interaction.value, snapshot.value) };
 }
 
 export function createCombobox<ID extends StableID>(
@@ -235,8 +242,8 @@ class TerminalComboboxConnection<ID extends StableID> implements ComboboxConnect
       const result = this.#controller.handleKeyboardInput(input);
       if (result.ok) this.#applyEffects(result.commands);
       this.#onTransition?.(Object.freeze({ event: keyboardEvent, result }));
-      this.#onUpdate?.();
-      return true;
+      if (result.ok) this.#onUpdate?.();
+      return result.ok;
     }
     const textInput = toTerminalTextInput(this.#controller.getSnapshot().state.text, input);
     if (textInput === null) return false;
@@ -244,8 +251,8 @@ class TerminalComboboxConnection<ID extends StableID> implements ComboboxConnect
     const result = this.#controller.handleTextInput(textInput);
     if (result.ok) this.#applyEffects(result.commands);
     if (event !== null) this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 
   #applyEffects(effects: readonly ComboboxEffect<ID>[]): void {
@@ -261,6 +268,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
   readonly #domain: Sequence<ID>;
   readonly #labels: ReadonlyMap<ID, string>;
   readonly #policies: ComboboxPolicies<ID>;
+  readonly #interaction: InteractionState;
   readonly #valueControlled: boolean;
   readonly #inputStateControlled: boolean;
   readonly #openControlled: boolean;
@@ -277,6 +285,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
 
   public constructor(
     options: ComboboxControllerOptions<ID>,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<ComboboxState<ID>>,
   ) {
     this.domain = options.domain;
@@ -284,6 +293,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     this.#domain = options.domain;
     this.#labels = options.labels;
     this.#policies = options.policies ?? {};
+    this.#interaction = interaction;
     this.#valueControlled = options.value !== undefined;
     this.#inputStateControlled = options.inputState !== undefined;
     this.#openControlled = options.open !== undefined;
@@ -365,6 +375,8 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     event: ComboboxEvent<ID>,
     expectedRevision: number,
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, comboboxIntent(event));
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -415,6 +427,10 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
       }));
     }
   }
+}
+
+function comboboxIntent<ID extends StableID>(event: ComboboxEvent<ID>): 'navigate' | 'mutate' {
+  return event === 'next' || event === 'previous' || event === 'close' ? 'navigate' : 'mutate';
 }
 
 function controlledState<ID extends StableID>(

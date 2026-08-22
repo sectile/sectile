@@ -11,6 +11,8 @@ export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends
   readonly values?: readonly number[];
   readonly defaultValues?: readonly number[];
   readonly defaultHighlightedValue?: ID | null;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly policies?: MultiThumbSliderPolicies;
   readonly onValuesChange?: (ticks: readonly number[]) => void;
   readonly onUpdate?: () => void;
@@ -37,6 +39,8 @@ export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbS
     reconcile: (previous, proposed) => createMultiThumbSliderState(thumbs.value, range.value, controlled ? previous.ticks : proposed.ticks, proposed.cursor.current, options.policies),
     notify: (previous, proposed) => { if (previous.ticks.some((tick, index) => tick !== proposed.ticks[index])) options.onValuesChange?.(proposed.ticks); },
     toEffect: (command) => command,
+    interaction: options,
+    interactionIntent: multiThumbIntent,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new TerminalMultiThumbSlider(options, thumbs.value, range.value, runtime.value) };
@@ -54,9 +58,11 @@ class TerminalMultiThumbSlider<ID extends StableID> implements MultiThumbSliderC
     if (this.#options.values === undefined) return { ok: false, error: { class: 'construction', code: 'not-controlled', message: 'Only a controlled multi-thumb slider can be synchronized.' } };
     return this.#runtime.replace(createMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
   }
-  public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { this.#runtime.handle(event); this.#options.onUpdate?.(); return true; }
+  public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event = toMultiThumbSliderEvent(input); return event === null ? false : this.handleEvent(event); }
 }
+
+function multiThumbIntent<ID extends StableID>(event: MultiThumbSliderEvent<ID>): 'navigate' | 'mutate' { if (typeof event === 'object') return event.type === 'focus' ? 'navigate' : 'mutate'; return event === 'next-thumb' || event === 'previous-thumb' ? 'navigate' : 'mutate'; }
 
 function toMultiThumbSliderEvent(input: TerminalKeyboardInput): Extract<MultiThumbSliderEvent, string> | null {
   if (input.key === 'right' || input.key === 'up') return 'increment';

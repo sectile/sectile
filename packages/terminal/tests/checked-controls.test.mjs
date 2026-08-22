@@ -5,3 +5,12 @@ test('terminal checked controls own enter and space dispatch', () => {
   const control = unwrap(createSwitch()); control.handleKeyboardInput({ key: 'enter' }); assert.equal(control.getSnapshot().state.checked, true);
   const toggle = unwrap(createToggleButton()); toggle.handleKeyboardInput({ key: 'space' }); assert.equal(toggle.getSnapshot().state.pressed, true); assert.equal(toggle.handleKeyboardInput({ key: 'tab' }), false);
 });
+test('terminal checked controls enforce disabled and read-only policies', () => {
+  const disabled = unwrap(createSwitch({ disabled: true }));
+  assert.equal(disabled.handleKeyboardInput({ key: 'space' }), false);
+  assert.equal(disabled.getSnapshot().state.checked, false);
+
+  const readOnly = unwrap(createCheckbox({ readOnly: true }));
+  assert.equal(readOnly.handleKeyboardInput({ key: 'space' }), false);
+  assert.equal(readOnly.getSnapshot().state.checked, false);
+});

@@ -39,7 +39,7 @@ export const tooltipDemo: DemoDefinition = {
 };
 
 function mountDialog(context: DemoContext, options: { readonly title: string; readonly modal: boolean; readonly controlled: boolean }): DemoSession {
-  const surface = popupSurface(options.title, 'Edit the name and move focus between actions.');
+  const surface = popupSurface(context.instanceID, options.title, 'Edit the name and move focus between actions.');
   const input = document.createElement('input'); input.value = 'Sectile workspace';
   const save = document.createElement('button'); save.type = 'button'; save.textContent = 'Save';
   surface.body.append(input); surface.actions.append(surface.close, save);
@@ -47,6 +47,7 @@ function mountDialog(context: DemoContext, options: { readonly title: string; re
   let external = false; let connection!: DialogConnection;
   connection = unwrap(createDialog({
     root: surface.popup, trigger: surface.trigger, modal: options.modal,
+    ...context.interaction,
     labelledBy: surface.title.id, describedBy: surface.description.id, initialFocus: input,
     ...(options.controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
     onUpdate: render,
@@ -60,7 +61,7 @@ function mountDialog(context: DemoContext, options: { readonly title: string; re
 }
 
 function mountAlertDialog(context: DemoContext, title: string, controlled: boolean): DemoSession {
-  const surface = popupSurface(title, 'This action cannot be undone. The safe action receives initial focus.');
+  const surface = popupSurface(context.instanceID, title, 'This action cannot be undone. The safe action receives initial focus.');
   surface.trigger.classList.add('button-with-icon');
   surface.trigger.replaceChildren(createElement(Trash2, { 'aria-hidden': 'true', height: 17, width: 17 }), 'Open confirmation');
   const confirm = document.createElement('button'); confirm.type = 'button'; confirm.textContent = 'Delete';
@@ -69,6 +70,7 @@ function mountAlertDialog(context: DemoContext, title: string, controlled: boole
   let external = false; let announcements = 0; let connection!: AlertDialogConnection;
   connection = unwrap(createAlertDialog({
     root: surface.popup, trigger: surface.trigger, labelledBy: surface.title.id,
+    ...context.interaction,
     describedBy: surface.description.id, initialFocus: surface.close,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
     onAnnounce: () => { announcements += 1; }, onUpdate: render,
@@ -88,7 +90,8 @@ function mountTooltip(context: DemoContext, copy: string, initial: boolean, cont
   root.append(trigger, tooltip); context.surface.append(root);
   let external = initial; let connection!: TooltipConnection;
   connection = unwrap(createTooltip({
-    root: tooltip, trigger, id: `tooltip-${controlled ? 'controlled' : initial ? 'open' : 'help'}`,
+    root: tooltip, trigger, id: `tooltip-${context.instanceID}-${controlled ? 'controlled' : initial ? 'open' : 'help'}`,
+    ...context.interaction,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : { defaultOpen: initial }),
     onUpdate: render,
   }));
@@ -97,14 +100,14 @@ function mountTooltip(context: DemoContext, copy: string, initial: boolean, cont
   return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
 }
 
-function popupSurface(titleText: string, descriptionText: string) {
+function popupSurface(instanceID: string, titleText: string, descriptionText: string) {
   const root = document.createElement('div'); root.className = 'popup-demo';
   const trigger = document.createElement('button'); trigger.type = 'button'; trigger.textContent = 'Open dialog';
   const popup = document.createElement('div'); popup.className = 'dialog-popup'; popup.tabIndex = -1;
   const header = document.createElement('header');
-  const title = document.createElement('h3'); title.id = `popup-title-${slug(titleText)}`; title.textContent = titleText;
+  const title = document.createElement('h3'); title.id = `popup-title-${instanceID}-${slug(titleText)}`; title.textContent = titleText;
   const iconClose = document.createElement('button'); iconClose.type = 'button'; iconClose.className = 'icon-control secondary'; iconClose.setAttribute('aria-label', 'Close'); iconClose.append(createElement(X, { 'aria-hidden': 'true', height: 17, width: 17 }));
-  const description = document.createElement('p'); description.id = `popup-description-${slug(titleText)}`; description.className = 'demo-copy'; description.textContent = descriptionText;
+  const description = document.createElement('p'); description.id = `popup-description-${instanceID}-${slug(titleText)}`; description.className = 'demo-copy'; description.textContent = descriptionText;
   const body = document.createElement('div'); body.className = 'dialog-body';
   const actions = document.createElement('footer'); actions.className = 'dialog-actions';
   const close = document.createElement('button'); close.type = 'button'; close.className = 'secondary'; close.textContent = 'Cancel';

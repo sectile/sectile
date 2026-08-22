@@ -110,6 +110,7 @@ function mountListboxCase(
   const connection = unwrap(createListbox({
     items: items.map((item) => item.id),
     root,
+    ...context.interaction,
     label: options.title,
     selectionMode: options.selectionMode,
     ...(options.disabledItems === undefined ? {} : { disabledItems: options.disabledItems }),

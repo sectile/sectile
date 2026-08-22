@@ -1,0 +1,9 @@
+import type { Result, StableID } from '@sectile/primitives';
+import type { StepperEvent, StepperState } from '@sectile/primitives/stepper';
+import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import { createTabs, type TabsOptions } from './tabs.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
+export type StepperOptions<ID extends StableID = StableID> = TabsOptions<ID>;
+export interface StepperConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<StepperState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<StepperState<ID>>>; handleEvent(event: StepperEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
+export function createStepper<ID extends StableID>(options: StepperOptions<ID>): Result<StepperConnection<ID>> { const result = createTabs(options); if (!result.ok) return result; const connection = result.value; return { ok: true, value: Object.freeze({ getSnapshot: () => connection.getSnapshot(), syncControlledValues: (values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }) => connection.syncControlledValues(values), handleEvent: (event: StepperEvent<ID>) => connection.handleEvent(mapEvent(event)), handleKeyboardInput: (input: TerminalKeyboardInput) => connection.handleKeyboardInput(input) }) }; }
+function mapEvent<ID extends StableID>(event: StepperEvent<ID>) { if (typeof event === 'object') return { type: event.type === 'focus-step' ? 'focus' as const : 'select' as const, id: event.id }; return event === 'next-step' ? 'next' as const : event === 'previous-step' ? 'previous' as const : event === 'first-step' ? 'first' as const : event === 'last-step' ? 'last' as const : 'activate' as const; }

@@ -14,6 +14,7 @@ let sessions: DemoSession[] = [];
 
 renderNavigation();
 mountActiveDemo();
+requestAnimationFrame(() => window.scrollTo(0, 0));
 
 resetButton.append(
   createElement(RotateCcw, { 'aria-hidden': 'true', height: 13, width: 13 }),
@@ -26,16 +27,35 @@ window.addEventListener('hashchange', () => {
   activeID = nextID;
   renderNavigation();
   mountActiveDemo();
+  requestAnimationFrame(() => window.scrollTo(0, 0));
 });
 
 function renderNavigation(): void {
+  let activeLink: HTMLAnchorElement | null = null;
   nav.replaceChildren(...demos.map((demo) => {
     const link = document.createElement('a');
     link.href = `#${demo.id}`;
     link.textContent = demo.label;
-    if (demo.id === activeID) link.setAttribute('aria-current', 'page');
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (demo.id !== activeID) {
+        history.pushState(null, '', link.href);
+        activeID = demo.id;
+        renderNavigation();
+        mountActiveDemo();
+      }
+      requestAnimationFrame(() => window.scrollTo(0, 0));
+    });
+    if (demo.id === activeID) {
+      link.setAttribute('aria-current', 'page');
+      activeLink = link;
+    }
     return link;
   }));
+  requestAnimationFrame(() => {
+    if (activeLink === null) return;
+    nav.scrollTop = Math.max(0, activeLink.offsetTop - (nav.clientHeight - activeLink.clientHeight) / 2);
+  });
 }
 
 function mountActiveDemo(): void {
@@ -64,6 +84,8 @@ function mountDemoCase(demoCase: DemoCaseDefinition): void {
   const card = document.createElement('article');
   card.className = 'example-card';
   card.dataset['case'] = demoCase.id;
+  const interaction = demoCase.interaction ?? 'enabled';
+  card.dataset['interaction'] = interaction;
 
   const main = document.createElement('section');
   main.className = 'example-main';
@@ -74,6 +96,14 @@ function mountDemoCase(demoCase: DemoCaseDefinition): void {
   mainHeading.append(revisionBadge);
   const surface = document.createElement('div');
   surface.className = 'demo-surface';
+  if (interaction !== 'enabled') {
+    const note = document.createElement('p');
+    note.className = 'interaction-note';
+    note.textContent = interaction === 'disabled'
+      ? 'Disabled: focus, pointer, and keyboard interaction are unavailable.'
+      : 'Read-only: focus and navigation remain available; value changes are rejected.';
+    surface.append(note);
+  }
   main.append(mainHeading, surface);
 
   const inspector = document.createElement('aside');
@@ -94,9 +124,16 @@ function mountDemoCase(demoCase: DemoCaseDefinition): void {
   let logEntries: LogEntry[] = [];
   const context: DemoContext = {
     surface,
+    instanceID: demoCase.id,
+    interaction: interaction === 'disabled'
+      ? { disabled: true }
+      : interaction === 'readOnly' ? { readOnly: true } : {},
     showState: (revision, state) => {
       revisionBadge.textContent = `revision ${revision}`;
-      stateOutput.textContent = JSON.stringify(state, null, 2);
+      stateOutput.textContent = JSON.stringify({
+        ...(typeof state === 'object' && state !== null ? state : { value: state }),
+        interaction,
+      }, null, 2);
     },
     record: (entry) => {
       logEntries = [entry, ...logEntries].slice(0, 12);

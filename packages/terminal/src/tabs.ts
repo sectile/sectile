@@ -19,6 +19,7 @@ export type TabsEffect<ID extends StableID = StableID> =
   | { readonly type: 'activate-tab'; readonly id: ID };
 
 export interface TabsOptions<ID extends StableID = StableID> {
+  readonly disabled?: boolean;
   readonly items: readonly ID[];
   readonly policies?: TabsPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -56,6 +57,7 @@ export function createTabs<ID extends StableID>(options: TabsOptions<ID>): Resul
   const valueControlled = options.value !== undefined;
   const highlightControlled = options.highlightedValue !== undefined;
   const runtime = createSemanticController<TabsState<ID>, TabsEvent<ID>, TabsCommand<ID>, TabsEffect<ID>>({
+    interaction: options,
     initial: createTabsState(domain.value, {
       selected: selected(options.value ?? options.defaultValue ?? null),
       current: options.highlightedValue !== undefined
@@ -153,8 +155,8 @@ class TerminalTabsConnection<ID extends StableID> implements TabsConnection<ID> 
     if (result.ok) for (const effect of result.commands) {
       if (effect.type === 'activate-tab') this.#options.onActivate?.(effect.id);
     }
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public handleKeyboardInput(input: KeyboardInput): boolean {

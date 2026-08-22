@@ -32,6 +32,7 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly defaultValue?: ID | null;
   readonly paused?: boolean;
   readonly defaultPaused?: boolean;
+  readonly disabled?: boolean;
   readonly policies?: CarouselPolicies;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly autoplay?: boolean | CarouselAutoplayOptions;
@@ -87,6 +88,7 @@ export function createCarousel<ID extends StableID>(options: CarouselOptions<ID>
       if (previous.paused !== proposed.paused) options.onPausedChange?.(proposed.paused);
     },
     toEffect: (command) => command,
+    interaction: options,
   });
   return runtime.ok
     ? { ok: true, value: new TerminalCarousel(options, slides.value, runtime.value, autoplay.value, valueControlled, pausedControlled) }

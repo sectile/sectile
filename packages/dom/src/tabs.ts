@@ -12,6 +12,7 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -26,6 +27,7 @@ export type TabsEffect<ID extends StableID = StableID> =
 
 export interface TabsOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
+  readonly disabled?: boolean;
   readonly items: readonly ID[];
   readonly policies?: TabsPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -85,6 +87,7 @@ export function createTabs<ID extends StableID>(
     TabsCommand<ID>,
     TabsEffect<ID>
   >({
+    interaction: options,
     initial,
     reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createTabsState(domain.value, {
@@ -161,6 +164,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     this.#highlightControlled = highlightControlled;
     this.#disabledItems = disabledItems;
     options.root.setAttribute('role', 'tablist');
+    setInteractionAttributes(options.root, options);
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     this.#keydown = (event): void => {
@@ -224,8 +228,8 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       }
       queueMicrotask(() => focusData(this.#options.root, 'tabsId', result.snapshot.state.cursor.current));
     }
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public disconnect(): void {

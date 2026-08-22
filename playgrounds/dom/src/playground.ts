@@ -12,9 +12,18 @@ export interface LogEntry {
 
 export interface DemoContext {
   readonly surface: HTMLElement;
+  readonly instanceID: string;
+  readonly interaction: DemoInteractionOptions;
   readonly showState: (revision: number, state: unknown) => void;
   readonly record: (entry: LogEntry) => void;
 }
+
+export interface DemoInteractionOptions {
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+}
+
+export type DemoInteractionMode = 'enabled' | 'disabled' | 'readOnly';
 
 export interface DemoSession {
   readonly focus: () => void;
@@ -32,6 +41,7 @@ interface DemoMetadata {
 export interface DemoCaseDefinition {
   readonly id: string;
   readonly title: string;
+  readonly interaction?: DemoInteractionMode;
   readonly mount: (context: DemoContext) => DemoSession;
 }
 
@@ -39,6 +49,36 @@ export type DemoDefinition = DemoMetadata & (
   | { readonly mount: (context: DemoContext) => DemoSession; readonly cases?: never }
   | { readonly cases: readonly DemoCaseDefinition[]; readonly mount?: never }
 );
+
+export function withInteractionCases(
+  demo: DemoDefinition,
+  options: { readonly readOnly?: boolean; readonly readOnlyCaseID?: string } = {},
+): DemoDefinition {
+  const cases: readonly DemoCaseDefinition[] = demo.cases ?? [{
+    id: demo.id,
+    title: demo.title,
+    mount: demo.mount,
+  }];
+  const base = cases[0];
+  if (base === undefined) return demo;
+  const readOnlyBase = options.readOnlyCaseID === undefined
+    ? base
+    : cases.find(({ id }) => id === options.readOnlyCaseID) ?? base;
+  return {
+    id: demo.id,
+    label: demo.label,
+    title: demo.title,
+    description: demo.description,
+    shortcuts: demo.shortcuts,
+    cases: [
+      ...cases,
+      { id: 'disabled-state', title: 'Disabled state', interaction: 'disabled', mount: base.mount },
+      ...(options.readOnly
+        ? [{ id: 'read-only-state', title: 'Read-only state', interaction: 'readOnly' as const, mount: readOnlyBase.mount }]
+        : []),
+    ],
+  };
+}
 
 export function effectLabels(effects: readonly object[]): readonly string[] {
   return effects.map((effect) => Object.entries(effect)

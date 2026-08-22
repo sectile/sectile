@@ -16,6 +16,13 @@ export {
   type ListboxTransitionDetails,
   type ListboxValueChangeDetails,
 } from './listbox.js';
+export { createCheckboxGroup, type CheckboxGroupConnection, type CheckboxGroupOptions } from './checkbox-group.js';
+export { createSelect, type SelectConnection, type SelectEffect, type SelectOptions } from './select.js';
+export { createPagination, type PaginationConnection, type PaginationOptions } from './pagination.js';
+export { createStepper, type StepperConnection, type StepperOptions } from './stepper.js';
+export { createRating, type RatingConnection, type RatingOptions } from './rating.js';
+export { createPinInput, type PinInputConnection, type PinInputOptions } from './pin-input.js';
+export { createTagsInput, type TagsInputConnection, type TagsInputOptions } from './tags-input.js';
 export {
   createTabs,
   toTabsEffect,
@@ -57,6 +64,7 @@ export { createSwitch, type SwitchConnection, type SwitchOptions } from './switc
 export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
 export { createWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
 export { createSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
+export { createNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
 export { createDialog, type DialogConnection, type DialogOptions } from './dialog.js';
 export { createAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
 export { createTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';

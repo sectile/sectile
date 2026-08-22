@@ -30,7 +30,7 @@ function mountText(context: DemoContext, options: {
   const wrap = document.createElement('div'); wrap.className = 'text-demo';
   const label = document.createElement('label');
   const element = options.multiline ? document.createElement('textarea') : document.createElement('input');
-  element.id = `text-demo-${options.label.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  element.id = `text-demo-${context.instanceID}-${options.label.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   element.className = 'text-input'; element.autocomplete = 'off'; label.htmlFor = element.id; label.textContent = options.label;
   const mirror = document.createElement('p'); mirror.className = 'text-mirror';
   wrap.append(label, element, mirror); context.surface.append(wrap);
@@ -42,6 +42,7 @@ function mountText(context: DemoContext, options: {
   let connection!: TextConnection;
   connection = unwrap(createText({
     element,
+    ...context.interaction,
     ...(options.controlled ? {
       value: external,
       onValueChange: ({ value }) => {

@@ -51,6 +51,7 @@ function mountTreeGrid(context: DemoContext, scenario: { readonly expanded: read
     connection = unwrap(createTreeGrid({
       rows,
       root,
+      ...context.interaction,
       policies: { eligible: (id) => !scenario.disabled.includes(id) },
       ...(scenario.controlled ? {
         expandedValue: externalExpanded, value: externalValue, highlightedValue: externalHighlight, editMode: externalEdit,

@@ -1,5 +1,10 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
 import {
+  createInteractionState,
+  requireInteraction,
+  type InteractionState,
+} from '@sectile/primitives/interaction';
+import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
@@ -41,6 +46,7 @@ export interface TreeViewHighlightChangeDetails<ID extends StableID = StableID> 
 
 export interface TreeViewControllerOptions<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;
+  readonly disabled?: boolean;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
   readonly expandedValue?: readonly ID[];
@@ -78,6 +84,7 @@ export interface TreeViewTransitionDetails<ID extends StableID = StableID> {
 
 export interface TreeViewConnectionOptions<ID extends StableID = StableID> {
   readonly controller: TreeViewController<ID>;
+  readonly disabled?: boolean;
   readonly onTransition?: (details: TreeViewTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
@@ -109,7 +116,9 @@ export function createTreeViewController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalTreeViewController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new TerminalTreeViewController(options, snapshot.value, interaction.value) };
 }
 
 export function createTreeView<ID extends StableID>(
@@ -179,8 +188,8 @@ class TerminalTreeViewConnection<ID extends StableID> implements TreeViewConnect
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 }
 
@@ -198,11 +207,13 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
   readonly #onHighlightedValueChange:
     | ((change: TreeViewHighlightChangeDetails<ID>) => void)
     | undefined;
+  readonly #interaction: InteractionState;
   #snapshot: RevisionSnapshot<TreeViewState<ID>>;
 
   public constructor(
     options: TreeViewControllerOptions<ID>,
     snapshot: RevisionSnapshot<TreeViewState<ID>>,
+    interaction: InteractionState,
   ) {
     this.tree = options.tree;
     this.#tree = options.tree;
@@ -213,6 +224,7 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
     this.#onValueChange = options.onValueChange;
     this.#onExpandedValueChange = options.onExpandedValueChange;
     this.#onHighlightedValueChange = options.onHighlightedValueChange;
+    this.#interaction = interaction;
     this.#snapshot = snapshot;
   }
 
@@ -252,6 +264,8 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, 'navigate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toTreeViewEvent<ID>(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {

@@ -5,12 +5,14 @@ import {
   type DisclosureCommand, type DisclosureEvent, type DisclosureState,
 } from '@sectile/primitives/disclosure';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface DisclosureOptions {
   readonly trigger: HTMLElement;
   readonly panel?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
+  readonly disabled?: boolean;
   readonly panelID?: string;
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
@@ -33,6 +35,7 @@ export function createDisclosure(options: DisclosureOptions): Result<DisclosureC
       if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open);
     },
     toEffect: (command) => command,
+    interaction: options,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMDisclosureConnection(options, runtime.value, controlled) };
@@ -54,6 +57,7 @@ class DOMDisclosureConnection implements DisclosureConnection {
     this.#controlled = controlled;
     this.#click = (): void => { this.handleEvent('toggle'); };
     options.trigger.addEventListener('click', this.#click);
+    setInteractionAttributes(options.trigger, options, { native: true });
     this.updateAttributes();
   }
   public getSnapshot(): RevisionSnapshot<DisclosureState> { return this.#runtime.getSnapshot(); }
@@ -64,10 +68,10 @@ class DOMDisclosureConnection implements DisclosureConnection {
     return result;
   }
   public handleEvent(event: DisclosureEvent): boolean {
-    this.#runtime.handle(event);
+    const result = this.#runtime.handle(event);
     this.updateAttributes();
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
   public updateAttributes(): void {
     const open = this.#runtime.getSnapshot().state.open;

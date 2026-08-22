@@ -45,6 +45,7 @@ function mountTreeView(context: DemoContext, scenario: { readonly expanded: read
     connection = unwrap(createTreeView({
       nodes,
       root,
+      ...context.interaction,
       disabledItems: scenario.disabled,
       ...(scenario.controlled ? {
         expandedValue: externalExpanded, value: externalSelected, highlightedValue: externalHighlight,

@@ -13,7 +13,43 @@ import { createTreeView } from '@sectile/terminal/tree-view';
 import { demos } from '../dist/demos.mjs';
 
 test('terminal playground exposes one demo for every public facade', () => {
-  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed']);
+  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'number-field', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed', 'checkbox-group', 'select', 'pagination', 'stepper', 'rating', 'pin-input', 'tags-input']);
+});
+
+test('terminal playground exposes disabled cases for every facade and read-only cases where supported', () => {
+  const readOnlyIDs = new Set([
+    'listbox', 'slider', 'text', 'combobox', 'tree-grid', 'radio-group',
+    'checkbox', 'spin-button', 'number-field', 'multi-thumb-slider', 'grid',
+  ]);
+  for (const demo of demos) {
+    const session = demo.create(demoHost(demo));
+    assert.equal(moveToScenario(session, 'disabled · input rejected'), true, `${demo.id} disabled case`);
+    session.disconnect?.();
+  }
+  for (const demo of demos.filter(({ id }) => readOnlyIDs.has(id))) {
+    const session = demo.create(demoHost(demo));
+    assert.equal(
+      moveToScenario(session, 'read-only · navigation allowed, mutation rejected'),
+      true,
+      `${demo.id} read-only case`,
+    );
+    session.disconnect?.();
+  }
+});
+
+test('terminal read-only examples preserve navigation while rejecting mutation', () => {
+  const listbox = demos.find(({ id }) => id === 'listbox');
+  assert.notEqual(listbox, undefined);
+  const listboxSession = listbox.create(demoHost(listbox));
+  assert.equal(moveToScenario(listboxSession, 'read-only · navigation allowed, mutation rejected'), true);
+  const before = listboxSession.lines(100).find((line) => line.includes('current='));
+  assert.equal(listboxSession.handle({ key: 'down' }), true);
+  const afterMove = listboxSession.lines(100).find((line) => line.includes('current='));
+  assert.notEqual(afterMove, before);
+  assert.equal(listboxSession.handle({ key: 'space' }), false);
+  const afterMutation = listboxSession.lines(100).find((line) => line.includes('current='));
+  assert.equal(afterMutation, afterMove);
+  listboxSession.disconnect?.();
 });
 
 test('terminal playground composes every facade through public package subpaths', () => {
@@ -90,4 +126,22 @@ test('terminal calendar demo renders a complete month and fulfills page requests
 
 function pad(value) {
   return String(value).padStart(2, '0');
+}
+
+function demoHost(demo) {
+  return {
+    render() {},
+    record() {},
+    recordText() {},
+    readOnly: demo.readOnly === true,
+    readOnlyCase: demo.readOnlyCase ?? 0,
+  };
+}
+
+function moveToScenario(session, marker) {
+  for (let index = 0; index < 12; index += 1) {
+    if (session.lines(100).some((line) => line.includes(marker))) return true;
+    session.handle({ key: ']' });
+  }
+  return false;
 }

@@ -10,9 +10,9 @@ import {
   type SliderOptions,
 } from './slider.js';
 
-export interface WindowSplitterOptions extends SliderOptions {
+export type WindowSplitterOptions = Omit<SliderOptions, 'readOnly'> & {
   readonly orientation?: 'horizontal' | 'vertical';
-}
+};
 
 export interface WindowSplitterConnection {
   readonly range: QuantizedRange;

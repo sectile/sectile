@@ -114,3 +114,16 @@ test('unsupported and stale terminal inputs are failure-atomic', () => {
   assert.equal(stale.error.code, 'stale-revision');
   assert.equal(stale.snapshot, initial);
 });
+
+test('read-only listbox navigates without changing selection', () => {
+  const connection = unwrap(createListbox({
+    items: ['a', 'b'],
+    defaultHighlightedValue: 'a',
+    defaultValue: ['a'],
+    readOnly: true,
+  }));
+  assert.equal(connection.handleKeyboardInput({ key: 'down' }), true);
+  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+  assert.equal(connection.handleKeyboardInput({ key: 'space' }), false);
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['a']);
+});

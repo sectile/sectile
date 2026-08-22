@@ -5,4 +5,18 @@ test('DOM checked controls own click dispatch and role-specific ARIA', () => {
   const switchElement = new FakeElement(); const control = unwrap(createSwitch({ element: switchElement })); switchElement.emit('click'); assert.equal(control.getSnapshot().state.checked, true); assert.equal(switchElement.attributes.get('role'), 'switch');
   const button = new FakeElement(); const toggle = unwrap(createToggleButton({ element: button })); button.emit('click'); assert.equal(toggle.getSnapshot().state.pressed, true); assert.equal(button.attributes.get('aria-pressed'), 'true');
 });
-class FakeElement { attributes = new Map(); listeners = new Map(); setAttribute(name, value) { this.attributes.set(name, value); } addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); } removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); } emit(type) { for (const listener of this.listeners.get(type) ?? []) listener(); } }
+test('DOM checked controls project and enforce interaction state', () => {
+  const disabledElement = new FakeElement();
+  const disabled = unwrap(createSwitch({ element: disabledElement, disabled: true }));
+  assert.equal(disabledElement.attributes.get('aria-disabled'), 'true');
+  assert.equal(disabledElement.disabled, true);
+  disabledElement.emit('click');
+  assert.equal(disabled.getSnapshot().state.checked, false);
+
+  const readOnlyElement = new FakeElement();
+  const readOnly = unwrap(createCheckbox({ element: readOnlyElement, readOnly: true }));
+  assert.equal(readOnlyElement.attributes.get('aria-readonly'), 'true');
+  readOnlyElement.emit('click');
+  assert.equal(readOnly.getSnapshot().state.checked, false);
+});
+class FakeElement { attributes = new Map(); listeners = new Map(); disabled = false; readOnly = false; setAttribute(name, value) { this.attributes.set(name, value); } removeAttribute(name) { this.attributes.delete(name); } addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); } removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); } emit(type) { for (const listener of this.listeners.get(type) ?? []) listener(); } }

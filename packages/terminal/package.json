@@ -21,6 +21,13 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
+    "./checkbox-group": { "types": "./dist/checkbox-group.d.ts", "import": "./dist/checkbox-group.js", "default": "./dist/checkbox-group.js" },
+    "./select": { "types": "./dist/select.d.ts", "import": "./dist/select.js", "default": "./dist/select.js" },
+    "./pagination": { "types": "./dist/pagination.d.ts", "import": "./dist/pagination.js", "default": "./dist/pagination.js" },
+    "./stepper": { "types": "./dist/stepper.d.ts", "import": "./dist/stepper.js", "default": "./dist/stepper.js" },
+    "./rating": { "types": "./dist/rating.d.ts", "import": "./dist/rating.js", "default": "./dist/rating.js" },
+    "./pin-input": { "types": "./dist/pin-input.d.ts", "import": "./dist/pin-input.js", "default": "./dist/pin-input.js" },
+    "./tags-input": { "types": "./dist/tags-input.d.ts", "import": "./dist/tags-input.js", "default": "./dist/tags-input.js" },
     "./grid": { "types": "./dist/grid.d.ts", "import": "./dist/grid.js", "default": "./dist/grid.js" },
     "./tabs": {
       "types": "./dist/tabs.d.ts",
@@ -52,6 +59,7 @@
     "./toggle-button": { "types": "./dist/toggle-button.d.ts", "import": "./dist/toggle-button.js", "default": "./dist/toggle-button.js" },
     "./window-splitter": { "types": "./dist/window-splitter.d.ts", "import": "./dist/window-splitter.js", "default": "./dist/window-splitter.js" },
     "./spin-button": { "types": "./dist/spin-button.d.ts", "import": "./dist/spin-button.js", "default": "./dist/spin-button.js" },
+    "./number-field": { "types": "./dist/number-field.d.ts", "import": "./dist/number-field.js", "default": "./dist/number-field.js" },
     "./dialog": { "types": "./dist/dialog.d.ts", "import": "./dist/dialog.js", "default": "./dist/dialog.js" },
     "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
     "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },

@@ -1,4 +1,5 @@
 import type { Result, SectileError } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
@@ -44,6 +45,8 @@ export interface TextValueChangeDetails {
 export interface TextControllerOptions {
   readonly value?: TextEditingState;
   readonly defaultValue?: TextEditingState;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onValueChange?: (change: TextValueChangeDetails) => void;
 }
 
@@ -69,6 +72,8 @@ export interface TextTransitionDetails {
 
 export interface TextConnectionOptions {
   readonly controller: TextController;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onTransition?: (details: TextTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
@@ -92,7 +97,9 @@ export function createTextController(options: TextControllerOptions = {}): Resul
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalTextController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new TerminalTextController(options, interaction.value, snapshot.value) };
 }
 
 export function createText(options: TextOptions = {}): Result<TextConnection> {
@@ -150,21 +157,24 @@ class TerminalTextConnection implements TextConnection {
     if (semanticInput === null) return false;
     const result = this.#controller.handleTextInput(semanticInput);
     this.#onTransition?.(Object.freeze({ input: semanticInput, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 }
 
 class TerminalTextController implements TextController {
   readonly #controlled: boolean;
+  readonly #interaction: InteractionState;
   readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
   #snapshot: RevisionSnapshot<TextEditingState>;
 
   public constructor(
     options: TextControllerOptions,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<TextEditingState>,
   ) {
     this.#controlled = options.value !== undefined;
+    this.#interaction = interaction;
     this.#onValueChange = options.onValueChange;
     this.#snapshot = snapshot;
   }
@@ -191,6 +201,8 @@ class TerminalTextController implements TextController {
     input: TextInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TextEditingState, never> {
+    const permitted = requireInteraction(this.#interaction, 'mutate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toTextEvent(input);
     if (event === null) {
       return rejectRevisionInput(this.#snapshot, {

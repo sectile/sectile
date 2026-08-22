@@ -8,6 +8,7 @@ import { createDisabledItems } from './internal/disabled-items.js';
 
 export interface AccordionOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[]; readonly policies?: AccordionPolicies<ID>; readonly disabledItems?: readonly ID[];
+  readonly disabled?: boolean;
   readonly openIDs?: readonly ID[]; readonly defaultOpenIDs?: readonly ID[];
   readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null;
   readonly onOpenChange?: (openIDs: readonly ID[]) => void;
@@ -31,6 +32,7 @@ export function createAccordion<ID extends StableID>(options: AccordionOptions<I
     reconcile: (previous, proposed) => createAccordionState(domain.value, { openIDs: openControlled ? previous.openIDs : proposed.openIDs, current: highlightControlled ? previous.cursor.current : proposed.cursor.current }, policies),
     notify: (previous, proposed) => { if (!sameIDs(previous.openIDs, proposed.openIDs)) options.onOpenChange?.(proposed.openIDs); if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); },
     toEffect: (command) => command,
+    interaction: options,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new TerminalAccordionConnection(options, domain.value, runtime.value, openControlled, highlightControlled, policies) };
@@ -46,7 +48,7 @@ class TerminalAccordionConnection<ID extends StableID> implements AccordionConne
     if (this.#openControlled !== (values.openIDs !== undefined) || this.#highlightControlled !== (values.highlightedValue !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled accordion values must preserve their construction-time shape.' } };
     const state = this.#runtime.getSnapshot().state; const result = this.#runtime.replace(createAccordionState(this.#domain, { openIDs: this.#openControlled ? (values.openIDs as readonly ID[]) : state.openIDs, current: this.#highlightControlled ? (values.highlightedValue as ID | null) : state.cursor.current }, this.#policies)); if (result.ok) this.#options.onUpdate?.(); return result;
   }
-  public handleEvent(event: AccordionEvent<ID>): boolean { this.#runtime.handle(event); this.#options.onUpdate?.(); return true; }
+  public handleEvent(event: AccordionEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event = toAccordionEvent<ID>(input); if (event === null) return false; return this.handleEvent(event); }
 }
 function sameIDs<ID>(left: readonly ID[], right: readonly ID[]): boolean { return left.length === right.length && left.every((id, index) => id === right[index]); }

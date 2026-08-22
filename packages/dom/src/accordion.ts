@@ -8,6 +8,7 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
 
 export type AccordionEffect<ID extends StableID = StableID> = AccordionCommand<ID>;
@@ -16,6 +17,7 @@ export interface AccordionOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[];
   readonly policies?: AccordionPolicies<ID>;
   readonly disabledItems?: readonly ID[];
+  readonly disabled?: boolean;
   readonly openIDs?: readonly ID[];
   readonly defaultOpenIDs?: readonly ID[];
   readonly highlightedValue?: ID | null;
@@ -57,6 +59,7 @@ export function createAccordion<ID extends StableID>(options: AccordionOptions<I
       if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current);
     },
     toEffect: (command) => command,
+    interaction: options,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMAccordionConnection(options, domain.value, runtime.value, openControlled, highlightControlled, policies, disabled.value) };
@@ -78,6 +81,7 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
     this.#openControlled = openControlled; this.#highlightControlled = highlightControlled;
     this.#policies = policies; this.#disabledItems = disabledItems;
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
+    setInteractionAttributes(options.root, options);
     this.#keydown = (event): void => { const semantic = toAccordionEvent<ID>(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
     this.#click = (event): void => { const id = findDelegatedID(event.target, options.root, 'accordionId'); if (id !== null) this.handleEvent({ type: 'toggle', id: id as ID }); };
     options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click);
@@ -107,7 +111,7 @@ class DOMAccordionConnection<ID extends StableID> implements AccordionConnection
   public handleEvent(event: AccordionEvent<ID>): boolean {
     const result = this.#runtime.handle(event); if (result.ok) queueMicrotask(() => {
       for (const element of this.#options.root.querySelectorAll<HTMLElement>('[data-accordion-id]')) if (element.dataset['accordionId'] === result.snapshot.state.cursor.current) element.focus();
-    }); this.#options.onUpdate?.(); return true;
+    }); if (result.ok) this.#options.onUpdate?.(); return result.ok;
   }
   public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); }
 }

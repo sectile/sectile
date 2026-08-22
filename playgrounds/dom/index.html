@@ -9,20 +9,29 @@
   </head>
   <body>
     <main class="shell">
-      <header class="hero">
-        <div>
-          <h1>Sectile interaction lab</h1>
-          <p id="demo-description" class="lede"></p>
+      <aside class="component-rail">
+        <div class="rail-heading">
+          <span class="rail-mark" aria-hidden="true"></span>
+          <strong>Components</strong>
         </div>
-      </header>
+        <nav id="demo-nav" class="demo-nav" aria-label="Components"></nav>
+      </aside>
 
-      <nav id="demo-nav" class="demo-nav" aria-label="Examples"></nav>
-      <section id="shortcuts" class="shortcuts" aria-label="Demo controls">
-        <div id="shortcut-list" class="shortcut-list"></div>
-        <button id="reset-button" type="button" class="reset-button secondary"></button>
+      <section class="playground-content">
+        <header class="hero">
+          <div>
+            <h1>Sectile interaction lab</h1>
+            <p id="demo-description" class="lede"></p>
+          </div>
+        </header>
+
+        <section id="shortcuts" class="shortcuts" aria-label="Demo controls">
+          <div id="shortcut-list" class="shortcut-list"></div>
+          <button id="reset-button" type="button" class="reset-button secondary"></button>
+        </section>
+
+        <div id="workspace" class="workspace"></div>
       </section>
-
-      <div id="workspace" class="workspace"></div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

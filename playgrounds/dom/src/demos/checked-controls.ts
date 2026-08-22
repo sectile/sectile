@@ -108,6 +108,7 @@ function mountCheckbox(
   let connection!: CheckboxConnection;
   connection = unwrap(createCheckbox({
     element: elements.control,
+    ...context.interaction,
     policies: { allowMixed: true },
     ...(controlled ? {
       value: external,
@@ -178,6 +179,7 @@ function mountSwitch(context: DemoContext, initial: boolean, controlled: boolean
   let connection!: SwitchConnection;
   connection = unwrap(createSwitch({
     element: elements.control,
+    ...context.interaction,
     ...(controlled ? {
       checked: external,
       onCheckedChange: (value) => {
@@ -220,6 +222,7 @@ function mountToggle(
   let connection!: ToggleButtonConnection;
   connection = unwrap(createToggleButton({
     element: elements.control,
+    ...context.interaction,
     ...(controlled ? {
       pressed: external,
       onPressedChange: (value) => {

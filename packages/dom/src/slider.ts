@@ -1,4 +1,5 @@
 import type { Result, SectileError } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   createBoundedRange,
   type BoundedRangeInput,
@@ -18,6 +19,7 @@ import {
   type RevisionSnapshot,
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -41,6 +43,8 @@ export interface SliderControllerOptions {
   readonly page?: number;
   readonly value?: number;
   readonly defaultValue?: number;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onValueChange?: (change: SliderValueChangeDetails) => void;
 }
 
@@ -74,6 +78,8 @@ export interface SliderConnectionOptions {
   readonly label?: string;
   readonly role?: 'slider' | 'separator';
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly formatValue?: (value: string) => string;
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
@@ -101,7 +107,9 @@ export function createSliderController(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new DOMSliderController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new DOMSliderController(options, interaction.value, snapshot.value) };
 }
 
 export function createSlider(options: SliderOptions): Result<SliderConnection> {
@@ -191,6 +199,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#track.addEventListener('pointermove', this.#handlePointer);
     this.#track.addEventListener('pointerup', this.#handlePointerUp);
     this.#track.addEventListener('pointercancel', this.#handlePointerUp);
+    setInteractionAttributes(this.#root, options, { readOnly: this.#role === 'slider' });
     this.refreshAttributes();
   }
 
@@ -245,8 +254,8 @@ class DOMSliderConnection implements SliderConnection {
     const result = this.#controller.handleEvent(event);
     if (result.ok) this.refreshAttributes();
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 
   public disconnect(): void {
@@ -270,17 +279,20 @@ class DOMSliderController implements SliderController {
   readonly #range: QuantizedRange;
   readonly #page: number;
   readonly #controlled: boolean;
+  readonly #interaction: InteractionState;
   readonly #onValueChange: ((change: SliderValueChangeDetails) => void) | undefined;
   #snapshot: RevisionSnapshot<SliderState>;
 
   public constructor(
     options: SliderControllerOptions,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<SliderState>,
   ) {
     this.range = options.range;
     this.#range = options.range;
     this.#page = options.page ?? 2;
     this.#controlled = options.value !== undefined;
+    this.#interaction = interaction;
     this.#onValueChange = options.onValueChange;
     this.#snapshot = snapshot;
   }
@@ -323,6 +335,8 @@ class DOMSliderController implements SliderController {
     event: SliderEvent,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<SliderState, SliderEffect> {
+    const permitted = requireInteraction(this.#interaction, 'mutate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,

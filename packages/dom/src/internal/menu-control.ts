@@ -3,11 +3,13 @@ import type { RevisionSnapshot } from '@sectile/primitives/revision';
 import type { Tree, TreeNodeInput } from '@sectile/primitives/tree';
 import { applyMenuEvent, createMenuModel, createMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/primitives/menu';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
+import { setInteractionAttributes } from './interaction.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
 export interface MenuControlOptions<ID extends StableID> {
   readonly root: HTMLElement;
+  readonly disabled?: boolean;
   readonly trigger?: HTMLElement;
   readonly items: readonly TreeNodeInput<ID>[];
   readonly kind: MenuKind;
@@ -40,6 +42,7 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
   const openControlled = options.kind === 'menu-button' && options.open !== undefined;
   const initialOpen = options.kind === 'menu-button' ? options.open ?? options.defaultOpen ?? false : true;
   const runtime = createSemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, MenuCommand<ID>>({
+    interaction: options,
     initial: createMenuState(model.value.tree, initialOpen, initialOpen ? options.defaultHighlightedValue ?? null : null, []),
     reducer: (state, event) => applyMenuEvent(model.value.tree, state, event, policies),
     reconcile: (previous, proposed) => {
@@ -58,6 +61,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>, policies: MenuPolicies<ID>, openControlled: boolean) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies; this.#openControlled = openControlled;
+    setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#view = options.root.ownerDocument?.defaultView ?? null; this.#instanceID = nextMenuControlID += 1;
     this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { for (const [id, element] of this.#elements) if (event.target === element || (typeof Node !== 'undefined' && event.target instanceof Node && element.contains(event.target))) { this.handleEvent({ type: 'focus', id }); if (this.#policies.disabled?.(id) !== true) this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu'); return; } };
@@ -80,7 +84,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (element.id.length === 0) element.id = `sectile-menu-${this.#instanceID}-submenu-${this.#submenus.size}`;
     this.#refresh();
   }
-  public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } } this.#options.onUpdate?.(); return true; }
+  public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } this.#options.onUpdate?.(); } return result.ok; }
   public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#view?.removeEventListener('resize', this.#reposition); this.#view?.removeEventListener('scroll', this.#reposition, true); this.#elements.clear(); this.#submenus.clear(); }
   #refresh(): void {
     const state = this.getSnapshot().state;

@@ -144,6 +144,7 @@ function mountSingleSlider(context: DemoContext, options: {
     } : { defaultValue: options.defaultValue }),
     root: thumb,
     track: elements.track,
+    ...context.interaction,
     label: options.label,
     ...(options.orientation === undefined ? {} : { orientation: options.orientation }),
     formatValue: options.format,
@@ -205,6 +206,7 @@ function mountMultiThumbSlider<ID extends StableID>(context: DemoContext, option
   const connection = unwrap(createMultiThumbSlider({
     root: elements.root,
     track: elements.track,
+    ...context.interaction,
     thumbs: options.ids,
     min: '0',
     max: '100',

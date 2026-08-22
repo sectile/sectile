@@ -10,6 +10,7 @@ import { createSemanticController, type SemanticController } from './internal/se
 export interface DisclosureOptions {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
+  readonly disabled?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
 }
@@ -27,6 +28,7 @@ export function createDisclosure(options: DisclosureOptions = {}): Result<Disclo
     reconcile: (previous, proposed) => createDisclosureState(controlled ? previous.open : proposed.open),
     notify: (previous, proposed) => { if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
     toEffect: (command) => command,
+    interaction: options,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new TerminalDisclosureConnection(options, runtime.value, controlled) };
@@ -48,7 +50,7 @@ class TerminalDisclosureConnection implements DisclosureConnection {
     if (result.ok) this.#options.onUpdate?.();
     return result;
   }
-  public handleEvent(event: DisclosureEvent): boolean { this.#runtime.handle(event); this.#options.onUpdate?.(); return true; }
+  public handleEvent(event: DisclosureEvent): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
     const event = toDisclosureEvent(input); if (event === null) return false; return this.handleEvent(event);
   }

@@ -39,7 +39,7 @@ function mountCombobox(context: DemoContext, scenario: { readonly mode: 'prefix'
     input.placeholder = 'Try “al” or “한”…';
     input.autocomplete = 'off';
     const popup = document.createElement('div');
-    popup.id = 'command-search-popup';
+    popup.id = `command-search-popup-${context.instanceID}`;
     popup.className = 'combobox-popup';
     wrap.append(input, popup);
     context.surface.append(wrap);
@@ -50,6 +50,7 @@ function mountCombobox(context: DemoContext, scenario: { readonly mode: 'prefix'
       items,
       input,
       popup,
+      ...context.interaction,
       policies: { matches: (label, query) => match(label, query, scenario.mode) },
       ...(scenario.controlled ? {
         value: externalValue, inputState: externalInput, open: externalOpen, highlightedValue: externalHighlight,

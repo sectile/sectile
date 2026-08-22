@@ -49,6 +49,7 @@ sectile/
 │   │   │   │   ├── controller.ts
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── disabled-items.ts
+│   │   │   │   ├── interaction.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
 │   │   │   │   ├── semantic-controller.ts
@@ -57,6 +58,7 @@ sectile/
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── dialog.ts
@@ -69,11 +71,18 @@ sectile/
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
 │   │   │   ├── multi-thumb-slider.ts
+│   │   │   ├── number-field.ts
+│   │   │   ├── pagination.ts
+│   │   │   ├── pin-input.ts
 │   │   │   ├── radio-group.ts
+│   │   │   ├── rating.ts
+│   │   │   ├── select.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── spin-button.ts
+│   │   │   ├── stepper.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tabs.ts
+│   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toolbar.ts
@@ -87,12 +96,14 @@ sectile/
 │   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── expansion-controls.test.mjs
+│   │   │   ├── extended-components.test.mjs
 │   │   │   ├── feed.test.mjs
 │   │   │   ├── grid.test.mjs
 │   │   │   ├── linear-controls.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── menu.test.mjs
 │   │   │   ├── multi-thumb-slider.test.mjs
+│   │   │   ├── number-field.test.mjs
 │   │   │   ├── popup-controls.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
@@ -195,25 +206,34 @@ sectile/
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── index.ts
+│   │   │   ├── interaction.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
 │   │   │   ├── multi-thumb-slider.ts
+│   │   │   ├── number-field.ts
+│   │   │   ├── pagination.ts
+│   │   │   ├── pin-input.ts
 │   │   │   ├── radio-group.ts
+│   │   │   ├── rating.ts
 │   │   │   ├── result.ts
 │   │   │   ├── revision.ts
+│   │   │   ├── select.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── spin-button.ts
+│   │   │   ├── stepper.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tabs.ts
+│   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toolbar.ts
@@ -234,6 +254,7 @@ sectile/
 │   │   │   │   ├── checked-controls.reference-law.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
 │   │   │   │   ├── expansion-controls.reference-law.test.mjs
+│   │   │   │   ├── extended-components.test.mjs
 │   │   │   │   ├── feed.reference-law.test.mjs
 │   │   │   │   ├── grid-control.reference-law.test.mjs
 │   │   │   │   ├── linear-action.reference-law.test.mjs
@@ -250,8 +271,10 @@ sectile/
 │   │   │   ├── differential/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
+│   │   │   │   ├── number-field.test.mjs
 │   │   │   │   └── text.reference-law.test.mjs
 │   │   │   ├── runtime/
+│   │   │   │   ├── interaction.test.mjs
 │   │   │   │   ├── result.test.mjs
 │   │   │   │   └── revision.test.mjs
 │   │   │   ├── state/
@@ -291,6 +314,7 @@ sectile/
 │       │   ├── alert-dialog.ts
 │       │   ├── calendar.ts
 │       │   ├── carousel.ts
+│       │   ├── checkbox-group.ts
 │       │   ├── checkbox.ts
 │       │   ├── combobox.ts
 │       │   ├── dialog.ts
@@ -306,11 +330,18 @@ sectile/
 │       │   ├── menubar.ts
 │       │   ├── multi-thumb-slider.ts
 │       │   ├── node.ts
+│       │   ├── number-field.ts
+│       │   ├── pagination.ts
+│       │   ├── pin-input.ts
 │       │   ├── radio-group.ts
+│       │   ├── rating.ts
+│       │   ├── select.ts
 │       │   ├── slider.ts
 │       │   ├── spin-button.ts
+│       │   ├── stepper.ts
 │       │   ├── switch.ts
 │       │   ├── tabs.ts
+│       │   ├── tags-input.ts
 │       │   ├── text.ts
 │       │   ├── toggle-button.ts
 │       │   ├── toolbar.ts
@@ -324,6 +355,7 @@ sectile/
 │       │   ├── checked-controls.test.mjs
 │       │   ├── combobox.test.mjs
 │       │   ├── expansion-controls.test.mjs
+│       │   ├── extended-components.test.mjs
 │       │   ├── feed.test.mjs
 │       │   ├── grid.test.mjs
 │       │   ├── keyboard.test.mjs
@@ -331,6 +363,7 @@ sectile/
 │       │   ├── listbox.test.mjs
 │       │   ├── menu.test.mjs
 │       │   ├── multi-thumb-slider.test.mjs
+│       │   ├── number-field.test.mjs
 │       │   ├── popup-controls.test.mjs
 │       │   ├── slider.test.mjs
 │       │   ├── spin-button.test.mjs
@@ -352,13 +385,16 @@ sectile/
 │   │   │   │   ├── collection-controls.ts
 │   │   │   │   ├── combobox.ts
 │   │   │   │   ├── expansion-controls.ts
+│   │   │   │   ├── extended-selection.ts
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── linear-controls.ts
 │   │   │   │   ├── listbox.ts
 │   │   │   │   ├── menu-controls.ts
+│   │   │   │   ├── number-field.ts
 │   │   │   │   ├── popup-controls.ts
 │   │   │   │   ├── range-controls.ts
 │   │   │   │   ├── slider.ts
+│   │   │   │   ├── structured-inputs.ts
 │   │   │   │   ├── text.ts
 │   │   │   │   ├── tree-grid.ts
 │   │   │   │   └── tree-view.ts

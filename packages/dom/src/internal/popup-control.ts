@@ -1,6 +1,8 @@
 import type { Result } from '@sectile/primitives';
+import type { InteractionStateInput } from '@sectile/primitives/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/primitives/revision';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
+import { setInteractionAttributes } from './interaction.js';
 
 export interface DOMPopupConnection<State, Event> {
   getSnapshot(): RevisionSnapshot<State>;
@@ -35,6 +37,7 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly onOpenChange?: ((open: boolean) => void) | undefined;
   readonly command?: (command: Command) => void;
   readonly onUpdate?: (() => void) | undefined;
+  readonly interaction?: InteractionStateInput;
 }
 
 export function createDOMPopup<State, Event, Command>(options: DOMPopupOptions<State, Event, Command>): Result<DOMPopupConnection<State, Event>> {
@@ -44,6 +47,7 @@ export function createDOMPopup<State, Event, Command>(options: DOMPopupOptions<S
     reconcile: (previous, proposed) => options.create(options.controlled ? options.read(previous) : options.read(proposed)),
     notify: (previous, proposed) => { if (options.read(previous) !== options.read(proposed)) options.onOpenChange?.(options.read(proposed)); },
     toEffect: (command) => command,
+    interaction: options.interaction,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMPopup(options, runtime.value) };
@@ -82,6 +86,8 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     if (options.labelledBy !== undefined) options.root.setAttribute('aria-labelledby', options.labelledBy);
     if (options.describedBy !== undefined) options.root.setAttribute('aria-describedby', options.describedBy);
+    setInteractionAttributes(options.root, options.interaction ?? {});
+    if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options.interaction ?? {}, { native: true });
     options.root.addEventListener('keydown', this.#keydown);
     options.trigger?.addEventListener('keydown', this.#keydown);
     if (options.triggerMode === 'focus-hover') {
@@ -112,8 +118,8 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     const result = this.#runtime.handle(event);
     if (result.ok) for (const command of result.commands) this.#options.command?.(command);
     this.#refresh(previous);
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
   public refresh(): void { this.#refresh(undefined); }
   public disconnect(): void {

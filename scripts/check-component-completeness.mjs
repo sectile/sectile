@@ -7,7 +7,7 @@ const packagePaths = [
   'packages/terminal/package.json',
 ];
 const supportSubpaths = new Set([
-  'package.json', 'sequence', 'range', 'tree', 'result', 'revision',
+  'package.json', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
   'keyboard', 'layout', 'node',
 ]);
 const migrationBaselineIDs = new Set([

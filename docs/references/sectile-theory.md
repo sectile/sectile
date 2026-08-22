@@ -3798,6 +3798,17 @@ if __name__ == "__main__":
     main()
 ```
 
+## NumberField
+
+NumberField는 quantized range가 아니라 exact decimal text 위에 놓인 editing composite다. SpinButton이 유한한 tick lattice에서 증감과 draft validation을 결합한다면, NumberField는 step controller 없이 다음 상태를 합성한다.
+
+- `value`: 마지막으로 commit된 canonical decimal string 또는 `null`
+- `inputState: TextEditingState`: 아직 평가하지 않은 text, selection, caret, IME composition
+
+기본 evaluator는 decimal literal만 허용한다. `createCalculatorExpression`을 정책으로 합성하면 `+`, `-`, `*`, `/`, `%`, `^`, 괄호를 exact decimal 연산으로 평가한다. 소수는 binary floating-point로 변환하지 않고 decimal string과 정수 계수로 계산한다. 따라서 `0.1+0.2 = 0.3`을 보존한다. `+`와 `-`의 우변 percent는 calculator 문맥을 따르므로 `50-20% = 40`이다. `^`는 오른쪽 결합이며 정수 지수만 허용한다.
+
+commit은 `inputState.snapshot.text`를 평가해 canonical `value`와 canonical text를 함께 만든다. cancel은 input state를 마지막 committed value로 복원한다. DOM과 terminal은 이 의미를 바꾸지 않는다. DOM은 native selection과 IME lifecycle을 기존 Text binding에 연결하고, terminal은 기존 Text reducer에 caret 이동·삽입·삭제를 투영한다. disabled와 read-only도 host adapter가 공통 interaction gate로 적용한다.
+
 ---
 
 ## 참고문헌

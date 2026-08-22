@@ -1,4 +1,5 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   applyListboxEvent,
   createListboxState,
@@ -20,6 +21,7 @@ import {
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -48,6 +50,8 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly disabledItems?: readonly ID[];
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
@@ -95,6 +99,8 @@ export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly disabledItems?: readonly ID[];
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly label?: string;
   readonly onActivate?: (id: ID) => void;
@@ -130,6 +136,8 @@ export function createListboxController<ID extends StableID>(
 ): Result<ListboxController<ID>> {
   const policies = listboxPolicies(options);
   if (!policies.ok) return policies;
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
   const initial = createListboxState(options.domain, {
     selected: options.value ?? options.defaultValue ?? [],
     current: options.highlightedValue !== undefined
@@ -139,7 +147,7 @@ export function createListboxController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new DOMListboxController(options, policies.value, snapshot.value) };
+  return { ok: true, value: new DOMListboxController(options, policies.value, interaction.value, snapshot.value) };
 }
 
 export function createListbox<ID extends StableID>(
@@ -222,6 +230,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
     this.#root.addEventListener('click', this.#handleClick);
+    setInteractionAttributes(this.#root, options, { readOnly: true });
     this.setListboxAttributes(options.label);
   }
 
@@ -285,18 +294,22 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       event: transitionEvent,
       result,
     }));
-    this.#onUpdate?.();
-    this.focusCurrent();
-    return true;
+    if (result.ok) {
+      this.#onUpdate?.();
+      this.focusCurrent();
+    }
+    return result.ok;
   }
 
   public handleEvent(event: ListboxEvent<ID>): boolean {
     const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    this.focusCurrent();
-    return true;
+    if (result.ok) {
+      this.#onUpdate?.();
+      this.focusCurrent();
+    }
+    return result.ok;
   }
 
   public focusCurrent(): void {
@@ -329,6 +342,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
 class DOMListboxController<ID extends StableID> implements ListboxController<ID> {
   readonly #domain: Sequence<ID>;
   readonly #policies: ListboxPolicies<ID>;
+  readonly #interaction: InteractionState;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
   readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
@@ -345,10 +359,12 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
   public constructor(
     options: ListboxControllerOptions<ID>,
     policies: ListboxPolicies<ID>,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<ListboxState<ID>>,
   ) {
     this.#domain = options.domain;
     this.#policies = policies;
+    this.#interaction = interaction;
     this.#selectionMode = policies.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
     this.#typeahead = options.typeahead;
@@ -401,6 +417,8 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, 'navigate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toListboxEvent<ID>(input, this.#orientation);
     if (event !== null) return this.handleEvent(event, expectedRevision);
     const queryPart = printableKey(input);
@@ -448,6 +466,8 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     event: ListboxEvent<ID>,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, listboxIntent(event));
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -514,9 +534,17 @@ function listboxPolicies<ID extends StableID>(
   const eligible = options.policies?.eligible;
   return { ok: true, value: Object.freeze({
     ...options.policies,
+    selectionFollowsFocus: options.readOnly ? false : options.policies?.selectionFollowsFocus ?? false,
     selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
     eligible: (id: ID) => !disabled.value.has(id) && (eligible?.(id) ?? true),
   }) };
+}
+
+function listboxIntent<ID extends StableID>(event: ListboxEvent<ID>): 'navigate' | 'mutate' {
+  if (typeof event === 'object') return event.type === 'focus' ? 'navigate' : 'mutate';
+  return event === 'next' || event === 'previous' || event === 'first' || event === 'last'
+    ? 'navigate'
+    : 'mutate';
 }
 
 function printableKey(input: KeyboardInput): string | null {

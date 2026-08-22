@@ -1,4 +1,5 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   applyListboxEvent,
   createListboxState,
@@ -43,6 +44,8 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly disabledItems?: readonly ID[];
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
@@ -86,6 +89,8 @@ export interface ListboxTransitionDetails<ID extends StableID = StableID> {
 
 export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly controller: ListboxController<ID>;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly orientation?: 'horizontal' | 'vertical';
   readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly onActivate?: (id: ID) => void;
@@ -112,6 +117,8 @@ export function createListboxController<ID extends StableID>(
 ): Result<ListboxController<ID>> {
   const policies = listboxPolicies(options);
   if (!policies.ok) return policies;
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
   const initial = createListboxState(options.domain, {
     selected: options.value ?? options.defaultValue ?? [],
     current: options.highlightedValue !== undefined
@@ -121,7 +128,7 @@ export function createListboxController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalListboxController(options, policies.value, snapshot.value) };
+  return { ok: true, value: new TerminalListboxController(options, policies.value, interaction.value, snapshot.value) };
 }
 
 export function createListbox<ID extends StableID>(
@@ -206,8 +213,8 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
     const transitionEvent: ListboxTransitionDetails<ID>['event'] = event
       ?? { type: 'typeahead', query: query as string };
     this.#onTransition?.(Object.freeze({ event: transitionEvent, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 
   public handleEvent(event: ListboxEvent<ID>): boolean {
@@ -218,14 +225,15 @@ class TerminalListboxConnection<ID extends StableID> implements ListboxConnectio
       }
     }
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 }
 
 class TerminalListboxController<ID extends StableID> implements ListboxController<ID> {
   readonly #domain: Sequence<ID>;
   readonly #policies: ListboxPolicies<ID>;
+  readonly #interaction: InteractionState;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
   readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
@@ -242,10 +250,12 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
   public constructor(
     options: ListboxControllerOptions<ID>,
     policies: ListboxPolicies<ID>,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<ListboxState<ID>>,
   ) {
     this.#domain = options.domain;
     this.#policies = policies;
+    this.#interaction = interaction;
     this.#selectionMode = policies.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
     this.#typeahead = options.typeahead;
@@ -298,6 +308,8 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     input: KeyboardInput,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, 'navigate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const event = toListboxEvent<ID>(input, this.#orientation);
     if (event !== null) return this.handleEvent(event, expectedRevision);
     const queryPart = printableText(input);
@@ -343,6 +355,8 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     event: ListboxEvent<ID>,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, listboxIntent(event));
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
@@ -408,9 +422,17 @@ function listboxPolicies<ID extends StableID>(
   const eligible = options.policies?.eligible;
   return { ok: true, value: Object.freeze({
     ...options.policies,
+    selectionFollowsFocus: options.readOnly ? false : options.policies?.selectionFollowsFocus ?? false,
     selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
     eligible: (id: ID) => !disabled.value.has(id) && (eligible?.(id) ?? true),
   }) };
+}
+
+function listboxIntent<ID extends StableID>(event: ListboxEvent<ID>): 'navigate' | 'mutate' {
+  if (typeof event === 'object') return event.type === 'focus' ? 'navigate' : 'mutate';
+  return event === 'next' || event === 'previous' || event === 'first' || event === 'last'
+    ? 'navigate'
+    : 'mutate';
 }
 
 function printableText(input: KeyboardInput): string | null {

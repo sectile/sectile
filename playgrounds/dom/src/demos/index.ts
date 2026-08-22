@@ -1,4 +1,4 @@
-import type { DemoDefinition } from '../playground.js';
+import { withInteractionCases, type DemoDefinition } from '../playground.js';
 import { calendarDemo } from './calendar.js';
 import { comboboxDemo } from './combobox.js';
 import { listboxDemo } from './listbox.js';
@@ -13,13 +13,17 @@ import { accordionDemo, disclosureDemo } from './expansion-controls.js';
 import { spinButtonDemo, windowSplitterDemo } from './range-controls.js';
 import { alertDialogDemo, dialogDemo, tooltipDemo } from './popup-controls.js';
 import { menuButtonDemo, menuDemo, menubarDemo } from './menu-controls.js';
+import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo } from './extended-selection.js';
+import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
+import { numberFieldDemo } from './number-field.js';
 
-export const demos: readonly DemoDefinition[] = Object.freeze([
+const rawDemos: readonly DemoDefinition[] = [
   listboxDemo,
   sliderDemo,
   multiThumbSliderDemo,
   windowSplitterDemo,
   spinButtonDemo,
+  numberFieldDemo,
   dialogDemo,
   alertDialogDemo,
   tooltipDemo,
@@ -42,4 +46,24 @@ export const demos: readonly DemoDefinition[] = Object.freeze([
   checkboxDemo,
   switchDemo,
   toggleButtonDemo,
+  checkboxGroupDemo,
+  selectDemo,
+  paginationDemo,
+  stepperDemo,
+  ratingDemo,
+  pinInputDemo,
+  tagsInputDemo,
+];
+
+const readOnlyDemos = new Set([
+  'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'text', 'combobox',
+  'tree-grid', 'grid', 'radio-group', 'checkbox',
+  'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
 ]);
+
+export const demos: readonly DemoDefinition[] = Object.freeze(
+  rawDemos.map((demo) => withInteractionCases(demo, {
+    readOnly: readOnlyDemos.has(demo.id),
+    ...(demo.id === 'grid' ? { readOnlyCaseID: 'editable' } : {}),
+  })),
+);

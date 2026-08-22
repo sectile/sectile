@@ -1,5 +1,10 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
 import {
+  createInteractionState,
+  requireInteraction,
+  type InteractionState,
+} from '@sectile/primitives/interaction';
+import {
   applyCalendarEvent,
   createCalendarState,
   type CalendarCommand,
@@ -35,6 +40,7 @@ export interface CalendarHighlightChangeDetails<ID extends StableID = StableID> 
 
 export interface CalendarControllerOptions<ID extends StableID = StableID> {
   readonly grid: Grid<ID>;
+  readonly disabled?: boolean;
   readonly policies?: CalendarPolicies<ID>;
   readonly value?: ID | null;
   readonly defaultValue?: ID | null;
@@ -73,6 +79,7 @@ export interface CalendarTransitionDetails<ID extends StableID = StableID> {
 
 export interface CalendarConnectionOptions<ID extends StableID = StableID> {
   readonly controller: CalendarController<ID>;
+  readonly disabled?: boolean;
   readonly onPageRequest?: (details: CalendarPageRequestDetails<ID>) => void;
   readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
@@ -107,7 +114,9 @@ export function createCalendarController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalCalendarController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new TerminalCalendarController(options, snapshot.value, interaction.value) };
 }
 
 export function createCalendar<ID extends StableID>(
@@ -185,8 +194,8 @@ class TerminalCalendarConnection<ID extends StableID> implements CalendarConnect
       }
     }
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 }
 
@@ -200,11 +209,13 @@ class TerminalCalendarController<ID extends StableID> implements CalendarControl
   readonly #onHighlightedValueChange:
     | ((change: CalendarHighlightChangeDetails<ID>) => void)
     | undefined;
+  readonly #interaction: InteractionState;
   #snapshot: RevisionSnapshot<CalendarState<ID>>;
 
   public constructor(
     options: CalendarControllerOptions<ID>,
     snapshot: RevisionSnapshot<CalendarState<ID>>,
+    interaction: InteractionState,
   ) {
     this.grid = options.grid;
     this.#grid = options.grid;
@@ -213,6 +224,7 @@ class TerminalCalendarController<ID extends StableID> implements CalendarControl
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
     this.#onHighlightedValueChange = options.onHighlightedValueChange;
+    this.#interaction = interaction;
     this.#snapshot = snapshot;
   }
 
@@ -258,6 +270,8 @@ class TerminalCalendarController<ID extends StableID> implements CalendarControl
         details: { key: input.key },
       });
     }
+    const permitted = requireInteraction(this.#interaction, 'navigate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,

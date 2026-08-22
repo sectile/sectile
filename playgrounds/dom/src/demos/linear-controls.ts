@@ -71,6 +71,7 @@ function mountTabs(
   context.surface.append(frame);
   const connection = unwrap(createTabs({
     root,
+    ...context.interaction,
     items: tabItems.map((item) => item.id),
     defaultValue: 'overview',
     defaultHighlightedValue: 'overview',
@@ -88,14 +89,14 @@ function mountTabs(
       const tab = document.createElement('button');
       tab.type = 'button';
       tab.textContent = item.label;
-      tab.id = `tab-${activation}-${orientation}-${item.id}`;
+      tab.id = `tab-${context.instanceID}-${activation}-${orientation}-${item.id}`;
       connection.setItemAttributes(tab, {
         id: item.id,
-        panelID: `panel-${activation}-${orientation}-${item.id}`,
+        panelID: `panel-${context.instanceID}-${activation}-${orientation}-${item.id}`,
       });
       root.append(tab);
       const content = document.createElement('section');
-      content.id = `panel-${activation}-${orientation}-${item.id}`;
+      content.id = `panel-${context.instanceID}-${activation}-${orientation}-${item.id}`;
       const contentHeader = document.createElement('header');
       contentHeader.className = 'tab-panel-header';
       const heading = document.createElement('h3');
@@ -135,6 +136,7 @@ function mountRadio(
   let connection!: RadioGroupConnection<RadioID>;
   connection = unwrap(createRadioGroup({
     root,
+    ...context.interaction,
     items: radioItems.map((item) => item.id),
     orientation,
     disabledItems,
@@ -195,6 +197,7 @@ function mountToolbar(
   let connection!: ToolbarConnection<ToolbarID>;
   connection = unwrap(createToolbar({
     root,
+    ...context.interaction,
     items: toolbarItems,
     orientation,
     disabledItems,

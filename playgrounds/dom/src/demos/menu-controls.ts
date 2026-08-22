@@ -83,6 +83,7 @@ function mountMenu(context: DemoContext, kind: 'menu' | 'menubar' | 'menu-button
   let invoked: string | null = null; let externalOpen = false; let connection!: MenuConnection<string>;
   const common = {
     root, items: scenario.items.map(({ id, parentID }) => ({ id, parentID })),
+    ...context.interaction,
     disabledItems: scenario.disabled, defaultHighlightedValue: scenario.items[0]?.id ?? null,
     typeahead: { textValue: (id: string) => scenario.items.find((item) => item.id === id)?.label ?? id },
     label: scenario.title, onInvoke: (id: string) => { invoked = id; }, onUpdate: render,

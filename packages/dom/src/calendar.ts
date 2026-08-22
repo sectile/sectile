@@ -1,5 +1,10 @@
 import type { Result, SectileError, StableID } from '@sectile/primitives';
 import {
+  createInteractionState,
+  requireInteraction,
+  type InteractionState,
+} from '@sectile/primitives/interaction';
+import {
   applyCalendarEvent,
   createCalendarState,
   type CalendarCommand,
@@ -16,6 +21,7 @@ import {
 } from '@sectile/primitives/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -40,6 +46,7 @@ export interface CalendarHighlightChangeDetails<ID extends StableID = StableID> 
 
 export interface CalendarControllerOptions<ID extends StableID = StableID> {
   readonly grid: Grid<ID>;
+  readonly disabled?: boolean;
   readonly policies?: CalendarPolicies<ID>;
   readonly value?: ID | null;
   readonly defaultValue?: ID | null;
@@ -83,6 +90,7 @@ export interface CalendarTransitionDetails<ID extends StableID = StableID> {
 export interface CalendarConnectionOptions<ID extends StableID = StableID> {
   readonly controller: CalendarController<ID>;
   readonly root: HTMLElement;
+  readonly disabled?: boolean;
   readonly onPageRequest?: (details: CalendarPageRequestDetails<ID>) => void;
   readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
@@ -129,7 +137,9 @@ export function createCalendarController<ID extends StableID>(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new DOMCalendarController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new DOMCalendarController(options, snapshot.value, interaction.value) };
 }
 
 export function createCalendar<ID extends StableID>(
@@ -187,6 +197,7 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
     this.#onPageRequest = options.onPageRequest;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
+    setInteractionAttributes(this.#root, options);
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
@@ -252,9 +263,11 @@ class DOMCalendarConnection<ID extends StableID> implements CalendarConnection<I
     const result = this.#controller.handleEvent(event);
     if (result.ok) this.#applyEffects(result.commands);
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    this.focusCurrent();
-    return true;
+    if (result.ok) {
+      this.#onUpdate?.();
+      this.focusCurrent();
+    }
+    return result.ok;
   }
 
   public focusCurrent(): void {
@@ -295,11 +308,13 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
   readonly #onHighlightedValueChange:
     | ((change: CalendarHighlightChangeDetails<ID>) => void)
     | undefined;
+  readonly #interaction: InteractionState;
   #snapshot: RevisionSnapshot<CalendarState<ID>>;
 
   public constructor(
     options: CalendarControllerOptions<ID>,
     snapshot: RevisionSnapshot<CalendarState<ID>>,
+    interaction: InteractionState,
   ) {
     this.grid = options.grid;
     this.#grid = options.grid;
@@ -308,6 +323,7 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
     this.#onHighlightedValueChange = options.onHighlightedValueChange;
+    this.#interaction = interaction;
     this.#snapshot = snapshot;
   }
 
@@ -360,6 +376,8 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     event: CalendarEvent<ID>,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>> {
+    const permitted = requireInteraction(this.#interaction, 'navigate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,

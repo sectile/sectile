@@ -18,6 +18,7 @@ export type ToolbarEffect<ID extends StableID = StableID> =
   | { readonly type: 'invoke-control'; readonly id: ID };
 
 export interface ToolbarOptions<ID extends StableID = StableID> {
+  readonly disabled?: boolean;
   readonly items: readonly ID[];
   readonly policies?: ToolbarPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -52,6 +53,7 @@ export function createToolbar<ID extends StableID>(
   const runtime = createSemanticController<
     ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
   >({
+    interaction: options,
     initial: createToolbarState(domain.value, {
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
@@ -122,8 +124,8 @@ class TerminalToolbarConnection<ID extends StableID> implements ToolbarConnectio
     if (result.ok) for (const effect of result.commands) {
       if (effect.type === 'invoke-control') this.#options.onInvoke?.(effect.id);
     }
-    this.#options.onUpdate?.();
-    return true;
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
   }
 
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {

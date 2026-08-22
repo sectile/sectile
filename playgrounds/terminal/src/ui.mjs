@@ -5,6 +5,7 @@ export const ansi = Object.freeze({
   bold: '\u001b[1m',
   dim: '\u001b[2m',
   cyan: '\u001b[36m',
+  yellow: '\u001b[33m',
   current: '\u001b[30;46m',
   editing: '\u001b[30;43m',
 });

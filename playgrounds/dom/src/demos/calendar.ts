@@ -59,6 +59,8 @@ function mountCalendar(context: DemoContext, scenario: { readonly disabledWeeken
     monthTitle.className = 'calendar-title';
     monthTitle.setAttribute('aria-live', 'polite');
     const nextButton = monthButton(ChevronRight, 'Next month');
+    previousButton.disabled = context.interaction.disabled ?? false;
+    nextButton.disabled = context.interaction.disabled ?? false;
     navigation.append(previousButton, monthTitle, nextButton);
 
     const weekdayRow = document.createElement('div');
@@ -91,6 +93,7 @@ function mountCalendar(context: DemoContext, scenario: { readonly disabledWeeken
       connection = unwrap(createCalendar({
         rows: page.rows,
         root,
+        ...context.interaction,
         policies: { eligible: (id) => !scenario.disabledWeekends || !isWeekend(id) },
         ...(scenario.controlled ? { value: visibleValue, highlightedValue } : { defaultValue: visibleValue, defaultHighlightedValue: highlightedValue }),
         onValueChange: ({ value }) => { selectedDate = value; if (scenario.controlled) queueMicrotask(syncControlled); },

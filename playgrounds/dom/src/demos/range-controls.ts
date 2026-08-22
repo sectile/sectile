@@ -27,9 +27,9 @@ export const spinButtonDemo: DemoDefinition = {
     { keys: ['Enter', 'Esc'], label: 'commit / cancel draft' },
   ],
   cases: [
-    { id: 'integer', title: 'Guest count', mount: (context) => mountSpinButton(context, { min: '1', max: '12', step: '1', initial: 1, suffix: ' guests' }) },
-    { id: 'invalid-draft', title: 'Draft validation', mount: (context) => mountSpinButton(context, { min: '0', max: '10', step: '1', initial: 4, draft: '4.5', suffix: '' }) },
-    { id: 'controlled', title: 'Controlled quantity', mount: (context) => mountSpinButton(context, { min: '0', max: '20', step: '2', initial: 3, suffix: ' units', controlled: true }) },
+    { id: 'integer', title: 'Guest count', mount: (context) => mountSpinButton(context, { min: '1', max: '12', step: '1', initial: '1', suffix: ' guests' }) },
+    { id: 'invalid-draft', title: 'Draft validation', mount: (context) => mountSpinButton(context, { min: '0', max: '10', step: '1', initial: '4', draft: '4.5', suffix: '' }) },
+    { id: 'controlled', title: 'Controlled quantity', mount: (context) => mountSpinButton(context, { min: '0', max: '20', step: '0.25', initial: '6.5', suffix: ' units', controlled: true }) },
   ],
 };
 
@@ -56,6 +56,7 @@ function mountSplitter(
   connection = unwrap(createWindowSplitter({
     root: separator,
     track: frame,
+    ...context.interaction,
     min: '0', max: '100', step: '1',
     orientation,
     label: `${first.textContent} size`,
@@ -91,7 +92,7 @@ function mountSpinButton(context: DemoContext, options: {
   readonly min: string;
   readonly max: string;
   readonly step: string;
-  readonly initial: number;
+  readonly initial: string;
   readonly draft?: string;
   readonly suffix: string;
   readonly controlled?: boolean;
@@ -106,6 +107,9 @@ function mountSpinButton(context: DemoContext, options: {
   const input = document.createElement('input');
   input.inputMode = 'decimal';
   const increment = iconButton(Plus, 'Increase');
+  const mutationLocked = context.interaction.disabled === true || context.interaction.readOnly === true;
+  decrement.disabled = mutationLocked;
+  increment.disabled = mutationLocked;
   const hint = document.createElement('p');
   hint.className = 'demo-copy';
   hint.textContent = options.draft === undefined
@@ -120,6 +124,7 @@ function mountSpinButton(context: DemoContext, options: {
   let connection!: SpinButtonConnection;
   connection = unwrap(createSpinButton({
     input, min: options.min, max: options.max, step: options.step,
+    ...context.interaction,
     label: 'Quantity', policies: { page: 3 },
     ...(options.controlled ? {
       value: externalValue,
@@ -147,8 +152,8 @@ function mountSpinButton(context: DemoContext, options: {
 
   function render(): void {
     const { revision, state } = connection.getSnapshot();
-    label.textContent = `${connection.range.valueAt(state.tick)}${options.suffix}`;
-    context.showState(revision, { value: connection.range.valueAt(state.tick), draft: state.draft, ownership: options.controlled ? 'controlled' : 'uncontrolled' });
+    label.textContent = `${state.value}${options.suffix}`;
+    context.showState(revision, { value: state.value, draft: state.draft, ownership: options.controlled ? 'controlled' : 'uncontrolled' });
   }
 
   render();

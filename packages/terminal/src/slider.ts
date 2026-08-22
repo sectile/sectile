@@ -1,4 +1,5 @@
 import type { Result, SectileError } from '@sectile/primitives';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
 import {
   createBoundedRange,
   type BoundedRangeInput,
@@ -37,6 +38,8 @@ export interface SliderControllerOptions {
   readonly page?: number;
   readonly value?: number;
   readonly defaultValue?: number;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onValueChange?: (change: SliderValueChangeDetails) => void;
 }
 
@@ -61,6 +64,8 @@ export interface SliderTransitionDetails {
 
 export interface SliderConnectionOptions {
   readonly controller: SliderController;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
@@ -84,7 +89,9 @@ export function createSliderController(
   if (!initial.ok) return initial;
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  return { ok: true, value: new TerminalSliderController(options, snapshot.value) };
+  const interaction = createInteractionState(options);
+  if (!interaction.ok) return interaction;
+  return { ok: true, value: new TerminalSliderController(options, interaction.value, snapshot.value) };
 }
 
 export function createSlider(options: SliderOptions): Result<SliderConnection> {
@@ -147,8 +154,8 @@ class TerminalSliderConnection implements SliderConnection {
     if (event === null) return false;
     const result = this.#controller.handleKeyboardInput(input);
     this.#onTransition?.(Object.freeze({ event, result }));
-    this.#onUpdate?.();
-    return true;
+    if (result.ok) this.#onUpdate?.();
+    return result.ok;
   }
 }
 
@@ -157,17 +164,20 @@ class TerminalSliderController implements SliderController {
   readonly #range: QuantizedRange;
   readonly #page: number;
   readonly #controlled: boolean;
+  readonly #interaction: InteractionState;
   readonly #onValueChange: ((change: SliderValueChangeDetails) => void) | undefined;
   #snapshot: RevisionSnapshot<SliderState>;
 
   public constructor(
     options: SliderControllerOptions,
+    interaction: InteractionState,
     snapshot: RevisionSnapshot<SliderState>,
   ) {
     this.range = options.range;
     this.#range = options.range;
     this.#page = options.page ?? 2;
     this.#controlled = options.value !== undefined;
+    this.#interaction = interaction;
     this.#onValueChange = options.onValueChange;
     this.#snapshot = snapshot;
   }
@@ -203,6 +213,8 @@ class TerminalSliderController implements SliderController {
         details: { key: input.key },
       });
     }
+    const permitted = requireInteraction(this.#interaction, 'mutate');
+    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
       expectedRevision,
