@@ -222,6 +222,14 @@ textarea.text-field { min-height: 8rem; }
 .timer-demo { display: grid; width: min(100%, 40rem); margin: 0 auto; justify-items: center; gap: 1.25rem; }
 .timer-area { display: flex; align-items: baseline; font: 700 clamp(3rem, 8vw, 6rem)/1 ui-monospace, monospace; letter-spacing: -0.08em; font-variant-numeric: tabular-nums; }
 .timer-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.55rem; }
+.cascade-select-demo { position: relative; display: grid; width: min(100%, 52rem); margin: 0 auto; gap: 0.75rem; }
+.cascade-select-trigger { justify-content: space-between; width: 100%; text-align: left; }
+.cascade-select-content { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(11rem, 1fr); overflow-x: auto; border: 1px solid #2b3649; border-radius: 1rem; background: #0d1421; box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.2); }
+.cascade-select-column { display: grid; align-content: start; min-height: 15rem; padding: 0.5rem; border-inline-end: 1px solid #2b3649; }
+.cascade-select-column:last-child { border-inline-end: 0; }
+.cascade-select-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0.65rem; background: transparent; color: inherit; padding: 0.75rem; text-align: left; }
+.cascade-select-item[data-highlighted] { background: #1b2547; outline: 1px solid #6d82ff; }
+.cascade-select-item[data-selected] { color: #5eead4; }
 .editable-case { width: min(100%, 38rem); margin: 0 auto; display: grid; gap: 0.8rem; }
 .editable-root, .editable-area { display: grid; gap: 0.7rem; }
 .editable-preview, .editable-input { width: 100%; min-height: 3.25rem; box-sizing: border-box; border: 1px solid #314058; border-radius: 0.8rem; background: #0d1625; color: #e8eefb; padding: 0.85rem 1rem; font: inherit; }

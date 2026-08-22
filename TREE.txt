@@ -131,6 +131,7 @@ sectile/
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
@@ -193,6 +194,7 @@ sectile/
 │   │   │   ├── composites/
 │   │   │   │   ├── calendar.reference-law.test.mjs
 │   │   │   │   ├── carousel.reference-law.test.mjs
+│   │   │   │   ├── cascade-select.test.mjs
 │   │   │   │   ├── checked-controls.reference-law.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
 │   │   │   │   ├── date-picker.test.mjs
@@ -270,6 +272,7 @@ sectile/
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
@@ -321,6 +324,7 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
+│   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── date-time.test.mjs
@@ -368,6 +372,7 @@ sectile/
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── combobox.ts
@@ -422,6 +427,7 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
+│   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── date-time.test.mjs
@@ -465,6 +471,7 @@ sectile/
 │       │   ├── alert-dialog.ts
 │       │   ├── calendar.ts
 │       │   ├── carousel.ts
+│       │   ├── cascade-select.ts
 │       │   ├── checkbox-group.ts
 │       │   ├── checkbox.ts
 │       │   ├── combobox.ts
@@ -516,6 +523,7 @@ sectile/
 │       │   └── window-splitter.ts
 │       ├── tests/
 │       │   ├── accordion.test.mjs
+│       │   ├── cascade-select.test.mjs
 │       │   ├── checkbox.test.mjs
 │       │   ├── checked-controls.test.mjs
 │       │   ├── collection-popup.test.mjs
@@ -549,6 +557,7 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── demos/
 │   │   │   │   ├── calendar.ts
+│   │   │   │   ├── cascade-select.ts
 │   │   │   │   ├── checked-controls.ts
 │   │   │   │   ├── collection-controls.ts
 │   │   │   │   ├── combobox.ts
@@ -599,6 +608,7 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── components/
 │   │   │   │   ├── AccordionCase.vue
+│   │   │   │   ├── CascadeSelectCase.vue
 │   │   │   │   ├── CatalogCase.vue
 │   │   │   │   ├── CheckboxCase.vue
 │   │   │   │   ├── CheckedControlCase.vue

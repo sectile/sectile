@@ -93,6 +93,24 @@ timer.setActionAttributes(required('[data-pause]'), 'pause')
 timer.setActionAttributes(required('[data-restart]'), 'restart')
 window.addEventListener('pagehide', () => timer.disconnect(), { once: true })`),
 
+  'cascade-select': example('cascade-select', 'createCascadeSelect', `const root = required<HTMLElement>('[data-cascade-select]')
+const trigger = required<HTMLButtonElement>('[data-trigger]')
+const popup = required<HTMLElement>('[data-content]')
+const cascade = createCascadeSelect({
+  root,
+  trigger,
+  popup,
+  nodes: [
+    { id: 'asia', parentID: null },
+    { id: 'kr', parentID: 'asia' },
+    { id: 'seoul', parentID: 'kr' },
+  ],
+  defaultValue: 'seoul',
+  onValueChange: (value) => console.log('destination', value),
+})
+
+window.addEventListener('pagehide', () => cascade.disconnect(), { once: true })`),
+
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({
   root,

@@ -310,6 +310,7 @@ export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type Tim
 export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './time-range-field.js';
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
 export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
+export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
 export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
 export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
 export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';

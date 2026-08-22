@@ -3855,6 +3855,17 @@ DatePicker는 date value, highlighted date, visible month, popup open state를 �
 
 locale별 숫자·월 이름 formatting, 비-Gregorian calendar, time zone conversion, recurrence는 현재 core 범위 밖이다.
 
+## Cascade Select
+
+Cascade Select는 새로운 기초 구조가 아니라 `Tree + cursor + single selection + expansion path`의 합성이다. 각 열은 현재 open branch path가 만드는 sibling sequence이며, branch 선택은 다음 열을 열고 leaf 선택만 최종 값을 commit한다.
+
+```text
+columns(tree, path) = roots(tree) :: map(children, path)
+valuePath(tree, leaf) = ancestors(leaf) ++ [leaf]
+```
+
+`path`는 root에서 시작하는 연속된 branch chain이어야 하며 leaf를 포함할 수 없다. 좌우 이동은 parent/child 열 사이를 이동하고, 상하 이동은 현재 열의 eligible sibling만 순회한다. disabled node는 focus와 selection에서 제외하며, selection policy는 기본적으로 leaf만 허용한다. DOM과 Vue는 이 의미를 여러 열과 popup으로 투영하고 terminal은 같은 reducer를 키 입력에 투영한다. 열 배치, popup 위치, label formatting은 host 책임이다.
+
 ## 참고문헌
 
 [R1] Barbara Liskov and Stephen Zilles. “Programming with Abstract Data Types.” SIGPLAN Symposium on Very High Level Languages, 1974. https://doi.org/10.1145/800233.807045

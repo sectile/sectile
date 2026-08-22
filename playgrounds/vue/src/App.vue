@@ -19,6 +19,7 @@ import DateRangeFieldCase from './components/DateRangeFieldCase.vue';
 import TimeRangeFieldCase from './components/TimeRangeFieldCase.vue';
 import ToastCase from './components/ToastCase.vue';
 import TimerCase from './components/TimerCase.vue';
+import CascadeSelectCase from './components/CascadeSelectCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
 import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
@@ -26,7 +27,7 @@ import { catalogScenarios } from './catalog-scenarios.js';
 
 const componentIDs = [
   'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
-  'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
+  'select', 'cascade-select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'toast', 'tooltip', 'carousel', 'feed', 'calendar', 'timer',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
   'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'time-range-field', 'date-time-field', 'date-picker',
@@ -92,7 +93,7 @@ const componentLabel = computed(() => ({
   'time-field': 'Time Field',
   'time-range-field': 'Time Range Field',
   'date-time-field': 'Date Time Field',
-  'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', combobox: 'Combobox',
+  'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', 'cascade-select': 'Cascade Select', combobox: 'Combobox',
   stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button', 'navigation-menu': 'Navigation Menu',
   dialog: 'Dialog', 'alert-dialog': 'Alert Dialog', tooltip: 'Tooltip', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar',
   popover: 'Popover',
@@ -211,10 +212,10 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#date-time-field" :aria-current="activeComponent === 'date-time-field' ? 'page' : undefined" @click.prevent="selectComponent('date-time-field')">Date Time Field</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['checkbox-group', 'select', 'combobox', 'tags-input', 'pin-input', 'grid', 'tree-view', 'tree-grid'].includes(activeComponent)">
-          <h2 class="demo-nav-heading"><span>Collections</span><span class="demo-nav-count" aria-label="8 components">8</span></h2>
+        <section class="demo-nav-group" :data-active="['checkbox-group', 'select', 'cascade-select', 'combobox', 'tags-input', 'pin-input', 'grid', 'tree-view', 'tree-grid'].includes(activeComponent)">
+          <h2 class="demo-nav-heading"><span>Collections</span><span class="demo-nav-count" aria-label="9 components">9</span></h2>
           <div class="demo-nav-links">
-            <a v-for="id in ['checkbox-group', 'select', 'combobox', 'tags-input', 'pin-input', 'grid', 'tree-view', 'tree-grid'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ 'checkbox-group': 'Checkbox Group', select: 'Select', combobox: 'Combobox', 'tags-input': 'Tags Input', 'pin-input': 'PIN Input', grid: 'Grid', 'tree-view': 'Tree View', 'tree-grid': 'Tree Grid' } as const)[id] }}</a>
+            <a v-for="id in ['checkbox-group', 'select', 'cascade-select', 'combobox', 'tags-input', 'pin-input', 'grid', 'tree-view', 'tree-grid'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ 'checkbox-group': 'Checkbox Group', select: 'Select', 'cascade-select': 'Cascade Select', combobox: 'Combobox', 'tags-input': 'Tags Input', 'pin-input': 'PIN Input', grid: 'Grid', 'tree-view': 'Tree View', 'tree-grid': 'Tree Grid' } as const)[id] }}</a>
           </div>
         </section>
         <section class="demo-nav-group" :data-active="['stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu', 'carousel', 'feed', 'calendar'].includes(activeComponent)">
@@ -348,6 +349,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
           description="The selected value can be inspected and focused without allowing mutation."
           :readonly="true"
         />
+      </div>
+
+      <div v-else-if="activeComponent === 'cascade-select'" class="workspace" data-demo="cascade-select">
+        <CascadeSelectCase :key="`cascade-location-${resetEpoch}`" title="Location hierarchy" description="Each chosen branch opens the next sibling column; a city commits the final value." initial-value="seoul" />
+        <CascadeSelectCase :key="`cascade-disabled-${resetEpoch}`" title="Unavailable destination" description="Disabled branches stay visible but cannot be entered or selected." :disabled-items="['jp', 'tokyo']" />
+        <CascadeSelectCase :key="`cascade-controlled-${resetEpoch}`" title="Controlled destination" description="The parent owns the selected leaf through v-model while branch navigation stays local." initial-value="paris" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'radio-group'" class="workspace" data-demo="radio-group">
