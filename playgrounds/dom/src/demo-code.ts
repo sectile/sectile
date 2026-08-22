@@ -111,6 +111,15 @@ const cascade = createCascadeSelect({
 
 window.addEventListener('pagehide', () => cascade.disconnect(), { once: true })`),
 
+  'color-picker': example('color-picker', 'createColorPicker', `const root = required<HTMLElement>('[data-color-picker]')
+const picker = createColorPicker({ root, defaultValue: '#5b6df680', allowAlpha: true })
+picker.setNativeInputAttributes(required<HTMLInputElement>('[data-native-color]'))
+picker.setTextInputAttributes(required<HTMLInputElement>('[data-color-text]'))
+picker.setChannelInputAttributes(required<HTMLInputElement>('[data-alpha]'), 'alpha')
+picker.setSwatchAttributes(required<HTMLElement>('[data-swatch]'))
+
+window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
+
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({
   root,

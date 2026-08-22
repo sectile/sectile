@@ -134,6 +134,7 @@ sectile/
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
+│   │   │   ├── color-picker.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
@@ -196,6 +197,7 @@ sectile/
 │   │   │   │   ├── carousel.reference-law.test.mjs
 │   │   │   │   ├── cascade-select.test.mjs
 │   │   │   │   ├── checked-controls.reference-law.test.mjs
+│   │   │   │   ├── color-picker.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
 │   │   │   │   ├── date-picker.test.mjs
 │   │   │   │   ├── expansion-controls.reference-law.test.mjs
@@ -275,6 +277,7 @@ sectile/
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
+│   │   │   ├── color-picker.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
@@ -326,6 +329,7 @@ sectile/
 │   │   │   ├── carousel.test.mjs
 │   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
+│   │   │   ├── color-picker.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── date-time.test.mjs
 │   │   │   ├── expansion-controls.test.mjs
@@ -375,6 +379,7 @@ sectile/
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
+│   │   │   ├── color-picker.ts
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
@@ -429,6 +434,7 @@ sectile/
 │   │   │   ├── carousel.test.mjs
 │   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
+│   │   │   ├── color-picker.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── date-time.test.mjs
 │   │   │   ├── expansion-controls.test.mjs
@@ -474,6 +480,7 @@ sectile/
 │       │   ├── cascade-select.ts
 │       │   ├── checkbox-group.ts
 │       │   ├── checkbox.ts
+│       │   ├── color-picker.ts
 │       │   ├── combobox.ts
 │       │   ├── date-field.ts
 │       │   ├── date-picker.ts
@@ -527,6 +534,7 @@ sectile/
 │       │   ├── checkbox.test.mjs
 │       │   ├── checked-controls.test.mjs
 │       │   ├── collection-popup.test.mjs
+│       │   ├── color-picker.test.mjs
 │       │   ├── date-pickers.test.mjs
 │       │   ├── date-range-field.test.mjs
 │       │   ├── derived-selection.test.mjs
@@ -560,6 +568,7 @@ sectile/
 │   │   │   │   ├── cascade-select.ts
 │   │   │   │   ├── checked-controls.ts
 │   │   │   │   ├── collection-controls.ts
+│   │   │   │   ├── color-picker.ts
 │   │   │   │   ├── combobox.ts
 │   │   │   │   ├── date-time.ts
 │   │   │   │   ├── editable.ts
@@ -612,6 +621,7 @@ sectile/
 │   │   │   │   ├── CatalogCase.vue
 │   │   │   │   ├── CheckboxCase.vue
 │   │   │   │   ├── CheckedControlCase.vue
+│   │   │   │   ├── ColorPickerCase.vue
 │   │   │   │   ├── DateRangeFieldCase.vue
 │   │   │   │   ├── DemoCard.vue
 │   │   │   │   ├── DisclosureCase.vue

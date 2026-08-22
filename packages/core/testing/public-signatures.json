@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "ab1e6bd9407e505a94fbab0c293cfaf31b5a0c6bea4321cc0f0f0ecdd5f75a73",
+  "fingerprint": "5237840042a08b5c2606a7ef86a98687f513cd80fa9e87c0c05e4896450e7135",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -29,6 +29,10 @@
     {
       "path": "dist/checkbox.d.ts",
       "sha256": "ef46097331ac06a7ff52a8f9296ce96aa6dfd159c8264a085c2460117f247aa2"
+    },
+    {
+      "path": "dist/color-picker.d.ts",
+      "sha256": "0d0745163333b9042867bcd7b7f51935f119633e026b03003d4d3c3e68fed6a6"
     },
     {
       "path": "dist/combobox.d.ts",

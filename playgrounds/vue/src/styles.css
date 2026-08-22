@@ -230,6 +230,19 @@ textarea.text-field { min-height: 8rem; }
 .cascade-select-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0.65rem; background: transparent; color: inherit; padding: 0.75rem; text-align: left; }
 .cascade-select-item[data-highlighted] { background: #1b2547; outline: 1px solid #6d82ff; }
 .cascade-select-item[data-selected] { color: #5eead4; }
+.color-picker-demo { display: grid; width: min(100%, 42rem); margin: 0 auto; gap: 1rem; }
+.color-picker-demo > label { color: #b8c4d6; font-size: 0.78rem; font-weight: 700; }
+.color-picker-control { display: grid; grid-template-columns: 3.25rem 4rem minmax(0, 1fr); align-items: stretch; gap: 0.65rem; }
+.color-picker-swatch { min-height: 3rem; border: 1px solid rgb(255 255 255 / 0.25); border-radius: 0.65rem; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2); }
+.color-picker-native { width: 4rem; min-height: 3rem; padding: 0.2rem; border: 1px solid #344158; border-radius: 0.65rem; background: #111a29; }
+.color-picker-text { min-width: 0; border: 1px solid #344158; border-radius: 0.65rem; padding: 0.65rem 0.8rem; color: #e7edf7; background: #0d1522; font: inherit; }
+.color-picker-channels { display: grid; gap: 0.65rem; }
+.color-picker-channels label { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); align-items: center; gap: 0.65rem; color: #8e9cb1; font: 0.75rem/1 ui-monospace, monospace; }
+.color-picker-channels input { width: 100%; accent-color: #7185ff; }
+.color-picker-formats { display: flex; align-items: center; gap: 0.45rem; }
+.color-picker-formats button { padding: 0.45rem 0.65rem; }
+.color-picker-formats [aria-pressed="true"] { border-color: #5eead4; color: #bffaf1; background: #153238; }
+.color-picker-value { margin-inline-start: auto; color: #dce5f2; font: 0.78rem/1.2 ui-monospace, monospace; }
 .editable-case { width: min(100%, 38rem); margin: 0 auto; display: grid; gap: 0.8rem; }
 .editable-root, .editable-area { display: grid; gap: 0.7rem; }
 .editable-preview, .editable-input { width: 100%; min-height: 3.25rem; box-sizing: border-box; border: 1px solid #314058; border-radius: 0.8rem; background: #0d1625; color: #e8eefb; padding: 0.85rem 1rem; font: inherit; }

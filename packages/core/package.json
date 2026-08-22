@@ -113,6 +113,7 @@
     "./toast": { "types": "./dist/toast.d.ts", "import": "./dist/toast.js", "default": "./dist/toast.js" },
     "./timer": { "types": "./dist/timer.d.ts", "import": "./dist/timer.js", "default": "./dist/timer.js" },
     "./cascade-select": { "types": "./dist/cascade-select.d.ts", "import": "./dist/cascade-select.js", "default": "./dist/cascade-select.js" },
+    "./color-picker": { "types": "./dist/color-picker.d.ts", "import": "./dist/color-picker.js", "default": "./dist/color-picker.js" },
     "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
     "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },
     "./multi-thumb-slider": { "types": "./dist/multi-thumb-slider.d.ts", "import": "./dist/multi-thumb-slider.js", "default": "./dist/multi-thumb-slider.js" },

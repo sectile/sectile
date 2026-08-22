@@ -3866,6 +3866,14 @@ valuePath(tree, leaf) = ancestors(leaf) ++ [leaf]
 
 `path`는 root에서 시작하는 연속된 branch chain이어야 하며 leaf를 포함할 수 없다. 좌우 이동은 parent/child 열 사이를 이동하고, 상하 이동은 현재 열의 eligible sibling만 순회한다. disabled node는 focus와 selection에서 제외하며, selection policy는 기본적으로 leaf만 허용한다. DOM과 Vue는 이 의미를 여러 열과 popup으로 투영하고 terminal은 같은 reducer를 키 입력에 투영한다. 열 배치, popup 위치, label formatting은 host 책임이다.
 
+## Color Picker
+
+Color Picker는 네 개의 유한 정수 range와 text editing의 합성이다. 저장 상태는 `{ red, green, blue, alpha } ∈ [0,255]⁴`이며 CSS 문자열이나 host 색상 객체를 canonical 값으로 사용하지 않는다. 이 표현은 RGB와 alpha 채널의 폐쇄성, 순서, bounded stepping을 그대로 보존하고 binary floating-point opacity 오차를 피한다.
+
+hex·rgb·rgba text는 draft로 유지하다 commit 시에만 canonical RGBA로 바뀐다. invalid draft는 기존 값을 변경하지 않는다. `format`은 값이 아니라 관찰 projection이므로 hex와 rgb 전환은 색상을 바꾸지 않는다. `allowAlpha=false` 정책은 alpha를 255로 고정하며 alpha focus와 mutation을 거부한다.
+
+DOM은 native `input[type=color]`, text input, range input과 form submission을 소유한다. native color input이 alpha를 표현하지 못하므로 alpha는 독립 range로 투영한다. terminal은 같은 channel cursor와 reducer를 방향키·text input에 투영한다. 색 공간 변환, gamut mapping, eye-dropper permission, 화면상 2차원 geometry는 host 또는 상위 정책 책임이다.
+
 ## 참고문헌
 
 [R1] Barbara Liskov and Stephen Zilles. “Programming with Abstract Data Types.” SIGPLAN Symposium on Very High Level Languages, 1974. https://doi.org/10.1145/800233.807045

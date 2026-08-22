@@ -441,6 +441,7 @@ export {
 export { ToastProvider, ToastViewport, ToastRoot, ToastTitle, ToastDescription, ToastClose, type ToastProviderProps, type ToastProviderSlotProps, type ToastPartProps, type ToastRootProps, type ToastRootSlotProps } from './toast.js';
 export { TimerActionTrigger, TimerArea, TimerControl, TimerItem, TimerRoot, TimerSeparator, type TimerPartProps, type TimerRootProps, type TimerSlotProps } from './timer.js';
 export { CascadeSelectColumn, CascadeSelectContent, CascadeSelectItem, CascadeSelectItemChevron, CascadeSelectItemIndicator, CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectValue, type CascadeSelectColumnProps, type CascadeSelectColumnSlotProps, type CascadeSelectItemProps, type CascadeSelectItemSlotProps, type CascadeSelectPartProps, type CascadeSelectRootProps, type CascadeSelectRootSlotProps } from './cascade-select.js';
+export { ColorPickerChannelInput, ColorPickerControl, ColorPickerFormatTrigger, ColorPickerLabel, ColorPickerNativeInput, ColorPickerRoot, ColorPickerSwatch, ColorPickerTextInput, ColorPickerValueText, type ColorPickerChannelInputProps, type ColorPickerFormatTriggerProps, type ColorPickerPartProps, type ColorPickerRootProps, type ColorPickerRootSlotProps } from './color-picker.js';
 export {
   GridCell,
   GridRoot,

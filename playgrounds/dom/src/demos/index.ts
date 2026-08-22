@@ -19,6 +19,7 @@ import { editableDemo } from './editable.js';
 import { toastDemo } from './toast.js';
 import { timerDemo } from './timer.js';
 import { cascadeSelectDemo } from './cascade-select.js';
+import { colorPickerDemo } from './color-picker.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
 import { dateFieldDemo, datePickerDemo, dateRangeFieldDemo, dateRangePickerDemo, dateTimeFieldDemo, dateTimePickerDemo, dateTimeRangePickerDemo, timeFieldDemo, timeRangeFieldDemo } from './date-time.js';
@@ -47,6 +48,7 @@ const rawDemos: readonly DemoDefinition[] = [
   toastDemo,
   timerDemo,
   cascadeSelectDemo,
+  colorPickerDemo,
   menuDemo,
   menubarDemo,
   menuButtonDemo,
@@ -96,7 +98,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
     label: 'Input',
     demoIDs: [
       'combobox', 'date-field', 'date-range-field', 'date-time-field', 'editable', 'number-field', 'pin-input', 'quantity-field',
-      'spin-button', 'tags-input', 'text', 'time-field', 'time-range-field',
+      'spin-button', 'tags-input', 'text', 'time-field', 'time-range-field', 'color-picker',
     ],
   },
   {
@@ -135,6 +137,7 @@ const readOnlyDemos = new Set([
   'tree-grid', 'grid', 'radio-group', 'checkbox',
   'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
   'cascade-select',
+  'color-picker',
   'toggle-group',
   'editable',
 ]);

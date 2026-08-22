@@ -20,6 +20,7 @@ import TimeRangeFieldCase from './components/TimeRangeFieldCase.vue';
 import ToastCase from './components/ToastCase.vue';
 import TimerCase from './components/TimerCase.vue';
 import CascadeSelectCase from './components/CascadeSelectCase.vue';
+import ColorPickerCase from './components/ColorPickerCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
 import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
@@ -27,7 +28,7 @@ import { catalogScenarios } from './catalog-scenarios.js';
 
 const componentIDs = [
   'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
-  'select', 'cascade-select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
+  'select', 'cascade-select', 'color-picker', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'toast', 'tooltip', 'carousel', 'feed', 'calendar', 'timer',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
   'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'time-range-field', 'date-time-field', 'date-picker',
@@ -93,7 +94,7 @@ const componentLabel = computed(() => ({
   'time-field': 'Time Field',
   'time-range-field': 'Time Range Field',
   'date-time-field': 'Date Time Field',
-  'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', 'cascade-select': 'Cascade Select', combobox: 'Combobox',
+  'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', 'cascade-select': 'Cascade Select', 'color-picker': 'Color Picker', combobox: 'Combobox',
   stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button', 'navigation-menu': 'Navigation Menu',
   dialog: 'Dialog', 'alert-dialog': 'Alert Dialog', tooltip: 'Tooltip', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar',
   popover: 'Popover',
@@ -224,10 +225,10 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a v-for="id in ['stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu', 'carousel', 'feed', 'calendar'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button', 'navigation-menu': 'Navigation Menu', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar' } as const)[id] }}</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(activeComponent)">
-          <h2 class="demo-nav-heading"><span>Value &amp; Date</span><span class="demo-nav-count" aria-label="9 components">9</span></h2>
+        <section class="demo-nav-group" :data-active="['color-picker', 'rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(activeComponent)">
+          <h2 class="demo-nav-heading"><span>Value &amp; Date</span><span class="demo-nav-count" aria-label="10 components">10</span></h2>
           <div class="demo-nav-links">
-            <a v-for="id in ['rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ rating: 'Rating', 'multi-thumb-slider': 'Multi Thumb Slider', timer: 'Timer', 'window-splitter': 'Window Splitter', 'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker', 'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker' } as const)[id] }}</a>
+            <a v-for="id in ['color-picker', 'rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ 'color-picker': 'Color Picker', rating: 'Rating', 'multi-thumb-slider': 'Multi Thumb Slider', timer: 'Timer', 'window-splitter': 'Window Splitter', 'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker', 'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker' } as const)[id] }}</a>
           </div>
         </section>
         <section class="demo-nav-group" :data-active="['dialog', 'alert-dialog', 'popover', 'toast', 'tooltip'].includes(activeComponent)">
@@ -385,6 +386,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
         <TimerCase :key="`timer-stopwatch-${resetEpoch}`" title="Stopwatch" description="An unbounded timer measures elapsed time until paused or reset." />
         <TimerCase :key="`timer-countdown-${resetEpoch}`" title="Release countdown" description="Countdown reaches zero exactly and emits one completion." countdown :start-ms="10_000" auto-start />
         <TimerCase :key="`timer-target-${resetEpoch}`" title="Bounded elapsed timer" description="A count-up timer stops at an explicit target." :target-ms="15_000" />
+      </div>
+
+      <div v-else-if="activeComponent === 'color-picker'" class="workspace" data-demo="color-picker">
+        <ColorPickerCase :key="`color-native-${resetEpoch}`" title="Native accent color" description="Native color and text inputs edit the same exact RGB value." initial-value="#5b6df6" :alpha="false" />
+        <ColorPickerCase :key="`color-alpha-${resetEpoch}`" title="RGBA channels" description="Independent integer channels preserve alpha without floating-point state." initial-value="#26c6a080" />
+        <ColorPickerCase :key="`color-controlled-${resetEpoch}`" title="Controlled brand color" description="The parent owns the serialized color through v-model." initial-value="#f59e0b" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'tabs'" class="workspace" data-demo="tabs">
