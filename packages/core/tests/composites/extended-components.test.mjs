@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { applyCheckboxGroupEvent, createCheckboxGroupState } from '../../.verification-dist/checkbox-group.js';
+import { applyToggleGroupEvent, createToggleGroupState } from '../../.verification-dist/toggle-group.js';
 import { applySelectEvent, createSelectState } from '../../.verification-dist/select.js';
 import {
   applyPaginationEvent,
@@ -26,6 +27,21 @@ test('checkbox group composes multiple selection without coupling focus and valu
   assert.deepEqual(moved.state.selection.selected, ['a']);
   const toggled = unwrap(applyCheckboxGroupEvent(domain, moved.state, 'toggle'));
   assert.deepEqual(toggled.state.selection.selected, ['a', 'b']);
+});
+
+test('toggle group supports deselectable single and independent multiple pressed values', () => {
+  const single = unwrap(createToggleGroupState(domain, { current: 'a', selected: ['a'] }));
+  const released = unwrap(applyToggleGroupEvent(domain, single, 'press'));
+  assert.deepEqual(released.state.selection.selected, []);
+  const fixed = unwrap(applyToggleGroupEvent(domain, single, 'press', { deselectable: false }));
+  assert.deepEqual(fixed.state.selection.selected, ['a']);
+
+  const multiple = unwrap(createToggleGroupState(domain, { current: 'a', selected: ['a'] }, true));
+  const moved = unwrap(applyToggleGroupEvent(domain, multiple, 'next', { multiple: true }));
+  const pressed = unwrap(applyToggleGroupEvent(domain, moved.state, 'press', { multiple: true }));
+  assert.deepEqual(pressed.state.selection.selected, ['a', 'b']);
+  assert.equal(createToggleGroupState(domain, {}, 'yes').ok, false);
+  assert.equal(applyToggleGroupEvent(domain, single, 'press', { multiple: 'yes' }).ok, false);
 });
 
 test('select keeps navigation open and closes only after selection', () => {

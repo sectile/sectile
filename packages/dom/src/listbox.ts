@@ -51,6 +51,8 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly policies?: ListboxPolicies<ID>;
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly activationMode?: 'activate' | 'toggle';
+  readonly clearOnEscape?: boolean;
   readonly disabledItems?: readonly ID[];
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -103,6 +105,7 @@ export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly activationMode?: 'activate' | 'toggle';
   readonly disabledItems?: readonly ID[];
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -280,6 +283,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #onUpdate: (() => void) | undefined;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #activationMode: 'activate' | 'toggle';
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #typeaheadEnabled: boolean;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
@@ -293,6 +297,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#onUpdate = options.onUpdate;
     this.#selectionMode = options.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
+    this.#activationMode = options.activationMode ?? 'activate';
     this.#disabledItems = new Set(options.disabledItems ?? []);
     this.#typeaheadEnabled = options.typeahead !== undefined;
     this.#handleKeydown = (event): void => {
@@ -301,7 +306,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#handleClick = (event): void => {
       const id = findDelegatedID(event.target, this.#root, 'listboxId') as ID | null;
       if (id === null || this.#disabledItems.has(id)) return;
-      this.handleEvent(this.#selectionMode === 'multiple'
+      this.handleEvent(this.#selectionMode === 'multiple' || this.#activationMode === 'toggle'
         ? { type: 'toggle', id }
         : { type: 'activate', id });
     };
@@ -427,6 +432,8 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
   readonly #interaction: InteractionState;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #activationMode: 'activate' | 'toggle';
+  readonly #clearOnEscape: boolean;
   readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
@@ -449,6 +456,8 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     this.#interaction = interaction;
     this.#selectionMode = policies.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
+    this.#activationMode = options.activationMode ?? 'activate';
+    this.#clearOnEscape = options.clearOnEscape ?? true;
     this.#typeahead = options.typeahead;
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
@@ -501,7 +510,10 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
     const permitted = requireInteraction(this.#interaction, 'navigate');
     if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const event = toListboxEvent<ID>(input, this.#orientation);
+    const mapped = toListboxEvent<ID>(input, this.#orientation);
+    const event = mapped === 'activate' && this.#activationMode === 'toggle'
+      ? 'toggle'
+      : mapped === 'clear' && !this.#clearOnEscape ? null : mapped;
     if (event !== null) return this.handleEvent(event, expectedRevision);
     const queryPart = printableKey(input);
     if (queryPart === null || this.#typeahead === undefined) {

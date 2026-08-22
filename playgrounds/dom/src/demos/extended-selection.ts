@@ -4,6 +4,7 @@ import { createPagination, type PaginationConnection } from '@sectile/dom/pagina
 import { createRating, type RatingConnection } from '@sectile/dom/rating';
 import { createSelect, type SelectConnection } from '@sectile/dom/select';
 import { createStepper, type StepperConnection } from '@sectile/dom/stepper';
+import { createToggleGroup, type ToggleGroupConnection } from '@sectile/dom/toggle-group';
 import {
   Check,
   ChevronDown,
@@ -31,6 +32,17 @@ export const checkboxGroupDemo: DemoDefinition = {
     { id: 'release-channels', title: 'Release channels', mount: (context) => mountCheckboxGroup(context, ['stable'], [], false) },
     { id: 'disabled-choice', title: 'Unavailable channel', mount: (context) => mountCheckboxGroup(context, ['stable', 'preview'], ['nightly'], false) },
     { id: 'controlled', title: 'Controlled subscriptions', mount: (context) => mountCheckboxGroup(context, ['preview'], [], true) },
+  ],
+};
+
+export const toggleGroupDemo: DemoDefinition = {
+  id: 'toggle-group', label: 'Toggle group', title: 'Toggle group',
+  description: 'One or many related actions keep an independent pressed state.',
+  shortcuts: [{ keys: ['←', '→'], label: 'move' }, { keys: ['Enter', 'Space'], label: 'press' }],
+  cases: [
+    { id: 'single', title: 'Text alignment', mount: (context) => mountToggleGroup(context, ['left'], false, false) },
+    { id: 'multiple', title: 'Text formatting', mount: (context) => mountToggleGroup(context, ['bold', 'italic'], true, false) },
+    { id: 'controlled', title: 'Controlled tools', mount: (context) => mountToggleGroup(context, ['bold'], true, true) },
   ],
 };
 
@@ -95,6 +107,22 @@ function mountCheckboxGroup(context: DemoContext, initial: readonly string[], di
     onUpdate: render,
   });
   function render(): void { const { revision, state } = connection.getSnapshot(); for (const [id, button] of buttons) { connection.setItemAttributes(button, { id, disabled: disabled.includes(id) }); button.classList.toggle('selected', state.selection.has(id)); button.classList.toggle('current', state.cursor.current === id); } context.showState(revision, { selected: state.selection.selected, current: state.cursor.current, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
+  render(); return { focus: () => buttons[0]?.[1].focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountToggleGroup(context: DemoContext, initial: readonly string[], multiple: boolean, controlled: boolean): DemoSession {
+  const items = multiple ? ['bold', 'italic', 'underline'] : ['left', 'center', 'right'];
+  const root = document.createElement('div'); root.className = 'toggle-group-demo';
+  const copy = demoCopy(multiple ? 'Combine any formatting actions.' : 'Choose one alignment, or press it again to clear.');
+  const group = document.createElement('div'); group.className = 'toggle-group-control';
+  const buttons = items.map((id) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary'; button.textContent = id; group.append(button); return [id, button] as const; });
+  root.append(copy, group); context.surface.append(root);
+  let external = [...initial]; let connection!: ToggleGroupConnection<string>;
+  connection = createToggleGroup({ root: group, items, multiple, ...context.interaction,
+    ...(controlled ? { value: external, highlightedValue: items[0] ?? null, onValueChange: ({ value }) => { external = [...value]; queueMicrotask(() => connection.syncControlledValues({ value: external, highlightedValue: connection.getSnapshot().state.cursor.current })); } } : { defaultValue: initial, defaultHighlightedValue: items[0] ?? null }),
+    onUpdate: render,
+  });
+  function render(): void { const { revision, state } = connection.getSnapshot(); for (const [id, button] of buttons) { connection.setItemAttributes(button, { id }); button.classList.toggle('selected', state.selection.has(id)); } context.showState(revision, { pressed: state.selection.selected, current: state.cursor.current, mode: multiple ? 'multiple' : 'single', ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => buttons[0]?.[1].focus(), disconnect: () => connection.disconnect() };
 }
 

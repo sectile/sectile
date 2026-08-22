@@ -45,6 +45,8 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly policies?: ListboxPolicies<ID>;
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly activationMode?: 'activate' | 'toggle';
+  readonly clearOnEscape?: boolean;
   readonly disabledItems?: readonly ID[];
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -94,6 +96,7 @@ export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly activationMode?: 'activate' | 'toggle';
   readonly typeahead?: ListboxTypeaheadOptions<ID>;
   readonly onActivate?: (id: ID) => void;
   readonly onTransition?: (details: ListboxTransitionDetails<ID>) => void;
@@ -250,6 +253,8 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
   readonly #interaction: InteractionState;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #activationMode: 'activate' | 'toggle';
+  readonly #clearOnEscape: boolean;
   readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
   readonly #valueControlled: boolean;
   readonly #highlightControlled: boolean;
@@ -272,6 +277,8 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     this.#interaction = interaction;
     this.#selectionMode = policies.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
+    this.#activationMode = options.activationMode ?? 'activate';
+    this.#clearOnEscape = options.clearOnEscape ?? true;
     this.#typeahead = options.typeahead;
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
@@ -324,7 +331,10 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
     const permitted = requireInteraction(this.#interaction, 'navigate');
     if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const event = toListboxEvent<ID>(input, this.#orientation);
+    const mapped = toListboxEvent<ID>(input, this.#orientation);
+    const event = mapped === 'activate' && this.#activationMode === 'toggle'
+      ? 'toggle'
+      : mapped === 'clear' && !this.#clearOnEscape ? null : mapped;
     if (event !== null) return this.handleEvent(event, expectedRevision);
     const queryPart = printableText(input);
     if (queryPart === null || this.#typeahead === undefined) {

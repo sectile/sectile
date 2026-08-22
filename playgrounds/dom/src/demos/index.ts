@@ -13,7 +13,7 @@ import { accordionDemo, disclosureDemo } from './expansion-controls.js';
 import { spinButtonDemo, windowSplitterDemo } from './range-controls.js';
 import { alertDialogDemo, dialogDemo, tooltipDemo } from './popup-controls.js';
 import { menuButtonDemo, menuDemo, menubarDemo } from './menu-controls.js';
-import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo } from './extended-selection.js';
+import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo, toggleGroupDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
@@ -56,6 +56,7 @@ const rawDemos: readonly DemoDefinition[] = [
   checkboxDemo,
   switchDemo,
   toggleButtonDemo,
+  toggleGroupDemo,
   checkboxGroupDemo,
   selectDemo,
   paginationDemo,
@@ -92,7 +93,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
     demoIDs: [
       'checkbox', 'checkbox-group', 'date-picker', 'date-range-picker', 'date-time-picker',
       'date-time-range-picker', 'listbox',
-      'radio-group', 'rating', 'select', 'switch', 'toggle-button',
+      'radio-group', 'rating', 'select', 'switch', 'toggle-button', 'toggle-group',
     ],
   },
   {
@@ -121,6 +122,7 @@ const readOnlyDemos = new Set([
   'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'date-time-field', 'time-field', 'text', 'combobox',
   'tree-grid', 'grid', 'radio-group', 'checkbox',
   'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
+  'toggle-group',
 ]);
 
 const demosByID = new Map(rawDemos.map((demo) => [demo.id, demo]));

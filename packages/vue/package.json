@@ -71,6 +71,11 @@
       "import": "./dist/toggle-button.js",
       "default": "./dist/toggle-button.js"
     },
+    "./toggle-group": {
+      "types": "./dist/toggle-group.d.ts",
+      "import": "./dist/toggle-group.js",
+      "default": "./dist/toggle-group.js"
+    },
     "./tooltip": {
       "types": "./dist/tooltip.d.ts",
       "import": "./dist/tooltip.js",

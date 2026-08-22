@@ -150,6 +150,7 @@ export {
   type ToggleButtonControllerOptions,
   type ToggleButtonOptions,
 } from './toggle-button.js';
+export { createToggleGroup, tryCreateToggleGroup, type ToggleGroupConnection, type ToggleGroupOptions } from './toggle-group.js';
 export { createWindowSplitter, tryCreateWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
 export { createSpinButton, tryCreateSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
 export { createNumberField, tryCreateNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';

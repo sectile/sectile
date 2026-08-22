@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCheckboxGroup } from '../dist/checkbox-group.js';
+import { createToggleGroup } from '../dist/toggle-group.js';
 import { createSelect } from '../dist/select.js';
 import { createPagination } from '../dist/pagination.js';
 import { createStepper } from '../dist/stepper.js';
@@ -46,6 +47,18 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   stepper.handleEvent('activate-step');
   assert.deepEqual(stepper.getSnapshot().state.selection.selected, ['profile']);
   assert.equal(stepperRoot.attributes.get('aria-roledescription'), 'stepper');
+});
+
+test('DOM toggle group projects pressed buttons and toggles single values', () => {
+  const root = new FakeElement();
+  const group = createToggleGroup({ root, items: ['bold', 'italic'], defaultValue: ['bold'] });
+  const bold = new FakeElement();
+  group.setItemAttributes(bold, { id: 'bold' });
+  assert.equal(root.attributes.get('role'), 'group');
+  assert.equal(bold.attributes.get('aria-pressed'), 'true');
+  assert.equal(bold.attributes.get('aria-selected'), undefined);
+  group.handleEvent({ type: 'press', id: 'bold' });
+  assert.deepEqual(group.getSnapshot().state.selection.selected, []);
 });
 
 test('DOM pagination owns item projection, delegated clicks, and boundary availability', () => {

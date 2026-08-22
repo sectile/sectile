@@ -44,6 +44,7 @@ export interface ListboxStateInput<ID extends StableID = StableID>
 
 export interface ListboxPolicies<ID extends StableID = StableID> {
   readonly selectionMode?: SelectionMode;
+  readonly deselectable?: boolean;
   readonly eligible?: (id: ID) => boolean;
   readonly selectionFollowsFocus?: boolean;
   readonly boundary?: BoundaryPolicy;
@@ -108,6 +109,15 @@ export function applyListboxEvent<ID extends StableID>(
       { selectionFollowsFocus },
     );
   }
+  const deselectable = policies.deselectable ?? false;
+  if (typeof deselectable !== 'boolean') {
+    return fail(
+      'transition-rejection',
+      'invalid-deselectable-policy',
+      'deselectable must be boolean.',
+      { deselectable },
+    );
+  }
   if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
     return fail(
       'transition-rejection',
@@ -154,7 +164,7 @@ export function applyListboxEvent<ID extends StableID>(
     if (event.type === 'toggle') {
       return createMachineUpdate(listboxState(
         createCursorState(event.id),
-        selectForMode(state.selection, event.id, domain, selectionMode),
+        selectForMode(state.selection, event.id, domain, selectionMode, deselectable),
       ), [{ type: 'focus', id: event.id }]);
     }
     return createMachineUpdate(
@@ -178,7 +188,7 @@ export function applyListboxEvent<ID extends StableID>(
       return createMachineUpdate(
         listboxState(
           state.cursor,
-          selectForMode(state.selection, current, domain, selectionMode),
+          selectForMode(state.selection, current, domain, selectionMode, deselectable),
         ),
       );
     }
@@ -318,9 +328,10 @@ function selectForMode<ID extends StableID>(
   id: ID,
   domain: Sequence<ID>,
   selectionMode: SelectionMode,
+  deselectable: boolean,
 ): SelectionState<ID> {
   return selectionMode === 'single'
-    ? selectOne(state, id, domain)
+    ? deselectable && state.has(id) ? clearSelection(state) : selectOne(state, id, domain)
     : toggleMultipleSelection(state, id, domain);
 }
 

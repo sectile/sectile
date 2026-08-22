@@ -169,6 +169,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── toggle-button.ts
+│   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
@@ -292,6 +293,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── toggle-button.ts
+│   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
@@ -383,6 +385,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── toggle-button.ts
+│   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
@@ -468,6 +471,7 @@ sectile/
 │       │   ├── text.ts
 │       │   ├── time-field.ts
 │       │   ├── toggle-button.ts
+│       │   ├── toggle-group.ts
 │       │   ├── toolbar.ts
 │       │   ├── tooltip.ts
 │       │   ├── tree-grid.ts
@@ -522,6 +526,7 @@ sectile/
 │   │   │   │   ├── text.ts
 │   │   │   │   ├── tree-grid.ts
 │   │   │   │   └── tree-view.ts
+│   │   │   ├── demo-code.ts
 │   │   │   ├── highlight.d.ts
 │   │   │   ├── highlight.js
 │   │   │   ├── main.ts
@@ -556,12 +561,16 @@ sectile/
 │   │   │   │   ├── DisclosureCase.vue
 │   │   │   │   ├── ListboxCase.vue
 │   │   │   │   ├── NativeFieldCase.vue
+│   │   │   │   ├── PaginationCase.vue
 │   │   │   │   ├── RadioGroupCase.vue
 │   │   │   │   ├── SliderCase.vue
 │   │   │   │   ├── SpinButtonCase.vue
 │   │   │   │   ├── TabsCase.vue
-│   │   │   │   └── TextCase.vue
+│   │   │   │   ├── TextCase.vue
+│   │   │   │   └── ToggleGroupCase.vue
 │   │   │   ├── App.vue
+│   │   │   ├── catalog-code.ts
+│   │   │   ├── catalog-scenarios.ts
 │   │   │   ├── highlight.d.ts
 │   │   │   ├── highlight.js
 │   │   │   ├── main.ts

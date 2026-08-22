@@ -4,6 +4,7 @@ import { RotateCcw } from '@lucide/vue';
 import type { CheckboxValue } from '@sectile/vue/checkbox';
 import CheckboxCase from './components/CheckboxCase.vue';
 import CheckedControlCase from './components/CheckedControlCase.vue';
+import ToggleGroupCase from './components/ToggleGroupCase.vue';
 import DisclosureCase from './components/DisclosureCase.vue';
 import AccordionCase from './components/AccordionCase.vue';
 import TextCase from './components/TextCase.vue';
@@ -18,7 +19,7 @@ import CatalogCase from './components/CatalogCase.vue';
 import { catalogScenarios } from './catalog-scenarios.js';
 
 const componentIDs = [
-  'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'listbox', 'radio-group', 'rating',
+  'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'tooltip', 'carousel', 'feed', 'calendar',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'tags-input', 'pin-input', 'spin-button',
@@ -69,6 +70,7 @@ const componentLabel = computed(() => ({
   checkbox: 'Checkbox',
   switch: 'Switch',
   'toggle-button': 'Toggle Button',
+  'toggle-group': 'Toggle Group',
   listbox: 'Listbox',
   'radio-group': 'Radio Group',
   tabs: 'Tabs',
@@ -154,15 +156,16 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
         <strong>Components</strong>
       </div>
       <nav class="demo-nav" aria-label="Component categories">
-        <section class="demo-nav-group" :data-active="['checkbox', 'switch', 'toggle-button', 'listbox', 'radio-group', 'slider'].includes(activeComponent)">
+        <section class="demo-nav-group" :data-active="['checkbox', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'slider'].includes(activeComponent)">
           <h2 class="demo-nav-heading">
             <span>Selection</span>
-            <span class="demo-nav-count" aria-label="6 components">6</span>
+            <span class="demo-nav-count" aria-label="7 components">7</span>
           </h2>
           <div class="demo-nav-links">
             <a href="#checkbox" :aria-current="activeComponent === 'checkbox' ? 'page' : undefined" @click.prevent="selectComponent('checkbox')">Checkbox</a>
             <a href="#switch" :aria-current="activeComponent === 'switch' ? 'page' : undefined" @click.prevent="selectComponent('switch')">Switch</a>
             <a href="#toggle-button" :aria-current="activeComponent === 'toggle-button' ? 'page' : undefined" @click.prevent="selectComponent('toggle-button')">Toggle Button</a>
+            <a href="#toggle-group" :aria-current="activeComponent === 'toggle-group' ? 'page' : undefined" @click.prevent="selectComponent('toggle-group')">Toggle Group</a>
             <a href="#listbox" :aria-current="activeComponent === 'listbox' ? 'page' : undefined" @click.prevent="selectComponent('listbox')">Listbox</a>
             <a href="#radio-group" :aria-current="activeComponent === 'radio-group' ? 'page' : undefined" @click.prevent="selectComponent('radio-group')">Radio Group</a>
             <a href="#slider" :aria-current="activeComponent === 'slider' ? 'page' : undefined" @click.prevent="selectComponent('slider')">Slider</a>
@@ -328,6 +331,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
         <RadioGroupCase :key="`radio-${resetEpoch}`" />
         <RadioGroupCase :key="`radio-controlled-${resetEpoch}`" :controlled="true" />
         <RadioGroupCase :key="`radio-readonly-${resetEpoch}`" :readonly="true" />
+      </div>
+
+      <div v-else-if="activeComponent === 'toggle-group'" class="workspace" data-demo="toggle-group">
+        <ToggleGroupCase :key="`toggle-single-${resetEpoch}`" title="Text alignment" description="One pressed action at a time; press the active item again to clear it." />
+        <ToggleGroupCase :key="`toggle-multiple-${resetEpoch}`" title="Text formatting" description="Independent actions can remain pressed together." :multiple="true" />
+        <ToggleGroupCase :key="`toggle-controlled-${resetEpoch}`" title="Controlled formatting" description="The parent owns the pressed value array." :multiple="true" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'tabs'" class="workspace" data-demo="tabs">

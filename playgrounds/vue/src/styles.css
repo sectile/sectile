@@ -133,6 +133,10 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .toggle-control { display: inline-grid; min-width: 12rem; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.65rem; border-color: #39465d; color: #d8e0ed; background: #121a28; text-align: start; }
 .toggle-control[data-state="checked"] { border-color: #5eead4; color: #071412; background: #5eead4; }
 .toggle-control[data-state="checked"] .toggle-value { color: #144b45; }
+.toggle-group-example { width: min(34rem, 100%); }
+.toggle-group-control { display: inline-flex; gap: 0.35rem; padding: 0.35rem; border: 1px solid #263246; border-radius: 0.8rem; background: #0b1422; }
+.toggle-group-item { min-width: 5.5rem; text-transform: capitalize; }
+.toggle-group-item[aria-pressed="true"] { border-color: #5eead4; color: #071412; background: #5eead4; }
 .disclosure-control { overflow: hidden; border: 1px solid #344158; border-radius: 0.8rem; background: #0d1522; }
 .disclosure-trigger { display: flex; width: 100%; min-height: 3.7rem; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0; padding: 0.85rem 1rem; color: #e4ebf5; background: #121b2a; text-align: start; }
 .disclosure-trigger svg { transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1); }

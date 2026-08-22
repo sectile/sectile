@@ -1,5 +1,6 @@
 function example(moduleName: string, imports: string, body: string): string {
-  return `import { ${imports} } from '@sectile/dom/${moduleName}'
+  const specifier = '@sectile/dom/' + moduleName;
+  return `import { ${imports} } from '${specifier}'
 
 const required = <T extends Element>(selector: string): T => {
   const element = document.querySelector<T>(selector)
@@ -41,6 +42,20 @@ const toggle = createToggleButton({
 })
 
 window.addEventListener('pagehide', () => toggle.disconnect(), { once: true })`),
+
+  'toggle-group': example('toggle-group', 'createToggleGroup', `${collectionItems}
+const toggleGroup = createToggleGroup({
+  root,
+  items,
+  multiple: true,
+  defaultValue: ['alpha'],
+  onValueChange: ({ value }) => console.log('pressed', value),
+})
+
+for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
+  toggleGroup.setItemAttributes(item, { id: item.dataset.value as typeof items[number] })
+}
+window.addEventListener('pagehide', () => toggleGroup.disconnect(), { once: true })`),
 
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({

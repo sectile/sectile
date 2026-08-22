@@ -64,6 +64,7 @@
     "./checkbox": { "types": "./dist/checkbox.d.ts", "import": "./dist/checkbox.js", "default": "./dist/checkbox.js" },
     "./switch": { "types": "./dist/switch.d.ts", "import": "./dist/switch.js", "default": "./dist/switch.js" },
     "./toggle-button": { "types": "./dist/toggle-button.d.ts", "import": "./dist/toggle-button.js", "default": "./dist/toggle-button.js" },
+    "./toggle-group": { "types": "./dist/toggle-group.d.ts", "import": "./dist/toggle-group.js", "default": "./dist/toggle-group.js" },
     "./window-splitter": { "types": "./dist/window-splitter.d.ts", "import": "./dist/window-splitter.js", "default": "./dist/window-splitter.js" },
     "./spin-button": { "types": "./dist/spin-button.d.ts", "import": "./dist/spin-button.js", "default": "./dist/spin-button.js" },
     "./number-field": { "types": "./dist/number-field.d.ts", "import": "./dist/number-field.js", "default": "./dist/number-field.js" },

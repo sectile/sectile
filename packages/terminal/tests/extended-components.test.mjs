@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCheckboxGroup } from '../dist/checkbox-group.js';
+import { createToggleGroup } from '../dist/toggle-group.js';
 import { createSelect } from '../dist/select.js';
 import { createPagination } from '../dist/pagination.js';
 import { createStepper } from '../dist/stepper.js';
@@ -35,6 +36,18 @@ test('terminal extended selection facades own conventional keyboard input', asyn
   rating.handleEvent('increase');
   await Promise.resolve();
   assert.deepEqual(rating.getSnapshot().state.selection.selected, ['2']);
+});
+
+test('terminal toggle group uses Enter and Space as presses', () => {
+  const single = createToggleGroup({ items: ['bold', 'italic'], defaultValue: ['bold'], defaultHighlightedValue: 'bold' });
+  single.handleKeyboardInput({ key: 'enter' });
+  assert.deepEqual(single.getSnapshot().state.selection.selected, []);
+
+  const multiple = createToggleGroup({ items: ['bold', 'italic'], multiple: true, defaultHighlightedValue: 'bold' });
+  multiple.handleKeyboardInput({ key: 'space' });
+  multiple.handleKeyboardInput({ key: 'right' });
+  multiple.handleKeyboardInput({ key: 'enter' });
+  assert.deepEqual(multiple.getSnapshot().state.selection.selected, ['bold', 'italic']);
 });
 
 test('terminal pagination exposes edge and ellipsis projection without enumerating every page', () => {

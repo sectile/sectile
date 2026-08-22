@@ -1,7 +1,8 @@
 function sfc(imports: string, template: string, setup = ''): string {
   const setupSource = setup === '' ? '' : `\n${setup.trim()}\n`;
+  const specifier = '@sectile/vue/' + moduleName(imports);
   return `<script setup lang="ts">
-import { ${imports} } from '@sectile/vue/${moduleName(imports)}'${setupSource}
+import { ${imports} } from '${specifier}'${setupSource}
 </script>
 
 <template>

@@ -3,6 +3,7 @@ import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h, nextTick, ref } from 'vue';
 import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../dist/radio-group.js';
+import { ToggleGroupItem, ToggleGroupRoot } from '../dist/toggle-group.js';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../dist/tabs.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
@@ -39,6 +40,24 @@ test('Vue radio group follows controlled selection', async () => {
   await nextTick();
   assert.equal(value.value, 'sms');
   assert.equal(root.children[1].props['aria-checked'], 'true');
+});
+
+test('Vue toggle group exposes headless pressed buttons and controlled values', async () => {
+  const renderer = createTestRenderer();
+  const value = ref(['bold']);
+  const app = renderer.createApp({
+    render: () => h(ToggleGroupRoot, { items: ['bold', 'italic'], modelValue: value.value, 'onUpdate:modelValue': (next) => { value.value = next; } }, {
+      default: () => ['bold', 'italic'].map((entry) => h(ToggleGroupItem, { value: entry }, () => entry)),
+    }),
+  });
+  const container = createHostNode('root');
+  app.mount(container);
+  const root = container.children[0];
+  assert.equal(root.children[0].props['aria-pressed'], 'true');
+  root.children[0].props.onClick({ defaultPrevented: false, currentTarget: { closest: () => undefined } });
+  await nextTick();
+  assert.deepEqual(value.value, []);
+  assert.equal(root.children[0].props['aria-pressed'], 'false');
 });
 
 test('Vue tabs link triggers to persistent panels', async () => {

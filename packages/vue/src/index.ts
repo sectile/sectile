@@ -78,6 +78,14 @@ export {
   type ToggleButtonSlotProps,
 } from './toggle-button.js';
 export {
+  ToggleGroupItem,
+  ToggleGroupRoot,
+  type ToggleGroupItemProps,
+  type ToggleGroupItemSlotProps,
+  type ToggleGroupRootProps,
+  type ToggleGroupRootSlotProps,
+} from './toggle-group.js';
+export {
   TooltipContent,
   TooltipPortal,
   TooltipRoot,
