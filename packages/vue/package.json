@@ -56,6 +56,11 @@
       "import": "./dist/date-field.js",
       "default": "./dist/date-field.js"
     },
+    "./date-range-field": {
+      "types": "./dist/date-range-field.d.ts",
+      "import": "./dist/date-range-field.js",
+      "default": "./dist/date-range-field.js"
+    },
     "./date-time-field": {
       "types": "./dist/date-time-field.d.ts",
       "import": "./dist/date-time-field.js",

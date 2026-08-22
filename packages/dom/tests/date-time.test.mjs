@@ -5,6 +5,7 @@ import { createDateRange, createDateValue, formatDateValue } from '@sectile/core
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
 import { createDateField } from '../dist/date-field.js';
+import { createDateRangeField } from '../dist/date-range-field.js';
 import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDatePicker } from '../dist/date-picker.js';
 import { createDateRangePicker } from '../dist/date-range-picker.js';
@@ -20,6 +21,32 @@ test('DOM date field projects native interaction and caret segment stepping', ()
   assert.equal(formatDateValue(field.getValue()), '2024-02-29');
   assert.equal(input.inputMode, 'numeric');
   assert.equal(input.placeholder, 'YYYY-MM-DD');
+});
+
+test('DOM date range field keeps endpoint drafts independent and commits an ordered range', () => {
+  const startInput = new FakeInput();
+  const endInput = new FakeInput();
+  const field = createDateRangeField({ startInput, endInput });
+  const start = unwrap(createDateValue(2026, 8, 22));
+  const end = unwrap(createDateValue(2026, 8, 28));
+
+  assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: start } }), true);
+  assert.equal(field.getValue(), null);
+  assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: end } }), true);
+  assert.equal(formatDateValue(field.getValue().start), '2026-08-22');
+  assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
+  assert.equal(startInput.placeholder, 'YYYY-MM-DD');
+  assert.equal(endInput.placeholder, 'YYYY-MM-DD');
+});
+
+test('DOM date range field rejects inverted controlled proposals', () => {
+  const value = unwrap(createDateRange(
+    unwrap(createDateValue(2026, 8, 22)),
+    unwrap(createDateValue(2026, 8, 28)),
+  ));
+  const field = createDateRangeField({ startInput: new FakeInput(), endInput: new FakeInput(), value });
+  assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createDateValue(2026, 8, 20)) } }), false);
+  assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
 });
 
 test('DOM date picker composes an editable date field with calendar selection', () => {

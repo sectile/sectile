@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "911264f88acd5eb959bbbdb1eb2616abc5cb43a9614ed2b0890522ebf36942ee",
+  "fingerprint": "49659b625ec2513613423afafd95fd526e470556665a3afbf1a077c5e837cda1",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -37,6 +37,10 @@
     {
       "path": "dist/date-picker.d.ts",
       "sha256": "1a953bc12b9c82500ca7d404c9a09be86c994f83ec86e443f3f36f6a14447086"
+    },
+    {
+      "path": "dist/date-range-field.d.ts",
+      "sha256": "173432e33d315391431098188dc309ae21f56979ec6162f642f38025809f58b0"
     },
     {
       "path": "dist/date-range-picker.d.ts",

@@ -7,6 +7,7 @@ import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDa
 import { createTimeField } from '../dist/time-field.js';
 import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDateRangePicker } from '../dist/date-range-picker.js';
+import { createDateRangeField } from '../dist/date-range-field.js';
 import { createDateTimePicker } from '../dist/date-time-picker.js';
 import { createDateTimeRangePicker } from '../dist/date-time-range-picker.js';
 
@@ -18,6 +19,17 @@ test('terminal time field maps vertical keys to the active segment', () => {
   field.handleKeyboardInput({ key: 'right' });
   field.handleKeyboardInput({ key: 'up' });
   assert.equal(formatTimeValue(field.getValue()), '10:45');
+});
+
+test('terminal date range field switches endpoints and commits a complete range', () => {
+  const field = createDateRangeField();
+  field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: unwrap(createDateValue(2026, 8, 22)) } });
+  assert.equal(field.getValue(), null);
+  field.handleKeyboardInput({ key: 'tab' });
+  field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createDateValue(2026, 8, 28)) } });
+  assert.equal(formatDateValue(field.getValue().start), '2026-08-22');
+  assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
+  assert.equal(field.getSnapshot().state.active, 'end');
 });
 
 test('terminal date-time field carries time segments across civil day boundaries', () => {

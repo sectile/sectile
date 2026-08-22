@@ -1,4 +1,5 @@
 import { createDateField, type DateFieldConnection } from '@sectile/dom/date-field';
+import { createDateRangeField, type DateRangeFieldConnection } from '@sectile/dom/date-range-field';
 import { createDateTimeField, type DateTimeFieldConnection } from '@sectile/dom/date-time-field';
 import { createTimeField, type TimeFieldConnection } from '@sectile/dom/time-field';
 import { createDatePicker, type DatePickerConnection } from '@sectile/dom/date-picker';
@@ -38,6 +39,16 @@ export const timeFieldDemo: DemoDefinition = {
     { id: 'wall-clock', title: 'Wall-clock time', mount: (context) => mountTimeField(context, { initial: time(9, 30) }) },
     { id: 'stepped', title: '15-minute schedule', mount: (context) => mountTimeField(context, { initial: time(10, 15), step: 15 }) },
     { id: 'controlled', title: 'Controlled time', mount: (context) => mountTimeField(context, { initial: time(14, 0), controlled: true }) },
+  ],
+};
+
+export const dateRangeFieldDemo: DemoDefinition = {
+  id: 'date-range-field', label: 'Date range field', title: 'Date range field', description: 'Edit independent start and end dates without a calendar popup.',
+  shortcuts: [{ keys: ['↑', '↓'], label: 'adjust caret segment' }, { keys: ['Enter'], label: 'commit endpoint' }, { keys: ['Escape'], label: 'cancel drafts' }],
+  cases: [
+    { id: 'basic', title: 'Deployment dates', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 8, 22), date(2026, 8, 28))) }) },
+    { id: 'bounded', title: 'Booking window', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 9, 1), date(2026, 9, 7))), min: date(2026, 9, 1), max: date(2026, 9, 30) }) },
+    { id: 'controlled', title: 'Controlled range', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 10, 5), date(2026, 10, 12))), controlled: true }) },
   ],
 };
 
@@ -105,6 +116,19 @@ function mountTimeField(context: DemoContext, scenario: { initial: TimeValue; st
   connection = createTimeField({ input, ...context.interaction, policies: scenario.step === undefined ? {} : { step: { minute: scenario.step } }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
   function render(): void { const snapshot = connection.getSnapshot(); output.value = snapshot.state.value === null ? 'No committed time' : `Committed ${formatTimeValue(snapshot.state.value)}`; context.showState(snapshot.revision, { value: snapshot.state.value, segment: snapshot.state.inputState.snapshot.selection, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => input.focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountDateRangeField(context: DemoContext, scenario: { initial: DateRange; min?: DateValue; max?: DateValue; controlled?: boolean }): DemoSession {
+  const shell = document.createElement('div'); shell.className = 'temporal-field-shell';
+  const label = document.createElement('label'); label.textContent = 'Date range';
+  const controls = document.createElement('div'); controls.className = 'date-picker-fields';
+  const startInput = document.createElement('input'); const separator = document.createElement('span'); separator.textContent = 'to'; const endInput = document.createElement('input'); controls.append(startInput, separator, endInput);
+  const hint = document.createElement('p'); hint.className = 'temporal-field-hint'; hint.textContent = 'Each endpoint keeps its own draft. The complete range commits only when start is not after end.';
+  const output = document.createElement('output'); shell.append(label, controls, hint, output); context.surface.append(shell);
+  let controlled = scenario.initial; let connection: DateRangeFieldConnection;
+  connection = createDateRangeField({ startInput, endInput, ...context.interaction, policies: { ...(scenario.min === undefined ? {} : { min: scenario.min }), ...(scenario.max === undefined ? {} : { max: scenario.max }) }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), startLabel: 'Range start', endLabel: 'Range end', onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
+  function render(): void { const snapshot = connection.getSnapshot(); const value = snapshot.state.value; output.value = value === null ? 'Complete both endpoints' : `Committed ${formatDateValue(value.start)} – ${formatDateValue(value.end)}`; context.showState(snapshot.revision, { value, startDraft: snapshot.state.start.inputState.snapshot.text, endDraft: snapshot.state.end.inputState.snapshot.text, active: snapshot.state.active, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
+  render(); return { focus: () => startInput.focus(), disconnect: () => connection.disconnect() };
 }
 
 function mountDateTimeField(context: DemoContext, scenario: { initial: DateTimeValue; step?: number; controlled?: boolean }): DemoSession {

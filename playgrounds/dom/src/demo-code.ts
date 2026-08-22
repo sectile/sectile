@@ -610,6 +610,18 @@ const dateField = createDateField({
 
 window.addEventListener('pagehide', () => dateField.disconnect(), { once: true })`),
 
+  'date-range-field': example('date-range-field', 'createDateRangeField', `const dateRangeField = createDateRangeField({
+  startInput: required<HTMLInputElement>('[data-range-start]'),
+  endInput: required<HTMLInputElement>('[data-range-end]'),
+  defaultValue: {
+    start: { year: 2026, month: 8, day: 22 },
+    end: { year: 2026, month: 8, day: 28 },
+  },
+  onValueChange: (value) => console.log('range', value),
+})
+
+window.addEventListener('pagehide', () => dateRangeField.disconnect(), { once: true })`),
+
   'time-field': example('time-field', 'createTimeField', `const input = required<HTMLInputElement>('[data-time-field]')
 const timeField = createTimeField({
   input,

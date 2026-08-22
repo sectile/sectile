@@ -136,6 +136,7 @@ sectile/
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
+│   │   │   ├── date-range-field.ts
 │   │   │   ├── date-range-picker.ts
 │   │   │   ├── date-time-field.ts
 │   │   │   ├── date-time-picker.ts
@@ -210,6 +211,7 @@ sectile/
 │   │   │   ├── differential/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
+│   │   │   │   ├── date-range-field.test.mjs
 │   │   │   │   ├── date-time-field.test.mjs
 │   │   │   │   ├── editable.test.mjs
 │   │   │   │   ├── number-field.test.mjs
@@ -267,6 +269,7 @@ sectile/
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
+│   │   │   ├── date-range-field.ts
 │   │   │   ├── date-range-picker.ts
 │   │   │   ├── date-time-field.ts
 │   │   │   ├── date-time-picker.ts
@@ -359,6 +362,7 @@ sectile/
 │   │   │   ├── combobox.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
+│   │   │   ├── date-range-field.ts
 │   │   │   ├── date-range-picker.ts
 │   │   │   ├── date-time-field.ts
 │   │   │   ├── date-time-picker.ts
@@ -450,6 +454,7 @@ sectile/
 │       │   ├── combobox.ts
 │       │   ├── date-field.ts
 │       │   ├── date-picker.ts
+│       │   ├── date-range-field.ts
 │       │   ├── date-range-picker.ts
 │       │   ├── date-time-field.ts
 │       │   ├── date-time-picker.ts
@@ -496,6 +501,7 @@ sectile/
 │       │   ├── checked-controls.test.mjs
 │       │   ├── collection-popup.test.mjs
 │       │   ├── date-pickers.test.mjs
+│       │   ├── date-range-field.test.mjs
 │       │   ├── derived-selection.test.mjs
 │       │   ├── disclosure.test.mjs
 │       │   ├── editable.test.mjs
@@ -572,6 +578,7 @@ sectile/
 │   │   │   │   ├── CatalogCase.vue
 │   │   │   │   ├── CheckboxCase.vue
 │   │   │   │   ├── CheckedControlCase.vue
+│   │   │   │   ├── DateRangeFieldCase.vue
 │   │   │   │   ├── DemoCard.vue
 │   │   │   │   ├── DisclosureCase.vue
 │   │   │   │   ├── EditableCase.vue

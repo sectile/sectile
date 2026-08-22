@@ -15,6 +15,7 @@ import RadioGroupCase from './components/RadioGroupCase.vue';
 import TabsCase from './components/TabsCase.vue';
 import SliderCase from './components/SliderCase.vue';
 import NativeFieldCase from './components/NativeFieldCase.vue';
+import DateRangeFieldCase from './components/DateRangeFieldCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
 import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
@@ -25,7 +26,7 @@ const componentIDs = [
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'tooltip', 'carousel', 'feed', 'calendar',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
-  'number-field', 'quantity-field', 'date-field', 'time-field', 'date-time-field', 'date-picker',
+  'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'date-time-field', 'date-picker',
   'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'grid', 'tree-view', 'tree-grid',
 ] as const;
 type ComponentID = typeof componentIDs[number];
@@ -84,6 +85,7 @@ const componentLabel = computed(() => ({
   'spin-button': 'Spin Button',
   'number-field': 'Number Field',
   'date-field': 'Date Field',
+  'date-range-field': 'Date Range Field',
   'time-field': 'Time Field',
   'date-time-field': 'Date Time Field',
   'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', combobox: 'Combobox',
@@ -186,7 +188,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#tabs" :aria-current="activeComponent === 'tabs' ? 'page' : undefined" @click.prevent="selectComponent('tabs')">Tabs</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['text', 'editable', 'spin-button', 'number-field', 'date-field', 'time-field', 'date-time-field'].includes(activeComponent)">
+        <section class="demo-nav-group" :data-active="['text', 'editable', 'spin-button', 'number-field', 'date-field', 'date-range-field', 'time-field', 'date-time-field'].includes(activeComponent)">
           <h2 class="demo-nav-heading">
             <span>Editing</span>
             <span class="demo-nav-count" aria-label="7 components">7</span>
@@ -197,6 +199,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#spin-button" :aria-current="activeComponent === 'spin-button' ? 'page' : undefined" @click.prevent="selectComponent('spin-button')">Spin Button</a>
             <a href="#number-field" :aria-current="activeComponent === 'number-field' ? 'page' : undefined" @click.prevent="selectComponent('number-field')">Number Field</a>
             <a href="#date-field" :aria-current="activeComponent === 'date-field' ? 'page' : undefined" @click.prevent="selectComponent('date-field')">Date Field</a>
+            <a href="#date-range-field" :aria-current="activeComponent === 'date-range-field' ? 'page' : undefined" @click.prevent="selectComponent('date-range-field')">Date Range Field</a>
             <a href="#time-field" :aria-current="activeComponent === 'time-field' ? 'page' : undefined" @click.prevent="selectComponent('time-field')">Time Field</a>
             <a href="#date-time-field" :aria-current="activeComponent === 'date-time-field' ? 'page' : undefined" @click.prevent="selectComponent('date-time-field')">Date Time Field</a>
           </div>
@@ -385,6 +388,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
 
       <div v-else-if="activeComponent === 'date-field'" class="workspace" data-demo="date-field">
         <NativeFieldCase :key="`date-${resetEpoch}`" kind="date-field" title="Civil date" description="A timezone-free Gregorian date with caret-segment adjustment." :initial-value="{ year: 2026, month: 8, day: 22 }" />
+      </div>
+
+      <div v-else-if="activeComponent === 'date-range-field'" class="workspace" data-demo="date-range-field">
+        <DateRangeFieldCase :key="`date-range-${resetEpoch}`" title="Deployment dates" description="Independent endpoint drafts commit as one ordered civil-date range." :initial-value="{ start: { year: 2026, month: 8, day: 22 }, end: { year: 2026, month: 8, day: 28 } }" />
+        <DateRangeFieldCase :key="`date-range-bounded-${resetEpoch}`" title="September booking" description="Both endpoints share the same September availability bounds." :initial-value="{ start: { year: 2026, month: 9, day: 1 }, end: { year: 2026, month: 9, day: 7 } }" :bounded="true" />
+        <DateRangeFieldCase :key="`date-range-controlled-${resetEpoch}`" title="Controlled range" description="The parent owns the complete range through v-model." :initial-value="{ start: { year: 2026, month: 10, day: 5 }, end: { year: 2026, month: 10, day: 12 } }" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'time-field'" class="workspace" data-demo="time-field">

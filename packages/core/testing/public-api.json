@@ -51,6 +51,7 @@
     "./revision",
     "./text",
     "./editable",
+    "./date-range-field",
     "./package.json"
   ],
   "requiredRuntimeSubpaths": [
@@ -100,7 +101,8 @@
     "./tree-grid",
     "./revision",
     "./text",
-    "./editable"
+    "./editable",
+    "./date-range-field"
   ],
   "runtimeTargets": {
     "./sequence": "structures/sequence",
@@ -149,6 +151,7 @@
     "./tree-grid": "tree-grid",
     "./revision": "revision",
     "./text": "text",
-    "./editable": "editable"
+    "./editable": "editable",
+    "./date-range-field": "date-range-field"
   }
 }

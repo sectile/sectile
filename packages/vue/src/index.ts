@@ -75,6 +75,14 @@ export {
 } from './popover.js';
 export { DateField, type DateFieldProps, type DateValue } from './date-field.js';
 export {
+  DateRangeFieldEndInput,
+  DateRangeFieldRoot,
+  DateRangeFieldStartInput,
+  type DateRange,
+  type DateRangeFieldRootProps,
+  type DateRangeFieldRootSlotProps,
+} from './date-range-field.js';
+export {
   DateTimeField,
   type DateTimeFieldProps,
   type DateTimeValue,

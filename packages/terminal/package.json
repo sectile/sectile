@@ -132,6 +132,7 @@
       "import": "./dist/text.js",
       "default": "./dist/text.js"
     },
+    "./date-range-field": { "types": "./dist/date-range-field.d.ts", "import": "./dist/date-range-field.js", "default": "./dist/date-range-field.js" },
     "./editable": {
       "types": "./dist/editable.d.ts",
       "import": "./dist/editable.js",
