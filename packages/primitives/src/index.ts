@@ -31,3 +31,29 @@ export type {
   NumericExpressionEvaluator,
   NumericExpressionResult,
 } from './number-field.js';
+export type {
+  Dimension,
+  UnitConversion,
+  UnitConversionOptions,
+  UnitDefinition,
+  UnitExpression,
+  UnitExpressionConversion,
+  UnitExpressionFactor,
+  UnitID,
+  UnitRatio,
+  UnitRegistry,
+  UnitScalar,
+  UnitSystemDefinition,
+  UnitSystemPreferenceDefinition,
+  UnitSystemProfile,
+} from './units.js';
+export type {
+  ParsedQuantityInput,
+  QuantityFieldCommand,
+  QuantityFieldEvent,
+  QuantityInputParserOptions,
+  QuantityFieldPolicies,
+  QuantityFieldState,
+  QuantityFieldUpdate,
+  QuantityValue,
+} from './quantity-field.js';

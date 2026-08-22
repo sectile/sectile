@@ -3809,6 +3809,31 @@ NumberField는 quantized range가 아니라 exact decimal text 위에 놓인 edi
 
 commit은 `inputState.snapshot.text`를 평가해 canonical `value`와 canonical text를 함께 만든다. cancel은 input state를 마지막 committed value로 복원한다. DOM과 terminal은 이 의미를 바꾸지 않는다. DOM은 native selection과 IME lifecycle을 기존 Text binding에 연결하고, terminal은 기존 Text reducer에 caret 이동·삽입·삭제를 투영한다. disabled와 read-only도 host adapter가 공통 interaction gate로 적용한다.
 
+## QuantityField
+
+QuantityField는 NumberField와 단위 레지스트리를 합성한 editing composite다. 상태는 물리량 자체와 표시 방법을 분리한다.
+
+- `quantity: { value, unit } | null`: canonical unit으로 정규화한 저장값
+- `displayUnit`: 편집기에서 보여주는 호환 단위
+- `inputState: TextEditingState`: 현재 표시 단위로 작성 중인 text, selection, caret, composition
+
+단위 정의는 `id`, `symbol`, `aliases`, `dimension`, `scale`, `offset`으로 구성한다. 차원은 기저 차원 이름에서 정수 지수로 가는 유한 map이며, 정규화 후 같은 차원만 변환할 수 있다. 변환은 각 단위를 공통 차원 좌표에 놓는 affine map으로 정의한다.
+
+```text
+canonical = value * scale + offset
+target = (canonical - target.offset) / target.scale
+```
+
+`scale`과 `offset`은 decimal string 또는 정확한 유리수 `{ numerator, denominator }`다. 따라서 inch처럼 유한 decimal인 선형 단위뿐 아니라 Fahrenheit의 `5/9` scale도 중간 binary floating-point 없이 보존한다. 반올림은 target decimal string을 만드는 마지막 나눗셈에서만 지정한 precision과 rounding policy로 수행한다. 알 수 없는 단위, 다른 차원, 0 이하 scale은 실패한다.
+
+표준 catalog는 길이, 넓이, 부피, 질량, 시간, 온도, 속도, 가속도, information 단위를 제공한다. `createMetricUnitSystem`과 `createImperialUnitSystem`은 각 차원의 기본 표시 단위와 selector 순서를 정하는 preference profile이다. profile은 입력을 제한하는 allowlist가 아니다. 사용자가 profile 밖의 호환 단위를 명시하면 그 선택을 보존한다.
+
+단위 표현 parser는 whitespace, `*`, `·`, `/`, `^n`, Unicode superscript를 합성한다. 예를 들어 `kg·m²/s^2`, `m/s²`를 같은 차원 algebra로 정규화한다. offset이 있는 affine 단위는 `°C`처럼 단독 지수 1일 때만 허용하며 compound에 들어가면 실패한다. 모든 단위 token과 alias는 registry 안에서 모호하지 않아야 한다.
+
+표시 단위 변경은 물리량을 바꾸지 않고 input text만 새 단위로 다시 투영한다. commit은 `150cm`, `100-20% cm`, `9.8 m/s²`처럼 숫자 또는 계산식 뒤에 붙은 단위 표현을 읽어 canonical unit으로 정규화한다. suffix가 없으면 현재 표시 단위를 사용한다. `min`과 `max`도 canonical unit 기준이다. DOM은 profile에 따른 unit option과 native text/IME binding을 소유하고, terminal은 동일한 reducer에 caret 편집과 단위 순환을 투영한다.
+
+이 primitive는 exact linear/affine conversion만 소유한다. 환율처럼 시간에 따라 바뀌는 conversion source, 로그·비선형 단위, locale 문장 formatting, 값의 크기에 따른 자동 단위 전환은 범위 밖이다.
+
 ---
 
 ## 참고문헌

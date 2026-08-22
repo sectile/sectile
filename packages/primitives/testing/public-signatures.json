@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "80de171b45f732b729a9b674630efb00ec54ef7c9b8f842ad984741fd190159a",
+  "fingerprint": "0e0d3103db309df9f4bf9860746fd3307c7aaf30c140e314ede621c498ed37d1",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -44,7 +44,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "6e533d2c30e975ab27d6135c016248a64c0624fbbc8cb02bd3468a0cd26d79a6"
+      "sha256": "3af1bc8cc481d771596b4877bf2a9faa45671d9913b2d36121595a74ab271a7f"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -163,6 +163,10 @@
       "sha256": "fcb9c38a8023d8c8ed2ca4b4866dcbba0e9331b316172c260db18e10298961c5"
     },
     {
+      "path": "dist/quantity-field.d.ts",
+      "sha256": "2110388c632fbbc8b48792a9875b72e85e6f5fc759f9a701f0043e19ca57372c"
+    },
+    {
       "path": "dist/radio-group.d.ts",
       "sha256": "9743ce028ac05de24cf3fb5a7b05861dd6c959dfce57c5e61a8959bd50be77ae"
     },
@@ -249,6 +253,10 @@
     {
       "path": "dist/tree-view.d.ts",
       "sha256": "5a5bd113c87cca3812262c2ce3c064354c11aac5ca4dac44a8cb71d735990151"
+    },
+    {
+      "path": "dist/units.d.ts",
+      "sha256": "4cb84ebc92439c5740e90fecebddfd1bebec2ef2f00f1ef38716500aff395715"
     },
     {
       "path": "dist/window-splitter.d.ts",
