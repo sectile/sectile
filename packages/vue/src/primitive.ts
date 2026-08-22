@@ -15,6 +15,7 @@ export type PrimitiveAs = string | Component;
 export interface PrimitiveProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
+  readonly elementRef?: (element: unknown) => void;
 }
 
 export const Primitive = defineComponent({
@@ -23,14 +24,18 @@ export const Primitive = defineComponent({
   props: {
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
+    elementRef: { type: Function as PropType<(element: unknown) => void>, default: undefined },
   },
   setup(props, { attrs, slots }) {
-    return (): VNodeChild => renderPrimitive(props, attrs, slots);
+    return (): VNodeChild => renderPrimitive(props, mergeProps(
+      attrs,
+      props.elementRef === undefined ? {} : { ref: props.elementRef },
+    ), slots);
   },
 });
 
 export function renderPrimitive(
-  props: Required<PrimitiveProps>,
+  props: Pick<Required<PrimitiveProps>, 'as' | 'asChild'>,
   attributes: Readonly<Record<string, unknown>>,
   slots: Slots,
 ): VNodeChild {

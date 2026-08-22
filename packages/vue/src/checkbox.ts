@@ -20,6 +20,7 @@ import {
   type CheckboxValue as DOMCheckboxValue,
 } from '@sectile/dom/checkbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { visuallyHiddenInputStyle } from './internal/native-input.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 
@@ -157,14 +158,13 @@ export const CheckboxRoot = defineComponent({
       if (props.name === undefined && props.form === undefined && !props.required) return root;
       return [root, h('input', mergeProps(
         inputAttributes.value as unknown as Record<string, unknown>,
-        { style: nativeInputStyle },
+        { style: visuallyHiddenInputStyle },
       ))];
     };
   },
 });
 
 export interface CheckboxIndicatorProps {
-  readonly forceMount?: boolean;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -173,7 +173,6 @@ export const CheckboxIndicator = defineComponent({
   name: 'SectileCheckboxIndicator',
   inheritAttrs: false,
   props: {
-    forceMount: { type: Boolean, default: false },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' },
     asChild: { type: Boolean, default: false },
   },
@@ -187,10 +186,10 @@ export const CheckboxIndicator = defineComponent({
     }
     return (): VNodeChild => {
       const state = context.slotProps.value;
-      if (!props.forceMount && state.checked === false) return null;
       return h(Primitive, mergeProps(attrs, {
         as: props.as,
         asChild: props.asChild,
+        hidden: state.checked === false,
         'aria-hidden': 'true',
         'data-scope': 'checkbox',
         'data-part': 'indicator',
@@ -227,12 +226,3 @@ function toDOMValue(value: CheckboxValue): DOMCheckboxValue {
 function fromDOMValue(value: DOMCheckboxValue): CheckboxValue {
   return value === 'mixed' ? 'indeterminate' : value;
 }
-
-const nativeInputStyle = Object.freeze({
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  margin: '0',
-  opacity: '0',
-  pointerEvents: 'none',
-});
