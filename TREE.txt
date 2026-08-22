@@ -74,6 +74,7 @@ sectile/
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
+│   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── select.ts
@@ -105,6 +106,7 @@ sectile/
 │   │   │   ├── multi-thumb-slider.test.mjs
 │   │   │   ├── number-field.test.mjs
 │   │   │   ├── popup-controls.test.mjs
+│   │   │   ├── quantity-field.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
@@ -222,6 +224,7 @@ sectile/
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
+│   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── result.ts
@@ -240,6 +243,7 @@ sectile/
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
+│   │   │   ├── units.ts
 │   │   │   └── window-splitter.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
@@ -272,11 +276,13 @@ sectile/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
 │   │   │   │   ├── number-field.test.mjs
+│   │   │   │   ├── quantity-field.test.mjs
 │   │   │   │   └── text.reference-law.test.mjs
 │   │   │   ├── runtime/
 │   │   │   │   ├── interaction.test.mjs
 │   │   │   │   ├── result.test.mjs
-│   │   │   │   └── revision.test.mjs
+│   │   │   │   ├── revision.test.mjs
+│   │   │   │   └── units.test.mjs
 │   │   │   ├── state/
 │   │   │   │   ├── cursor.reference-law.test.mjs
 │   │   │   │   ├── expansion.reference-law.test.mjs
@@ -333,6 +339,7 @@ sectile/
 │       │   ├── number-field.ts
 │       │   ├── pagination.ts
 │       │   ├── pin-input.ts
+│       │   ├── quantity-field.ts
 │       │   ├── radio-group.ts
 │       │   ├── rating.ts
 │       │   ├── select.ts
@@ -365,6 +372,7 @@ sectile/
 │       │   ├── multi-thumb-slider.test.mjs
 │       │   ├── number-field.test.mjs
 │       │   ├── popup-controls.test.mjs
+│       │   ├── quantity-field.test.mjs
 │       │   ├── slider.test.mjs
 │       │   ├── spin-button.test.mjs
 │       │   ├── text.test.mjs
@@ -392,6 +400,7 @@ sectile/
 │   │   │   │   ├── menu-controls.ts
 │   │   │   │   ├── number-field.ts
 │   │   │   │   ├── popup-controls.ts
+│   │   │   │   ├── quantity-field.ts
 │   │   │   │   ├── range-controls.ts
 │   │   │   │   ├── slider.ts
 │   │   │   │   ├── structured-inputs.ts

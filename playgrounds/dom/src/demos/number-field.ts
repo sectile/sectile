@@ -117,9 +117,11 @@ function mountNumberField(context: DemoContext, options: {
     button.disabled = context.interaction.disabled === true || context.interaction.readOnly === true;
     button.addEventListener('click', () => {
       if (!connection.handleEvent(replaceAll(connection.getSnapshot().state.inputState, expression))) return;
-      connection.handleEvent('commit');
-      input.focus();
-      render();
+      queueMicrotask(() => {
+        connection.handleEvent('commit');
+        input.focus();
+        render();
+      });
     });
     examples.append(button);
   }

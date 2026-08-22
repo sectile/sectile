@@ -16,6 +16,7 @@ import { menuButtonDemo, menuDemo, menubarDemo } from './menu-controls.js';
 import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { numberFieldDemo } from './number-field.js';
+import { quantityFieldDemo } from './quantity-field.js';
 
 const rawDemos: readonly DemoDefinition[] = [
   listboxDemo,
@@ -24,6 +25,7 @@ const rawDemos: readonly DemoDefinition[] = [
   windowSplitterDemo,
   spinButtonDemo,
   numberFieldDemo,
+  quantityFieldDemo,
   dialogDemo,
   alertDialogDemo,
   tooltipDemo,
@@ -56,7 +58,7 @@ const rawDemos: readonly DemoDefinition[] = [
 ];
 
 const readOnlyDemos = new Set([
-  'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'text', 'combobox',
+  'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'quantity-field', 'text', 'combobox',
   'tree-grid', 'grid', 'radio-group', 'checkbox',
   'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
 ]);

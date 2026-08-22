@@ -1,12 +1,18 @@
 import { unwrap } from '@sectile/primitives/result';
 import { createTextEditingState } from '@sectile/primitives/text';
 import { createCalculatorExpression } from '@sectile/primitives/number-field';
+import {
+  createImperialUnitSystem,
+  createMetricUnitSystem,
+  createStandardUnitRegistry,
+} from '@sectile/primitives/units';
 import { createCalendar } from '@sectile/terminal/calendar';
 import { createCombobox } from '@sectile/terminal/combobox';
 import { createListbox } from '@sectile/terminal/listbox';
 import { createSlider } from '@sectile/terminal/slider';
 import { createText } from '@sectile/terminal/text';
 import { createNumberField } from '@sectile/terminal/number-field';
+import { createQuantityField } from '@sectile/terminal/quantity-field';
 import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
@@ -20,6 +26,9 @@ const terminalCalendarMonthFormatter = new Intl.DateTimeFormat('en-US', {
 const terminalCalendarShortMonthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
 });
+const terminalStandardUnits = unwrap(createStandardUnitRegistry());
+const terminalMetricUnits = unwrap(createMetricUnitSystem(terminalStandardUnits));
+const terminalImperialUnits = unwrap(createImperialUnitSystem(terminalStandardUnits));
 
 export const demos = Object.freeze([
   { id: 'listbox', label: 'Listbox', description: 'move · typeahead · single/multiple · [/] cases', readOnly: true, create: createListboxDemo },
@@ -40,6 +49,7 @@ export const demos = Object.freeze([
   { id: 'window-splitter', label: 'Window splitter', description: 'horizontal · vertical · controlled · [/] cases', create: createWindowSplitterDemo },
   { id: 'spin-button', label: 'Spin Button', description: 'decimal step · invalid draft · controlled · [/] cases', readOnly: true, create: createSpinButtonDemo },
   { id: 'number-field', label: 'Number field', description: 'exact decimal · expressions · caret · controlled · [/] cases', readOnly: true, create: createNumberFieldDemo },
+  { id: 'quantity-field', label: 'Quantity field', description: 'units · affine conversion · expressions · { } cases', readOnly: true, create: createQuantityFieldDemo },
   { id: 'dialog', label: 'Dialog', description: 'modal · non-modal · controlled · [/] cases', create: (host) => createPopupDemo(host, 'dialog') },
   { id: 'alert-dialog', label: 'Alert dialog', description: 'destructive · unsaved · controlled · [/] cases', create: (host) => createPopupDemo(host, 'alert-dialog') },
   { id: 'tooltip', label: 'Tooltip', description: 'closed · open · controlled · [/] cases', create: (host) => createPopupDemo(host, 'tooltip') },
@@ -346,7 +356,9 @@ function createTagsInputDemo(host) {
   });
 }
 
-function scenarioDemo(host, scenarios, create) {
+function scenarioDemo(host, scenarios, create, options = {}) {
+  const previousCaseKey = options.previousCaseKey ?? '[';
+  const nextCaseKey = options.nextCaseKey ?? ']';
   const disabledSource = scenarios[0];
   const readOnlySource = scenarios[host.readOnlyCase ?? 0] ?? disabledSource;
   scenarios = [
@@ -366,9 +378,9 @@ function scenarioDemo(host, scenarios, create) {
   let session = create(scenarios[index]);
   return {
     handle(input) {
-      if (input.key === '[' || input.key === ']') {
+      if (input.key === previousCaseKey || input.key === nextCaseKey) {
         session.disconnect?.();
-        index = (index + (input.key === ']' ? 1 : -1) + scenarios.length) % scenarios.length;
+        index = (index + (input.key === nextCaseKey ? 1 : -1) + scenarios.length) % scenarios.length;
         session = create(scenarios[index]);
         host.render();
         return true;
@@ -382,7 +394,7 @@ function scenarioDemo(host, scenarios, create) {
           ? 'read-only · navigation allowed, mutation rejected'
           : null;
       return [
-        `${ansi.dim}case ${index + 1}/${scenarios.length} · [ / ] switch${ansi.reset}`,
+        `${ansi.dim}case ${index + 1}/${scenarios.length} · ${previousCaseKey} / ${nextCaseKey} switch${ansi.reset}`,
         ...(interaction === null ? [] : [`${ansi.yellow}${interaction}${ansi.reset}`]),
         ...session.lines(width),
       ];
@@ -811,6 +823,90 @@ function createNumberFieldDemo(host) {
       },
     };
   });
+}
+
+function createQuantityFieldDemo(host) {
+  const evaluator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));
+  return scenarioDemo(host, [
+    {
+      title: 'Metric length', registry: terminalStandardUnits, unitSystem: terminalMetricUnits, canonicalUnit: 'metre',
+      quantity: { value: '1', unit: 'metre' }, displayUnit: null, evaluator: null,
+      draft: null, controlled: false, detail: '150cm or 12in · canonical metres',
+    },
+    {
+      title: 'Affine temperature', registry: terminalStandardUnits, unitSystem: terminalMetricUnits, canonicalUnit: 'kelvin',
+      quantity: { value: '295.15', unit: 'kelvin' }, displayUnit: null, evaluator: null,
+      draft: null, controlled: false, detail: '22°C or 32°F · canonical Kelvin',
+    },
+    {
+      title: 'Unit calculator', registry: terminalStandardUnits, unitSystem: terminalMetricUnits, canonicalUnit: 'metre',
+      quantity: { value: '0.5', unit: 'metre' }, displayUnit: 'centimetre', evaluator,
+      draft: '100-20% cm', controlled: false, detail: 'calculator syntax and unit suffix compose',
+    },
+    {
+      title: 'Compound acceleration', registry: terminalStandardUnits, unitSystem: terminalMetricUnits,
+      canonicalUnit: 'metre-per-second-squared', quantity: { value: '9.8', unit: 'metre-per-second-squared' },
+      displayUnit: null, evaluator: null, draft: '9.8 m/s²', controlled: false,
+      detail: 'division and superscript dimensions',
+    },
+    {
+      title: 'Controlled imperial quantity', registry: terminalStandardUnits, unitSystem: terminalImperialUnits,
+      canonicalUnit: 'metre', quantity: { value: '1.2', unit: 'metre' }, displayUnit: null, evaluator,
+      draft: null, controlled: true, detail: 'profile default plus external ownership',
+    },
+  ], (scenario) => {
+    const initialUnit = scenario.displayUnit
+      ?? scenario.unitSystem.getDefaultUnit(scenario.canonicalUnit)
+      ?? scenario.canonicalUnit;
+    const initialText = scenario.draft ?? unwrap(scenario.registry.convert(
+      scenario.quantity.value, scenario.quantity.unit, initialUnit,
+    )).value;
+    let externalQuantity = scenario.quantity;
+    let externalUnit = initialUnit;
+    let externalInput = numberFieldEditing(initialText);
+    let connection;
+    connection = unwrap(createQuantityField({
+      ...scenario.interaction,
+      policies: {
+        registry: scenario.registry,
+        canonicalUnit: scenario.canonicalUnit,
+        unitSystem: scenario.unitSystem,
+        ...(scenario.evaluator === null ? {} : { evaluator: scenario.evaluator }),
+      },
+      ...(scenario.controlled ? {
+        quantity: externalQuantity,
+        displayUnit: externalUnit,
+        inputState: externalInput,
+        onQuantityChange: ({ value }) => { externalQuantity = value; queueMicrotask(sync); },
+        onDisplayUnitChange: (unit) => { externalUnit = unit; queueMicrotask(sync); },
+        onInputStateChange: (value) => { externalInput = value; queueMicrotask(sync); },
+      } : {
+        defaultQuantity: scenario.quantity,
+        ...(scenario.displayUnit === null ? {} : { defaultDisplayUnit: scenario.displayUnit }),
+        ...(scenario.draft === null ? {} : { defaultInputState: numberFieldEditing(scenario.draft) }),
+      }),
+      onUpdate: host.render,
+    }));
+    function sync() { connection.syncControlledValues({ quantity: externalQuantity, displayUnit: externalUnit, inputState: externalInput }); }
+    return {
+      handle: (input) => connection.handleKeyboardInput(input),
+      lines(width) {
+        const { revision, state } = connection.getSnapshot();
+        const text = connection.getText();
+        const caret = connection.getCaret();
+        const editing = `${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
+        const displaySymbol = scenario.registry.get(state.displayUnit)?.symbol ?? state.displayUnit;
+        const canonicalSymbol = scenario.registry.get(scenario.canonicalUnit)?.symbol ?? scenario.canonicalUnit;
+        return [
+          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.dim}${scenario.detail} · [ / ] unit · Enter commit${ansi.reset}`,
+          '', `${plain(editing, Math.max(1, width - 10))}  ${styled(ansi.cyan, displaySymbol, 4)}`, '',
+          `canonical=${state.quantity?.value ?? '−'} ${canonicalSymbol}  display=${state.displayUnit}`,
+          `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+        ];
+      },
+    };
+  }, { previousCaseKey: '{', nextCaseKey: '}' });
 }
 
 function numberFieldEditing(text) {

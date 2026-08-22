@@ -13,13 +13,13 @@ import { createTreeView } from '@sectile/terminal/tree-view';
 import { demos } from '../dist/demos.mjs';
 
 test('terminal playground exposes one demo for every public facade', () => {
-  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'number-field', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed', 'checkbox-group', 'select', 'pagination', 'stepper', 'rating', 'pin-input', 'tags-input']);
+  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'number-field', 'quantity-field', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed', 'checkbox-group', 'select', 'pagination', 'stepper', 'rating', 'pin-input', 'tags-input']);
 });
 
 test('terminal playground exposes disabled cases for every facade and read-only cases where supported', () => {
   const readOnlyIDs = new Set([
     'listbox', 'slider', 'text', 'combobox', 'tree-grid', 'radio-group',
-    'checkbox', 'spin-button', 'number-field', 'multi-thumb-slider', 'grid',
+    'checkbox', 'spin-button', 'number-field', 'quantity-field', 'multi-thumb-slider', 'grid',
   ]);
   for (const demo of demos) {
     const session = demo.create(demoHost(demo));
@@ -140,8 +140,9 @@ function demoHost(demo) {
 
 function moveToScenario(session, marker) {
   for (let index = 0; index < 12; index += 1) {
-    if (session.lines(100).some((line) => line.includes(marker))) return true;
-    session.handle({ key: ']' });
+    const lines = session.lines(100);
+    if (lines.some((line) => line.includes(marker))) return true;
+    session.handle({ key: lines.some((line) => line.includes('{ / } switch')) ? '}' : ']' });
   }
   return false;
 }
