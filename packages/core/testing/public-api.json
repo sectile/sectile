@@ -52,6 +52,7 @@
     "./text",
     "./editable",
     "./date-range-field",
+    "./time-range-field",
     "./package.json"
   ],
   "requiredRuntimeSubpaths": [
@@ -102,7 +103,8 @@
     "./revision",
     "./text",
     "./editable",
-    "./date-range-field"
+    "./date-range-field",
+    "./time-range-field"
   ],
   "runtimeTargets": {
     "./sequence": "structures/sequence",
@@ -152,6 +154,7 @@
     "./revision": "revision",
     "./text": "text",
     "./editable": "editable",
-    "./date-range-field": "date-range-field"
+    "./date-range-field": "date-range-field",
+    "./time-range-field": "time-range-field"
   }
 }

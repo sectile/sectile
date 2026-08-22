@@ -210,6 +210,7 @@ export { createDateField, tryCreateDateField, type DateFieldConnection, type Dat
 export { createDateRangeField, tryCreateDateRangeField, type DateRangeFieldConnection, type DateRangeFieldControlledValues, type DateRangeFieldOptions } from './date-range-field.js';
 export { createDateTimeField, tryCreateDateTimeField, type DateTimeFieldConnection, type DateTimeFieldControlledValues, type DateTimeFieldOptions } from './date-time-field.js';
 export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type TimeFieldControlledValues, type TimeFieldOptions } from './time-field.js';
+export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './time-range-field.js';
 export { createDatePicker, tryCreateDatePicker, toDatePickerEvent, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
 export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
 export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';

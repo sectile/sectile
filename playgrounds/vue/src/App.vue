@@ -16,6 +16,7 @@ import TabsCase from './components/TabsCase.vue';
 import SliderCase from './components/SliderCase.vue';
 import NativeFieldCase from './components/NativeFieldCase.vue';
 import DateRangeFieldCase from './components/DateRangeFieldCase.vue';
+import TimeRangeFieldCase from './components/TimeRangeFieldCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
 import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
@@ -26,7 +27,7 @@ const componentIDs = [
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'tooltip', 'carousel', 'feed', 'calendar',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
-  'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'date-time-field', 'date-picker',
+  'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'time-range-field', 'date-time-field', 'date-picker',
   'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'grid', 'tree-view', 'tree-grid',
 ] as const;
 type ComponentID = typeof componentIDs[number];
@@ -87,6 +88,7 @@ const componentLabel = computed(() => ({
   'date-field': 'Date Field',
   'date-range-field': 'Date Range Field',
   'time-field': 'Time Field',
+  'time-range-field': 'Time Range Field',
   'date-time-field': 'Date Time Field',
   'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', combobox: 'Combobox',
   stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button', 'navigation-menu': 'Navigation Menu',
@@ -188,7 +190,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#tabs" :aria-current="activeComponent === 'tabs' ? 'page' : undefined" @click.prevent="selectComponent('tabs')">Tabs</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['text', 'editable', 'spin-button', 'number-field', 'date-field', 'date-range-field', 'time-field', 'date-time-field'].includes(activeComponent)">
+        <section class="demo-nav-group" :data-active="['text', 'editable', 'spin-button', 'number-field', 'date-field', 'date-range-field', 'time-field', 'time-range-field', 'date-time-field'].includes(activeComponent)">
           <h2 class="demo-nav-heading">
             <span>Editing</span>
             <span class="demo-nav-count" aria-label="7 components">7</span>
@@ -201,6 +203,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#date-field" :aria-current="activeComponent === 'date-field' ? 'page' : undefined" @click.prevent="selectComponent('date-field')">Date Field</a>
             <a href="#date-range-field" :aria-current="activeComponent === 'date-range-field' ? 'page' : undefined" @click.prevent="selectComponent('date-range-field')">Date Range Field</a>
             <a href="#time-field" :aria-current="activeComponent === 'time-field' ? 'page' : undefined" @click.prevent="selectComponent('time-field')">Time Field</a>
+            <a href="#time-range-field" :aria-current="activeComponent === 'time-range-field' ? 'page' : undefined" @click.prevent="selectComponent('time-range-field')">Time Range Field</a>
             <a href="#date-time-field" :aria-current="activeComponent === 'date-time-field' ? 'page' : undefined" @click.prevent="selectComponent('date-time-field')">Date Time Field</a>
           </div>
         </section>
@@ -398,6 +401,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
 
       <div v-else-if="activeComponent === 'time-field'" class="workspace" data-demo="time-field">
         <NativeFieldCase :key="`time-${resetEpoch}`" kind="time-field" title="Wall-clock time" description="A 24-hour time value without a timezone or host Date object." :initial-value="{ hour: 9, minute: 30, second: 0, millisecond: 0 }" />
+      </div>
+
+      <div v-else-if="activeComponent === 'time-range-field'" class="workspace" data-demo="time-range-field">
+        <TimeRangeFieldCase :key="`time-range-${resetEpoch}`" title="Office hours" description="An ordered pair of timezone-free wall-clock values." :initial-value="{ start: { hour: 9, minute: 30, second: 0, millisecond: 0 }, end: { hour: 17, minute: 45, second: 0, millisecond: 0 } }" />
+        <TimeRangeFieldCase :key="`time-range-step-${resetEpoch}`" title="15-minute booking" description="Caret stepping uses a shared 15-minute policy." :initial-value="{ start: { hour: 10, minute: 0, second: 0, millisecond: 0 }, end: { hour: 11, minute: 30, second: 0, millisecond: 0 } }" :stepped="true" />
+        <TimeRangeFieldCase :key="`time-range-controlled-${resetEpoch}`" title="Controlled hours" description="The parent owns the complete range through v-model." :initial-value="{ start: { hour: 8, minute: 0, second: 0, millisecond: 0 }, end: { hour: 16, minute: 30, second: 0, millisecond: 0 } }" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'date-time-field'" class="workspace" data-demo="date-time-field">

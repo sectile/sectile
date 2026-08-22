@@ -5,6 +5,7 @@ import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
 import { createDateRange, createDateValue, formatDateValue } from '@sectile/core/date-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
 import { createTimeField } from '../dist/time-field.js';
+import { createTimeRangeField } from '../dist/time-range-field.js';
 import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDateRangePicker } from '../dist/date-range-picker.js';
 import { createDateRangeField } from '../dist/date-range-field.js';
@@ -30,6 +31,15 @@ test('terminal date range field switches endpoints and commits a complete range'
   assert.equal(formatDateValue(field.getValue().start), '2026-08-22');
   assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
   assert.equal(field.getSnapshot().state.active, 'end');
+});
+
+test('terminal time range field switches endpoints and commits a complete range', () => {
+  const field = createTimeRangeField();
+  field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: unwrap(createTimeValue(9, 30)) } });
+  field.handleKeyboardInput({ key: 'tab' });
+  field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createTimeValue(17, 45)) } });
+  assert.equal(formatTimeValue(field.getValue().start), '09:30');
+  assert.equal(formatTimeValue(field.getValue().end), '17:45');
 });
 
 test('terminal date-time field carries time segments across civil day boundaries', () => {

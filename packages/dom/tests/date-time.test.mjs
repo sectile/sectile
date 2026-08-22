@@ -12,6 +12,7 @@ import { createDateRangePicker } from '../dist/date-range-picker.js';
 import { createDateTimePicker } from '../dist/date-time-picker.js';
 import { createDateTimeRangePicker } from '../dist/date-time-range-picker.js';
 import { createTimeField } from '../dist/time-field.js';
+import { createTimeRangeField } from '../dist/time-range-field.js';
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
   const input = new FakeInput();
@@ -47,6 +48,15 @@ test('DOM date range field rejects inverted controlled proposals', () => {
   const field = createDateRangeField({ startInput: new FakeInput(), endInput: new FakeInput(), value });
   assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createDateValue(2026, 8, 20)) } }), false);
   assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
+});
+
+test('DOM time range field commits ordered wall-clock endpoints', () => {
+  const field = createTimeRangeField({ startInput: new FakeInput(), endInput: new FakeInput() });
+  field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: unwrap(createTimeValue(9, 30)) } });
+  assert.equal(field.getValue(), null);
+  field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createTimeValue(17, 45)) } });
+  assert.equal(formatTimeValue(field.getValue().start), '09:30');
+  assert.equal(formatTimeValue(field.getValue().end), '17:45');
 });
 
 test('DOM date picker composes an editable date field with calendar selection', () => {

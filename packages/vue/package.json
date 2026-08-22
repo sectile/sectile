@@ -106,6 +106,7 @@
       "import": "./dist/time-field.js",
       "default": "./dist/time-field.js"
     },
+    "./time-range-field": { "types": "./dist/time-range-field.d.ts", "import": "./dist/time-range-field.js", "default": "./dist/time-range-field.js" },
     "./listbox": {
       "types": "./dist/listbox.d.ts",
       "import": "./dist/listbox.js",

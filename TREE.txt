@@ -172,6 +172,7 @@ sectile/
 │   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
+│   │   │   ├── time-range-field.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -216,7 +217,8 @@ sectile/
 │   │   │   │   ├── editable.test.mjs
 │   │   │   │   ├── number-field.test.mjs
 │   │   │   │   ├── quantity-field.test.mjs
-│   │   │   │   └── text.reference-law.test.mjs
+│   │   │   │   ├── text.reference-law.test.mjs
+│   │   │   │   └── time-range-field.test.mjs
 │   │   │   ├── runtime/
 │   │   │   │   ├── interaction.test.mjs
 │   │   │   │   ├── result.test.mjs
@@ -302,6 +304,7 @@ sectile/
 │   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
+│   │   │   ├── time-range-field.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -398,6 +401,7 @@ sectile/
 │   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
+│   │   │   ├── time-range-field.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -488,6 +492,7 @@ sectile/
 │       │   ├── tags-input.ts
 │       │   ├── text.ts
 │       │   ├── time-field.ts
+│       │   ├── time-range-field.ts
 │       │   ├── toggle-button.ts
 │       │   ├── toggle-group.ts
 │       │   ├── toolbar.ts
@@ -515,7 +520,8 @@ sectile/
 │       │   ├── slider.test.mjs
 │       │   ├── spin-button.test.mjs
 │       │   ├── structural-controls.test.mjs
-│       │   └── text.test.mjs
+│       │   ├── text.test.mjs
+│       │   └── time-range-field.test.mjs
 │       ├── CHANGELOG.md
 │       ├── LICENSE
 │       ├── package.json
@@ -591,6 +597,7 @@ sectile/
 │   │   │   │   ├── SpinButtonCase.vue
 │   │   │   │   ├── TabsCase.vue
 │   │   │   │   ├── TextCase.vue
+│   │   │   │   ├── TimeRangeFieldCase.vue
 │   │   │   │   └── ToggleGroupCase.vue
 │   │   │   ├── App.vue
 │   │   │   ├── catalog-code.ts

@@ -632,6 +632,17 @@ const timeField = createTimeField({
 
 window.addEventListener('pagehide', () => timeField.disconnect(), { once: true })`),
 
+  'time-range-field': example('time-range-field', 'createTimeRangeField', `const timeRangeField = createTimeRangeField({
+  startInput: required<HTMLInputElement>('[data-time-start]'),
+  endInput: required<HTMLInputElement>('[data-time-end]'),
+  defaultValue: {
+    start: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+    end: { hour: 17, minute: 45, second: 0, millisecond: 0 },
+  },
+})
+
+window.addEventListener('pagehide', () => timeRangeField.disconnect(), { once: true })`),
+
   'date-time-field': example('date-time-field', 'createDateTimeField', `const input = required<HTMLInputElement>('[data-date-time-field]')
 const dateTimeField = createDateTimeField({
   input,

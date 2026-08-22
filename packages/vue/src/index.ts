@@ -132,6 +132,7 @@ export {
   type EditableRootSlotProps,
 } from './editable.js';
 export { TimeField, type TimeFieldProps, type TimeValue } from './time-field.js';
+export { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput, type TimeRange, type TimeRangeFieldRootProps, type TimeRangeFieldRootSlotProps } from './time-range-field.js';
 export {
   ListboxItem,
   ListboxItemIndicator,

@@ -2,6 +2,8 @@ import { createDateField, type DateFieldConnection } from '@sectile/dom/date-fie
 import { createDateRangeField, type DateRangeFieldConnection } from '@sectile/dom/date-range-field';
 import { createDateTimeField, type DateTimeFieldConnection } from '@sectile/dom/date-time-field';
 import { createTimeField, type TimeFieldConnection } from '@sectile/dom/time-field';
+import { createTimeRangeField, type TimeRangeFieldConnection } from '@sectile/dom/time-range-field';
+import type { TimeRange } from '@sectile/core/time-range-field';
 import { createDatePicker, type DatePickerConnection } from '@sectile/dom/date-picker';
 import { createDateRangePicker, type DateRangePickerConnection } from '@sectile/dom/date-range-picker';
 import { createDateTimePicker, type DateTimePickerConnection } from '@sectile/dom/date-time-picker';
@@ -49,6 +51,16 @@ export const dateRangeFieldDemo: DemoDefinition = {
     { id: 'basic', title: 'Deployment dates', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 8, 22), date(2026, 8, 28))) }) },
     { id: 'bounded', title: 'Booking window', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 9, 1), date(2026, 9, 7))), min: date(2026, 9, 1), max: date(2026, 9, 30) }) },
     { id: 'controlled', title: 'Controlled range', mount: (context) => mountDateRangeField(context, { initial: unwrap(createDateRange(date(2026, 10, 5), date(2026, 10, 12))), controlled: true }) },
+  ],
+};
+
+export const timeRangeFieldDemo: DemoDefinition = {
+  id: 'time-range-field', label: 'Time range field', title: 'Time range field', description: 'Edit an ordered pair of timezone-free wall-clock times.',
+  shortcuts: [{ keys: ['↑', '↓'], label: 'adjust caret segment' }, { keys: ['Enter'], label: 'commit endpoint' }, { keys: ['Escape'], label: 'cancel drafts' }],
+  cases: [
+    { id: 'office-hours', title: 'Office hours', mount: (context) => mountTimeRangeField(context, { initial: { start: time(9, 30), end: time(17, 45) } }) },
+    { id: 'stepped', title: '15-minute booking', mount: (context) => mountTimeRangeField(context, { initial: { start: time(10, 0), end: time(11, 30) }, step: 15 }) },
+    { id: 'controlled', title: 'Controlled hours', mount: (context) => mountTimeRangeField(context, { initial: { start: time(8, 0), end: time(16, 30) }, controlled: true }) },
   ],
 };
 
@@ -128,6 +140,14 @@ function mountDateRangeField(context: DemoContext, scenario: { initial: DateRang
   let controlled = scenario.initial; let connection: DateRangeFieldConnection;
   connection = createDateRangeField({ startInput, endInput, ...context.interaction, policies: { ...(scenario.min === undefined ? {} : { min: scenario.min }), ...(scenario.max === undefined ? {} : { max: scenario.max }) }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), startLabel: 'Range start', endLabel: 'Range end', onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
   function render(): void { const snapshot = connection.getSnapshot(); const value = snapshot.state.value; output.value = value === null ? 'Complete both endpoints' : `Committed ${formatDateValue(value.start)} – ${formatDateValue(value.end)}`; context.showState(snapshot.revision, { value, startDraft: snapshot.state.start.inputState.snapshot.text, endDraft: snapshot.state.end.inputState.snapshot.text, active: snapshot.state.active, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
+  render(); return { focus: () => startInput.focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountTimeRangeField(context: DemoContext, scenario: { initial: TimeRange; step?: number; controlled?: boolean }): DemoSession {
+  const shell = document.createElement('div'); shell.className = 'temporal-field-shell'; const label = document.createElement('label'); label.textContent = 'Time range'; const controls = document.createElement('div'); controls.className = 'date-picker-fields'; const startInput = document.createElement('input'); const separator = document.createElement('span'); separator.textContent = 'to'; const endInput = document.createElement('input'); controls.append(startInput, separator, endInput); const hint = document.createElement('p'); hint.className = 'temporal-field-hint'; hint.textContent = 'Use a same-day range whose start does not follow its end.'; const output = document.createElement('output'); shell.append(label, controls, hint, output); context.surface.append(shell);
+  let controlled = scenario.initial; let connection: TimeRangeFieldConnection;
+  connection = createTimeRangeField({ startInput, endInput, ...context.interaction, policies: scenario.step === undefined ? {} : { step: { minute: scenario.step } }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), startLabel: 'Start time', endLabel: 'End time', onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
+  function render(): void { const snapshot = connection.getSnapshot(); const value = snapshot.state.value; output.value = value === null ? 'Complete both endpoints' : `Committed ${formatTimeValue(value.start)} – ${formatTimeValue(value.end)}`; context.showState(snapshot.revision, { value, startDraft: snapshot.state.start.inputState.snapshot.text, endDraft: snapshot.state.end.inputState.snapshot.text, active: snapshot.state.active, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => startInput.focus(), disconnect: () => connection.disconnect() };
 }
 
