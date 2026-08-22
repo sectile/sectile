@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { createCalendar } from '@sectile/dom/calendar';
 import { createCombobox } from '@sectile/dom/combobox';
@@ -8,6 +9,29 @@ import { createText } from '@sectile/dom/text';
 import { createTreeGrid } from '@sectile/dom/tree-grid';
 import { createTreeView } from '@sectile/dom/tree-view';
 import { unwrap } from '@sectile/core/result';
+
+test('DOM playground shows copyable public API examples for every package component', async () => {
+  const [packageSource, codeSource, mainSource] = await Promise.all([
+    readFile(new URL('../../../packages/dom/package.json', import.meta.url), 'utf8'),
+    readFile(new URL('../src/demo-code.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../src/main.ts', import.meta.url), 'utf8'),
+  ]);
+  const packageJSON = JSON.parse(packageSource);
+  const componentIDs = Object.keys(packageJSON.exports)
+    .filter((subpath) => subpath.startsWith('./') && subpath !== './package.json')
+    .map((subpath) => subpath.slice(2));
+
+  for (const id of componentIDs) {
+    assert.ok(
+      codeSource.includes(`  '${id}': example(`) || codeSource.includes(`  ${id}: example(`),
+      `${id} needs a public API source example`,
+    );
+  }
+  assert.match(mainSource, /domDemoCode\[demoID\]/);
+  assert.doesNotMatch(codeSource, /\.mount\.toString\(\)/);
+  assert.match(codeSource, /createCombobox\(\{/);
+  assert.match(codeSource, /window\.addEventListener\('pagehide', \(\) => combobox\.disconnect\(\)/);
+});
 
 test('DOM playground composes every facade through public package subpaths', () => {
   const listbox = createListbox({

@@ -1,4 +1,5 @@
 import { demoGroups, demos } from './demos/index.js';
+import { domDemoCode } from './demo-code.js';
 import { Code2, createElement, Eye, RotateCcw } from 'lucide';
 import type { DemoCaseDefinition, DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
 import { highlightJavaScript } from './highlight.js';
@@ -109,12 +110,12 @@ function mountActiveDemo(): void {
     mount: demo.mount,
   }];
   const nextWorkspace = document.createDocumentFragment();
-  for (const demoCase of cases) mountDemoCase(demoCase, nextWorkspace);
+  for (const demoCase of cases) mountDemoCase(demo.id, demoCase, nextWorkspace);
   workspace.replaceChildren(nextWorkspace);
   window.scrollTo(viewportX, viewportY);
 }
 
-function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): void {
+function mountDemoCase(demoID: string, demoCase: DemoCaseDefinition, target: DocumentFragment): void {
   const card = document.createElement('article');
   card.className = 'example-card';
   card.dataset['case'] = demoCase.id;
@@ -133,7 +134,7 @@ function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): 
   codeOutput.className = 'demo-code';
   codeOutput.hidden = true;
   codeOutput.tabIndex = 0;
-  const source = demoCase.source ?? sourceFromMount(demoCase);
+  const source = demoCase.source ?? domDemoCode[demoID] ?? sourceFromMount(demoCase);
   const fallback = document.createElement('pre');
   const code = document.createElement('code');
   code.textContent = source;
