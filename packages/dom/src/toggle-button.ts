@@ -1,4 +1,4 @@
-import type { Result } from '@sectile/primitives'; import { applyToggleButtonEvent, createToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/primitives/toggle-button';
+import type { Result } from '@sectile/core'; import { applyToggleButtonEvent, createToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/core/toggle-button';
 import { createDOMCheckedControl, type DOMCheckedControl } from './internal/checked-control.js';
 export interface ToggleButtonOptions { readonly element: HTMLElement; readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
 export type ToggleButtonConnection = DOMCheckedControl<ToggleButtonState, ToggleButtonEvent, boolean>;

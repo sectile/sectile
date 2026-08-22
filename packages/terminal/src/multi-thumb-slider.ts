@@ -1,8 +1,8 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/primitives/range';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import { applyMultiThumbSliderEvent, createMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/primitives/multi-thumb-slider';
+import type { Result, StableID } from '@sectile/core';
+import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import { applyMultiThumbSliderEvent, createMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 

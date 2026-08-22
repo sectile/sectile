@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createSliderController as createDOMSliderController } from '@sectile/dom/slider';
-import { createRange } from '@sectile/primitives/range';
+import { createRange } from '@sectile/core/range';
 import { createSliderController as createTerminalSliderController } from '@sectile/terminal/slider';
 
 const INPUTS = [

@@ -1,6 +1,6 @@
 import { createCombobox } from '@sectile/dom/combobox';
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const items = [

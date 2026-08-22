@@ -1,8 +1,8 @@
 {
-  "name": "@sectile/primitives",
+  "name": "@sectile/core",
   "version": "0.0.0",
   "private": true,
-  "description": "Renderer-neutral canonical interaction structures with explicit laws, failures, and costs.",
+  "description": "Renderer-neutral interaction semantics with explicit laws, failures, and costs.",
   "license": "UNLICENSED",
   "type": "module",
   "sideEffects": false,

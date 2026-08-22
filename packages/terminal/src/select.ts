@@ -1,7 +1,7 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import { applySelectEvent, createSelectState, type SelectCommand, type SelectEvent, type SelectPolicies, type SelectState } from '@sectile/primitives/select';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import { applySelectEvent, createSelectState, type SelectCommand, type SelectEvent, type SelectPolicies, type SelectState } from '@sectile/core/select';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

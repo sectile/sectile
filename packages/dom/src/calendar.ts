@@ -1,9 +1,9 @@
-import type { Result, SectileError, StableID } from '@sectile/primitives';
+import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
   requireInteraction,
   type InteractionState,
-} from '@sectile/primitives/interaction';
+} from '@sectile/core/interaction';
 import {
   applyCalendarEvent,
   createCalendarState,
@@ -11,14 +11,14 @@ import {
   type CalendarEvent,
   type CalendarPolicies,
   type CalendarState,
-} from '@sectile/primitives/calendar';
-import { createGrid, type Grid } from '@sectile/primitives/grid';
+} from '@sectile/core/calendar';
+import { createGrid, type Grid } from '@sectile/core/grid';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';

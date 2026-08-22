@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
-import { createSequence } from '@sectile/primitives/sequence';
-import { createTextEditingState } from '@sectile/primitives/text';
+import { unwrap } from '@sectile/core/result';
+import { createSequence } from '@sectile/core/sequence';
+import { createTextEditingState } from '@sectile/core/text';
 import {
   createCombobox,
   createComboboxController,

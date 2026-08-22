@@ -1,7 +1,7 @@
 import { createMultiThumbSlider } from '@sectile/dom/multi-thumb-slider';
 import { createSlider } from '@sectile/dom/slider';
-import type { StableID } from '@sectile/primitives';
-import { unwrap } from '@sectile/primitives/result';
+import type { StableID } from '@sectile/core';
+import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 export const sliderDemo: DemoDefinition = {

@@ -1,5 +1,5 @@
-import type { Result, SectileError, StableID } from '@sectile/primitives';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
+import type { Result, SectileError, StableID } from '@sectile/core';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   applyListboxEvent,
   createListboxState,
@@ -10,14 +10,14 @@ import {
   type ListboxSelectionMode,
   type ListboxState,
   type ListboxStateInput,
-} from '@sectile/primitives/listbox';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
+} from '@sectile/core/listbox';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import type { TerminalKeyboardInput } from './keyboard.js';

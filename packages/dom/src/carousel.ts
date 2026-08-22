@@ -1,5 +1,5 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
 import {
   applyCarouselEvent,
   createCarouselState,
@@ -10,8 +10,8 @@ import {
   type CarouselPolicies,
   type CarouselPosition,
   type CarouselState,
-} from '@sectile/primitives/carousel';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+} from '@sectile/core/carousel';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 

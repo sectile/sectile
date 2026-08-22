@@ -1,6 +1,6 @@
 import { emitKeypressEvents } from 'node:readline';
 import type { ReadStream } from 'node:tty';
-import type { Result } from '@sectile/primitives';
+import type { Result } from '@sectile/core';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface NodeKeypress {

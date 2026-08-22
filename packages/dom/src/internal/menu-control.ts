@@ -1,7 +1,7 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import type { Tree, TreeNodeInput } from '@sectile/primitives/tree';
-import { applyMenuEvent, createMenuModel, createMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/primitives/menu';
+import type { Result, StableID } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import type { Tree, TreeNodeInput } from '@sectile/core/tree';
+import { applyMenuEvent, createMenuModel, createMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 import { setInteractionAttributes } from './interaction.js';
 

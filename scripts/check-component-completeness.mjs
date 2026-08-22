@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const packagePaths = [
-  'packages/primitives/package.json',
+  'packages/core/package.json',
   'packages/dom/package.json',
   'packages/terminal/package.json',
 ];
@@ -41,7 +41,7 @@ for (const path of packagePaths) {
 const canonical = packageComponents[0].components;
 for (const { path, components } of packageComponents.slice(1)) {
   assert.deepEqual(components, canonical,
-    `${path} must expose the same component subpaths as @sectile/primitives.`);
+    `${path} must expose the same component subpaths as @sectile/core.`);
 }
 
 const entries = manifest.components;

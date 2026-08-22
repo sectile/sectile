@@ -1,7 +1,7 @@
-import type { Result } from '@sectile/primitives';
-import type { QuantizedRange } from '@sectile/primitives/range';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import type { SliderState } from '@sectile/primitives/slider';
+import type { Result } from '@sectile/core';
+import type { QuantizedRange } from '@sectile/core/range';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import type { SliderState } from '@sectile/core/slider';
 import {
   createSlider,
   type KeyboardInput,

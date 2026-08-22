@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyAlertDialogEvent, createAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/primitives/alert-dialog';
+import type { Result } from '@sectile/core';
+import { applyAlertDialogEvent, createAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 export interface AlertDialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onAnnounce?: () => void; readonly onUpdate?: () => void }
 export type AlertDialogConnection = TerminalPopupConnection<AlertDialogState, AlertDialogEvent>;

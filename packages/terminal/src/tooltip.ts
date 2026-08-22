@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyTooltipEvent, createTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/primitives/tooltip';
+import type { Result } from '@sectile/core';
+import { applyTooltipEvent, createTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 export interface TooltipOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
 export type TooltipConnection = TerminalPopupConnection<TooltipState, TooltipEvent>;

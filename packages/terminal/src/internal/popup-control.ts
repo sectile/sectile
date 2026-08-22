@@ -1,6 +1,6 @@
-import type { Result } from '@sectile/primitives';
-import type { InteractionStateInput } from '@sectile/primitives/interaction';
-import type { MachineUpdate, RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result } from '@sectile/core';
+import type { InteractionStateInput } from '@sectile/core/interaction';
+import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from '../keyboard.js';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 

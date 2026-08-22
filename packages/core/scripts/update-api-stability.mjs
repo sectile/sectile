@@ -1,6 +1,6 @@
 import { writeFile, readFile } from 'node:fs/promises';
 import { semanticFingerprint } from './lib/repository.mjs';
 const publicAPI = JSON.parse(await readFile('testing/public-api.json', 'utf8'));
-const value = { contractVersion: 22, publicAPISHA256: semanticFingerprint(publicAPI) };
+const value = { contractVersion: 23, publicAPISHA256: semanticFingerprint(publicAPI) };
 await writeFile('testing/api-stability.json', `${JSON.stringify(value, null, 2)}\n`);
 console.log(JSON.stringify(value, null, 2));

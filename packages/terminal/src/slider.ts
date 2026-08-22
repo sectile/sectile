@@ -1,23 +1,23 @@
-import type { Result, SectileError } from '@sectile/primitives';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
+import type { Result, SectileError } from '@sectile/core';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   createBoundedRange,
   type BoundedRangeInput,
   type QuantizedRange,
-} from '@sectile/primitives/range';
+} from '@sectile/core/range';
 import {
   applySliderEvent,
   createSliderState,
   type SliderCommand,
   type SliderEvent,
   type SliderState,
-} from '@sectile/primitives/slider';
+} from '@sectile/core/slider';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 

@@ -1,4 +1,4 @@
-import type { TextEditingState, TextSelectionInput } from '@sectile/primitives/text';
+import type { TextEditingState, TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from '../keyboard.js';
 import type { TextInput } from '../text.js';
 

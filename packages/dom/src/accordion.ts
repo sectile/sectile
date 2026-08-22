@@ -1,10 +1,10 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyAccordionEvent, createAccordionState,
   type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState,
-} from '@sectile/primitives/accordion';
+} from '@sectile/core/accordion';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

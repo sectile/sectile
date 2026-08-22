@@ -1,6 +1,6 @@
-import type { Result } from '@sectile/primitives';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/primitives/pin-input';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 

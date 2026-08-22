@@ -10,7 +10,7 @@
     "verify": "pnpm run test"
   },
   "dependencies": {
-    "@sectile/primitives": "workspace:*",
+    "@sectile/core": "workspace:*",
     "@sectile/terminal": "workspace:*"
   }
 }

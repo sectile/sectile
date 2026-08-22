@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createMenuButton } from '../dist/menu-button.js';
 import { createMenubar } from '../dist/menubar.js';
 

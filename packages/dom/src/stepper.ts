@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { StepperEvent, StepperState } from '@sectile/primitives/stepper';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import type { StepperEvent, StepperState } from '@sectile/core/stepper';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createTabs, type TabsConnection, type TabsOptions } from './tabs.js';
 
 export type StepperOptions<ID extends StableID = StableID> = TabsOptions<ID>;

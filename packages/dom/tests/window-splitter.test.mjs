@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createWindowSplitter } from '../dist/window-splitter.js';
 
 test('DOM window splitter reuses range control with separator projection', () => {

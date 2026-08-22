@@ -1,26 +1,26 @@
-# @sectile/primitives
+# @sectile/core
 
-Renderer-neutral canonical interaction structures with explicit identity, failure, complexity, and resource contracts.
+Renderer-neutral interaction semantics with explicit identity, failure, complexity, and resource contracts.
 
 ```ts
-import { createSequence } from '@sectile/primitives/sequence';
-import { createRange } from '@sectile/primitives/range';
-import { createGrid } from '@sectile/primitives/grid';
-import { createTree } from '@sectile/primitives/tree';
-import { unwrap } from '@sectile/primitives/result';
-import { applyListboxEvent, createListboxState } from '@sectile/primitives/listbox';
-import { applyTabsEvent, createTabsState } from '@sectile/primitives/tabs';
-import { applyRadioGroupEvent, createRadioGroupState } from '@sectile/primitives/radio-group';
-import { applyToolbarEvent, createToolbarState } from '@sectile/primitives/toolbar';
-import { applyAccordionEvent, createAccordionState } from '@sectile/primitives/accordion';
-import { applyDisclosureEvent, createDisclosureState } from '@sectile/primitives/disclosure';
-import { applyCalendarEvent, createCalendarState } from '@sectile/primitives/calendar';
-import { applyComboboxEvent, createComboboxState } from '@sectile/primitives/combobox';
-import { applySliderEvent, createSliderState } from '@sectile/primitives/slider';
-import { applyTreeViewEvent, createTreeViewState } from '@sectile/primitives/tree-view';
-import { applyTreeGridEvent, createTreeGridModel, createTreeGridState } from '@sectile/primitives/tree-grid';
-import { createRevisionSnapshot } from '@sectile/primitives/revision';
-import { applyTextEvent, createTextEditingState } from '@sectile/primitives/text';
+import { createSequence } from '@sectile/core/sequence';
+import { createRange } from '@sectile/core/range';
+import { createGrid } from '@sectile/core/grid';
+import { createTree } from '@sectile/core/tree';
+import { unwrap } from '@sectile/core/result';
+import { applyListboxEvent, createListboxState } from '@sectile/core/listbox';
+import { applyTabsEvent, createTabsState } from '@sectile/core/tabs';
+import { applyRadioGroupEvent, createRadioGroupState } from '@sectile/core/radio-group';
+import { applyToolbarEvent, createToolbarState } from '@sectile/core/toolbar';
+import { applyAccordionEvent, createAccordionState } from '@sectile/core/accordion';
+import { applyDisclosureEvent, createDisclosureState } from '@sectile/core/disclosure';
+import { applyCalendarEvent, createCalendarState } from '@sectile/core/calendar';
+import { applyComboboxEvent, createComboboxState } from '@sectile/core/combobox';
+import { applySliderEvent, createSliderState } from '@sectile/core/slider';
+import { applyTreeViewEvent, createTreeViewState } from '@sectile/core/tree-view';
+import { applyTreeGridEvent, createTreeGridModel, createTreeGridState } from '@sectile/core/tree-grid';
+import { createRevisionSnapshot } from '@sectile/core/revision';
+import { applyTextEvent, createTextEditingState } from '@sectile/core/text';
 ```
 
 The root export contains shared types and has no runtime authority. State primitives are pure: adapters create a valid state, apply semantic events, and own the resulting state. Construction returns a typed `Result`; consumers can narrow it directly or use `unwrap` when failure should throw a detailed `SectileResultError`. Query absence returns `null`; bounded movement reports resource rejection rather than silently choosing a different result.

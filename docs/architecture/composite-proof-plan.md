@@ -2,7 +2,7 @@
 
 Sectile does not equate an accessibility pattern with a new primitive. A host role may
 need its own adapter facade while sharing the same renderer-neutral state machine with
-other roles. A new `@sectile/primitives/*` subpath is promoted only when it owns a
+other roles. A new `@sectile/core/*` subpath is promoted only when it owns a
 distinct invariant or event algebra.
 
 ## Promotion gate

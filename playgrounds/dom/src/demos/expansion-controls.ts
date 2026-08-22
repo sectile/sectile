@@ -1,6 +1,6 @@
 import { createAccordion, type AccordionConnection } from '@sectile/dom/accordion';
 import { createDisclosure, type DisclosureConnection } from '@sectile/dom/disclosure';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { ChevronDown, createElement, Rocket, Settings2, TriangleAlert } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

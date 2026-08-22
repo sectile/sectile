@@ -1,8 +1,8 @@
 import { createMenu, type MenuConnection } from '@sectile/dom/menu';
 import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
-import type { StableID } from '@sectile/primitives';
-import { unwrap } from '@sectile/primitives/result';
+import type { StableID } from '@sectile/core';
+import { unwrap } from '@sectile/core/result';
 import { ChevronDown, ChevronRight, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

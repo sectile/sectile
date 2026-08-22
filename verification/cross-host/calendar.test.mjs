@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCalendarController as createDOMCalendarController } from '@sectile/dom/calendar';
-import { createGrid } from '@sectile/primitives/grid';
+import { createGrid } from '@sectile/core/grid';
 import { createCalendarController as createTerminalCalendarController } from '@sectile/terminal/calendar';
 
 const INPUTS = [

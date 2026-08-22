@@ -1,6 +1,6 @@
-import type { Result } from '@sectile/primitives';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/primitives/pin-input';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 export interface PinInputOptions { readonly length: number; readonly policies?: PinInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: string; readonly defaultValue?: string; readonly onValueChange?: (value: string) => void; readonly onComplete?: (value: string) => void; readonly onUpdate?: () => void }

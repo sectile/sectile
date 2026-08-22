@@ -1,9 +1,9 @@
-import type { Result } from '@sectile/primitives';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyDisclosureEvent, createDisclosureState,
   type DisclosureCommand, type DisclosureEvent, type DisclosureState,
-} from '@sectile/primitives/disclosure';
+} from '@sectile/core/disclosure';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 

@@ -1,10 +1,10 @@
 # @sectile/dom
 
-DOM controllers for Sectile semantic machines. This package depends only on exported `@sectile/primitives` subpaths and owns its state, build, and tests.
+DOM controllers for Sectile semantic machines. This package depends only on exported `@sectile/core` subpaths and owns its state, build, and tests.
 
 ```ts
 import { createListbox } from '@sectile/dom/listbox';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 
 const listbox = unwrap(createListbox({
   items: ['alpha', 'beta'],

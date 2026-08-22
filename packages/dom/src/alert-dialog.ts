@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyAlertDialogEvent, createAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/primitives/alert-dialog';
+import type { Result } from '@sectile/core';
+import { applyAlertDialogEvent, createAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 
 export interface AlertDialogOptions {

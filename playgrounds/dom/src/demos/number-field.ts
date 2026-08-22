@@ -1,7 +1,7 @@
 import { createNumberField, type NumberFieldConnection } from '@sectile/dom/number-field';
-import { createCalculatorExpression, type NumericExpressionEvaluator } from '@sectile/primitives/number-field';
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
+import { createCalculatorExpression, type NumericExpressionEvaluator } from '@sectile/core/number-field';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const calculator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));

@@ -1,15 +1,15 @@
-import type { Result, SectileError, StableID } from '@sectile/primitives';
+import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
   requireInteraction,
   type InteractionState,
-} from '@sectile/primitives/interaction';
+} from '@sectile/core/interaction';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import {
   applyTreeGridEvent,
   createTreeGridModelFromRows,
@@ -21,7 +21,7 @@ import {
   type TreeGridPolicies,
   type TreeGridRowInput,
   type TreeGridState,
-} from '@sectile/primitives/tree-grid';
+} from '@sectile/core/tree-grid';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';

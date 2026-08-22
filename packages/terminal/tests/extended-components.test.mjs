@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCheckboxGroup } from '../dist/checkbox-group.js';
 import { createSelect } from '../dist/select.js';
 import { createPagination } from '../dist/pagination.js';

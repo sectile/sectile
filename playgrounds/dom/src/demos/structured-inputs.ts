@@ -1,6 +1,6 @@
 import { createPinInput, type PinInputConnection } from '@sectile/dom/pin-input';
 import { createTagsInput, type TagsInputConnection } from '@sectile/dom/tags-input';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createElement, X } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createSpinButton } from '../dist/spin-button.js';
 
 test('terminal spin button separates drafts from committed decimal values', () => {

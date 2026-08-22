@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "package": "@sectile/primitives",
+  "package": "@sectile/core",
   "rootPolicy": "type-only",
   "requiredSubpaths": [
     ".",

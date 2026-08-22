@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { PaginationEvent, PaginationState } from '@sectile/primitives/pagination';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import type { PaginationEvent, PaginationState } from '@sectile/core/pagination';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createRadioGroup, type RadioGroupOptions } from './radio-group.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 

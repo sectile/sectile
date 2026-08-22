@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import {
   createListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
 } from '../dist/listbox.js';
-import { createSequence } from '@sectile/primitives/sequence';
+import { createSequence } from '@sectile/core/sequence';
 
 test('terminal listbox facade owns construction, input dispatch, and activation', () => {
   const activations = [];

@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { applyGridEvent, createGrid, createGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/primitives/grid';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { applyGridEvent, createGrid, createGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 

@@ -18,6 +18,6 @@ The law registry contains all 37 currently public structure laws. Each law has a
 Migration-only facts, such as the one-time removal of historical subpaths, are not encoded as permanent negative regression checks.
 
 The component-completeness check is a ratchet. It requires export parity across
-`@sectile/primitives`, `@sectile/dom`, and `@sectile/terminal`, plus one audited entry for
+`@sectile/core`, `@sectile/dom`, and `@sectile/terminal`, plus one audited entry for
 every public component. Existing incomplete areas are listed as migration gaps; new public
 components cannot add such gaps.

@@ -1,6 +1,6 @@
-import type { Result } from '@sectile/primitives';
-import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/primitives/range';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result } from '@sectile/core';
+import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applySpinButtonEvent,
   createSpinButtonState,
@@ -8,7 +8,7 @@ import {
   type SpinButtonEvent,
   type SpinButtonPolicies,
   type SpinButtonState,
-} from '@sectile/primitives/spin-button';
+} from '@sectile/core/spin-button';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
 export interface SpinButtonOptions extends BoundedRangeInput {

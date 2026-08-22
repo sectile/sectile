@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { PaginationEvent, PaginationState } from '@sectile/primitives/pagination';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import type { PaginationEvent, PaginationState } from '@sectile/core/pagination';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
 
 export type PaginationOptions<ID extends StableID = StableID> = Omit<RadioGroupOptions<ID>, 'orientation' | 'onValueChange' | 'onHighlightedValueChange'> & { readonly onPageChange?: (page: ID | null) => void };

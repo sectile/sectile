@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyCheckboxEvent, createCheckboxState, type CheckboxCommand, type CheckboxEvent, type CheckboxPolicies, type CheckboxState, type CheckboxValue } from '@sectile/primitives/checkbox';
+import type { Result } from '@sectile/core';
+import { applyCheckboxEvent, createCheckboxState, type CheckboxCommand, type CheckboxEvent, type CheckboxPolicies, type CheckboxState, type CheckboxValue } from '@sectile/core/checkbox';
 import { createDOMCheckedControl, type DOMCheckedControl } from './internal/checked-control.js';
 export interface CheckboxOptions { readonly element: HTMLElement; readonly value?: CheckboxValue; readonly defaultValue?: CheckboxValue; readonly policies?: CheckboxPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: CheckboxValue) => void; readonly onUpdate?: () => void }
 export type CheckboxConnection = DOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxValue>;

@@ -1,16 +1,16 @@
-import type { Result, SectileError, StableID } from '@sectile/primitives';
+import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
   requireInteraction,
   type InteractionState,
-} from '@sectile/primitives/interaction';
+} from '@sectile/core/interaction';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
-import { createTree, type Tree, type TreeNodeInput } from '@sectile/primitives/tree';
+} from '@sectile/core/revision';
+import { createTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import {
   applyTreeViewEvent,
   createTreeViewState,
@@ -18,7 +18,7 @@ import {
   type TreeViewEvent,
   type TreeViewPolicies,
   type TreeViewState,
-} from '@sectile/primitives/tree-view';
+} from '@sectile/core/tree-view';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';

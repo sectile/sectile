@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createTreeGridController as createDOMTreeGridController } from '@sectile/dom/tree-grid';
-import { createGrid } from '@sectile/primitives/grid';
-import { createTree } from '@sectile/primitives/tree';
-import { createTreeGridModel } from '@sectile/primitives/tree-grid';
+import { createGrid } from '@sectile/core/grid';
+import { createTree } from '@sectile/core/tree';
+import { createTreeGridModel } from '@sectile/core/tree-grid';
 import { createTreeGridController as createTerminalTreeGridController } from '@sectile/terminal/tree-grid';
 
 const INPUTS = [

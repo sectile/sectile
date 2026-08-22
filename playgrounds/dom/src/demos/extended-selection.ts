@@ -3,7 +3,7 @@ import { createPagination, type PaginationConnection } from '@sectile/dom/pagina
 import { createRating, type RatingConnection } from '@sectile/dom/rating';
 import { createSelect, type SelectConnection } from '@sectile/dom/select';
 import { createStepper, type StepperConnection } from '@sectile/dom/stepper';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, createElement, Star } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

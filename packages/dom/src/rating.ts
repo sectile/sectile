@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { RatingEvent, RatingState } from '@sectile/primitives/rating';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import type { RatingEvent, RatingState } from '@sectile/core/rating';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
 
 export type RatingOptions<ID extends StableID = StableID> = Omit<RadioGroupOptions<ID>, 'orientation' | 'onValueChange'> & { readonly clearable?: boolean; readonly onValueChange?: (value: ID | null) => void };

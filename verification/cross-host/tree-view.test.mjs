@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createTreeViewController as createDOMTreeViewController } from '@sectile/dom/tree-view';
-import { createTree } from '@sectile/primitives/tree';
+import { createTree } from '@sectile/core/tree';
 import { createTreeViewController as createTerminalTreeViewController } from '@sectile/terminal/tree-view';
 
 const INPUTS = [

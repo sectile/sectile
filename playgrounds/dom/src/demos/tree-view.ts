@@ -1,5 +1,5 @@
 import { createTreeView, type TreeViewConnection } from '@sectile/dom/tree-view';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const nodes = [

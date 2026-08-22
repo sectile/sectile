@@ -1,5 +1,5 @@
 import { createListbox } from '@sectile/dom/listbox';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { Check, createElement, LockKeyhole } from 'lucide';
 import {
   effectLabels,

@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCalculatorExpression } from '@sectile/primitives/number-field';
-import { unwrap } from '@sectile/primitives/result';
+import { createCalculatorExpression } from '@sectile/core/number-field';
+import { unwrap } from '@sectile/core/result';
 import {
   createImperialUnitSystem,
   createStandardUnitRegistry,
   createUnitRegistry,
-} from '@sectile/primitives/units';
+} from '@sectile/core/units';
 import { createQuantityField } from '../dist/quantity-field.js';
 
 const registry = unwrap(createUnitRegistry([

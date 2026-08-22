@@ -1,5 +1,5 @@
-import type { Result, SectileError, StableID } from '@sectile/primitives';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
+import type { Result, SectileError, StableID } from '@sectile/core';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   applyComboboxEvent,
   createComboboxState,
@@ -7,18 +7,18 @@ import {
   type ComboboxEvent,
   type ComboboxPolicies,
   type ComboboxState,
-} from '@sectile/primitives/combobox';
+} from '@sectile/core/combobox';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
+} from '@sectile/core/revision';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
 import {
   createTextEditingState,
   type TextEditingState,
-} from '@sectile/primitives/text';
+} from '@sectile/core/text';
 import {
   applyControllerEvent,
   sameControllerState,

@@ -1,4 +1,4 @@
-import type { Result } from '@sectile/primitives';
+import type { Result } from '@sectile/core';
 import {
   applyRevisionedEvent,
   createRevisionSnapshot,
@@ -7,7 +7,7 @@ import {
   type EventReducer,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 
 export function applyControllerEvent<State, Event, Command, Effect>(
   current: RevisionSnapshot<State>,

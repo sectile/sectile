@@ -65,10 +65,10 @@ State × SemanticInput
 ### 0.2 최종 이름
 
 ```text
-@sectile/primitives/sequence
-@sectile/primitives/range
-@sectile/primitives/grid
-@sectile/primitives/tree
+@sectile/core/sequence
+@sectile/core/range
+@sectile/core/grid
+@sectile/core/tree
 ```
 
 다음 이름은 사용하지 않는다.

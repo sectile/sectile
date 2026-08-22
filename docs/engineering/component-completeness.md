@@ -1,7 +1,7 @@
 # Component completeness
 
 A public Sectile component is a cross-package contract, not only a primitive export.
-The same component ID must exist in `@sectile/primitives`, `@sectile/dom`, and
+The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
 `@sectile/terminal`, and it must satisfy every requirement below before release.
 
 1. **Theory** — authoritative state is decomposed into existing structures and state

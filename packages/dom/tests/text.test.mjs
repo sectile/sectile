@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState } from '@sectile/primitives/text';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState } from '@sectile/core/text';
 import { createText, createTextController, toTextEvent } from '../dist/text.js';
 
 test('DOM text facade owns beforeinput rendering and IME composition lifecycle', () => {

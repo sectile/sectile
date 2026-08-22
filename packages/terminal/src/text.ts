@@ -1,11 +1,11 @@
-import type { Result, SectileError } from '@sectile/primitives';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/primitives/interaction';
+import type { Result, SectileError } from '@sectile/core';
+import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import {
   applyTextEvent,
   createTextEditingState,
@@ -13,7 +13,7 @@ import {
   type TextEditingState,
   type TextEvent,
   type TextSelectionInput,
-} from '@sectile/primitives/text';
+} from '@sectile/core/text';
 import {
   applyControllerEvent,
   sameControllerState,

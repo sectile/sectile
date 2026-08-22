@@ -1,4 +1,4 @@
-import type { InteractionStateInput } from '@sectile/primitives/interaction';
+import type { InteractionStateInput } from '@sectile/core/interaction';
 
 export function setInteractionAttributes(
   element: HTMLElement,

@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyDialogEvent, createDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/primitives/dialog';
+import type { Result } from '@sectile/core';
+import { applyDialogEvent, createDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/core/dialog';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 
 export interface DialogOptions {

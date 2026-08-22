@@ -1,6 +1,6 @@
 /**
  * The root is intentionally type-only. Runtime consumers import one canonical
- * structure from @sectile/primitives/sequence, /range, /grid, or /tree.
+ * structure from @sectile/core/sequence, /range, /grid, or /tree.
  */
 export type {
   AxisBoundaryPolicy,

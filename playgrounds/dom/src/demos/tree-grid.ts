@@ -1,5 +1,5 @@
 import { createTreeGrid, type TreeGridConnection } from '@sectile/dom/tree-grid';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const rows = [

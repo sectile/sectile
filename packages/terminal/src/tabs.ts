@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyTabsEvent,
   createTabsState,
@@ -8,7 +8,7 @@ import {
   type TabsEvent,
   type TabsPolicies,
   type TabsState,
-} from '@sectile/primitives/tabs';
+} from '@sectile/core/tabs';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { createDisabledItems } from './internal/disabled-items.js';

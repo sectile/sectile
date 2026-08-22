@@ -1,6 +1,6 @@
 import { createSpinButton, type SpinButtonConnection } from '@sectile/dom/spin-button';
 import { createWindowSplitter, type WindowSplitterConnection } from '@sectile/dom/window-splitter';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createElement, Minus, Plus } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

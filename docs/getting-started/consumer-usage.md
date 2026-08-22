@@ -3,8 +3,8 @@
 Construction is explicit and failure-aware.
 
 ```ts
-import { createSequence } from '@sectile/primitives/sequence';
-import { unwrap } from '@sectile/primitives/result';
+import { createSequence } from '@sectile/core/sequence';
+import { unwrap } from '@sectile/core/result';
 
 const sequence = unwrap(createSequence(['alpha', 'beta', 'gamma']));
 const next = sequence.move('alpha', 1, 'stop');
@@ -15,8 +15,8 @@ const next = sequence.move('alpha', 1, 'stop');
 Exact numeric domains use decimal strings and integer ticks.
 
 ```ts
-import { createRange } from '@sectile/primitives/range';
-import { unwrap } from '@sectile/primitives/result';
+import { createRange } from '@sectile/core/range';
+import { unwrap } from '@sectile/core/result';
 
 const range = unwrap(createRange({ origin: '-0.3', step: '0.1', count: 6 }));
 range.valueAt(3); // "0"

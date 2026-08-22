@@ -1,7 +1,7 @@
 import { createAlertDialog, type AlertDialogConnection } from '@sectile/dom/alert-dialog';
 import { createDialog, type DialogConnection } from '@sectile/dom/dialog';
 import { createTooltip, type TooltipConnection } from '@sectile/dom/tooltip';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createElement, HelpCircle, Trash2, X } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

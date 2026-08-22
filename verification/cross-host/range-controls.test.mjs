@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createMultiThumbSlider as createDOMMultiThumbSlider } from '@sectile/dom/multi-thumb-slider';
 import { createSpinButton as createDOMSpinButton } from '@sectile/dom/spin-button';
 import { createNumberField as createDOMNumberField } from '@sectile/dom/number-field';
@@ -10,8 +10,8 @@ import { createMultiThumbSlider as createTerminalMultiThumbSlider } from '@secti
 import { createSpinButton as createTerminalSpinButton } from '@sectile/terminal/spin-button';
 import { createNumberField as createTerminalNumberField } from '@sectile/terminal/number-field';
 import { createQuantityField as createTerminalQuantityField } from '@sectile/terminal/quantity-field';
-import { createCalculatorExpression } from '@sectile/primitives/number-field';
-import { createMetricUnitSystem, createStandardUnitRegistry } from '@sectile/primitives/units';
+import { createCalculatorExpression } from '@sectile/core/number-field';
+import { createMetricUnitSystem, createStandardUnitRegistry } from '@sectile/core/units';
 import { createWindowSplitter as createTerminalWindowSplitter } from '@sectile/terminal/window-splitter';
 
 test('DOM and terminal multi-thumb sliders preserve constrained and crossing traces', () => {

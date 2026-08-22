@@ -1,6 +1,6 @@
 import { createText, type TextConnection } from '@sectile/dom/text';
-import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
-import { unwrap } from '@sectile/primitives/result';
+import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
+import { unwrap } from '@sectile/core/result';
 import { effectLabels, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 export const textDemo: DemoDefinition = {

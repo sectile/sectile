@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCalculatorExpression } from '@sectile/primitives/number-field';
-import { unwrap } from '@sectile/primitives/result';
+import { createCalculatorExpression } from '@sectile/core/number-field';
+import { unwrap } from '@sectile/core/result';
 import { createNumberField } from '../dist/number-field.js';
 
 test('DOM number field commits calculator expressions and retains invalid drafts', () => {

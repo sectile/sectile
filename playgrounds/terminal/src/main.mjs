@@ -1,4 +1,4 @@
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { fitTerminalText } from '@sectile/terminal/layout';
 import { createTTYKeyboard } from '@sectile/terminal/node';
 import { demos } from './demos.mjs';

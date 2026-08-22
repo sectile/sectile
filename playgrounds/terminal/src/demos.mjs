@@ -1,11 +1,11 @@
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState } from '@sectile/primitives/text';
-import { createCalculatorExpression } from '@sectile/primitives/number-field';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState } from '@sectile/core/text';
+import { createCalculatorExpression } from '@sectile/core/number-field';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
   createStandardUnitRegistry,
-} from '@sectile/primitives/units';
+} from '@sectile/core/units';
 import { createCalendar } from '@sectile/terminal/calendar';
 import { createCombobox } from '@sectile/terminal/combobox';
 import { createListbox } from '@sectile/terminal/listbox';

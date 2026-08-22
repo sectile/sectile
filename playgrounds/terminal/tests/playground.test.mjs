@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCalendar } from '@sectile/terminal/calendar';
 import { createCombobox } from '@sectile/terminal/combobox';
 import { fitTerminalText } from '@sectile/terminal/layout';

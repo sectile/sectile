@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyRadioGroupEvent,
   createRadioGroupState,
@@ -8,7 +8,7 @@ import {
   type RadioGroupEvent,
   type RadioGroupPolicies,
   type RadioGroupState,
-} from '@sectile/primitives/radio-group';
+} from '@sectile/core/radio-group';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

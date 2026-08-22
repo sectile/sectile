@@ -1,6 +1,6 @@
-import type { Result } from '@sectile/primitives';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/primitives/text';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
 import {
   applyNumberFieldEvent,
   createNumberFieldState,
@@ -8,7 +8,7 @@ import {
   type NumberFieldEvent,
   type NumberFieldPolicies,
   type NumberFieldState,
-} from '@sectile/primitives/number-field';
+} from '@sectile/core/number-field';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { toTerminalTextInput } from './internal/text-input.js';

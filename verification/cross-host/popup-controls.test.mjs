@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createDialog as createDOMDialog } from '@sectile/dom/dialog';
 import { createAlertDialog as createDOMAlertDialog } from '@sectile/dom/alert-dialog';
 import { createTooltip as createDOMTooltip } from '@sectile/dom/tooltip';

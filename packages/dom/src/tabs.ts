@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionResult, RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyTabsEvent,
   createTabsState,
@@ -8,7 +8,7 @@ import {
   type TabsEvent,
   type TabsPolicies,
   type TabsState,
-} from '@sectile/primitives/tabs';
+} from '@sectile/core/tabs';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

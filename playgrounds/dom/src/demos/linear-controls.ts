@@ -1,12 +1,12 @@
 import { createRadioGroup, type RadioGroupConnection } from '@sectile/dom/radio-group';
 import { createTabs } from '@sectile/dom/tabs';
 import { createToolbar, type ToolbarConnection } from '@sectile/dom/toolbar';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { Bold, Code2, Italic, List, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const tabItems = [
-  { id: 'overview', label: 'Overview', heading: 'Release health', status: 'Ready to ship', panel: 'The current rollout is healthy across primitives, DOM, and terminal packages.' },
+  { id: 'overview', label: 'Overview', heading: 'Release health', status: 'Ready to ship', panel: 'The current rollout is healthy across core, DOM, and terminal packages.' },
   { id: 'changes', label: 'Changes', heading: 'Migration summary', status: '3 packages updated', panel: 'Review public entry-point changes and the migration notes for this release.' },
   { id: 'checks', label: 'Checks', heading: 'Verification status', status: '18 checks passed', panel: 'Automated package, cross-host, and public-signature checks completed successfully.' },
 ] as const;

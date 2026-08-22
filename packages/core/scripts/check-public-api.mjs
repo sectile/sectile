@@ -34,7 +34,7 @@ for (const [subpath, target] of Object.entries(contract.runtimeTargets)) {
 
 console.log(JSON.stringify({
   status: 'passed',
-  package: 'primitives',
+  package: 'core',
   requiredSubpaths: contract.requiredSubpaths.length,
   actualSubpaths: Object.keys(exportsMap).length,
 }, null, 2));

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "0e0d3103db309df9f4bf9860746fd3307c7aaf30c140e314ede621c498ed37d1",
+  "fingerprint": "61978c0130a362b5de9a43ce01f19852d7ac36eb0d69d410f8fb9cf117ca1efc",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -44,7 +44,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "3af1bc8cc481d771596b4877bf2a9faa45671d9913b2d36121595a74ab271a7f"
+      "sha256": "872041df88dc4f231993737a2441d6b698d4d890606eab4c7af9989ebfcd3d4c"
     },
     {
       "path": "dist/interaction.d.ts",

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createMultiThumbSlider } from '../dist/multi-thumb-slider.js';
 
 test('DOM multi-thumb slider projects constrained thumb values', () => {

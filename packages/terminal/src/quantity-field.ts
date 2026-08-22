@@ -1,4 +1,4 @@
-import type { Result } from '@sectile/primitives';
+import type { Result } from '@sectile/core';
 import {
   applyQuantityFieldEvent,
   createQuantityFieldState,
@@ -7,9 +7,9 @@ import {
   type QuantityFieldPolicies,
   type QuantityFieldState,
   type QuantityValue,
-} from '@sectile/primitives/quantity-field';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
-import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/primitives/text';
+} from '@sectile/core/quantity-field';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { toTerminalTextInput } from './internal/text-input.js';

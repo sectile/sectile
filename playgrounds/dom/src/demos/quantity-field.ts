@@ -1,15 +1,15 @@
 import { createQuantityField, type QuantityFieldConnection } from '@sectile/dom/quantity-field';
-import { createCalculatorExpression, type NumericExpressionEvaluator } from '@sectile/primitives/number-field';
-import type { QuantityValue } from '@sectile/primitives/quantity-field';
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState, type TextEditingState } from '@sectile/primitives/text';
+import { createCalculatorExpression, type NumericExpressionEvaluator } from '@sectile/core/number-field';
+import type { QuantityValue } from '@sectile/core/quantity-field';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
   createStandardUnitRegistry,
   type UnitRegistry,
   type UnitSystemProfile,
-} from '@sectile/primitives/units';
+} from '@sectile/core/units';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const calculator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCheckbox as createDOMCheckbox } from '@sectile/dom/checkbox';
 import { createSwitch as createDOMSwitch } from '@sectile/dom/switch';
 import { createToggleButton as createDOMToggleButton } from '@sectile/dom/toggle-button';

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createAccordion as createDOMAccordion } from '@sectile/dom/accordion';
 import { createDisclosure as createDOMDisclosure } from '@sectile/dom/disclosure';
 import { createAccordion as createTerminalAccordion } from '@sectile/terminal/accordion';

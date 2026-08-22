@@ -1,16 +1,16 @@
-import type { Result } from '@sectile/primitives';
+import type { Result } from '@sectile/core';
 import {
   createInteractionState,
   requireInteraction,
   type InteractionStateInput,
-} from '@sectile/primitives/interaction';
+} from '@sectile/core/interaction';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,
   type EventReducer,
   type RevisionResult,
   type RevisionSnapshot,
-} from '@sectile/primitives/revision';
+} from '@sectile/core/revision';
 import { applyControllerEvent, synchronizeControllerState } from './controller.js';
 
 export interface SemanticController<State, Event, Effect> {

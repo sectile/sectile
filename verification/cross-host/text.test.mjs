@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createTextController as createDOMTextController } from '@sectile/dom/text';
-import { createTextEditingState } from '@sectile/primitives/text';
+import { createTextEditingState } from '@sectile/core/text';
 import { createTextController as createTerminalTextController } from '@sectile/terminal/text';
 
 test('DOM and terminal text controllers produce equivalent replacement traces', () => {

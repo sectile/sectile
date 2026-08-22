@@ -1,7 +1,7 @@
 import { createCheckbox, type CheckboxConnection } from '@sectile/dom/checkbox';
 import { createSwitch, type SwitchConnection } from '@sectile/dom/switch';
 import { createToggleButton, type ToggleButtonConnection } from '@sectile/dom/toggle-button';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { Bell, Bold, Check, createElement, Minus } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 

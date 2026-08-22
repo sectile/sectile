@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCarousel as createDOMCarousel } from '@sectile/dom/carousel';
 import { createFeed as createDOMFeed } from '@sectile/dom/feed';
 import { createGridControl as createDOMGrid } from '@sectile/dom/grid';

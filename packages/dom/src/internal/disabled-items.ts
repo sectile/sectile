@@ -1,4 +1,4 @@
-import type { Result, StableID } from '@sectile/primitives';
+import type { Result, StableID } from '@sectile/core';
 
 export interface IdentityDomain<ID extends StableID> {
   contains(id: ID): boolean;

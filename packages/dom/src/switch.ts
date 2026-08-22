@@ -1,4 +1,4 @@
-import type { Result } from '@sectile/primitives'; import { applySwitchEvent, createSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/primitives/switch';
+import type { Result } from '@sectile/core'; import { applySwitchEvent, createSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch';
 import { createDOMCheckedControl, type DOMCheckedControl } from './internal/checked-control.js';
 export interface SwitchOptions { readonly element: HTMLElement; readonly checked?: boolean; readonly defaultChecked?: boolean; readonly disabled?: boolean; readonly onCheckedChange?: (checked: boolean) => void; readonly onUpdate?: () => void }
 export type SwitchConnection = DOMCheckedControl<SwitchState, SwitchEvent, boolean>;

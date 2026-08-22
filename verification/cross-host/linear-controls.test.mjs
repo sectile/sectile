@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createTabs as createDOMTabs } from '@sectile/dom/tabs';
 import { createRadioGroup as createDOMRadioGroup } from '@sectile/dom/radio-group';
 import { createToolbar as createDOMToolbar } from '@sectile/dom/toolbar';

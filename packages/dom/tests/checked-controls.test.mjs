@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/primitives/result';
+import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/core/result';
 import { createCheckbox } from '../dist/checkbox.js'; import { createSwitch } from '../dist/switch.js'; import { createToggleButton } from '../dist/toggle-button.js';
 test('DOM checked controls own click dispatch and role-specific ARIA', () => {
   const checkboxElement = new FakeElement(); const checkbox = unwrap(createCheckbox({ element: checkboxElement, defaultValue: 'mixed' })); checkboxElement.emit('click'); assert.equal(checkbox.getSnapshot().state.checked, true); assert.equal(checkboxElement.attributes.get('aria-checked'), 'true');

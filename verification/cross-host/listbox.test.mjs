@@ -1,12 +1,12 @@
 /* Cross-package evidence: two published host surfaces drive one semantic machine. */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import {
   createListboxController as createDOMListboxController,
   toListboxEvent as toDOMListboxEvent,
 } from '@sectile/dom/listbox';
-import { createSequence } from '@sectile/primitives/sequence';
+import { createSequence } from '@sectile/core/sequence';
 import {
   createListboxController as createTerminalListboxController,
   toListboxEvent as toTerminalListboxEvent,

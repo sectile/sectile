@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCalculatorExpression } from '@sectile/primitives/number-field';
-import { unwrap } from '@sectile/primitives/result';
-import { createTextEditingState } from '@sectile/primitives/text';
+import { createCalculatorExpression } from '@sectile/core/number-field';
+import { unwrap } from '@sectile/core/result';
+import { createTextEditingState } from '@sectile/core/text';
 import { createNumberField } from '../dist/number-field.js';
 
 test('terminal number field edits at its caret and commits calculator expressions', () => {

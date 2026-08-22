@@ -11,24 +11,24 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:packages/dom
-      '@sectile/primitives':
+      '@sectile/core':
         specifier: workspace:*
-        version: link:packages/primitives
+        version: link:packages/core
       '@sectile/terminal':
         specifier: workspace:*
         version: link:packages/terminal
 
   packages/dom:
     dependencies:
-      '@sectile/primitives':
+      '@sectile/core':
         specifier: workspace:*
-        version: link:../primitives
+        version: link:../core
     devDependencies:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
 
-  packages/primitives:
+  packages/core:
     devDependencies:
       typescript:
         specifier: 7.0.2
@@ -36,9 +36,9 @@ importers:
 
   packages/terminal:
     dependencies:
-      '@sectile/primitives':
+      '@sectile/core':
         specifier: workspace:*
-        version: link:../primitives
+        version: link:../core
       string-width:
         specifier: 8.1.0
         version: 8.1.0
@@ -55,9 +55,9 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:../../packages/dom
-      '@sectile/primitives':
+      '@sectile/core':
         specifier: workspace:*
-        version: link:../../packages/primitives
+        version: link:../../packages/core
       lucide:
         specifier: ^1.33.0
         version: 1.33.0
@@ -71,9 +71,9 @@ importers:
 
   playgrounds/terminal:
     dependencies:
-      '@sectile/primitives':
+      '@sectile/core':
         specifier: workspace:*
-        version: link:../../packages/primitives
+        version: link:../../packages/core
       '@sectile/terminal':
         specifier: workspace:*
         version: link:../../packages/terminal

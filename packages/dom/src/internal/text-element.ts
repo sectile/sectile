@@ -1,4 +1,4 @@
-import { isTextCodeUnitBoundary, type TextEditingState, type TextSelectionInput } from '@sectile/primitives/text';
+import { isTextCodeUnitBoundary, type TextEditingState, type TextSelectionInput } from '@sectile/core/text';
 import type { TextElement, TextInput } from '../text.js';
 
 export interface DOMTextElementBindingOptions {

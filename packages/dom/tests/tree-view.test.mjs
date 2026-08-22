@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
-import { createTree } from '@sectile/primitives/tree';
+import { unwrap } from '@sectile/core/result';
+import { createTree } from '@sectile/core/tree';
 import {
   createTreeView,
   createTreeViewController,

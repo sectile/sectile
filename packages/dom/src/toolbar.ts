@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import { createSequence, type Sequence } from '@sectile/primitives/sequence';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import { createSequence, type Sequence } from '@sectile/core/sequence';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyToolbarEvent,
   createToolbarState,
@@ -8,7 +8,7 @@ import {
   type ToolbarEvent,
   type ToolbarPolicies,
   type ToolbarState,
-} from '@sectile/primitives/toolbar';
+} from '@sectile/core/toolbar';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

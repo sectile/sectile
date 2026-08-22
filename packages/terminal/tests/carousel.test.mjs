@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createCarousel } from '../dist/carousel.js';
 
 test('terminal carousel owns movement, position, and pause keys', () => {

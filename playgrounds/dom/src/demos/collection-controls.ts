@@ -1,7 +1,7 @@
 import { createCarousel, type CarouselConnection } from '@sectile/dom/carousel';
 import { createFeed, type FeedConnection } from '@sectile/dom/feed';
 import { createGridControl, type GridConnection } from '@sectile/dom/grid';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Pause, Play, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -48,7 +48,7 @@ export const carouselDemo: DemoDefinition = {
 };
 
 const feedItems = [
-  { id: 'r1', time: '09:02', channel: 'Primitives', title: 'Primitive laws verified', detail: 'Sequence and selection checks passed.' },
+  { id: 'r1', time: '09:02', channel: 'Core', title: 'Primitive laws verified', detail: 'Sequence and selection checks passed.' },
   { id: 'r2', time: '09:28', channel: 'DOM', title: 'DOM adapter published', detail: 'ARIA and focus projection ready.' },
   { id: 'r3', time: '09:47', channel: 'Terminal', title: 'Terminal adapter published', detail: 'Normalized input and rendering ready.' },
   { id: 'r4', time: '10:15', channel: 'Playground', title: 'Playground refreshed', detail: 'Scenario coverage expanded.' },

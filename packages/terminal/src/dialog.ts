@@ -1,5 +1,5 @@
-import type { Result } from '@sectile/primitives';
-import { applyDialogEvent, createDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/primitives/dialog';
+import type { Result } from '@sectile/core';
+import { applyDialogEvent, createDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/core/dialog';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 export interface DialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onUpdate?: () => void }
 export type DialogConnection = TerminalPopupConnection<DialogState, DialogEvent>;

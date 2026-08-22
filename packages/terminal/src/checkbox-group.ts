@@ -1,6 +1,6 @@
-import type { Result, StableID } from '@sectile/primitives';
-import type { CheckboxGroupEvent, CheckboxGroupState } from '@sectile/primitives/checkbox-group';
-import type { RevisionSnapshot } from '@sectile/primitives/revision';
+import type { Result, StableID } from '@sectile/core';
+import type { CheckboxGroupEvent, CheckboxGroupState } from '@sectile/core/checkbox-group';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 

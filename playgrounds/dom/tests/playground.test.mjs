@@ -7,7 +7,7 @@ import { createSlider } from '@sectile/dom/slider';
 import { createText } from '@sectile/dom/text';
 import { createTreeGrid } from '@sectile/dom/tree-grid';
 import { createTreeView } from '@sectile/dom/tree-view';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 
 test('DOM playground composes every facade through public package subpaths', () => {
   const listbox = unwrap(createListbox({

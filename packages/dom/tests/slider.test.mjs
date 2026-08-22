@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
-import { createRange } from '@sectile/primitives/range';
+import { unwrap } from '@sectile/core/result';
+import { createRange } from '@sectile/core/range';
 import {
   createSlider,
   createSliderController,

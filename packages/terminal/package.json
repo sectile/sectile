@@ -125,7 +125,7 @@
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {
-    "@sectile/primitives": "workspace:*",
+    "@sectile/core": "workspace:*",
     "string-width": "8.1.0"
   },
   "devDependencies": {

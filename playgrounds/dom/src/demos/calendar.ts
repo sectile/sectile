@@ -1,5 +1,5 @@
 import { createCalendar, type CalendarConnection } from '@sectile/dom/calendar';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { ChevronLeft, ChevronRight, createElement } from 'lucide';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 

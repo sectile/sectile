@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/primitives/result';
+import { unwrap } from '@sectile/core/result';
 import { createTabs, toTabsEvent } from '../dist/tabs.js';
 import { createRadioGroup, toRadioGroupEvent } from '../dist/radio-group.js';
 import { createToolbar, toToolbarEvent } from '../dist/toolbar.js';
