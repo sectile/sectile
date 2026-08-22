@@ -421,7 +421,6 @@ sectile/
 │       └── tsconfig.json
 ├── playgrounds/
 │   ├── dom/
-│   │   ├── public/
 │   │   ├── src/
 │   │   │   ├── demos/
 │   │   │   │   ├── calendar.ts
@@ -478,6 +477,7 @@ sectile/
 │   ├── publish-packages.mjs
 │   ├── release.mjs
 │   ├── release.test.mjs
+│   ├── tree.test.mjs
 │   └── update-tree.mjs
 ├── verification/
 │   ├── cross-host/

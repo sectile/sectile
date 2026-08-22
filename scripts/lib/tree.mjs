@@ -49,7 +49,7 @@ async function readNodes(directory) {
     .filter(shouldInclude)
     .sort(compareEntries);
 
-  return Promise.all(
+  const nodes = await Promise.all(
     entries.map(async (entry) => ({
       children: entry.isDirectory()
         ? await readNodes(join(directory, entry.name))
@@ -57,6 +57,8 @@ async function readNodes(directory) {
       name: entry.name,
     })),
   );
+
+  return nodes.filter((node) => node.children === null || node.children.length > 0);
 }
 
 function appendNodes(lines, nodes, prefix) {
