@@ -13,14 +13,14 @@ import { createTreeView } from '@sectile/terminal/tree-view';
 import { demos } from '../dist/demos.mjs';
 
 test('terminal playground exposes one demo for every public facade', () => {
-  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'date-time-field', 'time-field', 'date-picker', 'date-range-picker', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed', 'checkbox-group', 'select', 'pagination', 'stepper', 'rating', 'pin-input', 'tags-input']);
+  assert.deepEqual(demos.map(({ id }) => id), ['listbox', 'slider', 'calendar', 'tree-view', 'text', 'combobox', 'tree-grid', 'tabs', 'radio-group', 'toolbar', 'accordion', 'disclosure', 'checkbox', 'switch', 'toggle-button', 'window-splitter', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'date-time-field', 'time-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'dialog', 'alert-dialog', 'tooltip', 'multi-thumb-slider', 'grid', 'menu', 'menubar', 'menu-button', 'carousel', 'feed', 'checkbox-group', 'select', 'pagination', 'stepper', 'rating', 'pin-input', 'tags-input']);
 });
 
 test('terminal playground exposes disabled cases for every facade and read-only cases where supported', () => {
   const readOnlyIDs = new Set([
     'listbox', 'slider', 'text', 'combobox', 'tree-grid', 'radio-group',
     'checkbox', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'date-time-field', 'time-field',
-    'date-picker', 'date-range-picker', 'multi-thumb-slider', 'grid',
+    'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'multi-thumb-slider', 'grid',
   ]);
   for (const demo of demos) {
     const session = demo.create(demoHost(demo));

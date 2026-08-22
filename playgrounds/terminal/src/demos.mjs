@@ -3,7 +3,7 @@ import { createTextEditingState } from '@sectile/core/text';
 import { createCalculatorExpression } from '@sectile/core/number-field';
 import { createDateValue, createDateRange, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
-import { createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field';
+import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
@@ -21,6 +21,8 @@ import { createDateTimeField } from '@sectile/terminal/date-time-field';
 import { createTimeField } from '@sectile/terminal/time-field';
 import { createDatePicker } from '@sectile/terminal/date-picker';
 import { createDateRangePicker } from '@sectile/terminal/date-range-picker';
+import { createDateTimePicker } from '@sectile/terminal/date-time-picker';
+import { createDateTimeRangePicker } from '@sectile/terminal/date-time-range-picker';
 import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
@@ -63,6 +65,8 @@ export const demos = Object.freeze([
   { id: 'time-field', label: 'Time field', description: 'wall-clock value · caret segments · commit · [/] cases', readOnly: true, create: createTimeFieldDemo },
   { id: 'date-picker', label: 'Date picker', description: 'month grid · bounds · single selection · [/] cases', readOnly: true, create: createDatePickerDemo },
   { id: 'date-range-picker', label: 'Date range picker', description: 'range anchor · inclusive selection · [/] cases', readOnly: true, create: createDateRangePickerDemo },
+  { id: 'date-time-picker', label: 'Date-time picker', description: 'civil date-time · calendar · wall clock · [/] cases', readOnly: true, create: createDateTimePickerDemo },
+  { id: 'date-time-range-picker', label: 'Date-time range picker', description: 'civil range · endpoint times · [/] cases', readOnly: true, create: createDateTimeRangePickerDemo },
   { id: 'dialog', label: 'Dialog', description: 'modal · non-modal · controlled · [/] cases', create: (host) => createPopupDemo(host, 'dialog') },
   { id: 'alert-dialog', label: 'Alert dialog', description: 'destructive · unsaved · controlled · [/] cases', create: (host) => createPopupDemo(host, 'alert-dialog') },
   { id: 'tooltip', label: 'Tooltip', description: 'closed · open · controlled · [/] cases', create: (host) => createPopupDemo(host, 'tooltip') },
@@ -1042,6 +1046,68 @@ function createDateRangePickerDemo(host) {
     { title: 'Quarter availability', controlled: false, bounded: true },
     { title: 'Controlled range', controlled: true, bounded: false },
   ], (scenario) => createTerminalPicker(host, scenario, true));
+}
+
+function createDateTimePickerDemo(host) {
+  return scenarioDemo(host, [
+    { title: 'Schedule release', controlled: false },
+    { title: 'Morning appointment', controlled: false },
+    { title: 'Controlled date-time picker', controlled: true },
+  ], (scenario) => createTerminalDateTimePicker(host, scenario, false));
+}
+
+function createDateTimeRangePickerDemo(host) {
+  return scenarioDemo(host, [
+    { title: 'Maintenance window', controlled: false },
+    { title: 'Multi-day office hours', controlled: false },
+    { title: 'Controlled date-time range', controlled: true },
+  ], (scenario) => createTerminalDateTimePicker(host, scenario, true));
+}
+
+function createTerminalDateTimePicker(host, scenario, range) {
+  const at = (year, month, day, hour, minute) => unwrap(createDateTimeValue(
+    unwrap(createDateValue(year, month, day)),
+    unwrap(createTimeValue(hour, minute)),
+  ));
+  let externalValue = range
+    ? unwrap(createDateTimeRange(at(2026, 8, 25, 22, 0), at(2026, 8, 26, 2, 30)))
+    : at(2026, 8, 22, 16, 30);
+  let externalHighlight = range ? externalValue.end.date : externalValue.date;
+  let externalOpen = true; let syncScheduled = false; let connection;
+  const policies = range
+    ? { startTime: { step: { minute: 15 } }, endTime: { step: { minute: 15 } } }
+    : { time: { step: { minute: 15 } } };
+  const create = range ? createDateTimeRangePicker : createDateTimePicker;
+  connection = create({
+    ...scenario.interaction, policies,
+    ...(scenario.controlled
+      ? { value: externalValue, highlightedValue: externalHighlight, open: externalOpen,
+          onValueChange: (value) => { externalValue = value; scheduleSync(); },
+          onHighlightedValueChange: (value) => { externalHighlight = value; scheduleSync(); },
+          onOpenChange: (open) => { externalOpen = open; scheduleSync(); } }
+      : { defaultValue: externalValue, defaultHighlightedValue: externalHighlight, defaultOpen: true }),
+    onUpdate: host.render,
+  });
+  function scheduleSync() { if (!scenario.controlled || syncScheduled) return; syncScheduled = true; queueMicrotask(() => { syncScheduled = false; connection.syncControlledValues({ value: externalValue, highlightedValue: externalHighlight, open: externalOpen }); }); }
+  return {
+    handle: (input) => connection.handleKeyboardInput(input),
+    lines(width) {
+      const { revision, state } = connection.getSnapshot(); const calendar = state.calendar; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7))); const selectedStart = range ? state.value?.start.date : state.value?.date; const selectedEnd = range ? state.value?.end.date : selectedStart;
+      return [
+        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.dim}arrows move · Enter select · Alt+↑/↓ time${range ? ' · Shift+Alt+↑/↓ end' : ''}${ansi.reset}`, '',
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
+        ...month.map((week) => week.map((value) => terminalCell(String(value.day), cellWidth, { current: sameTerminalDate(value, calendar.highlighted), selected: selectedStart !== undefined && selectedEnd !== undefined && compareTerminalDate(selectedStart, value) <= 0 && compareTerminalDate(value, selectedEnd) <= 0 })).join(' ')),
+        '', range
+          ? `range=${state.value === null ? '−' : formatDateTimeRange(state.value)}  anchor=${state.anchor === null ? '−' : formatDateValue(state.anchor)}`
+          : `value=${state.value === null ? '−' : formatDateTimeValue(state.value)}`,
+        range
+          ? `start-time=${formatTimeValue(state.startTime)}  end-time=${formatTimeValue(state.endTime)}`
+          : `time=${formatTimeValue(state.time)}`,
+        `highlighted=${formatDateValue(calendar.highlighted)}  open=${calendar.open}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+      ];
+    },
+  };
 }
 
 function createTerminalPicker(host, scenario, range) {

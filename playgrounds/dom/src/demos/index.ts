@@ -17,7 +17,7 @@ import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo 
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
-import { dateFieldDemo, datePickerDemo, dateRangePickerDemo, dateTimeFieldDemo, timeFieldDemo } from './date-time.js';
+import { dateFieldDemo, datePickerDemo, dateRangePickerDemo, dateTimeFieldDemo, dateTimePickerDemo, dateTimeRangePickerDemo, timeFieldDemo } from './date-time.js';
 
 const rawDemos: readonly DemoDefinition[] = [
   listboxDemo,
@@ -32,6 +32,8 @@ const rawDemos: readonly DemoDefinition[] = [
   timeFieldDemo,
   datePickerDemo,
   dateRangePickerDemo,
+  dateTimePickerDemo,
+  dateTimeRangePickerDemo,
   dialogDemo,
   alertDialogDemo,
   tooltipDemo,
@@ -88,7 +90,8 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
     id: 'selection',
     label: 'Selection',
     demoIDs: [
-      'checkbox', 'checkbox-group', 'date-picker', 'date-range-picker', 'listbox',
+      'checkbox', 'checkbox-group', 'date-picker', 'date-range-picker', 'date-time-picker',
+      'date-time-range-picker', 'listbox',
       'radio-group', 'rating', 'select', 'switch', 'toggle-button',
     ],
   },

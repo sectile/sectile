@@ -3,10 +3,12 @@ import { createDateTimeField, type DateTimeFieldConnection } from '@sectile/dom/
 import { createTimeField, type TimeFieldConnection } from '@sectile/dom/time-field';
 import { createDatePicker, type DatePickerConnection } from '@sectile/dom/date-picker';
 import { createDateRangePicker, type DateRangePickerConnection } from '@sectile/dom/date-range-picker';
+import { createDateTimePicker, type DateTimePickerConnection } from '@sectile/dom/date-time-picker';
+import { createDateTimeRangePicker, type DateTimeRangePickerConnection } from '@sectile/dom/date-time-range-picker';
 import { unwrap } from '@sectile/core/result';
 import { compareDateValues, createDateRange, createDateValue, dateDayOfWeek, formatDateValue, type DateRange, type DateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue, type TimeValue } from '@sectile/core/time-field';
-import { createDateTimeValue, formatDateTimeValue, type DateTimeValue } from '@sectile/core/date-time-field';
+import { createDateTimeRange, createDateTimeValue, formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/core/date-time-field';
 import { CalendarClock, CalendarDays, ChevronLeft, ChevronRight, Clock3, createElement } from 'lucide';
 import { type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
@@ -14,6 +16,8 @@ const date = (year: number, month: number, day: number): DateValue => unwrap(cre
 const time = (hour: number, minute: number): TimeValue => unwrap(createTimeValue(hour, minute));
 const dateTime = (year: number, month: number, day: number, hour: number, minute: number): DateTimeValue =>
   unwrap(createDateTimeValue(date(year, month, day), time(hour, minute)));
+const dateTimeRange = (start: DateTimeValue, end: DateTimeValue): DateTimeRange =>
+  unwrap(createDateTimeRange(start, end));
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as const;
 
@@ -67,6 +71,26 @@ export const dateRangePickerDemo: DemoDefinition = {
   ],
 };
 
+export const dateTimePickerDemo: DemoDefinition = {
+  id: 'date-time-picker', label: 'Date-time picker', title: 'Date-time picker', description: 'Choose a timezone-free date and wall-clock time in one composed control.',
+  shortcuts: [{ keys: ['←', '→', '↑', '↓'], label: 'move day or week' }, { keys: ['Page Up', 'Page Down'], label: 'change month' }, { keys: ['Enter'], label: 'select date' }],
+  cases: [
+    { id: 'schedule', title: 'Schedule release', mount: (context) => mountDateTimePicker(context, { initial: dateTime(2026, 8, 22, 16, 30) }) },
+    { id: 'morning', title: 'Morning appointment', mount: (context) => mountDateTimePicker(context, { initial: dateTime(2026, 8, 25, 9, 15) }) },
+    { id: 'controlled', title: 'Controlled date-time picker', mount: (context) => mountDateTimePicker(context, { initial: dateTime(2026, 8, 22, 14, 0), controlled: true }) },
+  ],
+};
+
+export const dateTimeRangePickerDemo: DemoDefinition = {
+  id: 'date-time-range-picker', label: 'Date-time range picker', title: 'Date-time range picker', description: 'Choose an inclusive date range with independent start and end wall-clock times.',
+  shortcuts: [{ keys: ['←', '→', '↑', '↓'], label: 'move day or week' }, { keys: ['Page Up', 'Page Down'], label: 'change month' }, { keys: ['Enter'], label: 'set range endpoint' }],
+  cases: [
+    { id: 'maintenance', title: 'Maintenance window', mount: (context) => mountDateTimeRangePicker(context, { initial: dateTimeRange(dateTime(2026, 8, 25, 22, 0), dateTime(2026, 8, 26, 2, 30)) }) },
+    { id: 'office-hours', title: 'Multi-day office hours', mount: (context) => mountDateTimeRangePicker(context, { initial: dateTimeRange(dateTime(2026, 8, 18, 9, 0), dateTime(2026, 8, 22, 17, 30)) }) },
+    { id: 'controlled', title: 'Controlled date-time range', mount: (context) => mountDateTimeRangePicker(context, { initial: dateTimeRange(dateTime(2026, 8, 18, 10, 0), dateTime(2026, 8, 22, 18, 0)), controlled: true }) },
+  ],
+};
+
 function mountDateField(context: DemoContext, scenario: { initial: DateValue; min?: DateValue; max?: DateValue; controlled?: boolean }): DemoSession {
   const shell = fieldShell('Release date', 'YYYY-MM-DD', CalendarDays, 'Use ↑ or ↓ on the year, month, or day segment.', 'Enter a real calendar date using YYYY-MM-DD.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
   let controlled = scenario.initial; let connection: DateFieldConnection;
@@ -92,12 +116,12 @@ function mountDateTimeField(context: DemoContext, scenario: { initial: DateTimeV
 }
 
 function mountDatePicker(context: DemoContext, scenario: { initial: DateValue; weekdaysOnly?: boolean; controlled?: boolean }): DemoSession {
-  const ui = pickerShell(false); context.surface.append(ui.shell); let controlledValue: DateValue | null = scenario.initial; let controlledHighlight = scenario.initial; let controlledOpen = true; let syncScheduled = false; let connection: DatePickerConnection;
-  connection = createDatePicker({ root: ui.popup, grid: ui.grid, trigger: ui.trigger, input: ui.startInput, ...context.interaction, policies: scenario.weekdaysOnly ? { unavailable: (value) => [6, 7].includes(isoWeekday(value)) } : {}, ...(scenario.controlled ? { value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen } : { defaultValue: controlledValue, defaultHighlightedValue: controlledHighlight, defaultOpen: true }), onValueChange: (value) => { controlledValue = value; scheduleSync(); }, onHighlightedValueChange: (value) => { controlledHighlight = value; scheduleSync(); }, onOpenChange: (open) => { controlledOpen = open; scheduleSync(); }, onUpdate: render });
+  const ui = pickerShell(false); context.surface.append(ui.shell); let controlledValue: DateValue | null = scenario.initial; let controlledHighlight = scenario.initial; let syncScheduled = false; let connection: DatePickerConnection;
+  connection = createDatePicker({ root: ui.popup, grid: ui.grid, trigger: ui.trigger, input: ui.startInput, ...context.interaction, policies: scenario.weekdaysOnly ? { unavailable: (value) => [6, 7].includes(isoWeekday(value)) } : {}, open: true, ...(scenario.controlled ? { value: controlledValue, highlightedValue: controlledHighlight } : { defaultValue: controlledValue, defaultHighlightedValue: controlledHighlight }), onValueChange: (value) => { controlledValue = value; scheduleSync(); }, onHighlightedValueChange: (value) => { controlledHighlight = value; scheduleSync(); }, onUpdate: render });
   ui.previous.addEventListener('click', previous); ui.next.addEventListener('click', next); render();
   function previous(): void { connection.handleEvent('previous-month'); } function next(): void { connection.handleEvent('next-month'); }
   function scheduleSync(): void { if (!scenario.controlled || syncScheduled) return; syncScheduled = true; queueMicrotask(() => { syncScheduled = false; sync(); }); }
-  function sync(): void { connection.syncControlledValues({ value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen }); }
+  function sync(): void { connection.syncControlledValues({ value: controlledValue, highlightedValue: controlledHighlight, open: true }); }
   function render(): void { const snapshot = connection.getSnapshot(); renderMonth(ui, connection.getMonth(), snapshot.state.view, snapshot.state.value, snapshot.state.highlighted, (cell, value) => connection.setCellAttributes(cell, value)); connection.refresh(); context.showState(snapshot.revision, { value: snapshot.state.value, highlighted: snapshot.state.highlighted, view: snapshot.state.view, open: snapshot.state.open, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
   return { focus: () => ui.trigger.focus(), disconnect: () => { ui.previous.removeEventListener('click', previous); ui.next.removeEventListener('click', next); connection.disconnect(); } };
 }
@@ -113,12 +137,38 @@ function mountRangePicker(context: DemoContext, scenario: { initial: DateRange |
   return { focus: () => ui.trigger.focus(), disconnect: () => { ui.previous.removeEventListener('click', previous); ui.next.removeEventListener('click', next); connection.disconnect(); } };
 }
 
+function mountDateTimePicker(context: DemoContext, scenario: { initial: DateTimeValue; controlled?: boolean }): DemoSession {
+  const ui = dateTimePickerShell(false); context.surface.append(ui.shell); let controlledValue: DateTimeValue | null = scenario.initial; let controlledHighlight = scenario.initial.date; let controlledOpen = true; let syncScheduled = false; let connection: DateTimePickerConnection;
+  connection = createDateTimePicker({ root: ui.popup, grid: ui.grid, trigger: ui.trigger, input: ui.startInput, timeInput: ui.startTimeInput, ...context.interaction, ...(scenario.controlled ? { value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen } : { defaultValue: controlledValue, defaultHighlightedValue: controlledHighlight, defaultOpen: true }), onValueChange: (value) => { controlledValue = value; scheduleSync(); }, onHighlightedValueChange: (value) => { controlledHighlight = value; scheduleSync(); }, onOpenChange: (open) => { controlledOpen = open; scheduleSync(); }, onUpdate: render });
+  ui.previous.addEventListener('click', previous); ui.next.addEventListener('click', next); render();
+  function previous(): void { connection.handleEvent('previous-month'); } function next(): void { connection.handleEvent('next-month'); }
+  function scheduleSync(): void { if (!scenario.controlled || syncScheduled) return; syncScheduled = true; queueMicrotask(() => { syncScheduled = false; sync(); }); }
+  function sync(): void { connection.syncControlledValues({ value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen }); }
+  function render(): void { const snapshot = connection.getSnapshot(); const state = snapshot.state; renderMonth(ui, connection.getMonth(), state.calendar.view, state.value?.date ?? null, state.calendar.highlighted, (cell, value) => connection.setCellAttributes(cell, value)); connection.refresh(); context.showState(snapshot.revision, { value: state.value, time: state.time, highlighted: state.calendar.highlighted, view: state.calendar.view, open: state.calendar.open, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
+  return { focus: () => ui.startInput.focus(), disconnect: () => { ui.previous.removeEventListener('click', previous); ui.next.removeEventListener('click', next); connection.disconnect(); } };
+}
+
+function mountDateTimeRangePicker(context: DemoContext, scenario: { initial: DateTimeRange; controlled?: boolean }): DemoSession {
+  const ui = dateTimePickerShell(true); context.surface.append(ui.shell); let controlledValue: DateTimeRange | null = scenario.initial; let controlledHighlight = scenario.initial.end.date; let controlledOpen = true; let syncScheduled = false; let connection: DateTimeRangePickerConnection;
+  connection = createDateTimeRangePicker({ root: ui.popup, grid: ui.grid, trigger: ui.trigger, startInput: ui.startInput, ...(ui.endInput === undefined ? {} : { endInput: ui.endInput }), startTimeInput: ui.startTimeInput, ...(ui.endTimeInput === undefined ? {} : { endTimeInput: ui.endTimeInput }), ...context.interaction, ...(scenario.controlled ? { value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen } : { defaultValue: controlledValue, defaultHighlightedValue: controlledHighlight, defaultOpen: true }), onValueChange: (value) => { controlledValue = value; scheduleSync(); }, onHighlightedValueChange: (value) => { controlledHighlight = value; scheduleSync(); }, onOpenChange: (open) => { controlledOpen = open; scheduleSync(); }, onUpdate: render });
+  ui.previous.addEventListener('click', previous); ui.next.addEventListener('click', next); render();
+  function previous(): void { connection.handleEvent('previous-month'); } function next(): void { connection.handleEvent('next-month'); }
+  function scheduleSync(): void { if (!scenario.controlled || syncScheduled) return; syncScheduled = true; queueMicrotask(() => { syncScheduled = false; sync(); }); }
+  function sync(): void { connection.syncControlledValues({ value: controlledValue, highlightedValue: controlledHighlight, open: controlledOpen }); }
+  function render(): void { const snapshot = connection.getSnapshot(); const state = snapshot.state; const selected = state.value === null ? null : { start: state.value.start.date, end: state.value.end.date }; renderMonth(ui, connection.getMonth(), state.calendar.view, selected, state.calendar.highlighted, (cell, value) => connection.setCellAttributes(cell, value)); connection.refresh(); context.showState(snapshot.revision, { value: state.value, anchor: state.anchor, startTime: state.startTime, endTime: state.endTime, highlighted: state.calendar.highlighted, view: state.calendar.view, open: state.calendar.open, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
+  return { focus: () => ui.trigger.focus(), disconnect: () => { ui.previous.removeEventListener('click', previous); ui.next.removeEventListener('click', next); connection.disconnect(); } };
+}
+
 let fieldID = 0;
 function fieldShell(labelText: string, placeholder: string, icon: typeof CalendarDays, hintText: string, errorText: string): HTMLElement { const shell = document.createElement('div'); shell.className = 'temporal-field-shell'; const inputID = `temporal-field-${fieldID += 1}`; const hintID = `${inputID}-hint`; const errorID = `${inputID}-error`; const label = document.createElement('label'); label.htmlFor = inputID; label.textContent = labelText; const control = document.createElement('div'); control.className = 'temporal-field-control'; control.append(createElement(icon)); const input = document.createElement('input'); input.id = inputID; input.placeholder = placeholder; input.setAttribute('aria-describedby', `${hintID} ${errorID}`); control.append(input); const hint = document.createElement('p'); hint.id = hintID; hint.className = 'temporal-field-hint'; hint.textContent = hintText; const error = document.createElement('p'); error.id = errorID; error.className = 'temporal-field-error'; error.setAttribute('role', 'alert'); error.textContent = errorText; const output = document.createElement('output'); shell.append(label, control, hint, error, output); return shell; }
 
 function pickerShell(range: boolean): { shell: HTMLElement; popup: HTMLElement; grid: HTMLElement; trigger: HTMLButtonElement; startInput: HTMLInputElement; endInput?: HTMLInputElement; previous: HTMLButtonElement; next: HTMLButtonElement; title: HTMLElement } {
   const shell = document.createElement('div'); shell.className = 'date-picker-shell'; const fieldRow = document.createElement('div'); fieldRow.className = 'date-picker-fields'; const startInput = document.createElement('input'); startInput.setAttribute('aria-label', range ? 'Range start' : 'Selected date'); fieldRow.append(startInput); let endInput: HTMLInputElement | undefined; if (range) { const separator = document.createElement('span'); separator.textContent = 'to'; endInput = document.createElement('input'); endInput.setAttribute('aria-label', 'Range end'); fieldRow.append(separator, endInput); } const trigger = document.createElement('button'); trigger.className = 'date-picker-trigger secondary'; trigger.append(createElement(CalendarDays)); trigger.setAttribute('aria-label', range ? 'Choose date range' : 'Choose date'); fieldRow.append(trigger);
   const popup = document.createElement('div'); popup.className = 'date-picker-popup'; const nav = document.createElement('div'); nav.className = 'date-picker-navigation'; const previous = iconButton(ChevronLeft, 'Previous month'); const title = document.createElement('h3'); const next = iconButton(ChevronRight, 'Next month'); nav.append(previous, title, next); const weekdaysRow = document.createElement('div'); weekdaysRow.className = 'date-picker-weekdays'; for (const weekday of weekdays) { const cell = document.createElement('span'); cell.textContent = weekday; cell.setAttribute('role', 'columnheader'); weekdaysRow.append(cell); } const grid = document.createElement('div'); grid.className = 'date-picker-grid'; popup.append(nav, weekdaysRow, grid); shell.append(fieldRow, popup); return { shell, popup, grid, trigger, startInput, ...(endInput === undefined ? {} : { endInput }), previous, next, title };
+}
+
+function dateTimePickerShell(range: boolean): ReturnType<typeof pickerShell> & { startTimeInput: HTMLInputElement; endTimeInput?: HTMLInputElement } {
+  const ui = pickerShell(range); ui.trigger.replaceChildren(createElement(CalendarClock)); ui.trigger.setAttribute('aria-label', range ? 'Choose date and time range' : 'Choose date and time'); ui.startInput.setAttribute('aria-label', range ? 'Date-time range start' : 'Selected date and time'); if (ui.endInput !== undefined) ui.endInput.setAttribute('aria-label', 'Date-time range end'); const times = document.createElement('div'); times.className = 'date-time-picker-times'; const startLabel = document.createElement('label'); startLabel.textContent = range ? 'Start time' : 'Time'; const startTimeInput = document.createElement('input'); startTimeInput.setAttribute('aria-label', startLabel.textContent); startLabel.append(startTimeInput); times.append(startLabel); let endTimeInput: HTMLInputElement | undefined; if (range) { const endLabel = document.createElement('label'); endLabel.textContent = 'End time'; endTimeInput = document.createElement('input'); endTimeInput.setAttribute('aria-label', 'End time'); endLabel.append(endTimeInput); times.append(endLabel); } ui.popup.append(times); return { ...ui, startTimeInput, ...(endTimeInput === undefined ? {} : { endTimeInput }) };
 }
 
 function renderMonth(ui: ReturnType<typeof pickerShell>, month: readonly (readonly DateValue[])[], view: { year: number; month: number }, selected: DateValue | DateRange | null, highlighted: DateValue, attributes: (cell: HTMLElement, value: DateValue) => void): void { ui.title.textContent = `${monthNames[view.month - 1]} ${view.year}`; ui.grid.replaceChildren(); for (const week of month) for (const value of week) { const cell = document.createElement('button'); cell.className = ['date-picker-cell', value.month !== view.month ? 'outside' : '', compareDateValues(value, highlighted) === 0 ? 'highlighted' : '', isSelected(selected, value) ? 'selected' : ''].filter(Boolean).join(' '); cell.textContent = String(value.day); cell.setAttribute('aria-label', formatDateValue(value)); attributes(cell, value); ui.grid.append(cell); } }

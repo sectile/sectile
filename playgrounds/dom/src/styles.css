@@ -158,7 +158,11 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 
 .workspace { display: grid; gap: 1rem; }
 .example-card { display: grid; height: 34rem; overflow: hidden; grid-template-columns: minmax(0, 1.45fr) minmax(19rem, 0.75fr); border: 1px solid #252e3e; border-radius: 1rem; background: rgba(15, 21, 33, 0.94); box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.2); }
-.workspace[data-demo="calendar"] .example-card { height: 42rem; }
+.workspace:is(
+  [data-demo="calendar"],
+  [data-demo="date-time-picker"],
+  [data-demo="date-time-range-picker"]
+) .example-card { height: 42rem; }
 .example-main { display: grid; min-width: 0; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
 .example-inspector { display: grid; min-width: 0; overflow: hidden; grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr); border-left: 1px solid #252e3e; }
 .inspector-section { display: grid; min-width: 0; min-height: 0; overflow: hidden; grid-template-rows: auto minmax(0, 1fr); }
@@ -659,6 +663,10 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .date-picker-cell.selected { color: #07211d; background: #5eead4; font-weight: 800; }
 .date-picker-cell.highlighted { position: relative; z-index: 1; box-shadow: inset 0 0 0 2px #8fa0ff; }
 .date-picker-cell[aria-disabled="true"] { color: #46536a; cursor: default; }
+.date-time-picker-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; margin-top: 0.75rem; }
+.date-time-picker-times > label { display: grid; gap: 0.35rem; color: #8e9cb1; font-size: 0.7rem; }
+.date-time-picker-times > label:only-child { grid-column: 1 / -1; }
+.date-time-picker-times input { min-width: 0; width: 100%; padding: 0.58rem 0.7rem; border: 1px solid #344158; border-radius: 0.55rem; color: #e7edf7; background: #0d1523; font: inherit; }
 
 .tree-view { padding: 0.5rem; outline: none; }
 .tree-item { gap: 0.55rem; padding-right: 0.75rem; }
@@ -867,7 +875,11 @@ pre { height: 100%; min-height: 0; margin: 0; padding: 1rem 1.15rem; overflow: a
   .component-rail { border-radius: 0.8rem; }
   .rail-heading { padding-inline: 0.7rem; }
   .example-card { height: 62rem; grid-template-columns: 1fr; grid-template-rows: 29rem 33rem; }
-  .workspace[data-demo="calendar"] .example-card { height: 73rem; grid-template-rows: 40rem 33rem; }
+  .workspace:is(
+    [data-demo="calendar"],
+    [data-demo="date-time-picker"],
+    [data-demo="date-time-range-picker"]
+  ) .example-card { height: 73rem; grid-template-rows: 40rem 33rem; }
   .example-inspector { border-top: 1px solid #252e3e; border-left: 0; }
 }
 
