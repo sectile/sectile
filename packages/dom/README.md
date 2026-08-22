@@ -14,5 +14,3 @@ The package does not provide markup, components, styles, themes, or application 
 ## API shape
 
 Direct `createX` factories return ready connections. Matching `tryCreateX` factories expose recoverable construction failure. Every facade provides `state`, `send`, `update`, `subscribe`, and `destroy` alongside component-specific binding methods. Lower-level controller and connection factories remain available for separate ownership.
-
-See [consumer usage](../../docs/getting-started/consumer-usage.md), [architecture](../../docs/architecture/README.md), and the [DOM playground](../../playgrounds/dom/README.md).

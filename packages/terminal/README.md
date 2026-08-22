@@ -14,5 +14,3 @@ The package does not provide a terminal component framework, visual theme, scree
 ## API shape
 
 Direct `createX` factories return ready connections. Matching `tryCreateX` factories expose recoverable construction failure. Every facade provides `state`, `send`, `update`, `subscribe`, and `destroy` alongside host-specific methods. Lower-level controllers remain available for separate ownership.
-
-See [consumer usage](../../docs/getting-started/consumer-usage.md), [architecture](../../docs/architecture/README.md), and the [terminal playground](../../playgrounds/terminal/README.md).

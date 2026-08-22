@@ -2,6 +2,7 @@ sectile/
 ├── .github/
 │   └── workflows/
 │       ├── quality.yml
+│       ├── release.yml
 │       └── testing.yml
 ├── docs/
 │   ├── architecture/
@@ -229,6 +230,8 @@ sectile/
 │   │   │   ├── implementation-verifier.mjs
 │   │   │   ├── theory-verification.json
 │   │   │   └── theory-verifier.py
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -318,6 +321,8 @@ sectile/
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
 │   │   │   └── window-splitter.test.mjs
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
@@ -408,6 +413,8 @@ sectile/
 │       │   ├── tree-grid.test.mjs
 │       │   ├── tree-view.test.mjs
 │       │   └── window-splitter.test.mjs
+│       ├── CHANGELOG.md
+│       ├── LICENSE
 │       ├── package.json
 │       ├── README.md
 │       ├── tsconfig.build.json
@@ -461,11 +468,16 @@ sectile/
 │   └── README.md
 ├── scripts/
 │   ├── lib/
+│   │   ├── release.mjs
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
 │   ├── check-component-completeness.mjs
 │   ├── check-docs.mjs
+│   ├── check-release.mjs
 │   ├── check-workspace-boundaries.mjs
+│   ├── publish-packages.mjs
+│   ├── release.mjs
+│   ├── release.test.mjs
 │   └── update-tree.mjs
 ├── verification/
 │   ├── cross-host/
@@ -487,6 +499,7 @@ sectile/
 │   └── component-completeness.json
 ├── .gitignore
 ├── .node-version
+├── LICENSE
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
