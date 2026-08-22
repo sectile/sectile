@@ -17,7 +17,7 @@ import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo 
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
-import { dateFieldDemo, datePickerDemo, dateRangePickerDemo, timeFieldDemo } from './date-time.js';
+import { dateFieldDemo, datePickerDemo, dateRangePickerDemo, dateTimeFieldDemo, timeFieldDemo } from './date-time.js';
 
 const rawDemos: readonly DemoDefinition[] = [
   listboxDemo,
@@ -28,6 +28,7 @@ const rawDemos: readonly DemoDefinition[] = [
   numberFieldDemo,
   quantityFieldDemo,
   dateFieldDemo,
+  dateTimeFieldDemo,
   timeFieldDemo,
   datePickerDemo,
   dateRangePickerDemo,
@@ -79,7 +80,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
     id: 'input',
     label: 'Input',
     demoIDs: [
-      'combobox', 'date-field', 'number-field', 'pin-input', 'quantity-field',
+      'combobox', 'date-field', 'date-time-field', 'number-field', 'pin-input', 'quantity-field',
       'spin-button', 'tags-input', 'text', 'time-field',
     ],
   },
@@ -114,7 +115,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
 ];
 
 const readOnlyDemos = new Set([
-  'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'time-field', 'text', 'combobox',
+  'listbox', 'slider', 'multi-thumb-slider', 'spin-button', 'number-field', 'quantity-field', 'date-field', 'date-time-field', 'time-field', 'text', 'combobox',
   'tree-grid', 'grid', 'radio-group', 'checkbox',
   'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
 ]);

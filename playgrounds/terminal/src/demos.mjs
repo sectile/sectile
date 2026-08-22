@@ -3,6 +3,7 @@ import { createTextEditingState } from '@sectile/core/text';
 import { createCalculatorExpression } from '@sectile/core/number-field';
 import { createDateValue, createDateRange, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
+import { createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
@@ -16,6 +17,7 @@ import { createText } from '@sectile/terminal/text';
 import { createNumberField } from '@sectile/terminal/number-field';
 import { createQuantityField } from '@sectile/terminal/quantity-field';
 import { createDateField } from '@sectile/terminal/date-field';
+import { createDateTimeField } from '@sectile/terminal/date-time-field';
 import { createTimeField } from '@sectile/terminal/time-field';
 import { createDatePicker } from '@sectile/terminal/date-picker';
 import { createDateRangePicker } from '@sectile/terminal/date-range-picker';
@@ -57,6 +59,7 @@ export const demos = Object.freeze([
   { id: 'number-field', label: 'Number field', description: 'exact decimal · expressions · caret · controlled · [/] cases', readOnly: true, create: createNumberFieldDemo },
   { id: 'quantity-field', label: 'Quantity field', description: 'units · affine conversion · expressions · { } cases', readOnly: true, create: createQuantityFieldDemo },
   { id: 'date-field', label: 'Date field', description: 'calendar value · caret segments · commit · [/] cases', readOnly: true, create: createDateFieldDemo },
+  { id: 'date-time-field', label: 'Date-time field', description: 'civil date-time · midnight carry · commit · [/] cases', readOnly: true, create: createDateTimeFieldDemo },
   { id: 'time-field', label: 'Time field', description: 'wall-clock value · caret segments · commit · [/] cases', readOnly: true, create: createTimeFieldDemo },
   { id: 'date-picker', label: 'Date picker', description: 'month grid · bounds · single selection · [/] cases', readOnly: true, create: createDatePickerDemo },
   { id: 'date-range-picker', label: 'Date range picker', description: 'range anchor · inclusive selection · [/] cases', readOnly: true, create: createDateRangePickerDemo },
@@ -986,11 +989,23 @@ function createTimeFieldDemo(host) {
   ], (scenario) => createTerminalTemporalField(host, scenario, 'time'));
 }
 
+function createDateTimeFieldDemo(host) {
+  const at = (year, month, day, hour, minute) => unwrap(createDateTimeValue(
+    unwrap(createDateValue(year, month, day)),
+    unwrap(createTimeValue(hour, minute)),
+  ));
+  return scenarioDemo(host, [
+    { title: 'Local schedule', value: at(2026, 8, 22, 16, 30), controlled: false, policies: {}, detail: 'timezone-free date and wall clock' },
+    { title: 'Cross-midnight stepping', value: at(2026, 8, 22, 23, 45), controlled: false, policies: { step: { minute: 30 } }, detail: 'time segments carry into the civil date' },
+    { title: 'Controlled date-time', value: at(2026, 8, 22, 14, 0), controlled: true, policies: {}, detail: 'external value ownership' },
+  ], (scenario) => createTerminalTemporalField(host, scenario, 'date-time'));
+}
+
 function createTerminalTemporalField(host, scenario, kind) {
   let external = scenario.value;
   let connection;
-  const create = kind === 'date' ? createDateField : createTimeField;
-  const format = kind === 'date' ? formatDateValue : formatTimeValue;
+  const create = kind === 'date' ? createDateField : kind === 'date-time' ? createDateTimeField : createTimeField;
+  const format = kind === 'date' ? formatDateValue : kind === 'date-time' ? formatDateTimeValue : formatTimeValue;
   connection = create({
     ...scenario.interaction,
     policies: scenario.policies,

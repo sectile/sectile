@@ -1,0 +1,208 @@
+import { unwrap } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
+import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
+import {
+  applyDateTimeFieldEvent,
+  createDateTimeFieldState,
+  type DateTimeFieldCommand,
+  type DateTimeFieldEvent,
+  type DateTimeFieldPolicies,
+  type DateTimeFieldState,
+  type DateTimeValue,
+} from '@sectile/core/date-time-field';
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { toTerminalTextInput } from './internal/text-input.js';
+import type { TerminalKeyboardInput } from './keyboard.js';
+import { toTextEvent } from './text.js';
+
+export interface DateTimeFieldOptions {
+  readonly policies?: DateTimeFieldPolicies;
+  readonly value?: DateTimeValue | null;
+  readonly defaultValue?: DateTimeValue | null;
+  readonly inputState?: TextEditingState;
+  readonly defaultInputState?: TextEditingState;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly required?: boolean;
+  readonly onValueChange?: (value: DateTimeValue | null) => void;
+  readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
+  readonly onUpdate?: () => void;
+}
+
+export interface DateTimeFieldControlledValues {
+  readonly value?: DateTimeValue | null;
+  readonly inputState?: TextEditingState;
+}
+
+export interface DateTimeFieldConnection {
+  getSnapshot(): RevisionSnapshot<DateTimeFieldState>;
+  getText(): string;
+  getValue(): DateTimeValue | null;
+  getCaret(): number;
+  syncControlledValues(values: DateTimeFieldControlledValues): Result<RevisionSnapshot<DateTimeFieldState>>;
+  handleEvent(event: DateTimeFieldEvent): boolean;
+  handleKeyboardInput(input: TerminalKeyboardInput): boolean;
+  handleTextInput(text: string): boolean;
+}
+
+export function createDateTimeField(
+  options: DateTimeFieldOptions = {},
+): FacadeConnection<DateTimeFieldConnection> {
+  return unwrap(tryCreateDateTimeField(options));
+}
+
+export function tryCreateDateTimeField(
+  options: DateTimeFieldOptions = {},
+): Result<FacadeConnection<DateTimeFieldConnection>> {
+  return createFacadeConnection(options, construct);
+}
+
+function construct(options: DateTimeFieldOptions): Result<DateTimeFieldConnection> {
+  const valueControlled = options.value !== undefined;
+  const inputControlled = options.inputState !== undefined;
+  const policies = Object.freeze({
+    ...options.policies,
+    ...(options.required === undefined ? {} : { required: options.required }),
+  });
+  const runtime = createSemanticController<
+    DateTimeFieldState,
+    DateTimeFieldEvent,
+    DateTimeFieldCommand,
+    DateTimeFieldCommand
+  >({
+    initial: createDateTimeFieldState(
+      options.value !== undefined ? options.value : options.defaultValue ?? null,
+      options.inputState !== undefined ? options.inputState : options.defaultInputState,
+    ),
+    reducer: (state, event) => applyDateTimeFieldEvent(state, event, policies),
+    reconcile: (previous, proposed) => createDateTimeFieldState(
+      valueControlled ? previous.value : proposed.value,
+      inputControlled ? previous.inputState : proposed.inputState,
+    ),
+    notify: (previous, proposed) => {
+      if (JSON.stringify(previous.inputState) !== JSON.stringify(proposed.inputState)) {
+        options.onInputStateChange?.(proposed.inputState, previous.inputState);
+      }
+    },
+    toEffect: (command) => command,
+    interaction: options,
+  });
+  return runtime.ok
+    ? { ok: true, value: new TerminalDateTimeField(options, runtime.value, valueControlled, inputControlled) }
+    : runtime;
+}
+
+class TerminalDateTimeField implements DateTimeFieldConnection {
+  readonly options: DateTimeFieldOptions;
+  readonly runtime: SemanticController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>;
+  readonly valueControlled: boolean;
+  readonly inputControlled: boolean;
+
+  public constructor(
+    options: DateTimeFieldOptions,
+    runtime: SemanticController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>,
+    valueControlled: boolean,
+    inputControlled: boolean,
+  ) {
+    this.options = options;
+    this.runtime = runtime;
+    this.valueControlled = valueControlled;
+    this.inputControlled = inputControlled;
+  }
+
+  public getSnapshot(): RevisionSnapshot<DateTimeFieldState> {
+    return this.runtime.getSnapshot();
+  }
+
+  public getText(): string {
+    return this.getSnapshot().state.inputState.snapshot.text;
+  }
+
+  public getValue(): DateTimeValue | null {
+    return this.getSnapshot().state.value;
+  }
+
+  public getCaret(): number {
+    return this.getSnapshot().state.inputState.snapshot.selection.focusCodeUnitOffset;
+  }
+
+  public syncControlledValues(
+    values: DateTimeFieldControlledValues,
+  ): Result<RevisionSnapshot<DateTimeFieldState>> {
+    if (
+      this.valueControlled !== (values.value !== undefined)
+      || this.inputControlled !== (values.inputState !== undefined)
+    ) {
+      return {
+        ok: false,
+        error: {
+          class: 'construction',
+          code: 'controlled-shape-mismatch',
+          message: 'Controlled date-time field values must preserve their construction-time shape.',
+        },
+      };
+    }
+    const state = this.getSnapshot().state;
+    const result = this.runtime.replace(createDateTimeFieldState(
+      this.valueControlled ? values.value as DateTimeValue | null : state.value,
+      this.inputControlled ? values.inputState as TextEditingState : state.inputState,
+    ));
+    if (result.ok) this.options.onUpdate?.();
+    return result;
+  }
+
+  public handleEvent(event: DateTimeFieldEvent): boolean {
+    const result = this.runtime.handle(event);
+    if (result.ok) {
+      for (const command of result.commands) {
+        if (command.type === 'value-committed') this.options.onValueChange?.(command.value);
+      }
+      this.options.onUpdate?.();
+    }
+    return result.ok;
+  }
+
+  public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
+    if (input.ctrlKey === true || input.altKey === true) return false;
+    if (input.key === 'enter') return this.handleEvent('commit');
+    if (input.key === 'escape') return this.handleEvent('cancel');
+    if (input.key === 'up') return this.handleEvent('increment-segment');
+    if (input.key === 'down') return this.handleEvent('decrement-segment');
+    if (input.key === 'left' || input.key === 'right' || input.key === 'home' || input.key === 'end') {
+      return this.#move(input);
+    }
+    const semantic = toTerminalTextInput(this.getSnapshot().state.inputState, input);
+    const event = semantic === null ? null : toTextEvent(semantic);
+    return event !== null && this.handleEvent({ type: 'text', event });
+  }
+
+  public handleTextInput(text: string): boolean {
+    return typeof text === 'string' && text.length > 0 && this.handleKeyboardInput({ key: text, text });
+  }
+
+  #move(input: TerminalKeyboardInput): boolean {
+    const snapshot = this.getSnapshot().state.inputState.snapshot;
+    const selection = snapshot.selection;
+    const focus = input.key === 'home'
+      ? 0
+      : input.key === 'end'
+        ? snapshot.text.length
+        : input.key === 'left'
+          ? Math.max(0, selection.focusCodeUnitOffset - 1)
+          : Math.min(snapshot.text.length, selection.focusCodeUnitOffset + 1);
+    const next: TextSelectionInput = {
+      anchorCodeUnitOffset: input.shiftKey === true ? selection.anchorCodeUnitOffset : focus,
+      focusCodeUnitOffset: focus,
+    };
+    const event: TextEvent = {
+      type: 'replace',
+      startCodeUnitOffset: focus,
+      endCodeUnitOffset: focus,
+      text: '',
+      selection: next,
+    };
+    return this.handleEvent({ type: 'text', event });
+  }
+}

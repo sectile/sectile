@@ -61,6 +61,7 @@
     "./spin-button": { "types": "./dist/spin-button.d.ts", "import": "./dist/spin-button.js", "default": "./dist/spin-button.js" },
     "./number-field": { "types": "./dist/number-field.d.ts", "import": "./dist/number-field.js", "default": "./dist/number-field.js" },
     "./date-field": { "types": "./dist/date-field.d.ts", "import": "./dist/date-field.js", "default": "./dist/date-field.js" },
+    "./date-time-field": { "types": "./dist/date-time-field.d.ts", "import": "./dist/date-time-field.js", "default": "./dist/date-time-field.js" },
     "./time-field": { "types": "./dist/time-field.d.ts", "import": "./dist/time-field.js", "default": "./dist/time-field.js" },
     "./date-picker": { "types": "./dist/date-picker.d.ts", "import": "./dist/date-picker.js", "default": "./dist/date-picker.js" },
     "./date-range-picker": { "types": "./dist/date-range-picker.d.ts", "import": "./dist/date-range-picker.js", "default": "./dist/date-range-picker.js" },

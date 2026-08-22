@@ -19,9 +19,20 @@ import {
   formatTimeValue,
   parseTimeValue,
 } from '../../.verification-dist/time-field.js';
+import {
+  addDateTimeMilliseconds,
+  applyDateTimeFieldEvent,
+  createDateTimeFieldState,
+  createDateTimeValue,
+  dateTimeSegmentAt,
+  formatDateTimeValue,
+  parseDateTimeValue,
+} from '../../.verification-dist/date-time-field.js';
 
 const date = (year, month, day) => createDateValue(year, month, day).value;
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond).value;
+const dateTime = (year, month, day, hour, minute, second = 0, millisecond = 0) =>
+  createDateTimeValue(date(year, month, day), time(hour, minute, second, millisecond)).value;
 
 test('date values are strict Gregorian calendar values without host time', () => {
   assert.equal(createDateValue(2024, 2, 29).ok, true);
@@ -102,4 +113,58 @@ test('time field commits, bounds, and adjusts its caret segment', () => {
   const rejectedStep = applyTimeFieldEvent(invalidDraft, 'increment-segment');
   assert.equal(rejectedStep.error.code, 'invalid-time-format');
   assert.equal(formatTimeValue(invalidDraft.value), '10:30');
+});
+
+test('date-time values remain timezone-free and use a strict ISO-like separator', () => {
+  const value = dateTime(2026, 8, 22, 16, 3);
+  assert.equal(formatDateTimeValue(value), '2026-08-22T16:03');
+  assert.deepEqual(parseDateTimeValue('2026-08-22T16:03').value, value);
+  assert.equal(parseDateTimeValue('2026-08-22 16:03').error.code, 'invalid-date-time-format');
+  assert.equal(parseDateTimeValue('2026-02-30T16:03').error.code, 'invalid-date-day');
+});
+
+test('date-time arithmetic carries wall-clock changes across civil day boundaries', () => {
+  const forward = addDateTimeMilliseconds(dateTime(2024, 2, 28, 23, 59, 59, 999), 1);
+  assert.equal(formatDateTimeValue(forward.value), '2024-02-29T00:00');
+
+  const backward = addDateTimeMilliseconds(dateTime(2024, 3, 1, 0, 0), -1);
+  assert.equal(formatDateTimeValue(backward.value), '2024-02-29T23:59:59.999');
+});
+
+test('date-time field steps the active segment and rejects invalid drafts atomically', () => {
+  let state = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 45)).value;
+  state = applyDateTimeFieldEvent(state, {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 14,
+      endCodeUnitOffset: 14,
+      text: '',
+      selection: { anchorCodeUnitOffset: 14, focusCodeUnitOffset: 14 },
+    },
+  }).value.state;
+  const next = applyDateTimeFieldEvent(state, 'increment-segment', { step: { minute: 30 } });
+  assert.equal(formatDateTimeValue(next.value.state.value), '2024-02-01T00:15');
+  assert.equal(dateTimeSegmentAt(14), 'minute');
+  assert.deepEqual(next.value.state.inputState.snapshot.selection, {
+    anchorCodeUnitOffset: 14,
+    direction: 'forward',
+    endCodeUnitOffset: 16,
+    focusCodeUnitOffset: 16,
+    startCodeUnitOffset: 14,
+  });
+
+  const invalidDraft = applyDateTimeFieldEvent(next.value.state, {
+    type: 'text',
+    event: {
+      type: 'replace',
+      startCodeUnitOffset: 0,
+      endCodeUnitOffset: next.value.state.inputState.snapshot.text.length,
+      text: '2024-02-01T00:15oops',
+      selection: { anchorCodeUnitOffset: 20, focusCodeUnitOffset: 20 },
+    },
+  }).value.state;
+  const rejected = applyDateTimeFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(rejected.error.code, 'invalid-time-format');
+  assert.equal(formatDateTimeValue(invalidDraft.value), '2024-02-01T00:15');
 });

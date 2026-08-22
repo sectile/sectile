@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "bb6a20e6fe65cb96fd35496b93370f529f803ac4509359abacc37eeeecb5d76b",
+  "fingerprint": "8474a933679c1e982cca2755882615bd13be89ee8ff61cdaa85794558006af51",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -43,6 +43,10 @@
       "sha256": "1aadcd692dabd9e0e868971461ec949438d5fa7f88b90120bbf77a87a781cf23"
     },
     {
+      "path": "dist/date-time-field.d.ts",
+      "sha256": "9e6b6adeefd6bd4e1b918f804cc08d0009a9dc89fa5fb9e5b6a19d74d8350a29"
+    },
+    {
       "path": "dist/dialog.d.ts",
       "sha256": "b6f3aa14727dd3b295be945a06a898c5bbad2ecee7d30dea418daffaa6cc8471"
     },
@@ -56,7 +60,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "6deebe7740ca64d35caa1db3781593b574050178e2aef0cb5426f09c032ce694"
+      "sha256": "5b95d17a8fa5ed8bb2c6b180e2944ff3820cb7cb0afa614659c552262cdb8c98"
     },
     {
       "path": "dist/interaction.d.ts",

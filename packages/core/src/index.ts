@@ -42,6 +42,15 @@ export type {
   DateValue,
 } from './date-field.js';
 export type {
+  DateTimeFieldCommand,
+  DateTimeFieldEvent,
+  DateTimeFieldPolicies,
+  DateTimeFieldState,
+  DateTimeFieldUpdate,
+  DateTimeSegment,
+  DateTimeValue,
+} from './date-time-field.js';
+export type {
   TimeFieldCommand,
   TimeFieldEvent,
   TimeFieldPolicies,

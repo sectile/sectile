@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { unwrap } from '@sectile/core/result';
 import { createDateValue, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
+import { createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field';
 import { createDateField } from '../dist/date-field.js';
+import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDatePicker } from '../dist/date-picker.js';
 import { createTimeField } from '../dist/time-field.js';
 
@@ -72,6 +74,46 @@ test('DOM time field exposes invalid drafts and restores the committed value on 
   assert.equal(formatTimeValue(field.getValue()), '16:03');
   assert.equal(input.attributes.get('aria-invalid'), 'false');
   assert.equal(input.validationMessage, '');
+});
+
+test('DOM date-time field carries time segments across civil day boundaries', () => {
+  const input = new FakeInput();
+  const value = unwrap(createDateTimeValue(
+    unwrap(createDateValue(2024, 1, 31)),
+    unwrap(createTimeValue(23, 45)),
+  ));
+  const field = createDateTimeField({
+    input,
+    defaultValue: value,
+    policies: { step: { minute: 30 } },
+  });
+
+  input.setSelectionRange(14, 14);
+  input.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(formatDateTimeValue(field.getValue()), '2024-02-01T00:15');
+  assert.equal(input.value, '2024-02-01T00:15');
+  assert.equal(input.placeholder, 'YYYY-MM-DDTHH:mm');
+});
+
+test('DOM date-time field rejects invalid arrow steps and restores on blur', () => {
+  const input = new FakeInput();
+  const field = createDateTimeField({
+    input,
+    defaultValue: unwrap(createDateTimeValue(
+      unwrap(createDateValue(2026, 8, 22)),
+      unwrap(createTimeValue(16, 3)),
+    )),
+  });
+
+  replaceInput(input, '2026-08-22T16:03oops');
+  input.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(input.value, '2026-08-22T16:03oops');
+  assert.equal(formatDateTimeValue(field.getValue()), '2026-08-22T16:03');
+  assert.equal(input.attributes.get('aria-invalid'), 'true');
+
+  input.emit('blur', {});
+  assert.equal(input.value, '2026-08-22T16:03');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
 function keyboard(key) { return { key, isComposing: false, preventDefault() {} }; }

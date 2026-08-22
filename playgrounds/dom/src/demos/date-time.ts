@@ -1,15 +1,19 @@
 import { createDateField, type DateFieldConnection } from '@sectile/dom/date-field';
+import { createDateTimeField, type DateTimeFieldConnection } from '@sectile/dom/date-time-field';
 import { createTimeField, type TimeFieldConnection } from '@sectile/dom/time-field';
 import { createDatePicker, type DatePickerConnection } from '@sectile/dom/date-picker';
 import { createDateRangePicker, type DateRangePickerConnection } from '@sectile/dom/date-range-picker';
 import { unwrap } from '@sectile/core/result';
 import { compareDateValues, createDateRange, createDateValue, dateDayOfWeek, formatDateValue, type DateRange, type DateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue, type TimeValue } from '@sectile/core/time-field';
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, createElement } from 'lucide';
+import { createDateTimeValue, formatDateTimeValue, type DateTimeValue } from '@sectile/core/date-time-field';
+import { CalendarClock, CalendarDays, ChevronLeft, ChevronRight, Clock3, createElement } from 'lucide';
 import { type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const date = (year: number, month: number, day: number): DateValue => unwrap(createDateValue(year, month, day));
 const time = (hour: number, minute: number): TimeValue => unwrap(createTimeValue(hour, minute));
+const dateTime = (year: number, month: number, day: number, hour: number, minute: number): DateTimeValue =>
+  unwrap(createDateTimeValue(date(year, month, day), time(hour, minute)));
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as const;
 
@@ -30,6 +34,16 @@ export const timeFieldDemo: DemoDefinition = {
     { id: 'wall-clock', title: 'Wall-clock time', mount: (context) => mountTimeField(context, { initial: time(9, 30) }) },
     { id: 'stepped', title: '15-minute schedule', mount: (context) => mountTimeField(context, { initial: time(10, 15), step: 15 }) },
     { id: 'controlled', title: 'Controlled time', mount: (context) => mountTimeField(context, { initial: time(14, 0), controlled: true }) },
+  ],
+};
+
+export const dateTimeFieldDemo: DemoDefinition = {
+  id: 'date-time-field', label: 'Date-time field', title: 'Date-time field', description: 'Edit one timezone-free calendar date and wall-clock time with civil boundary carry.',
+  shortcuts: [{ keys: ['↑', '↓'], label: 'adjust caret segment' }, { keys: ['Enter'], label: 'commit' }, { keys: ['Escape'], label: 'cancel draft' }],
+  cases: [
+    { id: 'local-schedule', title: 'Local schedule', mount: (context) => mountDateTimeField(context, { initial: dateTime(2026, 8, 22, 16, 30) }) },
+    { id: 'cross-midnight', title: 'Cross-midnight stepping', mount: (context) => mountDateTimeField(context, { initial: dateTime(2026, 8, 22, 23, 45), step: 30 }) },
+    { id: 'controlled', title: 'Controlled date-time', mount: (context) => mountDateTimeField(context, { initial: dateTime(2026, 8, 22, 14, 0), controlled: true }) },
   ],
 };
 
@@ -54,7 +68,7 @@ export const dateRangePickerDemo: DemoDefinition = {
 };
 
 function mountDateField(context: DemoContext, scenario: { initial: DateValue; min?: DateValue; max?: DateValue; controlled?: boolean }): DemoSession {
-  const shell = fieldShell('Release date', 'YYYY-MM-DD', CalendarDays, 'Enter a real calendar date using YYYY-MM-DD.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
+  const shell = fieldShell('Release date', 'YYYY-MM-DD', CalendarDays, 'Use ↑ or ↓ on the year, month, or day segment.', 'Enter a real calendar date using YYYY-MM-DD.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
   let controlled = scenario.initial; let connection: DateFieldConnection;
   connection = createDateField({ input, ...context.interaction, policies: { ...(scenario.min === undefined ? {} : { min: scenario.min }), ...(scenario.max === undefined ? {} : { max: scenario.max }) }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
   function render(): void { const snapshot = connection.getSnapshot(); output.value = snapshot.state.value === null ? 'No committed date' : `Committed ${formatDateValue(snapshot.state.value)}`; context.showState(snapshot.revision, { value: snapshot.state.value, segment: snapshot.state.inputState.snapshot.selection, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
@@ -62,10 +76,18 @@ function mountDateField(context: DemoContext, scenario: { initial: DateValue; mi
 }
 
 function mountTimeField(context: DemoContext, scenario: { initial: TimeValue; step?: number; controlled?: boolean }): DemoSession {
-  const shell = fieldShell('Start time', 'HH:mm', Clock3, 'Enter a 24-hour time using HH:mm.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
+  const shell = fieldShell('Start time', 'HH:mm', Clock3, 'Use ↑ or ↓ on the hour, minute, second, or millisecond segment.', 'Enter a 24-hour time using HH:mm.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
   let controlled = scenario.initial; let connection: TimeFieldConnection;
   connection = createTimeField({ input, ...context.interaction, policies: scenario.step === undefined ? {} : { step: { minute: scenario.step } }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
   function render(): void { const snapshot = connection.getSnapshot(); output.value = snapshot.state.value === null ? 'No committed time' : `Committed ${formatTimeValue(snapshot.state.value)}`; context.showState(snapshot.revision, { value: snapshot.state.value, segment: snapshot.state.inputState.snapshot.selection, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
+  render(); return { focus: () => input.focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountDateTimeField(context: DemoContext, scenario: { initial: DateTimeValue; step?: number; controlled?: boolean }): DemoSession {
+  const shell = fieldShell('Local date and time', 'YYYY-MM-DDTHH:mm', CalendarClock, 'Use ↑ or ↓ on the date or time segment. Time changes carry across midnight.', 'Enter a real date and 24-hour time using YYYY-MM-DDTHH:mm.'); const input = shell.querySelector('input') as HTMLInputElement; const output = shell.querySelector('output') as HTMLOutputElement; context.surface.append(shell);
+  let controlled = scenario.initial; let connection: DateTimeFieldConnection;
+  connection = createDateTimeField({ input, ...context.interaction, policies: scenario.step === undefined ? {} : { step: { minute: scenario.step } }, ...(scenario.controlled ? { value: controlled } : { defaultValue: controlled }), onValueChange: (value) => { if (value !== null) controlled = value; if (scenario.controlled) queueMicrotask(() => connection.syncControlledValues({ value: controlled })); }, onUpdate: render });
+  function render(): void { const snapshot = connection.getSnapshot(); output.value = snapshot.state.value === null ? 'No committed date-time' : `Committed ${formatDateTimeValue(snapshot.state.value)}`; context.showState(snapshot.revision, { value: snapshot.state.value, segment: snapshot.state.inputState.snapshot.selection, ownership: scenario.controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => input.focus(), disconnect: () => connection.disconnect() };
 }
 
@@ -90,7 +112,7 @@ function mountRangePicker(context: DemoContext, scenario: { initial: DateRange |
 }
 
 let fieldID = 0;
-function fieldShell(labelText: string, placeholder: string, icon: typeof CalendarDays, errorText: string): HTMLElement { const shell = document.createElement('div'); shell.className = 'temporal-field-shell'; const inputID = `temporal-field-${fieldID += 1}`; const hintID = `${inputID}-hint`; const errorID = `${inputID}-error`; const label = document.createElement('label'); label.htmlFor = inputID; label.textContent = labelText; const control = document.createElement('div'); control.className = 'temporal-field-control'; control.append(createElement(icon)); const input = document.createElement('input'); input.id = inputID; input.placeholder = placeholder; input.setAttribute('aria-describedby', `${hintID} ${errorID}`); control.append(input); const hint = document.createElement('p'); hint.id = hintID; hint.className = 'temporal-field-hint'; hint.textContent = placeholder === 'YYYY-MM-DD' ? 'Use ↑ or ↓ on the year, month, or day segment.' : 'Use ↑ or ↓ on the hour, minute, second, or millisecond segment.'; const error = document.createElement('p'); error.id = errorID; error.className = 'temporal-field-error'; error.setAttribute('role', 'alert'); error.textContent = errorText; const output = document.createElement('output'); shell.append(label, control, hint, error, output); return shell; }
+function fieldShell(labelText: string, placeholder: string, icon: typeof CalendarDays, hintText: string, errorText: string): HTMLElement { const shell = document.createElement('div'); shell.className = 'temporal-field-shell'; const inputID = `temporal-field-${fieldID += 1}`; const hintID = `${inputID}-hint`; const errorID = `${inputID}-error`; const label = document.createElement('label'); label.htmlFor = inputID; label.textContent = labelText; const control = document.createElement('div'); control.className = 'temporal-field-control'; control.append(createElement(icon)); const input = document.createElement('input'); input.id = inputID; input.placeholder = placeholder; input.setAttribute('aria-describedby', `${hintID} ${errorID}`); control.append(input); const hint = document.createElement('p'); hint.id = hintID; hint.className = 'temporal-field-hint'; hint.textContent = hintText; const error = document.createElement('p'); error.id = errorID; error.className = 'temporal-field-error'; error.setAttribute('role', 'alert'); error.textContent = errorText; const output = document.createElement('output'); shell.append(label, control, hint, error, output); return shell; }
 
 function pickerShell(range: boolean): { shell: HTMLElement; popup: HTMLElement; grid: HTMLElement; trigger: HTMLButtonElement; startInput: HTMLInputElement; endInput?: HTMLInputElement; previous: HTMLButtonElement; next: HTMLButtonElement; title: HTMLElement } {
   const shell = document.createElement('div'); shell.className = 'date-picker-shell'; const fieldRow = document.createElement('div'); fieldRow.className = 'date-picker-fields'; const startInput = document.createElement('input'); startInput.setAttribute('aria-label', range ? 'Range start' : 'Selected date'); fieldRow.append(startInput); let endInput: HTMLInputElement | undefined; if (range) { const separator = document.createElement('span'); separator.textContent = 'to'; endInput = document.createElement('input'); endInput.setAttribute('aria-label', 'Range end'); fieldRow.append(separator, endInput); } const trigger = document.createElement('button'); trigger.className = 'date-picker-trigger secondary'; trigger.append(createElement(CalendarDays)); trigger.setAttribute('aria-label', range ? 'Choose date range' : 'Choose date'); fieldRow.append(trigger);
