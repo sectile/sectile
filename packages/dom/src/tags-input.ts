@@ -23,14 +23,40 @@ function tryCreateTagsInputConnection(options: TagsInputOptions): Result<TagsInp
 }
 class DOMTagsInputConnection implements TagsInputConnection {
   readonly #options: TagsInputOptions; readonly #runtime: SemanticController<TagsInputState, TagsInputEvent, TagsInputCommand>; readonly #controlled: { value: boolean; input: boolean };
-  readonly #inputHandler = (): void => { this.handleEvent({ type: 'input', value: this.#options.input.value }); };
-  readonly #keydown = (event: KeyboardEvent): void => { const state = this.#runtime.getSnapshot().state; const fromInput = event.target === this.#options.input; let semantic: TagsInputEvent | null = null; if (fromInput && (event.key === 'Enter' || event.key === ',')) semantic = { type: 'add' }; else if ((event.key === 'Backspace' || event.key === 'Delete') && state.current !== null) semantic = 'remove-current'; else if (fromInput && event.key === 'Backspace' && this.#options.input.value.length === 0) semantic = 'previous'; else if (event.key === 'ArrowLeft') semantic = 'previous'; else if (event.key === 'ArrowRight') semantic = 'next'; if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
+  #composing = false;
+  #addAfterComposition = false;
+  #ignoreNextCompositionInput = false;
+  readonly #inputHandler = (event: Event): void => {
+    const inputEvent = event as InputEvent;
+    if (this.#composing || inputEvent.isComposing) return;
+    const ignoreCompositionTail = this.#ignoreNextCompositionInput
+      && (inputEvent.inputType === 'insertCompositionText' || inputEvent.inputType === undefined);
+    this.#ignoreNextCompositionInput = false;
+    if (ignoreCompositionTail) this.#render();
+    else this.handleEvent({ type: 'input', value: this.#options.input.value });
+  };
+  readonly #compositionStart = (): void => {
+    this.#composing = true;
+    this.#addAfterComposition = false;
+    this.#ignoreNextCompositionInput = false;
+  };
+  readonly #compositionEnd = (): void => {
+    if (!this.#composing) return;
+    const value = this.#options.input.value;
+    const add = this.#addAfterComposition;
+    this.#composing = false;
+    this.#addAfterComposition = false;
+    this.#ignoreNextCompositionInput = true;
+    this.handleEvent({ type: 'input', value });
+    if (add) queueMicrotask(() => this.handleEvent({ type: 'add', value }));
+  };
+  readonly #keydown = (event: KeyboardEvent): void => { const fromInput = event.target === this.#options.input; if (this.#composing || event.isComposing) { if (fromInput && event.key === 'Enter') this.#addAfterComposition = true; return; } const state = this.#runtime.getSnapshot().state; let semantic: TagsInputEvent | null = null; if (fromInput && (event.key === 'Enter' || event.key === ',')) semantic = { type: 'add' }; else if ((event.key === 'Backspace' || event.key === 'Delete') && state.current !== null) semantic = 'remove-current'; else if (fromInput && event.key === 'Backspace' && this.#options.input.value.length === 0) semantic = 'previous'; else if (event.key === 'ArrowLeft') semantic = 'previous'; else if (event.key === 'ArrowRight') semantic = 'next'; if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
   readonly #click = (event: MouseEvent): void => { const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-tags-input-index]') : null; if (target !== null && this.#options.root.contains(target)) this.handleEvent({ type: 'remove', index: Number(target.dataset['tagsInputIndex']) }); };
-  constructor(options: TagsInputOptions, runtime: SemanticController<TagsInputState, TagsInputEvent, TagsInputCommand>, controlled: { value: boolean; input: boolean }) { this.#options = options; this.#runtime = runtime; this.#controlled = controlled; options.root.setAttribute('role', 'group'); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label); setInteractionAttributes(options.root, options, { readOnly: true }); options.input.disabled = options.disabled === true; options.input.readOnly = options.readOnly === true; options.input.addEventListener('input', this.#inputHandler); options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); this.#render(); }
+  constructor(options: TagsInputOptions, runtime: SemanticController<TagsInputState, TagsInputEvent, TagsInputCommand>, controlled: { value: boolean; input: boolean }) { this.#options = options; this.#runtime = runtime; this.#controlled = controlled; options.root.setAttribute('role', 'group'); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label); setInteractionAttributes(options.root, options, { readOnly: true }); options.input.disabled = options.disabled === true; options.input.readOnly = options.readOnly === true; options.input.addEventListener('input', this.#inputHandler); options.input.addEventListener('compositionstart', this.#compositionStart); options.input.addEventListener('compositionend', this.#compositionEnd); options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); this.#render(); }
   getSnapshot(): RevisionSnapshot<TagsInputState> { return this.#runtime.getSnapshot(); }
   syncControlledValues(values: { readonly value?: readonly string[]; readonly inputValue?: string }): Result<RevisionSnapshot<TagsInputState>> { if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.input !== (values.inputValue !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled tags input values must preserve their construction-time shape.' } }; const state = this.#runtime.getSnapshot().state; const result = this.#runtime.replace(createTagsInputState(this.#controlled.value ? values.value ?? [] : state.tags, this.#controlled.input ? values.inputValue ?? '' : state.draft, state.current)); if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result; }
   setTagAttributes(element: HTMLElement, index: number): void { const state = this.#runtime.getSnapshot().state; element.dataset['tagsInputIndex'] = String(index); element.setAttribute('role', 'button'); element.setAttribute('aria-label', `Remove ${state.tags[index] ?? 'tag'}`); element.tabIndex = state.current === index ? 0 : -1; }
   handleEvent(event: TagsInputEvent): boolean { const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render(); for (const effect of result.commands) { if (effect.type === 'focus-input') queueMicrotask(() => this.#options.input.focus()); else if (effect.type === 'focus-tag') queueMicrotask(() => this.#options.root.querySelector<HTMLElement>(`[data-tags-input-index="${effect.index}"]`)?.focus()); } this.#options.onUpdate?.(); return true; }
-  disconnect(): void { this.#options.input.removeEventListener('input', this.#inputHandler); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); }
-  #render(): void { this.#options.input.value = this.#runtime.getSnapshot().state.draft; }
+  disconnect(): void { this.#options.input.removeEventListener('input', this.#inputHandler); this.#options.input.removeEventListener('compositionstart', this.#compositionStart); this.#options.input.removeEventListener('compositionend', this.#compositionEnd); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); }
+  #render(): void { if (!this.#composing) this.#options.input.value = this.#runtime.getSnapshot().state.draft; }
 }

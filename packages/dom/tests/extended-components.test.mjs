@@ -83,6 +83,101 @@ test('DOM extended facades reject mutations while read-only', () => {
   assert.deepEqual(pin.getSnapshot().state.values, ['1', '']);
 });
 
+test('DOM tags input leaves live native IME text under browser ownership', () => {
+  const root = new FakeElement();
+  const input = new FakeElement();
+  const tags = createTagsInput({ root, input });
+
+  input.emit('compositionstart', { data: '' });
+  input.value = 'ㅎ';
+  input.emit('input', { inputType: 'insertCompositionText', isComposing: true });
+  assert.equal(tags.getSnapshot().state.draft, '');
+  assert.equal(input.value, 'ㅎ');
+
+  input.value = '한';
+  input.emit('compositionend', { data: '한' });
+  assert.equal(tags.getSnapshot().state.draft, '한');
+  assert.equal(input.value, '한');
+
+  input.value = '한한';
+  input.emit('input', { inputType: 'insertCompositionText', isComposing: false });
+  assert.equal(tags.getSnapshot().state.draft, '한');
+  assert.equal(input.value, '한');
+
+  input.emit('compositionstart', { data: '' });
+  input.value = '한ㄱ';
+  input.emit('input', { inputType: 'insertCompositionText', isComposing: true });
+  assert.equal(tags.getSnapshot().state.draft, '한');
+  assert.equal(input.value, '한ㄱ');
+
+  input.value = '한글';
+  input.emit('compositionend', { data: '글' });
+  assert.equal(tags.getSnapshot().state.draft, '한글');
+  assert.equal(input.value, '한글');
+
+  tags.disconnect();
+  assert.equal(input.listeners.get('compositionstart')?.size ?? 0, 0);
+  assert.equal(input.listeners.get('compositionend')?.size ?? 0, 0);
+});
+
+test('DOM tags input adds a completed IME draft with one Enter press', async () => {
+  const root = new FakeElement();
+  const input = new FakeElement();
+  const tags = createTagsInput({ root, input });
+
+  input.emit('compositionstart', { data: '' });
+  input.value = '한글';
+  let prevented = false;
+  root.emit('keydown', {
+    key: 'Enter',
+    target: input,
+    isComposing: true,
+    preventDefault() { prevented = true; },
+  });
+  assert.equal(prevented, false);
+  assert.deepEqual(tags.getSnapshot().state.tags, []);
+
+  input.emit('compositionend', { data: '한글' });
+  await Promise.resolve();
+  assert.deepEqual(tags.getSnapshot().state.tags, ['한글']);
+  assert.equal(tags.getSnapshot().state.draft, '');
+  assert.equal(input.value, '');
+
+  tags.disconnect();
+
+  const controlledRoot = new FakeElement();
+  const controlledInput = new FakeElement();
+  let value = [];
+  let inputValue = '';
+  let controlled;
+  const sync = () => controlled.syncControlledValues({ value, inputValue });
+  controlled = createTagsInput({
+    root: controlledRoot,
+    input: controlledInput,
+    value,
+    inputValue,
+    onValueChange: (next) => { value = [...next]; queueMicrotask(sync); },
+    onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); },
+  });
+
+  controlledInput.emit('compositionstart', { data: '' });
+  controlledInput.value = '제어';
+  controlledRoot.emit('keydown', {
+    key: 'Enter',
+    target: controlledInput,
+    isComposing: true,
+    preventDefault() {},
+  });
+  controlledInput.emit('compositionend', { data: '제어' });
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.deepEqual(controlled.getSnapshot().state.tags, ['제어']);
+  assert.equal(controlled.getSnapshot().state.draft, '');
+  assert.equal(controlledInput.value, '');
+
+  controlled.disconnect();
+});
+
 class FakeElement {
   attributes = new Map();
   dataset = {};
@@ -101,6 +196,7 @@ class FakeElement {
   removeAttribute(name) { this.attributes.delete(name); }
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  emit(type, event) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
   querySelectorAll() { return []; }
   querySelector() { return null; }
   contains(target) { return target === this; }
