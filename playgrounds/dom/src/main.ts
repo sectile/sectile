@@ -1,6 +1,7 @@
 import { demoGroups, demos } from './demos/index.js';
-import { createElement, RotateCcw } from 'lucide';
+import { Code2, createElement, Eye, RotateCcw } from 'lucide';
 import type { DemoCaseDefinition, DemoContext, DemoSession, LogEntry, Shortcut } from './playground.js';
+import { highlightJavaScript } from './highlight.js';
 import './styles.css';
 
 const nav = requiredElement<HTMLElement>('#demo-nav');
@@ -126,9 +127,35 @@ function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): 
   const revisionBadge = document.createElement('span');
   revisionBadge.className = 'badge';
   revisionBadge.textContent = 'revision 0';
-  mainHeading.append(revisionBadge);
   const surface = document.createElement('div');
   surface.className = 'demo-surface';
+  const codeOutput = document.createElement('div');
+  codeOutput.className = 'demo-code';
+  codeOutput.hidden = true;
+  codeOutput.tabIndex = 0;
+  const source = demoCase.source ?? sourceFromMount(demoCase);
+  const fallback = document.createElement('pre');
+  const code = document.createElement('code');
+  code.textContent = source;
+  fallback.append(code);
+  codeOutput.append(fallback);
+  let highlightingStarted = false;
+  const renderHighlightedCode = (): void => {
+    if (highlightingStarted) return;
+    highlightingStarted = true;
+    void highlightJavaScript(source).then((html) => {
+      codeOutput.innerHTML = html;
+    }).catch(() => {
+      // The readable plain-text fallback remains when highlighting cannot load.
+    });
+  };
+  const headingActions = document.createElement('div');
+  headingActions.className = 'panel-heading-actions';
+  headingActions.append(
+    createViewModeControl(surface, codeOutput, demoCase.title, renderHighlightedCode),
+    revisionBadge,
+  );
+  mainHeading.append(headingActions);
   if (interaction !== 'enabled') {
     const note = document.createElement('p');
     note.className = 'interaction-note';
@@ -137,7 +164,7 @@ function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): 
       : 'Read-only: focus and navigation remain available; value changes are rejected.';
     surface.append(note);
   }
-  main.append(mainHeading, surface);
+  main.append(mainHeading, surface, codeOutput);
 
   const inspector = document.createElement('aside');
   inspector.className = 'example-inspector';
@@ -175,6 +202,60 @@ function mountDemoCase(demoCase: DemoCaseDefinition, target: DocumentFragment): 
   };
   sessions.push(demoCase.mount(context));
   renderLog(eventLog, logEntries);
+}
+
+function createViewModeControl(
+  surface: HTMLElement,
+  codeOutput: HTMLElement,
+  title: string,
+  renderHighlightedCode: () => void,
+): HTMLElement {
+  const group = document.createElement('div');
+  group.className = 'view-mode-control';
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', `${title} display mode`);
+
+  const viewButton = createModeButton('View', Eye, true);
+  const codeButton = createModeButton('Code', Code2, false);
+  viewButton.addEventListener('click', () => setViewMode('view'));
+  codeButton.addEventListener('click', () => setViewMode('code'));
+  group.append(viewButton, codeButton);
+  return group;
+
+  function setViewMode(mode: 'view' | 'code'): void {
+    const showingView = mode === 'view';
+    if (!showingView) renderHighlightedCode();
+    surface.hidden = !showingView;
+    codeOutput.hidden = showingView;
+    viewButton.setAttribute('aria-pressed', String(showingView));
+    codeButton.setAttribute('aria-pressed', String(!showingView));
+  }
+}
+
+function createModeButton(
+  label: string,
+  icon: Parameters<typeof createElement>[0],
+  pressed: boolean,
+): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'view-mode-button';
+  button.setAttribute('aria-pressed', String(pressed));
+  button.append(
+    createElement(icon, { 'aria-hidden': 'true', height: 13, width: 13 }),
+    label,
+  );
+  return button;
+}
+
+function sourceFromMount(demoCase: DemoCaseDefinition): string {
+  const interaction = demoCase.interaction ?? 'enabled';
+  return [
+    `// ${demoCase.title}`,
+    `// interaction: ${interaction}`,
+    '',
+    demoCase.mount.toString(),
+  ].join('\n');
 }
 
 function createPanelHeading(titleText: string): HTMLElement {

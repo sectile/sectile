@@ -42,6 +42,7 @@ export interface DemoCaseDefinition {
   readonly id: string;
   readonly title: string;
   readonly interaction?: DemoInteractionMode;
+  readonly source?: string;
   readonly mount: (context: DemoContext) => DemoSession;
 }
 
@@ -72,9 +73,19 @@ export function withInteractionCases(
     shortcuts: demo.shortcuts,
     cases: [
       ...cases,
-      { id: 'disabled-state', title: 'Disabled state', interaction: 'disabled', mount: base.mount },
+      {
+        ...base,
+        id: 'disabled-state',
+        title: 'Disabled state',
+        interaction: 'disabled',
+      },
       ...(options.readOnly
-        ? [{ id: 'read-only-state', title: 'Read-only state', interaction: 'readOnly' as const, mount: readOnlyBase.mount }]
+        ? [{
+          ...readOnlyBase,
+          id: 'read-only-state',
+          title: 'Read-only state',
+          interaction: 'readOnly' as const,
+        }]
         : []),
     ],
   };

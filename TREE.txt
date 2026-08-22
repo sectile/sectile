@@ -327,92 +327,107 @@ sectile/
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
 │   │   └── tsconfig.json
-│   └── terminal/
+│   ├── terminal/
+│   │   ├── scripts/
+│   │   │   ├── build.mjs
+│   │   │   └── check-reproducible-build.mjs
+│   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   ├── checked-control.ts
+│   │   │   │   ├── controller.ts
+│   │   │   │   ├── disabled-items.ts
+│   │   │   │   ├── facade.ts
+│   │   │   │   ├── menu-control.ts
+│   │   │   │   ├── popup-control.ts
+│   │   │   │   ├── semantic-controller.ts
+│   │   │   │   └── text-input.ts
+│   │   │   ├── accordion.ts
+│   │   │   ├── alert-dialog.ts
+│   │   │   ├── calendar.ts
+│   │   │   ├── carousel.ts
+│   │   │   ├── checkbox-group.ts
+│   │   │   ├── checkbox.ts
+│   │   │   ├── combobox.ts
+│   │   │   ├── date-field.ts
+│   │   │   ├── date-picker.ts
+│   │   │   ├── date-range-picker.ts
+│   │   │   ├── date-time-field.ts
+│   │   │   ├── date-time-picker.ts
+│   │   │   ├── date-time-range-picker.ts
+│   │   │   ├── dialog.ts
+│   │   │   ├── disclosure.ts
+│   │   │   ├── feed.ts
+│   │   │   ├── grid.ts
+│   │   │   ├── index.ts
+│   │   │   ├── keyboard.ts
+│   │   │   ├── layout.ts
+│   │   │   ├── listbox.ts
+│   │   │   ├── menu-button.ts
+│   │   │   ├── menu.ts
+│   │   │   ├── menubar.ts
+│   │   │   ├── multi-thumb-slider.ts
+│   │   │   ├── node.ts
+│   │   │   ├── number-field.ts
+│   │   │   ├── pagination.ts
+│   │   │   ├── pin-input.ts
+│   │   │   ├── quantity-field.ts
+│   │   │   ├── radio-group.ts
+│   │   │   ├── rating.ts
+│   │   │   ├── select.ts
+│   │   │   ├── slider.ts
+│   │   │   ├── spin-button.ts
+│   │   │   ├── stepper.ts
+│   │   │   ├── switch.ts
+│   │   │   ├── tabs.ts
+│   │   │   ├── tags-input.ts
+│   │   │   ├── text.ts
+│   │   │   ├── time-field.ts
+│   │   │   ├── toggle-button.ts
+│   │   │   ├── toolbar.ts
+│   │   │   ├── tooltip.ts
+│   │   │   ├── tree-grid.ts
+│   │   │   ├── tree-view.ts
+│   │   │   └── window-splitter.ts
+│   │   ├── tests/
+│   │   │   ├── calendar.test.mjs
+│   │   │   ├── carousel.test.mjs
+│   │   │   ├── checked-controls.test.mjs
+│   │   │   ├── combobox.test.mjs
+│   │   │   ├── date-time.test.mjs
+│   │   │   ├── expansion-controls.test.mjs
+│   │   │   ├── extended-components.test.mjs
+│   │   │   ├── factory-api.test.mjs
+│   │   │   ├── feed.test.mjs
+│   │   │   ├── grid.test.mjs
+│   │   │   ├── keyboard.test.mjs
+│   │   │   ├── linear-controls.test.mjs
+│   │   │   ├── listbox.test.mjs
+│   │   │   ├── menu.test.mjs
+│   │   │   ├── multi-thumb-slider.test.mjs
+│   │   │   ├── number-field.test.mjs
+│   │   │   ├── popup-controls.test.mjs
+│   │   │   ├── quantity-field.test.mjs
+│   │   │   ├── slider.test.mjs
+│   │   │   ├── spin-button.test.mjs
+│   │   │   ├── text.test.mjs
+│   │   │   ├── tree-grid.test.mjs
+│   │   │   ├── tree-view.test.mjs
+│   │   │   └── window-splitter.test.mjs
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   └── tsconfig.json
+│   └── vue/
 │       ├── scripts/
-│       │   ├── build.mjs
-│       │   └── check-reproducible-build.mjs
+│       │   └── build.mjs
 │       ├── src/
-│       │   ├── internal/
-│       │   │   ├── checked-control.ts
-│       │   │   ├── controller.ts
-│       │   │   ├── disabled-items.ts
-│       │   │   ├── facade.ts
-│       │   │   ├── menu-control.ts
-│       │   │   ├── popup-control.ts
-│       │   │   ├── semantic-controller.ts
-│       │   │   └── text-input.ts
-│       │   ├── accordion.ts
-│       │   ├── alert-dialog.ts
-│       │   ├── calendar.ts
-│       │   ├── carousel.ts
-│       │   ├── checkbox-group.ts
 │       │   ├── checkbox.ts
-│       │   ├── combobox.ts
-│       │   ├── date-field.ts
-│       │   ├── date-picker.ts
-│       │   ├── date-range-picker.ts
-│       │   ├── date-time-field.ts
-│       │   ├── date-time-picker.ts
-│       │   ├── date-time-range-picker.ts
-│       │   ├── dialog.ts
-│       │   ├── disclosure.ts
-│       │   ├── feed.ts
-│       │   ├── grid.ts
 │       │   ├── index.ts
-│       │   ├── keyboard.ts
-│       │   ├── layout.ts
-│       │   ├── listbox.ts
-│       │   ├── menu-button.ts
-│       │   ├── menu.ts
-│       │   ├── menubar.ts
-│       │   ├── multi-thumb-slider.ts
-│       │   ├── node.ts
-│       │   ├── number-field.ts
-│       │   ├── pagination.ts
-│       │   ├── pin-input.ts
-│       │   ├── quantity-field.ts
-│       │   ├── radio-group.ts
-│       │   ├── rating.ts
-│       │   ├── select.ts
-│       │   ├── slider.ts
-│       │   ├── spin-button.ts
-│       │   ├── stepper.ts
-│       │   ├── switch.ts
-│       │   ├── tabs.ts
-│       │   ├── tags-input.ts
-│       │   ├── text.ts
-│       │   ├── time-field.ts
-│       │   ├── toggle-button.ts
-│       │   ├── toolbar.ts
-│       │   ├── tooltip.ts
-│       │   ├── tree-grid.ts
-│       │   ├── tree-view.ts
-│       │   └── window-splitter.ts
+│       │   └── primitive.ts
 │       ├── tests/
-│       │   ├── calendar.test.mjs
-│       │   ├── carousel.test.mjs
-│       │   ├── checked-controls.test.mjs
-│       │   ├── combobox.test.mjs
-│       │   ├── date-time.test.mjs
-│       │   ├── expansion-controls.test.mjs
-│       │   ├── extended-components.test.mjs
-│       │   ├── factory-api.test.mjs
-│       │   ├── feed.test.mjs
-│       │   ├── grid.test.mjs
-│       │   ├── keyboard.test.mjs
-│       │   ├── linear-controls.test.mjs
-│       │   ├── listbox.test.mjs
-│       │   ├── menu.test.mjs
-│       │   ├── multi-thumb-slider.test.mjs
-│       │   ├── number-field.test.mjs
-│       │   ├── popup-controls.test.mjs
-│       │   ├── quantity-field.test.mjs
-│       │   ├── slider.test.mjs
-│       │   ├── spin-button.test.mjs
-│       │   ├── text.test.mjs
-│       │   ├── tree-grid.test.mjs
-│       │   ├── tree-view.test.mjs
-│       │   └── window-splitter.test.mjs
+│       │   └── checkbox.test.mjs
 │       ├── CHANGELOG.md
 │       ├── LICENSE
 │       ├── package.json
@@ -443,6 +458,8 @@ sectile/
 │   │   │   │   ├── text.ts
 │   │   │   │   ├── tree-grid.ts
 │   │   │   │   └── tree-view.ts
+│   │   │   ├── highlight.d.ts
+│   │   │   ├── highlight.js
 │   │   │   ├── main.ts
 │   │   │   ├── playground.ts
 │   │   │   ├── styles.css
@@ -464,6 +481,25 @@ sectile/
 │   │   │   └── playground.test.mjs
 │   │   ├── package.json
 │   │   └── README.md
+│   ├── vue/
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   ├── CheckboxCase.vue
+│   │   │   │   └── DemoCard.vue
+│   │   │   ├── App.vue
+│   │   │   ├── highlight.d.ts
+│   │   │   ├── highlight.js
+│   │   │   ├── main.ts
+│   │   │   ├── styles.css
+│   │   │   ├── types.ts
+│   │   │   └── vite-env.d.ts
+│   │   ├── tests/
+│   │   │   └── playground.test.mjs
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.json
+│   │   └── vite.config.ts
 │   └── README.md
 ├── scripts/
 │   ├── lib/
