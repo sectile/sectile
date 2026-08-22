@@ -66,7 +66,18 @@ export {
   type DisclosureOptions,
 } from './disclosure.js';
 export {
-  createCheckbox, tryCreateCheckbox, type CheckboxConnection, type CheckboxOptions,
+  createCheckbox, tryCreateCheckbox,
+  createCheckboxController,
+  getCheckboxAttributes,
+  type CheckboxAttributeOptions,
+  type CheckboxAttributes,
+  type CheckboxConnection,
+  type CheckboxController,
+  type CheckboxControllerOptions,
+  type CheckboxOptions,
+  type CheckboxPolicies,
+  type CheckboxState,
+  type CheckboxValue,
 } from './checkbox.js';
 export { createSwitch, tryCreateSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
 export { createToggleButton, tryCreateToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
