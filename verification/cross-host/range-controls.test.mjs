@@ -4,11 +4,14 @@ import { unwrap } from '@sectile/primitives/result';
 import { createMultiThumbSlider as createDOMMultiThumbSlider } from '@sectile/dom/multi-thumb-slider';
 import { createSpinButton as createDOMSpinButton } from '@sectile/dom/spin-button';
 import { createNumberField as createDOMNumberField } from '@sectile/dom/number-field';
+import { createQuantityField as createDOMQuantityField } from '@sectile/dom/quantity-field';
 import { createWindowSplitter as createDOMWindowSplitter } from '@sectile/dom/window-splitter';
 import { createMultiThumbSlider as createTerminalMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider';
 import { createSpinButton as createTerminalSpinButton } from '@sectile/terminal/spin-button';
 import { createNumberField as createTerminalNumberField } from '@sectile/terminal/number-field';
+import { createQuantityField as createTerminalQuantityField } from '@sectile/terminal/quantity-field';
 import { createCalculatorExpression } from '@sectile/primitives/number-field';
+import { createMetricUnitSystem, createStandardUnitRegistry } from '@sectile/primitives/units';
 import { createWindowSplitter as createTerminalWindowSplitter } from '@sectile/terminal/window-splitter';
 
 test('DOM and terminal multi-thumb sliders preserve constrained and crossing traces', () => {
@@ -50,6 +53,30 @@ test('DOM and terminal number fields preserve exact expression traces', () => {
     'cancel',
   ]);
   assert.equal(DOM.getValue(), '512');
+  assert.equal(DOM.getText(), terminal.getText());
+});
+
+test('DOM and terminal quantity fields preserve canonical values across display units', () => {
+  const registry = unwrap(createStandardUnitRegistry());
+  const unitSystem = unwrap(createMetricUnitSystem(registry));
+  const options = {
+    policies: { registry, unitSystem, canonicalUnit: 'metre', evaluator: unwrap(createCalculatorExpression()) },
+    defaultQuantity: { value: '1', unit: 'metre' },
+    defaultDisplayUnit: 'centimetre',
+  };
+  const DOM = unwrap(createDOMQuantityField({ ...options, input: new FakeInput() }));
+  const terminal = unwrap(createTerminalQuantityField(options));
+  assertSemanticTrace(DOM, terminal, [
+    replaceText(3, '250.5'),
+    'commit',
+    { type: 'set-display-unit', unit: 'inch' },
+  ]);
+  assertSemanticTrace(DOM, terminal, [
+    replaceText(DOM.getText().length, '100-20% cm'),
+    'commit',
+    { type: 'set-display-unit', unit: 'metre' },
+  ]);
+  assert.deepEqual(DOM.getQuantity(), { value: '0.8', unit: 'metre' });
   assert.equal(DOM.getText(), terminal.getText());
 });
 

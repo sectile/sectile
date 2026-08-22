@@ -60,6 +60,7 @@
     "./window-splitter": { "types": "./dist/window-splitter.d.ts", "import": "./dist/window-splitter.js", "default": "./dist/window-splitter.js" },
     "./spin-button": { "types": "./dist/spin-button.d.ts", "import": "./dist/spin-button.js", "default": "./dist/spin-button.js" },
     "./number-field": { "types": "./dist/number-field.d.ts", "import": "./dist/number-field.js", "default": "./dist/number-field.js" },
+    "./quantity-field": { "types": "./dist/quantity-field.d.ts", "import": "./dist/quantity-field.js", "default": "./dist/quantity-field.js" },
     "./dialog": { "types": "./dist/dialog.d.ts", "import": "./dist/dialog.js", "default": "./dist/dialog.js" },
     "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
     "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },

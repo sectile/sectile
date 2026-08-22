@@ -67,6 +67,7 @@ export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptio
 export { createWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
 export { createSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
 export { createNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
+export { createQuantityField, type QuantityFieldConnection, type QuantityFieldOptions, type QuantityFieldValueChangeDetails } from './quantity-field.js';
 export { createDialog, type DialogConnection, type DialogOptions } from './dialog.js';
 export { createAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
 export { createTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';

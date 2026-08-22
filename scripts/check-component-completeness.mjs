@@ -8,7 +8,7 @@ const packagePaths = [
 ];
 const supportSubpaths = new Set([
   'package.json', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
-  'keyboard', 'layout', 'node',
+  'keyboard', 'layout', 'node', 'units',
 ]);
 const migrationBaselineIDs = new Set([
   'accordion', 'alert-dialog', 'calendar', 'carousel', 'checkbox', 'combobox',
