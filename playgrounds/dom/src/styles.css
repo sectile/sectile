@@ -280,7 +280,8 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .stepper-demo,
 .rating-demo,
 .pin-input-demo,
-.tags-input-demo { width: 100%; max-width: 38rem; margin: 0 auto; }
+.tags-input-demo,
+.editable-demo { width: 100%; max-width: 38rem; margin: 0 auto; }
 
 .checkbox-group-demo { display: grid; gap: 0.9rem; }
 .choice-stack { display: grid; gap: 0.45rem; outline: none; }
@@ -366,7 +367,15 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .rating-star svg { fill: currentColor; stroke-width: 1.5; }
 
 .pin-input-demo,
-.tags-input-demo { display: grid; gap: 0.65rem; }
+.tags-input-demo,
+.editable-demo { display: grid; gap: 0.65rem; }
+
+.editable-preview,
+.editable-input { width: 100%; min-height: 3.25rem; box-sizing: border-box; border: 1px solid #314058; border-radius: 0.8rem; background: #0d1625; color: #e8eefb; padding: 0.85rem 1rem; font: inherit; }
+.editable-preview { display: flex; align-items: center; cursor: text; }
+.editable-preview[hidden], .editable-input[hidden] { display: none; }
+.editable-actions { display: flex; gap: 0.5rem; }
+.editable-actions button { min-height: 2.35rem; padding: 0.45rem 0.8rem; }
 .pin-cells { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .pin-cell { width: 3.15rem; height: 3.65rem; border: 1px solid #3b4860; border-radius: 0.75rem; color: #fff; background: #0c1320; font-size: 1.25rem; font-weight: 750; text-align: center; caret-color: #5eead4; outline: none; }
 .pin-cell:focus { border-color: #7184ff; box-shadow: 0 0 0 3px rgba(113, 132, 255, 0.15); }

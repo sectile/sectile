@@ -9,6 +9,7 @@ import PopoverCase from './components/PopoverCase.vue';
 import DisclosureCase from './components/DisclosureCase.vue';
 import AccordionCase from './components/AccordionCase.vue';
 import TextCase from './components/TextCase.vue';
+import EditableCase from './components/EditableCase.vue';
 import ListboxCase from './components/ListboxCase.vue';
 import RadioGroupCase from './components/RadioGroupCase.vue';
 import TabsCase from './components/TabsCase.vue';
@@ -23,7 +24,7 @@ const componentIDs = [
   'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
   'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'tooltip', 'carousel', 'feed', 'calendar',
-  'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'tags-input', 'pin-input', 'spin-button',
+  'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
   'number-field', 'quantity-field', 'date-field', 'time-field', 'date-time-field', 'date-picker',
   'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'grid', 'tree-view', 'tree-grid',
 ] as const;
@@ -79,6 +80,7 @@ const componentLabel = computed(() => ({
   disclosure: 'Disclosure',
   accordion: 'Accordion',
   text: 'Text',
+  editable: 'Editable',
   'spin-button': 'Spin Button',
   'number-field': 'Number Field',
   'date-field': 'Date Field',
@@ -184,13 +186,14 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a href="#tabs" :aria-current="activeComponent === 'tabs' ? 'page' : undefined" @click.prevent="selectComponent('tabs')">Tabs</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['text', 'spin-button', 'number-field', 'date-field', 'time-field', 'date-time-field'].includes(activeComponent)">
+        <section class="demo-nav-group" :data-active="['text', 'editable', 'spin-button', 'number-field', 'date-field', 'time-field', 'date-time-field'].includes(activeComponent)">
           <h2 class="demo-nav-heading">
             <span>Editing</span>
-            <span class="demo-nav-count" aria-label="6 components">6</span>
+            <span class="demo-nav-count" aria-label="7 components">7</span>
           </h2>
           <div class="demo-nav-links">
             <a href="#text" :aria-current="activeComponent === 'text' ? 'page' : undefined" @click.prevent="selectComponent('text')">Text</a>
+            <a href="#editable" :aria-current="activeComponent === 'editable' ? 'page' : undefined" @click.prevent="selectComponent('editable')">Editable</a>
             <a href="#spin-button" :aria-current="activeComponent === 'spin-button' ? 'page' : undefined" @click.prevent="selectComponent('spin-button')">Spin Button</a>
             <a href="#number-field" :aria-current="activeComponent === 'number-field' ? 'page' : undefined" @click.prevent="selectComponent('number-field')">Number Field</a>
             <a href="#date-field" :aria-current="activeComponent === 'date-field' ? 'page' : undefined" @click.prevent="selectComponent('date-field')">Date Field</a>
@@ -307,6 +310,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
           initial-value="Approved release note"
           :readonly="true"
         />
+      </div>
+
+      <div v-else-if="activeComponent === 'editable'" class="workspace" data-demo="editable">
+        <EditableCase :key="`editable-basic-${resetEpoch}`" title="Release title" description="Click the preview to edit inline, then commit or cancel the draft." initial-value="Sectile 0.1" />
+        <EditableCase :key="`editable-validated-${resetEpoch}`" title="Validated slug" description="Normalization and validation stay policy-driven in core." initial-value="sectile-core" :validated="true" />
+        <EditableCase :key="`editable-controlled-${resetEpoch}`" title="Controlled label" description="v-model owns the committed value while the editable owns its temporary draft." initial-value="Production" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'listbox'" class="workspace" data-demo="listbox">

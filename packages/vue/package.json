@@ -91,6 +91,11 @@
       "import": "./dist/text.js",
       "default": "./dist/text.js"
     },
+    "./editable": {
+      "types": "./dist/editable.d.ts",
+      "import": "./dist/editable.js",
+      "default": "./dist/editable.js"
+    },
     "./time-field": {
       "types": "./dist/time-field.d.ts",
       "import": "./dist/time-field.js",

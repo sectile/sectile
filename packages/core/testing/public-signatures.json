@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "ce07046097f4b8298d7941491fe87f28750081966a53f30ddce639424a1e5b0f",
+  "fingerprint": "911264f88acd5eb959bbbdb1eb2616abc5cb43a9614ed2b0890522ebf36942ee",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -61,6 +61,10 @@
     {
       "path": "dist/disclosure.d.ts",
       "sha256": "d1591f8e0371ee53dc78d196b57dc8a8d6dc7e4090a218d0501ede9c2b806f71"
+    },
+    {
+      "path": "dist/editable.d.ts",
+      "sha256": "7155941a3579a8fabfe94350c93120686dcec79df3e64957ea5e2f88ecd1b08c"
     },
     {
       "path": "dist/feed.d.ts",

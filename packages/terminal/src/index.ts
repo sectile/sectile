@@ -204,6 +204,7 @@ export {
   type TextTransitionDetails,
   type TextValueChangeDetails,
 } from './text.js';
+export { createEditable, tryCreateEditable, type EditableConnection, type EditableOptions } from './editable.js';
 export type { TerminalKeyboardInput } from './keyboard.js';
 export { createDateField, tryCreateDateField, type DateFieldConnection, type DateFieldControlledValues, type DateFieldOptions } from './date-field.js';
 export { createDateTimeField, tryCreateDateTimeField, type DateTimeFieldConnection, type DateTimeFieldControlledValues, type DateTimeFieldOptions } from './date-time-field.js';

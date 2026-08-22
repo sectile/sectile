@@ -8,6 +8,7 @@ import { createStepper } from '../dist/stepper.js';
 import { createRating } from '../dist/rating.js';
 import { createPinInput } from '../dist/pin-input.js';
 import { createTagsInput } from '../dist/tags-input.js';
+import { createEditable } from '../dist/editable.js';
 
 test('DOM selection facades project checkbox, select, pagination, and step semantics', () => {
   const groupRoot = new FakeElement();
@@ -166,6 +167,28 @@ test('DOM extended facades reject mutations while read-only', () => {
   const pin = createPinInput({ root: new FakeElement(), inputs: [new FakeElement(), new FakeElement()], defaultValue: '1', readOnly: true });
   assert.equal(pin.handleEvent({ type: 'input', value: '2' }), false);
   assert.deepEqual(pin.getSnapshot().state.values, ['1', '']);
+});
+
+test('DOM editable owns native edit, commit, cancel, and focus handoff', () => {
+  const root = new FakeElement();
+  const preview = new FakeElement();
+  const input = new FakeElement();
+  const editable = createEditable({ root, preview, input, defaultValue: 'Alpha' });
+  preview.emit('click', {});
+  assert.equal(editable.getSnapshot().state.editing, true);
+  assert.equal(input.focused, true);
+  input.value = 'Beta';
+  input.emit('input', {});
+  input.emit('keydown', { key: 'Enter', preventDefault() {} });
+  assert.deepEqual(editable.getSnapshot().state, { value: 'Beta', draft: 'Beta', editing: false });
+  assert.equal(preview.focused, true);
+
+  preview.emit('click', {});
+  input.value = 'Discarded';
+  input.emit('input', {});
+  input.emit('keydown', { key: 'Escape', preventDefault() {} });
+  assert.equal(editable.getSnapshot().state.value, 'Beta');
+  editable.disconnect();
 });
 
 test('DOM tags input leaves live native IME text under browser ownership', () => {

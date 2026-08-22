@@ -15,6 +15,7 @@ import { alertDialogDemo, dialogDemo, popoverDemo, tooltipDemo } from './popup-c
 import { menuButtonDemo, menuDemo, menubarDemo, navigationMenuDemo } from './menu-controls.js';
 import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo, toggleGroupDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
+import { editableDemo } from './editable.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
 import { dateFieldDemo, datePickerDemo, dateRangePickerDemo, dateTimeFieldDemo, dateTimePickerDemo, dateTimeRangePickerDemo, timeFieldDemo } from './date-time.js';
@@ -66,6 +67,7 @@ const rawDemos: readonly DemoDefinition[] = [
   ratingDemo,
   pinInputDemo,
   tagsInputDemo,
+  editableDemo,
 ];
 
 interface DemoGroupDefinition {
@@ -85,7 +87,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
     id: 'input',
     label: 'Input',
     demoIDs: [
-      'combobox', 'date-field', 'date-time-field', 'number-field', 'pin-input', 'quantity-field',
+      'combobox', 'date-field', 'date-time-field', 'editable', 'number-field', 'pin-input', 'quantity-field',
       'spin-button', 'tags-input', 'text', 'time-field',
     ],
   },
@@ -125,6 +127,7 @@ const readOnlyDemos = new Set([
   'tree-grid', 'grid', 'radio-group', 'checkbox',
   'checkbox-group', 'select', 'pagination', 'rating', 'pin-input', 'tags-input',
   'toggle-group',
+  'editable',
 ]);
 
 const demosByID = new Map(rawDemos.map((demo) => [demo.id, demo]));

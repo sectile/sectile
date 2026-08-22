@@ -111,6 +111,18 @@ export {
   type TooltipRootSlotProps,
 } from './tooltip.js';
 export { TextField, type TextFieldProps } from './text.js';
+export {
+  EditableArea,
+  EditableCancelTrigger,
+  EditableEditTrigger,
+  EditableInput,
+  EditablePreview,
+  EditableRoot,
+  EditableSubmitTrigger,
+  type EditablePartProps,
+  type EditableRootProps,
+  type EditableRootSlotProps,
+} from './editable.js';
 export { TimeField, type TimeFieldProps, type TimeValue } from './time-field.js';
 export {
   ListboxItem,

@@ -8,6 +8,7 @@ import { createStepper } from '../dist/stepper.js';
 import { createRating } from '../dist/rating.js';
 import { createPinInput } from '../dist/pin-input.js';
 import { createTagsInput } from '../dist/tags-input.js';
+import { createEditable } from '../dist/editable.js';
 
 test('terminal extended selection facades own conventional keyboard input', async () => {
   const group = createCheckboxGroup({ items: ['a', 'b'], defaultValue: ['a'], defaultHighlightedValue: 'a' });
@@ -105,4 +106,16 @@ test('terminal extended facades keep navigation but reject read-only mutation', 
   const tags = createTagsInput({ defaultValue: ['dom'], readOnly: true });
   assert.equal(tags.handleKeyboardInput({ text: 'x' }), false);
   assert.deepEqual(tags.getSnapshot().state.tags, ['dom']);
+});
+
+test('terminal editable enters, edits, commits, and cancels with conventional keys', () => {
+  const editable = createEditable({ defaultValue: 'Alpha' });
+  editable.handleKeyboardInput({ key: 'enter' });
+  for (const text of ['B', 'e', 't', 'a']) editable.handleKeyboardInput({ text });
+  editable.handleKeyboardInput({ key: 'enter' });
+  assert.equal(editable.getSnapshot().state.value, 'AlphaBeta');
+  editable.handleKeyboardInput({ key: 'enter' });
+  editable.handleKeyboardInput({ key: 'backspace' });
+  editable.handleKeyboardInput({ key: 'escape' });
+  assert.equal(editable.getSnapshot().state.value, 'AlphaBeta');
 });

@@ -559,6 +559,22 @@ const text = createText({
 
 window.addEventListener('pagehide', () => text.disconnect(), { once: true })`),
 
+  editable: example('editable', 'createEditable', `const root = required<HTMLElement>('[data-editable]')
+const preview = required<HTMLElement>('[data-editable-preview]')
+const input = required<HTMLInputElement>('[data-editable-input]')
+const editable = createEditable({
+  root,
+  preview,
+  input,
+  editTrigger: required<HTMLButtonElement>('[data-editable-edit]'),
+  submitTrigger: required<HTMLButtonElement>('[data-editable-submit]'),
+  cancelTrigger: required<HTMLButtonElement>('[data-editable-cancel]'),
+  defaultValue: 'Sectile 0.1',
+  onValueChange: (value) => { preview.textContent = value },
+})
+
+window.addEventListener('pagehide', () => editable.disconnect(), { once: true })`),
+
   'pin-input': example('pin-input', 'createPinInput', `const root = required<HTMLElement>('[data-pin-input]')
 const inputs = [...root.querySelectorAll<HTMLInputElement>('input')]
 const pinInput = createPinInput({

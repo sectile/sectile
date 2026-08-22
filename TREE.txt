@@ -142,6 +142,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── index.ts
 │   │   │   ├── interaction.ts
@@ -210,6 +211,7 @@ sectile/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
 │   │   │   │   ├── date-time-field.test.mjs
+│   │   │   │   ├── editable.test.mjs
 │   │   │   │   ├── number-field.test.mjs
 │   │   │   │   ├── quantity-field.test.mjs
 │   │   │   │   └── text.reference-law.test.mjs
@@ -271,6 +273,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── grid.ts
 │   │   │   ├── index.ts
@@ -362,6 +365,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── grid.ts
 │   │   │   ├── index.ts
@@ -452,6 +456,7 @@ sectile/
 │       │   ├── date-time-range-picker.ts
 │       │   ├── dialog.ts
 │       │   ├── disclosure.ts
+│       │   ├── editable.ts
 │       │   ├── feed.ts
 │       │   ├── grid.ts
 │       │   ├── index.ts
@@ -493,6 +498,7 @@ sectile/
 │       │   ├── date-pickers.test.mjs
 │       │   ├── derived-selection.test.mjs
 │       │   ├── disclosure.test.mjs
+│       │   ├── editable.test.mjs
 │       │   ├── extended-controls.test.mjs
 │       │   ├── linear-selection.test.mjs
 │       │   ├── listbox.test.mjs
@@ -519,6 +525,7 @@ sectile/
 │   │   │   │   ├── collection-controls.ts
 │   │   │   │   ├── combobox.ts
 │   │   │   │   ├── date-time.ts
+│   │   │   │   ├── editable.ts
 │   │   │   │   ├── expansion-controls.ts
 │   │   │   │   ├── extended-selection.ts
 │   │   │   │   ├── index.ts
@@ -567,6 +574,7 @@ sectile/
 │   │   │   │   ├── CheckedControlCase.vue
 │   │   │   │   ├── DemoCard.vue
 │   │   │   │   ├── DisclosureCase.vue
+│   │   │   │   ├── EditableCase.vue
 │   │   │   │   ├── ListboxCase.vue
 │   │   │   │   ├── NativeFieldCase.vue
 │   │   │   │   ├── PaginationCase.vue
