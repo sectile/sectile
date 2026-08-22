@@ -5,6 +5,7 @@ import type { CheckboxValue } from '@sectile/vue/checkbox';
 import CheckboxCase from './components/CheckboxCase.vue';
 import CheckedControlCase from './components/CheckedControlCase.vue';
 import ToggleGroupCase from './components/ToggleGroupCase.vue';
+import PopoverCase from './components/PopoverCase.vue';
 import DisclosureCase from './components/DisclosureCase.vue';
 import AccordionCase from './components/AccordionCase.vue';
 import TextCase from './components/TextCase.vue';
@@ -21,7 +22,7 @@ import { catalogScenarios } from './catalog-scenarios.js';
 const componentIDs = [
   'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button',
-  'disclosure', 'accordion', 'dialog', 'alert-dialog', 'tooltip', 'carousel', 'feed', 'calendar',
+  'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'tooltip', 'carousel', 'feed', 'calendar',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'tags-input', 'pin-input', 'spin-button',
   'number-field', 'quantity-field', 'date-field', 'time-field', 'date-time-field', 'date-picker',
   'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'grid', 'tree-view', 'tree-grid',
@@ -86,6 +87,7 @@ const componentLabel = computed(() => ({
   'checkbox-group': 'Checkbox Group', rating: 'Rating', select: 'Select', combobox: 'Combobox',
   stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button',
   dialog: 'Dialog', 'alert-dialog': 'Alert Dialog', tooltip: 'Tooltip', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar',
+  popover: 'Popover',
   'multi-thumb-slider': 'Multi Thumb Slider', 'window-splitter': 'Window Splitter', 'tags-input': 'Tags Input', 'pin-input': 'PIN Input',
   'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker',
   'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker', grid: 'Grid', 'tree-view': 'Tree View', 'tree-grid': 'Tree Grid',
@@ -214,11 +216,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a v-for="id in ['rating', 'multi-thumb-slider', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ rating: 'Rating', 'multi-thumb-slider': 'Multi Thumb Slider', 'window-splitter': 'Window Splitter', 'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker', 'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker' } as const)[id] }}</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['dialog', 'alert-dialog', 'tooltip'].includes(activeComponent)">
-          <h2 class="demo-nav-heading"><span>Overlays</span><span class="demo-nav-count" aria-label="3 components">3</span></h2>
+        <section class="demo-nav-group" :data-active="['dialog', 'alert-dialog', 'popover', 'tooltip'].includes(activeComponent)">
+          <h2 class="demo-nav-heading"><span>Overlays</span><span class="demo-nav-count" aria-label="4 components">4</span></h2>
           <div class="demo-nav-links">
             <a href="#dialog" :aria-current="activeComponent === 'dialog' ? 'page' : undefined" @click.prevent="selectComponent('dialog')">Dialog</a>
             <a href="#alert-dialog" :aria-current="activeComponent === 'alert-dialog' ? 'page' : undefined" @click.prevent="selectComponent('alert-dialog')">Alert Dialog</a>
+            <a href="#popover" :aria-current="activeComponent === 'popover' ? 'page' : undefined" @click.prevent="selectComponent('popover')">Popover</a>
             <a href="#tooltip" :aria-current="activeComponent === 'tooltip' ? 'page' : undefined" @click.prevent="selectComponent('tooltip')">Tooltip</a>
           </div>
         </section>
@@ -337,6 +340,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
         <ToggleGroupCase :key="`toggle-single-${resetEpoch}`" title="Text alignment" description="One pressed action at a time; press the active item again to clear it." />
         <ToggleGroupCase :key="`toggle-multiple-${resetEpoch}`" title="Text formatting" description="Independent actions can remain pressed together." :multiple="true" />
         <ToggleGroupCase :key="`toggle-controlled-${resetEpoch}`" title="Controlled formatting" description="The parent owns the pressed value array." :multiple="true" :controlled="true" />
+      </div>
+
+      <div v-else-if="activeComponent === 'popover'" class="workspace" data-demo="popover">
+        <PopoverCase :key="`popover-bottom-${resetEpoch}`" title="Profile details" description="Anchored content opens below the trigger and closes outside." />
+        <PopoverCase :key="`popover-right-${resetEpoch}`" title="Side placement" description="Placement flips when the preferred side lacks room." side="right" />
+        <PopoverCase :key="`popover-controlled-${resetEpoch}`" title="Controlled popover" description="The parent owns open state." side="top" :controlled="true" />
       </div>
 
       <div v-else-if="activeComponent === 'tabs'" class="workspace" data-demo="tabs">

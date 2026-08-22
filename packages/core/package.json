@@ -107,6 +107,7 @@
     "./units": { "types": "./dist/units.d.ts", "import": "./dist/units.js", "default": "./dist/units.js" },
     "./quantity-field": { "types": "./dist/quantity-field.d.ts", "import": "./dist/quantity-field.js", "default": "./dist/quantity-field.js" },
     "./dialog": { "types": "./dist/dialog.d.ts", "import": "./dist/dialog.js", "default": "./dist/dialog.js" },
+    "./popover": { "types": "./dist/popover.d.ts", "import": "./dist/popover.js", "default": "./dist/popover.js" },
     "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
     "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },
     "./multi-thumb-slider": { "types": "./dist/multi-thumb-slider.d.ts", "import": "./dist/multi-thumb-slider.js", "default": "./dist/multi-thumb-slider.js" },

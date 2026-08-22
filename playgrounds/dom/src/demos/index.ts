@@ -11,7 +11,7 @@ import { checkboxDemo, switchDemo, toggleButtonDemo } from './checked-controls.j
 import { radioGroupDemo, tabsDemo, toolbarDemo } from './linear-controls.js';
 import { accordionDemo, disclosureDemo } from './expansion-controls.js';
 import { spinButtonDemo, windowSplitterDemo } from './range-controls.js';
-import { alertDialogDemo, dialogDemo, tooltipDemo } from './popup-controls.js';
+import { alertDialogDemo, dialogDemo, popoverDemo, tooltipDemo } from './popup-controls.js';
 import { menuButtonDemo, menuDemo, menubarDemo } from './menu-controls.js';
 import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo, toggleGroupDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
@@ -35,6 +35,7 @@ const rawDemos: readonly DemoDefinition[] = [
   dateTimePickerDemo,
   dateTimeRangePickerDemo,
   dialogDemo,
+  popoverDemo,
   alertDialogDemo,
   tooltipDemo,
   menuDemo,
@@ -114,7 +115,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
   {
     id: 'disclosure-overlay',
     label: 'Disclosure & overlays',
-    demoIDs: ['accordion', 'alert-dialog', 'dialog', 'disclosure', 'tooltip'],
+    demoIDs: ['accordion', 'alert-dialog', 'dialog', 'disclosure', 'popover', 'tooltip'],
   },
 ];
 

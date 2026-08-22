@@ -34,6 +34,7 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
+  readonly closeOnInteractOutside?: boolean;
   readonly onOpenChange?: ((open: boolean) => void) | undefined;
   readonly command?: (command: Command) => void;
   readonly onUpdate?: (() => void) | undefined;
@@ -62,6 +63,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   readonly #focusOut: () => void;
   readonly #pointerEnter: () => void;
   readonly #pointerLeave: () => void;
+  readonly #pointerDown: (event: PointerEvent) => void;
   #focused = false;
   #hovered = false;
 
@@ -81,6 +83,12 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     this.#focusOut = (): void => { this.#focused = false; if (!this.#hovered) this.handleEvent(options.close); };
     this.#pointerEnter = (): void => { this.#hovered = true; this.handleEvent(options.open); };
     this.#pointerLeave = (): void => { this.#hovered = false; if (!this.#focused) this.handleEvent(options.close); };
+    this.#pointerDown = (event): void => {
+      if (!this.#isOpen() || options.closeOnInteractOutside !== true) return;
+      const target = event.target;
+      if (target instanceof Node && (options.root.contains(target) || options.trigger?.contains(target) === true)) return;
+      this.handleEvent(options.close);
+    };
     options.root.setAttribute('role', options.role);
     if (options.modal !== undefined) options.root.setAttribute('aria-modal', String(options.modal));
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
@@ -101,6 +109,9 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
       }
     } else {
       options.trigger?.addEventListener('click', this.#click);
+    }
+    if (options.closeOnInteractOutside === true && typeof document !== 'undefined') {
+      document.addEventListener('pointerdown', this.#pointerDown, true);
     }
     this.#refresh(false);
   }
@@ -130,6 +141,9 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     this.#options.trigger?.removeEventListener('blur', this.#focusOut);
     this.#options.trigger?.removeEventListener('mouseenter', this.#pointerEnter);
     this.#options.trigger?.removeEventListener('mouseleave', this.#pointerLeave);
+    if (this.#options.closeOnInteractOutside === true && typeof document !== 'undefined') {
+      document.removeEventListener('pointerdown', this.#pointerDown, true);
+    }
   }
   #isOpen(): boolean { return this.#options.read(this.#runtime.getSnapshot().state); }
   #refresh(previous: boolean | undefined): void {

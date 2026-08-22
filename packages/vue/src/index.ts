@@ -58,6 +58,21 @@ export {
   type DialogRootProps,
   type DialogRootSlotProps,
 } from './dialog.js';
+export {
+  PopoverAnchor,
+  PopoverArrow,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverPortal,
+  PopoverRoot,
+  PopoverTitle,
+  PopoverTrigger,
+  type PopoverPartProps,
+  type PopoverPortalProps,
+  type PopoverRootProps,
+  type PopoverRootSlotProps,
+} from './popover.js';
 export { DateField, type DateFieldProps, type DateValue } from './date-field.js';
 export {
   DateTimeField,

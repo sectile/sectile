@@ -153,6 +153,7 @@ sectile/
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
+│   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
@@ -280,6 +281,7 @@ sectile/
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
+│   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
@@ -372,6 +374,7 @@ sectile/
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
+│   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
@@ -457,6 +460,7 @@ sectile/
 │       │   ├── number-field.ts
 │       │   ├── pagination.ts
 │       │   ├── pin-input.ts
+│       │   ├── popover.ts
 │       │   ├── primitive.ts
 │       │   ├── quantity-field.ts
 │       │   ├── radio-group.ts
@@ -562,6 +566,7 @@ sectile/
 │   │   │   │   ├── ListboxCase.vue
 │   │   │   │   ├── NativeFieldCase.vue
 │   │   │   │   ├── PaginationCase.vue
+│   │   │   │   ├── PopoverCase.vue
 │   │   │   │   ├── RadioGroupCase.vue
 │   │   │   │   ├── SliderCase.vue
 │   │   │   │   ├── SpinButtonCase.vue

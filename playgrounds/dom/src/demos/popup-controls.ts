@@ -1,5 +1,6 @@
 import { createAlertDialog, type AlertDialogConnection } from '@sectile/dom/alert-dialog';
 import { createDialog, type DialogConnection } from '@sectile/dom/dialog';
+import { createPopover, type PopoverConnection, type PopoverSide } from '@sectile/dom/popover';
 import { createTooltip, type TooltipConnection } from '@sectile/dom/tooltip';
 import { createElement, HelpCircle, Trash2, X } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
@@ -23,6 +24,17 @@ export const alertDialogDemo: DemoDefinition = {
     { id: 'destructive', title: 'Delete project', mount: (context) => mountAlertDialog(context, 'Delete project?', false) },
     { id: 'unsaved', title: 'Discard changes', mount: (context) => mountAlertDialog(context, 'Discard unsaved changes?', false) },
     { id: 'controlled', title: 'Controlled confirmation', mount: (context) => mountAlertDialog(context, 'Revoke production key?', true) },
+  ],
+};
+
+export const popoverDemo: DemoDefinition = {
+  id: 'popover', label: 'Popover', title: 'Popover',
+  description: 'Anchored non-modal content with outside dismissal, collision-aware placement, and controlled ownership.',
+  shortcuts: [{ keys: ['Click'], label: 'toggle' }, { keys: ['Esc'], label: 'close' }],
+  cases: [
+    { id: 'anchored', title: 'Profile details', mount: (context) => mountPopover(context, 'bottom', false) },
+    { id: 'collision', title: 'Right aligned tools', mount: (context) => mountPopover(context, 'right', false) },
+    { id: 'controlled', title: 'Controlled popover', mount: (context) => mountPopover(context, 'top', true) },
   ],
 };
 
@@ -80,6 +92,29 @@ function mountAlertDialog(context: DemoContext, title: string, controlled: boole
   function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, announcements, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render();
   return { focus: () => surface.trigger.focus(), disconnect: () => connection.disconnect() };
+}
+
+function mountPopover(context: DemoContext, side: PopoverSide, controlled: boolean): DemoSession {
+  const root = document.createElement('div'); root.className = 'popover-demo';
+  const trigger = document.createElement('button'); trigger.type = 'button'; trigger.className = 'secondary'; trigger.textContent = 'Edit profile';
+  const content = document.createElement('section'); content.className = 'popover-popup'; content.tabIndex = -1;
+  const arrow = document.createElement('span'); arrow.className = 'popover-arrow';
+  const title = document.createElement('h3'); title.id = `popover-title-${context.instanceID}`; title.textContent = 'Profile details';
+  const description = document.createElement('p'); description.id = `popover-description-${context.instanceID}`; description.className = 'demo-copy'; description.textContent = 'Change the public display name.';
+  const input = document.createElement('input'); input.value = 'Sectile'; input.setAttribute('aria-label', 'Display name');
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'secondary'; close.textContent = 'Done';
+  content.append(arrow, title, description, input, close); root.append(trigger, content); context.surface.append(root);
+  let external = false; let connection!: PopoverConnection;
+  connection = createPopover({
+    root: content, trigger, arrow, side, align: side === 'right' ? 'start' : 'center',
+    ...context.interaction, labelledBy: title.id, describedBy: description.id,
+    ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
+    onUpdate: render,
+  });
+  close.addEventListener('click', () => connection.handleEvent('close'));
+  function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, side: content.dataset['side'] ?? side, align: content.dataset['align'] ?? 'center', ownership: controlled ? 'controlled' : 'uncontrolled' }); }
+  render();
+  return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
 }
 
 function mountTooltip(context: DemoContext, copy: string, initial: boolean, controlled: boolean): DemoSession {

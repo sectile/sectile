@@ -46,6 +46,11 @@
       "import": "./dist/dialog.js",
       "default": "./dist/dialog.js"
     },
+    "./popover": {
+      "types": "./dist/popover.d.ts",
+      "import": "./dist/popover.js",
+      "default": "./dist/popover.js"
+    },
     "./date-field": {
       "types": "./dist/date-field.d.ts",
       "import": "./dist/date-field.js",

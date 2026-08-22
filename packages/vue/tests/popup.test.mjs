@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from '../dist/dialog.js';
 import { AlertDialogContent, AlertDialogRoot, AlertDialogTitle } from '../dist/alert-dialog.js';
+import { PopoverAnchor, PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from '../dist/popover.js';
 import { TooltipContent, TooltipRoot, TooltipTrigger } from '../dist/tooltip.js';
 
 test('Vue dialog links persistent compound parts with native dialog semantics', async () => {
@@ -55,4 +56,20 @@ test('Vue alert dialog and tooltip preserve their distinct native roles', async 
   assert.match(alert, /role="alertdialog"/);
   assert.match(tooltip, /role="tooltip"/);
   assert.match(tooltip, /aria-describedby="sectile-tooltip-\d+-content"/);
+});
+
+test('Vue popover exposes non-modal anchored compound parts', async () => {
+  const html = await renderToString(createSSRApp({
+    render: () => h(PopoverRoot, { defaultOpen: true, side: 'right', align: 'start' }, {
+      default: () => [
+        h(PopoverAnchor, null, { default: () => 'Anchor' }),
+        h(PopoverTrigger, null, { default: () => 'Open profile' }),
+        h(PopoverContent, null, { default: () => [h(PopoverArrow), 'Profile'] }),
+      ],
+    }),
+  }));
+  assert.match(html, /data-scope="popover"/);
+  assert.match(html, /aria-modal="false"/);
+  assert.match(html, /data-part="anchor"/);
+  assert.match(html, /data-part="arrow"/);
 });

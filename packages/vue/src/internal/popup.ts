@@ -31,6 +31,8 @@ export interface PopupConnection {
 export interface PopupFactoryOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
+  readonly anchor?: HTMLElement;
+  readonly arrow?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -41,6 +43,11 @@ export interface PopupFactoryOptions {
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
+  readonly closeOnInteractOutside?: boolean;
+  readonly side?: 'top' | 'right' | 'bottom' | 'left';
+  readonly align?: 'start' | 'center' | 'end';
+  readonly sideOffset?: number;
+  readonly collisionPadding?: number;
   readonly onOpenChange: (open: boolean) => void;
   readonly onUpdate: () => void;
 }
@@ -50,6 +57,7 @@ export interface PopupComponentConfig {
   readonly role: 'dialog' | 'alertdialog' | 'tooltip';
   readonly modal: boolean;
   readonly triggerMode: 'click' | 'focus-hover';
+  readonly closeOnInteractOutside?: boolean;
   create(options: PopupFactoryOptions): PopupConnection;
 }
 
@@ -66,6 +74,11 @@ export interface PopupRootProps {
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
+  readonly closeOnInteractOutside?: boolean;
+  readonly side?: 'top' | 'right' | 'bottom' | 'left';
+  readonly align?: 'start' | 'center' | 'end';
+  readonly sideOffset?: number;
+  readonly collisionPadding?: number;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
@@ -73,10 +86,13 @@ export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly
 interface PopupContext {
   readonly open: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
+  readonly modal: ComputedRef<boolean>;
   readonly contentID: string;
   readonly titleID: string;
   readonly descriptionID: string;
   readonly trigger: ShallowRef<HTMLElement | undefined>;
+  readonly anchor: ShallowRef<HTMLElement | undefined>;
+  readonly arrow: ShallowRef<HTMLElement | undefined>;
   readonly content: ShallowRef<HTMLElement | undefined>;
   connect(): void;
   disconnect(): void;
@@ -88,12 +104,14 @@ let popupID = 0;
 export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   Root: Component;
   Trigger: Component;
+  Anchor: Component;
   Portal: Component;
   Overlay: Component;
   Content: Component;
   Title: Component;
   Description: Component;
   Close: Component;
+  Arrow: Component;
 }> {
   const contextKey = Symbol(`Sectile${config.scope}Root`);
   const useRoot = (part: string): PopupContext => {
@@ -121,6 +139,11 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       autoFocus: { type: Boolean, default: true },
       restoreFocus: { type: Boolean, default: true },
       trapFocus: { type: Boolean, default: config.modal },
+      closeOnInteractOutside: { type: Boolean, default: config.closeOnInteractOutside ?? false },
+      side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
+      align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
+      sideOffset: { type: Number, default: 8 },
+      collisionPadding: { type: Number, default: 8 },
     },
     emits: { 'update:open': (_open: boolean): boolean => true },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
@@ -128,6 +151,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const controlled = props.open !== undefined;
       const localOpen = ref(controlled ? props.open as boolean : props.defaultOpen);
       const trigger = shallowRef<HTMLElement>();
+      const anchor = shallowRef<HTMLElement>();
+      const arrow = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
       const connection = shallowRef<PopupConnection>();
       const id = ++popupID;
@@ -136,6 +161,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const descriptionID = `sectile-${config.scope}-${id}-description`;
       const open = computed(() => localOpen.value);
       const disabled = computed(() => props.disabled);
+      const modal = computed(() => props.modal);
       const update = (): void => {
         if (connection.value === undefined) return;
         void connection.value.getSnapshot().revision;
@@ -150,6 +176,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         connection.value = config.create({
           root: content.value,
           ...(trigger.value === undefined ? {} : { trigger: trigger.value }),
+          ...(anchor.value === undefined ? {} : { anchor: anchor.value }),
+          ...(arrow.value === undefined ? {} : { arrow: arrow.value }),
           ...(controlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
           disabled: props.disabled,
           modal: props.modal,
@@ -158,6 +186,11 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           autoFocus: props.autoFocus,
           restoreFocus: props.restoreFocus,
           trapFocus: props.trapFocus,
+          closeOnInteractOutside: props.closeOnInteractOutside,
+          side: props.side,
+          align: props.align,
+          sideOffset: props.sideOffset,
+          collisionPadding: props.collisionPadding,
           onOpenChange: (next) => {
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
@@ -174,7 +207,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       });
       onBeforeUnmount(disconnect);
       provide<PopupContext>(contextKey, {
-        open, disabled, contentID, titleID, descriptionID, trigger, content, connect, disconnect,
+        open, disabled, modal, contentID, titleID, descriptionID, trigger, anchor, arrow, content, connect, disconnect,
         close: () => { connection.value?.handleEvent('close'); },
       });
       return (): VNodeChild => h(Fragment as Component, null, slots['default']?.({ open: open.value, disabled: props.disabled }) ?? []);
@@ -210,9 +243,35 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         as: props.as, asChild: props.asChild,
         elementRef: (element: unknown) => { root.content.value = element instanceof HTMLElement ? element : undefined; },
         id: root.contentID, role: config.role, hidden: !root.open.value,
-        'aria-modal': config.modal ? 'true' : undefined,
+        'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
         'aria-labelledby': root.titleID, 'aria-describedby': root.descriptionID,
         'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
+      }), slots);
+    },
+  });
+
+  const Anchor = defineComponent({
+    name: `Sectile${pascal(config.scope)}Anchor`, inheritAttrs: false, props: primitiveProps,
+    setup(props, { attrs, slots }) {
+      const root = useRoot('Anchor');
+      onMounted(root.connect);
+      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (element: unknown) => { root.anchor.value = element instanceof HTMLElement ? element : undefined; },
+        'data-scope': config.scope, 'data-part': 'anchor',
+      }), slots);
+    },
+  });
+
+  const Arrow = defineComponent({
+    name: `Sectile${pascal(config.scope)}Arrow`, inheritAttrs: false, props: primitiveProps,
+    setup(props, { attrs, slots }) {
+      const root = useRoot('Arrow');
+      onMounted(root.connect);
+      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (element: unknown) => { root.arrow.value = element instanceof HTMLElement ? element : undefined; },
+        'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'arrow',
       }), slots);
     },
   });
@@ -261,7 +320,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     });
   }
 
-  return Object.freeze({ Root, Trigger, Portal, Overlay, Content, Title, Description, Close });
+  return Object.freeze({ Root, Trigger, Anchor, Portal, Overlay, Content, Title, Description, Close, Arrow });
 }
 
 function pascal(value: string): string {

@@ -57,6 +57,18 @@ for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
 }
 window.addEventListener('pagehide', () => toggleGroup.disconnect(), { once: true })`),
 
+  popover: example('popover', 'createPopover', `const trigger = required<HTMLButtonElement>('[data-popover-trigger]')
+const content = required<HTMLElement>('[data-popover-content]')
+const popover = createPopover({
+  root: content,
+  trigger,
+  side: 'bottom',
+  align: 'center',
+  closeOnInteractOutside: true,
+})
+
+window.addEventListener('pagehide', () => popover.disconnect(), { once: true })`),
+
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({
   root,
