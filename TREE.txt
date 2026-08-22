@@ -1,14 +1,81 @@
 sectile/
 ├── .github/
 │   └── workflows/
+│       ├── docs.yml
 │       ├── quality.yml
 │       ├── release.yml
 │       └── testing.yml
 ├── docs/
+│   ├── .vitepress/
+│   │   ├── theme/
+│   │   │   ├── components/
+│   │   │   │   ├── CheckboxDemo.vue
+│   │   │   │   ├── ComponentCatalog.vue
+│   │   │   │   └── ExampleFrame.vue
+│   │   │   ├── index.ts
+│   │   │   └── styles.css
+│   │   └── config.ts
 │   ├── architecture/
 │   │   ├── composite-proof-plan.md
 │   │   ├── README.md
 │   │   └── theory-to-runtime.md
+│   ├── components/
+│   │   ├── accordion.md
+│   │   ├── alert-dialog.md
+│   │   ├── calendar.md
+│   │   ├── carousel.md
+│   │   ├── cascade-select.md
+│   │   ├── checkbox-group.md
+│   │   ├── checkbox.md
+│   │   ├── color-picker.md
+│   │   ├── combobox.md
+│   │   ├── date-field.md
+│   │   ├── date-picker.md
+│   │   ├── date-range-field.md
+│   │   ├── date-range-picker.md
+│   │   ├── date-time-field.md
+│   │   ├── date-time-picker.md
+│   │   ├── date-time-range-picker.md
+│   │   ├── dialog.md
+│   │   ├── disclosure.md
+│   │   ├── editable.md
+│   │   ├── feed.md
+│   │   ├── grid.md
+│   │   ├── index.md
+│   │   ├── listbox.md
+│   │   ├── menu-button.md
+│   │   ├── menu.md
+│   │   ├── menubar.md
+│   │   ├── multi-thumb-slider.md
+│   │   ├── navigation-menu.md
+│   │   ├── number-field.md
+│   │   ├── pagination.md
+│   │   ├── pin-input.md
+│   │   ├── popover.md
+│   │   ├── quantity-field.md
+│   │   ├── radio-group.md
+│   │   ├── rating.md
+│   │   ├── select.md
+│   │   ├── slider.md
+│   │   ├── spin-button.md
+│   │   ├── stepper.md
+│   │   ├── switch.md
+│   │   ├── tabs.md
+│   │   ├── tags-input.md
+│   │   ├── text.md
+│   │   ├── time-field.md
+│   │   ├── time-range-field.md
+│   │   ├── timer.md
+│   │   ├── toast.md
+│   │   ├── toggle-button.md
+│   │   ├── toggle-group.md
+│   │   ├── toolbar.md
+│   │   ├── tooltip.md
+│   │   ├── tree-grid.md
+│   │   ├── tree-view.md
+│   │   └── window-splitter.md
+│   ├── data/
+│   │   └── components.json
 │   ├── decisions/
 │   │   ├── public-migration.md
 │   │   └── README.md
@@ -17,9 +84,24 @@ sectile/
 │   │   ├── naming.md
 │   │   ├── package-boundary.md
 │   │   └── README.md
+│   ├── examples/
+│   │   └── checkbox/
+│   │       └── BasicCheckbox.vue
 │   ├── getting-started/
 │   │   ├── consumer-usage.md
 │   │   └── README.md
+│   ├── guide/
+│   │   ├── getting-started.md
+│   │   ├── host-model.md
+│   │   ├── introduction.md
+│   │   ├── state-ownership.md
+│   │   └── styling.md
+│   ├── packages/
+│   │   ├── core.md
+│   │   ├── dom.md
+│   │   ├── index.md
+│   │   ├── terminal.md
+│   │   └── vue.md
 │   ├── performance/
 │   │   ├── complexity.md
 │   │   └── README.md
@@ -29,16 +111,25 @@ sectile/
 │   │   ├── README.md
 │   │   ├── sequence.md
 │   │   └── tree.md
+│   ├── public/
+│   │   └── mark.svg
 │   ├── references/
 │   │   ├── README.md
 │   │   ├── sectile-theory.md
 │   │   └── verification.md
+│   ├── scripts/
+│   │   ├── check-content.mjs
+│   │   └── generate-component-pages.mjs
 │   ├── testing/
 │   │   ├── README.md
 │   │   └── verification-pipeline.md
+│   ├── env.d.ts
 │   ├── implementation-checklist.md
+│   ├── index.md
+│   ├── package.json
 │   ├── README.md
-│   └── roadmap.md
+│   ├── roadmap.md
+│   └── tsconfig.json
 ├── packages/
 │   ├── core/
 │   │   ├── benchmarks/
@@ -664,7 +755,6 @@ sectile/
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
 │   ├── check-component-completeness.mjs
-│   ├── check-docs.mjs
 │   ├── check-release.mjs
 │   ├── check-workspace-boundaries.mjs
 │   ├── publish-packages.mjs
@@ -696,6 +786,7 @@ sectile/
 ├── package.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
+├── PRODUCT.md
 ├── README.md
 ├── TREE.txt
 └── tsconfig.base.json

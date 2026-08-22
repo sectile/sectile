@@ -11,7 +11,7 @@ const packageDirectories = (
       .filter((entry) => entry.isDirectory())
       .map((entry) => resolve(workspaceRoot, entry.name));
   }))
-).flat();
+).flat().concat(resolve(root, 'docs'));
 const manifests = new Map();
 
 for (const directory of packageDirectories) {

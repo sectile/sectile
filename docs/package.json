@@ -1,0 +1,31 @@
+{
+  "name": "@sectile/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev --host 127.0.0.1",
+    "build": "vitepress build",
+    "preview": "vitepress preview --host 127.0.0.1",
+    "generate": "node scripts/generate-component-pages.mjs",
+    "generate:check": "node scripts/generate-component-pages.mjs --check",
+    "check": "node scripts/check-content.mjs",
+    "typecheck": "vue-tsc --noEmit",
+    "verify": "pnpm generate:check && pnpm check && pnpm typecheck && pnpm build"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.33.0",
+    "@sectile/core": "workspace:*",
+    "@sectile/dom": "workspace:*",
+    "@sectile/terminal": "workspace:*",
+    "@sectile/vue": "workspace:*",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "shiki": "^4.4.3",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vitepress": "^1.6.4",
+    "vue-tsc": "^3.0.6"
+  }
+}
