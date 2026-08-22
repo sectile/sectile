@@ -212,6 +212,13 @@ textarea.text-field { min-height: 8rem; }
 .catalog-demo { width: min(100%, 48rem); margin: 0 auto; }
 .catalog-description { max-width: 42rem; margin: 0 0 1.2rem; color: #91a0b7; line-height: 1.55; }
 .catalog-stack { display: grid; gap: 0.7rem; }
+.toast-example { display: grid; width: min(100%, 40rem); margin: 0 auto; gap: 1rem; }
+.toast-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.toast-viewport { display: grid; min-height: 12rem; margin: 0; padding: 0; align-content: end; gap: 0.65rem; list-style: none; }
+.toast-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border: 1px solid #344158; border-radius: 0.75rem; background: #101826; }
+.toast-item > div { display: grid; gap: 0.2rem; }
+.toast-item [data-part="description"] { color: #8e9db2; font-size: 0.75rem; }
+.toast-item[data-kind="success"] { border-color: #28786f; }.toast-item[data-kind="warning"] { border-color: #9a722e; }.toast-item[data-kind="error"] { border-color: #9b4450; }
 .editable-case { width: min(100%, 38rem); margin: 0 auto; display: grid; gap: 0.8rem; }
 .editable-root, .editable-area { display: grid; gap: 0.7rem; }
 .editable-preview, .editable-input { width: 100%; min-height: 3.25rem; box-sizing: border-box; border: 1px solid #314058; border-radius: 0.8rem; background: #0d1625; color: #e8eefb; padding: 0.85rem 1rem; font: inherit; }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "9cd8e5320e91638e701e90338fe92d7b468f54af07e461e566a4276e3e330bfb",
+  "fingerprint": "ed03289fb5098adc672e9f7d070bcc78f7611803dd28bc6ab903f6eb2ba2fd71",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -281,6 +281,10 @@
     {
       "path": "dist/time-range-field.d.ts",
       "sha256": "451519dff6ba468fd2a48705dd2c3d11adc558831aa4e186a6dd28331d869e7b"
+    },
+    {
+      "path": "dist/toast.d.ts",
+      "sha256": "6fac1f400e969fec791f323acd9cc5dade60a78ed9e9e5850e2c91f79d6c68b1"
     },
     {
       "path": "dist/toggle-button.d.ts",

@@ -285,6 +285,15 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 
 .checkbox-group-demo { display: grid; gap: 0.9rem; }
 .choice-stack { display: grid; gap: 0.45rem; outline: none; }
+.toast-demo { display: grid; width: min(100%, 40rem); margin: 0 auto; gap: 1rem; }
+.toast-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.toast-viewport { display: grid; min-height: 12rem; margin: 0; padding: 0; align-content: end; gap: 0.65rem; list-style: none; }
+.toast-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border: 1px solid #344158; border-radius: 0.75rem; background: #101826; }
+.toast-item > div { display: grid; gap: 0.2rem; }
+.toast-item span { color: #8e9db2; font-size: 0.75rem; }
+.toast-item[data-kind="success"] { border-color: #28786f; }
+.toast-item[data-kind="warning"] { border-color: #9a722e; }
+.toast-item[data-kind="error"] { border-color: #9b4450; }
 .choice-card,
 .select-option {
   display: flex;

@@ -69,6 +69,17 @@ const popover = createPopover({
 
 window.addEventListener('pagehide', () => popover.disconnect(), { once: true })`),
 
+  toast: example('toast', 'createToast', `const viewport = required<HTMLElement>('[data-toast-viewport]')
+const toast = createToast({
+  root: viewport,
+  defaultDurationMs: 5000,
+  maxVisible: 3,
+  onItemsChange: (items) => console.log('visible toasts', items),
+})
+
+toast.push({ id: 'saved', title: 'Release saved', kind: 'success' })
+window.addEventListener('pagehide', () => toast.disconnect(), { once: true })`),
+
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({
   root,

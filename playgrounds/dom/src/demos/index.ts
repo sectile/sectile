@@ -16,6 +16,7 @@ import { menuButtonDemo, menuDemo, menubarDemo, navigationMenuDemo } from './men
 import { checkboxGroupDemo, paginationDemo, ratingDemo, selectDemo, stepperDemo, toggleGroupDemo } from './extended-selection.js';
 import { pinInputDemo, tagsInputDemo } from './structured-inputs.js';
 import { editableDemo } from './editable.js';
+import { toastDemo } from './toast.js';
 import { numberFieldDemo } from './number-field.js';
 import { quantityFieldDemo } from './quantity-field.js';
 import { dateFieldDemo, datePickerDemo, dateRangeFieldDemo, dateRangePickerDemo, dateTimeFieldDemo, dateTimePickerDemo, dateTimeRangePickerDemo, timeFieldDemo, timeRangeFieldDemo } from './date-time.js';
@@ -41,6 +42,7 @@ const rawDemos: readonly DemoDefinition[] = [
   popoverDemo,
   alertDialogDemo,
   tooltipDemo,
+  toastDemo,
   menuDemo,
   menubarDemo,
   menuButtonDemo,
@@ -120,7 +122,7 @@ const groupDefinitions: readonly DemoGroupDefinition[] = [
   {
     id: 'disclosure-overlay',
     label: 'Disclosure & overlays',
-    demoIDs: ['accordion', 'alert-dialog', 'dialog', 'disclosure', 'popover', 'tooltip'],
+    demoIDs: ['accordion', 'alert-dialog', 'dialog', 'disclosure', 'popover', 'toast', 'tooltip'],
   },
 ];
 

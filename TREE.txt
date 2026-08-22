@@ -173,6 +173,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── time-range-field.ts
+│   │   │   ├── toast.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -206,6 +207,7 @@ sectile/
 │   │   │   │   ├── popup-controls.reference-law.test.mjs
 │   │   │   │   ├── slider.reference-law.test.mjs
 │   │   │   │   ├── spin-button.reference-law.test.mjs
+│   │   │   │   ├── toast.test.mjs
 │   │   │   │   ├── tree-grid.reference-law.test.mjs
 │   │   │   │   ├── tree-view.reference-law.test.mjs
 │   │   │   │   └── window-splitter.reference-law.test.mjs
@@ -305,6 +307,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── time-range-field.ts
+│   │   │   ├── toast.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -333,6 +336,7 @@ sectile/
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
+│   │   │   ├── toast.test.mjs
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
 │   │   │   └── window-splitter.test.mjs
@@ -402,6 +406,7 @@ sectile/
 │   │   │   ├── text.ts
 │   │   │   ├── time-field.ts
 │   │   │   ├── time-range-field.ts
+│   │   │   ├── toast.ts
 │   │   │   ├── toggle-button.ts
 │   │   │   ├── toggle-group.ts
 │   │   │   ├── toolbar.ts
@@ -431,6 +436,7 @@ sectile/
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
+│   │   │   ├── toast.test.mjs
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
 │   │   │   └── window-splitter.test.mjs
@@ -493,6 +499,7 @@ sectile/
 │       │   ├── text.ts
 │       │   ├── time-field.ts
 │       │   ├── time-range-field.ts
+│       │   ├── toast.ts
 │       │   ├── toggle-button.ts
 │       │   ├── toggle-group.ts
 │       │   ├── toolbar.ts
@@ -521,7 +528,8 @@ sectile/
 │       │   ├── spin-button.test.mjs
 │       │   ├── structural-controls.test.mjs
 │       │   ├── text.test.mjs
-│       │   └── time-range-field.test.mjs
+│       │   ├── time-range-field.test.mjs
+│       │   └── toast.test.mjs
 │       ├── CHANGELOG.md
 │       ├── LICENSE
 │       ├── package.json
@@ -551,6 +559,7 @@ sectile/
 │   │   │   │   ├── slider.ts
 │   │   │   │   ├── structured-inputs.ts
 │   │   │   │   ├── text.ts
+│   │   │   │   ├── toast.ts
 │   │   │   │   ├── tree-grid.ts
 │   │   │   │   └── tree-view.ts
 │   │   │   ├── demo-code.ts
@@ -598,6 +607,7 @@ sectile/
 │   │   │   │   ├── TabsCase.vue
 │   │   │   │   ├── TextCase.vue
 │   │   │   │   ├── TimeRangeFieldCase.vue
+│   │   │   │   ├── ToastCase.vue
 │   │   │   │   └── ToggleGroupCase.vue
 │   │   │   ├── App.vue
 │   │   │   ├── catalog-code.ts

@@ -438,6 +438,7 @@ export {
   type FeedRootProps,
   type FeedRootSlotProps,
 } from './feed.js';
+export { ToastProvider, ToastViewport, ToastRoot, ToastTitle, ToastDescription, ToastClose, type ToastProviderProps, type ToastProviderSlotProps, type ToastPartProps, type ToastRootProps, type ToastRootSlotProps } from './toast.js';
 export {
   GridCell,
   GridRoot,
