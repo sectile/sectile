@@ -294,6 +294,9 @@ kbd { padding: 0.16rem 0.38rem; border: 1px solid #3a465c; border-bottom-width: 
 .toast-item[data-kind="success"] { border-color: #28786f; }
 .toast-item[data-kind="warning"] { border-color: #9a722e; }
 .toast-item[data-kind="error"] { border-color: #9b4450; }
+.timer-demo { display: grid; justify-items: center; gap: 1.25rem; }
+.timer-area { display: flex; align-items: baseline; font: 700 clamp(3rem, 8vw, 6rem)/1 ui-monospace, monospace; letter-spacing: -0.08em; font-variant-numeric: tabular-nums; }
+.timer-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.55rem; }
 .choice-card,
 .select-option {
   display: flex;

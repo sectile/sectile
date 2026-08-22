@@ -53,6 +53,7 @@
     "./editable",
     "./date-range-field",
     "./time-range-field",
+    "./timer",
     "./toast",
     "./package.json"
   ],
@@ -106,6 +107,7 @@
     "./editable",
     "./date-range-field",
     "./time-range-field",
+    "./timer",
     "./toast"
   ],
   "runtimeTargets": {
@@ -158,6 +160,7 @@
     "./editable": "editable",
     "./date-range-field": "date-range-field",
     "./time-range-field": "time-range-field",
+    "./timer": "timer",
     "./toast": "toast"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "ed03289fb5098adc672e9f7d070bcc78f7611803dd28bc6ab903f6eb2ba2fd71",
+  "fingerprint": "c25b1bacbc1e010e875357ff13cfc4002d091261483565f3e6a959a3cfaca661",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -281,6 +281,10 @@
     {
       "path": "dist/time-range-field.d.ts",
       "sha256": "451519dff6ba468fd2a48705dd2c3d11adc558831aa4e186a6dd28331d869e7b"
+    },
+    {
+      "path": "dist/timer.d.ts",
+      "sha256": "c693f865f8c3e0c668078b740a232cf6e21228875411be66b3649751ccca94a1"
     },
     {
       "path": "dist/toast.d.ts",

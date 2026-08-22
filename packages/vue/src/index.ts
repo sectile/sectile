@@ -439,6 +439,7 @@ export {
   type FeedRootSlotProps,
 } from './feed.js';
 export { ToastProvider, ToastViewport, ToastRoot, ToastTitle, ToastDescription, ToastClose, type ToastProviderProps, type ToastProviderSlotProps, type ToastPartProps, type ToastRootProps, type ToastRootSlotProps } from './toast.js';
+export { TimerActionTrigger, TimerArea, TimerControl, TimerItem, TimerRoot, TimerSeparator, type TimerPartProps, type TimerRootProps, type TimerSlotProps } from './timer.js';
 export {
   GridCell,
   GridRoot,

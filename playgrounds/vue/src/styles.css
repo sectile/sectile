@@ -219,6 +219,9 @@ textarea.text-field { min-height: 8rem; }
 .toast-item > div { display: grid; gap: 0.2rem; }
 .toast-item [data-part="description"] { color: #8e9db2; font-size: 0.75rem; }
 .toast-item[data-kind="success"] { border-color: #28786f; }.toast-item[data-kind="warning"] { border-color: #9a722e; }.toast-item[data-kind="error"] { border-color: #9b4450; }
+.timer-demo { display: grid; width: min(100%, 40rem); margin: 0 auto; justify-items: center; gap: 1.25rem; }
+.timer-area { display: flex; align-items: baseline; font: 700 clamp(3rem, 8vw, 6rem)/1 ui-monospace, monospace; letter-spacing: -0.08em; font-variant-numeric: tabular-nums; }
+.timer-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.55rem; }
 .editable-case { width: min(100%, 38rem); margin: 0 auto; display: grid; gap: 0.8rem; }
 .editable-root, .editable-area { display: grid; gap: 0.7rem; }
 .editable-preview, .editable-input { width: 100%; min-height: 3.25rem; box-sizing: border-box; border: 1px solid #314058; border-radius: 0.8rem; background: #0d1625; color: #e8eefb; padding: 0.85rem 1rem; font: inherit; }

@@ -18,6 +18,7 @@ import NativeFieldCase from './components/NativeFieldCase.vue';
 import DateRangeFieldCase from './components/DateRangeFieldCase.vue';
 import TimeRangeFieldCase from './components/TimeRangeFieldCase.vue';
 import ToastCase from './components/ToastCase.vue';
+import TimerCase from './components/TimerCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
 import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
@@ -26,7 +27,7 @@ import { catalogScenarios } from './catalog-scenarios.js';
 const componentIDs = [
   'checkbox', 'checkbox-group', 'switch', 'toggle-button', 'toggle-group', 'listbox', 'radio-group', 'rating',
   'select', 'combobox', 'tabs', 'stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu',
-  'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'toast', 'tooltip', 'carousel', 'feed', 'calendar',
+  'disclosure', 'accordion', 'dialog', 'alert-dialog', 'popover', 'toast', 'tooltip', 'carousel', 'feed', 'calendar', 'timer',
   'slider', 'multi-thumb-slider', 'window-splitter', 'text', 'editable', 'tags-input', 'pin-input', 'spin-button',
   'number-field', 'quantity-field', 'date-field', 'date-range-field', 'time-field', 'time-range-field', 'date-time-field', 'date-picker',
   'date-range-picker', 'date-time-picker', 'date-time-range-picker', 'grid', 'tree-view', 'tree-grid',
@@ -96,6 +97,7 @@ const componentLabel = computed(() => ({
   dialog: 'Dialog', 'alert-dialog': 'Alert Dialog', tooltip: 'Tooltip', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar',
   popover: 'Popover',
   toast: 'Toast',
+  timer: 'Timer',
   'multi-thumb-slider': 'Multi Thumb Slider', 'window-splitter': 'Window Splitter', 'tags-input': 'Tags Input', 'pin-input': 'PIN Input',
   'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker',
   'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker', grid: 'Grid', 'tree-view': 'Tree View', 'tree-grid': 'Tree Grid',
@@ -221,10 +223,10 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
             <a v-for="id in ['stepper', 'pagination', 'toolbar', 'menu', 'menubar', 'menu-button', 'navigation-menu', 'carousel', 'feed', 'calendar'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ stepper: 'Stepper', pagination: 'Pagination', toolbar: 'Toolbar', menu: 'Menu', menubar: 'Menubar', 'menu-button': 'Menu Button', 'navigation-menu': 'Navigation Menu', carousel: 'Carousel', feed: 'Feed', calendar: 'Calendar' } as const)[id] }}</a>
           </div>
         </section>
-        <section class="demo-nav-group" :data-active="['rating', 'multi-thumb-slider', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(activeComponent)">
-          <h2 class="demo-nav-heading"><span>Value &amp; Date</span><span class="demo-nav-count" aria-label="8 components">8</span></h2>
+        <section class="demo-nav-group" :data-active="['rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(activeComponent)">
+          <h2 class="demo-nav-heading"><span>Value &amp; Date</span><span class="demo-nav-count" aria-label="9 components">9</span></h2>
           <div class="demo-nav-links">
-            <a v-for="id in ['rating', 'multi-thumb-slider', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ rating: 'Rating', 'multi-thumb-slider': 'Multi Thumb Slider', 'window-splitter': 'Window Splitter', 'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker', 'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker' } as const)[id] }}</a>
+            <a v-for="id in ['rating', 'multi-thumb-slider', 'timer', 'window-splitter', 'quantity-field', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'] as const" :key="id" :href="`#${id}`" :aria-current="activeComponent === id ? 'page' : undefined" @click.prevent="selectComponent(id)">{{ ({ rating: 'Rating', 'multi-thumb-slider': 'Multi Thumb Slider', timer: 'Timer', 'window-splitter': 'Window Splitter', 'quantity-field': 'Quantity Field', 'date-picker': 'Date Picker', 'date-range-picker': 'Date Range Picker', 'date-time-picker': 'Date Time Picker', 'date-time-range-picker': 'Date Time Range Picker' } as const)[id] }}</a>
           </div>
         </section>
         <section class="demo-nav-group" :data-active="['dialog', 'alert-dialog', 'popover', 'toast', 'tooltip'].includes(activeComponent)">
@@ -370,6 +372,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
         <ToastCase :key="`toast-auto-${resetEpoch}`" title="Automatic notifications" description="Timed notifications pause while the viewport is hovered or focused." />
         <ToastCase :key="`toast-persistent-${resetEpoch}`" title="Persistent notification" description="A null duration keeps notifications until explicit dismissal." :persistent="true" />
         <ToastCase :key="`toast-limited-${resetEpoch}`" title="Limited queue" description="The oldest notification leaves when the visible queue reaches its limit." :max-visible="2" />
+      </div>
+
+      <div v-else-if="activeComponent === 'timer'" class="workspace" data-demo="timer">
+        <TimerCase :key="`timer-stopwatch-${resetEpoch}`" title="Stopwatch" description="An unbounded timer measures elapsed time until paused or reset." />
+        <TimerCase :key="`timer-countdown-${resetEpoch}`" title="Release countdown" description="Countdown reaches zero exactly and emits one completion." countdown :start-ms="10_000" auto-start />
+        <TimerCase :key="`timer-target-${resetEpoch}`" title="Bounded elapsed timer" description="A count-up timer stops at an explicit target." :target-ms="15_000" />
       </div>
 
       <div v-else-if="activeComponent === 'tabs'" class="workspace" data-demo="tabs">

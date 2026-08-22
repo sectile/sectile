@@ -79,6 +79,19 @@ const toast = createToast({
 
 toast.push({ id: 'saved', title: 'Release saved', kind: 'success' })
 window.addEventListener('pagehide', () => toast.disconnect(), { once: true })`),
+  timer: example('timer', 'createTimer', `const root = required<HTMLElement>('[data-timer]')
+const timer = createTimer({
+  root,
+  countdown: true,
+  startMs: 60_000,
+  autoStart: true,
+  onComplete: () => console.log('complete'),
+})
+timer.setItemAttributes(required('[data-minutes]'), 'minutes')
+timer.setItemAttributes(required('[data-seconds]'), 'seconds')
+timer.setActionAttributes(required('[data-pause]'), 'pause')
+timer.setActionAttributes(required('[data-restart]'), 'restart')
+window.addEventListener('pagehide', () => timer.disconnect(), { once: true })`),
 
   listbox: example('listbox', 'createListbox', `${collectionItems}
 const listbox = createListbox({

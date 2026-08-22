@@ -52,6 +52,7 @@
       "default": "./dist/popover.js"
     },
     "./toast": { "types": "./dist/toast.d.ts", "import": "./dist/toast.js", "default": "./dist/toast.js" },
+    "./timer": { "types": "./dist/timer.d.ts", "import": "./dist/timer.js", "default": "./dist/timer.js" },
     "./date-field": {
       "types": "./dist/date-field.d.ts",
       "import": "./dist/date-field.js",
