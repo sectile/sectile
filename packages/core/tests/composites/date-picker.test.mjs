@@ -30,12 +30,13 @@ test('date picker skips unavailable dates under a bounded scan', () => {
   assert.equal(formatDateValue(result.value.state.highlighted), '2026-08-24');
 });
 
-test('range picker keeps an anchor, normalizes direction, then closes', () => {
+test('range picker keeps an anchor, normalizes direction, and stays open', () => {
   let state = createDateRangePickerState({ calendar: { highlighted: date(2026, 8, 22), open: true } }).value;
   state = applyDateRangePickerEvent(state, { type: 'select', value: date(2026, 8, 22) }).value.state;
   assert.equal(formatDateValue(state.anchor), '2026-08-22');
   const completed = applyDateRangePickerEvent(state, { type: 'select', value: date(2026, 8, 18) });
   assert.equal(formatDateValue(completed.value.state.value.start), '2026-08-18');
   assert.equal(formatDateValue(completed.value.state.value.end), '2026-08-22');
-  assert.equal(completed.value.state.calendar.open, false);
+  assert.equal(completed.value.state.calendar.open, true);
+  assert.equal(completed.value.commands.some(({ type }) => type === 'open-changed'), false);
 });

@@ -1047,7 +1047,7 @@ function createDateRangePickerDemo(host) {
 function createTerminalPicker(host, scenario, range) {
   const initial = unwrap(createDateValue(2026, 8, 22));
   let externalValue = range ? unwrap(createDateRange(unwrap(createDateValue(2026, 8, 18)), initial)) : initial;
-  let externalHighlight = initial; let externalOpen = true; let connection;
+  let externalHighlight = initial; let externalOpen = true; let syncScheduled = false; let connection;
   const policies = {
     ...(scenario.weekdaysOnly ? { unavailable: (value) => terminalISOWeekday(value) >= 6 } : {}),
     ...(scenario.bounded ? { min: unwrap(createDateValue(2026, 8, 1)), max: unwrap(createDateValue(2026, 10, 31)) } : {}),
@@ -1057,13 +1057,14 @@ function createTerminalPicker(host, scenario, range) {
     ...scenario.interaction, policies,
     ...(scenario.controlled
       ? { value: externalValue, highlightedValue: externalHighlight, open: externalOpen,
-          onValueChange: (value) => { externalValue = value; queueMicrotask(sync); },
-          onHighlightedValueChange: range ? undefined : (value) => { externalHighlight = value; queueMicrotask(sync); },
-          onOpenChange: (open) => { externalOpen = open; queueMicrotask(sync); } }
+          onValueChange: (value) => { externalValue = value; scheduleSync(); },
+          onHighlightedValueChange: (value) => { externalHighlight = value; scheduleSync(); },
+          onOpenChange: (open) => { externalOpen = open; scheduleSync(); } }
       : { defaultValue: externalValue, defaultHighlightedValue: externalHighlight, defaultOpen: true }),
     onUpdate: host.render,
   });
-  function sync() { const state = connection.getSnapshot().state; if (range) externalHighlight = state.calendar.highlighted; connection.syncControlledValues({ value: externalValue, highlightedValue: externalHighlight, open: externalOpen }); }
+  function scheduleSync() { if (syncScheduled) return; syncScheduled = true; queueMicrotask(() => { syncScheduled = false; sync(); }); }
+  function sync() { connection.syncControlledValues({ value: externalValue, highlightedValue: externalHighlight, open: externalOpen }); }
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {

@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { unwrap } from '@sectile/core/result';
-import { createDateValue, formatDateValue } from '@sectile/core/date-field';
+import { createDateRange, createDateValue, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
 import { createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field';
 import { createDateField } from '../dist/date-field.js';
 import { createDateTimeField } from '../dist/date-time-field.js';
 import { createDatePicker } from '../dist/date-picker.js';
+import { createDateRangePicker } from '../dist/date-range-picker.js';
 import { createTimeField } from '../dist/time-field.js';
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
@@ -36,6 +37,38 @@ test('DOM date picker composes an editable date field with calendar selection', 
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2024-02-12');
   assert.equal(input.readOnly, false);
+});
+
+test('DOM controlled range picker exposes highlight changes and stays open after commit', () => {
+  const initialHighlight = unwrap(createDateValue(2026, 8, 22));
+  let value = unwrap(createDateRange(
+    unwrap(createDateValue(2026, 8, 18)),
+    initialHighlight,
+  ));
+  let highlightedValue = initialHighlight;
+  let open = true;
+  const picker = createDateRangePicker({
+    root: new FakeElement(),
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    value,
+    highlightedValue,
+    open,
+    onValueChange: (next) => { value = next; },
+    onHighlightedValueChange: (next) => { highlightedValue = next; },
+    onOpenChange: (next) => { open = next; },
+  });
+
+  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 25)) });
+  picker.syncControlledValues({ value, highlightedValue, open });
+  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 28)) });
+  picker.syncControlledValues({ value, highlightedValue, open });
+
+  assert.equal(formatDateValue(picker.getSnapshot().state.value.start), '2026-08-25');
+  assert.equal(formatDateValue(picker.getSnapshot().state.value.end), '2026-08-28');
+  assert.equal(formatDateValue(picker.getSnapshot().state.calendar.highlighted), '2026-08-28');
+  assert.equal(picker.getSnapshot().state.calendar.open, true);
+  assert.equal(open, true);
 });
 
 test('DOM date field exposes invalid drafts and restores the committed value on blur', () => {
