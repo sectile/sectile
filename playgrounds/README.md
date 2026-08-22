@@ -1,10 +1,8 @@
 # Playgrounds
 
-Each host adapter owns an independent playground project. Add future adapters as sibling directories.
-Both current playgrounds expose listbox, slider, calendar, tree-view, text, combobox,
-and tree-grid as switchable demos instead of stacking host examples in one surface.
+Interactive witnesses for the public host adapters.
 
-```sh
-pnpm --filter @sectile/playground-dom dev
-pnpm --filter @sectile/playground-terminal dev
-```
+The DOM and terminal playgrounds are independent workspace projects. Each covers the same public component catalog while exposing host-specific input, state, and effects. Future hosts belong in sibling projects with their own dependencies, builds, and tests.
+
+- [DOM playground](dom/README.md)
+- [Terminal playground](terminal/README.md)

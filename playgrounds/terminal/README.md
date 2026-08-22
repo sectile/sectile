@@ -1,12 +1,7 @@
 # Terminal playground
 
-Interactive witnesses for every public terminal facade: listbox, slider, calendar,
-tree-view, text, combobox, and tree-grid.
+TTY witnesses for every public `@sectile/terminal` facade.
 
-```sh
-pnpm --filter @sectile/playground-terminal dev
-```
+The component menu opens independent scenarios that display normalized input, semantic state, and host effects. Navigation and reset shortcuts are shown in the running application.
 
-Choose a demo with the arrow keys and Enter, or press `1`–`7`. Each demo shows its
-own shortcuts, revision state, and host effects. Press `Ctrl+B` to return to the menu,
-`Ctrl+R` to reset the active demo, and `Ctrl+C` to quit.
+Run with `pnpm --filter @sectile/playground-terminal dev`.

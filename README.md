@@ -1,26 +1,23 @@
 # Sectile
 
-Sectile is a pnpm monorepo for deterministic, renderer-neutral interaction semantics and host adapters. The current workspace contains:
+Renderer-neutral interaction semantics for interfaces that must behave consistently across hosts.
 
-- `@sectile/core`: canonical structures, composite semantics, and revision control;
-- `@sectile/dom`: controlled/uncontrolled DOM interaction controllers;
-- `@sectile/terminal`: controlled/uncontrolled terminal interaction controllers.
+Sectile separates interaction rules from presentation. `@sectile/core` defines deterministic state transitions and data structures. Host packages translate native input into those semantics and project the resulting effects without owning application data, markup, or styling.
 
-Adapter playgrounds are independent projects under `playgrounds/*` so new hosts can be added as siblings without coupling their dependencies, builds, or tests.
+## Packages
 
-Each workspace project owns its source, build, tests, and project-specific verification. The workspace root only orchestrates project scripts, enforces package boundaries, and runs true cross-package verification.
+| Package | Responsibility |
+| --- | --- |
+| `@sectile/core` | Pure structures, interaction state, transitions, and validation |
+| `@sectile/dom` | DOM input, focus, ARIA, and element bindings |
+| `@sectile/terminal` | Terminal input, Unicode layout, and TTY integration |
 
-```sh
-pnpm verify
-pnpm verify:theory
-pnpm verify:reproducible-build
-```
+## Principles
 
-Run the playgrounds:
+- One semantic model across every host
+- Explicit controlled and uncontrolled ownership
+- Typed failures and failure-atomic transitions
+- Exact text, decimal, range, and unit operations
+- Package-local builds and tests with cross-host verification
 
-```sh
-pnpm --filter @sectile/playground-dom dev
-pnpm --filter @sectile/playground-terminal dev
-```
-
-Start with [the documentation index](docs/README.md), the [accepted theory](docs/references/sectile-theory.md), and the [verification record](docs/references/verification.md).
+See the [documentation](docs/README.md), [accepted theory](docs/references/sectile-theory.md), and [interactive playgrounds](playgrounds/README.md). The canonical repository check is `pnpm verify`.
