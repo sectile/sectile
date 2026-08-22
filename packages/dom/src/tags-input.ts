@@ -3,6 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyTagsInputEvent, createTagsInputState, type TagsInputCommand, type TagsInputEvent, type TagsInputPolicies, type TagsInputState } from '@sectile/core/tags-input';
+export type { TagsInputPolicies } from '@sectile/core/tags-input';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 

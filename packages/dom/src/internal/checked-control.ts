@@ -80,7 +80,8 @@ export function getCheckedControlAttributes<Value>(options: {
   readonly nativeReadOnly?: boolean;
 }): CheckedControlAttributes {
   const disabled = options.disabled ?? false;
-  const readOnly = options.supportsReadOnly === true && (options.readOnly ?? false);
+  const readOnly = options.readOnly ?? false;
+  const exposesARIAReadOnly = options.supportsReadOnly === true && readOnly;
   const formatted = options.format(options.value);
   return Object.freeze({
     role: options.role,
@@ -88,12 +89,14 @@ export function getCheckedControlAttributes<Value>(options: {
       ? { 'aria-checked': formatted }
       : { 'aria-pressed': formatted }),
     'aria-disabled': disabled ? 'true' : undefined,
-    'aria-readonly': readOnly ? 'true' : undefined,
+    'aria-readonly': exposesARIAReadOnly ? 'true' : undefined,
     'data-state': checkedDataState(formatted),
     'data-disabled': disabled ? '' : undefined,
     'data-readonly': readOnly ? '' : undefined,
     disabled: options.native === true ? disabled : undefined,
-    readOnly: options.nativeReadOnly === true ? readOnly : undefined,
+    readOnly: options.nativeReadOnly === true && options.supportsReadOnly === true
+      ? readOnly
+      : undefined,
   });
 }
 

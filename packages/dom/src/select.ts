@@ -4,6 +4,7 @@ import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applySelectEvent, createSelectState, type SelectCommand, type SelectEvent, type SelectPolicies, type SelectState } from '@sectile/core/select';
+export type { SelectPolicies } from '@sectile/core/select';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';

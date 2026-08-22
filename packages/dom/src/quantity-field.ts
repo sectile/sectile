@@ -10,17 +10,42 @@ import {
   type QuantityFieldState,
   type QuantityValue,
 } from '@sectile/core/quantity-field';
+export type { QuantityFieldPolicies, QuantityValue } from '@sectile/core/quantity-field';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
+import {
+  createImperialUnitSystem,
+  createMetricUnitSystem,
+  createStandardUnitRegistry,
+} from '@sectile/core/units';
 
 export interface QuantityFieldValueChangeDetails {
   readonly value: QuantityValue | null;
   readonly expression: string;
   readonly displayUnit: string;
+}
+
+export type StandardQuantityUnitSystem = 'metric' | 'imperial' | 'all';
+
+export function createStandardQuantityPolicies(
+  canonicalUnit: string,
+  unitSystem: StandardQuantityUnitSystem = 'all',
+): QuantityFieldPolicies {
+  const registry = unwrap(createStandardUnitRegistry());
+  const profile = unitSystem === 'metric'
+    ? unwrap(createMetricUnitSystem(registry))
+    : unitSystem === 'imperial'
+      ? unwrap(createImperialUnitSystem(registry))
+      : undefined;
+  return Object.freeze({
+    registry,
+    canonicalUnit,
+    ...(profile === undefined ? {} : { unitSystem: profile }),
+  });
 }
 
 export interface QuantityFieldOptions {

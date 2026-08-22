@@ -10,6 +10,7 @@ import {
   type ComboboxPolicies,
   type ComboboxState,
 } from '@sectile/core/combobox';
+export type { ComboboxPolicies } from '@sectile/core/combobox';
 import {
   createRevisionSnapshot,
   rejectRevisionInput,

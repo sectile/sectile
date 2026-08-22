@@ -50,6 +50,34 @@ export interface SliderControllerOptions {
   readonly onValueChange?: (change: SliderValueChangeDetails) => void;
 }
 
+export interface SliderRangeValueChangeDetails {
+  readonly value: string;
+  readonly previousValue: string;
+}
+
+export type SliderRangeControllerOptions = Omit<SliderControllerOptions, 'range' | 'value' | 'defaultValue' | 'onValueChange'>
+  & BoundedRangeInput
+  & {
+    readonly value?: string;
+    readonly defaultValue?: string;
+    readonly onValueChange?: (change: SliderRangeValueChangeDetails) => void;
+  };
+
+export interface SliderAttributeOptions {
+  readonly label?: string;
+  readonly role?: 'slider' | 'separator';
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly formatValue?: (value: string) => string;
+}
+
+export interface SliderInputOptions {
+  readonly name?: string;
+  readonly form?: string;
+  readonly disabled?: boolean;
+}
+
 export interface SliderControlledValues {
   readonly value: number;
 }
@@ -114,6 +142,72 @@ export function createSliderController(
   return { ok: true, value: new DOMSliderController(options, interaction.value, snapshot.value) };
 }
 
+export function createSliderControllerFromRange(options: SliderRangeControllerOptions): Result<SliderController> {
+  const range = createBoundedRange(options);
+  if (!range.ok) return range;
+  const current = options.value ?? options.defaultValue ?? range.value.lower;
+  const tick = range.value.tickOf(current);
+  if (tick === null) return { ok: false, error: {
+    class: 'construction',
+    code: 'slider-value-off-range',
+    message: 'Slider value must be an exact value in the configured range.',
+    details: { value: current },
+  } };
+  return createSliderController({
+    range: range.value,
+    ...(options.page === undefined ? {} : { page: options.page }),
+    ...(options.value === undefined ? { defaultValue: tick } : { value: tick }),
+    ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+    ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+    onValueChange: ({ value, previousValue }) => options.onValueChange?.({
+      value: range.value.valueAt(value) as string,
+      previousValue: range.value.valueAt(previousValue) as string,
+    }),
+  });
+}
+
+export function getSliderAttributes(
+  controller: SliderController,
+  options: SliderAttributeOptions = {},
+): Readonly<Record<string, string | number | undefined>> {
+  const value = controller.range.valueAt(controller.getSnapshot().state.tick) as string;
+  return Object.freeze({
+    role: options.role ?? 'slider',
+    tabindex: options.disabled === true ? -1 : 0,
+    'aria-valuemin': controller.range.lower,
+    'aria-valuemax': controller.range.upper,
+    'aria-valuenow': value,
+    'aria-valuetext': options.formatValue?.(value) ?? value,
+    'aria-orientation': options.orientation ?? 'horizontal',
+    'aria-label': options.label,
+    'aria-disabled': options.disabled === true ? 'true' : undefined,
+    'aria-readonly': options.readOnly === true ? 'true' : undefined,
+    'data-scope': 'slider',
+    'data-part': 'thumb',
+    'data-disabled': options.disabled === true ? '' : undefined,
+    'data-readonly': options.readOnly === true ? '' : undefined,
+  });
+}
+
+export function getSliderInputAttributes(
+  controller: SliderController,
+  options: SliderInputOptions = {},
+): Readonly<Record<string, string | number | boolean | undefined>> {
+  const value = controller.range.valueAt(controller.getSnapshot().state.tick) as string;
+  return Object.freeze({
+    type: 'range',
+    name: options.name,
+    form: options.form,
+    min: controller.range.lower,
+    max: controller.range.upper,
+    step: controller.range.step,
+    value,
+    disabled: options.disabled ?? false,
+    tabindex: -1,
+    'aria-hidden': 'true',
+  });
+}
+
 export function createSlider(options: SliderOptions): FacadeConnection<SliderConnection> {
   return unwrap(tryCreateSlider(options));
 }
@@ -158,6 +252,8 @@ class DOMSliderConnection implements SliderConnection {
   readonly #role: 'slider' | 'separator';
   readonly #orientation: 'horizontal' | 'vertical';
   readonly #formatValue: (value: string) => string;
+  readonly #disabled: boolean;
+  readonly #readOnly: boolean;
   readonly #onTransition: ((details: SliderTransitionDetails) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
@@ -174,6 +270,8 @@ class DOMSliderConnection implements SliderConnection {
     this.#role = options.role ?? 'slider';
     this.#orientation = options.orientation ?? 'horizontal';
     this.#formatValue = options.formatValue ?? ((value) => value);
+    this.#disabled = options.disabled ?? false;
+    this.#readOnly = options.readOnly ?? false;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#handleKeydown = (event): void => {
@@ -233,17 +331,14 @@ class DOMSliderConnection implements SliderConnection {
   }
 
   public refreshAttributes(): void {
-    const tick = this.#controller.getSnapshot().state.tick;
-    const value = this.range.valueAt(tick) as string;
-    this.#root.setAttribute('role', this.#role);
-    this.#root.setAttribute('aria-valuemin', this.range.lower);
-    this.#root.setAttribute('aria-valuemax', this.range.upper);
-    this.#root.setAttribute('aria-valuenow', value);
-    this.#root.setAttribute('aria-valuetext', this.#formatValue(value));
-    this.#root.setAttribute('aria-orientation', this.#orientation);
-    if (this.#label === undefined) this.#root.removeAttribute('aria-label');
-    else this.#root.setAttribute('aria-label', this.#label);
-    if (this.#root.tabIndex < 0) this.#root.tabIndex = 0;
+    applyAttributes(this.#root, getSliderAttributes(this.#controller, {
+      role: this.#role,
+      orientation: this.#orientation,
+      ...(this.#label === undefined ? {} : { label: this.#label }),
+      formatValue: this.#formatValue,
+      disabled: this.#disabled,
+      readOnly: this.#readOnly,
+    }));
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
@@ -274,6 +369,14 @@ class DOMSliderConnection implements SliderConnection {
     this.#track.removeEventListener('pointermove', this.#handlePointer);
     this.#track.removeEventListener('pointerup', this.#handlePointerUp);
     this.#track.removeEventListener('pointercancel', this.#handlePointerUp);
+  }
+}
+
+function applyAttributes(element: HTMLElement, attributes: Readonly<Record<string, string | number | undefined>>): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (name === 'tabindex') { element.tabIndex = Number(value ?? -1); continue; }
+    if (value === undefined) element.removeAttribute(name);
+    else element.setAttribute(name, String(value));
   }
 }
 

@@ -1,9 +1,50 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core'; import { applyToggleButtonEvent, createToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/core/toggle-button';
-import { createDOMCheckedControl, type DOMCheckedControl } from './internal/checked-control.js';
-export interface ToggleButtonOptions { readonly element: HTMLElement; readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
+import {
+  createCheckedControlController,
+  createDOMCheckedControl,
+  getCheckedControlAttributes,
+  type CheckedControlAttributes,
+  type CheckedControlController,
+  type DOMCheckedControl,
+} from './internal/checked-control.js';
+export interface ToggleButtonOptions { readonly element: HTMLElement; readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
 export type ToggleButtonConnection = DOMCheckedControl<ToggleButtonState, ToggleButtonEvent, boolean>;
+export interface ToggleButtonControllerOptions { readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onPressedChange?: (pressed: boolean) => void }
+export type ToggleButtonController = CheckedControlController<ToggleButtonState, ToggleButtonEvent, boolean>;
+export interface ToggleButtonAttributeOptions { readonly disabled?: boolean; readonly readOnly?: boolean; readonly native?: boolean }
+export type ToggleButtonAttributes = CheckedControlAttributes & { readonly 'data-scope': 'toggle-button'; readonly 'data-part': 'root' };
+
+export function createToggleButtonController(options: ToggleButtonControllerOptions = {}): Result<ToggleButtonController> {
+  return createCheckedControlController<ToggleButtonState, ToggleButtonEvent, ToggleButtonCommand, boolean>({
+    controlled: options.pressed !== undefined,
+    initial: createToggleButtonState(options.pressed ?? options.defaultPressed ?? false),
+    reducer: applyToggleButtonEvent,
+    create: createToggleButtonState,
+    read: (state) => state.pressed,
+    onChange: options.onPressedChange,
+    interaction: options,
+  });
+}
+
+export function getToggleButtonAttributes(
+  state: ToggleButtonState,
+  options: ToggleButtonAttributeOptions = {},
+): ToggleButtonAttributes {
+  return Object.freeze({
+    ...getCheckedControlAttributes({
+      attribute: 'aria-pressed',
+      value: state.pressed,
+      format: String,
+      ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      ...(options.native === undefined ? {} : { native: options.native }),
+    }),
+    'data-scope': 'toggle-button',
+    'data-part': 'root',
+  });
+}
 export function createToggleButton(options: ToggleButtonOptions): FacadeConnection<ToggleButtonConnection> {
   return unwrap(tryCreateToggleButton(options));
 }

@@ -17,6 +17,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
+export type { CarouselPolicies, CarouselPosition } from '@sectile/core/carousel';
+
 export interface CarouselScheduler {
   schedule(callback: () => void, delayMs: number): unknown;
   cancel(token: unknown): void;

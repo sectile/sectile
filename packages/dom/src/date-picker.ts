@@ -3,6 +3,8 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/core/date-field';
 import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState, datePickerID, isDatePickerValueAvailable, type DatePickerCommand, type DatePickerEvent, type DatePickerPolicies, type DatePickerState } from '@sectile/core/date-picker';
+export { createDatePickerMonth, datePickerID, isDatePickerValueAvailable } from '@sectile/core/date-picker';
+export type { DatePickerPolicies } from '@sectile/core/date-picker';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';

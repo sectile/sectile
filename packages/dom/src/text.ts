@@ -61,6 +61,15 @@ export interface TextValueChangeDetails {
   readonly previousValue: TextEditingState;
 }
 
+export type TextState = TextEditingState;
+
+export function createTextState(value = ''): TextEditingState {
+  return unwrap(createTextEditingState(value, {
+    anchorCodeUnitOffset: value.length,
+    focusCodeUnitOffset: value.length,
+  }));
+}
+
 export interface TextControllerOptions {
   readonly value?: TextEditingState;
   readonly defaultValue?: TextEditingState;

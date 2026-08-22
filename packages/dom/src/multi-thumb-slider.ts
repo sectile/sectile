@@ -5,6 +5,7 @@ import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from 
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyMultiThumbSliderEvent, createMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
+export type { MultiThumbSliderPolicies } from '@sectile/core/multi-thumb-slider';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 

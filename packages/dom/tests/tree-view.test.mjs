@@ -86,6 +86,11 @@ test('DOM tree-view derives disabled semantics and skips unavailable items', () 
   assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
   assert.equal(connection.handleEvent({ type: 'toggle-select', id: 'child-b' }), true);
   assert.deepEqual(connection.getSnapshot().state.selection.selected, []);
+  const dynamic = new FakeElement();
+  connection.setItemAttributes(dynamic, { id: 'grandchild', disabled: true });
+  assert.equal(dynamic.attributes.get('aria-disabled'), 'true');
+  assert.equal(connection.handleEvent({ type: 'toggle-select', id: 'grandchild' }), true);
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, []);
 });
 
 test('uncontrolled DOM tree-view owns expansion, highlight, and selection', () => {
@@ -102,6 +107,24 @@ test('uncontrolled DOM tree-view owns expansion, highlight, and selection', () =
   const selected = controller.handleKeyboardInput({ key: ' ' });
   assert.equal(selected.ok, true);
   assert.deepEqual(selected.snapshot.state.selection.selected, ['child-a']);
+});
+
+test('read-only DOM tree-view keeps navigation and expansion while rejecting selection', () => {
+  const controller = unwrap(createTreeViewController({
+    tree: tree(),
+    readOnly: true,
+    defaultHighlightedValue: 'root',
+  }));
+  const expanded = controller.handleKeyboardInput({ key: 'ArrowRight' });
+  assert.equal(expanded.ok, true);
+  assert.deepEqual(expanded.snapshot.state.expansion.ids, ['root']);
+  const moved = controller.handleKeyboardInput({ key: 'ArrowRight' });
+  assert.equal(moved.ok, true);
+  assert.equal(moved.snapshot.state.cursor.current, 'child-a');
+  const selected = controller.handleKeyboardInput({ key: ' ' });
+  assert.equal(selected.ok, false);
+  assert.equal(selected.error.code, 'interaction-read-only');
+  assert.deepEqual(selected.snapshot.state.selection.selected, []);
 });
 
 test('controlled DOM tree-view emits expansion proposals until synchronized', () => {

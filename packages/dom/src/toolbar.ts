@@ -11,6 +11,7 @@ import {
   type ToolbarPolicies,
   type ToolbarState,
 } from '@sectile/core/toolbar';
+export type { ToolbarPolicies } from '@sectile/core/toolbar';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

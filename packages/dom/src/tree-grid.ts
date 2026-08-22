@@ -28,6 +28,12 @@ import { applyControllerEvent, synchronizeControllerState } from './internal/con
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
+export type {
+  TreeGridEditMode,
+  TreeGridPolicies,
+  TreeGridRowInput,
+} from '@sectile/core/tree-grid';
+
 export interface KeyboardInput {
   readonly key: string;
   readonly altKey?: boolean;
@@ -294,6 +300,11 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
   readonly #handleDoubleClick: (event: MouseEvent) => void;
+  readonly #editors = new Map<HTMLInputElement, {
+    readonly input: () => void;
+    readonly compositionStart: () => void;
+    readonly compositionEnd: () => void;
+  }>();
   #lastCellClick: { readonly id: CellID; readonly time: number } | null = null;
   #editBaseline: { readonly id: CellID; readonly value: string } | null = null;
   #composing = false;
@@ -400,20 +411,26 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   }
 
   public bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void {
+    const previous = this.#editors.get(element);
+    if (previous !== undefined) {
+      element.removeEventListener('input', previous.input);
+      element.removeEventListener('compositionstart', previous.compositionStart);
+      element.removeEventListener('compositionend', previous.compositionEnd);
+    }
     setInteractionAttributes(element, {
       disabled: this.#disabled,
       readOnly: this.#readOnly,
     }, { readOnly: true, native: true });
     element.value = this.#getCellValue(options.id);
     element.setAttribute('aria-label', options.label ?? `Edit ${String(options.id)}`);
-    element.addEventListener('input', (): void => {
+    const input = (): void => {
       this.#setCellValue(options.id, element.value);
-    });
-    element.addEventListener('compositionstart', (): void => {
+    };
+    const compositionStart = (): void => {
       this.#composing = true;
       this.#commitAfterComposition = false;
-    });
-    element.addEventListener('compositionend', (): void => {
+    };
+    const compositionEnd = (): void => {
       this.#composing = false;
       if (!this.#commitAfterComposition) return;
       this.#commitAfterComposition = false;
@@ -421,7 +438,11 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
         if (this.#controller.getSnapshot().state.editMode !== 'editing') return;
         this.#dispatchKeyboardInput({ key: 'Enter' });
       }, 0);
-    });
+    };
+    element.addEventListener('input', input);
+    element.addEventListener('compositionstart', compositionStart);
+    element.addEventListener('compositionend', compositionEnd);
+    this.#editors.set(element, { input, compositionStart, compositionEnd });
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
@@ -467,6 +488,12 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
     this.#root.removeEventListener('dblclick', this.#handleDoubleClick);
+    for (const [element, listeners] of this.#editors) {
+      element.removeEventListener('input', listeners.input);
+      element.removeEventListener('compositionstart', listeners.compositionStart);
+      element.removeEventListener('compositionend', listeners.compositionEnd);
+    }
+    this.#editors.clear();
   }
 
   #dispatchKeyboardInput(input: KeyboardInput): boolean {
@@ -669,7 +696,7 @@ function treeGridIntent<RowID extends StableID, CellID extends StableID>(
   event: TreeGridEvent<RowID, CellID>,
 ): 'navigate' | 'mutate' {
   const type = typeof event === 'object' ? event.type : event;
-  return type === 'start-edit' || type === 'commit-edit' || type === 'cancel-edit'
+  return type === 'select' || type === 'start-edit' || type === 'commit-edit' || type === 'cancel-edit'
     ? 'mutate'
     : 'navigate';
 }

@@ -17,6 +17,9 @@ import { setFieldValidity, setInteractionAttributes } from './internal/interacti
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
+export { formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
+export type { DateTimeRange, DateTimeValue } from '@sectile/core/date-time-field';
+
 export interface DateTimeFieldOptions {
   readonly input: HTMLInputElement;
   readonly policies?: DateTimeFieldPolicies;

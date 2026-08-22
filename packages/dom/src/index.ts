@@ -3,6 +3,9 @@ export {
   connectListbox,
   createListbox, tryCreateListbox,
   createListboxController,
+  createListboxControllerFromItems,
+  getListboxItemAttributes,
+  getListboxRootAttributes,
   toListboxEffect,
   toListboxEvent,
   type KeyboardInput,
@@ -11,10 +14,14 @@ export {
   type ListboxConnectionOptions,
   type ListboxController,
   type ListboxControllerOptions,
+  type ListboxAttributeState,
   type ListboxEffect,
   type ListboxHighlightChangeDetails,
   type ListboxItemAttributes,
+  type ListboxItemAttributesOptions,
+  type ListboxItemsControllerOptions,
   type ListboxOptions,
+  type ListboxRootAttributesOptions,
   type ListboxTransitionDetails,
   type ListboxValueChangeDetails,
 } from './listbox.js';
@@ -32,19 +39,32 @@ export { createPinInput, tryCreatePinInput, type PinInputConnection, type PinInp
 export { createTagsInput, tryCreateTagsInput, type TagsInputConnection, type TagsInputOptions } from './tags-input.js';
 export {
   createTabs, tryCreateTabs,
+  getTabsContentAttributes,
+  getTabsListAttributes,
+  getTabsRootAttributes,
+  getTabsTriggerAttributes,
   toTabsEffect,
   toTabsEvent,
   type TabsConnection,
   type TabsEffect,
   type TabsItemAttributes,
   type TabsOptions,
+  type TabsContentAttributesOptions,
+  type TabsListAttributesOptions,
+  type TabsTriggerAttributesOptions,
 } from './tabs.js';
 export {
   createRadioGroup, tryCreateRadioGroup,
+  getRadioGroupInputAttributes,
+  getRadioGroupItemAttributes,
+  getRadioGroupRootAttributes,
   toRadioGroupEvent,
   type RadioGroupConnection,
   type RadioGroupEffect,
   type RadioGroupOptions,
+  type RadioGroupInputAttributesOptions,
+  type RadioGroupItemAttributesOptions,
+  type RadioGroupRootAttributesOptions,
 } from './radio-group.js';
 export {
   createToolbar, tryCreateToolbar,
@@ -54,16 +74,39 @@ export {
   type ToolbarOptions,
 } from './toolbar.js';
 export {
+  connectAccordion,
   createAccordion, tryCreateAccordion,
+  createAccordionController,
+  getAccordionPanelAttributes,
+  getAccordionRootAttributes,
+  getAccordionTriggerAttributes,
   toAccordionEvent,
   type AccordionConnection,
+  type AccordionControlledValues,
+  type AccordionController,
+  type AccordionControllerOptions,
   type AccordionEffect,
+  type AccordionHighlightChangeDetails,
   type AccordionOptions,
+  type AccordionPanelAttributesOptions,
+  type AccordionRootAttributesOptions,
+  type AccordionTriggerAttributes,
+  type AccordionTriggerAttributesOptions,
+  type AccordionValueChangeDetails,
 } from './accordion.js';
 export {
   createDisclosure, tryCreateDisclosure,
+  createDisclosureController,
+  getDisclosureContentAttributes,
+  getDisclosureTriggerAttributes,
   type DisclosureConnection,
+  type DisclosureContentAttributes,
+  type DisclosureContentOptions,
+  type DisclosureController,
+  type DisclosureControllerOptions,
   type DisclosureOptions,
+  type DisclosureTriggerAttributes,
+  type DisclosureTriggerOptions,
 } from './disclosure.js';
 export {
   createCheckbox, tryCreateCheckbox,
@@ -82,8 +125,31 @@ export {
   type CheckboxState,
   type CheckboxValue,
 } from './checkbox.js';
-export { createSwitch, tryCreateSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
-export { createToggleButton, tryCreateToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
+export {
+  createSwitch, tryCreateSwitch,
+  createSwitchController,
+  getSwitchAttributes,
+  getSwitchInputAttributes,
+  type SwitchAttributeOptions,
+  type SwitchAttributes,
+  type SwitchConnection,
+  type SwitchController,
+  type SwitchControllerOptions,
+  type SwitchInputAttributes,
+  type SwitchInputOptions,
+  type SwitchOptions,
+} from './switch.js';
+export {
+  createToggleButton, tryCreateToggleButton,
+  createToggleButtonController,
+  getToggleButtonAttributes,
+  type ToggleButtonAttributeOptions,
+  type ToggleButtonAttributes,
+  type ToggleButtonConnection,
+  type ToggleButtonController,
+  type ToggleButtonControllerOptions,
+  type ToggleButtonOptions,
+} from './toggle-button.js';
 export { createWindowSplitter, tryCreateWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
 export { createSpinButton, tryCreateSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
 export { createNumberField, tryCreateNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
@@ -152,6 +218,9 @@ export {
   connectSlider,
   createSlider, tryCreateSlider,
   createSliderController,
+  createSliderControllerFromRange,
+  getSliderAttributes,
+  getSliderInputAttributes,
   toSliderEffect,
   toSliderEvent,
   type KeyboardInput as SliderKeyboardInput,
@@ -160,6 +229,10 @@ export {
   type SliderConnectionOptions,
   type SliderController,
   type SliderControllerOptions,
+  type SliderRangeControllerOptions,
+  type SliderRangeValueChangeDetails,
+  type SliderAttributeOptions,
+  type SliderInputOptions,
   type SliderEffect,
   type SliderOptions,
   type SliderTransitionDetails,
@@ -212,6 +285,7 @@ export {
   connectText,
   createText, tryCreateText,
   createTextController,
+  createTextState,
   toTextEvent,
   type TextControlledValues,
   type TextConnection,
@@ -221,6 +295,7 @@ export {
   type TextInput as DOMTextInput,
   type TextElement,
   type TextOptions,
+  type TextState,
   type TextTransitionDetails,
   type TextValueChangeDetails,
 } from './text.js';

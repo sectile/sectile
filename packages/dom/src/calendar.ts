@@ -14,6 +14,7 @@ import {
   type CalendarPolicies,
   type CalendarState,
 } from '@sectile/core/calendar';
+export type { CalendarPolicies } from '@sectile/core/calendar';
 import { createGrid, type Grid } from '@sectile/core/grid';
 import {
   createRevisionSnapshot,

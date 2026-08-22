@@ -7,7 +7,10 @@ import {
   createStandardUnitRegistry,
   createUnitRegistry,
 } from '@sectile/core/units';
-import { createQuantityField } from '../dist/quantity-field.js';
+import {
+  createQuantityField,
+  createStandardQuantityPolicies,
+} from '../dist/quantity-field.js';
 
 const registry = unwrap(createUnitRegistry([
   { id: 'meter', symbol: 'm', dimension: { length: 1 }, scale: '1' },
@@ -79,6 +82,17 @@ test('DOM quantity field applies unit-system defaults and commits inline unit ex
   assert.equal(field.getDisplayUnit(), 'centimetre');
   assert.equal(input.value, '80');
   assert.deepEqual(unitSelect.children.map(({ value }) => value), ['inch', 'foot', 'yard', 'mile', 'centimetre']);
+});
+
+test('DOM quantity field exposes standard policies without a core dependency', () => {
+  const metric = createStandardQuantityPolicies('metre', 'metric');
+  const all = createStandardQuantityPolicies('metre');
+
+  assert.equal(metric.canonicalUnit, 'metre');
+  assert.equal(metric.unitSystem.id, 'metric');
+  assert.equal(all.canonicalUnit, 'metre');
+  assert.equal(all.unitSystem, undefined);
+  assert.equal(metric.registry.get('centimetre')?.symbol, 'cm');
 });
 
 function replaceAll(previous, text) {

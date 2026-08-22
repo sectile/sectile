@@ -12,6 +12,7 @@ import {
   type DateTimePickerPolicies,
   type DateTimePickerState,
 } from '@sectile/core/date-time-picker';
+export type { DateTimePickerPolicies } from '@sectile/core/date-time-picker';
 import type { TimeValue } from '@sectile/core/time-field';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';

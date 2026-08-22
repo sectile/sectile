@@ -40,6 +40,10 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
   const input = new FakeInput();
   connection.bindEditor(input, { id: 'root-name' });
+  connection.bindEditor(input, { id: 'root-name' });
+  assert.equal(input.listeners.get('input')?.size, 1);
+  assert.equal(input.listeners.get('compositionstart')?.size, 1);
+  assert.equal(input.listeners.get('compositionend')?.size, 1);
   input.emit('compositionstart');
   input.value = '한글';
   input.emit('input');
@@ -59,6 +63,10 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.deepEqual(events, ['start-edit', 'commit-edit', 'start-edit', 'cancel-edit']);
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+  assert.equal(input.listeners.get('input')?.size ?? 0, 0);
+  assert.equal(input.listeners.get('compositionstart')?.size ?? 0, 0);
+  assert.equal(input.listeners.get('compositionend')?.size ?? 0, 0);
+  assert.equal(cancelledInput.listeners.get('input')?.size ?? 0, 0);
 
   const invalid = tryCreateTreeGrid({
     rows: [{ id: 'child', parentID: 'missing', cells: ['child-name'] }],
@@ -166,6 +174,25 @@ test('uncontrolled DOM tree-grid owns expansion, highlight, selection, and edit 
   assert.equal(committed.ok, true);
   assert.equal(committed.snapshot.state.editMode, 'navigation');
   assert.deepEqual(committed.commands, [{ type: 'commit-cell-edit', id: 'child-name' }]);
+});
+
+test('read-only DOM tree-grid keeps navigation and expansion while rejecting mutation', () => {
+  const controller = unwrap(createTreeGridController({
+    model: model(),
+    readOnly: true,
+    defaultHighlightedValue: 'root-name',
+  }));
+  const expanded = controller.handleKeyboardInput({ key: 'ArrowRight', altKey: true });
+  assert.equal(expanded.ok, true);
+  const moved = controller.handleKeyboardInput({ key: 'ArrowDown' });
+  assert.equal(moved.ok, true);
+  assert.equal(moved.snapshot.state.cursor.current, 'child-name');
+  const selected = controller.handleKeyboardInput({ key: ' ' });
+  assert.equal(selected.ok, false);
+  assert.equal(selected.error.code, 'interaction-read-only');
+  const editing = controller.handleKeyboardInput({ key: 'Enter' });
+  assert.equal(editing.ok, false);
+  assert.equal(editing.error.code, 'interaction-read-only');
 });
 
 test('controlled DOM tree-grid emits proposals until every controlled field is synchronized', () => {

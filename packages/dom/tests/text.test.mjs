@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
-import { createText, createTextController, toTextEvent } from '../dist/text.js';
+import { createText, createTextController, createTextState, toTextEvent } from '../dist/text.js';
+
+test('DOM text creates a caret-preserving state from a plain string', () => {
+  const state = createTextState('한글');
+  assert.equal(state.snapshot.text, '한글');
+  assert.equal(state.snapshot.selection.anchorCodeUnitOffset, 2);
+  assert.equal(state.snapshot.selection.focusCodeUnitOffset, 2);
+});
 
 test('DOM text facade owns beforeinput rendering and IME composition lifecycle', () => {
   const element = new FakeTextElement();

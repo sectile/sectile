@@ -18,6 +18,7 @@ import {
   type PaginationState,
 } from '@sectile/core/pagination';
 import type { RevisionSnapshot } from '@sectile/core/revision';
+export type { PaginationControl, PaginationItem, PaginationItemRange } from '@sectile/core/pagination';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
@@ -51,6 +52,38 @@ export interface PaginationConnection {
   setItemAttributes(element: HTMLElement, item: PaginationItem): void;
   handleEvent(event: PaginationEvent): boolean;
   disconnect(): void;
+}
+
+export interface PaginationView {
+  readonly items: readonly PaginationItem[];
+  readonly range: PaginationItemRange;
+  readonly pageCount: number;
+}
+
+/** Computes the renderable pagination view without requiring a DOM connection. */
+export function getPaginationView(options: Omit<PaginationOptions, 'root'>): Result<PaginationView> {
+  const itemsPerPage = options.itemsPerPage ?? options.defaultItemsPerPage ?? 10;
+  const model = createPaginationModel({
+    total: options.total,
+    itemsPerPage,
+    ...(options.siblingCount === undefined ? {} : { siblingCount: options.siblingCount }),
+    ...(options.showEdges === undefined ? {} : { showEdges: options.showEdges }),
+    ...(options.showControls === undefined ? {} : { showControls: options.showControls }),
+  });
+  if (!model.ok) return model;
+  const state = createPaginationState(model.value, options.page ?? options.defaultPage ?? 1, itemsPerPage);
+  if (!state.ok) return state;
+  const items = getPaginationItems(model.value, state.value);
+  if (!items.ok) return items;
+  const range = getPaginationItemRange(model.value, state.value);
+  if (!range.ok) return range;
+  const pageCount = getPaginationPageCount(model.value, state.value);
+  if (!pageCount.ok) return pageCount;
+  return { ok: true, value: Object.freeze({
+    items: items.value,
+    range: range.value,
+    pageCount: pageCount.value,
+  }) };
 }
 
 export function createPagination(

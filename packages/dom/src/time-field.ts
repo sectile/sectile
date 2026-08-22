@@ -9,6 +9,9 @@ import { setFieldValidity, setInteractionAttributes } from './internal/interacti
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
+export { formatTimeValue } from '@sectile/core/time-field';
+export type { TimeValue } from '@sectile/core/time-field';
+
 export interface TimeFieldOptions { readonly input: HTMLInputElement; readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly onValueChange?: (value: TimeValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
 export interface TimeFieldControlledValues { readonly value?: TimeValue | null; readonly inputState?: TextEditingState; }
 export interface TimeFieldConnection { getSnapshot(): RevisionSnapshot<TimeFieldState>; getText(): string; getValue(): TimeValue | null; syncControlledValues(values: TimeFieldControlledValues): Result<RevisionSnapshot<TimeFieldState>>; handleEvent(event: TimeFieldEvent): boolean; refresh(): void; disconnect(): void; }

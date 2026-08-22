@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/core/result';
-import { createCheckbox, createCheckboxController, getCheckboxAttributes, getCheckboxInputAttributes } from '../dist/checkbox.js'; import { createSwitch } from '../dist/switch.js'; import { createToggleButton } from '../dist/toggle-button.js';
+import { createCheckbox, createCheckboxController, getCheckboxAttributes, getCheckboxInputAttributes } from '../dist/checkbox.js'; import { createSwitch, createSwitchController, getSwitchAttributes, getSwitchInputAttributes } from '../dist/switch.js'; import { createToggleButton, createToggleButtonController, getToggleButtonAttributes } from '../dist/toggle-button.js';
 test('DOM checked controls own click dispatch and role-specific ARIA', () => {
   const checkboxElement = new FakeElement(); const checkbox = createCheckbox({ element: checkboxElement, defaultValue: 'mixed' }); checkboxElement.emit('click'); assert.equal(checkbox.getSnapshot().state.checked, true); assert.equal(checkboxElement.attributes.get('aria-checked'), 'true');
   const switchElement = new FakeElement(); const control = createSwitch({ element: switchElement }); switchElement.emit('click'); assert.equal(control.getSnapshot().state.checked, true); assert.equal(switchElement.attributes.get('role'), 'switch');
@@ -71,6 +71,51 @@ test('DOM checkbox synchronizes native checkbox properties while the browser own
   assert.equal(checkbox.getSnapshot().state.checked, true);
   assert.equal(input.checked, true);
   assert.equal(input.indeterminate, false);
+});
+test('DOM switch exposes native form projection and read-only semantics', () => {
+  const controller = unwrap(createSwitchController({ defaultChecked: true, readOnly: true }));
+  assert.deepEqual(getSwitchAttributes(controller.getSnapshot().state, {
+    readOnly: true,
+    required: true,
+    native: true,
+  }), {
+    role: 'switch',
+    'aria-checked': 'true',
+    'aria-disabled': undefined,
+    'aria-readonly': 'true',
+    'data-state': 'checked',
+    'data-disabled': undefined,
+    'data-readonly': '',
+    disabled: false,
+    readOnly: undefined,
+    'aria-required': 'true',
+    'data-scope': 'switch',
+    'data-part': 'root',
+  });
+  assert.equal(getSwitchInputAttributes(controller.getSnapshot().state, {
+    name: 'notifications',
+  }).checked, true);
+  assert.equal(controller.handleEvent('toggle'), false);
+});
+test('DOM toggle button exposes declarative pressed state and blocks read-only input', () => {
+  const controller = unwrap(createToggleButtonController({ defaultPressed: true, readOnly: true }));
+  assert.deepEqual(getToggleButtonAttributes(controller.getSnapshot().state, {
+    readOnly: true,
+    native: true,
+  }), {
+    role: undefined,
+    'aria-pressed': 'true',
+    'aria-disabled': undefined,
+    'aria-readonly': undefined,
+    'data-state': 'checked',
+    'data-disabled': undefined,
+    'data-readonly': '',
+    disabled: false,
+    readOnly: undefined,
+    'data-scope': 'toggle-button',
+    'data-part': 'root',
+  });
+  assert.equal(controller.handleEvent('toggle'), false);
 });
 class FakeElement { attributes = new Map(); listeners = new Map(); disabled = false; readOnly = false; setAttribute(name, value) { this.attributes.set(name, value); } removeAttribute(name) { this.attributes.delete(name); } addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); } removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); } emit(type) { for (const listener of this.listeners.get(type) ?? []) listener(); } }
 class FakeCheckboxInput extends FakeElement { type = 'checkbox'; checked = false; indeterminate = false; }

@@ -25,6 +25,9 @@ import { applyControllerEvent, synchronizeControllerState } from './internal/con
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
+export type { TreeNodeInput } from '@sectile/core/tree';
+export type { TreeViewPolicies } from '@sectile/core/tree-view';
+
 export interface KeyboardInput {
   readonly key: string;
   readonly altKey?: boolean;
@@ -55,6 +58,7 @@ export interface TreeViewHighlightChangeDetails<ID extends StableID = StableID> 
 export interface TreeViewControllerOptions<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;
   readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
   readonly expandedValue?: readonly ID[];
@@ -87,6 +91,7 @@ export interface TreeViewController<ID extends StableID = StableID> {
     event: TreeViewEvent<ID>,
     expectedRevision?: number,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>>;
+  setItemDisabled(id: ID, disabled: boolean): void;
 }
 
 export interface TreeViewTransitionDetails<ID extends StableID = StableID> {
@@ -98,6 +103,7 @@ export interface TreeViewConnectionOptions<ID extends StableID = StableID> {
   readonly controller: TreeViewController<ID>;
   readonly root: HTMLElement;
   readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly onTransition?: (details: TreeViewTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
   readonly disabledItems?: readonly ID[];
@@ -214,7 +220,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
     this.#disabled = new Set(options.disabledItems ?? []);
-    setInteractionAttributes(this.#root, options);
+    setInteractionAttributes(this.#root, options, { readOnly: true });
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
@@ -259,6 +265,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     element: HTMLElement,
     attributes: TreeViewItemAttributes<ID>,
   ): void {
+    this.#controller.setItemDisabled(attributes.id, attributes.disabled === true);
     const state = this.#controller.getSnapshot().state;
     const leaf = this.tree.isLeaf(attributes.id);
     const level = attributes.level ?? (this.tree.depthOf(attributes.id) ?? 0) + 1;
@@ -339,6 +346,7 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
     | ((change: TreeViewHighlightChangeDetails<ID>) => void)
     | undefined;
   readonly #interaction: InteractionState;
+  readonly #itemDisabled = new Set<ID>();
   #snapshot: RevisionSnapshot<TreeViewState<ID>>;
 
   public constructor(
@@ -348,7 +356,11 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
   ) {
     this.tree = options.tree;
     this.#tree = options.tree;
-    this.#policies = options.policies ?? {};
+    const suppliedEligibility = options.policies?.eligible;
+    this.#policies = {
+      ...options.policies,
+      eligible: (id) => !this.#itemDisabled.has(id) && (suppliedEligibility?.(id) ?? true),
+    };
     this.#valueControlled = options.value !== undefined;
     this.#expandedControlled = options.expandedValue !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
@@ -361,6 +373,11 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
 
   public getSnapshot(): RevisionSnapshot<TreeViewState<ID>> {
     return this.#snapshot;
+  }
+
+  public setItemDisabled(id: ID, disabled: boolean): void {
+    if (disabled) this.#itemDisabled.add(id);
+    else this.#itemDisabled.delete(id);
   }
 
   public syncControlledValues(
@@ -411,7 +428,7 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
     event: TreeViewEvent<ID>,
     expectedRevision = this.#snapshot.revision,
   ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
-    const permitted = requireInteraction(this.#interaction, 'navigate');
+    const permitted = requireInteraction(this.#interaction, treeViewIntent(event));
     if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
     const result = applyControllerEvent(
       this.#snapshot,
@@ -453,6 +470,11 @@ class DOMTreeViewController<ID extends StableID> implements TreeViewController<I
       }));
     }
   }
+}
+
+function treeViewIntent<ID extends StableID>(event: TreeViewEvent<ID>): 'navigate' | 'mutate' {
+  const type = typeof event === 'object' ? event.type : event;
+  return type === 'toggle-select' ? 'mutate' : 'navigate';
 }
 
 function controlledState<ID extends StableID>(

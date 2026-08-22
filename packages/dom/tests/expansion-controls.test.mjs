@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDisclosure } from '../dist/disclosure.js';
+import { createDisclosure, createDisclosureController, getDisclosureContentAttributes, getDisclosureTriggerAttributes } from '../dist/disclosure.js';
+import { unwrap } from '@sectile/core/result';
 import { createAccordion } from '../dist/accordion.js';
 
 test('DOM disclosure owns click projection and panel visibility', () => {
@@ -9,6 +10,34 @@ test('DOM disclosure owns click projection and panel visibility', () => {
   trigger.emit('click');
   assert.equal(disclosure.getSnapshot().state.open, true);
   assert.equal(trigger.attributes.get('aria-expanded'), 'true'); assert.equal(panel.hidden, false);
+});
+
+test('DOM disclosure exposes declarative trigger and content projections', () => {
+  const controller = unwrap(createDisclosureController({ defaultOpen: true, readOnly: true }));
+  const state = controller.getSnapshot().state;
+  assert.deepEqual(getDisclosureTriggerAttributes(state, {
+    panelID: 'details',
+    readOnly: true,
+    native: true,
+  }), {
+    'aria-expanded': 'true',
+    'aria-controls': 'details',
+    'aria-disabled': undefined,
+    'data-state': 'open',
+    'data-disabled': undefined,
+    'data-readonly': '',
+    disabled: false,
+    'data-scope': 'disclosure',
+    'data-part': 'trigger',
+  });
+  assert.deepEqual(getDisclosureContentAttributes(state, { id: 'details' }), {
+    id: 'details',
+    hidden: false,
+    'data-state': 'open',
+    'data-scope': 'disclosure',
+    'data-part': 'content',
+  });
+  assert.equal(controller.handleEvent('toggle'), false);
 });
 
 test('DOM accordion owns header click, keyboard movement, and ARIA projection', () => {

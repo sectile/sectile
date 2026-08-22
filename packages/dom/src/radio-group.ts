@@ -14,7 +14,6 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
-import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
 
 export type RadioGroupEffect<ID extends StableID = StableID> =
@@ -47,6 +46,80 @@ export interface RadioGroupConnection<ID extends StableID = StableID> {
   setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void;
   handleEvent(event: RadioGroupEvent<ID>): boolean;
   disconnect(): void;
+}
+
+export interface RadioGroupRootAttributesOptions {
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly label?: string;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+}
+
+export interface RadioGroupItemAttributesOptions<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly checked: boolean;
+  readonly highlighted: boolean;
+  readonly disabled?: boolean;
+}
+
+export interface RadioGroupInputAttributesOptions {
+  readonly name?: string;
+  readonly value: string;
+  readonly form?: string;
+  readonly checked: boolean;
+  readonly required?: boolean;
+  readonly disabled?: boolean;
+}
+
+export function getRadioGroupRootAttributes(
+  options: RadioGroupRootAttributesOptions = {},
+): Readonly<Record<string, string | undefined>> {
+  return Object.freeze({
+    role: 'radiogroup',
+    'aria-orientation': options.orientation ?? 'vertical',
+    'aria-label': options.label,
+    'aria-disabled': options.disabled === true ? 'true' : undefined,
+    'aria-readonly': options.readOnly === true ? 'true' : undefined,
+    'data-scope': 'radio-group',
+    'data-part': 'root',
+    'data-disabled': options.disabled === true ? '' : undefined,
+    'data-readonly': options.readOnly === true ? '' : undefined,
+  });
+}
+
+export function getRadioGroupItemAttributes<ID extends StableID>(
+  options: RadioGroupItemAttributesOptions<ID>,
+): Readonly<Record<string, string | number | boolean | undefined>> {
+  return Object.freeze({
+    role: 'radio',
+    type: 'button',
+    tabindex: options.disabled === true ? -1 : options.highlighted ? 0 : -1,
+    'aria-checked': String(options.checked),
+    'aria-disabled': options.disabled === true ? 'true' : undefined,
+    disabled: options.disabled === true ? true : undefined,
+    'data-radio-group-id': String(options.id),
+    'data-scope': 'radio-group',
+    'data-part': 'item',
+    'data-state': options.checked ? 'checked' : 'unchecked',
+    'data-highlighted': options.highlighted ? '' : undefined,
+    'data-disabled': options.disabled === true ? '' : undefined,
+  });
+}
+
+export function getRadioGroupInputAttributes(
+  options: RadioGroupInputAttributesOptions,
+): Readonly<Record<string, string | number | boolean | undefined>> {
+  return Object.freeze({
+    type: 'radio',
+    name: options.name,
+    value: options.value,
+    form: options.form,
+    checked: options.checked,
+    required: options.required ?? false,
+    disabled: options.disabled ?? false,
+    tabindex: -1,
+    'aria-hidden': 'true',
+  });
 }
 
 export function createRadioGroup<ID extends StableID>(
@@ -143,10 +216,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     this.#valueControlled = options.value !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#disabledItems = disabledItems;
-    options.root.setAttribute('role', 'radiogroup');
-    setInteractionAttributes(options.root, options, { readOnly: true });
-    options.root.setAttribute('aria-orientation', options.orientation ?? 'vertical');
-    if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
+    applyAttributes(options.root, getRadioGroupRootAttributes(options));
     this.#keydown = (event): void => {
       const semantic = toRadioGroupEvent<ID>(event, options.orientation);
       if (semantic === null) return;
@@ -186,13 +256,13 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
     const state = this.#runtime.getSnapshot().state;
     const unavailable = this.#options.disabled === true || disabled || this.#disabledItems.has(id);
-    element.dataset['radioGroupId'] = id;
-    element.setAttribute('role', 'radio');
-    element.setAttribute('aria-checked', String(state.selection.has(id)));
-    element.tabIndex = !unavailable && state.cursor.current === id ? 0 : -1;
-    if (unavailable) element.setAttribute('aria-disabled', 'true');
-    else element.removeAttribute('aria-disabled');
-    if ('disabled' in element) (element as HTMLButtonElement).disabled = unavailable;
+    element.dataset['radioGroupId'] = String(id);
+    applyAttributes(element, getRadioGroupItemAttributes({
+      id,
+      checked: state.selection.has(id),
+      highlighted: state.cursor.current === id,
+      disabled: unavailable,
+    }));
   }
 
   public handleEvent(event: RadioGroupEvent<ID>): boolean {
@@ -209,6 +279,24 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
   public disconnect(): void {
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
+  }
+}
+
+function applyAttributes(
+  element: HTMLElement,
+  attributes: Readonly<Record<string, string | number | boolean | undefined>>,
+): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (name === 'tabindex') {
+      element.tabIndex = Number(value ?? -1);
+      continue;
+    }
+    if (name === 'disabled' && 'disabled' in element) {
+      (element as HTMLButtonElement).disabled = value === true;
+      continue;
+    }
+    if (value === undefined || value === false) element.removeAttribute(name);
+    else element.setAttribute(name, value === true ? '' : String(value));
   }
 }
 

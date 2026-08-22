@@ -63,6 +63,9 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: ListboxHighlightChangeDetails<ID>) => void;
 }
 
+export type ListboxItemsControllerOptions<ID extends StableID = StableID> =
+  Omit<ListboxControllerOptions<ID>, 'domain'> & { readonly items: readonly ID[] };
+
 export interface ListboxTypeaheadOptions<ID extends StableID = StableID> {
   readonly textValue: (id: ID) => string;
   readonly normalize?: (text: string) => string;
@@ -115,6 +118,23 @@ export interface ListboxItemAttributes<ID extends StableID = StableID> {
   readonly disabled?: boolean;
 }
 
+export interface ListboxRootAttributesOptions {
+  readonly selectionMode?: ListboxSelectionMode;
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly label?: string;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+}
+
+export interface ListboxItemAttributesOptions {
+  readonly disabled?: boolean;
+}
+
+export interface ListboxAttributeState<ID extends StableID = StableID> {
+  readonly cursor: { readonly current: ID | null };
+  readonly selection: { has(id: ID): boolean };
+}
+
 export interface ListboxConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<ListboxState<ID>>;
   syncControlledValues(
@@ -150,6 +170,49 @@ export function createListboxController<ID extends StableID>(
   const snapshot = createRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new DOMListboxController(options, policies.value, interaction.value, snapshot.value) };
+}
+
+export function createListboxControllerFromItems<ID extends StableID>(
+  options: ListboxItemsControllerOptions<ID>,
+): Result<ListboxController<ID>> {
+  const domain = createSequence(options.items);
+  return domain.ok ? createListboxController({ ...options, domain: domain.value }) : domain;
+}
+
+export function getListboxRootAttributes(
+  options: ListboxRootAttributesOptions = {},
+): Readonly<Record<string, string | undefined>> {
+  return Object.freeze({
+    role: 'listbox',
+    'aria-orientation': options.orientation ?? 'vertical',
+    'aria-multiselectable': options.selectionMode === 'multiple' ? 'true' : undefined,
+    'aria-label': options.label,
+    'data-scope': 'listbox',
+    'data-part': 'root',
+    'data-disabled': options.disabled === true ? '' : undefined,
+    'data-readonly': options.readOnly === true ? '' : undefined,
+  });
+}
+
+export function getListboxItemAttributes<ID extends StableID>(
+  state: ListboxAttributeState<ID>,
+  attributes: ListboxItemAttributes<ID>,
+  options: ListboxItemAttributesOptions = {},
+): Readonly<Record<string, string | number | undefined>> {
+  const disabled = options.disabled === true || attributes.disabled === true;
+  const selected = state.selection.has(attributes.id);
+  return Object.freeze({
+    role: 'option',
+    tabindex: disabled ? -1 : state.cursor.current === attributes.id ? 0 : -1,
+    'aria-selected': String(selected),
+    'aria-disabled': disabled ? 'true' : undefined,
+    'data-listbox-id': String(attributes.id),
+    'data-scope': 'listbox',
+    'data-part': 'item',
+    'data-state': selected ? 'checked' : 'unchecked',
+    'data-highlighted': state.cursor.current === attributes.id ? '' : undefined,
+    'data-disabled': disabled ? '' : undefined,
+  });
 }
 
 export function createListbox<ID extends StableID>(
@@ -264,15 +327,11 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   }
 
   public setListboxAttributes(label?: string): void {
-    this.#root.setAttribute('role', 'listbox');
-    this.#root.setAttribute('aria-orientation', this.#orientation);
-    if (this.#selectionMode === 'multiple') {
-      this.#root.setAttribute('aria-multiselectable', 'true');
-    } else {
-      this.#root.removeAttribute('aria-multiselectable');
-    }
-    if (label === undefined) this.#root.removeAttribute('aria-label');
-    else this.#root.setAttribute('aria-label', label);
+    applyAttributes(this.#root, getListboxRootAttributes({
+      selectionMode: this.#selectionMode,
+      orientation: this.#orientation,
+      ...(label === undefined ? {} : { label }),
+    }));
   }
 
   public setItemAttributes(
@@ -280,14 +339,9 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     attributes: ListboxItemAttributes<ID>,
   ): void {
     const state = this.#controller.getSnapshot().state;
-    const current = state.cursor.current === attributes.id;
     element.dataset['listboxId'] = String(attributes.id);
-    element.tabIndex = current ? 0 : -1;
-    element.setAttribute('role', 'option');
-    element.setAttribute('aria-selected', String(state.selection.has(attributes.id)));
     const disabled = attributes.disabled === true || this.#disabledItems.has(attributes.id);
-    if (disabled) element.setAttribute('aria-disabled', 'true');
-    else element.removeAttribute('aria-disabled');
+    applyAttributes(element, getListboxItemAttributes(state, attributes, { disabled }));
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
@@ -350,6 +404,20 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     for (const effect of effects) {
       if (effect.type === 'dispatch-activation') this.#onActivate?.(effect.id);
     }
+  }
+}
+
+function applyAttributes(
+  element: HTMLElement,
+  attributes: Readonly<Record<string, string | number | undefined>>,
+): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (name === 'tabindex') {
+      element.tabIndex = Number(value ?? -1);
+      continue;
+    }
+    if (value === undefined) element.removeAttribute(name);
+    else element.setAttribute(name, String(value));
   }
 }
 

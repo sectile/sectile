@@ -14,7 +14,6 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
-import { setInteractionAttributes } from './internal/interaction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -30,6 +29,7 @@ export type TabsEffect<ID extends StableID = StableID> =
 export interface TabsOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly disabled?: boolean;
+  readonly readOnly?: boolean;
   readonly items: readonly ID[];
   readonly policies?: TabsPolicies<ID>;
   readonly disabledItems?: readonly ID[];
@@ -43,6 +43,77 @@ export interface TabsOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (value: ID | null) => void;
   readonly onActivate?: (id: ID) => void;
   readonly onUpdate?: () => void;
+}
+
+export interface TabsListAttributesOptions {
+  readonly orientation?: 'horizontal' | 'vertical';
+  readonly label?: string;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+}
+
+export interface TabsTriggerAttributesOptions<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly selected: boolean;
+  readonly highlighted: boolean;
+  readonly disabled?: boolean;
+  readonly triggerID?: string;
+  readonly panelID?: string;
+}
+
+export interface TabsContentAttributesOptions {
+  readonly selected: boolean;
+  readonly contentID?: string;
+  readonly triggerID?: string;
+}
+
+export function getTabsRootAttributes(): Readonly<Record<string, string>> {
+  return Object.freeze({ 'data-scope': 'tabs', 'data-part': 'root' });
+}
+
+export function getTabsListAttributes(options: TabsListAttributesOptions = {}): Readonly<Record<string, string | undefined>> {
+  return Object.freeze({
+    role: 'tablist',
+    'aria-orientation': options.orientation ?? 'horizontal',
+    'aria-label': options.label,
+    'aria-disabled': options.disabled === true ? 'true' : undefined,
+    'aria-readonly': options.readOnly === true ? 'true' : undefined,
+    'data-scope': 'tabs',
+    'data-part': 'list',
+    'data-disabled': options.disabled === true ? '' : undefined,
+    'data-readonly': options.readOnly === true ? '' : undefined,
+  });
+}
+
+export function getTabsTriggerAttributes<ID extends StableID>(options: TabsTriggerAttributesOptions<ID>): Readonly<Record<string, string | number | boolean | undefined>> {
+  return Object.freeze({
+    id: options.triggerID,
+    role: 'tab',
+    type: 'button',
+    tabindex: options.disabled === true ? -1 : options.highlighted ? 0 : -1,
+    'aria-selected': String(options.selected),
+    'aria-controls': options.panelID,
+    'aria-disabled': options.disabled === true ? 'true' : undefined,
+    disabled: options.disabled === true ? true : undefined,
+    'data-tabs-id': String(options.id),
+    'data-scope': 'tabs',
+    'data-part': 'trigger',
+    'data-state': options.selected ? 'active' : 'inactive',
+    'data-highlighted': options.highlighted ? '' : undefined,
+    'data-disabled': options.disabled === true ? '' : undefined,
+  });
+}
+
+export function getTabsContentAttributes(options: TabsContentAttributesOptions): Readonly<Record<string, string | boolean | undefined>> {
+  return Object.freeze({
+    id: options.contentID,
+    role: 'tabpanel',
+    hidden: !options.selected,
+    'aria-labelledby': options.triggerID,
+    'data-scope': 'tabs',
+    'data-part': 'content',
+    'data-state': options.selected ? 'active' : 'inactive',
+  });
 }
 
 export interface TabsItemAttributes<ID extends StableID = StableID> {
@@ -102,10 +173,11 @@ function tryCreateTabsConnection<ID extends StableID>(
     TabsEffect<ID>
   >({
     interaction: options,
+    interactionIntent: tabsIntent,
     initial,
     reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
     reconcile: (previous, proposed) => createTabsState(domain.value, {
-      selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
+      selected: valueControlled || options.readOnly === true ? previous.selection.selected : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -177,10 +249,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
     this.#valueControlled = valueControlled;
     this.#highlightControlled = highlightControlled;
     this.#disabledItems = disabledItems;
-    options.root.setAttribute('role', 'tablist');
-    setInteractionAttributes(options.root, options);
-    options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
-    if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
+    applyAttributes(options.root, getTabsListAttributes(options));
     this.#keydown = (event): void => {
       const semantic = toTabsEvent<ID>(event, options.orientation);
       if (semantic === null) return;
@@ -219,19 +288,22 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   public setItemAttributes(element: HTMLElement, attributes: TabsItemAttributes<ID>): void {
     const state = this.#runtime.getSnapshot().state;
     const active = state.selection.has(attributes.id);
+    const disabled = this.#options.disabled === true || attributes.disabled === true || this.#disabledItems.has(attributes.id);
     element.dataset['tabsId'] = String(attributes.id);
-    element.setAttribute('role', 'tab');
-    element.setAttribute('aria-selected', String(active));
-    element.tabIndex = state.cursor.current === attributes.id ? 0 : -1;
-    if (attributes.panelID !== undefined) element.setAttribute('aria-controls', attributes.panelID);
-    if (attributes.disabled || this.#disabledItems.has(attributes.id)) element.setAttribute('aria-disabled', 'true');
-    else element.removeAttribute('aria-disabled');
+    applyAttributes(element, getTabsTriggerAttributes({
+      id: attributes.id,
+      selected: active,
+      highlighted: state.cursor.current === attributes.id,
+      disabled,
+      ...(attributes.panelID === undefined ? {} : { panelID: attributes.panelID }),
+    }));
   }
 
   public setPanelAttributes(element: HTMLElement, id: ID, tabID?: string): void {
-    element.setAttribute('role', 'tabpanel');
-    element.hidden = !this.#runtime.getSnapshot().state.selection.has(id);
-    if (tabID !== undefined) element.setAttribute('aria-labelledby', tabID);
+    applyAttributes(element, getTabsContentAttributes({
+      selected: this.#runtime.getSnapshot().state.selection.has(id),
+      ...(tabID === undefined ? {} : { triggerID: tabID }),
+    }));
   }
 
   public handleEvent(event: TabsEvent<ID>): boolean {
@@ -249,6 +321,20 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
   public disconnect(): void {
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.root.removeEventListener('click', this.#click);
+  }
+}
+
+function tabsIntent<ID extends StableID>(event: TabsEvent<ID>): 'navigate' | 'mutate' {
+  return event === 'activate' || (typeof event === 'object' && event.type === 'activate') ? 'mutate' : 'navigate';
+}
+
+function applyAttributes(element: HTMLElement, attributes: Readonly<Record<string, string | number | boolean | undefined>>): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (name === 'tabindex') { element.tabIndex = Number(value ?? -1); continue; }
+    if (name === 'hidden') { element.hidden = value === true; continue; }
+    if (name === 'disabled' && 'disabled' in element) { (element as HTMLButtonElement).disabled = value === true; continue; }
+    if (value === undefined || value === false) element.removeAttribute(name);
+    else element.setAttribute(name, value === true ? '' : String(value));
   }
 }
 

@@ -4,6 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, dateRangeContains, formatDateValue, type DateRange, type DateValue } from '@sectile/core/date-field';
 import { createDatePickerMonth, datePickerID, isDatePickerValueAvailable, type DatePickerEvent, type DatePickerPolicies } from '@sectile/core/date-picker';
 import { applyDateRangePickerEvent, createDateRangePickerState, type DateRangePickerCommand, type DateRangePickerEvent, type DateRangePickerState } from '@sectile/core/date-range-picker';
+export type { DatePickerPolicies } from '@sectile/core/date-picker';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
