@@ -1,5 +1,4 @@
 import { createTreeView, type TreeViewConnection } from '@sectile/dom/tree-view';
-import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const nodes = [
@@ -42,7 +41,7 @@ function mountTreeView(context: DemoContext, scenario: { readonly expanded: read
     context.surface.append(root);
     let externalExpanded = [...scenario.expanded]; let externalSelected = [...scenario.selected]; let externalHighlight: NodeID | null = 'src';
     let connection!: TreeViewConnection<NodeID>;
-    connection = unwrap(createTreeView({
+    connection = createTreeView({
       nodes,
       root,
       ...context.interaction,
@@ -60,7 +59,7 @@ function mountTreeView(context: DemoContext, scenario: { readonly expanded: read
         effects: effectLabels(result.commands),
       }),
       onUpdate: render,
-    }));
+    });
 
     function render(): void {
       const { revision, state } = connection.getSnapshot();

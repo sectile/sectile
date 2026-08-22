@@ -1,7 +1,6 @@
 import { createRadioGroup, type RadioGroupConnection } from '@sectile/dom/radio-group';
 import { createTabs } from '@sectile/dom/tabs';
 import { createToolbar, type ToolbarConnection } from '@sectile/dom/toolbar';
-import { unwrap } from '@sectile/core/result';
 import { Bold, Code2, Italic, List, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -69,7 +68,7 @@ function mountTabs(
   panel.className = 'tab-panel';
   frame.append(root, panel);
   context.surface.append(frame);
-  const connection = unwrap(createTabs({
+  const connection = createTabs({
     root,
     ...context.interaction,
     items: tabItems.map((item) => item.id),
@@ -80,7 +79,7 @@ function mountTabs(
     policies: { activation },
     label: `${activation} release tabs`,
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     root.replaceChildren();
@@ -134,7 +133,7 @@ function mountRadio(
   context.surface.append(root);
   let external: RadioID | null = 'comfortable';
   let connection!: RadioGroupConnection<RadioID>;
-  connection = unwrap(createRadioGroup({
+  connection = createRadioGroup({
     root,
     ...context.interaction,
     items: radioItems.map((item) => item.id),
@@ -150,7 +149,7 @@ function mountRadio(
     } : { defaultValue: external }),
     defaultHighlightedValue: external,
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     root.replaceChildren();
@@ -195,7 +194,7 @@ function mountToolbar(
   let invoked: ToolbarID | null = null;
   let external: ToolbarID | null = 'bold';
   let connection!: ToolbarConnection<ToolbarID>;
-  connection = unwrap(createToolbar({
+  connection = createToolbar({
     root,
     ...context.interaction,
     items: toolbarItems,
@@ -211,7 +210,7 @@ function mountToolbar(
     } : { defaultHighlightedValue: external }),
     onInvoke: (id) => { invoked = id; status.textContent = `Invoked ${id}`; },
     onUpdate: render,
-  }));
+  });
   const icons = { bold: Bold, italic: Italic, code: Code2, list: List } as const;
   function render(): void {
     const { revision, state } = connection.getSnapshot();

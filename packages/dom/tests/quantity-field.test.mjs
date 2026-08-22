@@ -19,13 +19,13 @@ const registry = unwrap(createUnitRegistry([
 test('DOM quantity field owns compatible unit options, text editing, and canonical commit', () => {
   const input = new FakeInput();
   const unitSelect = new FakeSelect();
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     input,
     unitSelect,
     policies: { registry, canonicalUnit: 'meter' },
     defaultQuantity: { value: '1', unit: 'meter' },
     defaultDisplayUnit: 'centimeter',
-  }));
+  });
   assert.deepEqual(unitSelect.children.map(({ value }) => value), ['meter', 'centimeter', 'inch']);
   assert.equal(input.value, '100');
   input.setSelectionRange(0, 3);
@@ -40,13 +40,13 @@ test('DOM quantity field owns compatible unit options, text editing, and canonic
 test('DOM read-only quantity field rejects text mutation but allows display conversion', () => {
   const input = new FakeInput();
   const unitSelect = new FakeSelect();
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     input,
     unitSelect,
     readOnly: true,
     policies: { registry, canonicalUnit: 'meter' },
     defaultQuantity: { value: '1', unit: 'meter' },
-  }));
+  });
   assert.equal(field.handleEvent({ type: 'text', event: replaceAll('1', '2') }), false);
   unitSelect.value = 'centimeter';
   unitSelect.emit('change', {});
@@ -59,7 +59,7 @@ test('DOM quantity field applies unit-system defaults and commits inline unit ex
   const imperial = unwrap(createImperialUnitSystem(standard));
   const input = new FakeInput();
   const unitSelect = new FakeSelect();
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     input,
     unitSelect,
     policies: {
@@ -69,7 +69,7 @@ test('DOM quantity field applies unit-system defaults and commits inline unit ex
       evaluator: unwrap(createCalculatorExpression()),
     },
     defaultQuantity: { value: '1', unit: 'metre' },
-  }));
+  });
   assert.equal(field.getDisplayUnit(), 'foot');
   assert.deepEqual(unitSelect.children.map(({ value }) => value), ['inch', 'foot', 'yard', 'mile']);
   input.setSelectionRange(0, input.value.length);

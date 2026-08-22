@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createMenu as createDOMMenu } from '@sectile/dom/menu';
 import { createMenuButton as createDOMMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar as createDOMMenubar } from '@sectile/dom/menubar';
@@ -21,8 +20,8 @@ test('DOM and terminal menus and menubars preserve tree navigation parity', () =
   for (const [createDOM, createTerminal] of [[createDOMMenu, createTerminalMenu], [createDOMMenubar, createTerminalMenubar]]) {
     const root = new FakeElement();
     const options = { items, disabledItems: ['disabled'], defaultHighlightedValue: 'file', typeahead: { textValue: (id) => id } };
-    const DOM = unwrap(createDOM({ ...options, root }));
-    const terminal = unwrap(createTerminal(options));
+    const DOM = createDOM({ ...options, root });
+    const terminal = createTerminal(options);
     assertTrace(DOM, terminal, ['last', 'first', 'open-submenu', 'last', 'invoke', 'close-submenu']);
     root.emit('keydown', keyboard('h'));
     terminal.handleKeyboardInput({ key: 'h' });
@@ -33,8 +32,8 @@ test('DOM and terminal menus and menubars preserve tree navigation parity', () =
 test('DOM and terminal menu buttons preserve controlled popup parity', () => {
   const root = new FakeElement(); const trigger = new FakeElement();
   const options = { items, open: false, disabledItems: ['disabled'] };
-  const DOM = unwrap(createDOMMenuButton({ ...options, root, trigger }));
-  const terminal = unwrap(createTerminalMenuButton(options));
+  const DOM = createDOMMenuButton({ ...options, root, trigger });
+  const terminal = createTerminalMenuButton(options);
   assertTrace(DOM, terminal, ['open-popup']);
   assert.deepEqual(DOM.syncControlledValue(true), terminal.syncControlledValue(true));
   assertTrace(DOM, terminal, ['last', 'first', 'open-submenu', 'last', 'invoke']);

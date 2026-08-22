@@ -86,7 +86,7 @@ function mountNumberField(context: DemoContext, options: {
   let externalValue: string | null = options.initial;
   let externalInput = editing(options.draft ?? options.initial);
   let connection!: NumberFieldConnection;
-  connection = unwrap(createNumberField({
+  connection = createNumberField({
     input,
     ...context.interaction,
     label: options.label,
@@ -107,7 +107,7 @@ function mountNumberField(context: DemoContext, options: {
       ...(options.draft === undefined ? {} : { defaultInputState: editing(options.draft) }),
     }),
     onUpdate: render,
-  }));
+  });
 
   for (const expression of options.examples) {
     const button = document.createElement('button');

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createCheckboxGroup } from '../dist/checkbox-group.js';
 import { createSelect } from '../dist/select.js';
 import { createPagination } from '../dist/pagination.js';
@@ -11,7 +10,7 @@ import { createTagsInput } from '../dist/tags-input.js';
 
 test('DOM selection facades project checkbox, select, pagination, and step semantics', () => {
   const groupRoot = new FakeElement();
-  const group = unwrap(createCheckboxGroup({ root: groupRoot, items: ['alpha', 'beta'], defaultValue: ['alpha'] }));
+  const group = createCheckboxGroup({ root: groupRoot, items: ['alpha', 'beta'], defaultValue: ['alpha'] });
   const alpha = new FakeElement();
   group.setItemAttributes(alpha, { id: 'alpha' });
   assert.equal(groupRoot.attributes.get('role'), 'group');
@@ -23,7 +22,7 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   const selectRoot = new FakeElement();
   const trigger = new FakeElement();
   const popup = new FakeElement();
-  const select = unwrap(createSelect({ root: selectRoot, trigger, popup, items: ['alpha', 'beta'], defaultValue: 'alpha' }));
+  const select = createSelect({ root: selectRoot, trigger, popup, items: ['alpha', 'beta'], defaultValue: 'alpha' });
   select.handleEvent('next');
   assert.equal(select.getSnapshot().state.open, true);
   select.handleEvent('select');
@@ -31,7 +30,7 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.equal(popup.hidden, true);
 
   const paginationRoot = new FakeElement();
-  const pagination = unwrap(createPagination({ root: paginationRoot, items: ['1', '2', '3'], defaultValue: '1' }));
+  const pagination = createPagination({ root: paginationRoot, items: ['1', '2', '3'], defaultValue: '1' });
   const page = new FakeElement();
   pagination.setPageAttributes(page, '1');
   assert.equal(paginationRoot.attributes.get('role'), 'navigation');
@@ -40,7 +39,7 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.deepEqual(pagination.getSnapshot().state.selection.selected, ['3']);
 
   const stepperRoot = new FakeElement();
-  const stepper = unwrap(createStepper({ root: stepperRoot, items: ['account', 'profile'], defaultValue: 'account', defaultHighlightedValue: 'account' }));
+  const stepper = createStepper({ root: stepperRoot, items: ['account', 'profile'], defaultValue: 'account', defaultHighlightedValue: 'account' });
   stepper.handleEvent('next-step');
   assert.equal(stepper.getSnapshot().state.cursor.current, 'profile');
   assert.deepEqual(stepper.getSnapshot().state.selection.selected, ['account']);
@@ -51,7 +50,7 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
 
 test('DOM rating and structured input facades expose complete state transitions', async () => {
   const ratingRoot = new FakeElement();
-  const rating = unwrap(createRating({ root: ratingRoot, items: ['1', '2', '3'], defaultValue: '1', defaultHighlightedValue: '1', clearable: true }));
+  const rating = createRating({ root: ratingRoot, items: ['1', '2', '3'], defaultValue: '1', defaultHighlightedValue: '1', clearable: true });
   rating.handleEvent('increase');
   await Promise.resolve();
   assert.deepEqual(rating.getSnapshot().state.selection.selected, ['2']);
@@ -60,13 +59,13 @@ test('DOM rating and structured input facades expose complete state transitions'
 
   const inputs = [new FakeElement(), new FakeElement(), new FakeElement(), new FakeElement()];
   const completed = [];
-  const pin = unwrap(createPinInput({ root: new FakeElement(), inputs, onComplete: (value) => completed.push(value) }));
+  const pin = createPinInput({ root: new FakeElement(), inputs, onComplete: (value) => completed.push(value) });
   for (const value of ['1', '2', '3', '4']) pin.handleEvent({ type: 'input', value });
   assert.deepEqual(pin.getSnapshot().state.values, ['1', '2', '3', '4']);
   assert.deepEqual(completed, ['1234']);
 
   const tagsInput = new FakeElement();
-  const tags = unwrap(createTagsInput({ root: new FakeElement(), input: tagsInput, defaultValue: ['dom'], defaultInputValue: 'terminal' }));
+  const tags = createTagsInput({ root: new FakeElement(), input: tagsInput, defaultValue: ['dom'], defaultInputValue: 'terminal' });
   tags.handleEvent({ type: 'add' });
   assert.deepEqual(tags.getSnapshot().state.tags, ['dom', 'terminal']);
   tags.handleEvent({ type: 'focus-tag', index: 0 });
@@ -75,11 +74,11 @@ test('DOM rating and structured input facades expose complete state transitions'
 });
 
 test('DOM extended facades reject mutations while read-only', () => {
-  const select = unwrap(createSelect({ root: new FakeElement(), trigger: new FakeElement(), popup: new FakeElement(), items: ['a', 'b'], defaultValue: 'a', readOnly: true }));
+  const select = createSelect({ root: new FakeElement(), trigger: new FakeElement(), popup: new FakeElement(), items: ['a', 'b'], defaultValue: 'a', readOnly: true });
   assert.equal(select.handleEvent({ type: 'select', id: 'b' }), false);
   assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['a']);
 
-  const pin = unwrap(createPinInput({ root: new FakeElement(), inputs: [new FakeElement(), new FakeElement()], defaultValue: '1', readOnly: true }));
+  const pin = createPinInput({ root: new FakeElement(), inputs: [new FakeElement(), new FakeElement()], defaultValue: '1', readOnly: true });
   assert.equal(pin.handleEvent({ type: 'input', value: '2' }), false);
   assert.deepEqual(pin.getSnapshot().state.values, ['1', '']);
 });

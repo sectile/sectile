@@ -46,7 +46,7 @@ function mountCombobox(context: DemoContext, scenario: { readonly mode: 'prefix'
     let accepted: ItemID | null = null;
     const initialInput = unwrap(createTextEditingState(scenario.initial, { anchorCodeUnitOffset: scenario.initial.length, focusCodeUnitOffset: scenario.initial.length }));
     let externalValue: ItemID | null = null; let externalInput: TextEditingState = initialInput; let externalOpen = scenario.initial.length > 0; let externalHighlight: ItemID | null = null;
-    let connection = unwrap(createCombobox<ItemID>({
+    let connection = createCombobox<ItemID>({
       items,
       input,
       popup,
@@ -67,7 +67,7 @@ function mountCombobox(context: DemoContext, scenario: { readonly mode: 'prefix'
         effects: effectLabels(result.commands),
       }),
       onUpdate: render,
-    }));
+    });
 
     function render(): void {
       const { revision, state } = connection.getSnapshot();

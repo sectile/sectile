@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
@@ -204,6 +206,18 @@ export function createTreeGridController<
 }
 
 export function createTreeGrid<RowID extends StableID, CellID extends StableID>(
+  options: TreeGridOptions<RowID, CellID>,
+): FacadeConnection<TreeGridConnection<RowID, CellID>> {
+  return unwrap(tryCreateTreeGrid(options));
+}
+
+export function tryCreateTreeGrid<RowID extends StableID, CellID extends StableID>(
+  options: TreeGridOptions<RowID, CellID>,
+): Result<FacadeConnection<TreeGridConnection<RowID, CellID>>> {
+  return createFacadeConnection(options, (options) => tryCreateTreeGridConnection(options));
+}
+
+function tryCreateTreeGridConnection<RowID extends StableID, CellID extends StableID>(
   options: TreeGridOptions<RowID, CellID>,
 ): Result<TreeGridConnection<RowID, CellID>> {
   const model = createTreeGridModelFromRows(options.rows);

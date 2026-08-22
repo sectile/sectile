@@ -235,6 +235,7 @@ sectile/
 │   │   │   │   ├── controller.ts
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── disabled-items.ts
+│   │   │   │   ├── facade.ts
 │   │   │   │   ├── interaction.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
@@ -284,6 +285,7 @@ sectile/
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── expansion-controls.test.mjs
 │   │   │   ├── extended-components.test.mjs
+│   │   │   ├── factory-api.test.mjs
 │   │   │   ├── feed.test.mjs
 │   │   │   ├── grid.test.mjs
 │   │   │   ├── linear-controls.test.mjs
@@ -312,6 +314,7 @@ sectile/
 │       │   │   ├── checked-control.ts
 │       │   │   ├── controller.ts
 │       │   │   ├── disabled-items.ts
+│       │   │   ├── facade.ts
 │       │   │   ├── menu-control.ts
 │       │   │   ├── popup-control.ts
 │       │   │   ├── semantic-controller.ts
@@ -363,6 +366,7 @@ sectile/
 │       │   ├── combobox.test.mjs
 │       │   ├── expansion-controls.test.mjs
 │       │   ├── extended-components.test.mjs
+│       │   ├── factory-api.test.mjs
 │       │   ├── feed.test.mjs
 │       │   ├── grid.test.mjs
 │       │   ├── keyboard.test.mjs

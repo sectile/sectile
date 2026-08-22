@@ -53,39 +53,39 @@ test('terminal read-only examples preserve navigation while rejecting mutation',
 });
 
 test('terminal playground composes every facade through public package subpaths', () => {
-  const listbox = unwrap(createListbox({ items: ['a', 'b'], defaultHighlightedValue: 'a' }));
+  const listbox = createListbox({ items: ['a', 'b'], defaultHighlightedValue: 'a' });
   assert.equal(listbox.handleKeyboardInput({ key: 'down' }), true);
   assert.equal(listbox.getSnapshot().state.cursor.current, 'b');
 
-  const slider = unwrap(createSlider({ min: '0', max: '100', step: '5', defaultValue: 8 }));
+  const slider = createSlider({ min: '0', max: '100', step: '5', defaultValue: 8 });
   assert.equal(slider.handleKeyboardInput({ key: 'right' }), true);
   assert.equal(slider.getValue(), '45');
 
-  const calendar = unwrap(createCalendar({
+  const calendar = createCalendar({
     rows: [['a', 'b'], ['c', 'd']], defaultHighlightedValue: 'a',
-  }));
+  });
   assert.equal(calendar.handleKeyboardInput({ key: 'right' }), true);
   assert.equal(calendar.getSnapshot().state.cursor.current, 'b');
 
-  const treeView = unwrap(createTreeView({
+  const treeView = createTreeView({
     nodes: [{ id: 'root', parentID: null }, { id: 'child', parentID: 'root' }],
     defaultHighlightedValue: 'root',
-  }));
+  });
   assert.equal(treeView.handleKeyboardInput({ key: 'right' }), true);
   assert.deepEqual(treeView.getSnapshot().state.expansion.ids, ['root']);
 
-  const text = unwrap(createText());
+  const text = createText();
   assert.equal(text.handleKeyboardInput({ key: '한', text: '한' }), true);
   assert.equal(text.getValue(), '한');
 
-  const combobox = unwrap(createCombobox({
+  const combobox = createCombobox({
     items: [{ id: 'alpha', label: 'Alpha' }, { id: 'beta', label: 'Beta' }],
     policies: { matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()) },
-  }));
+  });
   assert.equal(combobox.handleKeyboardInput({ key: 'a', text: 'a' }), true);
   assert.equal(combobox.getSnapshot().state.cursor.current, 'alpha');
 
-  const treeGrid = unwrap(createTreeGrid({
+  const treeGrid = createTreeGrid({
     rows: [
       { id: 'root', parentID: null, cells: ['root-name', 'root-status'] },
       { id: 'child', parentID: 'root', cells: ['child-name', 'child-status'] },
@@ -93,7 +93,7 @@ test('terminal playground composes every facade through public package subpaths'
     defaultHighlightedValue: 'root-name',
     getCellValue: () => '',
     setCellValue: () => {},
-  }));
+  });
   assert.equal(treeGrid.handleKeyboardInput(
     toTerminalKeyboardInput(undefined, { name: 'right', meta: true }),
   ), true);

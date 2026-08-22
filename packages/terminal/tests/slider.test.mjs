@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createRange } from '@sectile/core/range';
 import {
   createSlider,
+  tryCreateSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
@@ -11,20 +12,20 @@ import {
 
 test('terminal slider facade constructs a bounded range and owns render updates', () => {
   let updates = 0;
-  const connection = unwrap(createSlider({
+  const connection = createSlider({
     min: '0',
     max: '1',
     step: '0.25',
     defaultValue: 1,
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.getValue(), '0.25');
   assert.equal(connection.handleKeyboardInput({ key: 'right' }), true);
   assert.equal(connection.handleKeyboardInput({ key: 'enter' }), false);
   assert.equal(connection.getValue(), '0.5');
   assert.equal(updates, 1);
 
-  const invalid = createSlider({ min: '1', max: '0', step: '0.25' });
+  const invalid = tryCreateSlider({ min: '1', max: '0', step: '0.25' });
   assert.equal(invalid.ok, false);
 });
 

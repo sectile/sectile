@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createAccordion as createDOMAccordion } from '@sectile/dom/accordion';
 import { createDisclosure as createDOMDisclosure } from '@sectile/dom/disclosure';
 import { createAccordion as createTerminalAccordion } from '@sectile/terminal/accordion';
@@ -14,8 +13,8 @@ test('DOM and terminal accordions preserve cursor and expansion parity', () => {
     defaultOpenIDs: ['one'],
     policies: { multiple: true },
   };
-  const DOM = unwrap(createDOMAccordion({ ...options, root: new FakeElement() }));
-  const terminal = unwrap(createTerminalAccordion(options));
+  const DOM = createDOMAccordion({ ...options, root: new FakeElement() });
+  const terminal = createTerminalAccordion(options);
   assertSemanticTrace(DOM, terminal, [
     'next',
     'toggle',
@@ -27,12 +26,12 @@ test('DOM and terminal accordions preserve cursor and expansion parity', () => {
 });
 
 test('DOM and terminal disclosures preserve uncontrolled and controlled parity', () => {
-  const DOM = unwrap(createDOMDisclosure({ trigger: new FakeElement(), defaultOpen: false }));
-  const terminal = unwrap(createTerminalDisclosure({ defaultOpen: false }));
+  const DOM = createDOMDisclosure({ trigger: new FakeElement(), defaultOpen: false });
+  const terminal = createTerminalDisclosure({ defaultOpen: false });
   assertSemanticTrace(DOM, terminal, ['toggle', 'open', 'close', 'toggle']);
 
-  const controlledDOM = unwrap(createDOMDisclosure({ trigger: new FakeElement(), open: false }));
-  const controlledTerminal = unwrap(createTerminalDisclosure({ open: false }));
+  const controlledDOM = createDOMDisclosure({ trigger: new FakeElement(), open: false });
+  const controlledTerminal = createTerminalDisclosure({ open: false });
   assertSemanticTrace(controlledDOM, controlledTerminal, ['toggle']);
   assert.deepEqual(
     controlledDOM.syncControlledValue(true),

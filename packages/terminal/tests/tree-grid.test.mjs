@@ -6,6 +6,7 @@ import { createTree } from '@sectile/core/tree';
 import { createTreeGridModel } from '@sectile/core/tree-grid';
 import {
   createTreeGrid,
+  tryCreateTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -30,14 +31,14 @@ test('terminal tree-grid connection owns edit buffering and cancel restoration',
   const values = new Map([['root-name', 'Root']]);
   const events = [];
   let updates = 0;
-  const connection = unwrap(createTreeGrid({
+  const connection = createTreeGrid({
     rows: modelRows(),
     defaultHighlightedValue: 'root-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event }) => events.push(event),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.model.tree.parentOf('child'), 'root');
 
   assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
@@ -48,7 +49,7 @@ test('terminal tree-grid connection owns edit buffering and cancel restoration',
   assert.deepEqual(events, ['start-edit', 'cancel-edit']);
   assert.equal(updates, 3);
 
-  const invalid = createTreeGrid({
+  const invalid = tryCreateTreeGrid({
     rows: [{ id: 'child', parentID: 'missing', cells: ['child-name'] }],
     getCellValue: () => '',
     setCellValue: () => {},
@@ -57,13 +58,13 @@ test('terminal tree-grid connection owns edit buffering and cancel restoration',
   assert.equal(invalid.error.code, 'missing-parent');
 
   let synchronizedUpdates = 0;
-  const controlled = unwrap(createTreeGrid({
+  const controlled = createTreeGrid({
     rows: modelRows(),
     value: null,
     getCellValue: () => '',
     setCellValue: () => {},
     onUpdate: () => { synchronizedUpdates += 1; },
-  }));
+  });
   const synchronized = unwrap(controlled.syncControlledValues({ value: 'root-name' }));
   assert.deepEqual(synchronized.state.selection.selected, ['root-name']);
   assert.equal(synchronizedUpdates, 1);

@@ -1,7 +1,6 @@
 import { createCheckbox, type CheckboxConnection } from '@sectile/dom/checkbox';
 import { createSwitch, type SwitchConnection } from '@sectile/dom/switch';
 import { createToggleButton, type ToggleButtonConnection } from '@sectile/dom/toggle-button';
-import { unwrap } from '@sectile/core/result';
 import { Bell, Bold, Check, createElement, Minus } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -106,7 +105,7 @@ function mountCheckbox(
   elements.control.append(marker, label);
   let external = initial;
   let connection!: CheckboxConnection;
-  connection = unwrap(createCheckbox({
+  connection = createCheckbox({
     element: elements.control,
     ...context.interaction,
     policies: { allowMixed: true },
@@ -118,7 +117,7 @@ function mountCheckbox(
       },
     } : { defaultValue: initial }),
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     const visualState = state.checked === 'mixed' ? 'mixed' : state.checked ? 'checked' : 'unchecked';
@@ -177,7 +176,7 @@ function mountSwitch(context: DemoContext, initial: boolean, controlled: boolean
   elements.preview.textContent = 'Changes take effect as soon as the switch is toggled.';
   let external = initial;
   let connection!: SwitchConnection;
-  connection = unwrap(createSwitch({
+  connection = createSwitch({
     element: elements.control,
     ...context.interaction,
     ...(controlled ? {
@@ -188,7 +187,7 @@ function mountSwitch(context: DemoContext, initial: boolean, controlled: boolean
       },
     } : { defaultChecked: initial }),
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     elements.root.dataset['state'] = state.checked ? 'on' : 'off';
@@ -220,7 +219,7 @@ function mountToggle(
     : 'Watch deployment status changes.';
   let external = initial;
   let connection!: ToggleButtonConnection;
-  connection = unwrap(createToggleButton({
+  connection = createToggleButton({
     element: elements.control,
     ...context.interaction,
     ...(controlled ? {
@@ -231,7 +230,7 @@ function mountToggle(
       },
     } : { defaultPressed: initial }),
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     elements.root.dataset['pressed'] = String(state.pressed);

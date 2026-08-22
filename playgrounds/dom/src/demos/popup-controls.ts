@@ -1,7 +1,6 @@
 import { createAlertDialog, type AlertDialogConnection } from '@sectile/dom/alert-dialog';
 import { createDialog, type DialogConnection } from '@sectile/dom/dialog';
 import { createTooltip, type TooltipConnection } from '@sectile/dom/tooltip';
-import { unwrap } from '@sectile/core/result';
 import { createElement, HelpCircle, Trash2, X } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -45,13 +44,13 @@ function mountDialog(context: DemoContext, options: { readonly title: string; re
   surface.body.append(input); surface.actions.append(surface.close, save);
   context.surface.append(surface.root);
   let external = false; let connection!: DialogConnection;
-  connection = unwrap(createDialog({
+  connection = createDialog({
     root: surface.popup, trigger: surface.trigger, modal: options.modal,
     ...context.interaction,
     labelledBy: surface.title.id, describedBy: surface.description.id, initialFocus: input,
     ...(options.controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
     onUpdate: render,
-  }));
+  });
   surface.close.addEventListener('click', () => connection.handleEvent('close'));
   surface.iconClose.addEventListener('click', () => connection.handleEvent('close'));
   save.addEventListener('click', () => connection.handleEvent('close'));
@@ -68,13 +67,13 @@ function mountAlertDialog(context: DemoContext, title: string, controlled: boole
   surface.actions.append(surface.close, confirm);
   context.surface.append(surface.root);
   let external = false; let announcements = 0; let connection!: AlertDialogConnection;
-  connection = unwrap(createAlertDialog({
+  connection = createAlertDialog({
     root: surface.popup, trigger: surface.trigger, labelledBy: surface.title.id,
     ...context.interaction,
     describedBy: surface.description.id, initialFocus: surface.close,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : {}),
     onAnnounce: () => { announcements += 1; }, onUpdate: render,
-  }));
+  });
   surface.close.addEventListener('click', () => connection.handleEvent('close'));
   surface.iconClose.addEventListener('click', () => connection.handleEvent('close'));
   confirm.addEventListener('click', () => connection.handleEvent('close'));
@@ -89,12 +88,12 @@ function mountTooltip(context: DemoContext, copy: string, initial: boolean, cont
   const tooltip = document.createElement('span'); tooltip.className = 'tooltip-popup'; tooltip.textContent = copy;
   root.append(trigger, tooltip); context.surface.append(root);
   let external = initial; let connection!: TooltipConnection;
-  connection = unwrap(createTooltip({
+  connection = createTooltip({
     root: tooltip, trigger, id: `tooltip-${context.instanceID}-${controlled ? 'controlled' : initial ? 'open' : 'help'}`,
     ...context.interaction,
     ...(controlled ? { open: external, onOpenChange: (open) => { external = open; queueMicrotask(() => connection.syncControlledValue(external)); } } : { defaultOpen: initial }),
     onUpdate: render,
-  }));
+  });
   function render(): void { const { revision, state } = connection.getSnapshot(); context.showState(revision, { open: state.open, describedBy: trigger.getAttribute('aria-describedby'), ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render();
   return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };

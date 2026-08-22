@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
@@ -120,6 +122,18 @@ export function createCalendarController<ID extends StableID>(
 }
 
 export function createCalendar<ID extends StableID>(
+  options: CalendarOptions<ID>,
+): FacadeConnection<CalendarConnection<ID>> {
+  return unwrap(tryCreateCalendar(options));
+}
+
+export function tryCreateCalendar<ID extends StableID>(
+  options: CalendarOptions<ID>,
+): Result<FacadeConnection<CalendarConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateCalendarConnection(options));
+}
+
+function tryCreateCalendarConnection<ID extends StableID>(
   options: CalendarOptions<ID>,
 ): Result<CalendarConnection<ID>> {
   const grid = createGrid(options.rows);

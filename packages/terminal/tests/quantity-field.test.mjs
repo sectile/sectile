@@ -16,10 +16,10 @@ const registry = unwrap(createUnitRegistry([
 ]));
 
 test('terminal quantity field cycles units and commits canonical decimal values', () => {
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     policies: { registry, canonicalUnit: 'meter' },
     defaultQuantity: { value: '1', unit: 'meter' },
-  }));
+  });
   field.handleKeyboardInput({ key: ']' });
   assert.equal(field.getDisplayUnit(), 'centimeter');
   assert.equal(field.getText(), '100');
@@ -33,11 +33,11 @@ test('terminal quantity field cycles units and commits canonical decimal values'
 });
 
 test('terminal read-only quantity field allows unit navigation and rejects value mutation', () => {
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     readOnly: true,
     policies: { registry, canonicalUnit: 'meter' },
     defaultQuantity: { value: '1', unit: 'meter' },
-  }));
+  });
   assert.equal(field.handleTextInput('2'), false);
   assert.equal(field.handleKeyboardInput({ key: ']' }), true);
   assert.equal(field.getDisplayUnit(), 'centimeter');
@@ -47,7 +47,7 @@ test('terminal read-only quantity field allows unit navigation and rejects value
 test('terminal quantity field applies profiles and accepts calculator input with a compact unit', () => {
   const standard = unwrap(createStandardUnitRegistry());
   const imperial = unwrap(createImperialUnitSystem(standard));
-  const field = unwrap(createQuantityField({
+  const field = createQuantityField({
     policies: {
       registry: standard,
       canonicalUnit: 'metre',
@@ -55,7 +55,7 @@ test('terminal quantity field applies profiles and accepts calculator input with
       evaluator: unwrap(createCalculatorExpression()),
     },
     defaultQuantity: { value: '1', unit: 'metre' },
-  }));
+  });
   assert.equal(field.getDisplayUnit(), 'foot');
   assert.equal(field.handleKeyboardInput({ key: ']' }), true);
   assert.equal(field.getDisplayUnit(), 'yard');

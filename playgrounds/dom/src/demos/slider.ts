@@ -1,7 +1,6 @@
 import { createMultiThumbSlider } from '@sectile/dom/multi-thumb-slider';
 import { createSlider } from '@sectile/dom/slider';
 import type { StableID } from '@sectile/core';
-import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 export const sliderDemo: DemoDefinition = {
@@ -130,7 +129,7 @@ function mountSingleSlider(context: DemoContext, options: {
   context.surface.append(elements.root);
 
   let externalValue = options.defaultValue;
-  const connection = unwrap(createSlider({
+  const connection = createSlider({
     min: options.min,
     max: options.max,
     step: options.step,
@@ -155,7 +154,7 @@ function mountSingleSlider(context: DemoContext, options: {
       effects: effectLabels(result.commands),
     }),
     onUpdate: render,
-  }));
+  });
 
   function render(): void {
     const { revision, state } = connection.getSnapshot();
@@ -203,7 +202,7 @@ function mountMultiThumbSlider<ID extends StableID>(context: DemoContext, option
   let previousTicks = [...options.defaultValues];
   let previousCursor: ID | null = options.ids[0] ?? null;
   let externalValues = [...options.defaultValues];
-  const connection = unwrap(createMultiThumbSlider({
+  const connection = createMultiThumbSlider({
     root: elements.root,
     track: elements.track,
     ...context.interaction,
@@ -241,7 +240,7 @@ function mountMultiThumbSlider<ID extends StableID>(context: DemoContext, option
       previousCursor = focused;
       render();
     },
-  }));
+  });
   for (const [id, thumb] of thumbs) connection.setThumbAttributes(thumb, id);
 
   function render(): void {

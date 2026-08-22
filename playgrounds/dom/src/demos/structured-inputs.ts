@@ -1,6 +1,5 @@
 import { createPinInput, type PinInputConnection } from '@sectile/dom/pin-input';
 import { createTagsInput, type TagsInputConnection } from '@sectile/dom/tags-input';
-import { unwrap } from '@sectile/core/result';
 import { createElement, X } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -34,7 +33,7 @@ function mountPinInput(context: DemoContext, length: number, initial: string, co
   const status = document.createElement('p'); status.className = 'input-status'; status.setAttribute('aria-live', 'polite');
   wrapper.append(label, root, status); context.surface.append(wrapper);
   let value = initial; let completed: string | null = null; let connection!: PinInputConnection;
-  connection = unwrap(createPinInput({ root, inputs, ...context.interaction, label: label.textContent, policies: { accept: (part) => mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: initial }), onComplete: (next) => { completed = next; render(); }, onUpdate: render }));
+  connection = createPinInput({ root, inputs, ...context.interaction, label: label.textContent, policies: { accept: (part) => mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: initial }), onComplete: (next) => { completed = next; render(); }, onUpdate: render });
   function render(): void { const { revision, state } = connection.getSnapshot(); status.textContent = completed === null ? `${state.values.filter(Boolean).length} of ${length} characters entered` : `Code ${completed} is complete`; context.showState(revision, { value: state.values.join(''), cells: state.values, current: state.current, complete: completed !== null, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => inputs[connection.getSnapshot().state.current]?.focus(), disconnect: () => connection.disconnect() };
 }
@@ -47,7 +46,7 @@ function mountTagsInput(context: DemoContext, initial: readonly string[], maxTag
   const hint = document.createElement('p'); hint.className = 'input-status';
   wrapper.append(label, root, hint); context.surface.append(wrapper);
   let value = [...initial]; let inputValue = ''; let connection!: TagsInputConnection;
-  connection = unwrap(createTagsInput({ root, input, ...context.interaction, label: 'Project tags', policies: { maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: initial }), onUpdate: render }));
+  connection = createTagsInput({ root, input, ...context.interaction, label: 'Project tags', policies: { maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: initial }), onUpdate: render });
   function sync(): void { connection.syncControlledValues({ value, inputValue }); }
   function render(): void { const { revision, state } = connection.getSnapshot(); const tags = state.tags.map((tag, index) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'tag-token'; button.disabled = context.interaction.disabled === true; button.append(document.createTextNode(tag), createElement(X, { 'aria-hidden': 'true', height: 13, width: 13 })); connection.setTagAttributes(button, index); button.classList.toggle('current', state.current === index); return button; }); root.replaceChildren(...tags, input); hint.textContent = `${state.tags.length} of ${maxTags} tags · Enter or comma adds the draft`; context.showState(revision, { tags: state.tags, draft: state.draft, current: state.current, maxTags, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => input.focus(), disconnect: () => connection.disconnect() };

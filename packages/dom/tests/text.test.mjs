@@ -7,11 +7,11 @@ import { createText, createTextController, toTextEvent } from '../dist/text.js';
 test('DOM text facade owns beforeinput rendering and IME composition lifecycle', () => {
   const element = new FakeTextElement();
   const transitions = [];
-  const connection = unwrap(createText({
+  const connection = createText({
     element,
     defaultValue: unwrap(createTextEditingState('a', selection(1))),
     onTransition: ({ input }) => transitions.push(input.type),
-  }));
+  });
   assert.equal(element.value, 'a');
   assert.equal(connection.handleBeforeInput(inputEvent('insertText', '한')), true);
   assert.equal(connection.getValue(), 'a한');
@@ -37,11 +37,11 @@ test('DOM text adopts native word and line deletion results', () => {
   const initialText = 'one two\nthree four';
   const element = new FakeTextElement();
   const transitions = [];
-  const connection = unwrap(createText({
+  const connection = createText({
     element,
     defaultValue: unwrap(createTextEditingState(initialText, selection(initialText.length))),
     onTransition: ({ input }) => transitions.push(input),
-  }));
+  });
   let prevented = false;
   element.emit('beforeinput', {
     inputType: 'deleteWordBackward',
@@ -78,10 +78,10 @@ test('DOM text adopts native word and line deletion results', () => {
 
 test('DOM text adopts non-cancelable and Unicode-safe native replacements', () => {
   const element = new FakeTextElement();
-  const connection = unwrap(createText({
+  const connection = createText({
     element,
     defaultValue: unwrap(createTextEditingState('A😀B', selection(3))),
-  }));
+  });
   let prevented = false;
   element.emit('beforeinput', {
     inputType: 'insertReplacementText',
@@ -104,11 +104,11 @@ test('controlled DOM text proposes native edits and restores until synchronized'
   const initial = unwrap(createTextEditingState('alpha beta', selection(10)));
   const element = new FakeTextElement();
   let proposed = null;
-  const connection = unwrap(createText({
+  const connection = createText({
     element,
     value: initial,
     onValueChange: ({ value }) => { proposed = value; },
-  }));
+  });
 
   element.value = 'alpha ';
   element.selectionStart = 6;

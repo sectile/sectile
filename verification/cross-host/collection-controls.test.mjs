@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createCarousel as createDOMCarousel } from '@sectile/dom/carousel';
 import { createFeed as createDOMFeed } from '@sectile/dom/feed';
 import { createGridControl as createDOMGrid } from '@sectile/dom/grid';
@@ -10,16 +9,16 @@ import { createGridControl as createTerminalGrid } from '@sectile/terminal/grid'
 
 test('DOM and terminal grids preserve navigation, disabled, selection, and edit traces', () => {
   const options = { rows: [['a', 'b', 'c'], ['d', null, 'e']], defaultHighlightedValue: 'a', disabledItems: ['b'], policies: { boundary: 'wrap-axis' } };
-  const DOM = unwrap(createDOMGrid({ ...options, root: new FakeElement() }));
-  const terminal = unwrap(createTerminalGrid(options));
+  const DOM = createDOMGrid({ ...options, root: new FakeElement() });
+  const terminal = createTerminalGrid(options);
   assertTrace(DOM, terminal, ['right', 'down', 'select', 'start-edit', 'cancel-edit', { type: 'focus', id: 'd' }]);
 });
 
 test('DOM and terminal carousels preserve boundaries, pause state, and controlled sync', () => {
   for (const controlled of [false, true]) {
     const options = { slides: ['a', 'b', 'c'], policies: { wrap: false }, ...(controlled ? { value: 'a', paused: false } : { defaultValue: 'a', defaultPaused: false }) };
-    const DOM = unwrap(createDOMCarousel({ ...options, root: new FakeElement() }));
-    const terminal = unwrap(createTerminalCarousel(options));
+    const DOM = createDOMCarousel({ ...options, root: new FakeElement() });
+    const terminal = createTerminalCarousel(options);
     assertTrace(DOM, terminal, ['previous', 'next', 'last', 'next', 'toggle-pause', { type: 'pause-for', reason: 'hover' }, { type: 'resume-for', reason: 'hover' }]);
     assert.deepEqual(DOM.getPosition(), terminal.getPosition());
     if (controlled) {
@@ -31,8 +30,8 @@ test('DOM and terminal carousels preserve boundaries, pause state, and controlle
 
 test('DOM and terminal feeds preserve revisioned request and window traces', () => {
   const requests = { DOM: [], terminal: [] };
-  const DOM = unwrap(createDOMFeed({ root: new FakeElement(), items: ['a', 'b'], revision: 1, onRequestWindow: (...request) => requests.DOM.push(request) }));
-  const terminal = unwrap(createTerminalFeed({ items: ['a', 'b'], revision: 1, onRequestWindow: (...request) => requests.terminal.push(request) }));
+  const DOM = createDOMFeed({ root: new FakeElement(), items: ['a', 'b'], revision: 1, onRequestWindow: (...request) => requests.DOM.push(request) });
+  const terminal = createTerminalFeed({ items: ['a', 'b'], revision: 1, onRequestWindow: (...request) => requests.terminal.push(request) });
   assertTrace(DOM, terminal, ['next', 'request-after']);
   assert.deepEqual(requests.DOM, requests.terminal);
   assert.deepEqual(DOM.syncWindow({ items: ['b', 'c'], revision: 2, highlightedValue: 'b' }), terminal.syncWindow({ items: ['b', 'c'], revision: 2, highlightedValue: 'b' }));

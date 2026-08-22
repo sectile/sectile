@@ -6,10 +6,10 @@ import { createText, createTextController, toTextEvent } from '../dist/text.js';
 
 test('terminal text facade owns grapheme-safe keyboard editing', () => {
   let updates = 0;
-  const connection = unwrap(createText({
+  const connection = createText({
     defaultValue: unwrap(createTextEditingState('a😀', selection(3))),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.handleKeyboardInput({ key: 'backspace' }), true);
   assert.equal(connection.getValue(), 'a');
   assert.equal(connection.handleKeyboardInput({ key: '한', text: '한' }), true);

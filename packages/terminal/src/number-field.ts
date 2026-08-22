@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
@@ -54,7 +56,15 @@ export interface NumberFieldConnection {
   handleTextInput(text: string): boolean;
 }
 
-export function createNumberField(options: NumberFieldOptions = {}): Result<NumberFieldConnection> {
+export function createNumberField(options: NumberFieldOptions = {}): FacadeConnection<NumberFieldConnection> {
+  return unwrap(tryCreateNumberField(options));
+}
+
+export function tryCreateNumberField(options: NumberFieldOptions = {}): Result<FacadeConnection<NumberFieldConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateNumberFieldConnection(options));
+}
+
+function tryCreateNumberFieldConnection(options: NumberFieldOptions = {}): Result<NumberFieldConnection> {
   const valueControlled = options.value !== undefined;
   const inputControlled = options.inputState !== undefined;
   const required = options.required ?? options.policies?.required;

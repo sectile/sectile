@@ -10,46 +10,46 @@ import { createTreeView } from '@sectile/dom/tree-view';
 import { unwrap } from '@sectile/core/result';
 
 test('DOM playground composes every facade through public package subpaths', () => {
-  const listbox = unwrap(createListbox({
+  const listbox = createListbox({
     items: ['a', 'b'], root: new FakeElement(), defaultHighlightedValue: 'a',
-  }));
+  });
   assert.equal(listbox.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
   assert.equal(listbox.getSnapshot().state.cursor.current, 'b');
 
-  const slider = unwrap(createSlider({
+  const slider = createSlider({
     min: '0', max: '100', step: '5', defaultValue: 8, root: new FakeElement(),
-  }));
+  });
   assert.equal(slider.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
   assert.equal(slider.getValue(), '45');
 
-  const calendar = unwrap(createCalendar({
+  const calendar = createCalendar({
     rows: [['a', 'b'], ['c', 'd']], root: new FakeElement(), defaultHighlightedValue: 'a',
-  }));
+  });
   assert.equal(calendar.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
   assert.equal(calendar.getSnapshot().state.cursor.current, 'b');
 
-  const treeView = unwrap(createTreeView({
+  const treeView = createTreeView({
     nodes: [{ id: 'root', parentID: null }, { id: 'child', parentID: 'root' }],
     root: new FakeElement(),
     defaultHighlightedValue: 'root',
-  }));
+  });
   assert.equal(treeView.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
   assert.deepEqual(treeView.getSnapshot().state.expansion.ids, ['root']);
 
-  const text = unwrap(createText({ element: new FakeTextElement() }));
+  const text = createText({ element: new FakeTextElement() });
   assert.equal(text.handleBeforeInput(inputEvent('insertText', '한')), true);
   assert.equal(text.getValue(), '한');
 
-  const combobox = unwrap(createCombobox({
+  const combobox = createCombobox({
     items: [{ id: 'alpha', label: 'Alpha' }, { id: 'beta', label: 'Beta' }],
     input: new FakeTextElement(),
     popup: new FakeElement(),
     policies: { matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()) },
-  }));
+  });
   assert.equal(combobox.handleBeforeInput(inputEvent('insertText', 'a')), true);
   assert.equal(combobox.getSnapshot().state.cursor.current, 'alpha');
 
-  const treeGrid = unwrap(createTreeGrid({
+  const treeGrid = createTreeGrid({
     rows: [
       { id: 'root', parentID: null, cells: ['root-name', 'root-status'] },
       { id: 'child', parentID: 'root', cells: ['child-name', 'child-status'] },
@@ -58,7 +58,7 @@ test('DOM playground composes every facade through public package subpaths', () 
     defaultHighlightedValue: 'root-name',
     getCellValue: () => '',
     setCellValue: () => {},
-  }));
+  });
   assert.equal(treeGrid.handleKeyboardEvent(keyboardEvent('ArrowRight', { altKey: true })), true);
   assert.equal(treeGrid.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
   assert.equal(treeGrid.getSnapshot().state.cursor.current, 'child-name');

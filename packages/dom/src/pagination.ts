@@ -1,13 +1,23 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import type { PaginationEvent, PaginationState } from '@sectile/core/pagination';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { createRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
+import { tryCreateRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
 
 export type PaginationOptions<ID extends StableID = StableID> = Omit<RadioGroupOptions<ID>, 'orientation' | 'onValueChange' | 'onHighlightedValueChange'> & { readonly onPageChange?: (page: ID | null) => void };
 export interface PaginationConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<PaginationState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<PaginationState<ID>>>; setPageAttributes(element: HTMLElement, id: ID, disabled?: boolean): void; handleEvent(event: PaginationEvent<ID>): boolean; disconnect(): void }
 
-export function createPagination<ID extends StableID>(options: PaginationOptions<ID>): Result<PaginationConnection<ID>> {
-  const result = createRadioGroup({ ...options, orientation: 'horizontal', ...(options.onPageChange === undefined ? {} : { onValueChange: options.onPageChange }) });
+export function createPagination<ID extends StableID>(options: PaginationOptions<ID>): FacadeConnection<PaginationConnection<ID>> {
+  return unwrap(tryCreatePagination(options));
+}
+
+export function tryCreatePagination<ID extends StableID>(options: PaginationOptions<ID>): Result<FacadeConnection<PaginationConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreatePaginationConnection(options));
+}
+
+function tryCreatePaginationConnection<ID extends StableID>(options: PaginationOptions<ID>): Result<PaginationConnection<ID>> {
+  const result = tryCreateRadioGroup({ ...options, orientation: 'horizontal', ...(options.onPageChange === undefined ? {} : { onValueChange: options.onPageChange }) });
   if (!result.ok) return result;
   options.root.setAttribute('role', 'navigation'); options.root.removeAttribute('aria-orientation');
   return { ok: true, value: wrap(result.value, options.root) };

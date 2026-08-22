@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -43,6 +45,18 @@ export interface RadioGroupConnection<ID extends StableID = StableID> {
 }
 
 export function createRadioGroup<ID extends StableID>(
+  options: RadioGroupOptions<ID>,
+): FacadeConnection<RadioGroupConnection<ID>> {
+  return unwrap(tryCreateRadioGroup(options));
+}
+
+export function tryCreateRadioGroup<ID extends StableID>(
+  options: RadioGroupOptions<ID>,
+): Result<FacadeConnection<RadioGroupConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateRadioGroupConnection(options));
+}
+
+function tryCreateRadioGroupConnection<ID extends StableID>(
   options: RadioGroupOptions<ID>,
 ): Result<RadioGroupConnection<ID>> {
   const domain = createSequence(options.items);

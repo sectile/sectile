@@ -112,7 +112,7 @@ function mountQuantityField(context: DemoContext, options: QuantityCase): DemoSe
   let externalUnit = resolveDisplayUnit(options);
   let externalInput = editing(options.draft ?? displayText(options));
   let connection!: QuantityFieldConnection;
-  connection = unwrap(createQuantityField({
+  connection = createQuantityField({
     input,
     unitSelect: select,
     ...context.interaction,
@@ -136,7 +136,7 @@ function mountQuantityField(context: DemoContext, options: QuantityCase): DemoSe
       ...(options.draft === undefined ? {} : { defaultInputState: editing(options.draft) }),
     }),
     onUpdate: render,
-  }));
+  });
 
   for (const value of options.examples) {
     const button = document.createElement('button');

@@ -1,30 +1,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createTabs, toTabsEvent } from '../dist/tabs.js';
 import { createRadioGroup, toRadioGroupEvent } from '../dist/radio-group.js';
 import { createToolbar, toToolbarEvent } from '../dist/toolbar.js';
 
 test('terminal tabs, radio group, and toolbar witness distinct linear algebras', () => {
-  const tabs = unwrap(createTabs({
+  const tabs = createTabs({
     items: ['one', 'two'], defaultValue: 'one', defaultHighlightedValue: 'one',
-  }));
+  });
   tabs.handleKeyboardInput({ key: 'right' });
   assert.deepEqual(tabs.getSnapshot().state.selection.selected, ['one']);
   tabs.handleKeyboardInput({ key: 'enter' });
   assert.deepEqual(tabs.getSnapshot().state.selection.selected, ['two']);
 
-  const radio = unwrap(createRadioGroup({
+  const radio = createRadioGroup({
     items: ['a', 'b'], defaultValue: 'a', defaultHighlightedValue: 'a',
-  }));
+  });
   radio.handleKeyboardInput({ key: 'down' });
   assert.deepEqual(radio.getSnapshot().state.selection.selected, ['b']);
 
   const invoked = [];
-  const toolbar = unwrap(createToolbar({
+  const toolbar = createToolbar({
     items: ['bold', 'italic'], defaultHighlightedValue: 'bold',
     onInvoke: (id) => invoked.push(id),
-  }));
+  });
   toolbar.handleKeyboardInput({ key: 'right' });
   toolbar.handleKeyboardInput({ key: 'enter' });
   assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
@@ -40,23 +39,23 @@ test('terminal linear controls own key normalization', () => {
 });
 
 test('terminal linear controls skip disabledItems without application policy glue', () => {
-  const tabs = unwrap(createTabs({
+  const tabs = createTabs({
     items: ['one', 'disabled', 'three'], disabledItems: ['disabled'],
     defaultHighlightedValue: 'one',
-  }));
+  });
   tabs.handleKeyboardInput({ key: 'right' });
   assert.equal(tabs.getSnapshot().state.cursor.current, 'three');
 
-  const radio = unwrap(createRadioGroup({
+  const radio = createRadioGroup({
     items: ['a', 'b', 'c'], disabledItems: ['b'], defaultValue: 'a', defaultHighlightedValue: 'a',
-  }));
+  });
   radio.handleKeyboardInput({ key: 'down' });
   assert.equal(radio.getSnapshot().state.cursor.current, 'c');
 
-  const toolbar = unwrap(createToolbar({
+  const toolbar = createToolbar({
     items: ['bold', 'disabled', 'italic'], disabledItems: ['disabled'],
     defaultHighlightedValue: 'bold',
-  }));
+  });
   toolbar.handleKeyboardInput({ key: 'right' });
   assert.equal(toolbar.getSnapshot().state.cursor.current, 'italic');
 });

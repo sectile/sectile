@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
@@ -188,6 +190,18 @@ export function createComboboxController<ID extends StableID>(
 }
 
 export function createCombobox<ID extends StableID>(
+  options: ComboboxOptions<ID>,
+): FacadeConnection<ComboboxConnection<ID>> {
+  return unwrap(tryCreateCombobox(options));
+}
+
+export function tryCreateCombobox<ID extends StableID>(
+  options: ComboboxOptions<ID>,
+): Result<FacadeConnection<ComboboxConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateComboboxConnection(options));
+}
+
+function tryCreateComboboxConnection<ID extends StableID>(
   options: ComboboxOptions<ID>,
 ): Result<ComboboxConnection<ID>> {
   const domain = createSequence(options.items.map((item) => item.id));

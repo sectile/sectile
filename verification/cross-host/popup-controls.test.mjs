@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createDialog as createDOMDialog } from '@sectile/dom/dialog';
 import { createAlertDialog as createDOMAlertDialog } from '@sectile/dom/alert-dialog';
 import { createTooltip as createDOMTooltip } from '@sectile/dom/tooltip';
@@ -15,8 +14,8 @@ test('DOM and terminal popups preserve open-state traces and controlled reconcil
     [createDOMTooltip, createTerminalTooltip],
   ];
   for (const [createDOM, createTerminal] of factories) {
-    const DOM = unwrap(createDOM({ root: new FakeElement(), open: false, autoFocus: false }));
-    const terminal = unwrap(createTerminal({ open: false }));
+    const DOM = createDOM({ root: new FakeElement(), open: false, autoFocus: false });
+    const terminal = createTerminal({ open: false });
     assertTrace(DOM, terminal, ['open', 'toggle', 'close']);
     assert.deepEqual(DOM.syncControlledValue(true), terminal.syncControlledValue(true));
     assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
@@ -26,17 +25,17 @@ test('DOM and terminal popups preserve open-state traces and controlled reconcil
 test('DOM and terminal alert dialogs deliver equivalent semantic obligations', () => {
   const DOMCommands = [];
   const terminalCommands = [];
-  const DOM = unwrap(createDOMAlertDialog({
+  const DOM = createDOMAlertDialog({
     root: new FakeElement(), autoFocus: false, restoreFocus: false,
     onInitialFocus: () => DOMCommands.push('focus'),
     onFocusRestore: () => DOMCommands.push('restore'),
     onAnnounce: () => DOMCommands.push('announce'),
-  }));
-  const terminal = unwrap(createTerminalAlertDialog({
+  });
+  const terminal = createTerminalAlertDialog({
     onInitialFocus: () => terminalCommands.push('focus'),
     onFocusRestore: () => terminalCommands.push('restore'),
     onAnnounce: () => terminalCommands.push('announce'),
-  }));
+  });
   assertTrace(DOM, terminal, ['open', 'close']);
   assert.deepEqual(DOMCommands, terminalCommands);
 });

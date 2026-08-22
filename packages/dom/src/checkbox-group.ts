@@ -1,7 +1,9 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import type { CheckboxGroupEvent, CheckboxGroupState } from '@sectile/core/checkbox-group';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { createListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
+import { tryCreateListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
 
 export type CheckboxGroupOptions<ID extends StableID = StableID> = Omit<ListboxOptions<ID>, 'selectionMode'>;
 export interface CheckboxGroupConnection<ID extends StableID = StableID> {
@@ -12,8 +14,16 @@ export interface CheckboxGroupConnection<ID extends StableID = StableID> {
   disconnect(): void;
 }
 
-export function createCheckboxGroup<ID extends StableID>(options: CheckboxGroupOptions<ID>): Result<CheckboxGroupConnection<ID>> {
-  const result = createListbox({ ...options, selectionMode: 'multiple' });
+export function createCheckboxGroup<ID extends StableID>(options: CheckboxGroupOptions<ID>): FacadeConnection<CheckboxGroupConnection<ID>> {
+  return unwrap(tryCreateCheckboxGroup(options));
+}
+
+export function tryCreateCheckboxGroup<ID extends StableID>(options: CheckboxGroupOptions<ID>): Result<FacadeConnection<CheckboxGroupConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateCheckboxGroupConnection(options));
+}
+
+function tryCreateCheckboxGroupConnection<ID extends StableID>(options: CheckboxGroupOptions<ID>): Result<CheckboxGroupConnection<ID>> {
+  const result = tryCreateListbox({ ...options, selectionMode: 'multiple' });
   if (!result.ok) return result;
   options.root.setAttribute('role', 'group');
   options.root.removeAttribute('aria-multiselectable');

@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -35,7 +37,15 @@ export interface AccordionConnection<ID extends StableID = StableID> {
   handleEvent(event: AccordionEvent<ID>): boolean;
   disconnect(): void;
 }
-export function createAccordion<ID extends StableID>(options: AccordionOptions<ID>): Result<AccordionConnection<ID>> {
+export function createAccordion<ID extends StableID>(options: AccordionOptions<ID>): FacadeConnection<AccordionConnection<ID>> {
+  return unwrap(tryCreateAccordion(options));
+}
+
+export function tryCreateAccordion<ID extends StableID>(options: AccordionOptions<ID>): Result<FacadeConnection<AccordionConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateAccordionConnection(options));
+}
+
+function tryCreateAccordionConnection<ID extends StableID>(options: AccordionOptions<ID>): Result<AccordionConnection<ID>> {
   const domain = createSequence(options.items); if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems); if (!disabled.ok) return disabled;
   const suppliedEligibility = options.policies?.eligible;

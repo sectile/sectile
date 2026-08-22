@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import {
@@ -75,7 +77,15 @@ interface NormalizedAutoplay {
   readonly scheduler: CarouselScheduler;
 }
 
-export function createCarousel<ID extends StableID>(options: CarouselOptions<ID>): Result<CarouselConnection<ID>> {
+export function createCarousel<ID extends StableID>(options: CarouselOptions<ID>): FacadeConnection<CarouselConnection<ID>> {
+  return unwrap(tryCreateCarousel(options));
+}
+
+export function tryCreateCarousel<ID extends StableID>(options: CarouselOptions<ID>): Result<FacadeConnection<CarouselConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateCarouselConnection(options));
+}
+
+function tryCreateCarouselConnection<ID extends StableID>(options: CarouselOptions<ID>): Result<CarouselConnection<ID>> {
   const slides = createSequence(options.slides);
   if (!slides.ok) return slides;
   const autoplay = normalizeAutoplay(options);

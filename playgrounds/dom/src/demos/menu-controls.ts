@@ -2,7 +2,6 @@ import { createMenu, type MenuConnection } from '@sectile/dom/menu';
 import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
 import type { StableID } from '@sectile/core';
-import { unwrap } from '@sectile/core/result';
 import { ChevronDown, ChevronRight, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -88,14 +87,14 @@ function mountMenu(context: DemoContext, kind: 'menu' | 'menubar' | 'menu-button
     typeahead: { textValue: (id: string) => scenario.items.find((item) => item.id === id)?.label ?? id },
     label: scenario.title, onInvoke: (id: string) => { invoked = id; }, onUpdate: render,
   };
-  connection = unwrap(kind === 'menu'
+  connection = kind === 'menu'
     ? createMenu(common)
     : kind === 'menubar'
       ? createMenubar(common)
       : createMenuButton({
         ...common, trigger,
         ...(scenario.controlled ? { open: externalOpen, onOpenChange: (open) => { externalOpen = open; queueMicrotask(() => connection.syncControlledValue(externalOpen)); } } : {}),
-      }));
+      });
   for (const [id, element] of elements) connection.setItemAttributes(element, id);
   for (const [parentID, submenu] of submenuSurfaces) connection.setSubmenuAttributes(submenu, parentID);
 

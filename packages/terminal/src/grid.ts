@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { applyGridEvent, createGrid, createGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -8,7 +10,15 @@ export interface GridOptions<ID extends StableID = StableID> extends StructureGr
 export interface GridControlledValues<ID extends StableID = StableID> { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly editMode?: GridEditMode }
 export interface GridConnection<ID extends StableID = StableID> { readonly grid: Grid<ID>; getSnapshot(): RevisionSnapshot<GridState<ID>>; syncControlledValues(values: GridControlledValues<ID>): Result<RevisionSnapshot<GridState<ID>>>; handleEvent(event: GridEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 
-export function createGridControl<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
+export function createGridControl<ID extends StableID>(options: GridOptions<ID>): FacadeConnection<GridConnection<ID>> {
+  return unwrap(tryCreateGridControl(options));
+}
+
+export function tryCreateGridControl<ID extends StableID>(options: GridOptions<ID>): Result<FacadeConnection<GridConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateGridControlConnection(options));
+}
+
+function tryCreateGridControlConnection<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
   const grid = createGrid(options.rows, options); if (!grid.ok) return grid; const disabled=new Set(options.disabledItems??[]);for(const id of disabled)if(grid.value.positionOf(id)===null)return{ok:false,error:{class:'construction',code:'disabled-item-outside-domain',message:'Every disabled grid cell must exist in the grid.',details:{id}}};const supplied=options.policies?.eligible;const policies:GridPolicies<ID>={...options.policies,eligible:(id)=>!disabled.has(id)&&(supplied?.(id)??true)};const vc=options.value!==undefined,hc=options.highlightedValue!==undefined,ec=options.editMode!==undefined;const selected = options.value !== undefined ? options.value : options.defaultValue ?? null;
   const runtime = createSemanticController<GridState<ID>, GridEvent<ID>, GridCommand<ID>, GridCommand<ID>>({ initial: createGridState(grid.value, { current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null, selected: selected === null ? [] : [selected], anchor: selected, editMode: options.editMode ?? options.defaultEditMode ?? 'navigation' }), reducer: (state, event) => applyGridEvent(grid.value, state, event, policies), reconcile: (previous, proposed) => createGridState(grid.value, { current: hc ? previous.cursor.current : proposed.cursor.current, selected: vc ? previous.selection.selected : proposed.selection.selected, anchor: vc ? previous.selection.anchor : proposed.selection.anchor, editMode: ec ? previous.editMode : proposed.editMode }), notify: (previous, proposed) => { const before = previous.selection.selected[0] ?? null; const after = proposed.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after);if(previous.cursor.current!==proposed.cursor.current)options.onHighlightedValueChange?.(proposed.cursor.current);if(previous.editMode!==proposed.editMode)options.onEditModeChange?.(proposed.editMode); }, toEffect: (command) => command, interaction: options, interactionIntent: gridIntent });
   if (!runtime.ok) return runtime; return { ok: true, value: new TerminalGrid(options, grid.value, runtime.value,vc,hc,ec) };

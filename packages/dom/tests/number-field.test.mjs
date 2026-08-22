@@ -7,13 +7,13 @@ import { createNumberField } from '../dist/number-field.js';
 test('DOM number field commits calculator expressions and retains invalid drafts', () => {
   const input = new FakeInput();
   const changes = [];
-  const field = unwrap(createNumberField({
+  const field = createNumberField({
     input,
     defaultValue: '50',
     inputMode: 'text',
     policies: { evaluator: unwrap(createCalculatorExpression()) },
     onValueChange: (change) => changes.push(change),
-  }));
+  });
   input.setSelectionRange(0, 2);
   input.emit('beforeinput', beforeInput('50-20%'));
   input.emit('keydown', keyboard('Enter'));
@@ -29,7 +29,7 @@ test('DOM number field commits calculator expressions and retains invalid drafts
 
 test('DOM number field ignores Enter while IME composition is active', () => {
   const input = new FakeInput();
-  const field = unwrap(createNumberField({ input, defaultValue: '1' }));
+  const field = createNumberField({ input, defaultValue: '1' });
   input.setSelectionRange(1, 1);
   input.emit('compositionstart', { data: '' });
   input.emit('compositionupdate', { data: '2' });

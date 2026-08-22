@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
@@ -7,7 +9,15 @@ import { createSemanticController, type SemanticController } from './internal/se
 export interface PinInputOptions { readonly root: HTMLElement; readonly inputs: readonly HTMLInputElement[]; readonly policies?: PinInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: string; readonly defaultValue?: string; readonly label?: string; readonly onValueChange?: (value: string) => void; readonly onComplete?: (value: string) => void; readonly onUpdate?: () => void }
 export type PinInputEffect = PinInputCommand;
 export interface PinInputConnection { getSnapshot(): RevisionSnapshot<PinInputState>; syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>>; handleEvent(event: PinInputEvent): boolean; disconnect(): void }
-export function createPinInput(options: PinInputOptions): Result<PinInputConnection> {
+export function createPinInput(options: PinInputOptions): FacadeConnection<PinInputConnection> {
+  return unwrap(tryCreatePinInput(options));
+}
+
+export function tryCreatePinInput(options: PinInputOptions): Result<FacadeConnection<PinInputConnection>> {
+  return createFacadeConnection(options, (options) => tryCreatePinInputConnection(options));
+}
+
+function tryCreatePinInputConnection(options: PinInputOptions): Result<PinInputConnection> {
   const controlled = options.value !== undefined;
   const runtime = createSemanticController<PinInputState, PinInputEvent, PinInputCommand, PinInputEffect>({
     interaction: options,

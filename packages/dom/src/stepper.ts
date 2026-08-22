@@ -1,7 +1,9 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import type { StepperEvent, StepperState } from '@sectile/core/stepper';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { createTabs, type TabsConnection, type TabsOptions } from './tabs.js';
+import { tryCreateTabs, type TabsConnection, type TabsOptions } from './tabs.js';
 
 export type StepperOptions<ID extends StableID = StableID> = TabsOptions<ID>;
 export interface StepperConnection<ID extends StableID = StableID> {
@@ -12,8 +14,16 @@ export interface StepperConnection<ID extends StableID = StableID> {
   handleEvent(event: StepperEvent<ID>): boolean;
   disconnect(): void;
 }
-export function createStepper<ID extends StableID>(options: StepperOptions<ID>): Result<StepperConnection<ID>> {
-  const result = createTabs(options); if (!result.ok) return result;
+export function createStepper<ID extends StableID>(options: StepperOptions<ID>): FacadeConnection<StepperConnection<ID>> {
+  return unwrap(tryCreateStepper(options));
+}
+
+export function tryCreateStepper<ID extends StableID>(options: StepperOptions<ID>): Result<FacadeConnection<StepperConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateStepperConnection(options));
+}
+
+function tryCreateStepperConnection<ID extends StableID>(options: StepperOptions<ID>): Result<StepperConnection<ID>> {
+  const result = tryCreateTabs(options); if (!result.ok) return result;
   options.root.setAttribute('aria-roledescription', 'stepper');
   return { ok: true, value: wrapStepper(result.value) };
 }

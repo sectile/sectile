@@ -89,7 +89,7 @@ function createGridDemo(host) {
     { title: 'Controlled grid state', boundary: 'stop', disabled: [], controlled: true, editable: true },
   ], (scenario) => {
     let value = null; let highlightedValue = 'plan'; let editMode = 'navigation'; let notice = scenario.editable ? 'Enter starts editing.' : 'Space selects.'; let connection;
-    connection = unwrap(createGridControl({
+    connection = createGridControl({
       ...scenario.interaction,
       rows, policies: { boundary: scenario.boundary }, disabledItems: scenario.disabled,
       ...(scenario.controlled ? {
@@ -99,7 +99,7 @@ function createGridDemo(host) {
         onEditModeChange: (next) => { editMode = next; queueMicrotask(sync); },
       } : { defaultHighlightedValue: highlightedValue }),
       onEditStart: (id) => { notice = `editing ${id}`; }, onEditCommit: (id) => { notice = `committed ${id}`; }, onEditCancel: (id) => { notice = `cancelled ${id}`; }, onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value, highlightedValue, editMode }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -130,13 +130,13 @@ function createCarouselDemo(host) {
     { title: 'Controlled vertical tour', wrap: true, controlled: true, orientation: 'vertical' },
   ], (scenario) => {
     let value = 'overview'; let paused = false; let announced = null; let connection;
-    connection = unwrap(createCarousel({
+    connection = createCarousel({
       ...scenario.interaction,
       slides: slides.map(([id]) => id), policies: { wrap: scenario.wrap }, orientation: scenario.orientation,
       ...(scenario.autoplayDelayMs === undefined ? {} : { autoplay: { delayMs: scenario.autoplayDelayMs, stopOnInteraction: false } }),
       ...(scenario.controlled ? { value, paused, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onPausedChange: (next) => { paused = next; queueMicrotask(sync); } } : { defaultValue: value, defaultPaused: paused }),
       onAnnounce: (id) => { announced = id; }, onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value, paused }); }
     return {
       handle: (input) => /^[1-3]$/.test(input.key)
@@ -168,7 +168,7 @@ function createFeedDemo(host) {
     { title: 'Load earlier window', start: 2, size: 3, load: true },
   ], (scenario) => {
     let start = scenario.start; let revision = 1; let windowIDs = getWindow(); let request = null; let connection;
-    connection = unwrap(createFeed({ ...scenario.interaction, items: windowIDs, revision, onRequestWindow: (direction, anchor) => { request = `${direction} from ${anchor ?? 'none'}`; if (!scenario.load) { connection.handleEvent('clear-request'); return; } start = Math.max(0, Math.min(items.length - scenario.size, start + (direction === 'after' ? 1 : -1))); windowIDs = getWindow(); revision += 1; queueMicrotask(() => connection.syncWindow({ items: windowIDs, revision, highlightedValue: (direction === 'after' ? windowIDs.at(-1) : windowIDs[0]) ?? null })); }, onUpdate: host.render }));
+    connection = createFeed({ ...scenario.interaction, items: windowIDs, revision, onRequestWindow: (direction, anchor) => { request = `${direction} from ${anchor ?? 'none'}`; if (!scenario.load) { connection.handleEvent('clear-request'); return; } start = Math.max(0, Math.min(items.length - scenario.size, start + (direction === 'after' ? 1 : -1))); windowIDs = getWindow(); revision += 1; queueMicrotask(() => connection.syncWindow({ items: windowIDs, revision, highlightedValue: (direction === 'after' ? windowIDs.at(-1) : windowIDs[0]) ?? null })); }, onUpdate: host.render });
     function getWindow() { return items.slice(start, start + scenario.size).map(([id]) => id); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -218,7 +218,7 @@ function createListboxDemo(host) {
 function createListboxScenario(host, items, scenario) {
   let activated = null;
   let externalValue = [...(scenario.options.value ?? [])];
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     ...scenario.interaction,
     items: items.map(([id]) => id),
     selectionMode: scenario.options.selectionMode,
@@ -237,7 +237,7 @@ function createListboxScenario(host, items, scenario) {
     onActivate: (id) => { activated = id; },
     onTransition: host.record,
     onUpdate: host.render,
-  }));
+  });
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
@@ -267,9 +267,9 @@ function createCheckboxGroupDemo(host) {
     { title: 'Controlled subscriptions', selected: ['preview'], disabled: [], controlled: true },
   ], (scenario) => {
     let value = [...scenario.selected]; let highlightedValue = 'stable'; let connection;
-    connection = unwrap(createCheckboxGroup({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled,
+    connection = createCheckboxGroup({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled,
       ...(scenario.controlled ? { value, highlightedValue, onValueChange: (change) => { value = [...change.value]; queueMicrotask(sync); }, onHighlightedValueChange: (change) => { highlightedValue = change.value; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
     return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}up/down · space toggles independent choices${ansi.reset}`, '', ...items.map(([id, label, detail]) => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`× ${label} — ${detail}`, Math.min(58, width))}${ansi.reset}` : terminalCell(`${state.selection.has(id) ? '☑' : '☐'} ${label} — ${detail}`, Math.min(58, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `selected=${state.selection.selected.join(',') || '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -283,9 +283,9 @@ function createSelectDemo(host) {
     { title: 'Controlled environment', value: 'nightly', disabled: [], controlled: true },
   ], (scenario) => {
     let value = scenario.value; let highlightedValue = scenario.value; let open = false; let connection;
-    connection = unwrap(createSelect({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled,
+    connection = createSelect({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled,
       ...(scenario.controlled ? { value, highlightedValue, open, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); }, onOpenChange: (next) => { open = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value, highlightedValue, open }); }
     return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); const selected = state.choice.selection.selected[0] ?? null; return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}up/down opens · enter selects · escape closes${ansi.reset}`, '', `${state.open ? '▾' : '▸'} ${items.find(([id]) => id === selected)?.[1] ?? 'Choose environment'}`, ...(state.open ? items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}  × ${label}${ansi.reset}` : terminalCell(`  ${label}`, Math.min(44, width), { current: state.choice.cursor.current === id, selected: state.choice.selection.has(id) })) : []), '', `open=${state.open}  value=${selected ?? '−'}  current=${state.choice.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -298,7 +298,7 @@ function createPaginationDemo(host) {
     { title: 'Controlled page', count: 7, value: '3', controlled: true },
   ], (scenario) => {
     const items = Array.from({ length: scenario.count }, (_, index) => String(index + 1)); let value = scenario.value; let highlightedValue = scenario.value; let connection;
-    connection = unwrap(createPagination({ ...scenario.interaction, items, ...(scenario.controlled ? { value, highlightedValue, onPageChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render }));
+    connection = createPagination({ ...scenario.interaction, items, ...(scenario.controlled ? { value, highlightedValue, onPageChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
     return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); const page = state.selection.selected[0] ?? null; return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right · home/end${ansi.reset}`, '', items.map((id) => id === page ? `${ansi.inverse} ${id} ${ansi.reset}` : ` ${id} `).join(' '), '', `page=${page ?? '−'} of ${scenario.count}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -312,7 +312,7 @@ function createStepperDemo(host) {
     { title: 'Controlled onboarding', value: 'review', disabled: [], controlled: true },
   ], (scenario) => {
     let value = scenario.value; let highlightedValue = scenario.value; let connection;
-    connection = unwrap(createStepper({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render }));
+    connection = createStepper({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
     return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right moves focus · enter activates${ansi.reset}`, '', ...items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}× ${label}${ansi.reset}` : terminalCell(label, Math.min(40, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `step=${state.selection.selected[0] ?? '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -325,7 +325,7 @@ function createRatingDemo(host) {
     { title: 'Controlled score', count: 10, value: '7', clearable: true, controlled: true },
   ], (scenario) => {
     const items = Array.from({ length: scenario.count }, (_, index) => String(index + 1)); let value = scenario.value; let highlightedValue = scenario.value; let connection;
-    connection = unwrap(createRating({ ...scenario.interaction, items, clearable: scenario.clearable, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render }));
+    connection = createRating({ ...scenario.interaction, items, clearable: scenario.clearable, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
     return { handle: (input) => input.key === 'c' ? connection.handleEvent('clear') : connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); const selected = Number(state.selection.selected[0] ?? 0); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right changes score${scenario.clearable ? ' · c clears' : ''}${ansi.reset}`, '', items.map((id) => Number(id) <= selected ? `${ansi.yellow}★${ansi.reset}` : `${ansi.dim}☆${ansi.reset}`).join(' '), '', `rating=${selected || '−'} of ${scenario.count}  current=${state.cursor.current ?? '−'}`, `clearable=${scenario.clearable}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -338,7 +338,7 @@ function createPinInputDemo(host) {
     { title: 'Controlled security key', length: 5, value: 'A7', mode: 'alphanumeric', controlled: true },
   ], (scenario) => {
     let value = scenario.value; let completed = null; let connection;
-    connection = unwrap(createPinInput({ ...scenario.interaction, length: scenario.length, policies: { accept: (part) => scenario.mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(scenario.controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: value }), onComplete: (next) => { completed = next; host.render(); }, onUpdate: host.render }));
+    connection = createPinInput({ ...scenario.interaction, length: scenario.length, policies: { accept: (part) => scenario.mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(scenario.controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: value }), onComplete: (next) => { completed = next; host.render(); }, onUpdate: host.render });
     return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}type characters · left/right · backspace/delete${ansi.reset}`, '', state.values.map((part, index) => state.current === index ? `${ansi.inverse} ${part || '·'} ${ansi.reset}` : `[${part || '·'}]`).join(' '), '', `value=${state.values.join('')}  current=${state.current + 1}/${scenario.length}`, `complete=${completed ?? 'no'}  mode=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
@@ -350,7 +350,7 @@ function createTagsInputDemo(host) {
     { title: 'Controlled recipients', tags: ['Design', 'Platform'], maxTags: 6, controlled: true },
   ], (scenario) => {
     let value = [...scenario.tags]; let inputValue = ''; let connection;
-    connection = unwrap(createTagsInput({ ...scenario.interaction, policies: { maxTags: scenario.maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(scenario.controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: value }), onUpdate: host.render }));
+    connection = createTagsInput({ ...scenario.interaction, policies: { maxTags: scenario.maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(scenario.controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: value }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, inputValue }); }
     return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}type · enter/comma adds · backspace removes${ansi.reset}`, '', state.tags.map((tag, index) => state.current === index ? `${ansi.inverse} ${tag} × ${ansi.reset}` : `[${tag} ×]`).join(' ') || `${ansi.dim}No tags${ansi.reset}`, '', `draft=${state.draft || '−'}  tags=${state.tags.length}/${scenario.maxTags}  current=${state.current ?? 'input'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
@@ -450,7 +450,7 @@ function createAccordionDemo(host) {
     const items = ['general', 'deployments', 'danger'];
     let external = ['general'];
     let connection;
-    connection = unwrap(createAccordion({
+    connection = createAccordion({
       ...scenario.interaction,
       items,
       policies: { expansion: scenario.expansion, collapsible: scenario.collapsible },
@@ -464,7 +464,7 @@ function createAccordionDemo(host) {
       } : { defaultOpenIDs: external }),
       defaultHighlightedValue: 'general',
       onUpdate: host.render,
-    }));
+    });
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -497,7 +497,7 @@ function createDisclosureDemo(host) {
   return scenarioDemo(host, scenarios, (scenario) => {
     let external = scenario.initial;
     let connection;
-    connection = unwrap(createDisclosure({
+    connection = createDisclosure({
       ...scenario.interaction,
       ...(scenario.controlled ? {
         open: external,
@@ -507,7 +507,7 @@ function createDisclosureDemo(host) {
         },
       } : { defaultOpen: scenario.initial }),
       onUpdate: host.render,
-    }));
+    });
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -528,7 +528,7 @@ function createDisclosureDemo(host) {
 function createLinearScenario(host, kind, scenario) {
   if (kind === 'tabs') {
     const items = ['overview', 'changes', 'checks'];
-    const connection = unwrap(createTabs({
+    const connection = createTabs({
       ...scenario.interaction,
       items,
       defaultValue: 'overview',
@@ -537,14 +537,14 @@ function createLinearScenario(host, kind, scenario) {
       disabledItems: scenario.disabledItems,
       policies: { activation: scenario.activation },
       onUpdate: host.render,
-    }));
+    });
     return linearSession(connection, scenario, items, (state, id) => state.selection.has(id));
   }
   if (kind === 'radio-group') {
     const items = ['compact', 'comfortable', 'spacious'];
     let external = 'comfortable';
     let connection;
-    connection = unwrap(createRadioGroup({
+    connection = createRadioGroup({
       ...scenario.interaction,
       items,
       orientation: scenario.orientation,
@@ -558,14 +558,14 @@ function createLinearScenario(host, kind, scenario) {
       } : { defaultValue: external }),
       defaultHighlightedValue: external,
       onUpdate: host.render,
-    }));
+    });
     return linearSession(connection, scenario, items, (state, id) => state.selection.has(id));
   }
   const items = ['bold', 'italic', 'code', 'list'];
   let external = 'bold';
   let invoked = null;
   let connection;
-  connection = unwrap(createToolbar({
+  connection = createToolbar({
     ...scenario.interaction,
     items,
     orientation: scenario.orientation,
@@ -579,7 +579,7 @@ function createLinearScenario(host, kind, scenario) {
     } : { defaultHighlightedValue: external }),
     onInvoke: (id) => { invoked = id; },
     onUpdate: host.render,
-  }));
+  });
   return linearSession(connection, scenario, items, () => false, () => `invoked=${invoked ?? '−'}`);
 }
 
@@ -610,7 +610,7 @@ function createCheckedScenario(host, kind, scenario) {
   let external = scenario.initial;
   let connection;
   if (kind === 'checkbox') {
-    connection = unwrap(createCheckbox({
+    connection = createCheckbox({
       ...scenario.interaction,
       policies: { allowMixed: true },
       ...(scenario.controlled ? {
@@ -621,9 +621,9 @@ function createCheckedScenario(host, kind, scenario) {
         },
       } : { defaultValue: scenario.initial }),
       onUpdate: host.render,
-    }));
+    });
   } else if (kind === 'switch') {
-    connection = unwrap(createSwitch({
+    connection = createSwitch({
       ...scenario.interaction,
       ...(scenario.controlled ? {
         checked: external,
@@ -633,9 +633,9 @@ function createCheckedScenario(host, kind, scenario) {
         },
       } : { defaultChecked: scenario.initial }),
       onUpdate: host.render,
-    }));
+    });
   } else {
-    connection = unwrap(createToggleButton({
+    connection = createToggleButton({
       ...scenario.interaction,
       ...(scenario.controlled ? {
         pressed: external,
@@ -645,7 +645,7 @@ function createCheckedScenario(host, kind, scenario) {
         },
       } : { defaultPressed: scenario.initial }),
       onUpdate: host.render,
-    }));
+    });
   }
   return {
     handle: (input) => connection.handleKeyboardInput(input),
@@ -674,7 +674,7 @@ function createSliderDemo(host) {
 function createSliderScenario(host, scenario) {
   let external = scenario.initial;
   let connection;
-  connection = unwrap(createSlider({
+  connection = createSlider({
     ...scenario.interaction,
     min: scenario.min, max: scenario.max, step: scenario.step, page: 4,
     ...(scenario.controlled ? {
@@ -686,7 +686,7 @@ function createSliderScenario(host, scenario) {
     } : { defaultValue: scenario.initial }),
     onTransition: host.record,
     onUpdate: host.render,
-  }));
+  });
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
@@ -713,7 +713,7 @@ function createWindowSplitterDemo(host) {
   ], (scenario) => {
     let external = scenario.initial;
     let connection;
-    connection = unwrap(createWindowSplitter({
+    connection = createWindowSplitter({
       ...scenario.interaction,
       min: '0', max: '100', step: '1',
       ...(scenario.controlled ? {
@@ -724,7 +724,7 @@ function createWindowSplitterDemo(host) {
         },
       } : { defaultValue: scenario.initial }),
       onUpdate: host.render,
-    }));
+    });
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -750,7 +750,7 @@ function createSpinButtonDemo(host) {
     let externalValue = scenario.initial;
     let externalDraft = scenario.draft;
     let connection;
-    connection = unwrap(createSpinButton({
+    connection = createSpinButton({
       ...scenario.interaction,
       min: scenario.min, max: scenario.max, step: scenario.step, policies: { page: 3 },
       ...(scenario.controlled ? {
@@ -759,7 +759,7 @@ function createSpinButtonDemo(host) {
         onDraftChange: (draft) => { externalDraft = draft; queueMicrotask(sync); },
       } : { defaultValue: scenario.initial, defaultDraft: scenario.draft }),
       onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value: externalValue, draft: externalDraft }); }
     return {
       handle(input) {
@@ -791,7 +791,7 @@ function createNumberFieldDemo(host) {
     let externalValue = scenario.initial;
     let externalInput = numberFieldEditing(scenario.draft ?? scenario.initial);
     let connection;
-    connection = unwrap(createNumberField({
+    connection = createNumberField({
       ...scenario.interaction,
       ...(scenario.evaluator === null ? {} : { policies: { evaluator: scenario.evaluator } }),
       ...(scenario.controlled ? {
@@ -804,7 +804,7 @@ function createNumberFieldDemo(host) {
         ...(scenario.draft === null ? {} : { defaultInputState: numberFieldEditing(scenario.draft) }),
       }),
       onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value: externalValue, inputState: externalInput }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -865,7 +865,7 @@ function createQuantityFieldDemo(host) {
     let externalUnit = initialUnit;
     let externalInput = numberFieldEditing(initialText);
     let connection;
-    connection = unwrap(createQuantityField({
+    connection = createQuantityField({
       ...scenario.interaction,
       policies: {
         registry: scenario.registry,
@@ -886,7 +886,7 @@ function createQuantityFieldDemo(host) {
         ...(scenario.draft === null ? {} : { defaultInputState: numberFieldEditing(scenario.draft) }),
       }),
       onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ quantity: externalQuantity, displayUnit: externalUnit, inputState: externalInput }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -925,7 +925,7 @@ function createMultiThumbSliderDemo(host) {
   ], (scenario) => {
     let external = [...scenario.values];
     let connection;
-    connection = unwrap(createMultiThumbSlider({
+    connection = createMultiThumbSlider({
       ...scenario.interaction,
       thumbs: scenario.ids, min: '0', max: '100', step: '1',
       policies: { minGap: scenario.minGap, allowCross: scenario.allowCross },
@@ -937,7 +937,7 @@ function createMultiThumbSliderDemo(host) {
         },
       } : { defaultValues: scenario.values }),
       onUpdate: host.render,
-    }));
+    });
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -992,11 +992,11 @@ function createPopupDemo(host, kind) {
       } : { defaultOpen: scenario.initial }),
       onUpdate: host.render,
     };
-    connection = unwrap(kind === 'dialog'
+    connection = kind === 'dialog'
       ? createDialog({ ...shared, onInitialFocus: () => { focusRequests += 1; }, onFocusRestore: () => { restoreRequests += 1; } })
       : kind === 'alert-dialog'
         ? createAlertDialog({ ...shared, onInitialFocus: () => { focusRequests += 1; }, onFocusRestore: () => { restoreRequests += 1; }, onAnnounce: () => { announcements += 1; } })
-        : createTooltip(shared));
+        : createTooltip(shared);
     return {
       handle(input) {
         if (input.key === 'enter' || input.key === 'space') return connection.handleEvent(connection.getSnapshot().state.open ? 'close' : 'open');
@@ -1065,7 +1065,7 @@ function createMenuDemo(host, kind) {
       onInvoke: (id) => { invoked = id; },
       onUpdate: host.render,
     };
-    connection = unwrap(kind === 'menu'
+    connection = kind === 'menu'
       ? createMenu(common)
       : kind === 'menubar'
         ? createMenubar(common)
@@ -1078,7 +1078,7 @@ function createMenuDemo(host, kind) {
               queueMicrotask(() => connection.syncControlledValue(externalOpen));
             },
           } : {}),
-        }));
+        });
     return {
       handle(input) {
         if (kind === 'menu-button' && !connection.getSnapshot().state.open && (input.key === 'enter' || input.key === 'space')) return connection.handleEvent('open-popup');
@@ -1117,7 +1117,7 @@ function createCalendarDemo(host) {
     const today = new Date(); const todayID = calendarDateID(today); let page = createCalendarMonth(today); let selectedDate = todayID; let highlightedDate = todayID; let connection = connect(todayID);
     function connect(highlightedValue) {
       const visibleValue = page.ids.has(selectedDate) ? selectedDate : null;
-      return unwrap(createCalendar({
+      return createCalendar({
         ...scenario.interaction,
         rows: page.rows, policies: { eligible: (id) => !scenario.disabledWeekends || !isTerminalWeekend(id) },
         ...(scenario.controlled ? { value: visibleValue, highlightedValue } : { defaultValue: visibleValue, defaultHighlightedValue: highlightedValue }),
@@ -1125,7 +1125,7 @@ function createCalendarDemo(host) {
         onHighlightedValueChange: ({ value }) => { highlightedDate = value; if (scenario.controlled) queueMicrotask(sync); },
         onPageRequest: ({ direction, from }) => { const target = shiftCalendarMonth(page.date, direction, from); page = createCalendarMonth(target); highlightedDate = calendarDateID(target); connection = connect(highlightedDate); },
         onTransition: host.record, onUpdate: host.render,
-      }));
+      });
     }
     function sync() { connection.syncControlledValues({ value: selectedDate !== null && page.ids.has(selectedDate) ? selectedDate : null, highlightedValue: highlightedDate !== null && page.ids.has(highlightedDate) ? highlightedDate : null }); }
     return {
@@ -1217,7 +1217,7 @@ function createTreeViewDemo(host) {
     { title: 'Controlled source explorer', expanded: ['src'], selected: ['readme'], disabled: [], controlled: true },
   ], (scenario) => {
     let expandedValue = [...scenario.expanded]; let value = [...scenario.selected]; let highlightedValue = 'src'; let connection;
-    connection = unwrap(createTreeView({
+    connection = createTreeView({
       ...scenario.interaction,
       nodes,
       disabledItems: scenario.disabled,
@@ -1228,7 +1228,7 @@ function createTreeViewDemo(host) {
         onHighlightedValueChange: ({ value: next }) => { highlightedValue = next; queueMicrotask(sync); },
       } : { defaultExpandedValue: expandedValue, defaultValue: value, defaultHighlightedValue: highlightedValue }),
       onTransition: host.record, onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ expandedValue, value, highlightedValue }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -1260,7 +1260,7 @@ function createTextDemo(host) {
     }));
     let external = initial;
     let connection;
-    connection = unwrap(createText({
+    connection = createText({
       ...scenario.interaction,
       ...(scenario.controlled ? {
         value: external,
@@ -1271,7 +1271,7 @@ function createTextDemo(host) {
       } : { defaultValue: initial }),
       onTransition: host.recordText,
       onUpdate: host.render,
-    }));
+    });
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -1308,7 +1308,7 @@ function createComboboxDemo(host) {
     const initialInput = unwrap(createTextEditingState(scenario.initial, { anchorCodeUnitOffset: scenario.initial.length, focusCodeUnitOffset: scenario.initial.length }));
     const matches = (label, query) => scenario.mode === 'prefix' ? label.toLocaleLowerCase().startsWith(query.toLocaleLowerCase()) : label.toLocaleLowerCase().includes(query.toLocaleLowerCase());
     let accepted = null; let value = null; let inputState = initialInput; let open = scenario.initial.length > 0; let highlightedValue = null; let connection;
-    connection = unwrap(createCombobox({
+    connection = createCombobox({
       ...scenario.interaction,
       items, policies: { matches },
       ...(scenario.controlled ? {
@@ -1319,7 +1319,7 @@ function createComboboxDemo(host) {
         onHighlightedValueChange: ({ value: next }) => { highlightedValue = next; queueMicrotask(sync); },
       } : { defaultInputState: initialInput, defaultOpen: open }),
       onAccept: (id) => { accepted = id; }, onTransition: host.record, onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ value, inputState, open, highlightedValue }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
@@ -1354,7 +1354,7 @@ function createTreeGridDemo(host) {
     { title: 'Controlled tree grid', expanded: ['projects', 'atlas'], disabled: [], controlled: true },
   ], (scenario) => {
     const values = new Map(initialValues); let expandedValue = [...scenario.expanded]; let value = null; let highlightedValue = 'projects-name'; let editMode = 'navigation'; let connection;
-    connection = unwrap(createTreeGrid({
+    connection = createTreeGrid({
       ...scenario.interaction,
       rows, policies: { eligible: (id) => !scenario.disabled.includes(id) },
       ...(scenario.controlled ? {
@@ -1365,7 +1365,7 @@ function createTreeGridDemo(host) {
         onEditModeChange: ({ value: next }) => { editMode = next; queueMicrotask(sync); },
       } : { defaultExpandedValue: expandedValue, defaultHighlightedValue: highlightedValue }),
       getCellValue: (id) => values.get(id) ?? '', setCellValue: (id, next) => values.set(id, next), onTransition: host.record, onUpdate: host.render,
-    }));
+    });
     function sync() { connection.syncControlledValues({ expandedValue, value, highlightedValue, editMode }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),

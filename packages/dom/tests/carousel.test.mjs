@@ -7,7 +7,7 @@ test('DOM carousel projects current slide and pause-independent movement', () =>
   const root = new FakeElement();
   const a = new FakeElement();
   const b = new FakeElement();
-  const carousel = unwrap(createCarousel({ root, slides: ['a', 'b'] }));
+  const carousel = createCarousel({ root, slides: ['a', 'b'] });
   carousel.setSlideAttributes(a, 'a');
   carousel.setSlideAttributes(b, 'b');
   carousel.handleEvent('pause');
@@ -25,7 +25,7 @@ test('DOM carousel wires controls and preserves controlled ownership', () => {
   const next = new FakeElement();
   const pause = new FakeElement();
   const changes = [];
-  const carousel = unwrap(createCarousel({
+  const carousel = createCarousel({
     root,
     previousButton: previous,
     nextButton: next,
@@ -35,7 +35,7 @@ test('DOM carousel wires controls and preserves controlled ownership', () => {
     paused: false,
     onValueChange: (value) => changes.push(['value', value]),
     onPausedChange: (value) => changes.push(['paused', value]),
-  }));
+  });
   next.emit('click');
   pause.emit('click');
   assert.deepEqual(changes, [['value', 'b'], ['paused', true]]);
@@ -53,14 +53,14 @@ test('DOM carousel exposes accessible direct indicators and bounded controls', (
   const indicators = new FakeElement();
   const indicatorA = new FakeElement();
   const indicatorB = new FakeElement();
-  const carousel = unwrap(createCarousel({
+  const carousel = createCarousel({
     root,
     previousButton: previous,
     nextButton: next,
     indicatorGroup: indicators,
     slides: ['a', 'b'],
     policies: { wrap: false },
-  }));
+  });
   carousel.setIndicatorAttributes(indicatorA, 'a');
   carousel.setIndicatorAttributes(indicatorB, 'b');
   assert.equal(indicators.attributes.get('role'), 'tablist');
@@ -76,11 +76,11 @@ test('DOM carousel exposes accessible direct indicators and bounded controls', (
 test('DOM carousel autoplay pauses independently for hover and cleans up its timer', () => {
   const scheduler = new FakeScheduler();
   const root = new FakeElement();
-  const carousel = unwrap(createCarousel({
+  const carousel = createCarousel({
     root,
     slides: ['a', 'b'],
     autoplay: { delayMs: 2400, pauseOnFocus: false, stopOnInteraction: false, scheduler },
-  }));
+  });
   assert.equal(scheduler.pending, 1);
   root.emit('mouseenter');
   assert.deepEqual(carousel.getSnapshot().state.pauseReasons, ['hover']);
@@ -98,7 +98,7 @@ test('DOM carousel explicit resume overrides its existing focus pause', () => {
   const scheduler = new FakeScheduler();
   const root = new FakeElement();
   const pause = new FakeElement();
-  const carousel = unwrap(createCarousel({ root, pauseButton: pause, slides: ['a', 'b'], autoplay: { scheduler } }));
+  const carousel = createCarousel({ root, pauseButton: pause, slides: ['a', 'b'], autoplay: { scheduler } });
   root.emit('focusin');
   pause.emit('click');
   assert.equal(carousel.getSnapshot().state.paused, true);
@@ -112,7 +112,7 @@ test('DOM carousel explicit resume overrides its existing focus pause', () => {
 test('DOM carousel leaves Space activation on nested controls to the browser', () => {
   const root = new FakeElement();
   const pause = new FakeElement();
-  const carousel = unwrap(createCarousel({ root, pauseButton: pause, slides: ['a', 'b'] }));
+  const carousel = createCarousel({ root, pauseButton: pause, slides: ['a', 'b'] });
   root.emit('keydown', { key: ' ', target: pause });
   assert.equal(carousel.getSnapshot().state.paused, false);
   pause.emit('click');

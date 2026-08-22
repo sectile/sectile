@@ -1,6 +1,7 @@
+export type { FacadeConnection } from './internal/facade.js';
 export {
   connectListbox,
-  createListbox,
+  createListbox, tryCreateListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
@@ -16,15 +17,15 @@ export {
   type ListboxTransitionDetails,
   type ListboxValueChangeDetails,
 } from './listbox.js';
-export { createCheckboxGroup, type CheckboxGroupConnection, type CheckboxGroupOptions } from './checkbox-group.js';
-export { createSelect, type SelectConnection, type SelectEffect, type SelectOptions } from './select.js';
-export { createPagination, type PaginationConnection, type PaginationOptions } from './pagination.js';
-export { createStepper, type StepperConnection, type StepperOptions } from './stepper.js';
-export { createRating, type RatingConnection, type RatingOptions } from './rating.js';
-export { createPinInput, type PinInputConnection, type PinInputOptions } from './pin-input.js';
-export { createTagsInput, type TagsInputConnection, type TagsInputOptions } from './tags-input.js';
+export { createCheckboxGroup, tryCreateCheckboxGroup, type CheckboxGroupConnection, type CheckboxGroupOptions } from './checkbox-group.js';
+export { createSelect, tryCreateSelect, type SelectConnection, type SelectEffect, type SelectOptions } from './select.js';
+export { createPagination, tryCreatePagination, type PaginationConnection, type PaginationOptions } from './pagination.js';
+export { createStepper, tryCreateStepper, type StepperConnection, type StepperOptions } from './stepper.js';
+export { createRating, tryCreateRating, type RatingConnection, type RatingOptions } from './rating.js';
+export { createPinInput, tryCreatePinInput, type PinInputConnection, type PinInputOptions } from './pin-input.js';
+export { createTagsInput, tryCreateTagsInput, type TagsInputConnection, type TagsInputOptions } from './tags-input.js';
 export {
-  createTabs,
+  createTabs, tryCreateTabs,
   toTabsEffect,
   toTabsEvent,
   type TabsConnection,
@@ -32,60 +33,60 @@ export {
   type TabsOptions,
 } from './tabs.js';
 export {
-  createRadioGroup,
+  createRadioGroup, tryCreateRadioGroup,
   toRadioGroupEvent,
   type RadioGroupConnection,
   type RadioGroupEffect,
   type RadioGroupOptions,
 } from './radio-group.js';
 export {
-  createToolbar,
+  createToolbar, tryCreateToolbar,
   toToolbarEvent,
   type ToolbarConnection,
   type ToolbarEffect,
   type ToolbarOptions,
 } from './toolbar.js';
 export {
-  createAccordion,
+  createAccordion, tryCreateAccordion,
   toAccordionEvent,
   type AccordionConnection,
   type AccordionOptions,
 } from './accordion.js';
 export {
-  createDisclosure,
+  createDisclosure, tryCreateDisclosure,
   toDisclosureEvent,
   type DisclosureConnection,
   type DisclosureOptions,
 } from './disclosure.js';
 export {
-  createCheckbox, type CheckboxConnection, type CheckboxOptions,
+  createCheckbox, tryCreateCheckbox, type CheckboxConnection, type CheckboxOptions,
 } from './checkbox.js';
-export { createSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
-export { createToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
-export { createWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
-export { createSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
-export { createNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
-export { createQuantityField, type QuantityFieldConnection, type QuantityFieldOptions, type QuantityFieldValueChangeDetails } from './quantity-field.js';
-export { createDialog, type DialogConnection, type DialogOptions } from './dialog.js';
-export { createAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
-export { createTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';
-export { createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderOptions } from './multi-thumb-slider.js';
-export { createMenu, type MenuConnection, type MenuOptions } from './menu.js';
-export { createMenubar, type MenubarConnection, type MenubarOptions } from './menubar.js';
-export { createMenuButton, type MenuButtonConnection, type MenuButtonOptions } from './menu-button.js';
+export { createSwitch, tryCreateSwitch, type SwitchConnection, type SwitchOptions } from './switch.js';
+export { createToggleButton, tryCreateToggleButton, type ToggleButtonConnection, type ToggleButtonOptions } from './toggle-button.js';
+export { createWindowSplitter, tryCreateWindowSplitter, type WindowSplitterConnection, type WindowSplitterOptions } from './window-splitter.js';
+export { createSpinButton, tryCreateSpinButton, toSpinButtonEvent, type SpinButtonConnection, type SpinButtonOptions } from './spin-button.js';
+export { createNumberField, tryCreateNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
+export { createQuantityField, tryCreateQuantityField, type QuantityFieldConnection, type QuantityFieldOptions, type QuantityFieldValueChangeDetails } from './quantity-field.js';
+export { createDialog, tryCreateDialog, type DialogConnection, type DialogOptions } from './dialog.js';
+export { createAlertDialog, tryCreateAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
+export { createTooltip, tryCreateTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';
+export { createMultiThumbSlider, tryCreateMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderOptions } from './multi-thumb-slider.js';
+export { createMenu, tryCreateMenu, type MenuConnection, type MenuOptions } from './menu.js';
+export { createMenubar, tryCreateMenubar, type MenubarConnection, type MenubarOptions } from './menubar.js';
+export { createMenuButton, tryCreateMenuButton, type MenuButtonConnection, type MenuButtonOptions } from './menu-button.js';
 export {
-  createCarousel,
+  createCarousel, tryCreateCarousel,
   type CarouselAutoplayOptions,
   type CarouselConnection,
   type CarouselControlledValues,
   type CarouselOptions,
   type CarouselScheduler,
 } from './carousel.js';
-export { createFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
-export { createGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
+export { createFeed, tryCreateFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
+export { createGridControl, tryCreateGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {
   connectCalendar,
-  createCalendar,
+  createCalendar, tryCreateCalendar,
   createCalendarController,
   toCalendarEffect,
   toCalendarEvent,
@@ -104,7 +105,7 @@ export {
 } from './calendar.js';
 export {
   connectCombobox,
-  createCombobox,
+  createCombobox, tryCreateCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
@@ -126,7 +127,7 @@ export {
 } from './combobox.js';
 export {
   connectSlider,
-  createSlider,
+  createSlider, tryCreateSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
@@ -143,7 +144,7 @@ export {
 } from './slider.js';
 export {
   connectTreeView,
-  createTreeView,
+  createTreeView, tryCreateTreeView,
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
@@ -162,7 +163,7 @@ export {
 } from './tree-view.js';
 export {
   connectTreeGrid,
-  createTreeGrid,
+  createTreeGrid, tryCreateTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -182,7 +183,7 @@ export {
 } from './tree-grid.js';
 export {
   connectText,
-  createText,
+  createText, tryCreateText,
   createTextController,
   toTextEvent,
   type TextControlledValues,

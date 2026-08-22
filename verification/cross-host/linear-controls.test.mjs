@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createTabs as createDOMTabs } from '@sectile/dom/tabs';
 import { createRadioGroup as createDOMRadioGroup } from '@sectile/dom/radio-group';
 import { createToolbar as createDOMToolbar } from '@sectile/dom/toolbar';
@@ -15,8 +14,8 @@ test('DOM and terminal tabs preserve the same selection and cursor trace', () =>
     defaultValue: 'one',
     defaultHighlightedValue: 'one',
   };
-  const DOM = unwrap(createDOMTabs({ ...options, root: new FakeElement() }));
-  const terminal = unwrap(createTerminalTabs(options));
+  const DOM = createDOMTabs({ ...options, root: new FakeElement() });
+  const terminal = createTerminalTabs(options);
   assertSemanticTrace(DOM, terminal, ['next', 'activate', 'first', 'last', 'previous']);
 });
 
@@ -27,8 +26,8 @@ test('DOM and terminal radio groups preserve the same checked trace', () => {
     defaultValue: 'alpha',
     defaultHighlightedValue: 'alpha',
   };
-  const DOM = unwrap(createDOMRadioGroup({ ...options, root: new FakeElement() }));
-  const terminal = unwrap(createTerminalRadioGroup(options));
+  const DOM = createDOMRadioGroup({ ...options, root: new FakeElement() });
+  const terminal = createTerminalRadioGroup(options);
   assertSemanticTrace(DOM, terminal, ['next', 'last', 'previous', { type: 'check', id: 'gamma' }]);
 });
 
@@ -40,15 +39,15 @@ test('DOM and terminal toolbars preserve cursor and invocation parity', () => {
     disabledItems: ['disabled'],
     defaultHighlightedValue: 'bold',
   };
-  const DOM = unwrap(createDOMToolbar({
+  const DOM = createDOMToolbar({
     ...options,
     root: new FakeElement(),
     onInvoke: (id) => DOMInvoked.push(id),
-  }));
-  const terminal = unwrap(createTerminalToolbar({
+  });
+  const terminal = createTerminalToolbar({
     ...options,
     onInvoke: (id) => terminalInvoked.push(id),
-  }));
+  });
   assertSemanticTrace(DOM, terminal, ['next', 'invoke', 'first', { type: 'invoke', id: 'italic' }]);
   assert.deepEqual(DOMInvoked, terminalInvoked);
 });

@@ -6,10 +6,10 @@ import { createTextEditingState } from '@sectile/core/text';
 import { createNumberField } from '../dist/number-field.js';
 
 test('terminal number field edits at its caret and commits calculator expressions', () => {
-  const field = unwrap(createNumberField({
+  const field = createNumberField({
     defaultValue: '50',
     policies: { evaluator: unwrap(createCalculatorExpression()) },
-  }));
+  });
   field.handleKeyboardInput({ key: 'end' });
   field.handleTextInput('-20%');
   assert.equal(field.getText(), '50-20%');
@@ -25,12 +25,12 @@ test('terminal number field edits at its caret and commits calculator expression
 test('terminal number field proposes controlled value and text state updates', () => {
   let proposed = null;
   const inputState = editing('2');
-  const field = unwrap(createNumberField({
+  const field = createNumberField({
     value: '2',
     inputState,
     policies: { evaluator: unwrap(createCalculatorExpression()) },
     onValueChange: (change) => { proposed = change; },
-  }));
+  });
   field.handleTextInput('^3');
   assert.equal(field.getText(), '2');
   unwrap(field.syncControlledValues({ value: '2', inputState: editing('2^3') }));
@@ -40,10 +40,10 @@ test('terminal number field proposes controlled value and text state updates', (
 });
 
 test('terminal number field commits exact decimal arithmetic', () => {
-  const field = unwrap(createNumberField({
+  const field = createNumberField({
     defaultValue: '0',
     policies: { evaluator: unwrap(createCalculatorExpression()) },
-  }));
+  });
   field.handleKeyboardInput({ key: 'home' });
   field.handleKeyboardInput({ key: 'delete' });
   field.handleTextInput('0.1+0.2');

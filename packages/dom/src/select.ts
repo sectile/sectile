@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -11,7 +13,15 @@ export interface SelectOptions<ID extends StableID = StableID> { readonly root: 
 export type SelectEffect<ID extends StableID = StableID> = { readonly type: 'focus-option'; readonly id: ID } | { readonly type: 'close-popup' };
 export interface SelectConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<SelectState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<SelectState<ID>>>; setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void; handleEvent(event: SelectEvent<ID>): boolean; disconnect(): void }
 
-export function createSelect<ID extends StableID>(options: SelectOptions<ID>): Result<SelectConnection<ID>> {
+export function createSelect<ID extends StableID>(options: SelectOptions<ID>): FacadeConnection<SelectConnection<ID>> {
+  return unwrap(tryCreateSelect(options));
+}
+
+export function tryCreateSelect<ID extends StableID>(options: SelectOptions<ID>): Result<FacadeConnection<SelectConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateSelectConnection(options));
+}
+
+function tryCreateSelectConnection<ID extends StableID>(options: SelectOptions<ID>): Result<SelectConnection<ID>> {
   const domain = createSequence(options.items); if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems); if (!disabled.ok) return disabled;
   const suppliedEligibility = options.policies?.eligible;

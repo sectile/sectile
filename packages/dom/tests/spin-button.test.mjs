@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createSpinButton } from '../dist/spin-button.js';
 
 test('DOM spin button preserves invalid drafts and exposes decimal values instead of ticks', () => {
   const input = new FakeInput();
-  const spin = unwrap(createSpinButton({ input, min: '-1', max: '2', step: '0.5', defaultValue: '0' }));
+  const spin = createSpinButton({ input, min: '-1', max: '2', step: '0.5', defaultValue: '0' });
   assert.equal(input.attributes.get('role'), 'spinbutton');
   assert.equal(input.attributes.get('aria-valuemin'), '-1');
   assert.equal(input.attributes.get('aria-valuemax'), '2');

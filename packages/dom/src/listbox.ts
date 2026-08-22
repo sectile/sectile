@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
@@ -151,6 +153,18 @@ export function createListboxController<ID extends StableID>(
 }
 
 export function createListbox<ID extends StableID>(
+  options: ListboxOptions<ID>,
+): FacadeConnection<ListboxConnection<ID>> {
+  return unwrap(tryCreateListbox(options));
+}
+
+export function tryCreateListbox<ID extends StableID>(
+  options: ListboxOptions<ID>,
+): Result<FacadeConnection<ListboxConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateListboxConnection(options));
+}
+
+function tryCreateListboxConnection<ID extends StableID>(
   options: ListboxOptions<ID>,
 ): Result<ListboxConnection<ID>> {
   const domain = createSequence(options.items);

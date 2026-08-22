@@ -1,5 +1,4 @@
 import { createCalendar, type CalendarConnection } from '@sectile/dom/calendar';
-import { unwrap } from '@sectile/core/result';
 import { ChevronLeft, ChevronRight, createElement } from 'lucide';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
@@ -90,7 +89,7 @@ function mountCalendar(context: DemoContext, scenario: { readonly disabledWeeken
       const visibleValue = selectedDate !== null && page.ids.has(selectedDate)
         ? selectedDate
         : null;
-      connection = unwrap(createCalendar({
+      connection = createCalendar({
         rows: page.rows,
         root,
         ...context.interaction,
@@ -111,7 +110,7 @@ function mountCalendar(context: DemoContext, scenario: { readonly disabledWeeken
           effects: effectLabels(result.commands),
         }),
         onUpdate: render,
-      }));
+      });
       render();
     }
 

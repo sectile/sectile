@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
@@ -20,7 +22,15 @@ export interface DisclosureConnection {
   handleEvent(event: DisclosureEvent): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
-export function createDisclosure(options: DisclosureOptions = {}): Result<DisclosureConnection> {
+export function createDisclosure(options: DisclosureOptions = {}): FacadeConnection<DisclosureConnection> {
+  return unwrap(tryCreateDisclosure(options));
+}
+
+export function tryCreateDisclosure(options: DisclosureOptions = {}): Result<FacadeConnection<DisclosureConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateDisclosureConnection(options));
+}
+
+function tryCreateDisclosureConnection(options: DisclosureOptions = {}): Result<DisclosureConnection> {
   const controlled = options.open !== undefined;
   const runtime = createSemanticController<DisclosureState, DisclosureEvent, DisclosureCommand, DisclosureCommand>({
     initial: createDisclosureState(options.open ?? options.defaultOpen ?? false),

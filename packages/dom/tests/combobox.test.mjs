@@ -5,6 +5,7 @@ import { createSequence } from '@sectile/core/sequence';
 import { createTextEditingState } from '@sectile/core/text';
 import {
   createCombobox,
+  tryCreateCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
@@ -16,13 +17,13 @@ test('DOM combobox facade owns construction, text input, ARIA, navigation, and a
   const popup = new FakeElement();
   popup.id = 'cities-popup';
   const accepted = [];
-  const connection = unwrap(createCombobox({
+  const connection = createCombobox({
     items: items(),
     input,
     popup,
     policies: fixture().policies,
     onAccept: (id) => accepted.push(id),
-  }));
+  });
   connection.setInputAttributes('City');
   connection.setPopupAttributes('Cities');
   assert.equal(connection.domain.size, 3);
@@ -45,11 +46,11 @@ test('DOM combobox facade owns construction, text input, ARIA, navigation, and a
   connection.disconnect();
 
   const imeInput = new FakeTextElement();
-  const imeConnection = unwrap(createCombobox({
+  const imeConnection = createCombobox({
     items: items(),
     input: imeInput,
     policies: fixture().policies,
-  }));
+  });
   imeInput.emit('compositionstart', { data: '' });
   imeInput.emit('compositionupdate', { data: 'be' });
   imeInput.emit('compositionend', { data: 'be' });
@@ -57,7 +58,7 @@ test('DOM combobox facade owns construction, text input, ARIA, navigation, and a
   assert.equal(imeConnection.getSnapshot().state.cursor.current, 'b');
   imeConnection.disconnect();
 
-  const duplicate = createCombobox({
+  const duplicate = tryCreateCombobox({
     items: [{ id: 'a', label: 'A' }, { id: 'a', label: 'Again' }],
     input: new FakeTextElement(),
   });
@@ -108,10 +109,10 @@ test('DOM keyboard and text inputs map onto combobox semantics', () => {
 
 test('DOM combobox restores controlled text after each native IME commit', () => {
   const input = new FakeTextElement();
-  const connection = unwrap(createCombobox({
+  const connection = createCombobox({
     items: [{ id: 'hangul', label: '한글' }],
     input,
-  }));
+  });
 
   commitComposition(input, '한', '한한');
   assert.equal(connection.getSnapshot().state.text.snapshot.text, '한');
@@ -125,11 +126,11 @@ test('DOM combobox restores controlled text after each native IME commit', () =>
 test('DOM combobox leaves live native IME text under browser ownership', () => {
   const input = new TrackingTextElement();
   let connection;
-  connection = unwrap(createCombobox({
+  connection = createCombobox({
     items: [{ id: 'hangul', label: '한글' }],
     input,
     onUpdate: () => connection.render(),
-  }));
+  });
 
   input.emit('compositionstart', { data: '' });
   input.emit('compositionupdate', { data: '한' });
@@ -143,10 +144,10 @@ test('DOM combobox leaves live native IME text under browser ownership', () => {
 
 test('DOM combobox adopts native word deletion through the shared text binding', () => {
   const input = new FakeTextElement();
-  const connection = unwrap(createCombobox({
+  const connection = createCombobox({
     items: items(),
     input,
-  }));
+  });
 
   assert.equal(connection.handleBeforeInput(inputEvent('insertText', 'alpha beta')), true);
   input.value = 'alpha ';
@@ -163,12 +164,12 @@ test('DOM combobox delegates option clicks into direct acceptance', () => {
   const input = new FakeTextElement();
   const popup = new FakeElement();
   const accepted = [];
-  const connection = unwrap(createCombobox({
+  const connection = createCombobox({
     items: items(),
     input,
     popup,
     onAccept: (id) => accepted.push(id),
-  }));
+  });
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'b' });
   popup.emit('click', { target: item });

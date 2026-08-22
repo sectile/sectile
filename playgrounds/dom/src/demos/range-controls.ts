@@ -1,6 +1,5 @@
 import { createSpinButton, type SpinButtonConnection } from '@sectile/dom/spin-button';
 import { createWindowSplitter, type WindowSplitterConnection } from '@sectile/dom/window-splitter';
-import { unwrap } from '@sectile/core/result';
 import { createElement, Minus, Plus } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -53,7 +52,7 @@ function mountSplitter(
 
   let externalValue = initial;
   let connection!: WindowSplitterConnection;
-  connection = unwrap(createWindowSplitter({
+  connection = createWindowSplitter({
     root: separator,
     track: frame,
     ...context.interaction,
@@ -68,7 +67,7 @@ function mountSplitter(
       },
     } : { defaultValue: initial }),
     onUpdate: render,
-  }));
+  });
 
   function render(): void {
     const { revision, state } = connection.getSnapshot();
@@ -122,7 +121,7 @@ function mountSpinButton(context: DemoContext, options: {
   let externalValue = options.initial;
   let externalDraft: string | null = options.draft ?? null;
   let connection!: SpinButtonConnection;
-  connection = unwrap(createSpinButton({
+  connection = createSpinButton({
     input, min: options.min, max: options.max, step: options.step,
     ...context.interaction,
     label: 'Quantity', policies: { page: 3 },
@@ -142,7 +141,7 @@ function mountSpinButton(context: DemoContext, options: {
       ...(options.draft === undefined ? {} : { defaultDraft: options.draft }),
     }),
     onUpdate: render,
-  }));
+  });
   decrement.addEventListener('click', () => connection.handleEvent('decrement'));
   increment.addEventListener('click', () => connection.handleEvent('increment'));
 

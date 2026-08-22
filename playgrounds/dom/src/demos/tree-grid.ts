@@ -1,5 +1,4 @@
 import { createTreeGrid, type TreeGridConnection } from '@sectile/dom/tree-grid';
-import { unwrap } from '@sectile/core/result';
 import { effectLabels, eventLabel, type DemoContext, type DemoDefinition, type DemoSession } from '../playground.js';
 
 const rows = [
@@ -48,7 +47,7 @@ function mountTreeGrid(context: DemoContext, scenario: { readonly expanded: read
     const values = new Map(initialValues);
     let externalExpanded = [...scenario.expanded]; let externalValue: CellID | null = null; let externalHighlight: CellID | null = 'projects-name'; let externalEdit: 'navigation' | 'editing' = 'navigation';
     let connection!: TreeGridConnection<RowID, CellID>;
-    connection = unwrap(createTreeGrid({
+    connection = createTreeGrid({
       rows,
       root,
       ...context.interaction,
@@ -69,7 +68,7 @@ function mountTreeGrid(context: DemoContext, scenario: { readonly expanded: read
         effects: effectLabels(result.commands),
       }),
       onUpdate: render,
-    }));
+    });
 
     function render(): void {
       const { model } = connection;

@@ -5,6 +5,7 @@ import { createSequence } from '@sectile/core/sequence';
 import { createTextEditingState } from '@sectile/core/text';
 import {
   createCombobox,
+  tryCreateCombobox,
   createComboboxController,
   toComboboxEffect,
   toComboboxEvent,
@@ -14,12 +15,12 @@ import {
 test('terminal combobox facade owns construction, text editing, navigation, and acceptance', () => {
   const accepted = [];
   let updates = 0;
-  const connection = unwrap(createCombobox({
+  const connection = createCombobox({
     items: items(),
     policies: fixture().policies,
     onAccept: (id) => accepted.push(id),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.domain.size, 3);
   assert.equal(connection.handleKeyboardInput({ key: 'a', text: 'al' }), true);
   assert.equal(connection.getInputValue(), 'al');
@@ -31,7 +32,7 @@ test('terminal combobox facade owns construction, text editing, navigation, and 
   assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
   assert.equal(updates, 3);
 
-  const duplicate = createCombobox({
+  const duplicate = tryCreateCombobox({
     items: [{ id: 'a', label: 'A' }, { id: 'a', label: 'Again' }],
   });
   assert.equal(duplicate.ok, false);

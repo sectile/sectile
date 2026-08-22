@@ -1,7 +1,6 @@
 import { createCarousel, type CarouselConnection } from '@sectile/dom/carousel';
 import { createFeed, type FeedConnection } from '@sectile/dom/feed';
 import { createGridControl, type GridConnection } from '@sectile/dom/grid';
-import { unwrap } from '@sectile/core/result';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Pause, Play, createElement } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -81,7 +80,7 @@ function mountGrid(context: DemoContext, scenario: {
   let externalValue: GridID | null = null; let externalHighlight: GridID | null = 'plan'; let externalEdit: 'navigation' | 'editing' = 'navigation';
   let editNotice = scenario.editable ? 'Enter or F2 starts editing the current cell.' : 'Space selects the current cell.';
   let connection!: GridConnection<GridID>;
-  connection = unwrap(createGridControl({
+  connection = createGridControl({
     root, rows: gridRows, label: 'Release ownership matrix', disabledItems: scenario.disabled,
     ...context.interaction,
     policies: { boundary: scenario.boundary },
@@ -95,7 +94,7 @@ function mountGrid(context: DemoContext, scenario: {
     onEditCommit: (id) => { editNotice = `Committed ${id}`; },
     onEditCancel: (id) => { editNotice = `Cancelled ${id}`; },
     onUpdate: render,
-  }));
+  });
   function sync(): void { connection.syncControlledValues({ value: externalValue, highlightedValue: externalHighlight, editMode: externalEdit }); }
   function render(): void {
     const { revision, state } = connection.getSnapshot(); root.replaceChildren();
@@ -157,7 +156,7 @@ function mountCarousel(context: DemoContext, scenario: {
 
   let externalValue: SlideID | null = 'overview'; let externalPaused = false; let announced: SlideID | null = null;
   let connection!: CarouselConnection<SlideID>;
-  connection = unwrap(createCarousel({
+  connection = createCarousel({
     root,
     ...context.interaction,
     ...(previous === undefined ? {} : { previousButton: previous }),
@@ -174,7 +173,7 @@ function mountCarousel(context: DemoContext, scenario: {
     getSlideLabel: (_id, index, count) => `Release slide ${index + 1} of ${count}`,
     getIndicatorLabel: (id) => `Go to ${slides.find((slide) => slide.id === id)?.title ?? id}`,
     onAnnounce: (id) => { announced = id; }, onUpdate: render,
-  }));
+  });
   for (const slide of slides) {
     connection.setSlideAttributes(slideElements.get(slide.id)!, slide.id);
     const indicator = indicatorElements.get(slide.id); if (indicator !== undefined) connection.setIndicatorAttributes(indicator, slide.id);
@@ -232,7 +231,7 @@ function mountFeed(context: DemoContext, scenario: {
   frame.append(summary); if (before !== undefined) frame.append(before); frame.append(root); if (after !== undefined) frame.append(after); frame.append(requestStatus); context.surface.append(frame);
   let windowStart = scenario.start; let windowEnd = scenario.end; let revision = 1; let windowIDs = currentWindow(); let lastRequest: string | null = null;
   let connection!: FeedConnection<FeedID>;
-  connection = unwrap(createFeed({
+  connection = createFeed({
     root,
     ...context.interaction,
     items: windowIDs,
@@ -254,7 +253,7 @@ function mountFeed(context: DemoContext, scenario: {
       queueMicrotask(() => connection.syncWindow({ items: windowIDs, revision, highlightedValue: (direction === 'after' ? windowIDs.at(-1) : windowIDs[0]) ?? null }));
     },
     onUpdate: render,
-  }));
+  });
   const requestBefore = (): void => { connection.handleEvent('request-before'); };
   const requestAfter = (): void => { connection.handleEvent('request-after'); };
   before?.addEventListener('click', requestBefore); after?.addEventListener('click', requestAfter);

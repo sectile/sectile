@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -38,6 +40,18 @@ export interface ToolbarConnection<ID extends StableID = StableID> {
 }
 
 export function createToolbar<ID extends StableID>(
+  options: ToolbarOptions<ID>,
+): FacadeConnection<ToolbarConnection<ID>> {
+  return unwrap(tryCreateToolbar(options));
+}
+
+export function tryCreateToolbar<ID extends StableID>(
+  options: ToolbarOptions<ID>,
+): Result<FacadeConnection<ToolbarConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateToolbarConnection(options));
+}
+
+function tryCreateToolbarConnection<ID extends StableID>(
   options: ToolbarOptions<ID>,
 ): Result<ToolbarConnection<ID>> {
   const domain = createSequence(options.items);

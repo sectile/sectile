@@ -3,7 +3,6 @@ import { createPagination, type PaginationConnection } from '@sectile/dom/pagina
 import { createRating, type RatingConnection } from '@sectile/dom/rating';
 import { createSelect, type SelectConnection } from '@sectile/dom/select';
 import { createStepper, type StepperConnection } from '@sectile/dom/stepper';
-import { unwrap } from '@sectile/core/result';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, createElement, Star } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -78,10 +77,10 @@ function mountCheckboxGroup(context: DemoContext, initial: readonly string[], di
   });
   root.append(intro, list); context.surface.append(root);
   let external = [...initial]; let connection!: CheckboxGroupConnection<string>;
-  connection = unwrap(createCheckboxGroup({ root: list, items: releaseOptions.map(({ id }) => id), disabledItems: disabled, ...context.interaction,
+  connection = createCheckboxGroup({ root: list, items: releaseOptions.map(({ id }) => id), disabledItems: disabled, ...context.interaction,
     ...(controlled ? { value: external, highlightedValue: releaseOptions[0].id, onValueChange: ({ value }) => { external = [...value]; queueMicrotask(() => connection.syncControlledValues({ value: external, highlightedValue: connection.getSnapshot().state.cursor.current })); } } : { defaultValue: initial, defaultHighlightedValue: releaseOptions[0].id }),
     onUpdate: render,
-  }));
+  });
   function render(): void { const { revision, state } = connection.getSnapshot(); for (const [id, button] of buttons) { connection.setItemAttributes(button, { id, disabled: disabled.includes(id) }); button.classList.toggle('selected', state.selection.has(id)); button.classList.toggle('current', state.cursor.current === id); } context.showState(revision, { selected: state.selection.selected, current: state.cursor.current, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => buttons[0]?.[1].focus(), disconnect: () => connection.disconnect() };
 }
@@ -94,9 +93,9 @@ function mountSelect(context: DemoContext, initial: string, disabled: readonly s
   const optionElements = releaseOptions.map((item) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'select-option'; button.append(choiceCopy(item.label, item.detail), marker(Check)); popup.append(button); return [item.id, button] as const; });
   root.append(label, trigger, popup); context.surface.append(root);
   let value = initial; let highlightedValue: string | null = initial; let open = false; let connection!: SelectConnection<string>;
-  connection = unwrap(createSelect({ root, trigger, popup, items: releaseOptions.map(({ id }) => id), disabledItems: disabled, ...context.interaction, label: 'Release channel',
+  connection = createSelect({ root, trigger, popup, items: releaseOptions.map(({ id }) => id), disabledItems: disabled, ...context.interaction, label: 'Release channel',
     ...(controlled ? { value, highlightedValue, open, onValueChange: (next) => { value = next ?? value; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); }, onOpenChange: (next) => { open = next; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render,
-  }));
+  });
   function sync(): void { connection.syncControlledValues({ value, highlightedValue, open }); }
   function render(): void { const { revision, state } = connection.getSnapshot(); const selected = state.choice.selection.selected[0] ?? null; const selectedItem = releaseOptions.find(({ id }) => id === selected); trigger.replaceChildren(document.createTextNode(selectedItem?.label ?? 'Choose a channel'), createElement(ChevronDown, { 'aria-hidden': 'true', height: 16, width: 16 })); for (const [id, button] of optionElements) { connection.setItemAttributes(button, id, disabled.includes(id)); button.classList.toggle('selected', state.choice.selection.has(id)); button.classList.toggle('current', state.choice.cursor.current === id); } context.showState(revision, { open: state.open, value: selected, current: state.choice.cursor.current, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
@@ -109,7 +108,7 @@ function mountPagination(context: DemoContext, count: number, initial: string, c
   const pageButtons = pages.map((page) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'page-button secondary'; button.textContent = page; return [page, button] as const; });
   root.append(previous, ...pageButtons.map(([, button]) => button), next); context.surface.append(root);
   let value: string | null = initial; let highlightedValue: string | null = initial; let connection!: PaginationConnection<string>;
-  connection = unwrap(createPagination({ root, items: pages, ...context.interaction, label: 'Result pages', ...(controlled ? { value, highlightedValue, onPageChange: (nextPage: string | null) => { value = nextPage; queueMicrotask(sync); }, onHighlightedValueChange: (nextPage: string | null) => { highlightedValue = nextPage; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render }));
+  connection = createPagination({ root, items: pages, ...context.interaction, label: 'Result pages', ...(controlled ? { value, highlightedValue, onPageChange: (nextPage: string | null) => { value = nextPage; queueMicrotask(sync); }, onHighlightedValueChange: (nextPage: string | null) => { highlightedValue = nextPage; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render });
   previous.addEventListener('click', () => connection.handleEvent('previous-page')); next.addEventListener('click', () => connection.handleEvent('next-page'));
   function sync(): void { connection.syncControlledValues({ value, highlightedValue }); }
   function render(): void { const { revision, state } = connection.getSnapshot(); for (const [page, button] of pageButtons) connection.setPageAttributes(button, page); previous.disabled = context.interaction.disabled === true || state.selection.selected[0] === pages[0]; next.disabled = context.interaction.disabled === true || state.selection.selected[0] === pages.at(-1); context.showState(revision, { page: state.selection.selected[0] ?? null, current: state.cursor.current, pageCount: count, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
@@ -124,7 +123,7 @@ function mountStepper(context: DemoContext, initial: string, disabled: readonly 
   const buttons = steps.map((step, index) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'step-button secondary'; button.append(Object.assign(document.createElement('span'), { className: 'step-number', textContent: String(index + 1) }), Object.assign(document.createElement('span'), { textContent: step.label })); track.append(button); return [step.id, button] as const; });
   root.append(track, ...panels.map(([, panel]) => panel)); context.surface.append(root);
   let value: string | null = initial; let highlightedValue: string | null = initial; let connection!: StepperConnection<string>;
-  connection = unwrap(createStepper({ root: track, items: steps.map(({ id }) => id), disabledItems: disabled, ...context.interaction, ...(controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render }));
+  connection = createStepper({ root: track, items: steps.map(({ id }) => id), disabledItems: disabled, ...context.interaction, ...(controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render });
   function sync(): void { connection.syncControlledValues({ value, highlightedValue }); }
   function render(): void { const { revision, state } = connection.getSnapshot(); for (const [id, button] of buttons) { connection.setStepAttributes(button, { id, panelID: `${context.instanceID}-${id}-panel`, disabled: disabled.includes(id) }); button.classList.toggle('complete', steps.findIndex((step) => step.id === id) < steps.findIndex((step) => step.id === state.selection.selected[0])); } for (const [id, panel] of panels) connection.setPanelAttributes(panel, id); context.showState(revision, { step: state.selection.selected[0] ?? null, current: state.cursor.current, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
   render(); return { focus: () => buttons[0]?.[1].focus(), disconnect: () => connection.disconnect() };
@@ -139,7 +138,7 @@ function mountRating(context: DemoContext, count: number, initial: string, clear
   const clear = document.createElement('button'); clear.type = 'button'; clear.className = 'compact-control secondary'; clear.textContent = 'Clear rating'; clear.hidden = !clearable;
   wrapper.append(summary, root, clear); context.surface.append(wrapper);
   let value: string | null = initial; let highlightedValue: string | null = initial; let connection!: RatingConnection<string>;
-  connection = unwrap(createRating({ root, items: values, ...context.interaction, clearable, ...(controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render }));
+  connection = createRating({ root, items: values, ...context.interaction, clearable, ...(controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render });
   clear.addEventListener('click', () => connection.handleEvent('clear'));
   function sync(): void { connection.syncControlledValues({ value, highlightedValue }); }
   function render(): void { const { revision, state } = connection.getSnapshot(); const selected = state.selection.selected[0] ?? null; const numeric = Number(selected ?? 0); for (const [rating, button] of buttons) { connection.setItemAttributes(button, rating); button.classList.toggle('filled', Number(rating) <= numeric); } summary.textContent = selected === null ? 'Not rated' : `${selected} out of ${count}`; clear.disabled = context.interaction.disabled === true || context.interaction.readOnly === true || selected === null; context.showState(revision, { rating: selected, current: state.cursor.current, clearable, ownership: controlled ? 'controlled' : 'uncontrolled' }); }

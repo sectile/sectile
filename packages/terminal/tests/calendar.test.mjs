@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createGrid } from '@sectile/core/grid';
 import {
   createCalendar,
+  tryCreateCalendar,
   createCalendarController,
   toCalendarEffect,
   toCalendarEvent,
@@ -12,19 +13,19 @@ import {
 test('terminal calendar facade constructs the grid and owns page requests', () => {
   const pages = [];
   let updates = 0;
-  const connection = unwrap(createCalendar({
+  const connection = createCalendar({
     rows: [['a', 'b'], ['c', 'd']],
     defaultHighlightedValue: 'a',
     onPageRequest: (request) => pages.push(request),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.grid.columnCount, 2);
   assert.equal(connection.handleKeyboardInput({ key: 'page-down' }), true);
   assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
   assert.deepEqual(pages, [{ direction: 1, from: 'a' }]);
   assert.equal(updates, 1);
 
-  const invalid = createCalendar({ rows: [['a'], ['a']] });
+  const invalid = tryCreateCalendar({ rows: [['a'], ['a']] });
   assert.equal(invalid.ok, false);
 });
 

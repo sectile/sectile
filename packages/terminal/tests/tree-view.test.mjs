@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createTree } from '@sectile/core/tree';
 import {
   createTreeView,
+  tryCreateTreeView,
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
@@ -11,18 +12,18 @@ import {
 
 test('terminal tree-view facade constructs the tree and owns keyboard updates', () => {
   let updates = 0;
-  const connection = unwrap(createTreeView({
+  const connection = createTreeView({
     nodes: nodes(),
     defaultHighlightedValue: 'root',
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.tree.size, 4);
   assert.equal(connection.handleKeyboardInput({ key: 'right' }), true);
   assert.equal(connection.handleKeyboardInput({ key: 'enter' }), false);
   assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
   assert.equal(updates, 1);
 
-  const invalid = createTreeView({ nodes: [{ id: 'child', parentID: 'missing' }] });
+  const invalid = tryCreateTreeView({ nodes: [{ id: 'child', parentID: 'missing' }] });
   assert.equal(invalid.ok, false);
 });
 
@@ -43,7 +44,7 @@ test('terminal tree-view commands project into highlight effects', () => {
 });
 
 test('terminal tree-view skips disabled items without host policy glue', () => {
-  const connection = unwrap(createTreeView({ nodes: nodes(), defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] }));
+  const connection = createTreeView({ nodes: nodes(), defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
   connection.handleKeyboardInput({ key: 'down' });
   assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
   connection.handleKeyboardInput({ key: 'down' });

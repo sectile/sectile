@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createRange } from '@sectile/core/range';
 import {
   createSlider,
+  tryCreateSlider,
   createSliderController,
   toSliderEffect,
   toSliderEvent,
@@ -12,7 +13,7 @@ import {
 test('DOM slider facade constructs a bounded range and owns keyboard ARIA updates', () => {
   const root = new FakeElement();
   let updates = 0;
-  const connection = unwrap(createSlider({
+  const connection = createSlider({
     min: '0',
     max: '1',
     step: '0.25',
@@ -20,7 +21,7 @@ test('DOM slider facade constructs a bounded range and owns keyboard ARIA update
     label: 'Opacity',
     defaultValue: 1,
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.getValue(), '0.25');
   assert.equal(root.attributes.get('role'), 'slider');
   assert.equal(root.attributes.get('aria-valuetext'), '0.25');
@@ -36,7 +37,7 @@ test('DOM slider facade constructs a bounded range and owns keyboard ARIA update
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
 
-  const invalid = createSlider({ min: '1', max: '0', step: '0.25', root: new FakeElement() });
+  const invalid = tryCreateSlider({ min: '1', max: '0', step: '0.25', root: new FakeElement() });
   assert.equal(invalid.ok, false);
 });
 
@@ -52,12 +53,12 @@ test('DOM keys map onto slider semantic events', () => {
 
 test('DOM slider maps pointer position onto an exact tick', () => {
   const root = new FakeElement();
-  const connection = unwrap(createSlider({
+  const connection = createSlider({
     min: '0',
     max: '1',
     step: '0.25',
     root,
-  }));
+  });
   root.emit('pointerdown', pointerEvent(75));
   root.emit('pointerup', pointerEvent(75));
   assert.equal(connection.getSnapshot().state.tick, 3);
@@ -66,14 +67,14 @@ test('DOM slider maps pointer position onto an exact tick', () => {
 
 test('DOM vertical slider maps its top edge to the upper value', () => {
   const root = new FakeElement();
-  const connection = unwrap(createSlider({
+  const connection = createSlider({
     min: '-1',
     max: '1',
     step: '0.5',
     root,
     orientation: 'vertical',
     formatValue: (value) => `${value} units`,
-  }));
+  });
   root.emit('pointerdown', { clientX: 0, clientY: 0, pointerId: 1, preventDefault() {} });
   assert.equal(connection.getValue(), '1');
   assert.equal(root.attributes.get('aria-valuenow'), '1');

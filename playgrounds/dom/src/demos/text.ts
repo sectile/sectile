@@ -40,7 +40,7 @@ function mountText(context: DemoContext, options: {
   }));
   let external: TextEditingState = initial;
   let connection!: TextConnection;
-  connection = unwrap(createText({
+  connection = createText({
     element,
     ...context.interaction,
     ...(options.controlled ? {
@@ -52,7 +52,7 @@ function mountText(context: DemoContext, options: {
     } : { defaultValue: initial }),
     onTransition: ({ input, result }) => context.record({ revision: result.snapshot.revision, event: input.type, accepted: result.ok, effects: effectLabels(result.commands) }),
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     mirror.textContent = connection.getValue() || 'The rendered value will appear here.';

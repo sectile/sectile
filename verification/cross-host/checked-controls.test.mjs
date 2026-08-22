@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createCheckbox as createDOMCheckbox } from '@sectile/dom/checkbox';
 import { createSwitch as createDOMSwitch } from '@sectile/dom/switch';
 import { createToggleButton as createDOMToggleButton } from '@sectile/dom/toggle-button';
@@ -27,8 +26,8 @@ test('DOM and terminal checked controls preserve equivalent semantic traces', ()
 });
 
 test('DOM and terminal checked controls preserve controlled reconciliation parity', () => {
-  const DOM = unwrap(createDOMCheckbox({ element: new FakeElement(), value: false }));
-  const terminal = unwrap(createTerminalCheckbox({ value: false }));
+  const DOM = createDOMCheckbox({ element: new FakeElement(), value: false });
+  const terminal = createTerminalCheckbox({ value: false });
   DOM.handleEvent('toggle');
   terminal.handleEvent('toggle');
   assert.deepEqual(DOM.getSnapshot(), terminal.getSnapshot());
@@ -37,8 +36,8 @@ test('DOM and terminal checked controls preserve controlled reconciliation parit
 });
 
 function assertCheckedParity(createDOM, createTerminal, events) {
-  const DOM = unwrap(createDOM());
-  const terminal = unwrap(createTerminal());
+  const DOM = createDOM();
+  const terminal = createTerminal();
   assert.deepEqual(DOM.getSnapshot(), terminal.getSnapshot());
   for (const event of events) {
     assert.equal(DOM.handleEvent(event), terminal.handleEvent(event));

@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
 import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
@@ -94,7 +96,15 @@ export function createSliderController(
   return { ok: true, value: new TerminalSliderController(options, interaction.value, snapshot.value) };
 }
 
-export function createSlider(options: SliderOptions): Result<SliderConnection> {
+export function createSlider(options: SliderOptions): FacadeConnection<SliderConnection> {
+  return unwrap(tryCreateSlider(options));
+}
+
+export function tryCreateSlider(options: SliderOptions): Result<FacadeConnection<SliderConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateSliderConnection(options));
+}
+
+function tryCreateSliderConnection(options: SliderOptions): Result<SliderConnection> {
   const range = createBoundedRange(options);
   if (!range.ok) return range;
   const controller = createSliderController({ ...options, range: range.value });

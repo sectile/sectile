@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -8,7 +10,15 @@ import { createSemanticController, type SemanticController } from './internal/se
 export interface SelectOptions<ID extends StableID = StableID> { readonly items: readonly ID[]; readonly disabledItems?: readonly ID[]; readonly policies?: SelectPolicies<ID>; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly open?: boolean; readonly defaultOpen?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
 export type SelectEffect<ID extends StableID = StableID> = { readonly type: 'move-highlight'; readonly id: ID } | { readonly type: 'close-popup' };
 export interface SelectConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<SelectState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<SelectState<ID>>>; handleEvent(event: SelectEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
-export function createSelect<ID extends StableID>(options: SelectOptions<ID>): Result<SelectConnection<ID>> {
+export function createSelect<ID extends StableID>(options: SelectOptions<ID>): FacadeConnection<SelectConnection<ID>> {
+  return unwrap(tryCreateSelect(options));
+}
+
+export function tryCreateSelect<ID extends StableID>(options: SelectOptions<ID>): Result<FacadeConnection<SelectConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateSelectConnection(options));
+}
+
+function tryCreateSelectConnection<ID extends StableID>(options: SelectOptions<ID>): Result<SelectConnection<ID>> {
   const domain = createSequence(options.items); if (!domain.ok) return domain; const disabled = createDisabledItems(domain.value, options.disabledItems); if (!disabled.ok) return disabled; const supplied = options.policies?.eligible; const policies: SelectPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.value.has(id) && (supplied?.(id) ?? true) }; const controlled = { value: options.value !== undefined, highlighted: options.highlightedValue !== undefined, open: options.open !== undefined };
   const runtime = createSemanticController<SelectState<ID>, SelectEvent<ID>, SelectCommand<ID>, SelectEffect<ID>>({ interaction: options, interactionIntent: (event) => event === 'select' || (typeof event === 'object' && event.type === 'select') ? 'mutate' : 'navigate', initial: createSelectState(domain.value, { value: options.value ?? options.defaultValue ?? null, current: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null, open: options.open ?? options.defaultOpen ?? false }), reducer: (state, event) => applySelectEvent(domain.value, state, event, policies), reconcile: (previous, proposed) => createSelectState(domain.value, { value: controlled.value ? previous.choice.selection.selected[0] ?? null : proposed.choice.selection.selected[0] ?? null, current: controlled.highlighted ? previous.choice.cursor.current : proposed.choice.cursor.current, open: controlled.open ? previous.open : proposed.open }), notify: (previous, proposed) => { const before = previous.choice.selection.selected[0] ?? null; const after = proposed.choice.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); if (previous.choice.cursor.current !== proposed.choice.cursor.current) options.onHighlightedValueChange?.(proposed.choice.cursor.current); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); }, toEffect: (command) => command.type === 'focus' ? { type: 'move-highlight', id: command.id } : { type: 'close-popup' } });
   return runtime.ok ? { ok: true, value: new TerminalSelectConnection(options, domain.value, runtime.value, controlled) } : runtime;

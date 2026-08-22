@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
   applyQuantityFieldEvent,
@@ -57,7 +59,15 @@ export interface QuantityFieldConnection {
   disconnect(): void;
 }
 
-export function createQuantityField(options: QuantityFieldOptions): Result<QuantityFieldConnection> {
+export function createQuantityField(options: QuantityFieldOptions): FacadeConnection<QuantityFieldConnection> {
+  return unwrap(tryCreateQuantityField(options));
+}
+
+export function tryCreateQuantityField(options: QuantityFieldOptions): Result<FacadeConnection<QuantityFieldConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateQuantityFieldConnection(options));
+}
+
+function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result<QuantityFieldConnection> {
   const quantityControlled = options.quantity !== undefined;
   const displayUnitControlled = options.displayUnit !== undefined;
   const inputControlled = options.inputState !== undefined;

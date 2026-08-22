@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createTree } from '@sectile/core/tree';
 import {
   createTreeView,
+  tryCreateTreeView,
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
@@ -12,12 +13,12 @@ import {
 test('DOM tree-view facade constructs the tree and owns ARIA and keyboard focus', () => {
   const root = new FakeElement();
   let updates = 0;
-  const connection = unwrap(createTreeView({
+  const connection = createTreeView({
     nodes: nodes(),
     root,
     defaultHighlightedValue: 'root',
     onUpdate: () => { updates += 1; },
-  }));
+  });
   connection.setTreeAttributes('Files');
   assert.equal(connection.tree.size, 4);
   assert.equal(root.attributes.get('role'), 'tree');
@@ -33,7 +34,7 @@ test('DOM tree-view facade constructs the tree and owns ARIA and keyboard focus'
   assert.equal(updates, 1);
   connection.disconnect();
 
-  const invalid = createTreeView({
+  const invalid = tryCreateTreeView({
     nodes: [{ id: 'child', parentID: 'missing' }],
     root: new FakeElement(),
   });
@@ -51,11 +52,11 @@ test('DOM keys map onto tree-view semantic events', () => {
 
 test('DOM tree-view delegates disclosure and item clicks', () => {
   const root = new FakeElement();
-  const connection = unwrap(createTreeView({
+  const connection = createTreeView({
     nodes: nodes(),
     root,
     defaultHighlightedValue: 'root',
-  }));
+  });
   const disclosure = new FakeElement();
   connection.setDisclosureAttributes(disclosure, 'root');
   root.emit('click', { target: disclosure });
@@ -76,7 +77,7 @@ test('DOM tree-view commands project into focus effects', () => {
 
 test('DOM tree-view derives disabled semantics and skips unavailable items', () => {
   const root = new FakeElement();
-  const connection = unwrap(createTreeView({ nodes: nodes(), root, defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] }));
+  const connection = createTreeView({ nodes: nodes(), root, defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
   const disabled = new FakeElement(); connection.setItemAttributes(disabled, { id: 'child-b' });
   assert.equal(disabled.attributes.get('aria-disabled'), 'true');
   connection.handleEvent('next');

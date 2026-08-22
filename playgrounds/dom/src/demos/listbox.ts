@@ -1,5 +1,4 @@
 import { createListbox } from '@sectile/dom/listbox';
-import { unwrap } from '@sectile/core/result';
 import { Check, createElement, LockKeyhole } from 'lucide';
 import {
   effectLabels,
@@ -107,7 +106,7 @@ function mountListboxCase(
 
   let activated: ItemID | null = null;
   let externalValue = [...(options.defaultValue ?? [])];
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: items.map((item) => item.id),
     root,
     ...context.interaction,
@@ -132,7 +131,7 @@ function mountListboxCase(
       effects: effectLabels(result.commands),
     }),
     onUpdate: render,
-  }));
+  });
 
   if (options.controlled) {
     const clear = document.createElement('button');

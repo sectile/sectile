@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -44,7 +46,15 @@ export interface TabsConnection<ID extends StableID = StableID> {
   handleKeyboardInput(input: KeyboardInput): boolean;
 }
 
-export function createTabs<ID extends StableID>(options: TabsOptions<ID>): Result<TabsConnection<ID>> {
+export function createTabs<ID extends StableID>(options: TabsOptions<ID>): FacadeConnection<TabsConnection<ID>> {
+  return unwrap(tryCreateTabs(options));
+}
+
+export function tryCreateTabs<ID extends StableID>(options: TabsOptions<ID>): Result<FacadeConnection<TabsConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateTabsConnection(options));
+}
+
+function tryCreateTabsConnection<ID extends StableID>(options: TabsOptions<ID>): Result<TabsConnection<ID>> {
   const domain = createSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);

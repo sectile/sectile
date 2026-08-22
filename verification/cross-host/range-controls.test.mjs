@@ -17,8 +17,8 @@ import { createWindowSplitter as createTerminalWindowSplitter } from '@sectile/t
 test('DOM and terminal multi-thumb sliders preserve constrained and crossing traces', () => {
   for (const policies of [{ minGap: 2 }, { allowCross: true }]) {
     const options = { thumbs: ['low', 'high'], min: '-1', max: '4', step: '0.5', defaultValues: [2, 8], policies };
-    const DOM = unwrap(createDOMMultiThumbSlider({ ...options, root: new FakeElement() }));
-    const terminal = unwrap(createTerminalMultiThumbSlider(options));
+    const DOM = createDOMMultiThumbSlider({ ...options, root: new FakeElement() });
+    const terminal = createTerminalMultiThumbSlider(options);
     assertSemanticTrace(DOM, terminal, ['increment', 'end', 'next-thumb', 'decrement', { type: 'set-tick', id: 'low', tick: 7 }]);
     assert.deepEqual(DOM.getValues(), terminal.getValues());
   }
@@ -26,8 +26,8 @@ test('DOM and terminal multi-thumb sliders preserve constrained and crossing tra
 
 test('DOM and terminal spin buttons preserve decimal values, drafts, and controlled sync', () => {
   const options = { min: '-1', max: '2', step: '0.5', value: '0', draft: null };
-  const DOM = unwrap(createDOMSpinButton({ ...options, input: new FakeInput() }));
-  const terminal = unwrap(createTerminalSpinButton(options));
+  const DOM = createDOMSpinButton({ ...options, input: new FakeInput() });
+  const terminal = createTerminalSpinButton(options);
   assertSemanticTrace(DOM, terminal, [
     { type: 'input', text: '1.5' },
     'commit',
@@ -42,8 +42,8 @@ test('DOM and terminal spin buttons preserve decimal values, drafts, and control
 
 test('DOM and terminal number fields preserve exact expression traces', () => {
   const options = { defaultValue: '50', policies: { evaluator: unwrap(createCalculatorExpression()) } };
-  const DOM = unwrap(createDOMNumberField({ ...options, input: new FakeInput() }));
-  const terminal = unwrap(createTerminalNumberField(options));
+  const DOM = createDOMNumberField({ ...options, input: new FakeInput() });
+  const terminal = createTerminalNumberField(options);
   assertSemanticTrace(DOM, terminal, [
     replaceText(2, '50-20%'),
     'commit',
@@ -64,8 +64,8 @@ test('DOM and terminal quantity fields preserve canonical values across display 
     defaultQuantity: { value: '1', unit: 'metre' },
     defaultDisplayUnit: 'centimetre',
   };
-  const DOM = unwrap(createDOMQuantityField({ ...options, input: new FakeInput() }));
-  const terminal = unwrap(createTerminalQuantityField(options));
+  const DOM = createDOMQuantityField({ ...options, input: new FakeInput() });
+  const terminal = createTerminalQuantityField(options);
   assertSemanticTrace(DOM, terminal, [
     replaceText(3, '250.5'),
     'commit',
@@ -82,8 +82,8 @@ test('DOM and terminal quantity fields preserve canonical values across display 
 
 test('DOM and terminal window splitters preserve range traces', () => {
   const options = { min: '0', max: '100', step: '1', defaultValue: 50, page: 10, orientation: 'vertical' };
-  const DOM = unwrap(createDOMWindowSplitter({ ...options, root: new FakeElement() }));
-  const terminal = unwrap(createTerminalWindowSplitter(options));
+  const DOM = createDOMWindowSplitter({ ...options, root: new FakeElement() });
+  const terminal = createTerminalWindowSplitter(options);
   const inputs = [
     [{ key: 'ArrowDown' }, { key: 'down' }],
     [{ key: 'ArrowUp' }, { key: 'up' }],

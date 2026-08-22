@@ -4,7 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createCarousel } from '../dist/carousel.js';
 
 test('terminal carousel owns movement, position, and pause keys', () => {
-  const carousel = unwrap(createCarousel({ slides: ['a', 'b'] }));
+  const carousel = createCarousel({ slides: ['a', 'b'] });
   carousel.handleKeyboardInput({ key: 'right' });
   carousel.handleKeyboardInput({ key: 'space' });
   assert.equal(carousel.getSnapshot().state.cursor.current, 'b');
@@ -14,13 +14,13 @@ test('terminal carousel owns movement, position, and pause keys', () => {
 
 test('terminal carousel preserves controlled slide and pause values', () => {
   const changes = [];
-  const carousel = unwrap(createCarousel({
+  const carousel = createCarousel({
     slides: ['a', 'b'],
     value: 'a',
     paused: false,
     onValueChange: (value) => changes.push(['value', value]),
     onPausedChange: (value) => changes.push(['paused', value]),
-  }));
+  });
   carousel.handleKeyboardInput({ key: 'right' });
   carousel.handleKeyboardInput({ key: 'space' });
   assert.deepEqual(changes, [['value', 'b'], ['paused', true]]);
@@ -32,11 +32,11 @@ test('terminal carousel preserves controlled slide and pause values', () => {
 
 test('terminal carousel autoplay advances, honors orientation, and disconnects', () => {
   const scheduler = new FakeScheduler();
-  const carousel = unwrap(createCarousel({
+  const carousel = createCarousel({
     slides: ['a', 'b'],
     orientation: 'vertical',
     autoplay: { delayMs: 1200, stopOnInteraction: false, scheduler },
-  }));
+  });
   assert.equal(carousel.handleKeyboardInput({ key: 'right' }), false);
   assert.equal(carousel.handleKeyboardInput({ key: 'down' }), true);
   assert.equal(carousel.getSnapshot().state.cursor.current, 'b');

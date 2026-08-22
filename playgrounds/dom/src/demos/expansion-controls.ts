@@ -1,6 +1,5 @@
 import { createAccordion, type AccordionConnection } from '@sectile/dom/accordion';
 import { createDisclosure, type DisclosureConnection } from '@sectile/dom/disclosure';
-import { unwrap } from '@sectile/core/result';
 import { ChevronDown, createElement, Rocket, Settings2, TriangleAlert } from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
@@ -45,7 +44,7 @@ function mountAccordion(context: DemoContext, options: {
   context.surface.append(root);
   let external: AccordionID[] = options.collapsible ? ['general'] : ['general'];
   let connection!: AccordionConnection<AccordionID>;
-  connection = unwrap(createAccordion({
+  connection = createAccordion({
     root,
     ...context.interaction,
     items: accordionItems.map((item) => item.id),
@@ -61,7 +60,7 @@ function mountAccordion(context: DemoContext, options: {
     defaultHighlightedValue: 'general',
     label: 'Project settings',
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     root.replaceChildren();
@@ -141,7 +140,7 @@ function mountDisclosure(context: DemoContext, initial: boolean, controlled: boo
   context.surface.append(root);
   let external = initial;
   let connection!: DisclosureConnection;
-  connection = unwrap(createDisclosure({
+  connection = createDisclosure({
     trigger,
     panel,
     ...context.interaction,
@@ -154,7 +153,7 @@ function mountDisclosure(context: DemoContext, initial: boolean, controlled: boo
       },
     } : { defaultOpen: initial }),
     onUpdate: render,
-  }));
+  });
   function render(): void {
     const { revision, state } = connection.getSnapshot();
     root.dataset['open'] = String(state.open);

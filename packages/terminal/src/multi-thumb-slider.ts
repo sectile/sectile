@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
 import { createSequence, type Sequence } from '@sectile/core/sequence';
@@ -27,7 +29,15 @@ export interface MultiThumbSliderConnection<ID extends StableID = StableID> {
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
 
-export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<MultiThumbSliderConnection<ID>> {
+export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbSliderOptions<ID>): FacadeConnection<MultiThumbSliderConnection<ID>> {
+  return unwrap(tryCreateMultiThumbSlider(options));
+}
+
+export function tryCreateMultiThumbSlider<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<FacadeConnection<MultiThumbSliderConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateMultiThumbSliderConnection(options));
+}
+
+function tryCreateMultiThumbSliderConnection<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<MultiThumbSliderConnection<ID>> {
   const thumbs = createSequence(options.thumbs);
   if (!thumbs.ok) return thumbs;
   const range = createBoundedRange(options);

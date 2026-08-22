@@ -4,6 +4,7 @@ import { unwrap } from '@sectile/core/result';
 import { createGrid } from '@sectile/core/grid';
 import {
   createCalendar,
+  tryCreateCalendar,
   createCalendarController,
   toCalendarEffect,
   toCalendarEvent,
@@ -12,12 +13,12 @@ import {
 test('DOM calendar facade constructs the grid and owns ARIA, focus, and page requests', () => {
   const root = new FakeElement();
   const pages = [];
-  const connection = unwrap(createCalendar({
+  const connection = createCalendar({
     rows: [['a', 'b'], ['c', 'd']],
     root,
     defaultHighlightedValue: 'a',
     onPageRequest: (request) => pages.push(request),
-  }));
+  });
   connection.setCalendarAttributes('Dates');
   assert.equal(connection.grid.rowCount, 2);
   assert.equal(root.attributes.get('role'), 'grid');
@@ -31,7 +32,7 @@ test('DOM calendar facade constructs the grid and owns ARIA, focus, and page req
   assert.deepEqual(pages, [{ direction: 1, from: 'a' }]);
   connection.disconnect();
 
-  const invalid = createCalendar({ rows: [['a'], ['a']], root: new FakeElement() });
+  const invalid = tryCreateCalendar({ rows: [['a'], ['a']], root: new FakeElement() });
   assert.equal(invalid.ok, false);
 });
 
@@ -46,7 +47,7 @@ test('DOM keys map onto calendar semantic events', () => {
 
 test('DOM calendar delegates cell clicks into direct selection', () => {
   const root = new FakeElement();
-  const connection = unwrap(createCalendar({ rows: [['a', 'b']], root }));
+  const connection = createCalendar({ rows: [['a', 'b']], root });
   const cell = new FakeElement();
   connection.setCellAttributes(cell, { id: 'b', rowIndex: 1, columnIndex: 2 });
   root.emit('click', { target: cell });

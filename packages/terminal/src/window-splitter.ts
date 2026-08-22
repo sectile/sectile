@@ -1,9 +1,11 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { QuantizedRange } from '@sectile/core/range';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { SliderState } from '@sectile/core/slider';
 import {
-  createSlider,
+  tryCreateSlider,
   type KeyboardInput,
   type SliderConnection,
   type SliderControlledValues,
@@ -24,9 +26,21 @@ export interface WindowSplitterConnection {
 
 export function createWindowSplitter(
   options: WindowSplitterOptions,
+): FacadeConnection<WindowSplitterConnection> {
+  return unwrap(tryCreateWindowSplitter(options));
+}
+
+export function tryCreateWindowSplitter(
+  options: WindowSplitterOptions,
+): Result<FacadeConnection<WindowSplitterConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateWindowSplitterConnection(options));
+}
+
+function tryCreateWindowSplitterConnection(
+  options: WindowSplitterOptions,
 ): Result<WindowSplitterConnection> {
   const { orientation = 'horizontal', ...sliderOptions } = options;
-  const slider = createSlider(sliderOptions);
+  const slider = tryCreateSlider(sliderOptions);
   if (!slider.ok) return slider;
   return {
     ok: true,

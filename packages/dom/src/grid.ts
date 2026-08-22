@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { applyGridEvent, createGrid, createGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -34,7 +36,15 @@ export interface GridConnection<ID extends StableID = StableID> {
   disconnect(): void;
 }
 
-export function createGridControl<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
+export function createGridControl<ID extends StableID>(options: GridOptions<ID>): FacadeConnection<GridConnection<ID>> {
+  return unwrap(tryCreateGridControl(options));
+}
+
+export function tryCreateGridControl<ID extends StableID>(options: GridOptions<ID>): Result<FacadeConnection<GridConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateGridControlConnection(options));
+}
+
+function tryCreateGridControlConnection<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
   const grid = createGrid(options.rows, options); if (!grid.ok) return grid;
   const disabled = new Set(options.disabledItems ?? []);
   for (const id of disabled) if (grid.value.positionOf(id) === null) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled grid cell must exist in the grid.', details: { id } } };

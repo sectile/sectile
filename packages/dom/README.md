@@ -4,20 +4,29 @@ DOM controllers for Sectile semantic machines. This package depends only on expo
 
 ```ts
 import { createListbox } from '@sectile/dom/listbox';
-import { unwrap } from '@sectile/core/result';
 
-const listbox = unwrap(createListbox({
+const listbox = createListbox({
   items: ['alpha', 'beta'],
   root,
   defaultValue: [],
   defaultHighlightedValue: null,
   onActivate: (id) => openItem(id),
-}));
+});
 
 listbox.setListboxAttributes('Items');
+
+const unsubscribe = listbox.subscribe(({ revision, state }) => {
+  console.log(revision, state);
+});
+listbox.send('next');
+console.log(listbox.state.cursor.current);
+unsubscribe();
+listbox.destroy();
 ```
 
-Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `controller.syncControlledValues(...)`. Use the corresponding `default*` field for uncontrolled state.
+Every direct component factory returns the same ergonomic facade aliases: `state` reads the current semantic state, `send(...)` dispatches the component input, `update(...)` synchronizes controlled values, `subscribe(...)` observes accepted updates, and `destroy()` releases host resources. Existing component-specific methods remain available for explicit or lower-level integration.
+
+Use `value` or `highlightedValue` for controlled fields, and synchronize accepted external values with `listbox.update(...)`. Use the corresponding `default*` field for uncontrolled state.
 
 `createListbox` constructs its sequence and connection, owns DOM keyboard and delegated click dispatch, focus, listbox ARIA, and activation delivery. `createListboxController` and `connectListbox` remain available when those layers have separate ownership.
 
@@ -39,4 +48,4 @@ Calendar, slider, tree-view, and tree-grid controllers follow the same ownership
 
 `connectTreeGrid` binds a controller to a DOM root and owns keyboard, disclosure, cell-click, and double-click dispatch, IME-safe Enter commits, edit rollback, focus movement, and tree-grid ARIA attributes. Consumers remain responsible for their data and rendered content, then call the connection's row, cell, disclosure, and editor binding methods while rendering.
 
-For ordinary setup, `createTreeGrid` accepts `{ id, parentID, cells }` rows plus controller and DOM connection options. It validates and constructs the primitive model, controller, and connection behind one `Result`. The lower-level controller and connection factories remain available for separately owned models or controllers.
+For ordinary setup, `createTreeGrid` accepts `{ id, parentID, cells }` rows plus controller and DOM connection options. It validates and constructs the core model, controller, and connection, throwing `SectileResultError` for invalid developer configuration. Use `tryCreateTreeGrid` when failure is expected data. The lower-level controller and connection factories remain available for separately owned models or controllers.

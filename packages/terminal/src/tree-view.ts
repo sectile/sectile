@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
   createInteractionState,
@@ -122,6 +124,18 @@ export function createTreeViewController<ID extends StableID>(
 }
 
 export function createTreeView<ID extends StableID>(
+  options: TreeViewOptions<ID>,
+): FacadeConnection<TreeViewConnection<ID>> {
+  return unwrap(tryCreateTreeView(options));
+}
+
+export function tryCreateTreeView<ID extends StableID>(
+  options: TreeViewOptions<ID>,
+): Result<FacadeConnection<TreeViewConnection<ID>>> {
+  return createFacadeConnection(options, (options) => tryCreateTreeViewConnection(options));
+}
+
+function tryCreateTreeViewConnection<ID extends StableID>(
   options: TreeViewOptions<ID>,
 ): Result<TreeViewConnection<ID>> {
   const tree = createTree(options.nodes);

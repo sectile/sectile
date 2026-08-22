@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
 import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
@@ -124,7 +126,15 @@ export function createTextController(options: TextControllerOptions = {}): Resul
   return { ok: true, value: new DOMTextController(options, interaction.value, snapshot.value) };
 }
 
-export function createText(options: TextOptions): Result<TextConnection> {
+export function createText(options: TextOptions): FacadeConnection<TextConnection> {
+  return unwrap(tryCreateText(options));
+}
+
+export function tryCreateText(options: TextOptions): Result<FacadeConnection<TextConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateTextConnection(options));
+}
+
+function tryCreateTextConnection(options: TextOptions): Result<TextConnection> {
   const controller = createTextController(options);
   if (!controller.ok) return controller;
   return { ok: true, value: connectText({ ...options, controller: controller.value }) };

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createMenuButton } from '../dist/menu-button.js';
 import { createMenubar } from '../dist/menubar.js';
 
@@ -10,12 +9,12 @@ test('DOM menu button owns trigger, nested popup path, and invocation', () => {
   const file = new FakeElement();
   const open = new FakeElement();
   let invoked = null;
-  const menu = unwrap(createMenuButton({
+  const menu = createMenuButton({
     root,
     trigger,
     items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
     onInvoke: (id) => { invoked = id; },
-  }));
+  });
 
   menu.setItemAttributes(file, 'file');
   menu.setItemAttributes(open, 'open');
@@ -34,7 +33,7 @@ test('DOM menu button owns disabled, edge, typeahead, and controlled open state'
   const root = new FakeElement();
   const trigger = new FakeElement();
   const disabled = new FakeElement();
-  menu = unwrap(createMenuButton({
+  menu = createMenuButton({
     root,
     trigger,
     items: [{ id: 'alpha', parentID: null }, { id: 'beta', parentID: null }, { id: 'build', parentID: null }],
@@ -42,7 +41,7 @@ test('DOM menu button owns disabled, edge, typeahead, and controlled open state'
     open: external,
     typeahead: { textValue: (id) => id, now: () => now },
     onOpenChange: (open) => { external = open; queueMicrotask(() => menu.syncControlledValue(external)); },
-  }));
+  });
 
   menu.setItemAttributes(disabled, 'beta');
   assert.equal(disabled.attributes.get('aria-disabled'), 'true');
@@ -66,11 +65,11 @@ test('DOM menu owns hidden submenu surfaces and collision-safe placement', () =>
   const file = new FakeElement({ left: 400, right: 480, top: 120, bottom: 160, width: 80, height: 40 });
   const child = new FakeElement();
   const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
-  const menu = unwrap(createMenuButton({
+  const menu = createMenuButton({
     root,
     trigger,
     items: [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }],
-  }));
+  });
 
   menu.setItemAttributes(file, 'file');
   menu.setItemAttributes(child, 'new');
@@ -96,11 +95,11 @@ test('DOM menu button positions its popup without occupying trigger layout', () 
   const view = new FakeView(500, 300);
   const root = new FakeElement({ left: 0, right: 180, top: 0, bottom: 120, width: 180, height: 120 }, view);
   const trigger = new FakeElement({ left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 });
-  const menu = unwrap(createMenuButton({
+  const menu = createMenuButton({
     root,
     trigger,
     items: [{ id: 'new', parentID: null }],
-  }));
+  });
 
   assert.equal(root.hidden, true);
   menu.handleEvent('open-popup');
@@ -118,11 +117,11 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   const file = new FakeElement({ left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 });
   const child = new FakeElement();
   const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
-  const menubar = unwrap(createMenubar({
+  const menubar = createMenubar({
     root,
     items: [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }],
     defaultHighlightedValue: 'file',
-  }));
+  });
 
   menubar.setItemAttributes(file, 'file');
   menubar.setItemAttributes(child, 'new');

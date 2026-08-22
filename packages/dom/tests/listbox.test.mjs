@@ -3,6 +3,7 @@ import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import {
   createListbox,
+  tryCreateListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
@@ -13,13 +14,13 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   const root = new FakeElement();
   const activations = [];
   let updates = 0;
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: ['a', 'b'],
     root,
     defaultHighlightedValue: 'a',
     onActivate: (id) => activations.push(id),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   connection.setListboxAttributes('Letters');
   assert.equal(root.attributes.get('role'), 'listbox');
   assert.equal(root.attributes.get('aria-label'), 'Letters');
@@ -39,7 +40,11 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
 
-  const duplicate = createListbox({ items: ['a', 'a'], root: new FakeElement() });
+  assert.throws(
+    () => createListbox({ items: ['a', 'a'], root: new FakeElement() }),
+    (error) => error.name === 'SectileResultError' && error.code === 'duplicate-id',
+  );
+  const duplicate = tryCreateListbox({ items: ['a', 'a'], root: new FakeElement() });
   assert.equal(duplicate.ok, false);
 });
 
@@ -57,17 +62,45 @@ test('DOM keyboard inputs map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'Tab' }), null);
 });
 
+test('DOM facade exposes state, send, update, subscribe, and destroy aliases', () => {
+  const root = new FakeElement();
+  const connection = createListbox({
+    items: ['a', 'b'],
+    root,
+    value: [],
+    highlightedValue: 'a',
+  });
+  const revisions = [];
+  const unsubscribe = connection.subscribe((snapshot) => revisions.push(snapshot.revision));
+
+  assert.equal(connection.state.cursor.current, 'a');
+  assert.equal(connection.send('next'), true);
+  assert.equal(connection.state.cursor.current, 'a');
+  assert.deepEqual(revisions, [1]);
+
+  const synchronized = connection.update({ value: ['b'], highlightedValue: 'b' });
+  assert.equal(synchronized.ok, true);
+  assert.equal(connection.state.cursor.current, 'b');
+  assert.deepEqual(connection.state.selection.selected, ['b']);
+  assert.deepEqual(revisions, [1, 2]);
+
+  unsubscribe();
+  connection.destroy();
+  assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
+  assert.equal(connection.send('previous'), false);
+});
+
 test('DOM listbox delegates clicks by selection mode and derives disabled semantics', () => {
   const root = new FakeElement();
   const activations = [];
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: ['a', 'b', 'disabled'],
     root,
     selectionMode: 'single',
     disabledItems: ['disabled'],
     defaultHighlightedValue: 'a',
     onActivate: (id) => activations.push(id),
-  }));
+  });
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'b' });
   root.emit('click', { target: item });

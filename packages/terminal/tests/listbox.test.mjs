@@ -3,6 +3,7 @@ import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import {
   createListbox,
+  tryCreateListbox,
   createListboxController,
   toListboxEffect,
   toListboxEvent,
@@ -12,12 +13,12 @@ import { createSequence } from '@sectile/core/sequence';
 test('terminal listbox facade owns construction, input dispatch, and activation', () => {
   const activations = [];
   let updates = 0;
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: ['a', 'b'],
     defaultHighlightedValue: 'a',
     onActivate: (id) => activations.push(id),
     onUpdate: () => { updates += 1; },
-  }));
+  });
   assert.equal(connection.handleKeyboardInput({ key: 'down' }), true);
   assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
   assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
@@ -25,7 +26,11 @@ test('terminal listbox facade owns construction, input dispatch, and activation'
   assert.deepEqual(activations, ['b']);
   assert.equal(updates, 2);
 
-  const duplicate = createListbox({ items: ['a', 'a'] });
+  assert.throws(
+    () => createListbox({ items: ['a', 'a'] }),
+    (error) => error.name === 'SectileResultError' && error.code === 'duplicate-id',
+  );
+  const duplicate = tryCreateListbox({ items: ['a', 'a'] });
   assert.equal(duplicate.ok, false);
 });
 
@@ -42,15 +47,40 @@ test('terminal keys map onto listbox semantic events', () => {
   assert.equal(toListboxEvent({ key: 'tab' }), null);
 });
 
+test('terminal facade exposes state, send, update, subscribe, and destroy aliases', () => {
+  const connection = createListbox({
+    items: ['a', 'b'],
+    value: [],
+    highlightedValue: 'a',
+  });
+  const revisions = [];
+  const unsubscribe = connection.subscribe((snapshot) => revisions.push(snapshot.revision));
+
+  assert.equal(connection.state.cursor.current, 'a');
+  assert.equal(connection.send('next'), true);
+  assert.equal(connection.state.cursor.current, 'a');
+  assert.deepEqual(revisions, [1]);
+
+  const synchronized = connection.update({ value: ['b'], highlightedValue: 'b' });
+  assert.equal(synchronized.ok, true);
+  assert.equal(connection.state.cursor.current, 'b');
+  assert.deepEqual(connection.state.selection.selected, ['b']);
+  assert.deepEqual(revisions, [1, 2]);
+
+  unsubscribe();
+  connection.destroy();
+  assert.equal(connection.send('previous'), false);
+});
+
 test('terminal listbox supports single selection, disabled items, typeahead, and direct events', () => {
   let now = 0;
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: ['alpha', 'blocked', 'bravo', 'beta'],
     selectionMode: 'single',
     disabledItems: ['blocked'],
     defaultHighlightedValue: 'alpha',
     typeahead: { textValue: (id) => id, now: () => now, timeoutMs: 250 },
-  }));
+  });
 
   assert.equal(connection.handleKeyboardInput({ key: 'b', text: 'b' }), true);
   assert.equal(connection.getSnapshot().state.cursor.current, 'bravo');
@@ -116,12 +146,12 @@ test('unsupported and stale terminal inputs are failure-atomic', () => {
 });
 
 test('read-only listbox navigates without changing selection', () => {
-  const connection = unwrap(createListbox({
+  const connection = createListbox({
     items: ['a', 'b'],
     defaultHighlightedValue: 'a',
     defaultValue: ['a'],
     readOnly: true,
-  }));
+  });
   assert.equal(connection.handleKeyboardInput({ key: 'down' }), true);
   assert.equal(connection.getSnapshot().state.cursor.current, 'b');
   assert.equal(connection.handleKeyboardInput({ key: 'space' }), false);

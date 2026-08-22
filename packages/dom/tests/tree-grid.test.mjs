@@ -6,6 +6,7 @@ import { createTree } from '@sectile/core/tree';
 import { createTreeGridModel } from '@sectile/core/tree-grid';
 import {
   createTreeGrid,
+  tryCreateTreeGrid,
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
@@ -15,14 +16,14 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   const root = new FakeElement();
   const values = new Map([['root-name', 'Root']]);
   const events = [];
-  const connection = unwrap(createTreeGrid({
+  const connection = createTreeGrid({
     rows: modelRows(),
     root,
     defaultHighlightedValue: 'root-name',
     getCellValue: (id) => values.get(id) ?? '',
     setCellValue: (id, value) => values.set(id, value),
     onTransition: ({ event }) => events.push(event),
-  }));
+  });
   assert.equal(connection.model.tree.parentOf('child'), 'root');
 
   connection.setGridAttributes(2, 2);
@@ -59,7 +60,7 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
 
-  const invalid = createTreeGrid({
+  const invalid = tryCreateTreeGrid({
     rows: [{ id: 'child', parentID: 'missing', cells: ['child-name'] }],
     root: new FakeElement(),
     getCellValue: () => '',
@@ -69,14 +70,14 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.equal(invalid.error.code, 'missing-parent');
 
   let renders = 0;
-  const controlled = unwrap(createTreeGrid({
+  const controlled = createTreeGrid({
     rows: modelRows(),
     root: new FakeElement(),
     value: null,
     getCellValue: () => '',
     setCellValue: () => {},
     onUpdate: () => { renders += 1; },
-  }));
+  });
   const synchronized = unwrap(controlled.syncControlledValues({ value: 'root-name' }));
   assert.deepEqual(synchronized.state.selection.selected, ['root-name']);
   assert.equal(renders, 1);
@@ -97,13 +98,13 @@ test('DOM keys map onto tree-grid navigation and edit modes', () => {
 
 test('DOM tree-grid delegates disclosure, cell click, and double-click editing', () => {
   const root = new FakeElement();
-  const connection = unwrap(createTreeGrid({
+  const connection = createTreeGrid({
     rows: modelRows(),
     root,
     defaultHighlightedValue: 'root-name',
     getCellValue: () => '',
     setCellValue: () => {},
-  }));
+  });
   const disclosure = new FakeElement();
   connection.setDisclosureAttributes(disclosure, 'root');
   root.emit('click', { target: disclosure });

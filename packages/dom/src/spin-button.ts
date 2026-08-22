@@ -1,3 +1,5 @@
+import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -37,7 +39,15 @@ export interface SpinButtonConnection {
   disconnect(): void;
 }
 
-export function createSpinButton(options: SpinButtonOptions): Result<SpinButtonConnection> {
+export function createSpinButton(options: SpinButtonOptions): FacadeConnection<SpinButtonConnection> {
+  return unwrap(tryCreateSpinButton(options));
+}
+
+export function tryCreateSpinButton(options: SpinButtonOptions): Result<FacadeConnection<SpinButtonConnection>> {
+  return createFacadeConnection(options, (options) => tryCreateSpinButtonConnection(options));
+}
+
+function tryCreateSpinButtonConnection(options: SpinButtonOptions): Result<SpinButtonConnection> {
   const range = createBoundedRange(options);
   if (!range.ok) return range;
   const valueControlled = options.value !== undefined;
