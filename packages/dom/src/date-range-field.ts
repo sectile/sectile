@@ -72,3 +72,6 @@ class DOMDateRangeField implements DateRangeFieldConnection {
   #key(endpoint: DateRangeFieldEndpoint, nativeEvent: Event): void { const event = nativeEvent as KeyboardEvent; if (this.#bindings[endpoint].isComposing || event.isComposing) return; const semantic = event.key === 'ArrowUp' ? 'increment-segment' : event.key === 'ArrowDown' ? 'decrement-segment' : event.key === 'Enter' ? 'commit' : event.key === 'Escape' ? 'cancel' : null; if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic === 'cancel' ? 'cancel' : { type: 'field', endpoint, event: semantic }); } }
   #commitOrCancel(endpoint: DateRangeFieldEndpoint): void { if (!this.#bindings[endpoint].isComposing && !this.handleEvent({ type: 'field', endpoint, event: 'commit' })) this.handleEvent({ type: 'field', endpoint, event: 'cancel' }); }
 }
+
+export { createDateRangeFieldState } from '@sectile/core/date-range-field';
+export type { DateRangeFieldPolicies, DateRangeFieldState } from '@sectile/core/date-range-field';

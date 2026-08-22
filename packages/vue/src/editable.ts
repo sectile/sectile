@@ -19,8 +19,9 @@ import {
 import {
   createEditable,
   type EditableConnection,
+  type EditablePolicies,
+  type EditableState,
 } from '@sectile/dom/editable';
-import type { EditablePolicies, EditableState } from '@sectile/core/editable';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface EditableRootProps {

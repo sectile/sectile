@@ -46,3 +46,6 @@ class DOMTimeRangeField implements TimeRangeFieldConnection {
   #commitOrCancel(endpoint: TimeRangeFieldEndpoint): void { if (!this.#bindings[endpoint].isComposing && !this.handleEvent({ type: 'field', endpoint, event: 'commit' })) this.handleEvent({ type: 'field', endpoint, event: 'cancel' }); }
 }
 function optionalInputState<Key extends 'startInputState' | 'endInputState'>(key: Key, value: TextEditingState | undefined): { readonly [Property in Key]?: TextEditingState } { return value === undefined ? {} : { [key]: value } as { readonly [Property in Key]?: TextEditingState }; }
+
+export { createTimeRangeFieldState } from '@sectile/core/time-range-field';
+export type { TimeRangeFieldPolicies, TimeRangeFieldState } from '@sectile/core/time-range-field';

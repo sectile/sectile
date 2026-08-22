@@ -1,7 +1,5 @@
 import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
-import { createTimeRangeField, type TimeRangeFieldConnection } from '@sectile/dom/time-range-field';
-import type { TimeRange } from '@sectile/core/time-range-field';
-import { createTimeRangeFieldState, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/core/time-range-field';
+import { createTimeRangeField, createTimeRangeFieldState, type TimeRange, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/time-range-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }

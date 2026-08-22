@@ -16,9 +16,8 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import { createDateRangeField, type DateRangeFieldConnection } from '@sectile/dom/date-range-field';
+import { createDateRangeField, createDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/date-range-field';
 import type { DateRange } from '@sectile/dom/date-field';
-import { createDateRangeFieldState, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/core/date-range-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface DateRangeFieldRootProps {
