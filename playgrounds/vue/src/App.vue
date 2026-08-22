@@ -13,6 +13,7 @@ import TabsCase from './components/TabsCase.vue';
 import SliderCase from './components/SliderCase.vue';
 import NativeFieldCase from './components/NativeFieldCase.vue';
 import SpinButtonCase from './components/SpinButtonCase.vue';
+import PaginationCase from './components/PaginationCase.vue';
 import CatalogCase from './components/CatalogCase.vue';
 import { catalogScenarios } from './catalog-scenarios.js';
 
@@ -112,6 +113,17 @@ const disclosureScenarios: readonly DisclosureScenario[] = [
   { id: 'controlled', title: 'Controlled disclosure', label: 'Audit details', description: 'v-model owns open state without exposing core policy objects.', initialValue: false, controlled: true },
   { id: 'readonly', title: 'Read-only disclosure', label: 'Locked compliance notes', description: 'Focus remains available while state changes are rejected.', initialValue: true, readonly: true },
 ];
+
+const paginationScenarios = [
+  { variant: 'standard', title: 'Result pages', description: 'Numbered pages, edge pages, and boundary controls cover the common result-list pattern.', total: 240, initialPage: 4, initialItemsPerPage: 20 },
+  { variant: 'compact', title: 'Compact navigation', description: 'Previous and next controls keep pagination usable when horizontal space is limited.', total: 64, initialPage: 3, initialItemsPerPage: 8, siblingCount: 0, showEdges: false, boundaryControls: false },
+  { variant: 'large', title: 'Large result set', description: 'Edge pages and ellipses keep one hundred pages scannable without rendering every page.', total: 2500, initialPage: 48, initialItemsPerPage: 25, siblingCount: 2 },
+  { variant: 'page-size', title: 'Adjustable page size', description: 'The parent controls both page and page size while the range summary stays synchronized.', total: 347, initialPage: 3, initialItemsPerPage: 25, adjustable: true },
+  { variant: 'controlled', title: 'Controlled page', description: 'External controls and pagination buttons update the same parent-owned page value.', total: 200, initialPage: 10, initialItemsPerPage: 10, controlled: true },
+  { variant: 'readonly', title: 'Read-only review', description: 'Page controls remain focusable for inspection while every navigation request is rejected.', total: 120, initialPage: 5, initialItemsPerPage: 10, readonly: true },
+  { variant: 'disabled', title: 'Disabled pagination', description: 'Unavailable result navigation leaves the tab sequence and ignores pointer interaction.', total: 120, initialPage: 5, initialItemsPerPage: 10, disabled: true },
+  { variant: 'empty', title: 'Empty result set', description: 'A zero-result collection keeps its summary understandable and all boundary movement unavailable.', total: 0, initialPage: 1, initialItemsPerPage: 20 },
+] as const;
 
 function isComponentID(value: string): value is ComponentID {
   return (componentIDs as readonly string[]).includes(value);
@@ -334,6 +346,14 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', readHash));
 
       <div v-else-if="activeComponent === 'spin-button'" class="workspace" data-demo="spin-button">
         <SpinButtonCase :key="`spin-button-${resetEpoch}`" />
+      </div>
+
+      <div v-else-if="activeComponent === 'pagination'" class="workspace" data-demo="pagination">
+        <PaginationCase
+          v-for="scenario in paginationScenarios"
+          :key="`${scenario.variant}-${resetEpoch}`"
+          v-bind="scenario"
+        />
       </div>
 
       <div v-else-if="activeComponent === 'date-field'" class="workspace" data-demo="date-field">

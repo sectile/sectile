@@ -93,3 +93,19 @@ test('Vue playground composes checked and expansion controls through public subp
   assert.equal(SpinButtonRoot.name, 'SectileSpinButtonRoot');
   assert.equal(SpinButtonInput.name, 'SectileSpinButtonInput');
 });
+
+test('Vue playground covers production pagination configurations', async () => {
+  const [appSource, paginationCaseSource] = await Promise.all([
+    readFile(new URL('../src/App.vue', import.meta.url), 'utf8'),
+    readFile(new URL('../src/components/PaginationCase.vue', import.meta.url), 'utf8'),
+  ]);
+
+  for (const variant of ['standard', 'compact', 'large', 'page-size', 'controlled', 'readonly', 'disabled', 'empty']) {
+    assert.match(appSource, new RegExp(`variant: '${variant}'`));
+  }
+  assert.match(paginationCaseSource, /v-model:items-per-page/);
+  assert.match(paginationCaseSource, /currentRange\.start/);
+  assert.match(paginationCaseSource, /PaginationFirst/);
+  assert.match(paginationCaseSource, /PaginationLast/);
+  assert.match(paginationCaseSource, /No results/);
+});

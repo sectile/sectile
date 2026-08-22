@@ -204,6 +204,31 @@ textarea.text-field { min-height: 8rem; }
 .catalog-pagination button { display: inline-grid; width: 2.4rem; min-width: 2.4rem; height: 2.4rem; padding: 0; place-items: center; border-radius: 0.55rem; }
 .catalog-pagination-page[data-current], .catalog-pagination-page[aria-current="page"] { color: #071412; border-color: #5eead4; background: #5eead4; }
 .catalog-pagination-ellipsis { display: inline-grid; width: 1.5rem; height: 2.4rem; place-items: center; color: #71809a; }
+.pagination-demo { width: min(100%, 45rem); margin: 0 auto; }
+.pagination-control { display: grid; gap: 1rem; }
+.pagination-summary { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid #293448; }
+.pagination-summary > div { display: grid; min-width: 0; gap: 0.15rem; }
+.pagination-summary strong { color: #eef4ff; font-size: 1.2rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.pagination-summary span { color: #8290a5; font-size: 0.75rem; }
+.pagination-page-status { flex: 0 0 auto; padding: 0.3rem 0.55rem; border: 1px solid #344158; border-radius: 99rem; color: #aab7ca !important; background: #111a29; font-variant-numeric: tabular-nums; }
+.pagination-items { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.35rem; }
+.pagination-items button { display: inline-grid; width: 2.5rem; min-width: 2.5rem; height: 2.5rem; padding: 0; place-items: center; border-color: #344158; color: #b9c5d7; background: #111a29; font-variant-numeric: tabular-nums; }
+.pagination-items button:hover:not(:disabled) { border-color: #53647f; color: #eef4ff; background: #182235; }
+.pagination-items button[aria-current="page"] { border-color: #5eead4; color: #071412; background: #5eead4; }
+.pagination-items button:disabled { color: #566378; background: #0d1420; cursor: not-allowed; }
+.pagination-ellipsis { display: inline-grid; width: 1.7rem; height: 2.5rem; place-items: center; color: #65748a; }
+.pagination-compact { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 0.7rem; }
+.pagination-compact > span { color: #aebad0; font-size: 0.8rem; font-variant-numeric: tabular-nums; text-align: center; }
+.pagination-text-control { display: inline-flex; min-height: 2.6rem; align-items: center; justify-content: center; gap: 0.35rem; border-color: #344158; color: #d6deeb; background: #111a29; }
+.pagination-text-control:last-child { justify-self: end; }
+.pagination-size-row { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; color: #98a6ba; font-size: 0.78rem; }
+.pagination-size-select { min-height: 2.4rem; border: 1px solid #3a465c; border-radius: 0.55rem; padding: 0.45rem 2rem 0.45rem 0.65rem; color: #e4ebf5; background: #111a29; font: inherit; }
+.pagination-size-select:focus-visible { outline: 2px solid #99a7ff; outline-offset: 3px; }
+.pagination-jump { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.65rem; border: 1px solid #293448; border-radius: 0.7rem; background: #0d1522; }
+.pagination-jump > span { margin-inline-end: 0.25rem; color: #8190a6; font-size: 0.75rem; }
+.pagination-jump button { min-width: 2.5rem; min-height: 2.3rem; padding: 0.35rem 0.65rem; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.pagination-jump button[aria-pressed="true"] { border-color: #5eead4; color: #bffaf1; background: #153238; }
+.example-card[data-interaction="disabled"] .pagination-demo { opacity: 0.58; }
 .catalog-option, .catalog-chip, .catalog-feed-item, .catalog-tree-item { display: flex; min-height: 2.8rem; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.65rem 0.8rem; border: 1px solid #344158; border-radius: 0.65rem; color: #dce5f2; background: #101826; }
 .catalog-tree-item { justify-content: flex-start; }
 .catalog-option[data-state="checked"], .catalog-option[data-selected], .catalog-grid-cell[data-selected] { border-color: #5eead4; background: #172943; }
@@ -286,4 +311,10 @@ pre { height: 100%; min-height: 0; margin: 0; padding: 1rem 1.15rem; overflow: a
   .demo-code { font-size: 0.68rem; }
   .checkbox-toolbar { grid-template-columns: 1fr; }
   .checkbox-status { justify-self: start; }
+  .pagination-summary { align-items: start; flex-direction: column; }
+  .pagination-items { justify-content: flex-start; }
+  .pagination-compact { grid-template-columns: 1fr; }
+  .pagination-compact > span { grid-row: 1; }
+  .pagination-text-control, .pagination-text-control:last-child { width: 100%; justify-self: stretch; }
+  .pagination-size-row { justify-content: space-between; }
 }
