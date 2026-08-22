@@ -3,7 +3,14 @@ import test from 'node:test';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { applyCheckboxGroupEvent, createCheckboxGroupState } from '../../.verification-dist/checkbox-group.js';
 import { applySelectEvent, createSelectState } from '../../.verification-dist/select.js';
-import { applyPaginationEvent, createPaginationState } from '../../.verification-dist/pagination.js';
+import {
+  applyPaginationEvent,
+  createPaginationModel,
+  createPaginationState,
+  getPaginationItemRange,
+  getPaginationItems,
+  getPaginationPageCount,
+} from '../../.verification-dist/pagination.js';
 import { applyStepperEvent, createStepperState } from '../../.verification-dist/stepper.js';
 import { applyRatingEvent, createRatingState } from '../../.verification-dist/rating.js';
 import { applyPinInputEvent, createPinInputState } from '../../.verification-dist/pin-input.js';
@@ -32,12 +39,82 @@ test('select keeps navigation open and closes only after selection', () => {
   assert.deepEqual(selected.commands.at(-1), { type: 'close-popup' });
 });
 
-test('pagination movement and direct page requests update the active page', () => {
-  const initial = unwrap(createPaginationState(domain, 'a'));
-  const moved = unwrap(applyPaginationEvent(domain, initial, 'next-page'));
-  assert.deepEqual(moved.state.selection.selected, ['b']);
-  const direct = unwrap(applyPaginationEvent(domain, moved.state, { type: 'go-to-page', id: 'c' }));
-  assert.deepEqual(direct.state.selection.selected, ['c']);
+test('pagination derives page count, bounded movement, and item ranges from totals', () => {
+  const model = unwrap(createPaginationModel({ total: 23, itemsPerPage: 10 }));
+  const initial = unwrap(createPaginationState(model, 1));
+  const moved = unwrap(applyPaginationEvent(model, initial, 'next-page'));
+  assert.equal(moved.state.page, 2);
+  const direct = unwrap(applyPaginationEvent(model, moved.state, { type: 'go-to-page', page: 3 }));
+  assert.equal(direct.state.page, 3);
+  assert.deepEqual(unwrap(getPaginationItemRange(model, direct.state)), { start: 21, end: 23, total: 23 });
+  assert.equal(unwrap(applyPaginationEvent(model, direct.state, 'next-page')).state.page, 3);
+  assert.equal(applyPaginationEvent(model, direct.state, { type: 'go-to-page', page: 4 }).ok, false);
+});
+
+test('pagination changes page size while preserving the first visible item', () => {
+  const model = unwrap(createPaginationModel({ total: 100, itemsPerPage: 10 }));
+  const initial = unwrap(createPaginationState(model, 4));
+  const larger = unwrap(applyPaginationEvent(model, initial, { type: 'set-items-per-page', itemsPerPage: 25 }));
+  assert.deepEqual(larger.state, { page: 2, itemsPerPage: 25 });
+  assert.deepEqual(larger.commands, [
+    { type: 'items-per-page-changed', itemsPerPage: 25 },
+    { type: 'page-changed', page: 2 },
+  ]);
+  assert.equal(unwrap(getPaginationPageCount(model, larger.state)), 4);
+  assert.deepEqual(unwrap(getPaginationItemRange(model, larger.state)), { start: 26, end: 50, total: 100 });
+
+  const smaller = unwrap(applyPaginationEvent(model, larger.state, { type: 'set-items-per-page', itemsPerPage: 5 }));
+  assert.deepEqual(smaller.state, { page: 6, itemsPerPage: 5 });
+  assert.deepEqual(unwrap(getPaginationItemRange(model, smaller.state)), { start: 26, end: 30, total: 100 });
+  assert.equal(applyPaginationEvent(model, smaller.state, { type: 'set-items-per-page', itemsPerPage: 0 }).ok, false);
+});
+
+test('pagination projects sibling windows, edges, ellipses, and controls', () => {
+  const model = unwrap(createPaginationModel({
+    total: 250,
+    itemsPerPage: 10,
+    siblingCount: 1,
+    showEdges: true,
+  }));
+  const state = unwrap(createPaginationState(model, 13));
+  assert.deepEqual(unwrap(getPaginationItems(model, state)), [
+    { type: 'control', control: 'first-page', targetPage: 1, disabled: false },
+    { type: 'control', control: 'previous-page', targetPage: 12, disabled: false },
+    { type: 'page', page: 1, selected: false },
+    { type: 'ellipsis', side: 'start' },
+    { type: 'page', page: 12, selected: false },
+    { type: 'page', page: 13, selected: true },
+    { type: 'page', page: 14, selected: false },
+    { type: 'ellipsis', side: 'end' },
+    { type: 'page', page: 25, selected: false },
+    { type: 'control', control: 'next-page', targetPage: 14, disabled: false },
+    { type: 'control', control: 'last-page', targetPage: 25, disabled: false },
+  ]);
+
+  const windowed = unwrap(createPaginationModel({
+    total: 250,
+    itemsPerPage: 10,
+    siblingCount: 1,
+    showControls: false,
+  }));
+  assert.deepEqual(
+    unwrap(getPaginationItems(windowed, unwrap(createPaginationState(windowed, 13)))),
+    [
+      { type: 'page', page: 12, selected: false },
+      { type: 'page', page: 13, selected: true },
+      { type: 'page', page: 14, selected: false },
+    ],
+  );
+});
+
+test('pagination handles empty collections and rejects unsafe projection inputs', () => {
+  const empty = unwrap(createPaginationModel({ total: 0 }));
+  const state = unwrap(createPaginationState(empty));
+  assert.equal(unwrap(getPaginationPageCount(empty, state)), 1);
+  assert.deepEqual(unwrap(getPaginationItemRange(empty, state)), { start: 0, end: 0, total: 0 });
+  assert.equal(createPaginationModel({ total: -1 }).ok, false);
+  assert.equal(createPaginationModel({ total: 10, itemsPerPage: 0 }).ok, false);
+  assert.equal(createPaginationModel({ total: 10, siblingCount: 1_001 }).ok, false);
 });
 
 test('stepper separates focus movement from step activation', () => {

@@ -1,26 +1,245 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
-import type { Result, StableID } from '@sectile/core';
-import type { PaginationEvent, PaginationState } from '@sectile/core/pagination';
+import type { Result } from '@sectile/core';
+import {
+  applyPaginationEvent,
+  createPaginationModel,
+  createPaginationState,
+  getPaginationItemRange,
+  getPaginationItems,
+  getPaginationPageCount,
+  type PaginationCommand,
+  type PaginationControl,
+  type PaginationEvent,
+  type PaginationItem,
+  type PaginationItemRange,
+  type PaginationModel,
+  type PaginationModelOptions,
+  type PaginationState,
+} from '@sectile/core/pagination';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { tryCreateRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
+import { findDelegatedID } from './internal/delegated-event.js';
+import { setInteractionAttributes } from './internal/interaction.js';
+import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
-export type PaginationOptions<ID extends StableID = StableID> = Omit<RadioGroupOptions<ID>, 'orientation' | 'onValueChange' | 'onHighlightedValueChange'> & { readonly onPageChange?: (page: ID | null) => void };
-export interface PaginationConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<PaginationState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<PaginationState<ID>>>; setPageAttributes(element: HTMLElement, id: ID, disabled?: boolean): void; handleEvent(event: PaginationEvent<ID>): boolean; disconnect(): void }
+export interface PaginationOptions extends Omit<PaginationModelOptions, 'itemsPerPage'> {
+  readonly root: HTMLElement;
+  readonly page?: number;
+  readonly defaultPage?: number;
+  readonly itemsPerPage?: number;
+  readonly defaultItemsPerPage?: number;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly label?: string;
+  readonly getPageLabel?: (page: number) => string;
+  readonly getControlLabel?: (control: PaginationControl) => string;
+  readonly onPageChange?: (page: number) => void;
+  readonly onItemsPerPageChange?: (itemsPerPage: number) => void;
+  readonly onUpdate?: () => void;
+}
 
-export function createPagination<ID extends StableID>(options: PaginationOptions<ID>): FacadeConnection<PaginationConnection<ID>> {
+export type PaginationControlledValues =
+  | { readonly page: number; readonly itemsPerPage: number }
+  | { readonly page?: never; readonly itemsPerPage?: never };
+
+export interface PaginationConnection {
+  getSnapshot(): RevisionSnapshot<PaginationState>;
+  getItems(): readonly PaginationItem[];
+  getItemRange(): PaginationItemRange;
+  getPageCount(): number;
+  syncControlledValues(values: PaginationControlledValues): Result<RevisionSnapshot<PaginationState>>;
+  setItemAttributes(element: HTMLElement, item: PaginationItem): void;
+  handleEvent(event: PaginationEvent): boolean;
+  disconnect(): void;
+}
+
+export function createPagination(
+  options: PaginationOptions,
+): FacadeConnection<PaginationConnection> {
   return unwrap(tryCreatePagination(options));
 }
 
-export function tryCreatePagination<ID extends StableID>(options: PaginationOptions<ID>): Result<FacadeConnection<PaginationConnection<ID>>> {
+export function tryCreatePagination(
+  options: PaginationOptions,
+): Result<FacadeConnection<PaginationConnection>> {
   return createFacadeConnection(options, (options) => tryCreatePaginationConnection(options));
 }
 
-function tryCreatePaginationConnection<ID extends StableID>(options: PaginationOptions<ID>): Result<PaginationConnection<ID>> {
-  const result = tryCreateRadioGroup({ ...options, orientation: 'horizontal', ...(options.onPageChange === undefined ? {} : { onValueChange: options.onPageChange }) });
-  if (!result.ok) return result;
-  options.root.setAttribute('role', 'navigation'); options.root.removeAttribute('aria-orientation');
-  return { ok: true, value: wrap(result.value, options.root) };
+function tryCreatePaginationConnection(options: PaginationOptions): Result<PaginationConnection> {
+  const controlled = options.page !== undefined || options.itemsPerPage !== undefined;
+  if (controlled && (options.page === undefined || options.itemsPerPage === undefined)) {
+    return { ok: false, error: {
+      class: 'construction',
+      code: 'incomplete-controlled-pagination',
+      message: 'Controlled pagination requires both page and itemsPerPage.',
+    } };
+  }
+  const initialItemsPerPage = options.itemsPerPage ?? options.defaultItemsPerPage ?? 10;
+  const model = createPaginationModel({
+    total: options.total,
+    itemsPerPage: initialItemsPerPage,
+    ...(options.siblingCount === undefined ? {} : { siblingCount: options.siblingCount }),
+    ...(options.showEdges === undefined ? {} : { showEdges: options.showEdges }),
+    ...(options.showControls === undefined ? {} : { showControls: options.showControls }),
+  });
+  if (!model.ok) return model;
+  const runtime = createSemanticController<
+    PaginationState, PaginationEvent, PaginationCommand, PaginationCommand
+  >({
+    initial: createPaginationState(
+      model.value,
+      options.page ?? options.defaultPage ?? 1,
+      initialItemsPerPage,
+    ),
+    reducer: (state, event) => applyPaginationEvent(model.value, state, event),
+    reconcile: (previous, proposed) => createPaginationState(
+      model.value,
+      controlled || options.readOnly === true ? previous.page : proposed.page,
+      controlled || options.readOnly === true ? previous.itemsPerPage : proposed.itemsPerPage,
+    ),
+    notify: (previous, proposed) => {
+      if (previous.page !== proposed.page) options.onPageChange?.(proposed.page);
+      if (previous.itemsPerPage !== proposed.itemsPerPage) {
+        options.onItemsPerPageChange?.(proposed.itemsPerPage);
+      }
+    },
+    toEffect: (command) => command,
+    interaction: options,
+    interactionIntent: () => 'mutate',
+  });
+  return runtime.ok
+    ? { ok: true, value: new DOMPagination(options, model.value, runtime.value, controlled) }
+    : runtime;
 }
-function wrap<ID extends StableID>(connection: RadioGroupConnection<ID>, root: HTMLElement): PaginationConnection<ID> { return Object.freeze({ getSnapshot: () => connection.getSnapshot(), syncControlledValues: (values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }) => connection.syncControlledValues(values), setPageAttributes: (element: HTMLElement, id: ID, disabled?: boolean): void => { connection.setItemAttributes(element, id, disabled); element.removeAttribute('role'); element.removeAttribute('aria-checked'); if (connection.getSnapshot().state.selection.has(id)) element.setAttribute('aria-current', 'page'); else element.removeAttribute('aria-current'); element.setAttribute('aria-label', `Page ${id}`); }, handleEvent: (event: PaginationEvent<ID>) => connection.handleEvent(mapEvent(event)), disconnect: (): void => { connection.disconnect(); root.removeAttribute('role'); } }); }
-function mapEvent<ID extends StableID>(event: PaginationEvent<ID>) { if (typeof event === 'object') return { type: 'check' as const, id: event.id }; return event === 'next-page' ? 'next' as const : event === 'previous-page' ? 'previous' as const : event === 'first-page' ? 'first' as const : 'last' as const; }
+
+class DOMPagination implements PaginationConnection {
+  readonly #options: PaginationOptions;
+  readonly #model: PaginationModel;
+  readonly #runtime: SemanticController<PaginationState, PaginationEvent, PaginationCommand>;
+  readonly #controlled: boolean;
+  readonly #click: (event: MouseEvent) => void;
+
+  public constructor(
+    options: PaginationOptions,
+    model: PaginationModel,
+    runtime: SemanticController<PaginationState, PaginationEvent, PaginationCommand>,
+    controlled: boolean,
+  ) {
+    this.#options = options;
+    this.#model = model;
+    this.#runtime = runtime;
+    this.#controlled = controlled;
+    this.#click = (event): void => {
+      const unavailable = findDelegatedID(event.target, options.root, 'paginationUnavailable');
+      if (unavailable === 'true' || options.readOnly === true) {
+        event.preventDefault?.();
+        return;
+      }
+      const pageValue = findDelegatedID(event.target, options.root, 'paginationPage');
+      if (pageValue !== null) {
+        const page = Number(pageValue);
+        if (Number.isSafeInteger(page)) this.handleEvent({ type: 'go-to-page', page });
+        return;
+      }
+      const controlValue = findDelegatedID(event.target, options.root, 'paginationControl');
+      const control = toPaginationControl(controlValue);
+      if (control !== null) this.handleEvent(control);
+    };
+    options.root.addEventListener('click', this.#click);
+    options.root.setAttribute('role', 'navigation');
+    options.root.setAttribute('aria-label', options.label ?? 'Pagination');
+    setInteractionAttributes(options.root, options, { readOnly: true });
+  }
+
+  public getSnapshot(): RevisionSnapshot<PaginationState> { return this.#runtime.getSnapshot(); }
+  public getItems(): readonly PaginationItem[] {
+    return unwrap(getPaginationItems(this.#model, this.getSnapshot().state));
+  }
+  public getItemRange(): PaginationItemRange {
+    return unwrap(getPaginationItemRange(this.#model, this.getSnapshot().state));
+  }
+  public getPageCount(): number {
+    return unwrap(getPaginationPageCount(this.#model, this.getSnapshot().state));
+  }
+
+  public syncControlledValues(
+    values: PaginationControlledValues,
+  ): Result<RevisionSnapshot<PaginationState>> {
+    const supplied = values.page !== undefined || values.itemsPerPage !== undefined;
+    if (this.#controlled !== supplied
+      || (supplied && (values.page === undefined || values.itemsPerPage === undefined))) {
+      return { ok: false, error: {
+        class: 'construction',
+        code: 'controlled-shape-mismatch',
+        message: 'Controlled pagination values must preserve their construction-time shape.',
+      } };
+    }
+    const state = this.getSnapshot().state;
+    const result = this.#runtime.replace(createPaginationState(
+      this.#model,
+      this.#controlled ? values.page as number : state.page,
+      this.#controlled ? values.itemsPerPage as number : state.itemsPerPage,
+    ));
+    if (result.ok) this.#options.onUpdate?.();
+    return result;
+  }
+
+  public setItemAttributes(element: HTMLElement, item: PaginationItem): void {
+    delete element.dataset['paginationPage'];
+    delete element.dataset['paginationControl'];
+    delete element.dataset['paginationUnavailable'];
+    element.removeAttribute('aria-current');
+    element.removeAttribute('aria-hidden');
+    element.removeAttribute('aria-disabled');
+    element.removeAttribute('data-pagination-type');
+    if ('disabled' in element) (element as HTMLButtonElement).disabled = false;
+
+    element.setAttribute('data-pagination-type', item.type);
+    if (item.type === 'ellipsis') {
+      element.setAttribute('aria-hidden', 'true');
+      element.tabIndex = -1;
+      return;
+    }
+
+    const unavailable = this.#options.disabled === true
+      || (item.type === 'control' && item.disabled);
+    if (item.type === 'page') {
+      element.dataset['paginationPage'] = String(item.page);
+      element.setAttribute('aria-label', this.#options.getPageLabel?.(item.page) ?? `Page ${item.page}`);
+      if (item.selected) element.setAttribute('aria-current', 'page');
+    } else {
+      element.dataset['paginationControl'] = item.control;
+      element.setAttribute('aria-label', this.#options.getControlLabel?.(item.control) ?? controlLabels[item.control]);
+    }
+    element.tabIndex = unavailable ? -1 : 0;
+    if (unavailable) {
+      element.dataset['paginationUnavailable'] = 'true';
+      element.setAttribute('aria-disabled', 'true');
+    }
+    if ('disabled' in element) (element as HTMLButtonElement).disabled = unavailable;
+  }
+
+  public handleEvent(event: PaginationEvent): boolean {
+    const result = this.#runtime.handle(event);
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
+  }
+
+  public disconnect(): void {
+    this.#options.root.removeEventListener('click', this.#click);
+  }
+}
+
+const controlLabels: Readonly<Record<PaginationControl, string>> = Object.freeze({
+  'first-page': 'First page',
+  'previous-page': 'Previous page',
+  'next-page': 'Next page',
+  'last-page': 'Last page',
+});
+
+function toPaginationControl(value: string | null): PaginationControl | null {
+  return value === 'first-page' || value === 'previous-page'
+    || value === 'next-page' || value === 'last-page'
+    ? value
+    : null;
+}

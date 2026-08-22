@@ -1,9 +1,20 @@
 import { createCheckboxGroup, type CheckboxGroupConnection } from '@sectile/dom/checkbox-group';
+import type { PaginationControl, PaginationItem } from '@sectile/core/pagination';
 import { createPagination, type PaginationConnection } from '@sectile/dom/pagination';
 import { createRating, type RatingConnection } from '@sectile/dom/rating';
 import { createSelect, type SelectConnection } from '@sectile/dom/select';
 import { createStepper, type StepperConnection } from '@sectile/dom/stepper';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, createElement, Star } from 'lucide';
+import {
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  createElement,
+  Ellipsis,
+  Star,
+} from 'lucide';
 import type { DemoContext, DemoDefinition, DemoSession } from '../playground.js';
 
 const releaseOptions = [
@@ -36,12 +47,14 @@ export const selectDemo: DemoDefinition = {
 
 export const paginationDemo: DemoDefinition = {
   id: 'pagination', label: 'Pagination', title: 'Pagination',
-  description: 'Direct page selection plus bounded previous and next navigation.',
-  shortcuts: [{ keys: ['←', '→'], label: 'move page' }, { keys: ['Home', 'End'], label: 'first / last' }],
+  description: 'Result totals, item windows, ellipses, edge controls, and controlled ownership.',
+  shortcuts: [{ keys: ['Tab'], label: 'move focus' }, { keys: ['Enter', 'Space'], label: 'choose page' }],
   cases: [
-    { id: 'compact', title: 'Compact results', mount: (context) => mountPagination(context, 5, '2', false) },
-    { id: 'long-range', title: 'Long result set', mount: (context) => mountPagination(context, 9, '5', false) },
-    { id: 'controlled', title: 'Controlled page', mount: (context) => mountPagination(context, 7, '3', true) },
+    { id: 'compact', title: 'Compact results', mount: (context) => mountPagination(context, { total: 42, itemsPerPage: 10, initialPage: 2 }) },
+    { id: 'long-range', title: 'Long result set', mount: (context) => mountPagination(context, { total: 247, itemsPerPage: 10, initialPage: 13, siblingCount: 1, showEdges: true }) },
+    { id: 'page-size', title: 'Adjustable page size', mount: (context) => mountPagination(context, { total: 92, itemsPerPage: 25, initialPage: 2, showEdges: true, pageSizes: [10, 25, 50] }) },
+    { id: 'pages-only', title: 'Pages without controls', mount: (context) => mountPagination(context, { total: 120, itemsPerPage: 10, initialPage: 6, siblingCount: 1, showEdges: true, showControls: false }) },
+    { id: 'controlled', title: 'Controlled page', mount: (context) => mountPagination(context, { total: 137, itemsPerPage: 20, initialPage: 3, showEdges: true, controlled: true }) },
   ],
 };
 
@@ -101,18 +114,132 @@ function mountSelect(context: DemoContext, initial: string, disabled: readonly s
   render(); return { focus: () => trigger.focus(), disconnect: () => connection.disconnect() };
 }
 
-function mountPagination(context: DemoContext, count: number, initial: string, controlled: boolean): DemoSession {
-  const root = document.createElement('nav'); root.className = 'pagination-demo';
-  const previous = iconButton(ChevronLeft, 'Previous page'); const next = iconButton(ChevronRight, 'Next page');
-  const pages = Array.from({ length: count }, (_, index) => String(index + 1));
-  const pageButtons = pages.map((page) => { const button = document.createElement('button'); button.type = 'button'; button.className = 'page-button secondary'; button.textContent = page; return [page, button] as const; });
-  root.append(previous, ...pageButtons.map(([, button]) => button), next); context.surface.append(root);
-  let value: string | null = initial; let highlightedValue: string | null = initial; let connection!: PaginationConnection<string>;
-  connection = createPagination({ root, items: pages, ...context.interaction, label: 'Result pages', ...(controlled ? { value, highlightedValue, onPageChange: (nextPage: string | null) => { value = nextPage; queueMicrotask(sync); }, onHighlightedValueChange: (nextPage: string | null) => { highlightedValue = nextPage; queueMicrotask(sync); } } : { defaultValue: initial, defaultHighlightedValue: initial }), onUpdate: render });
-  previous.addEventListener('click', () => connection.handleEvent('previous-page')); next.addEventListener('click', () => connection.handleEvent('next-page'));
-  function sync(): void { connection.syncControlledValues({ value, highlightedValue }); }
-  function render(): void { const { revision, state } = connection.getSnapshot(); for (const [page, button] of pageButtons) connection.setPageAttributes(button, page); previous.disabled = context.interaction.disabled === true || state.selection.selected[0] === pages[0]; next.disabled = context.interaction.disabled === true || state.selection.selected[0] === pages.at(-1); context.showState(revision, { page: state.selection.selected[0] ?? null, current: state.cursor.current, pageCount: count, ownership: controlled ? 'controlled' : 'uncontrolled' }); }
-  render(); return { focus: () => pageButtons.find(([page]) => page === initial)?.[1].focus(), disconnect: () => connection.disconnect() };
+interface PaginationDemoOptions {
+  readonly total: number;
+  readonly itemsPerPage: number;
+  readonly initialPage: number;
+  readonly siblingCount?: number;
+  readonly showEdges?: boolean;
+  readonly showControls?: boolean;
+  readonly pageSizes?: readonly number[];
+  readonly controlled?: boolean;
+}
+
+function mountPagination(context: DemoContext, scenario: PaginationDemoOptions): DemoSession {
+  const wrapper = document.createElement('div'); wrapper.className = 'pagination-demo';
+  const summary = document.createElement('div'); summary.className = 'pagination-summary'; summary.setAttribute('aria-live', 'polite');
+  const root = document.createElement('nav'); root.className = 'pagination-controls';
+  const sizeField = document.createElement('label'); sizeField.className = 'pagination-size';
+  sizeField.append(document.createTextNode('Per page'));
+  const sizeSelect = document.createElement('select'); sizeSelect.setAttribute('aria-label', 'Results per page');
+  for (const size of scenario.pageSizes ?? []) {
+    const option = document.createElement('option'); option.value = String(size); option.textContent = String(size);
+    sizeSelect.append(option);
+  }
+  const sizeControl = document.createElement('span'); sizeControl.className = 'pagination-size-control';
+  sizeControl.append(
+    sizeSelect,
+    createElement(ChevronDown, { 'aria-hidden': 'true', height: 15, width: 15 }),
+  );
+  sizeField.append(sizeControl);
+  wrapper.append(summary, root); context.surface.append(wrapper);
+  const elements = new Map<string, HTMLElement>();
+  let page = scenario.initialPage;
+  let itemsPerPage = scenario.itemsPerPage;
+  let connection!: PaginationConnection;
+  connection = createPagination({
+    root,
+    total: scenario.total,
+    ...(scenario.siblingCount === undefined ? {} : { siblingCount: scenario.siblingCount }),
+    ...(scenario.showEdges === undefined ? {} : { showEdges: scenario.showEdges }),
+    ...(scenario.showControls === undefined ? {} : { showControls: scenario.showControls }),
+    ...context.interaction,
+    label: 'Result pages',
+    ...(scenario.controlled
+      ? {
+          page,
+          itemsPerPage,
+          onPageChange: (nextPage: number) => { page = nextPage; queueMicrotask(sync); },
+          onItemsPerPageChange: (nextSize: number) => { itemsPerPage = nextSize; queueMicrotask(sync); },
+        }
+      : { defaultPage: page, defaultItemsPerPage: itemsPerPage }),
+    onUpdate: render,
+  });
+  sizeSelect.addEventListener('change', () => {
+    connection.handleEvent({ type: 'set-items-per-page', itemsPerPage: Number(sizeSelect.value) });
+  });
+  function sync(): void { connection.syncControlledValues({ page, itemsPerPage }); }
+  function render(): void {
+    const { revision, state } = connection.getSnapshot();
+    const items = connection.getItems();
+    const range = connection.getItemRange();
+    const visible = items.map((item) => {
+      const key = paginationItemKey(item);
+      const element = elements.get(key) ?? createPaginationItemElement(item);
+      elements.set(key, element);
+      connection.setItemAttributes(element, item);
+      return element;
+    });
+    root.replaceChildren(...visible);
+    const strong = document.createElement('strong');
+    strong.textContent = range.total === 0 ? 'No results' : `${range.start}–${range.end} of ${range.total} results`;
+    const detail = document.createElement('span');
+    detail.textContent = `Page ${state.page} of ${connection.getPageCount()}`;
+    const meta = document.createElement('span'); meta.className = 'pagination-meta'; meta.append(detail);
+    if (scenario.pageSizes !== undefined) {
+      sizeSelect.value = String(state.itemsPerPage);
+      sizeSelect.disabled = context.interaction.disabled === true || context.interaction.readOnly === true;
+      meta.append(sizeField);
+    } else {
+      detail.textContent += ` · ${state.itemsPerPage} per page`;
+    }
+    summary.replaceChildren(strong, meta);
+    context.showState(revision, {
+      page: state.page,
+      pageCount: connection.getPageCount(),
+      range,
+      visiblePages: items.filter((item) => item.type === 'page').map((item) => item.page),
+      itemsPerPage: state.itemsPerPage,
+      total: scenario.total,
+      showEdges: scenario.showEdges ?? false,
+      showControls: scenario.showControls ?? true,
+      ownership: scenario.controlled ? 'controlled' : 'uncontrolled',
+    });
+  }
+  render();
+  return {
+    focus: () => elements.get(`page-${scenario.initialPage}`)?.focus(),
+    disconnect: () => connection.disconnect(),
+  };
+}
+
+function paginationItemKey(item: PaginationItem): string {
+  return item.type === 'page' ? `page-${item.page}`
+    : item.type === 'ellipsis' ? `ellipsis-${item.side}`
+      : `control-${item.control}`;
+}
+
+function createPaginationItemElement(item: PaginationItem): HTMLElement {
+  if (item.type === 'ellipsis') {
+    const value = document.createElement('span'); value.className = 'pagination-ellipsis';
+    value.append(createElement(Ellipsis, { 'aria-hidden': 'true', height: 18, width: 18 }));
+    return value;
+  }
+  const button = document.createElement('button'); button.type = 'button';
+  if (item.type === 'page') {
+    button.className = 'page-button secondary'; button.textContent = String(item.page);
+  } else {
+    button.className = 'pagination-control secondary';
+    button.append(createElement(paginationControlIcon(item.control), { 'aria-hidden': 'true', height: 17, width: 17 }));
+  }
+  return button;
+}
+
+function paginationControlIcon(control: PaginationControl): typeof ChevronLeft {
+  if (control === 'first-page') return ChevronsLeft;
+  if (control === 'previous-page') return ChevronLeft;
+  if (control === 'next-page') return ChevronRight;
+  return ChevronsRight;
 }
 
 function mountStepper(context: DemoContext, initial: string, disabled: readonly string[], controlled: boolean): DemoSession {

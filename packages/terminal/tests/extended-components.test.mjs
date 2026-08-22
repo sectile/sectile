@@ -20,9 +20,10 @@ test('terminal extended selection facades own conventional keyboard input', asyn
   assert.deepEqual(select.getSnapshot().state.choice.selection.selected, ['b']);
   assert.equal(select.getSnapshot().state.open, false);
 
-  const pagination = createPagination({ items: ['1', '2', '3'], defaultValue: '1' });
+  const pagination = createPagination({ total: 30, defaultItemsPerPage: 10, defaultPage: 1 });
   pagination.handleKeyboardInput({ key: 'right' });
-  assert.deepEqual(pagination.getSnapshot().state.selection.selected, ['2']);
+  assert.equal(pagination.getSnapshot().state.page, 2);
+  assert.deepEqual(pagination.getItemRange(), { start: 11, end: 20, total: 30 });
 
   const stepper = createStepper({ items: ['one', 'two'], defaultValue: 'one', defaultHighlightedValue: 'one' });
   stepper.handleKeyboardInput({ key: 'right' });
@@ -34,6 +35,36 @@ test('terminal extended selection facades own conventional keyboard input', asyn
   rating.handleEvent('increase');
   await Promise.resolve();
   assert.deepEqual(rating.getSnapshot().state.selection.selected, ['2']);
+});
+
+test('terminal pagination exposes edge and ellipsis projection without enumerating every page', () => {
+  const pagination = createPagination({
+    total: 1_000,
+    defaultItemsPerPage: 10,
+    defaultPage: 50,
+    siblingCount: 1,
+    showEdges: true,
+  });
+  assert.equal(pagination.getPageCount(), 100);
+  assert.deepEqual(
+    pagination.getItems().filter((item) => item.type !== 'control'),
+    [
+      { type: 'page', page: 1, selected: false },
+      { type: 'ellipsis', side: 'start' },
+      { type: 'page', page: 49, selected: false },
+      { type: 'page', page: 50, selected: true },
+      { type: 'page', page: 51, selected: false },
+      { type: 'ellipsis', side: 'end' },
+      { type: 'page', page: 100, selected: false },
+    ],
+  );
+  pagination.handleKeyboardInput({ key: 'home' });
+  assert.equal(pagination.getSnapshot().state.page, 1);
+  pagination.handleKeyboardInput({ key: 'end' });
+  assert.equal(pagination.getSnapshot().state.page, 100);
+  pagination.handleEvent({ type: 'set-items-per-page', itemsPerPage: 25 });
+  assert.deepEqual(pagination.getSnapshot().state, { page: 40, itemsPerPage: 25 });
+  assert.equal(pagination.getPageCount(), 40);
 });
 
 test('terminal pin and tags inputs handle text, deletion, and completion', () => {

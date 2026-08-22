@@ -62,7 +62,7 @@ export const demos = Object.freeze([
   { id: 'feed', label: 'Feed', description: 'finite · before/after windows · [/] cases', create: createFeedDemo },
   { id: 'checkbox-group', label: 'Checkbox group', description: 'multiple values · disabled · controlled · [/] cases', readOnly: true, create: createCheckboxGroupDemo },
   { id: 'select', label: 'Select', description: 'open · move · choose · controlled · [/] cases', readOnly: true, create: createSelectDemo },
-  { id: 'pagination', label: 'Pagination', description: 'previous/next · direct page · controlled · [/] cases', readOnly: true, create: createPaginationDemo },
+  { id: 'pagination', label: 'Pagination', description: 'totals · windows · ellipsis · controls · [/] cases', readOnly: true, create: createPaginationDemo },
   { id: 'stepper', label: 'Stepper', description: 'focus steps · activate · disabled · [/] cases', create: createStepperDemo },
   { id: 'rating', label: 'Rating', description: 'ordered score · clearable · controlled · [/] cases', readOnly: true, create: createRatingDemo },
   { id: 'pin-input', label: 'Pin input', description: 'cells · validation · completion · [/] cases', readOnly: true, create: createPinInputDemo },
@@ -293,14 +293,63 @@ function createSelectDemo(host) {
 
 function createPaginationDemo(host) {
   return scenarioDemo(host, [
-    { title: 'Compact results', count: 5, value: '2', controlled: false },
-    { title: 'Long result set', count: 9, value: '5', controlled: false },
-    { title: 'Controlled page', count: 7, value: '3', controlled: true },
+    { title: 'Compact results', total: 42, itemsPerPage: 10, page: 2, controlled: false },
+    { title: 'Long result set', total: 247, itemsPerPage: 10, page: 13, siblingCount: 1, showEdges: true, controlled: false },
+    { title: 'Adjustable page size', total: 92, itemsPerPage: 25, page: 2, pageSizes: [10, 25, 50], showEdges: true, controlled: false },
+    { title: 'Pages without controls', total: 120, itemsPerPage: 10, page: 6, siblingCount: 1, showEdges: true, showControls: false, controlled: false },
+    { title: 'Controlled page', total: 137, itemsPerPage: 20, page: 3, pageSizes: [10, 20, 50], showEdges: true, controlled: true },
   ], (scenario) => {
-    const items = Array.from({ length: scenario.count }, (_, index) => String(index + 1)); let value = scenario.value; let highlightedValue = scenario.value; let connection;
-    connection = createPagination({ ...scenario.interaction, items, ...(scenario.controlled ? { value, highlightedValue, onPageChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
-    function sync() { connection.syncControlledValues({ value, highlightedValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); const page = state.selection.selected[0] ?? null; return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right · home/end${ansi.reset}`, '', items.map((id) => id === page ? `${ansi.inverse} ${id} ${ansi.reset}` : ` ${id} `).join(' '), '', `page=${page ?? '−'} of ${scenario.count}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    let page = scenario.page; let itemsPerPage = scenario.itemsPerPage; let connection;
+    connection = createPagination({
+      ...scenario.interaction,
+      total: scenario.total,
+      siblingCount: scenario.siblingCount,
+      showEdges: scenario.showEdges,
+      showControls: scenario.showControls,
+      ...(scenario.controlled
+        ? {
+            page,
+            itemsPerPage,
+            onPageChange: (next) => { page = next; queueMicrotask(sync); },
+            onItemsPerPageChange: (next) => { itemsPerPage = next; queueMicrotask(sync); },
+          }
+        : { defaultPage: page, defaultItemsPerPage: itemsPerPage }),
+      onUpdate: host.render,
+    });
+    function sync() { connection.syncControlledValues({ page, itemsPerPage }); }
+    function renderItem(item) {
+      if (item.type === 'ellipsis') return `${ansi.dim} … ${ansi.reset}`;
+      if (item.type === 'page') return item.selected ? `${ansi.inverse} ${item.page} ${ansi.reset}` : ` ${item.page} `;
+      const label = item.control === 'first-page' ? '|<' : item.control === 'previous-page' ? '<' : item.control === 'next-page' ? '>' : '>|';
+      return item.disabled ? `${ansi.dim} ${label} ${ansi.reset}` : ` ${label} `;
+    }
+    return {
+      handle: (input) => {
+        if (input.text === 'p' && scenario.pageSizes !== undefined) {
+          const current = connection.getSnapshot().state.itemsPerPage;
+          const index = scenario.pageSizes.indexOf(current);
+          return connection.handleEvent({
+            type: 'set-items-per-page',
+            itemsPerPage: scenario.pageSizes[(index + 1) % scenario.pageSizes.length],
+          });
+        }
+        return connection.handleKeyboardInput(input);
+      },
+      lines() {
+        const { revision, state } = connection.getSnapshot();
+        const range = connection.getItemRange();
+        return [
+          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.dim}left/right · home/end${scenario.pageSizes === undefined ? '' : ' · p page size'}${ansi.reset}`,
+          '',
+          connection.getItems().map(renderItem).join(' '),
+          '',
+          `showing=${range.start}–${range.end} of ${range.total}  page=${state.page}/${connection.getPageCount()}`,
+          `perPage=${state.itemsPerPage}  edges=${scenario.showEdges === true ? 'yes' : 'no'}  controls=${scenario.showControls === false ? 'no' : 'yes'}`,
+          `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+        ];
+      },
+    };
   });
 }
 

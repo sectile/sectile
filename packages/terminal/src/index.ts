@@ -19,7 +19,12 @@ export {
 } from './listbox.js';
 export { createCheckboxGroup, tryCreateCheckboxGroup, type CheckboxGroupConnection, type CheckboxGroupOptions } from './checkbox-group.js';
 export { createSelect, tryCreateSelect, type SelectConnection, type SelectEffect, type SelectOptions } from './select.js';
-export { createPagination, tryCreatePagination, type PaginationConnection, type PaginationOptions } from './pagination.js';
+export {
+  createPagination, tryCreatePagination,
+  type PaginationConnection,
+  type PaginationControlledValues,
+  type PaginationOptions,
+} from './pagination.js';
 export { createStepper, tryCreateStepper, type StepperConnection, type StepperOptions } from './stepper.js';
 export { createRating, tryCreateRating, type RatingConnection, type RatingOptions } from './rating.js';
 export { createPinInput, tryCreatePinInput, type PinInputConnection, type PinInputOptions } from './pin-input.js';

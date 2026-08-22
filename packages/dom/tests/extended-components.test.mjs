@@ -30,13 +30,13 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.equal(popup.hidden, true);
 
   const paginationRoot = new FakeElement();
-  const pagination = createPagination({ root: paginationRoot, items: ['1', '2', '3'], defaultValue: '1' });
+  const pagination = createPagination({ root: paginationRoot, total: 30, defaultPage: 1, defaultItemsPerPage: 10 });
   const page = new FakeElement();
-  pagination.setPageAttributes(page, '1');
+  pagination.setItemAttributes(page, pagination.getItems().find((item) => item.type === 'page' && item.page === 1));
   assert.equal(paginationRoot.attributes.get('role'), 'navigation');
   assert.equal(page.attributes.get('aria-current'), 'page');
-  pagination.handleEvent({ type: 'go-to-page', id: '3' });
-  assert.deepEqual(pagination.getSnapshot().state.selection.selected, ['3']);
+  pagination.handleEvent({ type: 'go-to-page', page: 3 });
+  assert.equal(pagination.getSnapshot().state.page, 3);
 
   const stepperRoot = new FakeElement();
   const stepper = createStepper({ root: stepperRoot, items: ['account', 'profile'], defaultValue: 'account', defaultHighlightedValue: 'account' });
@@ -46,6 +46,78 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   stepper.handleEvent('activate-step');
   assert.deepEqual(stepper.getSnapshot().state.selection.selected, ['profile']);
   assert.equal(stepperRoot.attributes.get('aria-roledescription'), 'stepper');
+});
+
+test('DOM pagination owns item projection, delegated clicks, and boundary availability', () => {
+  const root = new FakeElement();
+  const pagination = createPagination({
+    root,
+    total: 250,
+    defaultItemsPerPage: 10,
+    defaultPage: 1,
+    siblingCount: 1,
+    showEdges: true,
+  });
+  assert.equal(pagination.getPageCount(), 25);
+  assert.deepEqual(pagination.getItemRange(), { start: 1, end: 10, total: 250 });
+
+  const firstControl = pagination.getItems().find((item) => item.type === 'control' && item.control === 'first-page');
+  const firstButton = new FakeElement();
+  pagination.setItemAttributes(firstButton, firstControl);
+  assert.equal(firstButton.disabled, true);
+  assert.equal(firstButton.tabIndex, -1);
+  assert.equal(firstButton.attributes.get('aria-disabled'), 'true');
+
+  const pageFive = { type: 'page', page: 5, selected: false };
+  const pageButton = new FakeElement();
+  pagination.setItemAttributes(pageButton, pageFive);
+  assert.equal(pageButton.attributes.get('role'), undefined);
+  assert.equal(pageButton.attributes.get('aria-label'), 'Page 5');
+  assert.equal(pageButton.tabIndex, 0);
+  root.emit('click', { target: pageButton });
+  assert.equal(pagination.getSnapshot().state.page, 5);
+  assert.deepEqual(pagination.getItemRange(), { start: 41, end: 50, total: 250 });
+
+  const projected = pagination.getItems();
+  assert.ok(projected.some((item) => item.type === 'ellipsis' && item.side === 'start'));
+  assert.ok(projected.some((item) => item.type === 'ellipsis' && item.side === 'end'));
+
+  pagination.handleEvent({ type: 'set-items-per-page', itemsPerPage: 25 });
+  assert.deepEqual(pagination.getSnapshot().state, { page: 2, itemsPerPage: 25 });
+  assert.equal(pagination.getPageCount(), 10);
+  assert.deepEqual(pagination.getItemRange(), { start: 26, end: 50, total: 250 });
+
+  pagination.disconnect();
+  assert.equal(root.listeners.get('click')?.size ?? 0, 0);
+});
+
+test('DOM pagination proposes and synchronizes controlled page-size changes atomically', () => {
+  const root = new FakeElement();
+  const proposals = [];
+  const pagination = createPagination({
+    root,
+    total: 100,
+    page: 4,
+    itemsPerPage: 10,
+    onPageChange: (page) => proposals.push(['page', page]),
+    onItemsPerPageChange: (size) => proposals.push(['size', size]),
+  });
+  pagination.handleEvent({ type: 'set-items-per-page', itemsPerPage: 25 });
+  assert.deepEqual(pagination.getSnapshot().state, { page: 4, itemsPerPage: 10 });
+  assert.deepEqual(proposals, [['page', 2], ['size', 25]]);
+  assert.equal(pagination.syncControlledValues({ page: 2, itemsPerPage: 25 }).ok, true);
+  assert.deepEqual(pagination.getSnapshot().state, { page: 2, itemsPerPage: 25 });
+});
+
+test('DOM pagination removes globally disabled items from pointer and tab interaction', () => {
+  const root = new FakeElement();
+  const pagination = createPagination({ root, total: 30, defaultPage: 2, disabled: true });
+  const page = new FakeElement();
+  pagination.setItemAttributes(page, { type: 'page', page: 3, selected: false });
+  assert.equal(page.disabled, true);
+  assert.equal(page.tabIndex, -1);
+  root.emit('click', { target: page });
+  assert.equal(pagination.getSnapshot().state.page, 2);
 });
 
 test('DOM rating and structured input facades expose complete state transitions', async () => {
