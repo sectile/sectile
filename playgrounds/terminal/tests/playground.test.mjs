@@ -105,6 +105,35 @@ test('terminal playground composes every facade through public package subpaths'
   assert.equal(fitted.length > 0, true);
 });
 
+test('terminal checked controls use distinct host-native visual grammars', () => {
+  const checkbox = demos.find(({ id }) => id === 'checkbox');
+  const switchControl = demos.find(({ id }) => id === 'switch');
+  const toggleButton = demos.find(({ id }) => id === 'toggle-button');
+  assert.notEqual(checkbox, undefined);
+  assert.notEqual(switchControl, undefined);
+  assert.notEqual(toggleButton, undefined);
+
+  const checkboxSession = checkbox.create(demoHost(checkbox));
+  const switchSession = switchControl.create(demoHost(switchControl));
+  const toggleSession = toggleButton.create(demoHost(toggleButton));
+
+  assert.equal(checkboxSession.lines(80).some((line) => line.includes('[ ] Include analytics')), true);
+  assert.equal(switchSession.lines(80).some((line) => line.includes('[●──] OFF')), true);
+  assert.equal(toggleSession.lines(80).some((line) => line.startsWith('┌──')), true);
+
+  assert.equal(checkboxSession.handle({ key: 'space' }), true);
+  assert.equal(switchSession.handle({ key: 'space' }), true);
+  assert.equal(toggleSession.handle({ key: 'space' }), true);
+
+  assert.equal(checkboxSession.lines(80).some((line) => line.includes('[x] Include analytics')), true);
+  assert.equal(switchSession.lines(80).some((line) => line.includes('[──●] ON')), true);
+  assert.equal(toggleSession.lines(80).some((line) => line.includes('\u001b[7m│')), true);
+
+  checkboxSession.disconnect?.();
+  switchSession.disconnect?.();
+  toggleSession.disconnect?.();
+});
+
 test('terminal calendar demo renders a complete month and fulfills page requests', () => {
   const demo = demos.find(({ id }) => id === 'calendar');
   assert.notEqual(demo, undefined);
@@ -125,6 +154,27 @@ test('terminal calendar demo renders a complete month and fulfills page requests
   assert.equal(after.at(-1).includes(`selected=${selected}`), true);
 });
 
+test('terminal number field cases match the public docs order', () => {
+  const demo = demos.find(({ id }) => id === 'number-field');
+  assert.notEqual(demo, undefined);
+  const session = demo.create(demoHost(demo));
+  const expected = [
+    ['Exact decimal input', 'value=0.1'],
+    ['Calculator percentage', 'input=50-20%'],
+    ['Exponent expression', 'input=2^3^2'],
+    ['Bounded decimal', 'value=40.25'],
+    ['Controlled calculation', 'input=1/3'],
+  ];
+
+  for (const [title, state] of expected) {
+    const lines = session.lines(100);
+    assert.equal(lines.some((line) => line.includes(title)), true, title);
+    assert.equal(lines.some((line) => line.includes(state)), true, state);
+    session.handle({ key: ']' });
+  }
+  session.disconnect?.();
+});
+
 function pad(value) {
   return String(value).padStart(2, '0');
 }
@@ -143,7 +193,7 @@ function moveToScenario(session, marker) {
   for (let index = 0; index < 12; index += 1) {
     const lines = session.lines(100);
     if (lines.some((line) => line.includes(marker))) return true;
-    session.handle({ key: lines.some((line) => line.includes('{ / } switch')) ? '}' : ']' });
+    session.handle({ key: lines.some((line) => line.includes('{ / }')) ? '}' : ']' });
   }
   return false;
 }

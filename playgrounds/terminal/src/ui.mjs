@@ -6,6 +6,7 @@ export const ansi = Object.freeze({
   dim: '\u001b[2m',
   cyan: '\u001b[36m',
   yellow: '\u001b[33m',
+  inverse: '\u001b[7m',
   current: '\u001b[30;46m',
   editing: '\u001b[30;43m',
 });

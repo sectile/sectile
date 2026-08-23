@@ -460,7 +460,7 @@ function scenarioDemo(host, scenarios, create, options = {}) {
           ? 'read-only · navigation allowed, mutation rejected'
           : null;
       return [
-        `${ansi.dim}case ${index + 1}/${scenarios.length} · ${previousCaseKey} / ${nextCaseKey} switch${ansi.reset}`,
+        `${ansi.dim}case ${index + 1}/${scenarios.length} · ${previousCaseKey} / ${nextCaseKey} change case${ansi.reset}`,
         ...(interaction === null ? [] : [`${ansi.yellow}${interaction}${ansi.reset}`]),
         ...session.lines(width),
       ];
@@ -477,9 +477,9 @@ function createCheckedDemo(host, kind) {
       { title: 'Controlled checkbox', initial: true, controlled: true },
     ]
     : [
-      { title: kind === 'switch' ? 'Notifications off' : 'Formatting off', initial: false, controlled: false },
-      { title: kind === 'switch' ? 'Notifications on' : 'Formatting on', initial: true, controlled: false },
-      { title: 'Controlled state', initial: true, controlled: true },
+      { title: kind === 'switch' ? 'Deployment notifications' : 'Bold formatting', initial: false, controlled: false },
+      { title: kind === 'switch' ? 'Deployment notifications' : 'Bold formatting', initial: true, controlled: false },
+      { title: kind === 'switch' ? 'Controlled notifications' : 'Controlled formatting', initial: true, controlled: true },
     ];
   return scenarioDemo(host, scenarios, (scenario) => createCheckedScenario(host, kind, scenario));
 }
@@ -715,18 +715,45 @@ function createCheckedScenario(host, kind, scenario) {
   }
   return {
     handle: (input) => connection.handleKeyboardInput(input),
-    lines() {
+    lines(width) {
       const { revision, state } = connection.getSnapshot();
       const value = kind === 'toggle-button' ? state.pressed : state.checked;
+      const valueName = kind === 'toggle-button' ? 'pressed' : kind === 'switch' ? 'checked' : 'value';
       return [
         `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
         '',
-        `${value === true ? '[●]' : value === 'mixed' ? '[◐]' : '[ ]'} ${kind === 'switch' ? 'Deployment notifications' : kind === 'checkbox' ? 'Include analytics' : 'Bold formatting'}`,
+        ...checkedControlLines(kind, value, width),
         '',
-        `value=${String(value)}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+        `${valueName}=${String(value)}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
       ];
     },
   };
+}
+
+function checkedControlLines(kind, value, width) {
+  if (kind === 'checkbox') {
+    const marker = value === true ? '[x]' : value === 'mixed' ? '[-]' : '[ ]';
+    return [`${marker} ${plain('Include analytics', Math.max(1, width - 4))}`];
+  }
+
+  if (kind === 'switch') {
+    const checked = value === true;
+    const track = checked
+      ? `${ansi.cyan}[──●] ON${ansi.reset}`
+      : `${ansi.dim}[●──] OFF${ansi.reset}`;
+    return [`Deployment notifications  ${track}`];
+  }
+
+  const pressed = value === true;
+  const innerWidth = Math.max(16, Math.min(28, width - 4));
+  const content = plain(' B  Bold formatting', innerWidth);
+  return [
+    `┌${'─'.repeat(innerWidth)}┐`,
+    pressed
+      ? `${ansi.inverse}│${content}│${ansi.reset}  pressed`
+      : `│${content}│  released`,
+    `└${'─'.repeat(innerWidth)}┘`,
+  ];
 }
 
 function createSliderDemo(host) {
@@ -849,17 +876,18 @@ function createSpinButtonDemo(host) {
 function createNumberFieldDemo(host) {
   const evaluator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));
   return scenarioDemo(host, [
-    { title: 'Exact decimal input', initial: '0.000000000000000001', draft: null, evaluator: null, controlled: false, detail: 'decimal text without a step lattice' },
-    { title: 'Calculator percentage', initial: '50', draft: '50-20%', evaluator, controlled: false, detail: '50-20% commits 40' },
-    { title: 'Exponent expression', initial: '2', draft: '2^3^2', evaluator, controlled: false, detail: '^ is right-associative' },
-    { title: 'Controlled calculation', initial: '1', draft: '1/3', evaluator, controlled: true, detail: 'external value and draft ownership' },
+    { title: 'Exact decimal input', initial: '0.1', draft: null, policies: {}, controlled: false, detail: 'decimal text stays exact without binary floating-point coercion' },
+    { title: 'Calculator percentage', initial: '50', draft: '50-20%', policies: { evaluator }, controlled: false, detail: '50-20% commits 40' },
+    { title: 'Exponent expression', initial: '2', draft: '2^3^2', policies: { evaluator }, controlled: false, detail: '^ is right-associative' },
+    { title: 'Bounded decimal', initial: '40.25', draft: null, policies: { min: '0', max: '100' }, controlled: false, detail: 'committed values stay between 0 and 100' },
+    { title: 'Controlled calculation', initial: '1', draft: '1/3', policies: { evaluator }, controlled: true, detail: 'external value and input ownership' },
   ], (scenario) => {
     let externalValue = scenario.initial;
     let externalInput = numberFieldEditing(scenario.draft ?? scenario.initial);
     let connection;
     connection = createNumberField({
       ...scenario.interaction,
-      ...(scenario.evaluator === null ? {} : { policies: { evaluator: scenario.evaluator } }),
+      policies: scenario.policies,
       ...(scenario.controlled ? {
         value: externalValue,
         inputState: externalInput,
