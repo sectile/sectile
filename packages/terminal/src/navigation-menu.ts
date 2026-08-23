@@ -11,5 +11,5 @@ export function createNavigationMenu<ID extends StableID>(options: NavigationMen
 }
 
 export function tryCreateNavigationMenu<ID extends StableID>(options: NavigationMenuOptions<ID>): Result<FacadeConnection<NavigationMenuConnection<ID>>> {
-  return createFacadeConnection(options, (resolved) => createMenuControl({ ...resolved, kind: 'menubar' }));
+  return createFacadeConnection(options, (resolved) => createMenuControl({ ...resolved, kind: 'navigation-menu' }));
 }
