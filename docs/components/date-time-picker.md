@@ -5,9 +5,9 @@ Date Time Picker combines timezone-free civil values with calendar navigation an
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Date Time Picker demonstrates schedule as a separate, interactive configuration.
 
-<PackageImport component="date-time-picker" />
+<ComponentExample component="date-time-picker" scenario="schedule" title="Date Time Picker" description="Date Time Picker demonstrates schedule as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Schedule
-
-Use this case to inspect schedule independently from the component's other behavior.
 
 ### Morning
 
-Use this case to inspect morning independently from the component's other behavior.
+Date Time Picker demonstrates morning as a separate, interactive configuration.
+
+<ComponentExample component="date-time-picker" scenario="morning" title="Morning" description="Date Time Picker demonstrates morning as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Date Time Picker.
+
+<ComponentExample component="date-time-picker" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Date Time Picker." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="date-time-picker" />
 
 ## State ownership
 

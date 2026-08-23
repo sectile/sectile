@@ -5,9 +5,9 @@ Tabs composes ordered navigation, eligibility, and selection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Tabs demonstrates manual as a separate, interactive configuration.
 
-<PackageImport component="tabs" />
+<ComponentExample component="tabs" scenario="manual" title="Tabs" description="Tabs demonstrates manual as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Manual
-
-Use this case to inspect manual independently from the component's other behavior.
 
 ### Automatic
 
-Use this case to inspect automatic independently from the component's other behavior.
+Tabs demonstrates automatic as a separate, interactive configuration.
+
+<ComponentExample component="tabs" scenario="automatic" title="Automatic" description="Tabs demonstrates automatic as a separate, interactive configuration." :index="1" />
 
 ### Vertical disabled
 
-Use this case to inspect vertical disabled independently from the component's other behavior.
+Tabs demonstrates vertical disabled as a separate, interactive configuration.
+
+<ComponentExample component="tabs" scenario="vertical-disabled" title="Vertical disabled" description="Tabs demonstrates vertical disabled as a separate, interactive configuration." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="tabs" />
 
 ## State ownership
 

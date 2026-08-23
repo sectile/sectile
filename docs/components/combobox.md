@@ -5,9 +5,9 @@ Combobox composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Combobox demonstrates prefix as a separate, interactive configuration.
 
-<PackageImport component="combobox" />
+<ComponentExample component="combobox" scenario="prefix" title="Combobox" description="Combobox demonstrates prefix as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -22,23 +22,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Prefix
-
-Use this case to inspect prefix independently from the component's other behavior.
 
 ### Contains
 
-Use this case to inspect contains independently from the component's other behavior.
+Combobox demonstrates contains as a separate, interactive configuration.
+
+<ComponentExample component="combobox" scenario="contains" title="Contains" description="Combobox demonstrates contains as a separate, interactive configuration." :index="1" />
 
 ### Ime
 
-Use this case to inspect ime independently from the component's other behavior.
+Combobox demonstrates ime as a separate, interactive configuration.
+
+<ComponentExample component="combobox" scenario="ime" title="Ime" description="Combobox demonstrates ime as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Combobox.
+
+<ComponentExample component="combobox" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Combobox." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="combobox" />
 
 ## State ownership
 

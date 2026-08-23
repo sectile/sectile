@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+업무 시간 설정에서 시간 범위 입력의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="time-range-field" />
+<ComponentExample component="time-range-field" scenario="office-hours" title="시간 범위 입력" description="업무 시간 설정에서 시간 범위 입력의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -20,11 +20,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 업무 시간
-- 일정 간격
-- 외부 상태 관리
+
+## 추가 예시
+
+### 일정 간격
+
+설정한 간격에 맞는 값만 입력하고 조절할 수 있습니다.
+
+<ComponentExample component="time-range-field" scenario="stepped" title="일정 간격" description="설정한 간격에 맞는 값만 입력하고 조절할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 시간 범위 입력에 전달합니다.
+
+<ComponentExample component="time-range-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 시간 범위 입력에 전달합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="time-range-field" />
 
 ## 상태 관리 방식
 

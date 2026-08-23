@@ -5,9 +5,9 @@ Alert Dialog owns popup state and explicit focus or dismissal effects.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Alert Dialog demonstrates destructive as a separate, interactive configuration.
 
-<PackageImport component="alert-dialog" />
+<ComponentExample component="alert-dialog" scenario="destructive" title="Alert Dialog" description="Alert Dialog demonstrates destructive as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Destructive
-
-Use this case to inspect destructive independently from the component's other behavior.
 
 ### Unsaved
 
-Use this case to inspect unsaved independently from the component's other behavior.
+Alert Dialog demonstrates unsaved as a separate, interactive configuration.
+
+<ComponentExample component="alert-dialog" scenario="unsaved" title="Unsaved" description="Alert Dialog demonstrates unsaved as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Alert Dialog.
+
+<ComponentExample component="alert-dialog" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Alert Dialog." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="alert-dialog" />
 
 ## State ownership
 

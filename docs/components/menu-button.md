@@ -5,9 +5,9 @@ Menu Button models hierarchical command navigation, open paths, and invocation.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Menu Button demonstrates actions as a separate, interactive configuration.
 
-<PackageImport component="menu-button" />
+<ComponentExample component="menu-button" scenario="actions" title="Menu Button" description="Menu Button demonstrates actions as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -23,19 +23,35 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+## Terminal keyboard interaction
+
+| Key | Behavior |
+| --- | --- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move among items at the current level. |
+| <kbd>→</kbd> | Open a branch and enter its first item. |
+| <kbd>←</kbd> / <kbd>Esc</kbd> | Return to the parent level or close the menu. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | Move to the first or last item at the current level. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | Open a branch or run the current command. |
+
 ## Example cases
-
-### Actions
-
-Use this case to inspect actions independently from the component's other behavior.
 
 ### Nested
 
-Use this case to inspect nested independently from the component's other behavior.
+Menu Button demonstrates nested as a separate, interactive configuration.
+
+<ComponentExample component="menu-button" scenario="nested" title="Nested" description="Menu Button demonstrates nested as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Menu Button.
+
+<ComponentExample component="menu-button" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Menu Button." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="menu-button" />
 
 ## State ownership
 

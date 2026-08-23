@@ -5,9 +5,9 @@ Carousel composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Carousel demonstrates wrapping as a separate, interactive configuration.
 
-<PackageImport component="carousel" />
+<ComponentExample component="carousel" scenario="wrapping" title="Carousel" description="Carousel demonstrates wrapping as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,23 +19,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Wrapping
-
-Use this case to inspect wrapping independently from the component's other behavior.
 
 ### Bounded
 
-Use this case to inspect bounded independently from the component's other behavior.
+Constrain accepted values to the displayed minimum and maximum.
+
+<ComponentExample component="carousel" scenario="bounded" title="Bounded" description="Constrain accepted values to the displayed minimum and maximum." :index="1" />
 
 ### Paused
 
-Use this case to inspect paused independently from the component's other behavior.
+Carousel demonstrates paused as a separate, interactive configuration.
+
+<ComponentExample component="carousel" scenario="paused" title="Paused" description="Carousel demonstrates paused as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Carousel.
+
+<ComponentExample component="carousel" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Carousel." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="carousel" />
 
 ## State ownership
 

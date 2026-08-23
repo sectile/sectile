@@ -5,9 +5,9 @@ Toolbar coordinates focus and invocation across an ordered action set.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Toolbar demonstrates horizontal as a separate, interactive configuration.
 
-<PackageImport component="toolbar" />
+<ComponentExample component="toolbar" scenario="horizontal" title="Toolbar" description="Toolbar demonstrates horizontal as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Horizontal
-
-Use this case to inspect horizontal independently from the component's other behavior.
 
 ### Vertical disabled
 
-Use this case to inspect vertical disabled independently from the component's other behavior.
+Toolbar demonstrates vertical disabled as a separate, interactive configuration.
+
+<ComponentExample component="toolbar" scenario="vertical-disabled" title="Vertical disabled" description="Toolbar demonstrates vertical disabled as a separate, interactive configuration." :index="1" />
 
 ### Controlled focus
 
-Use this case to inspect controlled focus independently from the component's other behavior.
+Toolbar demonstrates controlled focus as a separate, interactive configuration.
+
+<ComponentExample component="toolbar" scenario="controlled-focus" title="Controlled focus" description="Toolbar demonstrates controlled focus as a separate, interactive configuration." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="toolbar" />
 
 ## State ownership
 

@@ -5,9 +5,9 @@ Date Time Field separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Date Time Field demonstrates local schedule as a separate, interactive configuration.
 
-<PackageImport component="date-time-field" />
+<ComponentExample component="date-time-field" scenario="local-schedule" title="Date Time Field" description="Date Time Field demonstrates local schedule as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -21,19 +21,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Local schedule
-
-Use this case to inspect local schedule independently from the component's other behavior.
 
 ### Cross midnight
 
-Use this case to inspect cross midnight independently from the component's other behavior.
+Date Time Field demonstrates cross midnight as a separate, interactive configuration.
+
+<ComponentExample component="date-time-field" scenario="cross-midnight" title="Cross midnight" description="Date Time Field demonstrates cross midnight as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Date Time Field.
+
+<ComponentExample component="date-time-field" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Date Time Field." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="date-time-field" />
 
 ## State ownership
 

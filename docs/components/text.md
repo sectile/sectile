@@ -5,9 +5,9 @@ Text separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Text demonstrates ime mixed as a separate, interactive configuration.
 
-<PackageImport component="text" />
+<ComponentExample component="text" scenario="ime-mixed" title="Text" description="Text demonstrates ime mixed as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -21,23 +21,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Ime mixed
-
-Use this case to inspect ime mixed independently from the component's other behavior.
 
 ### Unicode selection
 
-Use this case to inspect unicode selection independently from the component's other behavior.
+Text demonstrates unicode selection as a separate, interactive configuration.
+
+<ComponentExample component="text" scenario="unicode-selection" title="Unicode selection" description="Text demonstrates unicode selection as a separate, interactive configuration." :index="1" />
 
 ### Multiline
 
-Use this case to inspect multiline independently from the component's other behavior.
+Text demonstrates multiline as a separate, interactive configuration.
+
+<ComponentExample component="text" scenario="multiline" title="Multiline" description="Text demonstrates multiline as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Text.
+
+<ComponentExample component="text" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Text." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="text" />
 
 ## State ownership
 

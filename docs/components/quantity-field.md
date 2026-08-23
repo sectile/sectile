@@ -5,9 +5,9 @@ Quantity Field separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Quantity Field demonstrates length as a separate, interactive configuration.
 
-<PackageImport component="quantity-field" />
+<ComponentExample component="quantity-field" scenario="length" title="Quantity Field" description="Quantity Field demonstrates length as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -26,27 +26,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Length
-
-Use this case to inspect length independently from the component's other behavior.
 
 ### Temperature
 
-Use this case to inspect temperature independently from the component's other behavior.
+Quantity Field demonstrates temperature as a separate, interactive configuration.
+
+<ComponentExample component="quantity-field" scenario="temperature" title="Temperature" description="Quantity Field demonstrates temperature as a separate, interactive configuration." :index="1" />
 
 ### Calculator
 
-Use this case to inspect calculator independently from the component's other behavior.
+Enter 50-20% and commit the calculator result as 40.
+
+<ComponentExample component="quantity-field" scenario="calculator" title="Calculator" description="Enter 50-20% and commit the calculator result as 40." :index="2" />
 
 ### Compound
 
-Use this case to inspect compound independently from the component's other behavior.
+Quantity Field demonstrates compound as a separate, interactive configuration.
+
+<ComponentExample component="quantity-field" scenario="compound" title="Compound" description="Quantity Field demonstrates compound as a separate, interactive configuration." :index="3" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Quantity Field.
+
+<ComponentExample component="quantity-field" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Quantity Field." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="quantity-field" />
 
 ## State ownership
 

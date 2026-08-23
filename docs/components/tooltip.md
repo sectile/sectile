@@ -5,9 +5,9 @@ Tooltip owns popup state and explicit focus or dismissal effects.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Tooltip demonstrates focus hover as a separate, interactive configuration.
 
-<PackageImport component="tooltip" />
+<ComponentExample component="tooltip" scenario="focus-hover" title="Tooltip" description="Tooltip demonstrates focus hover as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,27 +19,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Focus hover
-
-Use this case to inspect focus hover independently from the component's other behavior.
 
 ### Initially open
 
-Use this case to inspect initially open independently from the component's other behavior.
+Tooltip begins open without occupying layout space around its trigger.
+
+<ComponentExample component="tooltip" scenario="initially-open" title="Initially open" description="Tooltip begins open without occupying layout space around its trigger." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Tooltip.
+
+<ComponentExample component="tooltip" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Tooltip." :index="2" />
 
 ### Closed
 
-Use this case to inspect closed independently from the component's other behavior.
+Tooltip starts closed and opens only from its trigger.
+
+<ComponentExample component="tooltip" scenario="closed" title="Closed" description="Tooltip starts closed and opens only from its trigger." :index="3" />
 
 ### Open
 
-Use this case to inspect open independently from the component's other behavior.
+Tooltip starts open so focus, dismissal, and overlay behavior can be inspected immediately.
+
+<ComponentExample component="tooltip" scenario="open" title="Open" description="Tooltip starts open so focus, dismissal, and overlay behavior can be inspected immediately." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="tooltip" />
 
 ## State ownership
 

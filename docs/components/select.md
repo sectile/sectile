@@ -5,9 +5,9 @@ Select composes ordered navigation, eligibility, and selection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Select demonstrates environment as a separate, interactive configuration.
 
-<PackageImport component="select" />
+<ComponentExample component="select" scenario="environment" title="Select" description="Select demonstrates environment as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Environment
-
-Use this case to inspect environment independently from the component's other behavior.
 
 ### Disabled option
 
-Use this case to inspect disabled option independently from the component's other behavior.
+Select demonstrates disabled option as a separate, interactive configuration.
+
+<ComponentExample component="select" scenario="disabled-option" title="Disabled option" description="Select demonstrates disabled option as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Select.
+
+<ComponentExample component="select" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Select." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="select" />
 
 ## State ownership
 

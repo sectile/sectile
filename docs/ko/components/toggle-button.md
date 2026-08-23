@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+서식 설정에서 토글 버튼의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="toggle-button" />
+<ComponentExample component="toggle-button" scenario="formatting" title="토글 버튼" description="서식 설정에서 토글 버튼의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -17,13 +17,36 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 서식
-- 경고
-- 외부 상태 관리
-- 꺼짐
-- 켜짐
+
+## 추가 예시
+
+### 경고
+
+경고 설정에서 토글 버튼의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="toggle-button" scenario="alert" title="경고" description="경고 설정에서 토글 버튼의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 토글 버튼에 전달합니다.
+
+<ComponentExample component="toggle-button" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 토글 버튼에 전달합니다." :index="2" />
+### 꺼짐
+
+토글 버튼가 꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다.
+
+<ComponentExample component="toggle-button" scenario="off" title="꺼짐" description="토글 버튼가 꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다." :index="3" />
+### 켜짐
+
+토글 버튼가 켜진 상태에서 시작하며, 이름을 바꾸지 않고 현재 상태를 드러냅니다.
+
+<ComponentExample component="toggle-button" scenario="on" title="켜짐" description="토글 버튼가 켜진 상태에서 시작하며, 이름을 바꾸지 않고 현재 상태를 드러냅니다." :index="4" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="toggle-button" />
 
 ## 상태 관리 방식
 

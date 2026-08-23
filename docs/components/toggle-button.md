@@ -5,9 +5,9 @@ Toggle Button models a persistent checked or pressed state with explicit ownersh
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Toggle Button demonstrates formatting as a separate, interactive configuration.
 
-<PackageImport component="toggle-button" />
+<ComponentExample component="toggle-button" scenario="formatting" title="Toggle Button" description="Toggle Button demonstrates formatting as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -17,27 +17,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Formatting
-
-Use this case to inspect formatting independently from the component's other behavior.
 
 ### Alert
 
-Use this case to inspect alert independently from the component's other behavior.
+Toggle Button demonstrates alert as a separate, interactive configuration.
+
+<ComponentExample component="toggle-button" scenario="alert" title="Alert" description="Toggle Button demonstrates alert as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Toggle Button.
+
+<ComponentExample component="toggle-button" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Toggle Button." :index="2" />
 
 ### Off
 
-Use this case to inspect off independently from the component's other behavior.
+Toggle Button starts off so its immediate toggle behavior is clear.
+
+<ComponentExample component="toggle-button" scenario="off" title="Off" description="Toggle Button starts off so its immediate toggle behavior is clear." :index="3" />
 
 ### On
 
-Use this case to inspect on independently from the component's other behavior.
+Toggle Button starts on and exposes the active state without changing its label.
+
+<ComponentExample component="toggle-button" scenario="on" title="On" description="Toggle Button starts on and exposes the active state without changing its label." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="toggle-button" />
 
 ## State ownership
 

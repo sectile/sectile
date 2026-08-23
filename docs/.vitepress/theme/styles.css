@@ -236,6 +236,19 @@
   height: 100%;
 }
 
+.terminal-component-example {
+  width: min(100%, 760px);
+}
+
+.terminal-component-example__xterm {
+  height: 320px;
+  padding: 18px 20px;
+}
+
+.terminal-component-example--compact .terminal-component-example__xterm {
+  height: 210px;
+}
+
 .bash-playground {
   overflow: hidden;
   margin: 22px 0 36px;

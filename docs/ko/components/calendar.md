@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+월간 달력 설정에서 달력의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="calendar" />
+<ComponentExample component="calendar" scenario="month" title="달력" description="월간 달력 설정에서 달력의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -19,11 +19,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 월간 달력
-- 비활성 항목 주말 비활성
-- 외부 상태 관리
+
+## 추가 예시
+
+### 비활성 항목 주말 비활성
+
+비활성 항목 주말 비활성 설정에서 달력의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="calendar" scenario="disabled-weekends" title="비활성 항목 주말 비활성" description="비활성 항목 주말 비활성 설정에서 달력의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 달력에 전달합니다.
+
+<ComponentExample component="calendar" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 달력에 전달합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="calendar" />
 
 ## 상태 관리 방식
 

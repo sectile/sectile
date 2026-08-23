@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+일정 선택 설정에서 날짜·시간 선택기의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="date-time-picker" />
+<ComponentExample component="date-time-picker" scenario="schedule" title="날짜·시간 선택기" description="일정 선택 설정에서 날짜·시간 선택기의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -20,11 +20,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 일정 선택
-- 오전
-- 외부 상태 관리
+
+## 추가 예시
+
+### 오전
+
+오전 설정에서 날짜·시간 선택기의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="date-time-picker" scenario="morning" title="오전" description="오전 설정에서 날짜·시간 선택기의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 날짜·시간 선택기에 전달합니다.
+
+<ComponentExample component="date-time-picker" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 날짜·시간 선택기에 전달합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="date-time-picker" />
 
 ## 상태 관리 방식
 

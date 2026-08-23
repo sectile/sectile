@@ -5,9 +5,9 @@ Disclosure models disclosure and expansion policy without rendering assumptions.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Disclosure starts closed and opens only from its trigger.
 
-<PackageImport component="disclosure" />
+<ComponentExample component="disclosure" scenario="closed" title="Disclosure" description="Disclosure starts closed and opens only from its trigger." :index="0" />
 
 ## Features
 
@@ -17,19 +17,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Closed
-
-Use this case to inspect closed independently from the component's other behavior.
 
 ### Open
 
-Use this case to inspect open independently from the component's other behavior.
+Disclosure starts open so focus, dismissal, and overlay behavior can be inspected immediately.
+
+<ComponentExample component="disclosure" scenario="open" title="Open" description="Disclosure starts open so focus, dismissal, and overlay behavior can be inspected immediately." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Disclosure.
+
+<ComponentExample component="disclosure" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Disclosure." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="disclosure" />
 
 ## State ownership
 

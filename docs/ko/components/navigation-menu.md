@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+제품 이동 메뉴 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="navigation-menu" />
+<ComponentExample component="navigation-menu" scenario="product" title="이동 메뉴" description="제품 이동 메뉴 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -21,11 +21,36 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
+## 터미널 키보드 동작
 
-- 제품 이동 메뉴
-- 링크 이동
-- 비활성 항목
+최상위 이동 메뉴는 가로로, 열린 하위 패널은 세로 계층으로 다룹니다.
+
+| 위치 | 키 | 동작 |
+| --- | --- | --- |
+| 최상위 | <kbd>←</kbd> / <kbd>→</kbd> | 최상위 링크와 실행 요소 사이를 이동합니다. |
+| 최상위 | <kbd>↑</kbd> / <kbd>↓</kbd> | 현재 하위 메뉴를 엽니다. |
+| 하위 패널 | <kbd>↑</kbd> / <kbd>↓</kbd> | 패널 안의 항목 사이를 이동합니다. |
+| 하위 패널 | <kbd>←</kbd> / <kbd>Esc</kbd> | 패널을 연 최상위 항목으로 돌아갑니다. |
+| 모든 단계 | <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 항목을 실행합니다. |
+
+## 추가 예시
+
+### 링크 이동
+
+링크 이동 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="링크 이동 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 비활성 항목
+
+이동 메뉴는 키보드와 포인터 입력을 받지 않습니다.
+
+<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="이동 메뉴는 키보드와 포인터 입력을 받지 않습니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="navigation-menu" />
 
 ## 상태 관리 방식
 

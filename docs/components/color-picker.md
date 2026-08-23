@@ -5,9 +5,9 @@ Color Picker separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Color Picker demonstrates native as a separate, interactive configuration.
 
-<PackageImport component="color-picker" />
+<ComponentExample component="color-picker" scenario="native" title="Color Picker" description="Color Picker demonstrates native as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -22,31 +22,45 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Native
-
-Use this case to inspect native independently from the component's other behavior.
 
 ### Alpha
 
-Use this case to inspect alpha independently from the component's other behavior.
+Color Picker demonstrates alpha as a separate, interactive configuration.
+
+<ComponentExample component="color-picker" scenario="alpha" title="Alpha" description="Color Picker demonstrates alpha as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Color Picker.
+
+<ComponentExample component="color-picker" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Color Picker." :index="2" />
 
 ### Text
 
-Use this case to inspect text independently from the component's other behavior.
+Color Picker demonstrates text as a separate, interactive configuration.
+
+<ComponentExample component="color-picker" scenario="text" title="Text" description="Color Picker demonstrates text as a separate, interactive configuration." :index="3" />
 
 ### Channels
 
-Use this case to inspect channels independently from the component's other behavior.
+Color Picker demonstrates channels as a separate, interactive configuration.
+
+<ComponentExample component="color-picker" scenario="channels" title="Channels" description="Color Picker demonstrates channels as a separate, interactive configuration." :index="4" />
 
 ### Readonly
 
-Use this case to inspect readonly independently from the component's other behavior.
+Color Picker remains focusable for inspection while rejecting changes.
+
+<ComponentExample component="color-picker" scenario="readonly" title="Readonly" description="Color Picker remains focusable for inspection while rejecting changes." :index="5" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="color-picker" />
 
 ## State ownership
 

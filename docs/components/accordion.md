@@ -5,9 +5,9 @@ Accordion models disclosure and expansion policy without rendering assumptions.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Keep one active value while moving and selecting with the keyboard or pointer.
 
-<PackageImport component="accordion" />
+<ComponentExample component="accordion" scenario="single" title="Accordion" description="Keep one active value while moving and selecting with the keyboard or pointer." :index="0" />
 
 ## Features
 
@@ -18,23 +18,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Single
-
-Use this case to inspect single independently from the component's other behavior.
 
 ### Multiple
 
-Use this case to inspect multiple independently from the component's other behavior.
+Select several values independently without collapsing the existing selection.
+
+<ComponentExample component="accordion" scenario="multiple" title="Multiple" description="Select several values independently without collapsing the existing selection." :index="1" />
 
 ### Required
 
-Use this case to inspect required independently from the component's other behavior.
+Accordion demonstrates required as a separate, interactive configuration.
+
+<ComponentExample component="accordion" scenario="required" title="Required" description="Accordion demonstrates required as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Accordion.
+
+<ComponentExample component="accordion" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Accordion." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="accordion" />
 
 ## State ownership
 

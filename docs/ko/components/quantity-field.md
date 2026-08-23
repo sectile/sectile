@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+길이 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="quantity-field" />
+<ComponentExample component="quantity-field" scenario="length" title="수량 입력" description="길이 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -26,13 +26,36 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 길이 단위
-- 온도 단위
-- 계산식 입력
-- 복합 단위
-- 외부 상태 관리
+
+## 추가 예시
+
+### 온도 단위
+
+온도 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="quantity-field" scenario="temperature" title="온도 단위" description="온도 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 계산식 입력
+
+50-20%를 입력하면 계산 결과인 40으로 확정됩니다.
+
+<ComponentExample component="quantity-field" scenario="calculator" title="계산식 입력" description="50-20%를 입력하면 계산 결과인 40으로 확정됩니다." :index="2" />
+### 복합 단위
+
+복합 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="quantity-field" scenario="compound" title="복합 단위" description="복합 단위 설정에서 수량 입력의 실제 동작을 확인할 수 있습니다." :index="3" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 수량 입력에 전달합니다.
+
+<ComponentExample component="quantity-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 수량 입력에 전달합니다." :index="4" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="quantity-field" />
 
 ## 상태 관리 방식
 

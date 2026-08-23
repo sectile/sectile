@@ -5,9 +5,9 @@ Editable separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Use the smallest practical Editable composition and let it own its initial state.
 
-<PackageImport component="editable" />
+<ComponentExample component="editable" scenario="basic" title="Editable" description="Use the smallest practical Editable composition and let it own its initial state." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Basic
-
-Use this case to inspect basic independently from the component's other behavior.
 
 ### Validated
 
-Use this case to inspect validated independently from the component's other behavior.
+Editable demonstrates validated as a separate, interactive configuration.
+
+<ComponentExample component="editable" scenario="validated" title="Validated" description="Editable demonstrates validated as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Editable.
+
+<ComponentExample component="editable" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Editable." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="editable" />
 
 ## State ownership
 

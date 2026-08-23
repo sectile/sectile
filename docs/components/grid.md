@@ -5,9 +5,9 @@ Grid composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Grid demonstrates selectable as a separate, interactive configuration.
 
-<PackageImport component="grid" />
+<ComponentExample component="grid" scenario="selectable" title="Grid" description="Grid demonstrates selectable as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,23 +20,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Selectable
-
-Use this case to inspect selectable independently from the component's other behavior.
 
 ### Disabled wrap
 
-Use this case to inspect disabled wrap independently from the component's other behavior.
+Grid demonstrates disabled wrap as a separate, interactive configuration.
+
+<ComponentExample component="grid" scenario="disabled-wrap" title="Disabled wrap" description="Grid demonstrates disabled wrap as a separate, interactive configuration." :index="1" />
 
 ### Editable
 
-Use this case to inspect editable independently from the component's other behavior.
+Grid demonstrates editable as a separate, interactive configuration.
+
+<ComponentExample component="grid" scenario="editable" title="Editable" description="Grid demonstrates editable as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Grid.
+
+<ComponentExample component="grid" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Grid." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="grid" />
 
 ## State ownership
 

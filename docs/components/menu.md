@@ -5,9 +5,9 @@ Menu models hierarchical command navigation, open paths, and invocation.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Menu demonstrates commands as a separate, interactive configuration.
 
-<PackageImport component="menu" />
+<ComponentExample component="menu" scenario="commands" title="Menu" description="Menu demonstrates commands as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -21,19 +21,35 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+## Terminal keyboard interaction
+
+| Key | Behavior |
+| --- | --- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Move among items at the current level. |
+| <kbd>→</kbd> | Open a branch and enter its first item. |
+| <kbd>←</kbd> / <kbd>Esc</kbd> | Return to the parent level or close the menu. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | Move to the first or last item at the current level. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | Open a branch or run the current command. |
+
 ## Example cases
-
-### Commands
-
-Use this case to inspect commands independently from the component's other behavior.
 
 ### Disabled
 
-Use this case to inspect disabled independently from the component's other behavior.
+Menu is removed from keyboard and pointer interaction.
+
+<ComponentExample component="menu" scenario="disabled" title="Disabled" description="Menu is removed from keyboard and pointer interaction." :index="1" />
 
 ### Nested
 
-Use this case to inspect nested independently from the component's other behavior.
+Menu demonstrates nested as a separate, interactive configuration.
+
+<ComponentExample component="menu" scenario="nested" title="Nested" description="Menu demonstrates nested as a separate, interactive configuration." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="menu" />
 
 ## State ownership
 

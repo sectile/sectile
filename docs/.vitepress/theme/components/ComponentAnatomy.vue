@@ -1,0 +1,525 @@
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue';
+import { useDocsLocale } from '../locale.js';
+import { componentAnatomy } from '../component-anatomy.js';
+import AnatomyPreviewNode from './AnatomyPreviewNode.vue';
+
+const props = defineProps<{ component: string }>();
+const { isKorean } = useDocsLocale();
+const definition = computed(() => componentAnatomy[props.component]);
+const selectedPart = ref('root');
+const hoveredPart = ref<string | null>(null);
+const previewValues = reactive<Record<string, string>>({});
+const activePart = computed(() => hoveredPart.value ?? selectedPart.value);
+
+watch(() => props.component, () => {
+  selectedPart.value = definition.value?.parts.includes('root') === true
+    ? 'root'
+    : definition.value?.parts[0] ?? 'root';
+  for (const part of Object.keys(previewValues)) delete previewValues[part];
+  if (props.component === 'quantity-field') {
+    previewValues['input'] = '12.5';
+    previewValues['unit-select'] = 'km';
+  }
+}, { immediate: true });
+
+const hasProvider = computed(() => definition.value?.parts.includes('provider') === true);
+const selectedLabel = computed(() => partTitle(activePart.value));
+const selectedDescription = computed(() => description(activePart.value, isKorean.value));
+const attributes = computed(() => activePart.value === 'provider'
+  ? []
+  : [
+      ['data-scope', definition.value?.scope ?? props.component],
+      ['data-part', activePart.value],
+    ] as const);
+
+function partTitle(part: string): string {
+  return part.split('-').map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`).join(' ');
+}
+
+function description(part: string, korean: boolean): string {
+  if (part === 'root') return korean ? '컴포넌트 전체가 차지하는 경계와 상호작용 범위입니다.' : 'The boundary and interaction area of the entire component.';
+  if (part === 'provider') return korean ? 'DOM 요소 없이 상태와 동작을 하위 요소에 제공합니다.' : 'Provides state and behavior without rendering a DOM element.';
+  return korean
+    ? '강조된 화면 영역이 이 공개 파트에 해당합니다. 아래 속성을 선택자로 사용해 스타일을 적용할 수 있습니다.'
+    : 'The highlighted region belongs to this public part. Use the attributes below as stable styling selectors.';
+}
+
+function updatePreviewValue(part: string, value: string): void {
+  previewValues[part] = value;
+}
+</script>
+
+<template>
+  <section v-if="definition" class="component-anatomy" :aria-label="isKorean ? `${component} 구성 살펴보기` : `Explore ${component} anatomy`">
+    <header class="component-anatomy__intro">
+      <p>
+        {{ isKorean
+          ? '영역에 마우스를 올리거나 직접 조작하면 해당 파트의 경계와 스타일 속성을 확인할 수 있습니다.'
+          : 'Hover or interact with a region to inspect its boundary and styling attributes.' }}
+      </p>
+      <button
+        v-if="hasProvider"
+        type="button"
+        class="component-anatomy__provider"
+        :aria-pressed="selectedPart === 'provider'"
+        @click="selectedPart = 'provider'"
+      >
+        <strong>Provider</strong>
+        <span>{{ isKorean ? '화면에 표시되지 않는 상태 소유자' : 'Non-visual state owner' }}</span>
+      </button>
+    </header>
+
+    <div class="component-anatomy__stage">
+      <AnatomyPreviewNode
+        :node="definition.preview"
+        :selected-part="selectedPart"
+        :active-part="activePart"
+        :preview-values="previewValues"
+        @select="selectedPart = $event"
+        @hover="hoveredPart = $event"
+        @update-value="updatePreviewValue"
+      />
+    </div>
+
+    <aside class="component-anatomy__inspector" aria-live="polite">
+      <div>
+        <span>{{ isKorean ? '선택한 영역' : 'Selected area' }}</span>
+        <strong>{{ selectedLabel }}</strong>
+        <p>{{ selectedDescription }}</p>
+      </div>
+      <dl v-if="attributes.length > 0">
+        <template v-for="([name, value]) in attributes" :key="name">
+          <dt>{{ name }}</dt>
+          <dd>{{ value }}</dd>
+        </template>
+      </dl>
+      <p v-else class="component-anatomy__non-visual">
+        {{ isKorean ? '이 파트는 DOM 영역을 만들지 않습니다.' : 'This part does not create a DOM area.' }}
+      </p>
+    </aside>
+  </section>
+</template>
+
+<style>
+.component-anatomy {
+  margin: 24px 0 32px;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  background: var(--vp-c-bg);
+}
+
+.component-anatomy__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+.component-anatomy__intro p,
+.component-anatomy__inspector p { margin: 0; }
+.component-anatomy__intro p { color: var(--vp-c-text-2); font-size: 13px; line-height: 1.55; }
+.component-anatomy button { font: inherit; }
+
+.component-anatomy__provider {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 9px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+}
+
+.component-anatomy__provider span { font-size: 12px; }
+.component-anatomy__provider[aria-pressed='true'] { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); box-shadow: 0 0 0 3px var(--vp-c-brand-soft); }
+
+.component-anatomy__stage {
+  --anatomy-control-height: 44px;
+
+  display: grid;
+  min-height: 420px;
+  padding: 56px 48px;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--vp-c-brand-soft) 35%, transparent), transparent 38%),
+    var(--vp-c-bg-soft);
+}
+
+.component-anatomy__stage .anatomy-node {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  color: var(--vp-c-text-1);
+}
+
+.component-anatomy__stage .anatomy-node--selectable { cursor: default; }
+.component-anatomy__stage .anatomy-node--selected-part { z-index: 4; outline: 3px solid var(--vp-c-brand-1); outline-offset: 4px; box-shadow: 0 0 0 8px var(--vp-c-brand-soft); }
+
+.component-anatomy__stage .anatomy-node__part-label {
+  position: absolute;
+  z-index: 12;
+  top: -13px;
+  left: 12px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--vp-c-brand-1);
+  color: white;
+  font: 600 10px/1.45 var(--vp-font-family-mono);
+  white-space: nowrap;
+}
+
+.component-anatomy__stage .anatomy-node__icon { display: inline-grid; flex: none; place-items: center; }
+.component-anatomy__stage .anatomy-node__detail { color: var(--vp-c-text-3); font-size: 11px; }
+.component-anatomy__stage .anatomy-node__button,
+.component-anatomy__stage .anatomy-node__input,
+.component-anatomy__stage .anatomy-node__select {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.component-anatomy__stage .anatomy-node__button {
+  display: inline-flex;
+  width: 100%;
+  min-height: inherit;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.component-anatomy__stage .anatomy-node__input { width: 100%; padding: 0; }
+.component-anatomy__stage .anatomy-node__input:focus-visible,
+.component-anatomy__stage .anatomy-node__range-input:focus-visible,
+.component-anatomy__stage .anatomy-node__select:focus-visible,
+.component-anatomy__stage .anatomy-node__button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 4px; }
+
+.component-anatomy__stage .anatomy-node__range-input {
+  position: absolute;
+  inset: -8px 0;
+  width: 100%;
+  height: 24px;
+  appearance: none;
+  margin: 0;
+  background: transparent;
+  cursor: ew-resize;
+}
+.component-anatomy__stage .anatomy-node__range-input::-webkit-slider-runnable-track { height: 8px; background: transparent; }
+.component-anatomy__stage .anatomy-node__range-input::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  appearance: none;
+  margin-top: -6px;
+  border: 3px solid var(--vp-c-brand-1);
+  border-radius: 50%;
+  background: var(--vp-c-bg);
+}
+.component-anatomy__stage .anatomy-node__range-input::-moz-range-track { height: 8px; background: transparent; }
+.component-anatomy__stage .anatomy-node__range-input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--vp-c-brand-1);
+  border-radius: 50%;
+  background: var(--vp-c-bg);
+}
+
+.component-anatomy__stage .anatomy-node--root {
+  width: min(100%, 680px);
+  padding: 22px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  background: var(--vp-c-bg);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--vp-c-text-1) 9%, transparent);
+}
+
+.component-anatomy__stage .anatomy-node--row { display: flex; align-items: center; gap: 10px; }
+.component-anatomy__stage .anatomy-node--stack { display: grid; gap: 3px; }
+.component-anatomy__stage .anatomy-node--form-stack { display: grid; gap: 12px; width: min(100%, 520px); }
+.component-anatomy__stage .anatomy-node--field-preview { width: min(100%, 520px); }
+.component-anatomy__stage .anatomy-node--field-row,
+.component-anatomy__stage .anatomy-node--picker-inputs { align-items: end; }
+.component-anatomy__stage .anatomy-node--picker-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.component-anatomy__stage .anatomy-node--label { font-size: 13px; font-weight: 650; }
+.component-anatomy__stage .anatomy-node--text { font-weight: 650; }
+.component-anatomy__stage .anatomy-node--muted { color: var(--vp-c-text-2); font-size: 12px; }
+
+.component-anatomy__stage .anatomy-node--button,
+.component-anatomy__stage .anatomy-node--icon-button {
+  display: inline-flex;
+  min-height: var(--anatomy-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 9px;
+  background: var(--vp-c-bg);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.component-anatomy__stage .anatomy-node--icon-button { width: var(--anatomy-control-height); padding: 0; font-size: 20px; }
+.component-anatomy__stage .anatomy-node--icon-button > .anatomy-node__detail { display: none; }
+.component-anatomy__stage .anatomy-node--danger { border-color: #dc5f62; background: #dc5f62; color: white; }
+.component-anatomy__stage .anatomy-node--input {
+  display: grid;
+  flex: 1;
+  min-height: var(--anatomy-control-height);
+  align-content: center;
+  gap: 1px;
+  padding: 7px 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg);
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+}
+
+.component-anatomy__stage .anatomy-node--input .anatomy-node__detail { order: -1; font-family: var(--vp-font-family-base); font-size: 9px; text-transform: uppercase; }
+.component-anatomy__stage .anatomy-node--native-select {
+  position: relative;
+  min-width: 90px;
+  padding: 0;
+}
+.component-anatomy__stage .anatomy-node__select-shell { position: relative; width: 100%; }
+.component-anatomy__stage .anatomy-node__select {
+  width: 100%;
+  min-height: var(--anatomy-control-height);
+  appearance: none;
+  padding: 0 38px 0 13px;
+  cursor: pointer;
+}
+.component-anatomy__stage .anatomy-node__select-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--vp-c-text-2);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.component-anatomy__stage .anatomy-node--textarea { display: grid; min-height: 92px; gap: 10px; padding: 14px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+
+.component-anatomy__stage .anatomy-node--choice { display: flex; width: min(100%, 520px); align-items: center; gap: 14px; box-shadow: none; }
+.component-anatomy__stage .anatomy-node--choice > .anatomy-node--indicator { width: 28px; height: 28px; border-radius: 7px; background: var(--vp-c-brand-1); color: white; }
+
+.component-anatomy__stage .anatomy-node--panel,
+.component-anatomy__stage .anatomy-node--list,
+.component-anatomy__stage .anatomy-node--viewport { border: 1px solid var(--vp-c-divider); border-radius: 11px; background: var(--vp-c-bg); }
+.component-anatomy__stage .anatomy-node--panel { padding: 14px; }
+.component-anatomy__stage .anatomy-node--list { display: grid; overflow: hidden; }
+.component-anatomy__stage .anatomy-node--item { display: flex; min-height: 46px; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--vp-c-divider); }
+.component-anatomy__stage .anatomy-node--item:last-child { border-bottom: 0; }
+.component-anatomy__stage .anatomy-node--item > .anatomy-node--indicator { margin-left: auto; }
+.component-anatomy__stage .anatomy-node--separator { height: 1px; margin: 5px 0; background: var(--vp-c-divider); }
+
+.component-anatomy__stage .anatomy-node--picker-root { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.component-anatomy__stage .anatomy-node--picker-root > .anatomy-node--calendar { grid-column: 1 / -1; }
+.component-anatomy__stage .anatomy-node--calendar { width: min(100%, 520px); padding: 16px; border: 1px solid var(--vp-c-divider); border-radius: 14px; background: var(--vp-c-bg); }
+.component-anatomy__stage .anatomy-node--view-switch { justify-content: center; margin-bottom: 10px; }
+.component-anatomy__stage .anatomy-node--view-switch .anatomy-node--button { min-height: 30px; padding: 0 10px; border-radius: 7px; font-size: 11px; }
+.component-anatomy__stage .anatomy-node--calendar-header { justify-content: space-between; margin-bottom: 8px; }
+.component-anatomy__stage .anatomy-node--calendar-title { flex: 1; text-align: center; }
+.component-anatomy__stage .anatomy-node--week-controls { justify-content: center; margin-bottom: 10px; }
+.component-anatomy__stage .anatomy-node--week-controls .anatomy-node--icon-button { width: 30px; min-height: 28px; font-size: 14px; }
+.component-anatomy__stage .anatomy-node--calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.component-anatomy__stage .anatomy-node--weekday { padding: 5px 0; color: var(--vp-c-text-3); font-size: 9px; font-weight: 700; text-align: center; }
+.component-anatomy__stage .anatomy-node--cell { display: grid; min-height: 36px; place-items: center; border-radius: 8px; font-size: 12px; }
+.component-anatomy__stage .anatomy-node--cell:hover { background: var(--vp-c-bg-soft); }
+.component-anatomy__stage .anatomy-node--selected { background: var(--vp-c-brand-1); color: white; }
+.component-anatomy__stage .anatomy-node--outside { color: var(--vp-c-text-3); }
+.component-anatomy__stage .anatomy-node--month-row { justify-content: center; margin-top: 10px; }
+.component-anatomy__stage .anatomy-node--month-cell { min-width: 72px; border: 1px solid var(--vp-c-divider); }
+
+.component-anatomy__stage .anatomy-node--slider-root { display: grid; gap: 30px; }
+.component-anatomy__stage .anatomy-node--split-label { justify-content: space-between; }
+.component-anatomy__stage .anatomy-node--track { position: relative; height: 8px; border-radius: 999px; background: var(--vp-c-bg-alt); }
+.component-anatomy__stage .anatomy-node--range { position: absolute; inset: 0 58% 0 0; border-radius: inherit; background: var(--vp-c-brand-1); }
+.component-anatomy__stage .anatomy-node--thumb { position: absolute; top: 50%; left: 40%; display: grid; width: 24px; height: 24px; place-items: center; border: 3px solid var(--vp-c-brand-1); border-radius: 50%; background: var(--vp-c-bg); font-size: 8px; transform: translate(-50%, -50%); }
+.component-anatomy__stage .anatomy-node--second-thumb { left: 72%; }
+
+.component-anatomy__stage .anatomy-node--dialog-root,
+.component-anatomy__stage .anatomy-node--popover-root,
+.component-anatomy__stage .anatomy-node--tooltip-root { min-height: 300px; }
+.component-anatomy__stage .anatomy-node--overlay { position: absolute; inset: 72px 22px 22px; display: grid; padding: 24px; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--vp-c-text-1) 18%, transparent); }
+.component-anatomy__stage .anatomy-node--dialog-panel { display: grid; width: min(100%, 360px); gap: 13px; box-shadow: 0 20px 50px color-mix(in srgb, var(--vp-c-text-1) 18%, transparent); }
+.component-anatomy__stage .anatomy-node--dialog-actions { justify-content: flex-end; }
+.component-anatomy__stage .anatomy-node--floating-panel,
+.component-anatomy__stage .anatomy-node--tooltip-panel { position: absolute; top: 84px; left: 50%; display: grid; width: min(80%, 330px); gap: 10px; transform: translateX(-50%); box-shadow: 0 18px 42px color-mix(in srgb, var(--vp-c-text-1) 15%, transparent); }
+.component-anatomy__stage .anatomy-node--floating-panel > .anatomy-node--icon-button { position: absolute; top: 10px; right: 10px; width: 28px; min-height: 28px; }
+.component-anatomy__stage .anatomy-node--popover-root > [data-part-name='anchor'] {
+  width: 92px;
+  height: 8px;
+  margin: 3px 0 0 12px;
+  border-radius: 999px;
+  background: var(--vp-c-brand-soft);
+}
+.component-anatomy__stage .anatomy-node--tooltip-panel { width: auto; padding: 9px 12px; font-size: 12px; }
+.component-anatomy__stage .anatomy-node--arrow { position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; border: 1px solid var(--vp-c-divider); border-right: 0; border-bottom: 0; background: var(--vp-c-bg); transform: rotate(45deg); }
+
+.component-anatomy__stage .anatomy-node--listbox-root,
+.component-anatomy__stage .anatomy-node--select-root,
+.component-anatomy__stage .anatomy-node--combobox-root,
+.component-anatomy__stage .anatomy-node--cascade-root { display: grid; width: min(100%, 520px); gap: 10px; }
+.component-anatomy__stage .anatomy-node--cascade-root > .anatomy-node--list { display: grid; grid-template-columns: repeat(2, 1fr); }
+
+.component-anatomy__stage .anatomy-node--menu-root,
+.component-anatomy__stage .anatomy-node--menu-button-root,
+.component-anatomy__stage .anatomy-node--navigation-root { min-height: 300px; }
+.component-anatomy__stage .anatomy-node--menu-panel { position: relative; width: 240px; }
+.component-anatomy__stage .anatomy-node--submenu { position: absolute; top: 90px; left: calc(100% - 8px); width: 170px; }
+.component-anatomy__stage .anatomy-node--menubar { padding: 5px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list { display: flex; overflow: visible; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--viewport { margin-top: 14px; padding: 18px; }
+
+.component-anatomy__stage .anatomy-node--data-grid { overflow: hidden; padding: 0; }
+.component-anatomy__stage .anatomy-node--grid-header,
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell { min-height: 48px; justify-items: start; padding: 0 14px; border-right: 1px solid var(--vp-c-divider); border-bottom: 1px solid var(--vp-c-divider); border-radius: 0; }
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell > .anatomy-node--indicator { position: absolute; left: 4px; }
+.component-anatomy__stage .anatomy-node--tree-root { display: grid; width: min(100%, 470px); }
+.component-anatomy__stage .anatomy-node--feed-root { display: grid; width: min(100%, 560px); gap: 12px; }
+
+.component-anatomy__stage .anatomy-node--rating-root,
+.component-anatomy__stage .anatomy-node--radio-root { display: grid; width: min(100%, 520px); gap: 14px; }
+.component-anatomy__stage .anatomy-node--rating-row { justify-content: center; }
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--item { min-height: auto; padding: 5px; border: 0; font-size: 29px; }
+.component-anatomy__stage .anatomy-node--active-star { color: #b58a2d; }
+.component-anatomy__stage .anatomy-node--inactive-star { color: var(--vp-c-divider); }
+.component-anatomy__stage .anatomy-node--radio-root .anatomy-node--indicator { order: -1; width: 18px; height: 18px; border: 2px solid var(--vp-c-divider); border-radius: 50%; }
+.component-anatomy__stage .anatomy-node--radio-root .anatomy-node--selected { border: 5px solid var(--vp-c-brand-1); background: var(--vp-c-bg); }
+.component-anatomy__stage .anatomy-node--switch-root { display: flex; width: min(100%, 500px); align-items: center; gap: 16px; }
+.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb { position: relative; top: auto; left: auto; width: 48px; height: 28px; border: 0; border-radius: 999px; background: var(--vp-c-brand-1); transform: none; }
+.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb::after { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: white; content: ''; }
+.component-anatomy__stage .anatomy-node--toggle-group,
+.component-anatomy__stage .anatomy-node--pagination-root,
+.component-anatomy__stage .anatomy-node--toolbar-root { display: flex; width: auto; gap: 6px; }
+.component-anatomy__stage .anatomy-node--toggle-group .anatomy-node--item,
+.component-anatomy__stage .anatomy-node--pagination-root .anatomy-node--item { min-width: 40px; justify-content: center; border: 1px solid var(--vp-c-divider); border-radius: 9px; }
+.component-anatomy__stage .anatomy-node--pressed,
+.component-anatomy__stage .anatomy-node--current { background: var(--vp-c-brand-1); color: white; }
+
+.component-anatomy__stage .anatomy-node--tags-root,
+.component-anatomy__stage .anatomy-node--pin-root { display: flex; width: min(100%, 600px); align-items: center; gap: 8px; }
+.component-anatomy__stage .anatomy-node--tags-root > .anatomy-node--item { border: 1px solid var(--vp-c-divider); border-radius: 999px; background: var(--vp-c-bg-soft); }
+.component-anatomy__stage .anatomy-node--pin-cell { flex: none; width: 54px; justify-items: center; font-size: 18px; }
+
+.component-anatomy__stage .anatomy-node--number-stepper { align-items: stretch; }
+.component-anatomy__stage .anatomy-node--number-stepper .anatomy-node--input { max-width: 160px; text-align: center; }
+.component-anatomy__stage .anatomy-node--color-root { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.component-anatomy__stage .anatomy-node--color-root > [data-part-name='label'],
+.component-anatomy__stage .anatomy-node--color-root > [data-part-name='control'],
+.component-anatomy__stage .anatomy-node--color-area,
+.component-anatomy__stage .anatomy-node--hue-track,
+.component-anatomy__stage .anatomy-node--alpha-track,
+.component-anatomy__stage .anatomy-node--color-channels,
+.component-anatomy__stage .anatomy-node--color-root > .anatomy-node--split-label { grid-column: 1 / -1; }
+.component-anatomy__stage .anatomy-node--color-root > [data-part-name='control'] { display: flex; align-items: center; gap: 10px; padding: 8px; }
+.component-anatomy__stage .anatomy-node--swatch { width: 42px; height: 42px; border: 1px solid var(--vp-c-divider); border-radius: 10px; background: #5e6ff2; }
+.component-anatomy__stage .anatomy-node--accent-swatch { position: relative; flex: none; }
+.component-anatomy__stage .anatomy-node--native-color-input {
+  position: absolute;
+  inset: 3px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  opacity: 0;
+  cursor: pointer;
+}
+.component-anatomy__stage .anatomy-node--native-color-input > .anatomy-node__input {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+.component-anatomy__stage .anatomy-node--color-area { min-height: 150px; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, #5e6ff2); }
+.component-anatomy__stage .anatomy-node--color-area { cursor: crosshair; }
+.component-anatomy__stage .anatomy-node--color-area > .anatomy-node--thumb { top: var(--anatomy-area-y, 36%); left: var(--anatomy-area-x, 68%); pointer-events: none; }
+.component-anatomy__stage .anatomy-node--hue-track { background: linear-gradient(90deg, red, #ff0, #0f0, #0ff, #00f, #f0f, red); }
+.component-anatomy__stage .anatomy-node--alpha-track { background: linear-gradient(90deg, transparent, #5e6ff2), repeating-conic-gradient(#ddd 0 25%, white 0 50%) 0 / 12px 12px; }
+.component-anatomy__stage .anatomy-node--color-channels { display: grid; grid-template-columns: 1fr 1fr; }
+.component-anatomy__stage .anatomy-node--coordinate-track { grid-column: 1 / -1; width: 100%; }
+
+.component-anatomy__stage .anatomy-node--carousel-root { display: grid; gap: 14px; }
+.component-anatomy__stage .anatomy-node--carousel-root > .anatomy-node--viewport { overflow: hidden; padding: 14px; }
+.component-anatomy__stage .anatomy-node--carousel-root .anatomy-node--track { display: flex; height: auto; gap: 12px; background: transparent; }
+.component-anatomy__stage .anatomy-node--slide { display: grid; flex: 0 0 72%; min-height: 150px; align-content: end; gap: 5px; padding: 22px; border-radius: 13px; background: var(--vp-c-brand-soft); font-size: 22px; font-weight: 700; }
+.component-anatomy__stage .anatomy-node--carousel-actions { justify-content: center; }
+.component-anatomy__stage .anatomy-node--carousel-dots { justify-content: center; }
+.component-anatomy__stage .anatomy-node--carousel-dots .anatomy-node--indicator { width: 9px; height: 9px; overflow: hidden; border-radius: 50%; background: var(--vp-c-divider); color: transparent; }
+.component-anatomy__stage .anatomy-node--carousel-dots .anatomy-node--selected { background: var(--vp-c-brand-1); }
+
+.component-anatomy__stage .anatomy-node--tabs-root,
+.component-anatomy__stage .anatomy-node--stepper-root { display: grid; gap: 16px; }
+.component-anatomy__stage .anatomy-node--tab-list { display: flex; border-bottom: 1px solid var(--vp-c-divider); }
+.component-anatomy__stage .anatomy-node--tab-list .anatomy-node--button { border: 0; border-radius: 0; }
+.component-anatomy__stage .anatomy-node--tab-list > .anatomy-node--indicator { position: absolute; bottom: -1px; left: 12px; width: 88px; height: 3px; background: var(--vp-c-brand-1); }
+.component-anatomy__stage .anatomy-node--stepper-root > .anatomy-node--list { display: flex; }
+
+.component-anatomy__stage .anatomy-node--accordion-root,
+.component-anatomy__stage .anatomy-node--disclosure-root { display: grid; width: min(100%, 580px); padding: 0; }
+.component-anatomy__stage .anatomy-node--accordion-root > .anatomy-node--item { display: grid; padding: 0; }
+.component-anatomy__stage .anatomy-node--accordion-root .anatomy-node--button,
+.component-anatomy__stage .anatomy-node--disclosure-root > .anatomy-node--button { width: 100%; justify-content: space-between; border: 0; }
+.component-anatomy__stage .anatomy-node--accordion-root .anatomy-node--panel,
+.component-anatomy__stage .anatomy-node--disclosure-root .anatomy-node--panel { border-width: 1px 0 0; border-radius: 0; }
+
+.component-anatomy__stage .anatomy-node--toolbar-root { padding: 8px; }
+.component-anatomy__stage .anatomy-node--timer-root { display: grid; width: min(100%, 500px); justify-items: center; gap: 20px; }
+.component-anatomy__stage .anatomy-node--timer-root > .anatomy-node--panel { display: flex; align-items: center; gap: 6px; font: 700 34px/1 var(--vp-font-family-mono); }
+.component-anatomy__stage .anatomy-node--timer-root .anatomy-node--toolbar { display: flex; gap: 8px; }
+.component-anatomy__stage .anatomy-node--toast-viewport { display: grid; width: min(100%, 560px); min-height: 260px; align-items: end; justify-items: end; padding: 20px; }
+.component-anatomy__stage .anatomy-node--toast-card { display: grid; width: 330px; gap: 5px; }
+.component-anatomy__stage .anatomy-node--toast-card > .anatomy-node--icon-button { position: absolute; top: 10px; right: 10px; }
+.component-anatomy__stage .anatomy-node--splitter-root { display: grid; grid-template-columns: minmax(0, 35%) 12px 1fr; min-height: 240px; padding: 0; overflow: hidden; }
+.component-anatomy__stage .anatomy-node--pane { display: grid; place-items: center; }
+.component-anatomy__stage .anatomy-node--handle { display: grid; place-items: center; background: var(--vp-c-brand-1); color: white; }
+
+.component-anatomy__inspector {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
+  gap: 22px;
+  align-items: start;
+  padding: 18px;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.component-anatomy__inspector > div { display: grid; gap: 5px; }
+.component-anatomy__inspector > div > span { color: var(--vp-c-text-3); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.component-anatomy__inspector > div > strong { font-size: 16px; }
+.component-anatomy__inspector p { color: var(--vp-c-text-2); font-size: 13px; line-height: 1.55; }
+.component-anatomy__inspector dl { display: grid; grid-template-columns: auto auto; margin: 0; overflow: hidden; border: 1px solid var(--vp-c-divider); border-radius: 9px; font-family: var(--vp-font-family-mono); font-size: 12px; }
+.component-anatomy__inspector dt,
+.component-anatomy__inspector dd { margin: 0; padding: 7px 10px; }
+.component-anatomy__inspector dt { border-right: 1px solid var(--vp-c-divider); background: var(--vp-c-bg-soft); color: var(--vp-c-text-2); }
+.component-anatomy__inspector dd { color: var(--vp-c-brand-1); }
+.component-anatomy__non-visual { align-self: center; }
+
+@media (max-width: 720px) {
+  .component-anatomy__intro { align-items: flex-start; flex-direction: column; }
+  .component-anatomy__stage { min-height: 360px; padding: 44px 20px; }
+  .component-anatomy__stage .anatomy-node--picker-inputs { grid-template-columns: 1fr; }
+  .component-anatomy__stage .anatomy-node--calendar { padding: 10px; }
+  .component-anatomy__stage .anatomy-node--week-controls,
+  .component-anatomy__stage .anatomy-node--month-row { display: none; }
+  .component-anatomy__stage .anatomy-node--submenu { position: static; width: auto; }
+  .component-anatomy__stage .anatomy-node--color-root { grid-template-columns: 1fr; }
+  .component-anatomy__inspector { grid-template-columns: 1fr; }
+}
+</style>

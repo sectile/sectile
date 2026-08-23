@@ -5,9 +5,9 @@ Date Range Picker combines timezone-free civil values with calendar navigation a
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Date Range Picker demonstrates booking as a separate, interactive configuration.
 
-<PackageImport component="date-range-picker" />
+<ComponentExample component="date-range-picker" scenario="booking" title="Date Range Picker" description="Date Range Picker demonstrates booking as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Booking
-
-Use this case to inspect booking independently from the component's other behavior.
 
 ### Bounded
 
-Use this case to inspect bounded independently from the component's other behavior.
+Constrain accepted values to the displayed minimum and maximum.
+
+<ComponentExample component="date-range-picker" scenario="bounded" title="Bounded" description="Constrain accepted values to the displayed minimum and maximum." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Date Range Picker.
+
+<ComponentExample component="date-range-picker" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Date Range Picker." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="date-range-picker" />
 
 ## State ownership
 

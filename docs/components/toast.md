@@ -5,9 +5,9 @@ Toast coordinates queued feedback, announcements, timing, and dismissal.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Toast demonstrates automatic as a separate, interactive configuration.
 
-<PackageImport component="toast" />
+<ComponentExample component="toast" scenario="automatic" title="Toast" description="Toast demonstrates automatic as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Automatic
-
-Use this case to inspect automatic independently from the component's other behavior.
 
 ### Persistent
 
-Use this case to inspect persistent independently from the component's other behavior.
+Keep feedback visible until the user dismisses it.
+
+<ComponentExample component="toast" scenario="persistent" title="Persistent" description="Keep feedback visible until the user dismisses it." :index="1" />
 
 ### Limited
 
-Use this case to inspect limited independently from the component's other behavior.
+Bound the visible queue while preserving the order of pending feedback.
+
+<ComponentExample component="toast" scenario="limited" title="Limited" description="Bound the visible queue while preserving the order of pending feedback." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="toast" />
 
 ## State ownership
 

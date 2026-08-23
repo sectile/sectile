@@ -5,9 +5,9 @@ Tags Input separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Tags Input demonstrates skills as a separate, interactive configuration.
 
-<PackageImport component="tags-input" />
+<ComponentExample component="tags-input" scenario="skills" title="Tags Input" description="Tags Input demonstrates skills as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Skills
-
-Use this case to inspect skills independently from the component's other behavior.
 
 ### Limited
 
-Use this case to inspect limited independently from the component's other behavior.
+Bound the visible queue while preserving the order of pending feedback.
+
+<ComponentExample component="tags-input" scenario="limited" title="Limited" description="Bound the visible queue while preserving the order of pending feedback." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Tags Input.
+
+<ComponentExample component="tags-input" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Tags Input." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="tags-input" />
 
 ## State ownership
 

@@ -5,9 +5,9 @@ Stepper composes ordered navigation, eligibility, and selection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Stepper demonstrates checkout as a separate, interactive configuration.
 
-<PackageImport component="stepper" />
+<ComponentExample component="stepper" scenario="checkout" title="Stepper" description="Stepper demonstrates checkout as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -18,19 +18,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Checkout
-
-Use this case to inspect checkout independently from the component's other behavior.
 
 ### Gated step
 
-Use this case to inspect gated step independently from the component's other behavior.
+Stepper demonstrates gated step as a separate, interactive configuration.
+
+<ComponentExample component="stepper" scenario="gated-step" title="Gated step" description="Stepper demonstrates gated step as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Stepper.
+
+<ComponentExample component="stepper" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Stepper." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="stepper" />
 
 ## State ownership
 

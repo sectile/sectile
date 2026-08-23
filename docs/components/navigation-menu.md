@@ -5,9 +5,9 @@ Navigation Menu preserves native navigation while coordinating compound panels a
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Navigation Menu demonstrates product as a separate, interactive configuration.
 
-<PackageImport component="navigation-menu" />
+<ComponentExample component="navigation-menu" scenario="product" title="Navigation Menu" description="Navigation Menu demonstrates product as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -21,19 +21,37 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+## Terminal keyboard interaction
+
+The root navigation stays horizontal. An opened panel becomes a vertical hierarchy.
+
+| Context | Key | Behavior |
+| --- | --- | --- |
+| Root | <kbd>←</kbd> / <kbd>→</kbd> | Move between root links and triggers. |
+| Root | <kbd>↑</kbd> / <kbd>↓</kbd> | Open the current branch. |
+| Panel | <kbd>↑</kbd> / <kbd>↓</kbd> | Move among items in the panel. |
+| Panel | <kbd>←</kbd> / <kbd>Esc</kbd> | Return to the owning root item. |
+| Any level | <kbd>Enter</kbd> / <kbd>Space</kbd> | Open a branch or run the current item. |
+
 ## Example cases
-
-### Product
-
-Use this case to inspect product independently from the component's other behavior.
 
 ### Links
 
-Use this case to inspect links independently from the component's other behavior.
+Navigation Menu demonstrates links as a separate, interactive configuration.
+
+<ComponentExample component="navigation-menu" scenario="links" title="Links" description="Navigation Menu demonstrates links as a separate, interactive configuration." :index="1" />
 
 ### Disabled
 
-Use this case to inspect disabled independently from the component's other behavior.
+Navigation Menu is removed from keyboard and pointer interaction.
+
+<ComponentExample component="navigation-menu" scenario="disabled" title="Disabled" description="Navigation Menu is removed from keyboard and pointer interaction." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="navigation-menu" />
 
 ## State ownership
 

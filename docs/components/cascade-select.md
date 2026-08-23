@@ -5,9 +5,9 @@ Cascade Select projects hierarchical choices into progressive selection columns.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Cascade Select demonstrates location as a separate, interactive configuration.
 
-<PackageImport component="cascade-select" />
+<ComponentExample component="cascade-select" scenario="location" title="Cascade Select" description="Cascade Select demonstrates location as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Location
-
-Use this case to inspect location independently from the component's other behavior.
 
 ### Disabled
 
-Use this case to inspect disabled independently from the component's other behavior.
+Cascade Select is removed from keyboard and pointer interaction.
+
+<ComponentExample component="cascade-select" scenario="disabled" title="Disabled" description="Cascade Select is removed from keyboard and pointer interaction." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Cascade Select.
+
+<ComponentExample component="cascade-select" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Cascade Select." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="cascade-select" />
 
 ## State ownership
 

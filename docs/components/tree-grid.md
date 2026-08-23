@@ -5,9 +5,9 @@ Tree Grid composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Tree Grid demonstrates expanded as a separate, interactive configuration.
 
-<PackageImport component="tree-grid" />
+<ComponentExample component="tree-grid" scenario="expanded" title="Tree Grid" description="Tree Grid demonstrates expanded as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -21,23 +21,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Expanded
-
-Use this case to inspect expanded independently from the component's other behavior.
 
 ### Collapsed
 
-Use this case to inspect collapsed independently from the component's other behavior.
+Tree Grid demonstrates collapsed as a separate, interactive configuration.
+
+<ComponentExample component="tree-grid" scenario="collapsed" title="Collapsed" description="Tree Grid demonstrates collapsed as a separate, interactive configuration." :index="1" />
 
 ### Unavailable cells
 
-Use this case to inspect unavailable cells independently from the component's other behavior.
+Tree Grid demonstrates unavailable cells as a separate, interactive configuration.
+
+<ComponentExample component="tree-grid" scenario="unavailable-cells" title="Unavailable cells" description="Tree Grid demonstrates unavailable cells as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Tree Grid.
+
+<ComponentExample component="tree-grid" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Tree Grid." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="tree-grid" />
 
 ## State ownership
 

@@ -5,9 +5,9 @@ Number Field separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Enter 0.1 as decimal text and keep that exact value without binary floating-point coercion.
 
-<PackageImport component="number-field" />
+<ComponentExample component="number-field" scenario="exact-decimal" title="Number Field" description="Enter 0.1 as decimal text and keep that exact value without binary floating-point coercion." :index="0" />
 
 ## Features
 
@@ -23,27 +23,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Exact decimal
-
-Use this case to inspect exact decimal independently from the component's other behavior.
 
 ### Calculator
 
-Use this case to inspect calculator independently from the component's other behavior.
+Enter 50-20% and commit the calculator result as 40.
+
+<ComponentExample component="number-field" scenario="calculator" title="Calculator" description="Enter 50-20% and commit the calculator result as 40." :index="1" />
 
 ### Exponent
 
-Use this case to inspect exponent independently from the component's other behavior.
+Enter 2^3^2 and evaluate exponentiation from right to left.
+
+<ComponentExample component="number-field" scenario="exponent" title="Exponent" description="Enter 2^3^2 and evaluate exponentiation from right to left." :index="2" />
 
 ### Bounded
 
-Use this case to inspect bounded independently from the component's other behavior.
+Constrain accepted values to the displayed minimum and maximum.
+
+<ComponentExample component="number-field" scenario="bounded" title="Bounded" description="Constrain accepted values to the displayed minimum and maximum." :index="3" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Number Field.
+
+<ComponentExample component="number-field" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Number Field." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="number-field" />
 
 ## State ownership
 

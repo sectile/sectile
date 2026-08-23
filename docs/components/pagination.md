@@ -5,9 +5,9 @@ Pagination projects a large logical range into a compact navigation window.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Use a reduced control set when the available width is limited.
 
-<PackageImport component="pagination" />
+<ComponentExample component="pagination" scenario="compact" title="Pagination" description="Use a reduced control set when the available width is limited." :index="0" />
 
 ## Features
 
@@ -21,27 +21,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Compact
-
-Use this case to inspect compact independently from the component's other behavior.
 
 ### Long range
 
-Use this case to inspect long range independently from the component's other behavior.
+Navigate a large result set without rendering every page number.
+
+<ComponentExample component="pagination" scenario="long-range" title="Long range" description="Navigate a large result set without rendering every page number." :index="1" />
 
 ### Page size
 
-Use this case to inspect page size independently from the component's other behavior.
+Change the number of items per page and return safely to the first valid page.
+
+<ComponentExample component="pagination" scenario="page-size" title="Page size" description="Change the number of items per page and return safely to the first valid page." :index="2" />
 
 ### Pages only
 
-Use this case to inspect pages only independently from the component's other behavior.
+Render direct page choices without first and last controls.
+
+<ComponentExample component="pagination" scenario="pages-only" title="Pages only" description="Render direct page choices without first and last controls." :index="3" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Pagination.
+
+<ComponentExample component="pagination" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Pagination." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="pagination" />
 
 ## State ownership
 

@@ -5,9 +5,9 @@ Date Range Field separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Use the smallest practical Date Range Field composition and let it own its initial state.
 
-<PackageImport component="date-range-field" />
+<ComponentExample component="date-range-field" scenario="basic" title="Date Range Field" description="Use the smallest practical Date Range Field composition and let it own its initial state." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Basic
-
-Use this case to inspect basic independently from the component's other behavior.
 
 ### Bounded
 
-Use this case to inspect bounded independently from the component's other behavior.
+Constrain accepted values to the displayed minimum and maximum.
+
+<ComponentExample component="date-range-field" scenario="bounded" title="Bounded" description="Constrain accepted values to the displayed minimum and maximum." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Date Range Field.
+
+<ComponentExample component="date-range-field" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Date Range Field." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="date-range-field" />
 
 ## State ownership
 

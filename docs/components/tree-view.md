@@ -5,9 +5,9 @@ Tree View composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Tree View demonstrates expanded as a separate, interactive configuration.
 
-<PackageImport component="tree-view" />
+<ComponentExample component="tree-view" scenario="expanded" title="Tree View" description="Tree View demonstrates expanded as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,27 +19,39 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Expanded
-
-Use this case to inspect expanded independently from the component's other behavior.
 
 ### Collapsed
 
-Use this case to inspect collapsed independently from the component's other behavior.
+Tree View demonstrates collapsed as a separate, interactive configuration.
+
+<ComponentExample component="tree-view" scenario="collapsed" title="Collapsed" description="Tree View demonstrates collapsed as a separate, interactive configuration." :index="1" />
 
 ### Multiple
 
-Use this case to inspect multiple independently from the component's other behavior.
+Select several values independently without collapsing the existing selection.
+
+<ComponentExample component="tree-view" scenario="multiple" title="Multiple" description="Select several values independently without collapsing the existing selection." :index="2" />
 
 ### Unavailable
 
-Use this case to inspect unavailable independently from the component's other behavior.
+Tree View demonstrates unavailable as a separate, interactive configuration.
+
+<ComponentExample component="tree-view" scenario="unavailable" title="Unavailable" description="Tree View demonstrates unavailable as a separate, interactive configuration." :index="3" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Tree View.
+
+<ComponentExample component="tree-view" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Tree View." :index="4" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="tree-view" />
 
 ## State ownership
 

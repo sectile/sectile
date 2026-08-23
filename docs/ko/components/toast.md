@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+자동 전환 설정에서 토스트 알림의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="toast" />
+<ComponentExample component="toast" scenario="automatic" title="토스트 알림" description="자동 전환 설정에서 토스트 알림의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -20,11 +20,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 자동 전환
-- 자동으로 닫히지 않는 알림
-- 개수 제한
+
+## 추가 예시
+
+### 자동으로 닫히지 않는 알림
+
+사용자가 직접 닫을 때까지 알림을 계속 표시합니다.
+
+<ComponentExample component="toast" scenario="persistent" title="자동으로 닫히지 않는 알림" description="사용자가 직접 닫을 때까지 알림을 계속 표시합니다." :index="1" />
+### 개수 제한
+
+화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다.
+
+<ComponentExample component="toast" scenario="limited" title="개수 제한" description="화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="toast" />
 
 ## 상태 관리 방식
 

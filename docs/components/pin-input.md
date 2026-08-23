@@ -5,9 +5,9 @@ Pin Input separates editable draft state from accepted application value.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Pin Input demonstrates verification code as a separate, interactive configuration.
 
-<PackageImport component="pin-input" />
+<ComponentExample component="pin-input" scenario="verification-code" title="Pin Input" description="Pin Input demonstrates verification code as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Verification code
-
-Use this case to inspect verification code independently from the component's other behavior.
 
 ### Prefilled
 
-Use this case to inspect prefilled independently from the component's other behavior.
+Pin Input demonstrates prefilled as a separate, interactive configuration.
+
+<ComponentExample component="pin-input" scenario="prefilled" title="Prefilled" description="Pin Input demonstrates prefilled as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Pin Input.
+
+<ComponentExample component="pin-input" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Pin Input." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="pin-input" />
 
 ## State ownership
 

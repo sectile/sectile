@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+유한 목록 설정에서 피드의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="feed" />
+<ComponentExample component="feed" scenario="finite" title="피드" description="유한 목록 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -20,11 +20,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 유한 목록
-- 불러오기 다음 항목 불러오기
-- 불러오기 이전 항목 불러오기
+
+## 추가 예시
+
+### 불러오기 다음 항목 불러오기
+
+불러오기 다음 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="feed" scenario="load-after" title="불러오기 다음 항목 불러오기" description="불러오기 다음 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 불러오기 이전 항목 불러오기
+
+불러오기 이전 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="feed" scenario="load-before" title="불러오기 이전 항목 불러오기" description="불러오기 이전 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="feed" />
 
 ## 상태 관리 방식
 

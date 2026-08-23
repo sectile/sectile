@@ -5,9 +5,9 @@ Slider models quantized values and host-independent range movement.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Slider demonstrates single value as a separate, interactive configuration.
 
-<PackageImport component="slider" />
+<ComponentExample component="slider" scenario="single-value" title="Slider" description="Slider demonstrates single value as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Single value
-
-Use this case to inspect single value independently from the component's other behavior.
 
 ### Vertical value
 
-Use this case to inspect vertical value independently from the component's other behavior.
+Slider demonstrates vertical value as a separate, interactive configuration.
+
+<ComponentExample component="slider" scenario="vertical-value" title="Vertical value" description="Slider demonstrates vertical value as a separate, interactive configuration." :index="1" />
 
 ### Controlled value
 
-Use this case to inspect controlled value independently from the component's other behavior.
+Slider demonstrates controlled value as a separate, interactive configuration.
+
+<ComponentExample component="slider" scenario="controlled-value" title="Controlled value" description="Slider demonstrates controlled value as a separate, interactive configuration." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="slider" />
 
 ## State ownership
 

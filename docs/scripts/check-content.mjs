@@ -70,6 +70,15 @@ for (const localeRoot of ['', 'ko']) {
   for (const componentId of componentIds) {
     const component = await readFile(resolve(root, localeRoot, 'components', `${componentId}.md`), 'utf8');
     assert.equal(component.includes('<HostInstall />'), false, `${localeRoot || 'English'} ${componentId} must not repeat installation guidance`);
+    if (componentId !== 'checkbox') {
+      const anatomyHeading = localeRoot === 'ko' ? '## 구성' : '## Anatomy';
+      assert.equal(component.includes(anatomyHeading), true, `${localeRoot || 'English'} ${componentId} requires ${anatomyHeading}`);
+      assert.equal(
+        component.includes(`<ComponentAnatomy component="${componentId}" />`),
+        true,
+        `${localeRoot || 'English'} ${componentId} must render its anatomy explorer`,
+      );
+    }
   }
 }
 

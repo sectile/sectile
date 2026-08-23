@@ -5,9 +5,9 @@ Switch models a persistent checked or pressed state with explicit ownership.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Switch starts off so its immediate toggle behavior is clear.
 
-<PackageImport component="switch" />
+<ComponentExample component="switch" scenario="off" title="Switch" description="Switch starts off so its immediate toggle behavior is clear." :index="0" />
 
 ## Features
 
@@ -17,19 +17,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Off
-
-Use this case to inspect off independently from the component's other behavior.
 
 ### On
 
-Use this case to inspect on independently from the component's other behavior.
+Switch starts on and exposes the active state without changing its label.
+
+<ComponentExample component="switch" scenario="on" title="On" description="Switch starts on and exposes the active state without changing its label." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Switch.
+
+<ComponentExample component="switch" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Switch." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="switch" />
 
 ## State ownership
 

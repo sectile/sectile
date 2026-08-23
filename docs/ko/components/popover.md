@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+기준 요소에 연결된 설정에서 팝오버의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="popover" />
+<ComponentExample component="popover" scenario="anchored" title="팝오버" description="기준 요소에 연결된 설정에서 팝오버의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -22,13 +22,36 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 기준 요소에 연결된
-- 화면 경계 회피
-- 외부 상태 관리
-- 닫힌 상태
-- 열림 상태
+
+## 추가 예시
+
+### 화면 경계 회피
+
+화면 경계 회피 설정에서 팝오버의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="popover" scenario="collision" title="화면 경계 회피" description="화면 경계 회피 설정에서 팝오버의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 팝오버에 전달합니다.
+
+<ComponentExample component="popover" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 팝오버에 전달합니다." :index="2" />
+### 닫힌 상태
+
+팝오버는 닫힌 상태에서 시작하며 실행 요소를 눌렀을 때만 열립니다.
+
+<ComponentExample component="popover" scenario="closed" title="닫힌 상태" description="팝오버는 닫힌 상태에서 시작하며 실행 요소를 눌렀을 때만 열립니다." :index="3" />
+### 열림 상태
+
+팝오버가 열린 상태에서 시작해 포커스 이동과 닫힘 동작을 바로 확인할 수 있습니다.
+
+<ComponentExample component="popover" scenario="open" title="열림 상태" description="팝오버가 열린 상태에서 시작해 포커스 이동과 닫힘 동작을 바로 확인할 수 있습니다." :index="4" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="popover" />
 
 ## 상태 관리 방식
 

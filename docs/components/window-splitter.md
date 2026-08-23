@@ -5,9 +5,9 @@ Window Splitter models quantized values and host-independent range movement.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Window Splitter demonstrates horizontal as a separate, interactive configuration.
 
-<PackageImport component="window-splitter" />
+<ComponentExample component="window-splitter" scenario="horizontal" title="Window Splitter" description="Window Splitter demonstrates horizontal as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Horizontal
-
-Use this case to inspect horizontal independently from the component's other behavior.
 
 ### Vertical
 
-Use this case to inspect vertical independently from the component's other behavior.
+Window Splitter demonstrates vertical as a separate, interactive configuration.
+
+<ComponentExample component="window-splitter" scenario="vertical" title="Vertical" description="Window Splitter demonstrates vertical as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Window Splitter.
+
+<ComponentExample component="window-splitter" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Window Splitter." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="window-splitter" />
 
 ## State ownership
 

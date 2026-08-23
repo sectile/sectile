@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다.
 
-<PackageImport component="timer" />
+<ComponentExample component="timer" scenario="stopwatch" title="타이머" description="시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다." :index="0" />
 
 ## 지원 기능
 
@@ -22,11 +22,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 스톱워치
-- 남은 시간
-- 목표 시간
+
+## 추가 예시
+
+### 남은 시간
+
+정해진 시간부터 거꾸로 세고 완료 시점을 한 번 알립니다.
+
+<ComponentExample component="timer" scenario="countdown" title="남은 시간" description="정해진 시간부터 거꾸로 세고 완료 시점을 한 번 알립니다." :index="1" />
+### 목표 시간
+
+정해진 목표 시각까지의 진행 상태를 표시합니다.
+
+<ComponentExample component="timer" scenario="target" title="목표 시간" description="정해진 목표 시각까지의 진행 상태를 표시합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="timer" />
 
 ## 상태 관리 방식
 

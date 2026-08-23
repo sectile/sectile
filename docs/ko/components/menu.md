@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+명령 실행 설정에서 메뉴의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="menu" />
+<ComponentExample component="menu" scenario="commands" title="메뉴" description="명령 실행 설정에서 메뉴의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -21,11 +21,34 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
+## 터미널 키보드 동작
 
-- 명령 실행
-- 비활성 항목
-- 하위 메뉴
+| 키 | 동작 |
+| --- | --- |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | 현재 단계의 이전·다음 항목으로 이동합니다. |
+| <kbd>→</kbd> | 하위 메뉴를 열고 첫 항목으로 들어갑니다. |
+| <kbd>←</kbd> / <kbd>Esc</kbd> | 상위 단계로 돌아가거나 메뉴를 닫습니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 처음·마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 명령을 실행합니다. |
+
+## 추가 예시
+
+### 비활성 항목
+
+메뉴는 키보드와 포인터 입력을 받지 않습니다.
+
+<ComponentExample component="menu" scenario="disabled" title="비활성 항목" description="메뉴는 키보드와 포인터 입력을 받지 않습니다." :index="1" />
+### 하위 메뉴
+
+하위 메뉴 설정에서 메뉴의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 메뉴 설정에서 메뉴의 실제 동작을 확인할 수 있습니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="menu" />
 
 ## 상태 관리 방식
 

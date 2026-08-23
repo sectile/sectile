@@ -5,9 +5,9 @@ Multi Thumb Slider models quantized values and host-independent range movement.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Multi Thumb Slider demonstrates two thumb range as a separate, interactive configuration.
 
-<PackageImport component="multi-thumb-slider" />
+<ComponentExample component="multi-thumb-slider" scenario="two-thumb-range" title="Multi Thumb Slider" description="Multi Thumb Slider demonstrates two thumb range as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -18,23 +18,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Two thumb range
-
-Use this case to inspect two thumb range independently from the component's other behavior.
 
 ### Three thumb thresholds
 
-Use this case to inspect three thumb thresholds independently from the component's other behavior.
+Multi Thumb Slider demonstrates three thumb thresholds as a separate, interactive configuration.
+
+<ComponentExample component="multi-thumb-slider" scenario="three-thumb-thresholds" title="Three thumb thresholds" description="Multi Thumb Slider demonstrates three thumb thresholds as a separate, interactive configuration." :index="1" />
 
 ### Crossing thumbs
 
-Use this case to inspect crossing thumbs independently from the component's other behavior.
+Multi Thumb Slider demonstrates crossing thumbs as a separate, interactive configuration.
+
+<ComponentExample component="multi-thumb-slider" scenario="crossing-thumbs" title="Crossing thumbs" description="Multi Thumb Slider demonstrates crossing thumbs as a separate, interactive configuration." :index="2" />
 
 ### Controlled range
 
-Use this case to inspect controlled range independently from the component's other behavior.
+Multi Thumb Slider demonstrates controlled range as a separate, interactive configuration.
+
+<ComponentExample component="multi-thumb-slider" scenario="controlled-range" title="Controlled range" description="Multi Thumb Slider demonstrates controlled range as a separate, interactive configuration." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="multi-thumb-slider" />
 
 ## State ownership
 

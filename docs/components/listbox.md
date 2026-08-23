@@ -5,9 +5,9 @@ Listbox composes ordered navigation, eligibility, and selection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Keep one active value while moving and selecting with the keyboard or pointer.
 
-<PackageImport component="listbox" />
+<ComponentExample component="listbox" scenario="single" title="Listbox" description="Keep one active value while moving and selecting with the keyboard or pointer." :index="0" />
 
 ## Features
 
@@ -22,23 +22,33 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Single
-
-Use this case to inspect single independently from the component's other behavior.
 
 ### Multiple
 
-Use this case to inspect multiple independently from the component's other behavior.
+Select several values independently without collapsing the existing selection.
+
+<ComponentExample component="listbox" scenario="multiple" title="Multiple" description="Select several values independently without collapsing the existing selection." :index="1" />
 
 ### Follow focus
 
-Use this case to inspect follow focus independently from the component's other behavior.
+Listbox demonstrates follow focus as a separate, interactive configuration.
+
+<ComponentExample component="listbox" scenario="follow-focus" title="Follow focus" description="Listbox demonstrates follow focus as a separate, interactive configuration." :index="2" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Listbox.
+
+<ComponentExample component="listbox" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Listbox." :index="3" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="listbox" />
 
 ## State ownership
 

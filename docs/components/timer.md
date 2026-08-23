@@ -5,9 +5,9 @@ Timer models quantized values and host-independent range movement.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Measure elapsed time with pause, resume, reset, and restart controls.
 
-<PackageImport component="timer" />
+<ComponentExample component="timer" scenario="stopwatch" title="Timer" description="Measure elapsed time with pause, resume, reset, and restart controls." :index="0" />
 
 ## Features
 
@@ -22,19 +22,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Stopwatch
-
-Use this case to inspect stopwatch independently from the component's other behavior.
 
 ### Countdown
 
-Use this case to inspect countdown independently from the component's other behavior.
+Count down from a fixed duration and announce completion once.
+
+<ComponentExample component="timer" scenario="countdown" title="Countdown" description="Count down from a fixed duration and announce completion once." :index="1" />
 
 ### Target
 
-Use this case to inspect target independently from the component's other behavior.
+Measure progress toward an explicit target time.
+
+<ComponentExample component="timer" scenario="target" title="Target" description="Measure progress toward an explicit target time." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="timer" />
 
 ## State ownership
 

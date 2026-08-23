@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+되돌릴 수 없는 작업 확인 설정에서 확인 대화상자의 실제 동작을 확인할 수 있습니다.
 
-<PackageImport component="alert-dialog" />
+<ComponentExample component="alert-dialog" scenario="destructive" title="확인 대화상자" description="되돌릴 수 없는 작업 확인 설정에서 확인 대화상자의 실제 동작을 확인할 수 있습니다." :index="0" />
 
 ## 지원 기능
 
@@ -20,11 +20,26 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 되돌릴 수 없는 작업 확인
-- 저장하지 않은 변경 확인
-- 외부 상태 관리
+
+## 추가 예시
+
+### 저장하지 않은 변경 확인
+
+저장하지 않은 변경 확인 설정에서 확인 대화상자의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="alert-dialog" scenario="unsaved" title="저장하지 않은 변경 확인" description="저장하지 않은 변경 확인 설정에서 확인 대화상자의 실제 동작을 확인할 수 있습니다." :index="1" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 확인 대화상자에 전달합니다.
+
+<ComponentExample component="alert-dialog" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 확인 대화상자에 전달합니다." :index="2" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="alert-dialog" />
 
 ## 상태 관리 방식
 

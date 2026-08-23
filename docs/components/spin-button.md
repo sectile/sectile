@@ -5,9 +5,9 @@ Spin Button models quantized values and host-independent range movement.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Spin Button demonstrates integer as a separate, interactive configuration.
 
-<PackageImport component="spin-button" />
+<ComponentExample component="spin-button" scenario="integer" title="Spin Button" description="Spin Button demonstrates integer as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -19,19 +19,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Integer
-
-Use this case to inspect integer independently from the component's other behavior.
 
 ### Invalid draft
 
-Use this case to inspect invalid draft independently from the component's other behavior.
+Spin Button demonstrates invalid draft as a separate, interactive configuration.
+
+<ComponentExample component="spin-button" scenario="invalid-draft" title="Invalid draft" description="Spin Button demonstrates invalid draft as a separate, interactive configuration." :index="1" />
 
 ### Controlled
 
-Use this case to inspect controlled independently from the component's other behavior.
+The parent owns the current value and applies every accepted change back to Spin Button.
+
+<ComponentExample component="spin-button" scenario="controlled" title="Controlled" description="The parent owns the current value and applies every accepted change back to Spin Button." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="spin-button" />
 
 ## State ownership
 

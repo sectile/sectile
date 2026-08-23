@@ -5,9 +5,9 @@
 
 ## 기본 사용법
 
-상단에서 사용 환경을 바꾸면 코드 예시도 함께 바뀝니다.
+한 번에 하나의 값만 활성화하고 키보드나 포인터로 이동해 선택합니다.
 
-<PackageImport component="accordion" />
+<ComponentExample component="accordion" scenario="single" title="아코디언" description="한 번에 하나의 값만 활성화하고 키보드나 포인터로 이동해 선택합니다." :index="0" />
 
 ## 지원 기능
 
@@ -18,12 +18,31 @@
 
 실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
 
-## 활용 예시
 
-- 하나만 선택
-- 여러 항목 선택
-- 필수 선택
-- 외부 상태 관리
+
+## 추가 예시
+
+### 여러 항목 선택
+
+기존 선택을 유지하면서 여러 값을 각각 선택하거나 해제할 수 있습니다.
+
+<ComponentExample component="accordion" scenario="multiple" title="여러 항목 선택" description="기존 선택을 유지하면서 여러 값을 각각 선택하거나 해제할 수 있습니다." :index="1" />
+### 필수 선택
+
+필수 선택 설정에서 아코디언의 실제 동작을 확인할 수 있습니다.
+
+<ComponentExample component="accordion" scenario="required" title="필수 선택" description="필수 선택 설정에서 아코디언의 실제 동작을 확인할 수 있습니다." :index="2" />
+### 외부 상태 관리
+
+현재 값은 부모가 관리하며, 허용된 변경을 다시 아코디언에 전달합니다.
+
+<ComponentExample component="accordion" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 아코디언에 전달합니다." :index="3" />
+
+## 구성
+
+각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
+
+<ComponentAnatomy component="accordion" />
 
 ## 상태 관리 방식
 

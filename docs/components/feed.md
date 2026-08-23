@@ -5,9 +5,9 @@ Feed composes cursor, selection, and collection projection semantics.
 
 ## Basic usage
 
-Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+Feed demonstrates finite as a separate, interactive configuration.
 
-<PackageImport component="feed" />
+<ComponentExample component="feed" scenario="finite" title="Feed" description="Feed demonstrates finite as a separate, interactive configuration." :index="0" />
 
 ## Features
 
@@ -20,19 +20,27 @@ Import the public subpath for the selected environment. The environment selector
 
 Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
 
+
+
 ## Example cases
-
-### Finite
-
-Use this case to inspect finite independently from the component's other behavior.
 
 ### Load after
 
-Use this case to inspect load after independently from the component's other behavior.
+Feed demonstrates load after as a separate, interactive configuration.
+
+<ComponentExample component="feed" scenario="load-after" title="Load after" description="Feed demonstrates load after as a separate, interactive configuration." :index="1" />
 
 ### Load before
 
-Use this case to inspect load before independently from the component's other behavior.
+Feed demonstrates load before as a separate, interactive configuration.
+
+<ComponentExample component="feed" scenario="load-before" title="Load before" description="Feed demonstrates load before as a separate, interactive configuration." :index="2" />
+
+## Anatomy
+
+Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+
+<ComponentAnatomy component="feed" />
 
 ## State ownership
 
