@@ -3,11 +3,41 @@
 
 Disclosure models disclosure and expansion policy without rendering assumptions.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="disclosure" />
+
+## Features
 
 - Open state.
 - Toggle.
 - Idempotent set.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Closed
+
+Use this case to inspect closed independently from the component's other behavior.
+
+### Open
+
+Use this case to inspect open independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -17,42 +47,6 @@ Disclosure models disclosure and expansion policy without rendering assumptions.
 | DOM | `@sectile/dom/disclosure` | Published |
 | Terminal | `@sectile/terminal/disclosure` | Published |
 | Vue | `@sectile/vue/disclosure` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as disclosure from '@sectile/core/disclosure'
-```
-
-```ts [DOM]
-import * as disclosure from '@sectile/dom/disclosure'
-```
-
-```ts [Terminal]
-import * as disclosure from '@sectile/terminal/disclosure'
-```
-
-```ts [Vue]
-import * as disclosure from '@sectile/vue/disclosure'
-```
-
-:::
-
-## Supported scenarios
-
-- Closed.
-- Open.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

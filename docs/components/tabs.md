@@ -3,13 +3,43 @@
 
 Tabs composes ordered navigation, eligibility, and selection semantics.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="tabs" />
+
+## Features
 
 - Cursor.
 - Single selection.
 - Manual or automatic activation.
 - Orientation.
 - Eligibility.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Manual
+
+Use this case to inspect manual independently from the component's other behavior.
+
+### Automatic
+
+Use this case to inspect automatic independently from the component's other behavior.
+
+### Vertical disabled
+
+Use this case to inspect vertical disabled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -19,42 +49,6 @@ Tabs composes ordered navigation, eligibility, and selection semantics.
 | DOM | `@sectile/dom/tabs` | Published |
 | Terminal | `@sectile/terminal/tabs` | Published |
 | Vue | `@sectile/vue/tabs` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as tabs from '@sectile/core/tabs'
-```
-
-```ts [DOM]
-import * as tabs from '@sectile/dom/tabs'
-```
-
-```ts [Terminal]
-import * as tabs from '@sectile/terminal/tabs'
-```
-
-```ts [Vue]
-import * as tabs from '@sectile/vue/tabs'
-```
-
-:::
-
-## Supported scenarios
-
-- Manual.
-- Automatic.
-- Vertical disabled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

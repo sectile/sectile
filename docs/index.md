@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Sectile
-  text: Interaction semantics without a visual system
-  tagline: Build renderer-neutral behavior once, then project it into DOM, terminal, and framework hosts.
+  text: Interaction semantics, not a visual system
+  tagline: Own behavior across DOM, terminal, and framework hosts—without inheriting a visual system.
   actions:
     - theme: brand
       text: Get started

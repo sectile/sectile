@@ -6,6 +6,22 @@ import catalog from '../data/components.json' with { type: 'json' };
 const root = resolve(import.meta.dirname, '..');
 const markdown = await paths(root, '.md');
 
+for (const localeRoot of ['', 'ko']) {
+  for (const route of ['components', 'packages', 'theory']) {
+    await access(resolve(root, localeRoot, route, 'index.md')).catch(() => {
+      assert.fail(`/${localeRoot === '' ? '' : `${localeRoot}/`}${route}/ requires an index.md route entry`);
+    });
+  }
+}
+
+for (const page of ['structures', 'state-and-text', 'transitions', 'composition', 'scope']) {
+  for (const localeRoot of ['', 'ko']) {
+    await access(resolve(root, localeRoot, 'theory', `${page}.md`)).catch(() => {
+      assert.fail(`/${localeRoot === '' ? '' : `${localeRoot}/`}theory/${page} requires a public theory page`);
+    });
+  }
+}
+
 for (const path of markdown) {
   const source = await readFile(path, 'utf8');
   const withoutFrontmatter = source.replace(/^---\n[\s\S]*?\n---\n/u, '');
@@ -19,21 +35,53 @@ for (const path of markdown) {
   }
 }
 
+const publicRoots = ['guide', 'components', 'packages', 'theory', 'ko'];
+const publicMarkdown = markdown.filter((path) => {
+  const pathFromRoot = relative(root, path);
+  return pathFromRoot === 'index.md' || publicRoots.some((directory) => pathFromRoot.startsWith(`${directory}/`));
+});
+const privateRoutes = ['architecture', 'decisions', 'engineering', 'getting-started', 'internals', 'performance', 'primitives', 'references', 'testing'];
+for (const path of publicMarkdown) {
+  const source = await readFile(path, 'utf8');
+  for (const route of privateRoutes) {
+    assert.equal(
+      source.includes(`](/${route}/`) || source.includes(`](/${route})`),
+      false,
+      `${relative(root, path)} must not expose internal /${route} documentation`,
+    );
+  }
+}
+
 const componentFiles = (await readdir(resolve(root, 'components')))
   .filter((name) => name.endsWith('.md') && name !== 'index.md')
   .map((name) => name.slice(0, -3))
   .sort();
 const componentIds = catalog.components.map((component) => component.id).sort();
 assert.deepEqual(componentFiles, componentIds, 'component docs must match the docs catalog');
+const koComponentFiles = (await readdir(resolve(root, 'ko', 'components')))
+  .filter((name) => name.endsWith('.md') && name !== 'index.md')
+  .map((name) => name.slice(0, -3))
+  .sort();
+assert.deepEqual(koComponentFiles, componentIds, 'Korean component docs must match the docs catalog');
+
+for (const localeRoot of ['', 'ko']) {
+  const gettingStarted = await readFile(resolve(root, localeRoot, 'guide/getting-started.md'), 'utf8');
+  assert.equal(gettingStarted.includes('<HostInstall />'), true, `${localeRoot || 'English'} getting started must include installation guidance`);
+  for (const componentId of componentIds) {
+    const component = await readFile(resolve(root, localeRoot, 'components', `${componentId}.md`), 'utf8');
+    assert.equal(component.includes('<HostInstall />'), false, `${localeRoot || 'English'} ${componentId} must not repeat installation guidance`);
+  }
+}
 
 const checkbox = await readFile(resolve(root, 'components/checkbox.md'), 'utf8');
 for (const heading of [
-  '## Features',
-  '## Installation',
-  '## Anatomy',
-  '## Vue usage',
+  '## Basic usage',
+  '## Indeterminate state',
   '## State ownership',
-  '## Core and host APIs',
+  '## Form participation',
+  '## Disabled and readonly',
+  '## Anatomy',
+  '## API reference',
   '## Data attributes',
   '## Keyboard interaction',
   '## Accessibility',
@@ -41,9 +89,30 @@ for (const heading of [
   assert.equal(checkbox.includes(heading), true, `checkbox.md requires ${heading}`);
 }
 assert.equal(checkbox.includes('<CheckboxDemo />'), true, 'checkbox.md must render the real example');
+assert.equal(checkbox.includes('<CheckboxIndeterminateDemo />'), true, 'checkbox.md must separate the indeterminate example');
 await access(resolve(root, 'examples/checkbox/BasicCheckbox.vue'));
+await access(resolve(root, 'examples/checkbox/IndeterminateCheckbox.vue'));
+await access(resolve(root, 'examples/checkbox/sources.ts'));
 
-console.log(JSON.stringify({ status: 'passed', markdown: markdown.length, components: componentIds.length }, null, 2));
+const koCheckbox = await readFile(resolve(root, 'ko/components/checkbox.md'), 'utf8');
+for (const heading of [
+  '## 기본 사용법',
+  '## 일부 선택 상태',
+  '## 상태 관리 방식',
+  '## 양식 제출',
+  '## 비활성 상태와 읽기 전용 상태',
+  '## 구성',
+  '## 속성',
+  '## 상태 속성',
+  '## 키보드 동작',
+  '## 접근성',
+]) {
+  assert.equal(koCheckbox.includes(heading), true, `ko/components/checkbox.md requires ${heading}`);
+}
+assert.equal(koCheckbox.includes('<CheckboxDemo />'), true, 'Korean checkbox docs must render the real example');
+assert.equal(koCheckbox.includes('<CheckboxIndeterminateDemo />'), true, 'Korean checkbox docs must separate the indeterminate example');
+
+console.log(JSON.stringify({ status: 'passed', markdown: markdown.length, publicMarkdown: publicMarkdown.length, components: componentIds.length }, null, 2));
 
 async function paths(directory, extension) {
   const result = [];

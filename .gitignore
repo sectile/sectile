@@ -2,7 +2,7 @@
 *.tsbuildinfo
 node_modules/
 .pnpm-store/
-.vitepress/cache/
+**/.vitepress/cache/
 
 dist/
 .*-dist/

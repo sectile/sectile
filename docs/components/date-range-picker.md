@@ -3,7 +3,13 @@
 
 Date Range Picker combines timezone-free civil values with calendar navigation and popup state.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="date-range-picker" />
+
+## Features
 
 - Inclusive date range.
 - Range anchor.
@@ -11,6 +17,30 @@ Date Range Picker combines timezone-free civil values with calendar navigation a
 - Cross month navigation.
 - Popup state.
 - Controlled range highlight and open.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Booking
+
+Use this case to inspect booking independently from the component's other behavior.
+
+### Bounded
+
+Use this case to inspect bounded independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -21,42 +51,6 @@ Date Range Picker combines timezone-free civil values with calendar navigation a
 | Terminal | `@sectile/terminal/date-range-picker` | Published |
 | Vue | `@sectile/vue/date-range-picker` | Workspace preview |
 
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as dateRangePicker from '@sectile/core/date-range-picker'
-```
-
-```ts [DOM]
-import * as dateRangePicker from '@sectile/dom/date-range-picker'
-```
-
-```ts [Terminal]
-import * as dateRangePicker from '@sectile/terminal/date-range-picker'
-```
-
-```ts [Vue]
-import * as dateRangePicker from '@sectile/vue/date-range-picker'
-```
-
-:::
-
-## Supported scenarios
-
-- Booking.
-- Bounded.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
-
 ## Semantics
 
-The component contract follows [Sectile theory](/references/sectile-theory#date-and-time-value). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.
+The component contract follows [Sectile composition theory](/theory/composition). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.

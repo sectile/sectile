@@ -3,7 +3,13 @@
 
 Number Field separates editable draft state from accepted application value.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="number-field" />
+
+## Features
 
 - Exact decimal value.
 - Text editing state.
@@ -15,6 +21,38 @@ Number Field separates editable draft state from accepted application value.
 - Commit or cancel.
 - Controlled value and input state.
 
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Exact decimal
+
+Use this case to inspect exact decimal independently from the component's other behavior.
+
+### Calculator
+
+Use this case to inspect calculator independently from the component's other behavior.
+
+### Exponent
+
+Use this case to inspect exponent independently from the component's other behavior.
+
+### Bounded
+
+Use this case to inspect bounded independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
+
 ## Package availability
 
 | Package | Import | Status |
@@ -24,44 +62,6 @@ Number Field separates editable draft state from accepted application value.
 | Terminal | `@sectile/terminal/number-field` | Published |
 | Vue | `@sectile/vue/number-field` | Workspace preview |
 
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as numberField from '@sectile/core/number-field'
-```
-
-```ts [DOM]
-import * as numberField from '@sectile/dom/number-field'
-```
-
-```ts [Terminal]
-import * as numberField from '@sectile/terminal/number-field'
-```
-
-```ts [Vue]
-import * as numberField from '@sectile/vue/number-field'
-```
-
-:::
-
-## Supported scenarios
-
-- Exact decimal.
-- Calculator.
-- Exponent.
-- Bounded.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
-
 ## Semantics
 
-The component contract follows [Sectile theory](/references/sectile-theory#number-field). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.
+The component contract follows [Sectile composition theory](/theory/state-and-text#text). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.

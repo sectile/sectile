@@ -10,14 +10,20 @@ sectile/
 │   │   ├── theme/
 │   │   │   ├── components/
 │   │   │   │   ├── CheckboxDemo.vue
+│   │   │   │   ├── CheckboxIndeterminateDemo.vue
 │   │   │   │   ├── ComponentCatalog.vue
-│   │   │   │   └── ExampleFrame.vue
+│   │   │   │   ├── ExampleFrame.vue
+│   │   │   │   ├── HostCode.vue
+│   │   │   │   ├── HostSelector.vue
+│   │   │   │   └── PackageImport.vue
+│   │   │   ├── host-preference.ts
 │   │   │   ├── index.ts
+│   │   │   ├── Layout.vue
 │   │   │   └── styles.css
 │   │   └── config.ts
 │   ├── architecture/
 │   │   ├── composite-proof-plan.md
-│   │   ├── README.md
+│   │   ├── index.md
 │   │   └── theory-to-runtime.md
 │   ├── components/
 │   │   ├── accordion.md
@@ -77,25 +83,29 @@ sectile/
 │   ├── data/
 │   │   └── components.json
 │   ├── decisions/
-│   │   ├── public-migration.md
-│   │   └── README.md
+│   │   ├── index.md
+│   │   └── public-migration.md
 │   ├── engineering/
 │   │   ├── component-completeness.md
+│   │   ├── index.md
 │   │   ├── naming.md
-│   │   ├── package-boundary.md
-│   │   └── README.md
+│   │   └── package-boundary.md
 │   ├── examples/
 │   │   └── checkbox/
-│   │       └── BasicCheckbox.vue
+│   │       ├── BasicCheckbox.vue
+│   │       ├── IndeterminateCheckbox.vue
+│   │       └── sources.ts
 │   ├── getting-started/
 │   │   ├── consumer-usage.md
-│   │   └── README.md
+│   │   └── index.md
 │   ├── guide/
 │   │   ├── getting-started.md
 │   │   ├── host-model.md
 │   │   ├── introduction.md
 │   │   ├── state-ownership.md
 │   │   └── styling.md
+│   ├── internals/
+│   │   └── index.md
 │   ├── packages/
 │   │   ├── core.md
 │   │   ├── dom.md
@@ -104,30 +114,29 @@ sectile/
 │   │   └── vue.md
 │   ├── performance/
 │   │   ├── complexity.md
-│   │   └── README.md
+│   │   └── index.md
 │   ├── primitives/
 │   │   ├── grid.md
+│   │   ├── index.md
 │   │   ├── range.md
-│   │   ├── README.md
 │   │   ├── sequence.md
 │   │   └── tree.md
 │   ├── public/
 │   │   └── mark.svg
 │   ├── references/
-│   │   ├── README.md
+│   │   ├── index.md
 │   │   ├── sectile-theory.md
 │   │   └── verification.md
 │   ├── scripts/
 │   │   ├── check-content.mjs
 │   │   └── generate-component-pages.mjs
 │   ├── testing/
-│   │   ├── README.md
+│   │   ├── index.md
 │   │   └── verification-pipeline.md
 │   ├── env.d.ts
 │   ├── implementation-checklist.md
 │   ├── index.md
 │   ├── package.json
-│   ├── README.md
 │   ├── roadmap.md
 │   └── tsconfig.json
 ├── packages/

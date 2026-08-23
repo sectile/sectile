@@ -3,12 +3,46 @@
 
 Multi Thumb Slider models quantized values and host-independent range movement.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="multi-thumb-slider" />
+
+## Features
 
 - Thumb cursor.
 - Atomic tick vector.
 - Minimum gap.
 - Crossing policy.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Two thumb range
+
+Use this case to inspect two thumb range independently from the component's other behavior.
+
+### Three thumb thresholds
+
+Use this case to inspect three thumb thresholds independently from the component's other behavior.
+
+### Crossing thumbs
+
+Use this case to inspect crossing thumbs independently from the component's other behavior.
+
+### Controlled range
+
+Use this case to inspect controlled range independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -18,43 +52,6 @@ Multi Thumb Slider models quantized values and host-independent range movement.
 | DOM | `@sectile/dom/multi-thumb-slider` | Published |
 | Terminal | `@sectile/terminal/multi-thumb-slider` | Published |
 | Vue | `@sectile/vue/multi-thumb-slider` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as multiThumbSlider from '@sectile/core/multi-thumb-slider'
-```
-
-```ts [DOM]
-import * as multiThumbSlider from '@sectile/dom/multi-thumb-slider'
-```
-
-```ts [Terminal]
-import * as multiThumbSlider from '@sectile/terminal/multi-thumb-slider'
-```
-
-```ts [Vue]
-import * as multiThumbSlider from '@sectile/vue/multi-thumb-slider'
-```
-
-:::
-
-## Supported scenarios
-
-- Two thumb range.
-- Three thumb thresholds.
-- Crossing thumbs.
-- Controlled range.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

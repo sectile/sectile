@@ -1,26 +1,16 @@
 # Getting started
 
-Choose the package closest to your rendering host. The published packages are `@sectile/core`, `@sectile/dom`, and `@sectile/terminal`. The Vue package is currently a workspace preview.
+Choose the environment in the site header. Installation, imports, explanations, and examples follow that selection throughout the documentation.
 
-## Install a published package
+## Install the selected package
 
-```sh
-pnpm add @sectile/core
-```
-
-Add a host adapter when the application needs one:
-
-```sh
-pnpm add @sectile/dom
-```
+<HostInstall />
 
 ## Import one component
 
 Every component has a public subpath. Importing the subpath keeps the dependency and bundle boundary visible.
 
-```ts
-import * as checkbox from '@sectile/core/checkbox'
-```
+<PackageImport component="checkbox" />
 
 ## Next steps
 

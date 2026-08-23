@@ -10,7 +10,9 @@ test('renders files while omitting empty directories', async (context) => {
   context.after(() => rm(root, { force: true, recursive: true }));
 
   await mkdir(join(root, 'empty'));
+  await mkdir(join(root, 'cache'));
   await mkdir(join(root, 'populated', 'empty'), { recursive: true });
+  await writeFile(join(root, 'cache', 'generated.js'), 'generated\n');
   await writeFile(join(root, 'populated', 'file.txt'), 'fixture\n');
 
   assert.equal(

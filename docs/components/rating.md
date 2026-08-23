@@ -3,12 +3,42 @@
 
 Rating composes ordered navigation, eligibility, and selection semantics.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="rating" />
+
+## Features
 
 - Ordered score.
 - Single selection.
 - Clear policy.
 - Controlled value.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Five star
+
+Use this case to inspect five star independently from the component's other behavior.
+
+### Required
+
+Use this case to inspect required independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -18,42 +48,6 @@ Rating composes ordered navigation, eligibility, and selection semantics.
 | DOM | `@sectile/dom/rating` | Published |
 | Terminal | `@sectile/terminal/rating` | Published |
 | Vue | `@sectile/vue/rating` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as rating from '@sectile/core/rating'
-```
-
-```ts [DOM]
-import * as rating from '@sectile/dom/rating'
-```
-
-```ts [Terminal]
-import * as rating from '@sectile/terminal/rating'
-```
-
-```ts [Vue]
-import * as rating from '@sectile/vue/rating'
-```
-
-:::
-
-## Supported scenarios
-
-- Five star.
-- Required.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

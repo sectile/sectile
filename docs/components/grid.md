@@ -3,7 +3,13 @@
 
 Grid composes cursor, selection, and collection projection semantics.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="grid" />
+
+## Features
 
 - Coordinate cursor.
 - Selection.
@@ -11,6 +17,34 @@ Grid composes cursor, selection, and collection projection semantics.
 - Eligibility.
 - Axis boundary.
 - Controlled state.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Selectable
+
+Use this case to inspect selectable independently from the component's other behavior.
+
+### Disabled wrap
+
+Use this case to inspect disabled wrap independently from the component's other behavior.
+
+### Editable
+
+Use this case to inspect editable independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -20,43 +54,6 @@ Grid composes cursor, selection, and collection projection semantics.
 | DOM | `@sectile/dom/grid` | Published |
 | Terminal | `@sectile/terminal/grid` | Published |
 | Vue | `@sectile/vue/grid` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as grid from '@sectile/core/grid'
-```
-
-```ts [DOM]
-import * as grid from '@sectile/dom/grid'
-```
-
-```ts [Terminal]
-import * as grid from '@sectile/terminal/grid'
-```
-
-```ts [Vue]
-import * as grid from '@sectile/vue/grid'
-```
-
-:::
-
-## Supported scenarios
-
-- Selectable.
-- Disabled wrap.
-- Editable.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

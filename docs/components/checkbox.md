@@ -1,29 +1,32 @@
 # Checkbox
 
-A checkbox represents inclusion in a set. Its value can be `true`, `false`, or `indeterminate` when a parent summarizes partially selected children.
+A checkbox represents whether a value belongs to a set. It supports ordinary checked and unchecked values, plus an indeterminate value for summarizing a partially selected group.
+
+## Basic usage
+
+Use a binary checkbox for a single optional value. The example starts unchecked and owns its state.
 
 <CheckboxDemo />
 
-## Features
+## Indeterminate state
 
-- Controlled and uncontrolled value ownership.
-- Binary and indeterminate values.
-- Native form submission through `name`, `value`, `form`, and `required`.
-- Disabled and readonly interaction states.
-- Stable root and indicator parts for styling.
-- DOM and terminal projections backed by the same core transition model.
+Use `indeterminate` when a parent checkbox summarizes children that are only partly selected. It is a presentation of aggregate state, not a third user choice that must appear in every checkbox.
 
-## Installation
+<CheckboxIndeterminateDemo />
 
-The renderer-neutral and host packages are published independently:
+Core, DOM, and terminal call this value `mixed`. Vue exposes the HTML-facing spelling `indeterminate` and translates it at the package boundary.
 
-```sh
-pnpm add @sectile/core @sectile/dom
-```
+## State ownership
 
-::: warning Vue workspace preview
-`@sectile/vue` is not published yet. Vue examples describe the current workspace API while it stabilizes.
-:::
+Use `defaultValue` when the checkbox owns its state. Use `modelValue` with `v-model` when a parent validates, persists, or coordinates the value. Providing `modelValue` makes the component controlled for its lifetime.
+
+## Form participation
+
+`name`, `value`, `form`, and `required` project native checkbox submission behavior. A checked root contributes its configured value; an unchecked root contributes no value. The Vue package renders the native input needed for submission.
+
+## Disabled and readonly
+
+Disabled checkboxes reject interaction, leave the tab sequence, and do not participate in form submission. Readonly checkboxes remain focusable and inspectable while rejecting value changes.
 
 ## Anatomy
 
@@ -33,27 +36,9 @@ pnpm add @sectile/core @sectile/dom
 </CheckboxRoot>
 ```
 
-`CheckboxRoot` owns value, interaction, form projection, and state attributes. `CheckboxIndicator` stays mounted and uses `hidden` when the value is false, matching normal HTML presence more closely than conditional mounting.
+`CheckboxRoot` owns value, interaction, form projection, and state attributes. `CheckboxIndicator` stays mounted and uses `hidden` when the value is false, preserving a stable DOM shape.
 
-## Vue usage
-
-```vue
-<script setup lang="ts">
-import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
-import { ref } from 'vue'
-
-const checked = ref<boolean | 'indeterminate'>('indeterminate')
-</script>
-
-<template>
-  <CheckboxRoot v-model="checked" name="analytics" v-slot="{ isIndeterminate }">
-    <CheckboxIndicator>
-      {{ isIndeterminate ? '−' : '✓' }}
-    </CheckboxIndicator>
-    Include analytics
-  </CheckboxRoot>
-</template>
-```
+## API reference
 
 ### Root props
 
@@ -76,7 +61,7 @@ const checked = ref<boolean | 'indeterminate'>('indeterminate')
 | --- | --- | --- |
 | `update:modelValue` | `boolean \| 'indeterminate'` | Reports an accepted value change. |
 
-### Default slot
+### Slot props
 
 | Property | Type | Meaning |
 | --- | --- | --- |
@@ -87,61 +72,6 @@ const checked = ref<boolean | 'indeterminate'>('indeterminate')
 | `readonly` | `boolean` | Current readonly state. |
 
 `CheckboxIndicator` exposes the same slot properties and supports `as` and `asChild`.
-
-## State ownership
-
-Use `defaultValue` when the checkbox can own its state. Use `v-model` when the parent must validate, persist, or coordinate the value.
-
-```vue
-<CheckboxRoot default-value="indeterminate" />
-
-<CheckboxRoot v-model="checked" />
-```
-
-Do not provide both ownership forms. A `modelValue` makes the component controlled for its lifetime.
-
-## Core and host APIs
-
-::: code-group
-
-```ts [Core]
-import {
-  applyCheckboxEvent,
-  createCheckboxState,
-} from '@sectile/core/checkbox'
-
-const initial = createCheckboxState('mixed')
-if (!initial.ok) throw new TypeError(initial.error.message)
-
-const update = applyCheckboxEvent(initial.value, 'toggle')
-```
-
-```ts [DOM]
-import { createCheckbox } from '@sectile/dom/checkbox'
-
-const connection = createCheckbox({
-  element: document.querySelector('[role="checkbox"]')!,
-  defaultValue: 'mixed',
-  onValueChange(value) {
-    console.log(value)
-  },
-})
-```
-
-```ts [Terminal]
-import { createCheckbox } from '@sectile/terminal/checkbox'
-
-const connection = createCheckbox({
-  defaultValue: 'mixed',
-  onValueChange(value) {
-    render(value)
-  },
-})
-```
-
-:::
-
-The core and host values use `'mixed'`. Vue exposes the HTML-facing spelling `'indeterminate'` and translates at its package boundary.
 
 ## Data attributes
 
@@ -166,6 +96,6 @@ Pointer activation follows native button or checkbox behavior through the DOM ad
 
 ## Accessibility
 
-The root exposes checkbox semantics and `aria-checked="mixed"` for an indeterminate value. Disabled and readonly remain distinct. When form props are present, Vue also renders the native checkbox input used for submission.
+The root exposes checkbox semantics and `aria-checked="mixed"` for an indeterminate value. Disabled and readonly remain distinct.
 
 See the [WAI-ARIA Checkbox Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/) for the corresponding accessibility pattern.

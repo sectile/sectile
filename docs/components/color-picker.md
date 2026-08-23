@@ -3,7 +3,13 @@
 
 Color Picker separates editable draft state from accepted application value.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="color-picker" />
+
+## Features
 
 - Exact integer rgba.
 - Hex and rgb parsing.
@@ -14,6 +20,42 @@ Color Picker separates editable draft state from accepted application value.
 - Native color input.
 - Controlled value draft and format.
 
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Native
+
+Use this case to inspect native independently from the component's other behavior.
+
+### Alpha
+
+Use this case to inspect alpha independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+### Text
+
+Use this case to inspect text independently from the component's other behavior.
+
+### Channels
+
+Use this case to inspect channels independently from the component's other behavior.
+
+### Readonly
+
+Use this case to inspect readonly independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
+
 ## Package availability
 
 | Package | Import | Status |
@@ -23,45 +65,6 @@ Color Picker separates editable draft state from accepted application value.
 | Terminal | `@sectile/terminal/color-picker` | Published |
 | Vue | `@sectile/vue/color-picker` | Workspace preview |
 
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as colorPicker from '@sectile/core/color-picker'
-```
-
-```ts [DOM]
-import * as colorPicker from '@sectile/dom/color-picker'
-```
-
-```ts [Terminal]
-import * as colorPicker from '@sectile/terminal/color-picker'
-```
-
-```ts [Vue]
-import * as colorPicker from '@sectile/vue/color-picker'
-```
-
-:::
-
-## Supported scenarios
-
-- Native.
-- Alpha.
-- Controlled.
-- Text.
-- Channels.
-- Readonly.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
-
 ## Semantics
 
-The component contract follows [Sectile theory](/references/sectile-theory#color-picker). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.
+The component contract follows [Sectile composition theory](/theory/state-and-text#text). Visual styling remains outside the package; use host attributes, parts, and state projections as styling hooks.

@@ -18,3 +18,5 @@ Sectile models interaction behavior independently from its renderer. The same co
 ## Package layers
 
 `@sectile/core` defines renderer-neutral semantics. `@sectile/dom` and `@sectile/terminal` translate native input and output. Framework packages such as `@sectile/vue` compose those host contracts into headless components.
+
+The [Theory](/theory/) section describes the structures, state models, transition laws, and component compositions that stay consistent across those packages.

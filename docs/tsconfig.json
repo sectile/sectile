@@ -12,6 +12,7 @@
   "include": [
     ".vitepress/**/*.ts",
     ".vitepress/**/*.vue",
+    "examples/**/*.ts",
     "examples/**/*.vue",
     "env.d.ts"
   ]

@@ -3,13 +3,51 @@
 
 Tree View composes cursor, selection, and collection projection semantics.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="tree-view" />
+
+## Features
 
 - Visible tree cursor.
 - Expansion.
 - Multiple selection.
 - Eligibility.
 - Controlled state.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Expanded
+
+Use this case to inspect expanded independently from the component's other behavior.
+
+### Collapsed
+
+Use this case to inspect collapsed independently from the component's other behavior.
+
+### Multiple
+
+Use this case to inspect multiple independently from the component's other behavior.
+
+### Unavailable
+
+Use this case to inspect unavailable independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -19,44 +57,6 @@ Tree View composes cursor, selection, and collection projection semantics.
 | DOM | `@sectile/dom/tree-view` | Published |
 | Terminal | `@sectile/terminal/tree-view` | Published |
 | Vue | `@sectile/vue/tree-view` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as treeView from '@sectile/core/tree-view'
-```
-
-```ts [DOM]
-import * as treeView from '@sectile/dom/tree-view'
-```
-
-```ts [Terminal]
-import * as treeView from '@sectile/terminal/tree-view'
-```
-
-```ts [Vue]
-import * as treeView from '@sectile/vue/tree-view'
-```
-
-:::
-
-## Supported scenarios
-
-- Expanded.
-- Collapsed.
-- Multiple.
-- Unavailable.
-- Controlled.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

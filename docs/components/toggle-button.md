@@ -3,11 +3,49 @@
 
 Toggle Button models a persistent checked or pressed state with explicit ownership.
 
-## Capabilities
+## Basic usage
+
+Import the public subpath for the selected environment. The environment selector in the site header applies to every code example.
+
+<PackageImport component="toggle-button" />
+
+## Features
 
 - Pressed state.
 - Toggle.
 - Idempotent set.
+
+Each feature is part of the public semantic contract. Host packages may expose different input and rendering helpers while preserving accepted transitions.
+
+## Example cases
+
+### Formatting
+
+Use this case to inspect formatting independently from the component's other behavior.
+
+### Alert
+
+Use this case to inspect alert independently from the component's other behavior.
+
+### Controlled
+
+Use this case to inspect controlled independently from the component's other behavior.
+
+### Off
+
+Use this case to inspect off independently from the component's other behavior.
+
+### On
+
+Use this case to inspect on independently from the component's other behavior.
+
+## State ownership
+
+State that changes application-owned data supports controlled or uncontrolled ownership where the component contract permits it. Use uncontrolled state for local behavior and controlled state when a parent coordinates validation, persistence, or multiple controls.
+
+## Disabled and readonly
+
+Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both. Disabled controls leave the interaction sequence; readonly controls remain available for inspection while rejecting mutation.
 
 ## Package availability
 
@@ -17,44 +55,6 @@ Toggle Button models a persistent checked or pressed state with explicit ownersh
 | DOM | `@sectile/dom/toggle-button` | Published |
 | Terminal | `@sectile/terminal/toggle-button` | Published |
 | Vue | `@sectile/vue/toggle-button` | Workspace preview |
-
-## Usage
-
-Import the public component subpath for the host you are building. Namespace imports keep the available state, events, controllers, and projection helpers together while the API is explored.
-
-::: code-group
-
-```ts [Core]
-import * as toggleButton from '@sectile/core/toggle-button'
-```
-
-```ts [DOM]
-import * as toggleButton from '@sectile/dom/toggle-button'
-```
-
-```ts [Terminal]
-import * as toggleButton from '@sectile/terminal/toggle-button'
-```
-
-```ts [Vue]
-import * as toggleButton from '@sectile/vue/toggle-button'
-```
-
-:::
-
-## Supported scenarios
-
-- Formatting.
-- Alert.
-- Controlled.
-- Off.
-- On.
-
-DOM and terminal scenarios refine the same semantic state. Host packages may expose different input and rendering helpers while preserving accepted transitions and controlled ownership.
-
-## Interaction states
-
-Component state that changes user-owned data supports controlled or uncontrolled ownership where listed above. Host projections distinguish disabled interaction from readonly inspection when the underlying control permits both.
 
 ## Semantics
 

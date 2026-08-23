@@ -1,94 +1,69 @@
 <script setup lang="ts">
-import { Check, Minus } from '@lucide/vue';
-import { CheckboxIndicator, CheckboxRoot, type CheckboxValue } from '@sectile/vue/checkbox';
+import { Check } from '@lucide/vue';
+import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox';
 import { ref } from 'vue';
+import { useDocsLocale } from '../../.vitepress/theme/locale.js';
 
-const value = ref<CheckboxValue>('indeterminate');
+const checked = ref(false);
+const { isKorean } = useDocsLocale();
 </script>
 
 <template>
-  <div class="permission-example">
-    <p class="eyebrow">Deployment access</p>
-    <CheckboxRoot v-model="value" class="permission" name="deployment-access">
-      <CheckboxIndicator v-slot="{ isIndeterminate }" class="indicator">
-        <Minus v-if="isIndeterminate" :size="16" :stroke-width="2.5" />
-        <Check v-else :size="16" :stroke-width="2.5" />
+  <div class="checkbox-example">
+    <CheckboxRoot v-model="checked" class="checkbox" name="analytics">
+      <CheckboxIndicator class="checkbox__indicator">
+        <Check :size="15" :stroke-width="2.5" />
       </CheckboxIndicator>
-      <span>
-        <strong>Select deployment channels</strong>
-        <small>Partially selected values remain explicit.</small>
-      </span>
+      <span>{{ isKorean ? '분석 기능 포함' : 'Include analytics' }}</span>
     </CheckboxRoot>
-    <p class="status">Current value: <code>{{ value }}</code></p>
   </div>
 </template>
 
-<style scoped>
-.permission-example {
-  width: min(100%, 520px);
-}
-
-.eyebrow {
-  margin: 0 0 10px;
-  color: var(--vp-c-text-3);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.permission {
-  display: flex;
-  width: 100%;
+<style>
+.checkbox-example {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--vp-c-border);
-  border-radius: 12px;
-  background: var(--vp-c-bg-soft);
+}
+
+.checkbox {
+  display: inline-grid;
+  grid-template-columns: 20px minmax(0, auto);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--vp-c-text-1);
-  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.permission:hover {
-  border-color: var(--vp-c-brand-1);
+.checkbox:hover {
+  background: var(--vp-c-bg-soft);
 }
 
-.permission:focus-visible {
+.checkbox:focus-visible {
   outline: 3px solid var(--vp-c-brand-soft);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
-.indicator {
+.checkbox__indicator {
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--vp-c-brand-1);
-  border-radius: 6px;
+  border-radius: 5px;
   color: white;
 }
 
-.permission[data-state='checked'] .indicator,
-.permission[data-state='indeterminate'] .indicator {
+.checkbox[data-state='checked'] .checkbox__indicator {
   background: var(--vp-c-brand-1);
 }
 
-.permission strong,
-.permission small {
-  display: block;
-}
-
-.permission small {
-  margin-top: 3px;
-  color: var(--vp-c-text-2);
-}
-
-.status {
-  margin: 12px 2px 0;
-  color: var(--vp-c-text-2);
-  font-size: 13px;
-}
 </style>

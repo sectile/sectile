@@ -8,6 +8,7 @@ const ignoredDirectoryNames = new Set([
   '.turbo',
   '.vitest',
   '.verification-dist',
+  'cache',
   'coverage',
   'dist',
   'node_modules',
