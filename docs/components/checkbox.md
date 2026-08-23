@@ -20,13 +20,19 @@ Core, DOM, and terminal call this value `mixed`. Vue exposes the HTML-facing spe
 
 Use `defaultValue` when the checkbox owns its state. Use `modelValue` with `v-model` when a parent validates, persists, or coordinates the value. Providing `modelValue` makes the component controlled for its lifetime.
 
+<CheckboxOwnershipDemo />
+
 ## Form participation
 
 `name`, `value`, `form`, and `required` project native checkbox submission behavior. A checked root contributes its configured value; an unchecked root contributes no value. The Vue package renders the native input needed for submission.
 
+<CheckboxFormDemo />
+
 ## Disabled and readonly
 
 Disabled checkboxes reject interaction, leave the tab sequence, and do not participate in form submission. Readonly checkboxes remain focusable and inspectable while rejecting value changes.
+
+<CheckboxInteractionDemo />
 
 ## Anatomy
 
@@ -75,6 +81,10 @@ Disabled checkboxes reject interaction, leave the tab sequence, and do not parti
 
 ## Data attributes
 
+Change the value and interaction flags, then select Root or Indicator to see which attributes belong to each part.
+
+<CheckboxAttributesDemo />
+
 | Part | Attribute | Values |
 | --- | --- | --- |
 | Root | `data-scope` | `checkbox` |
@@ -83,6 +93,7 @@ Disabled checkboxes reject interaction, leave the tab sequence, and do not parti
 | Root | `data-disabled` | Present when disabled. |
 | Root | `data-readonly` | Present when readonly. |
 | Indicator | `data-part` | `indicator` |
+| Indicator | `data-scope` | `checkbox` |
 | Indicator | `data-state` | Mirrors the root state. |
 
 ## Keyboard interaction

@@ -90,8 +90,24 @@ for (const heading of [
 }
 assert.equal(checkbox.includes('<CheckboxDemo />'), true, 'checkbox.md must render the real example');
 assert.equal(checkbox.includes('<CheckboxIndeterminateDemo />'), true, 'checkbox.md must separate the indeterminate example');
-await access(resolve(root, 'examples/checkbox/BasicCheckbox.vue'));
-await access(resolve(root, 'examples/checkbox/IndeterminateCheckbox.vue'));
+assert.equal(checkbox.includes('<CheckboxAttributesDemo />'), true, 'checkbox.md must render the data-attribute explorer');
+for (const example of [
+  'CheckboxOwnershipDemo',
+  'CheckboxFormDemo',
+  'CheckboxInteractionDemo',
+]) {
+  assert.equal(checkbox.includes(`<${example} />`), true, `checkbox.md must render ${example}`);
+}
+for (const example of [
+  'BasicCheckbox.vue',
+  'ControlledCheckbox.vue',
+  'DataAttributes.vue',
+  'FormCheckbox.vue',
+  'IndeterminateCheckbox.vue',
+  'InteractionCheckboxes.vue',
+]) {
+  await access(resolve(root, 'examples/checkbox', example));
+}
 await access(resolve(root, 'examples/checkbox/sources.ts'));
 
 const koCheckbox = await readFile(resolve(root, 'ko/components/checkbox.md'), 'utf8');
@@ -111,6 +127,14 @@ for (const heading of [
 }
 assert.equal(koCheckbox.includes('<CheckboxDemo />'), true, 'Korean checkbox docs must render the real example');
 assert.equal(koCheckbox.includes('<CheckboxIndeterminateDemo />'), true, 'Korean checkbox docs must separate the indeterminate example');
+assert.equal(koCheckbox.includes('<CheckboxAttributesDemo />'), true, 'Korean checkbox docs must render the data-attribute explorer');
+for (const example of [
+  'CheckboxOwnershipDemo',
+  'CheckboxFormDemo',
+  'CheckboxInteractionDemo',
+]) {
+  assert.equal(koCheckbox.includes(`<${example} />`), true, `Korean checkbox docs must render ${example}`);
+}
 
 console.log(JSON.stringify({ status: 'passed', markdown: markdown.length, publicMarkdown: publicMarkdown.length, components: componentIds.length }, null, 2));
 

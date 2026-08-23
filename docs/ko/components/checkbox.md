@@ -20,13 +20,19 @@
 
 컴포넌트가 상태를 직접 관리하게 하려면 `defaultValue`를 사용합니다. 부모가 저장, 검증, 여러 입력 사이의 연동을 맡아야 한다면 `modelValue`와 `v-model`을 사용합니다.
 
+<CheckboxOwnershipDemo />
+
 ## 양식 제출
 
 `name`, `value`, `form`, `required`는 브라우저의 체크박스 제출 방식으로 연결됩니다. 선택된 체크박스만 지정한 값을 제출합니다.
 
+<CheckboxFormDemo />
+
 ## 비활성 상태와 읽기 전용 상태
 
 비활성 체크박스는 입력과 포커스를 받지 않으며 양식 제출에서도 빠집니다. 읽기 전용 체크박스는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꾸지는 못합니다.
+
+<CheckboxInteractionDemo />
 
 ## 구성
 
@@ -56,6 +62,10 @@
 값이 바뀌면 `update:modelValue`가 `boolean | 'indeterminate'` 값을 전달합니다.
 
 ## 상태 속성
+
+값과 상호작용 상태를 바꾼 뒤 루트나 표시 요소를 선택하면, 각 구성 요소에 어떤 속성이 적용되는지 바로 확인할 수 있습니다.
+
+<CheckboxAttributesDemo />
 
 루트에는 `data-state="checked"`, `data-state="unchecked"`, `data-state="indeterminate"` 가운데 하나가 적용됩니다. 비활성 상태에는 `data-disabled`, 읽기 전용 상태에는 `data-readonly`가 추가됩니다.
 
