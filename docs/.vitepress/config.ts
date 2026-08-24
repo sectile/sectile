@@ -6,59 +6,136 @@ const title = (value: string): string => value
   .map((part) => part.length === 0 ? part : `${part[0]?.toUpperCase()}${part.slice(1)}`)
   .join(' ');
 
-const familyOrder = [
-  'checked',
-  'editing',
-  'linear-choice',
-  'range',
-  'date-time',
-  'collection',
-  'menu',
-  'popup',
-  'expansion',
-  'navigation',
-  'paged-navigation',
-  'linear-action',
-  'tree-choice',
-  'feedback',
-];
+const componentSidebarSections = [
+  {
+    text: 'Input & Editing',
+    koText: '입력과 편집',
+    componentIds: [
+      'color-picker',
+      'editable',
+      'number-field',
+      'pin-input',
+      'quantity-field',
+      'tags-input',
+      'text',
+    ],
+  },
+  {
+    text: 'Selection & Choice',
+    koText: '선택과 토글',
+    componentIds: [
+      'checkbox',
+      'checkbox-group',
+      'radio-group',
+      'select',
+      'combobox',
+      'listbox',
+      'cascade-select',
+      'rating',
+      'switch',
+      'toggle-button',
+      'toggle-group',
+    ],
+  },
+  {
+    text: 'Date & Time',
+    koText: '날짜와 시간',
+    componentIds: [
+      'calendar',
+      'date-field',
+      'date-range-field',
+      'time-field',
+      'time-range-field',
+      'date-time-field',
+      'date-picker',
+      'date-range-picker',
+      'date-time-picker',
+      'date-time-range-picker',
+      'timer',
+    ],
+  },
+  {
+    text: 'Range & Layout',
+    koText: '범위와 배치',
+    componentIds: [
+      'multi-thumb-slider',
+      'slider',
+      'spin-button',
+      'window-splitter',
+    ],
+  },
+  {
+    text: 'Collections & Data',
+    koText: '데이터와 모음',
+    componentIds: [
+      'feed',
+      'grid',
+      'tree-grid',
+      'tree-view',
+    ],
+  },
+  {
+    text: 'Menus & Actions',
+    koText: '메뉴와 작업',
+    componentIds: [
+      'menu',
+      'menu-button',
+      'menubar',
+      'toolbar',
+    ],
+  },
+  {
+    text: 'Overlays & Feedback',
+    koText: '오버레이와 피드백',
+    componentIds: [
+      'alert-dialog',
+      'dialog',
+      'popover',
+      'tooltip',
+      'toast',
+    ],
+  },
+  {
+    text: 'Navigation & Disclosure',
+    koText: '이동과 펼침',
+    componentIds: [
+      'navigation-menu',
+      'pagination',
+      'tabs',
+      'stepper',
+      'carousel',
+      'accordion',
+      'disclosure',
+    ],
+  },
+] as const;
 
-const componentSidebar: DefaultTheme.SidebarItem[] = familyOrder
-  .map((family) => ({
-    text: title(family),
-    collapsed: true,
-    items: catalog.components
-      .filter((component) => component.family === family)
-      .map((component) => ({ text: title(component.id), link: `/components/${component.id}` })),
-  }))
-  .filter((section) => section.items.length > 0);
+const sidebarComponentIds = componentSidebarSections.flatMap((section) => section.componentIds);
+const catalogComponentIds = catalog.components.map((component) => component.id);
+const sidebarComponentIdSet = new Set<string>(sidebarComponentIds);
+const catalogComponentIdSet = new Set(catalogComponentIds);
+const duplicateSidebarIds = sidebarComponentIds.filter((id, index) => sidebarComponentIds.indexOf(id) !== index);
+const missingSidebarIds = catalogComponentIds.filter((id) => !sidebarComponentIdSet.has(id));
+const unknownSidebarIds = sidebarComponentIds.filter((id) => !catalogComponentIdSet.has(id));
 
-const koFamilyLabels: Readonly<Record<string, string>> = Object.freeze({
-  checked: '선택 상태',
-  editing: '입력과 편집',
-  'linear-choice': '목록 선택',
-  range: '범위와 수치',
-  'date-time': '날짜와 시간',
-  collection: '모음과 탐색',
-  menu: '메뉴',
-  popup: '떠 있는 영역',
-  expansion: '펼침과 접힘',
-  navigation: '이동',
-  'paged-navigation': '페이지 이동',
-  'linear-action': '작업 모음',
-  'tree-choice': '계층 선택',
-  feedback: '알림과 피드백',
-});
+if (duplicateSidebarIds.length > 0 || missingSidebarIds.length > 0 || unknownSidebarIds.length > 0) {
+  throw new Error(`Invalid component sidebar: duplicates=${duplicateSidebarIds.join(',')} missing=${missingSidebarIds.join(',')} unknown=${unknownSidebarIds.join(',')}`);
+}
 
-const koComponentSidebar: DefaultTheme.SidebarItem[] = familyOrder
-  .map((family) => ({
-    text: koFamilyLabels[family] ?? family,
-    collapsed: true,
-    items: catalog.components
-      .filter((component) => component.family === family)
-      .map((component) => ({ text: title(component.id), link: `/ko/components/${component.id}` })),
-  }))
-  .filter((section) => section.items.length > 0);
+const buildComponentSidebar = (locale: 'en' | 'ko'): DefaultTheme.SidebarItem[] => {
+  const linkPrefix = locale === 'ko' ? '/ko/components' : '/components';
+
+  return componentSidebarSections.map((section) => ({
+    text: locale === 'ko' ? section.koText : section.text,
+    items: section.componentIds.map((id) => ({
+      text: title(id),
+      link: `${linkPrefix}/${id}`,
+    })),
+  }));
+};
+
+const componentSidebar = buildComponentSidebar('en');
+const koComponentSidebar = buildComponentSidebar('ko');
 
 const theorySidebar: DefaultTheme.SidebarItem[] = [
   { text: 'Overview', link: '/theory/' },
