@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import {
-  Check, ChevronDown, ChevronLeft, ChevronRight, FileCode2, Folder, FolderOpen,
-  GitBranch, PackageCheck, Pause, Play, Star,
+  Check, ChevronDown, ChevronLeft, ChevronRight, Download, FileCode2, FilePlus2, Folder, FolderOpen,
+  FolderPlus, GitBranch, PackageCheck, Pause, Play, Share2, Star, Upload,
 } from '@lucide/vue';
 import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '@sectile/vue/checkbox-group';
 import { SelectContent, SelectItem, SelectItemIndicator, SelectRoot, SelectTrigger, SelectValue } from '@sectile/vue/select';
@@ -24,8 +24,8 @@ import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDial
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
 import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '@sectile/vue/multi-thumb-slider';
 import { MenuItem, MenuRoot, MenuSeparator, MenuSubContent } from '@sectile/vue/menu';
-import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuButtonItem } from '@sectile/vue/menu-button';
-import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '@sectile/vue/navigation-menu';
+import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuButtonItem, MenuSeparator as MenuButtonSeparator, MenuSubContent as MenuButtonSubContent } from '@sectile/vue/menu-button';
+import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger, NavigationMenuViewport } from '@sectile/vue/navigation-menu';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPause, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '@sectile/vue/carousel';
 import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '@sectile/vue/feed';
 import { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxRoot } from '@sectile/vue/combobox';
@@ -81,6 +81,20 @@ const feedEvents = Object.freeze([
 const feedEventIDs = feedEvents.map(({ id }) => id);
 const toolbarItems = ['bold', 'italic', 'link'];
 const menuItems = [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }, { id: 'open', parentID: 'file' }, { id: 'help', parentID: null }];
+const menuButtonItems = computed(() => isScenario('nested')
+  ? [
+      { id: 'download', parentID: null },
+      { id: 'share', parentID: null },
+      { id: 'export', parentID: null },
+      { id: 'pdf', parentID: 'export' },
+      { id: 'markdown', parentID: 'export' },
+      { id: 'csv', parentID: 'export' },
+    ]
+  : [
+      { id: 'new-file', parentID: null },
+      { id: 'new-folder', parentID: null },
+      { id: 'import', parentID: null },
+    ]);
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
 const dateRange = Object.freeze({ start: date, end: Object.freeze({ year: 2026, month: 8, day: 25 }) });
 const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 }) });
@@ -118,7 +132,7 @@ const parts: Record<string, readonly string[]> = {
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
-  'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuLink'],
+  'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
   'tree-view': ['TreeViewRoot', 'TreeViewItem', 'TreeViewDisclosure', 'TreeViewGroup'], 'tree-grid': ['TreeGridRoot', 'TreeGridRow', 'TreeGridCell', 'TreeGridEditor'],
 };
@@ -131,7 +145,7 @@ const gridRows = computed(() => isScenario('editable', 'controlled', 'disabled-w
   ? [['Production', 'Ready', 'v0.2'], ['Preview', 'Pending', 'next']]
   : [['Core', 'Ready'], ['Vue', 'Active']]);
 const checkoutValue = ref('delivery');
-const actionStatus = ref('Choose an action');
+const actionStatus = ref('');
 const feedWindow = ref<readonly string[]>(Object.freeze(feedEventIDs.slice(1, 4)));
 const feedRevision = ref(0);
 const feedStatus = ref('');
@@ -165,7 +179,11 @@ const advanceCheckout = (current: string): void => {
   if (next !== undefined) checkoutValue.value = next;
 };
 const recordAction = (value: string): void => {
-  const labels: Readonly<Record<string, string>> = Object.freeze({ bold: 'Bold', italic: 'Italic', link: 'Link', file: 'File', new: 'New', open: 'Open', help: 'Help' });
+  const labels: Readonly<Record<string, string>> = Object.freeze({
+    bold: 'Bold', italic: 'Italic', link: 'Link', file: 'File', new: 'New', open: 'Open', help: 'Help',
+    'new-file': 'New file', 'new-folder': 'New folder', import: 'Import', download: 'Download', share: 'Share',
+    export: 'Export', pdf: 'PDF', markdown: 'Markdown', csv: 'CSV',
+  });
   actionStatus.value = `${labels[value] ?? value} action invoked`;
 };
 const loadFeedWindow = (direction: 'before' | 'after'): void => {
@@ -291,16 +309,16 @@ const loadFeedWindow = (direction: 'before' | 'after'): void => {
         </DialogContent>
       </DialogRoot>
       <AlertDialogRoot v-else-if="component === 'alert-dialog'">
-        <AlertDialogTrigger>{{ isScenario('unsaved') ? 'Leave editor' : 'Delete project' }}</AlertDialogTrigger>
+        <AlertDialogTrigger>{{ isScenario('unsaved') ? 'Discard draft' : 'Delete project' }}</AlertDialogTrigger>
         <AlertDialogOverlay class="catalog-dialog-overlay" />
-        <AlertDialogContent class="catalog-dialog catalog-alert-dialog">
+        <AlertDialogContent :class="['catalog-dialog', 'catalog-alert-dialog', isScenario('unsaved') ? 'catalog-alert-dialog--warning' : 'catalog-alert-dialog--danger']">
           <AlertDialogTitle class="catalog-dialog-title">{{ isScenario('unsaved') ? 'Discard unsaved changes?' : 'Delete project?' }}</AlertDialogTitle>
           <AlertDialogDescription class="catalog-dialog-description">
-            {{ isScenario('unsaved') ? 'Your unsaved edits will be lost.' : 'This action cannot be undone.' }}
+            {{ isScenario('unsaved') ? 'Your edits to Release 0.3 will be lost.' : 'This permanently removes the project and its deployment history.' }}
           </AlertDialogDescription>
           <div class="catalog-dialog-actions">
-            <AlertDialogClose class="secondary">Cancel</AlertDialogClose>
-            <AlertDialogClose class="catalog-danger-button">{{ isScenario('unsaved') ? 'Discard changes' : 'Delete project' }}</AlertDialogClose>
+            <AlertDialogClose class="secondary">{{ isScenario('unsaved') ? 'Keep editing' : 'Cancel' }}</AlertDialogClose>
+            <AlertDialogClose :class="isScenario('unsaved') ? 'catalog-warning-button' : 'catalog-danger-button'">{{ isScenario('unsaved') ? 'Discard changes' : 'Delete project' }}</AlertDialogClose>
           </div>
         </AlertDialogContent>
       </AlertDialogRoot>
@@ -310,23 +328,42 @@ const loadFeedWindow = (direction: 'before' | 'after'): void => {
 
       <div v-else-if="component === 'menu'" class="catalog-action-demo"><MenuRoot :items="menuItems" class="catalog-menu" @invoke="recordAction"><MenuItem value="file">File ›</MenuItem><MenuSubContent for="file" class="catalog-submenu"><MenuItem value="new">New</MenuItem><MenuItem value="open">Open</MenuItem></MenuSubContent><MenuSeparator /><MenuItem value="help">Help</MenuItem></MenuRoot><p class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p></div>
       <MenubarExample v-else-if="component === 'menubar'" :scenario="scenario" />
-      <div v-else-if="component === 'menu-button'" class="catalog-action-demo"><MenuButtonRoot :items="menuItems" :default-open="isScenario('nested', 'controlled')" @invoke="recordAction"><MenuButtonTrigger>Actions</MenuButtonTrigger><MenuButtonContent class="catalog-popup"><MenuButtonItem value="file">File</MenuButtonItem><MenuButtonItem value="help">Help</MenuButtonItem></MenuButtonContent></MenuButtonRoot><p class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p></div>
-      <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="menuItems" :disabled="isScenario('disabled')" label="Primary" class="catalog-navigation-menu">
+      <div v-else-if="component === 'menu-button'" class="catalog-action-demo catalog-menu-button-demo">
+        <MenuButtonRoot :items="menuButtonItems" :default-open="isScenario('nested')" @invoke="recordAction">
+          <MenuButtonTrigger class="catalog-menu-button-trigger">
+            <Share2 v-if="isScenario('nested')" :size="17" aria-hidden="true" />
+            <FilePlus2 v-else :size="17" aria-hidden="true" />
+            <span>{{ isScenario('nested') ? 'Export options' : 'Create' }}</span>
+            <ChevronDown :size="15" aria-hidden="true" />
+          </MenuButtonTrigger>
+          <MenuButtonContent class="catalog-popup catalog-menu-button-popup">
+            <template v-if="isScenario('nested')">
+              <MenuButtonItem value="download" class="catalog-menu-button-item"><Download :size="17" aria-hidden="true" /><span>Download copy</span><kbd>⇧D</kbd></MenuButtonItem>
+              <MenuButtonItem value="share" class="catalog-menu-button-item"><Share2 :size="17" aria-hidden="true" /><span>Share link</span><kbd>⌘L</kbd></MenuButtonItem>
+              <MenuButtonSeparator class="catalog-menu-button-separator" />
+              <MenuButtonItem value="export" class="catalog-menu-button-item"><FileCode2 :size="17" aria-hidden="true" /><span>Export as</span><ChevronRight :size="15" aria-hidden="true" /></MenuButtonItem>
+              <MenuButtonSubContent for="export" class="catalog-popup catalog-menu-button-submenu">
+                <MenuButtonItem value="pdf" class="catalog-menu-button-item"><span>PDF document</span><kbd>.pdf</kbd></MenuButtonItem>
+                <MenuButtonItem value="markdown" class="catalog-menu-button-item"><span>Markdown</span><kbd>.md</kbd></MenuButtonItem>
+                <MenuButtonItem value="csv" class="catalog-menu-button-item"><span>CSV data</span><kbd>.csv</kbd></MenuButtonItem>
+              </MenuButtonSubContent>
+            </template>
+            <template v-else>
+              <MenuButtonItem value="new-file" class="catalog-menu-button-item"><FilePlus2 :size="17" aria-hidden="true" /><span>New file</span><kbd>⌘N</kbd></MenuButtonItem>
+              <MenuButtonItem value="new-folder" class="catalog-menu-button-item"><FolderPlus :size="17" aria-hidden="true" /><span>New folder</span><kbd>⇧⌘N</kbd></MenuButtonItem>
+              <MenuButtonSeparator class="catalog-menu-button-separator" />
+              <MenuButtonItem value="import" class="catalog-menu-button-item"><Upload :size="17" aria-hidden="true" /><span>Import…</span></MenuButtonItem>
+            </template>
+          </MenuButtonContent>
+        </MenuButtonRoot>
+        <p v-if="actionStatus" class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p>
+      </div>
+      <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="menuItems" :disabled="isScenario('disabled')" label="Primary" class="catalog-navigation-menu" v-slot="{ openPath }">
         <NavigationMenuList class="catalog-navigation-list">
           <NavigationMenuItem class="catalog-navigation-item">
             <NavigationMenuTrigger value="file" as="button" class="catalog-navigation-trigger">
               {{ isScenario('links') ? 'Resources' : 'Products' }} <ChevronDown :size="15" aria-hidden="true" />
             </NavigationMenuTrigger>
-            <NavigationMenuContent for="file" class="catalog-navigation-panel">
-              <NavigationMenuLink value="new" as="a" href="#new" class="catalog-navigation-card">
-                <PackageCheck :size="18" aria-hidden="true" />
-                <span><strong>{{ isScenario('links') ? 'Guides' : 'New releases' }}</strong><small>{{ isScenario('links') ? 'Patterns for integrating Sectile' : 'What shipped in the latest version' }}</small></span>
-              </NavigationMenuLink>
-              <NavigationMenuLink value="open" as="a" href="#open" class="catalog-navigation-card">
-                <GitBranch :size="18" aria-hidden="true" />
-                <span><strong>{{ isScenario('links') ? 'API reference' : 'Open source' }}</strong><small>{{ isScenario('links') ? 'Props, events, parts, and types' : 'Browse packages and contribution guides' }}</small></span>
-              </NavigationMenuLink>
-            </NavigationMenuContent>
           </NavigationMenuItem>
           <NavigationMenuItem class="catalog-navigation-item">
             <NavigationMenuLink value="help" as="a" href="#docs" class="catalog-navigation-link">
@@ -334,6 +371,18 @@ const loadFeedWindow = (direction: 'before' | 'after'): void => {
             </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
+        <NavigationMenuViewport v-show="openPath.includes('file')" class="catalog-navigation-viewport">
+          <NavigationMenuContent for="file" class="catalog-navigation-panel">
+            <NavigationMenuLink value="new" as="a" href="#new" class="catalog-navigation-card">
+              <PackageCheck :size="18" aria-hidden="true" />
+              <span><strong>{{ isScenario('links') ? 'Guides' : 'New releases' }}</strong><small>{{ isScenario('links') ? 'Patterns for integrating Sectile' : 'What shipped in the latest version' }}</small></span>
+            </NavigationMenuLink>
+            <NavigationMenuLink value="open" as="a" href="#open" class="catalog-navigation-card">
+              <GitBranch :size="18" aria-hidden="true" />
+              <span><strong>{{ isScenario('links') ? 'API reference' : 'Open source' }}</strong><small>{{ isScenario('links') ? 'Props, events, parts, and types' : 'Browse packages and contribution guides' }}</small></span>
+            </NavigationMenuLink>
+          </NavigationMenuContent>
+        </NavigationMenuViewport>
       </NavigationMenuRoot>
 
       <CarouselRoot

@@ -37,7 +37,8 @@ const catalogCode = await readFile(
 
 test('navigation menu resets document markers and presents a composed popup', () => {
   assert.match(styles, /\.catalog-navigation-menu :is\(ul, ol\)[^{]*\{[^}]*list-style:\s*none;/s);
-  assert.match(styles, /\.catalog-navigation-panel\s*\{[^}]*position:\s*absolute;[^}]*grid-template-columns:\s*repeat\(2,/s);
+  assert.match(styles, /\.catalog-navigation-viewport\s*\{[^}]*position:\s*absolute;/s);
+  assert.match(styles, /\.catalog-navigation-panel\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
   assert.match(navigation, /catalog-navigation-card/);
   assert.match(navigation, /<ChevronDown/);
   assert.match(styles, /a\.catalog-navigation-link\s*\{[^}]*text-decoration:\s*none\s*!important;/s);

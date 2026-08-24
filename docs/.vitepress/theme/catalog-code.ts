@@ -409,13 +409,15 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'AlertDialogRoot, AlertDialogTrigger, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
     `  <AlertDialogRoot>
     <AlertDialogTrigger>Delete project</AlertDialogTrigger>
-    <AlertDialogOverlay />
+    <AlertDialogOverlay class="dialog-overlay" />
     <AlertDialogContent>
       <AlertDialogTitle>Delete project?</AlertDialogTitle>
-      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+      <AlertDialogDescription>
+        This permanently removes the project and its deployment history.
+      </AlertDialogDescription>
       <div class="actions">
         <AlertDialogClose>Cancel</AlertDialogClose>
-        <AlertDialogClose>Delete project</AlertDialogClose>
+        <AlertDialogClose class="danger">Delete project</AlertDialogClose>
       </div>
     </AlertDialogContent>
   </AlertDialogRoot>`,
@@ -528,38 +530,43 @@ const labels = {
 const textValue = id => labels[id] ?? id`,
   ),
   'menu-button': sfc(
-    'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem',
+    'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem, MenuSeparator',
     `  <MenuButtonRoot :items="items" @invoke="lastAction = $event">
-    <MenuButtonTrigger>Actions</MenuButtonTrigger>
+    <MenuButtonTrigger>Create</MenuButtonTrigger>
     <MenuButtonContent>
-      <MenuItem value="edit">Edit</MenuItem>
-      <MenuItem value="duplicate">Duplicate</MenuItem>
+      <MenuItem value="new-file">New file <kbd>⌘N</kbd></MenuItem>
+      <MenuItem value="new-folder">New folder <kbd>⇧⌘N</kbd></MenuItem>
+      <MenuSeparator />
+      <MenuItem value="import">Import…</MenuItem>
     </MenuButtonContent>
   </MenuButtonRoot>
-  <p role="status">{{ lastAction ? lastAction + ' invoked' : 'Choose an action' }}</p>`,
+  <p v-if="lastAction" role="status">{{ lastAction }} invoked</p>`,
     `import { ref } from 'vue'
 
 const lastAction = ref('')
 const items = [
-  { id: 'edit', parentID: null },
-  { id: 'duplicate', parentID: null },
+  { id: 'new-file', parentID: null },
+  { id: 'new-folder', parentID: null },
+  { id: 'import', parentID: null },
 ]`,
   ),
   'navigation-menu': sfc(
-    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuLink',
-    `  <NavigationMenuRoot :items="items" label="Primary">
+    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuViewport, NavigationMenuLink',
+    `  <NavigationMenuRoot :items="items" label="Primary" v-slot="{ openPath }">
     <NavigationMenuList>
       <NavigationMenuItem>
         <NavigationMenuTrigger value="products" as="button">Products</NavigationMenuTrigger>
-        <NavigationMenuContent for="products">
-          <NavigationMenuLink value="overview" as="a" href="/overview">Overview</NavigationMenuLink>
-          <NavigationMenuLink value="components" as="a" href="/components">Components</NavigationMenuLink>
-        </NavigationMenuContent>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink value="docs" as="a" href="/docs">Documentation</NavigationMenuLink>
       </NavigationMenuItem>
     </NavigationMenuList>
+    <NavigationMenuViewport v-show="openPath.includes('products')">
+      <NavigationMenuContent for="products">
+        <NavigationMenuLink value="overview" as="a" href="/overview">Overview</NavigationMenuLink>
+        <NavigationMenuLink value="components" as="a" href="/components">Components</NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuViewport>
   </NavigationMenuRoot>`,
     `const items = [
   { id: 'products', parentID: null },
@@ -747,6 +754,75 @@ const open = ref(false)`,
   ),
 });
 
+const alertDialogScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  destructive: catalogCode['alert-dialog'] ?? '',
+  unsaved: sfc(
+    'AlertDialogRoot, AlertDialogTrigger, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
+    `  <AlertDialogRoot>
+    <AlertDialogTrigger>Discard draft</AlertDialogTrigger>
+    <AlertDialogOverlay class="dialog-overlay" />
+    <AlertDialogContent>
+      <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+      <AlertDialogDescription>
+        Your edits to Release 0.3 will be lost.
+      </AlertDialogDescription>
+      <div class="actions">
+        <AlertDialogClose>Keep editing</AlertDialogClose>
+        <AlertDialogClose class="warning">Discard changes</AlertDialogClose>
+      </div>
+    </AlertDialogContent>
+  </AlertDialogRoot>`,
+  ),
+  controlled: sfc(
+    'AlertDialogRoot, AlertDialogTrigger, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
+    `  <AlertDialogRoot v-model:open="open">
+    <AlertDialogTrigger>Delete project</AlertDialogTrigger>
+    <AlertDialogOverlay class="dialog-overlay" />
+    <AlertDialogContent>
+      <AlertDialogTitle>Delete project?</AlertDialogTitle>
+      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+      <AlertDialogClose>Cancel</AlertDialogClose>
+    </AlertDialogContent>
+  </AlertDialogRoot>`,
+    `import { ref } from 'vue'
+
+const open = ref(false)`,
+  ),
+});
+
+const menuButtonScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  actions: catalogCode['menu-button'] ?? '',
+  nested: sfc(
+    'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem, MenuSeparator, MenuSubContent',
+    `  <MenuButtonRoot :items="items" default-open @invoke="lastAction = $event">
+    <MenuButtonTrigger>Export options</MenuButtonTrigger>
+    <MenuButtonContent>
+      <MenuItem value="download">Download copy <kbd>⇧D</kbd></MenuItem>
+      <MenuItem value="share">Share link <kbd>⌘L</kbd></MenuItem>
+      <MenuSeparator />
+      <MenuItem value="export">Export as ›</MenuItem>
+      <MenuSubContent for="export">
+        <MenuItem value="pdf">PDF document</MenuItem>
+        <MenuItem value="markdown">Markdown</MenuItem>
+        <MenuItem value="csv">CSV data</MenuItem>
+      </MenuSubContent>
+    </MenuButtonContent>
+  </MenuButtonRoot>
+  <p v-if="lastAction" role="status">{{ lastAction }} invoked</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
+  { id: 'download', parentID: null },
+  { id: 'share', parentID: null },
+  { id: 'export', parentID: null },
+  { id: 'pdf', parentID: 'export' },
+  { id: 'markdown', parentID: 'export' },
+  { id: 'csv', parentID: 'export' },
+]`,
+  ),
+});
+
 const popoverScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   anchored: catalogCode['popover'] ?? '',
   collision: sfc(
@@ -787,6 +863,8 @@ const open = ref(false)`,
 
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
   dialog: dialogScenarioCode,
+  'alert-dialog': alertDialogScenarioCode,
+  'menu-button': menuButtonScenarioCode,
   popover: popoverScenarioCode,
 });
 

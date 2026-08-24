@@ -29,6 +29,28 @@ test('menubar examples expose complete command hierarchies and distinct scenario
   assert.match(menubarSource, /<kbd>Ctrl\+N<\/kbd>/);
 });
 
+test('menu button examples expose useful flat and nested command sets', () => {
+  assert.match(source, /const menuButtonItems = computed/u);
+  assert.match(source, /<MenuButtonTrigger class="catalog-menu-button-trigger">/u);
+  assert.match(source, /<MenuButtonSeparator class="catalog-menu-button-separator"/u);
+  assert.match(source, /<MenuButtonSubContent for="export"/u);
+  assert.match(source, /New file/u);
+  assert.match(source, /PDF document/u);
+  assert.match(styles, /\.catalog-menu-button-item\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\) auto;/su);
+});
+
+test('navigation menu panels honor their closed disclosure state', () => {
+  assert.match(styles, /\.catalog-navigation-panel\[hidden\]\s*\{\s*display:\s*none;/);
+});
+
+test('navigation menu keeps equal insets, aligned items, and an anchored popup gap', () => {
+  assert.match(styles, /\.catalog-navigation-menu \.catalog-navigation-list\s*\{[^}]*padding:\s*0\.35rem;/s);
+  assert.match(styles, /\.catalog-navigation-menu \.catalog-navigation-item\s*\{[^}]*position:\s*static;[^}]*margin:\s*0;/s);
+  assert.match(styles, /\.catalog-navigation-trigger, \.catalog-navigation-link\s*\{[^}]*height:\s*2\.5rem;[^}]*line-height:\s*1;/s);
+  assert.match(styles, /\.catalog-navigation-viewport\s*\{[^}]*top:\s*calc\(100% \+ 0\.5rem\);[^}]*overflow:\s*visible;/s);
+  assert.match(source, /<NavigationMenuViewport v-show="openPath\.includes\('file'\)"/);
+});
+
 test('disabled grid examples only reference cells present in their row model', () => {
   assert.match(source, /isScenario\('editable', 'controlled', 'disabled-wrap'\)/);
   assert.match(source, /\['Preview', 'Pending', 'next'\]/);
