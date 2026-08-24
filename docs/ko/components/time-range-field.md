@@ -1,39 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 시간 범위 입력
 
-시간 범위 입력는 입력 중인 값과 확정된 값을 분리해 다룹니다.
+간격과 순서 규칙을 지키며 시작·종료 시각을 편집합니다.
 
-## 기본 사용법
+## 예시
 
-업무 시간 설정에서 시간 범위 입력의 실제 동작을 확인할 수 있습니다.
+### 업무 시간
 
-<ComponentExample component="time-range-field" scenario="office-hours" title="시간 범위 입력" description="업무 시간 설정에서 시간 범위 입력의 실제 동작을 확인할 수 있습니다." :index="0" />
+일반 업무 시간 안에서 시작 시각과 종료 시각을 선택합니다.
 
-## 지원 기능
-
-- 각각 독립된 양 끝값 입력 중인 값
-- 시간대에 영향받지 않는 시각 범위
-- 입력 미완료 범위 상태
-- 글자 입력 위치 날짜·시간 단위 조절
-- 같은 날의 시작·종료 순서 검증
-- 부모가 관리하는 범위 및 입력값 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="time-range-field" scenario="office-hours" title="업무 시간" description="일반 업무 시간 안에서 시작 시각과 종료 시각을 선택합니다." :index="0" />
 
 ### 일정 간격
 
-설정한 간격에 맞는 값만 입력하고 조절할 수 있습니다.
+설정한 간격에 맞는 값만 입력하고 조절합니다.
 
-<ComponentExample component="time-range-field" scenario="stepped" title="일정 간격" description="설정한 간격에 맞는 값만 입력하고 조절할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 시간 범위 입력에 전달합니다.
-
-<ComponentExample component="time-range-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 시간 범위 입력에 전달합니다." :index="2" />
+<ComponentExample component="time-range-field" scenario="stepped" title="일정 간격" description="설정한 간격에 맞는 값만 입력하고 조절합니다." :index="1" />
 
 ## 구성
 
@@ -41,23 +23,46 @@
 
 <ComponentAnatomy component="time-range-field" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/time-range-field`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TimeRangeFieldRoot</code></li>
+  <li><code class="component-api-token">TimeRangeFieldStartInput</code></li>
+  <li><code class="component-api-token">TimeRangeFieldEndInput</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TimeRangeFieldRootProps</code></li>
+  <li><code class="component-api-token">TimeRangeFieldRootSlotProps</code></li>
+  <li><code class="component-api-token">TimeRange</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/time-range-field` | 배포됨 |
-| 브라우저 | `@sectile/dom/time-range-field` | 배포됨 |
-| 터미널 | `@sectile/terminal/time-range-field` | 배포됨 |
-| Vue | `@sectile/vue/time-range-field` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="time-range-field"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">start-input</code></li>
+  <li><code class="component-part-token">end-input</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/state-and-text#text)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | 현재 값 구간을 증가시키거나 감소시킵니다. |
+| <kbd>Enter</kbd> | 입력 중인 값을 확정합니다. |
+| <kbd>Escape</kbd> | 입력을 취소하고 확정된 값을 복원합니다. |
+
+## 접근성
+
+시작과 종료 입력에 각각 이름을 제공하고 양 끝의 오류가 보이는 하나의 순서 있는 시간 범위로 노출합니다.

@@ -1,39 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 대화상자
 
-대화상자는 열림 상태와 포커스 이동, 닫힘 동작을 다룹니다.
+모달 또는 비모달 방식으로 페이지 위에 포커스된 내용을 엽니다.
 
-## 기본 사용법
+## 예시
 
-모달 설정에서 대화상자의 실제 동작을 확인할 수 있습니다.
+### 모달
 
-<ComponentExample component="dialog" scenario="modal" title="대화상자" description="모달 설정에서 대화상자의 실제 동작을 확인할 수 있습니다." :index="0" />
+열린 대화상자 안에 포커스를 유지하고 닫을 때 실행 요소로 되돌립니다.
 
-## 지원 기능
-
-- 열림 상태 상태
-- 초기 포커스 명령
-- 포커스 이전 포커스 복원 명령
-- 모달 여부 화면 표현
-- 포커스 포커스 가두기
-- 부모가 관리하는 열림 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="dialog" scenario="modal" title="모달" description="열린 대화상자 안에 포커스를 유지하고 닫을 때 실행 요소로 되돌립니다." :index="0" />
 
 ### 비모달 모달
 
-비모달 모달 설정에서 대화상자의 실제 동작을 확인할 수 있습니다.
+대화상자가 열려 있어도 주변 내용을 계속 조작할 수 있습니다.
 
-<ComponentExample component="dialog" scenario="non-modal" title="비모달 모달" description="비모달 모달 설정에서 대화상자의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 대화상자에 전달합니다.
-
-<ComponentExample component="dialog" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 대화상자에 전달합니다." :index="2" />
+<ComponentExample component="dialog" scenario="non-modal" title="비모달 모달" description="대화상자가 열려 있어도 주변 내용을 계속 조작할 수 있습니다." :index="1" />
 
 ## 구성
 
@@ -41,23 +23,59 @@
 
 <ComponentAnatomy component="dialog" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/dialog`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">DialogRoot</code></li>
+  <li><code class="component-api-token">DialogTrigger</code></li>
+  <li><code class="component-api-token">DialogPortal</code></li>
+  <li><code class="component-api-token">DialogOverlay</code></li>
+  <li><code class="component-api-token">DialogContent</code></li>
+  <li><code class="component-api-token">DialogTitle</code></li>
+  <li><code class="component-api-token">DialogDescription</code></li>
+  <li><code class="component-api-token">DialogClose</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">DialogRootProps</code></li>
+  <li><code class="component-api-token">DialogRootSlotProps</code></li>
+  <li><code class="component-api-token">DialogPartProps</code></li>
+  <li><code class="component-api-token">DialogPortalProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/dialog` | 배포됨 |
-| 브라우저 | `@sectile/dom/dialog` | 배포됨 |
-| 터미널 | `@sectile/terminal/dialog` | 배포됨 |
-| Vue | `@sectile/vue/dialog` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="dialog"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">trigger</code></li>
+  <li><code class="component-part-token">overlay</code></li>
+  <li><code class="component-part-token">content</code></li>
+  <li><code class="component-part-token">title</code></li>
+  <li><code class="component-part-token">description</code></li>
+  <li><code class="component-part-token">close</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 실행 요소나 포커스된 작업을 실행합니다. |
+| <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> | 사용 가능한 컨트롤 사이를 이동하며 모달 내용은 포커스를 내부에 유지합니다. |
+| <kbd>Escape</kbd> | 팝업을 닫고 설정된 경우 포커스를 복원합니다. |
+
+## 접근성
+
+대화상자는 제목과 설명을 연결하고 모달일 때만 포커스를 가둔 뒤 닫힐 때 복원합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

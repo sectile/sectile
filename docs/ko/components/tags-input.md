@@ -1,38 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 태그 입력
 
-태그 입력는 입력 중인 값과 확정된 값을 분리해 다룹니다.
+하나의 입력 필드에서 자유 형식 태그를 만들고 이동하고 지웁니다.
 
-## 기본 사용법
+## 예시
 
-기술 태그 설정에서 태그 입력의 실제 동작을 확인할 수 있습니다.
+### 기술 태그
 
-<ComponentExample component="tags-input" scenario="skills" title="태그 입력" description="기술 태그 설정에서 태그 입력의 실제 동작을 확인할 수 있습니다." :index="0" />
+입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다.
 
-## 지원 기능
-
-- 텍스트 입력 중인 값
-- 태그 항목 모음
-- 태그 현재 위치
-- 입력 정리
-- 부모가 관리하는 값 및 입력 중인 값
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="tags-input" scenario="skills" title="기술 태그" description="입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다." :index="0" />
 
 ### 개수 제한
 
-화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다.
+기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
 
-<ComponentExample component="tags-input" scenario="limited" title="개수 제한" description="화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 태그 입력에 전달합니다.
-
-<ComponentExample component="tags-input" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 태그 입력에 전달합니다." :index="2" />
+<ComponentExample component="tags-input" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="1" />
 
 ## 구성
 
@@ -40,23 +23,54 @@
 
 <ComponentAnatomy component="tags-input" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/tags-input`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TagsInputRoot</code></li>
+  <li><code class="component-api-token">TagsInputItem</code></li>
+  <li><code class="component-api-token">TagsInputItemText</code></li>
+  <li><code class="component-api-token">TagsInputItemDelete</code></li>
+  <li><code class="component-api-token">TagsInputInput</code></li>
+  <li><code class="component-api-token">TagsInputClear</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TagsInputRootProps</code></li>
+  <li><code class="component-api-token">TagsInputRootSlotProps</code></li>
+  <li><code class="component-api-token">TagsInputItemProps</code></li>
+  <li><code class="component-api-token">TagsInputItemSlotProps</code></li>
+  <li><code class="component-api-token">TagsInputPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/tags-input` | 배포됨 |
-| 브라우저 | `@sectile/dom/tags-input` | 배포됨 |
-| 터미널 | `@sectile/terminal/tags-input` | 배포됨 |
-| Vue | `@sectile/vue/tags-input` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="tags-input"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">item-text</code></li>
+  <li><code class="component-part-token">item-delete</code></li>
+  <li><code class="component-part-token">input</code></li>
+  <li><code class="component-part-token">clear</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/state-and-text#text)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Enter</kbd> / <kbd>Comma</kbd> | 현재 입력을 태그로 확정합니다. |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 입력란과 기존 태그 사이를 이동합니다. |
+| <kbd>Backspace</kbd> / <kbd>Delete</kbd> | 커서 상태에 따라 현재 태그로 이동하거나 삭제합니다. |
+
+## 접근성
+
+이름이 있는 묶음이 텍스트 입력을 기본 요소로 유지하고 각 태그 삭제 작업에 이름을 제공합니다.

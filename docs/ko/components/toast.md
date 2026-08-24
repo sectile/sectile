@@ -1,39 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 토스트 알림
 
-토스트 알림는 여러 알림의 순서, 표시 시간, 닫힘 동작을 다룹니다.
+현재 작업을 막지 않고 짧은 피드백을 순서대로 알립니다.
 
-## 기본 사용법
+## 예시
 
-자동 전환 설정에서 토스트 알림의 실제 동작을 확인할 수 있습니다.
+### 자동 닫힘
 
-<ComponentExample component="toast" scenario="automatic" title="토스트 알림" description="자동 전환 설정에서 토스트 알림의 실제 동작을 확인할 수 있습니다." :index="0" />
+잠시 표시한 알림을 자동으로 닫되 사용자가 바로 닫을 수 있는 버튼도 함께 제공합니다.
 
-## 지원 기능
-
-- 대기 중인 알림 대기열
-- 알림 종류 화면 읽기 알림
-- 자동 닫힘 또는 계속 표시
-- 일시 정지 다시 시작
-- 표시 제한
-- 직접 선택 직접 닫기
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="toast" scenario="automatic" title="자동 닫힘" description="잠시 표시한 알림을 자동으로 닫되 사용자가 바로 닫을 수 있는 버튼도 함께 제공합니다." :index="0" />
 
 ### 자동으로 닫히지 않는 알림
 
 사용자가 직접 닫을 때까지 알림을 계속 표시합니다.
 
 <ComponentExample component="toast" scenario="persistent" title="자동으로 닫히지 않는 알림" description="사용자가 직접 닫을 때까지 알림을 계속 표시합니다." :index="1" />
+
 ### 개수 제한
 
-화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다.
+기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
 
-<ComponentExample component="toast" scenario="limited" title="개수 제한" description="화면에 표시할 알림 수를 제한하면서 대기 순서를 유지합니다." :index="2" />
+<ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
 
 ## 구성
 
@@ -41,23 +29,54 @@
 
 <ComponentAnatomy component="toast" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/toast`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ToastProvider</code></li>
+  <li><code class="component-api-token">ToastViewport</code></li>
+  <li><code class="component-api-token">ToastRoot</code></li>
+  <li><code class="component-api-token">ToastTitle</code></li>
+  <li><code class="component-api-token">ToastDescription</code></li>
+  <li><code class="component-api-token">ToastClose</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ToastProviderProps</code></li>
+  <li><code class="component-api-token">ToastProviderSlotProps</code></li>
+  <li><code class="component-api-token">ToastPartProps</code></li>
+  <li><code class="component-api-token">ToastRootProps</code></li>
+  <li><code class="component-api-token">ToastRootSlotProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/toast` | 배포됨 |
-| 브라우저 | `@sectile/dom/toast` | 배포됨 |
-| 터미널 | `@sectile/terminal/toast` | 배포됨 |
-| Vue | `@sectile/vue/toast` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="toast"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">viewport</code></li>
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">title</code></li>
+  <li><code class="component-part-token">description</code></li>
+  <li><code class="component-part-token">close</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/composition)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Tab</kbd> | 컴포넌트의 기본 작업 컨트롤 사이를 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 포커스된 작업을 실행합니다. |
+
+## 접근성
+
+표시 영역이 알림 순서를 유지하고 각 토스트에 제목·설명·닫기 작업의 이름을 제공합니다.

@@ -1,37 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 체크박스 묶음
 
-체크박스 묶음는 순서가 있는 항목 사이의 이동과 선택을 다룹니다.
+하나의 묶음에서 서로 독립된 선택지를 원하는 만큼 고릅니다.
 
-## 기본 사용법
+## 예시
 
-배포 채널 색상 채널 조절 설정에서 체크박스 묶음의 실제 동작을 확인할 수 있습니다.
+### 배포 채널 색상 채널 조절
 
-<ComponentExample component="checkbox-group" scenario="release-channels" title="체크박스 묶음" description="배포 채널 색상 채널 조절 설정에서 체크박스 묶음의 실제 동작을 확인할 수 있습니다." :index="0" />
+서로 독립된 배포 채널을 하나 이상 선택합니다.
 
-## 지원 기능
-
-- 현재 위치
-- 여러 항목 선택 선택
-- 사용 가능 여부
-- 부모가 관리하는 선택 및 현재 항목
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="checkbox-group" scenario="release-channels" title="배포 채널 색상 채널 조절" description="서로 독립된 배포 채널을 하나 이상 선택합니다." :index="0" />
 
 ### 비활성 항목 선택 항목
 
-비활성 항목 선택 항목 설정에서 체크박스 묶음의 실제 동작을 확인할 수 있습니다.
+사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다.
 
-<ComponentExample component="checkbox-group" scenario="disabled-choice" title="비활성 항목 선택 항목" description="비활성 항목 선택 항목 설정에서 체크박스 묶음의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 체크박스 묶음에 전달합니다.
-
-<ComponentExample component="checkbox-group" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 체크박스 묶음에 전달합니다." :index="2" />
+<ComponentExample component="checkbox-group" scenario="disabled-choice" title="비활성 항목 선택 항목" description="사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다." :index="1" />
 
 ## 구성
 
@@ -39,23 +23,47 @@
 
 <ComponentAnatomy component="checkbox-group" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/checkbox-group`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CheckboxGroupRoot</code></li>
+  <li><code class="component-api-token">CheckboxGroupItem</code></li>
+  <li><code class="component-api-token">CheckboxGroupIndicator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CheckboxGroupRootProps</code></li>
+  <li><code class="component-api-token">CheckboxGroupRootSlotProps</code></li>
+  <li><code class="component-api-token">CheckboxGroupItemProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/checkbox-group` | 배포됨 |
-| 브라우저 | `@sectile/dom/checkbox-group` | 배포됨 |
-| 터미널 | `@sectile/terminal/checkbox-group` | 배포됨 |
-| Vue | `@sectile/vue/checkbox-group` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="checkbox-group"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">indicator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Tab</kbd> | 묶음 안팎으로 포커스를 이동합니다. |
+| <kbd>Space</kbd> | 포커스된 체크박스 항목을 전환합니다. |
+
+## 접근성
+
+이름이 있는 묶음 안에서 각 항목을 선택·비활성 상태가 있는 독립 체크박스로 유지합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/checkbox/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

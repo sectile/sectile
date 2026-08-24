@@ -1,56 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 색상 선택기
 
-색상 선택기는 입력 중인 값과 확정된 값을 분리해 다룹니다.
+기본 입력, 텍스트, 채널, 색상 영역으로 정확한 색을 편집합니다.
 
-## 기본 사용법
+## 예시
 
-브라우저 기본 색상 선택기 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다.
+### 브라우저 기본 색상 선택기
 
-<ComponentExample component="color-picker" scenario="native" title="색상 선택기" description="브라우저 기본 색상 선택기 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다." :index="0" />
+브라우저 기본 색상 입력과 텍스트 입력이 같은 정확한 색상값을 사용합니다.
 
-## 지원 기능
-
-- 정확한 정수 RGBA 값
-- HEX와 RGB 입력 해석
-- 입력 중인 값 입력 확정 또는 취소
-- 색상 채널 조절
-- 투명도 규칙
-- 표시 형식 화면 표현
-- 브라우저 기본 색상 입력
-- 부모가 관리하는 값 입력 중인 값 및 표시 형식
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="color-picker" scenario="native" title="브라우저 기본 색상 선택기" description="브라우저 기본 색상 입력과 텍스트 입력이 같은 정확한 색상값을 사용합니다." :index="0" />
 
 ### 투명도
 
-투명도 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다.
+화면에 보이는 색상 채널과 투명도를 함께 조절합니다.
 
-<ComponentExample component="color-picker" scenario="alpha" title="투명도" description="투명도 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 색상 선택기에 전달합니다.
-
-<ComponentExample component="color-picker" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 색상 선택기에 전달합니다." :index="2" />
-### 텍스트
-
-텍스트 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="color-picker" scenario="text" title="텍스트" description="텍스트 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다." :index="3" />
-### 색상 채널 조절
-
-색상 채널 조절 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="color-picker" scenario="channels" title="색상 채널 조절" description="색상 채널 조절 설정에서 색상 선택기의 실제 동작을 확인할 수 있습니다." :index="4" />
-### 읽기 전용
-
-색상 선택기에 포커스를 옮겨 값을 확인할 수 있지만 변경할 수는 없습니다.
-
-<ComponentExample component="color-picker" scenario="readonly" title="읽기 전용" description="색상 선택기에 포커스를 옮겨 값을 확인할 수 있지만 변경할 수는 없습니다." :index="5" />
+<ComponentExample component="color-picker" scenario="alpha" title="투명도" description="화면에 보이는 색상 채널과 투명도를 함께 조절합니다." :index="1" />
 
 ## 구성
 
@@ -58,23 +23,82 @@
 
 <ComponentAnatomy component="color-picker" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/color-picker`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ColorPickerRoot</code></li>
+  <li><code class="component-api-token">ColorPickerLabel</code></li>
+  <li><code class="component-api-token">ColorPickerControl</code></li>
+  <li><code class="component-api-token">ColorPickerNativeInput</code></li>
+  <li><code class="component-api-token">ColorPickerTextInput</code></li>
+  <li><code class="component-api-token">ColorPickerChannelInput</code></li>
+  <li><code class="component-api-token">ColorPickerCoordinateInput</code></li>
+  <li><code class="component-api-token">ColorPickerCoordinateSlider</code></li>
+  <li><code class="component-api-token">ColorPickerArea</code></li>
+  <li><code class="component-api-token">ColorPickerAreaThumb</code></li>
+  <li><code class="component-api-token">ColorPickerHueSlider</code></li>
+  <li><code class="component-api-token">ColorPickerAlphaSlider</code></li>
+  <li><code class="component-api-token">ColorPickerSwatch</code></li>
+  <li><code class="component-api-token">ColorPickerValueText</code></li>
+  <li><code class="component-api-token">ColorPickerFormatTrigger</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ColorPickerRootProps</code></li>
+  <li><code class="component-api-token">ColorPickerRootSlotProps</code></li>
+  <li><code class="component-api-token">ColorPickerPartProps</code></li>
+  <li><code class="component-api-token">ColorPickerChannelInputProps</code></li>
+  <li><code class="component-api-token">ColorPickerFormatTriggerProps</code></li>
+  <li><code class="component-api-token">ColorPickerCoordinateInputProps</code></li>
+  <li><code class="component-api-token">ColorPickerCoordinateSliderProps</code></li>
+  <li><code class="component-api-token">ColorAreaValue</code></li>
+  <li><code class="component-api-token">ColorChannel</code></li>
+  <li><code class="component-api-token">ColorCoordinate</code></li>
+  <li><code class="component-api-token">ColorCoordinateValue</code></li>
+  <li><code class="component-api-token">ColorFormat</code></li>
+  <li><code class="component-api-token">ColorModel</code></li>
+  <li><code class="component-api-token">ColorPickerPolicies</code></li>
+  <li><code class="component-api-token">ColorValue</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/color-picker` | 배포됨 |
-| 브라우저 | `@sectile/dom/color-picker` | 배포됨 |
-| 터미널 | `@sectile/terminal/color-picker` | 배포됨 |
-| Vue | `@sectile/vue/color-picker` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="color-picker"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">label</code></li>
+  <li><code class="component-part-token">control</code></li>
+  <li><code class="component-part-token">native-input</code></li>
+  <li><code class="component-part-token">text-input</code></li>
+  <li><code class="component-part-token">channel-input</code></li>
+  <li><code class="component-part-token">coordinate-input</code></li>
+  <li><code class="component-part-token">coordinate-slider</code></li>
+  <li><code class="component-part-token">area</code></li>
+  <li><code class="component-part-token">area-thumb</code></li>
+  <li><code class="component-part-token">hue-slider</code></li>
+  <li><code class="component-part-token">alpha-slider</code></li>
+  <li><code class="component-part-token">swatch</code></li>
+  <li><code class="component-part-token">value-text</code></li>
+  <li><code class="component-part-token">format-trigger</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/state-and-text#text)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 현재 색상 좌표나 슬라이더 값을 조절합니다. |
+| <kbd>Enter</kbd> | 입력한 색상 값을 확정합니다. |
+| <kbd>Escape</kbd> | 입력을 취소하고 확정된 색상을 복원합니다. |
+
+## 접근성
+
+텍스트 입력과 슬라이더가 이름, 범위, 현재 값, 색상 채널 역할을 노출해 색만으로 정보를 전달하지 않습니다.

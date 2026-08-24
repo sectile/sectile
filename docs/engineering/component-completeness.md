@@ -16,9 +16,9 @@ The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
    forcing applications to rebuild adapter internals.
 6. **Failure edges** — empty, disabled, stale, invalid, bounded-resource, and dynamic
    collection cases are either verified or explicitly inapplicable.
-7. **DOM scenarios** — the playground demonstrates core mode, major variants, and an
+7. **DOM scenarios** — the documentation demonstrates core mode, major variants, and an
    edge or dynamic state with real interactive markup.
-8. **Terminal scenarios** — the terminal playground demonstrates the same semantic
+8. **Terminal scenarios** — the documentation terminal preview demonstrates the same semantic
    variants plus terminal-specific input behavior.
 9. **Cross-host parity** — both adapters witness the same renderer-neutral transitions.
 10. **Framework ergonomics** — framework packages expose the conventions of their

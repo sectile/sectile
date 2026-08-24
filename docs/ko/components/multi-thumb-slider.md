@@ -1,42 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 다중 슬라이더
 
-다중 슬라이더는 일정한 간격으로 나뉜 수치 범위를 정확하게 다룹니다.
+하나의 수치 트랙에서 순서가 있는 여러 값을 조절합니다.
 
-## 기본 사용법
+## 예시
 
-핸들 두 개로 고르는 범위 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다.
+### 핸들 두 개로 고르는 범위
 
-<ComponentExample component="multi-thumb-slider" scenario="two-thumb-range" title="다중 슬라이더" description="핸들 두 개로 고르는 범위 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다." :index="0" />
+핸들 두 개로 범위의 최솟값과 최댓값을 고릅니다.
 
-## 지원 기능
-
-- 핸들 현재 위치
-- 원자적 단계값 값 묶음
-- 최소 최소 간격
-- 핸들 교차 규칙
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="multi-thumb-slider" scenario="two-thumb-range" title="핸들 두 개로 고르는 범위" description="핸들 두 개로 범위의 최솟값과 최댓값을 고릅니다." :index="0" />
 
 ### 핸들 세 개로 나누는 구간
 
-핸들 세 개로 나누는 구간 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다.
+핸들 세 개로 하나의 수치 범위를 의미 있는 구간으로 나눕니다.
 
-<ComponentExample component="multi-thumb-slider" scenario="three-thumb-thresholds" title="핸들 세 개로 나누는 구간" description="핸들 세 개로 나누는 구간 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="multi-thumb-slider" scenario="three-thumb-thresholds" title="핸들 세 개로 나누는 구간" description="핸들 세 개로 하나의 수치 범위를 의미 있는 구간으로 나눕니다." :index="1" />
+
 ### 핸들 교차 여러 핸들
 
-핸들 교차 여러 핸들 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다.
+설정한 규칙에 따라 핸들이 서로 지나가지 못하게 하거나 값의 순서를 정리합니다.
 
-<ComponentExample component="multi-thumb-slider" scenario="crossing-thumbs" title="핸들 교차 여러 핸들" description="핸들 교차 여러 핸들 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다." :index="2" />
-### 부모가 관리하는 범위
-
-부모가 관리하는 범위 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="multi-thumb-slider" scenario="controlled-range" title="부모가 관리하는 범위" description="부모가 관리하는 범위 설정에서 다중 슬라이더의 실제 동작을 확인할 수 있습니다." :index="3" />
+<ComponentExample component="multi-thumb-slider" scenario="crossing-thumbs" title="핸들 교차 여러 핸들" description="설정한 규칙에 따라 핸들이 서로 지나가지 못하게 하거나 값의 순서를 정리합니다." :index="2" />
 
 ## 구성
 
@@ -44,23 +29,53 @@
 
 <ComponentAnatomy component="multi-thumb-slider" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/multi-thumb-slider`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MultiThumbSliderRoot</code></li>
+  <li><code class="component-api-token">MultiThumbSliderTrack</code></li>
+  <li><code class="component-api-token">MultiThumbSliderRange</code></li>
+  <li><code class="component-api-token">MultiThumbSliderThumb</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MultiThumbSliderRootProps</code></li>
+  <li><code class="component-api-token">MultiThumbSliderRootSlotProps</code></li>
+  <li><code class="component-api-token">MultiThumbSliderThumbProps</code></li>
+  <li><code class="component-api-token">MultiThumbSliderThumbSlotProps</code></li>
+  <li><code class="component-api-token">MultiThumbSliderPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/multi-thumb-slider` | 배포됨 |
-| 브라우저 | `@sectile/dom/multi-thumb-slider` | 배포됨 |
-| 터미널 | `@sectile/terminal/multi-thumb-slider` | 배포됨 |
-| Vue | `@sectile/vue/multi-thumb-slider` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="multi-thumb-slider"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">track</code></li>
+  <li><code class="component-part-token">range</code></li>
+  <li><code class="component-part-token">thumb</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/slider-multithumb/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Right</kbd> / <kbd>Arrow Up</kbd> | 값을 한 단계 증가시킵니다. |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Down</kbd> | 값을 한 단계 감소시킵니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 최솟값 또는 최댓값으로 이동합니다. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 지원되는 경우 설정된 큰 단계만큼 값을 바꿉니다. |
+
+## 접근성
+
+각 핸들에 독립적인 이름을 제공하고 최솟값·최댓값·현재 값·방향을 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/slider-multithumb/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

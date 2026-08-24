@@ -1,48 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 메뉴
 
-메뉴는 계층형 명령 사이를 이동하고 실행하는 방식을 다룹니다.
+계층형 명령을 이동하고 하위 메뉴를 열어 작업을 실행합니다.
 
-## 기본 사용법
+## 예시
 
-명령 실행 설정에서 메뉴의 실제 동작을 확인할 수 있습니다.
+### 명령 실행
 
-<ComponentExample component="menu" scenario="commands" title="메뉴" description="명령 실행 설정에서 메뉴의 실제 동작을 확인할 수 있습니다." :index="0" />
+사용할 수 없는 항목은 건너뛰면서 명령 사이를 이동하고 현재 명령을 실행합니다.
 
-## 지원 기능
-
-- 계층 현재 위치
-- 열림 상태 경로
-- 작업 실행
-- 포커스 이전 포커스 복원 명령
-- 비활성 항목 항목
-- 양 끝 이동
-- 글자 입력으로 이동
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-## 터미널 키보드 동작
-
-| 키 | 동작 |
-| --- | --- |
-| <kbd>↑</kbd> / <kbd>↓</kbd> | 현재 단계의 이전·다음 항목으로 이동합니다. |
-| <kbd>→</kbd> | 하위 메뉴를 열고 첫 항목으로 들어갑니다. |
-| <kbd>←</kbd> / <kbd>Esc</kbd> | 상위 단계로 돌아가거나 메뉴를 닫습니다. |
-| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 처음·마지막 항목으로 이동합니다. |
-| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 명령을 실행합니다. |
-
-## 추가 예시
+<ComponentExample component="menu" scenario="commands" title="명령 실행" description="사용할 수 없는 항목은 건너뛰면서 명령 사이를 이동하고 현재 명령을 실행합니다." :index="0" />
 
 ### 비활성 항목
 
-메뉴는 키보드와 포인터 입력을 받지 않습니다.
+키보드와 포인터 입력을 받지 않습니다.
 
-<ComponentExample component="menu" scenario="disabled" title="비활성 항목" description="메뉴는 키보드와 포인터 입력을 받지 않습니다." :index="1" />
+<ComponentExample component="menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="1" />
+
 ### 하위 메뉴
 
-하위 메뉴 설정에서 메뉴의 실제 동작을 확인할 수 있습니다.
+하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다.
 
-<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 메뉴 설정에서 메뉴의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다." :index="2" />
 
 ## 구성
 
@@ -50,23 +29,66 @@
 
 <ComponentAnatomy component="menu" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/menu`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MenuRoot</code></li>
+  <li><code class="component-api-token">MenubarRoot</code></li>
+  <li><code class="component-api-token">NavigationMenuRoot</code></li>
+  <li><code class="component-api-token">MenuButtonRoot</code></li>
+  <li><code class="component-api-token">MenuButtonTrigger</code></li>
+  <li><code class="component-api-token">MenuButtonContent</code></li>
+  <li><code class="component-api-token">MenuItem</code></li>
+  <li><code class="component-api-token">MenuSubContent</code></li>
+  <li><code class="component-api-token">MenuSeparator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MenuRootProps</code></li>
+  <li><code class="component-api-token">MenuButtonRootProps</code></li>
+  <li><code class="component-api-token">MenuRootSlotProps</code></li>
+  <li><code class="component-api-token">MenuItemProps</code></li>
+  <li><code class="component-api-token">MenuItemSlotProps</code></li>
+  <li><code class="component-api-token">MenuSubContentProps</code></li>
+  <li><code class="component-api-token">MenuPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/menu` | 배포됨 |
-| 브라우저 | `@sectile/dom/menu` | 배포됨 |
-| 터미널 | `@sectile/terminal/menu` | 배포됨 |
-| Vue | `@sectile/vue/menu` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="menu"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">sub-content</code></li>
+  <li><code class="component-part-token">separator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+**예외와 추가 속성**
+
+- `item`: 모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분 · `data-level="<depth>"` 추가
+- `sub-content`: 상위 메뉴 항목이 소유하는 팝업 콘텐츠 · `data-level="<depth>"` 추가
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | 현재 메뉴 단계의 항목 사이를 이동합니다. |
+| <kbd>Arrow Right</kbd> / <kbd>Arrow Left</kbd> | 하위 메뉴를 열거나 상위 메뉴로 돌아갑니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 첫 번째 또는 마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 항목을 실행합니다. |
+| <kbd>Escape</kbd> | 현재 메뉴 단계를 닫습니다. |
+
+## 접근성
+
+메뉴 항목, 구분선, 하위 메뉴 상태가 계층형 메뉴 의미와 이동 포커스를 사용합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

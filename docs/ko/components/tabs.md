@@ -1,38 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 탭
 
-탭는 순서가 있는 항목 사이의 이동과 선택을 다룹니다.
+포커스와 실행 방식을 조정하며 같은 단계의 패널을 전환합니다.
 
-## 기본 사용법
+## 예시
 
-직접 선택 설정에서 탭의 실제 동작을 확인할 수 있습니다.
+### 직접 선택
 
-<ComponentExample component="tabs" scenario="manual" title="탭" description="직접 선택 설정에서 탭의 실제 동작을 확인할 수 있습니다." :index="0" />
+탭 사이에서 포커스만 옮기고 확정할 때 패널을 바꿉니다.
 
-## 지원 기능
-
-- 현재 위치
-- 하나만 선택 선택
-- 직접 선택 또는 자동 전환 실행
-- 배치 방향
-- 사용 가능 여부
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="tabs" scenario="manual" title="직접 선택" description="탭 사이에서 포커스만 옮기고 확정할 때 패널을 바꿉니다." :index="0" />
 
 ### 자동 전환
 
-자동 전환 설정에서 탭의 실제 동작을 확인할 수 있습니다.
+자동으로 다음 항목으로 이동하면서 일시 정지와 직접 이동 기능도 제공합니다.
 
-<ComponentExample component="tabs" scenario="automatic" title="자동 전환" description="자동 전환 설정에서 탭의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="tabs" scenario="automatic" title="자동 전환" description="자동으로 다음 항목으로 이동하면서 일시 정지와 직접 이동 기능도 제공합니다." :index="1" />
+
 ### 세로 방향 비활성 항목
 
-세로 방향 비활성 항목 설정에서 탭의 실제 동작을 확인할 수 있습니다.
+사용할 수 없는 항목을 건너뛰면서 작업 사이를 세로로 이동합니다.
 
-<ComponentExample component="tabs" scenario="vertical-disabled" title="세로 방향 비활성 항목" description="세로 방향 비활성 항목 설정에서 탭의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="tabs" scenario="vertical-disabled" title="세로 방향 비활성 항목" description="사용할 수 없는 항목을 건너뛰면서 작업 사이를 세로로 이동합니다." :index="2" />
 
 ## 구성
 
@@ -40,23 +29,59 @@
 
 <ComponentAnatomy component="tabs" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/tabs`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TabsRoot</code></li>
+  <li><code class="component-api-token">TabsList</code></li>
+  <li><code class="component-api-token">TabsTrigger</code></li>
+  <li><code class="component-api-token">TabsContent</code></li>
+  <li><code class="component-api-token">TabsIndicator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TabsActivationMode</code></li>
+  <li><code class="component-api-token">TabsRootProps</code></li>
+  <li><code class="component-api-token">TabsRootSlotProps</code></li>
+  <li><code class="component-api-token">TabsListProps</code></li>
+  <li><code class="component-api-token">TabsTriggerProps</code></li>
+  <li><code class="component-api-token">TabsTriggerSlotProps</code></li>
+  <li><code class="component-api-token">TabsContentProps</code></li>
+  <li><code class="component-api-token">TabsContentSlotProps</code></li>
+  <li><code class="component-api-token">TabsIndicatorProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/tabs` | 배포됨 |
-| 브라우저 | `@sectile/dom/tabs` | 배포됨 |
-| 터미널 | `@sectile/terminal/tabs` | 배포됨 |
-| Vue | `@sectile/vue/tabs` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="tabs"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">list</code></li>
+  <li><code class="component-part-token">trigger</code></li>
+  <li><code class="component-part-token">indicator</code></li>
+  <li><code class="component-part-token">content</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 가로 탭 목록에서 탭 사이를 이동합니다. |
+| <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | 세로 탭 목록에서 탭 사이를 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 첫 번째 또는 마지막 탭으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 직접 실행 모드에서 포커스된 탭을 엽니다. |
+
+## 접근성
+
+탭 목록이 각 탭을 하나의 탭 패널과 연결하고 선택·비활성·방향 상태를 유지합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

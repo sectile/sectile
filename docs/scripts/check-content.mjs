@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, extname, relative, resolve } from 'node:path';
 import catalog from '../data/components.json' with { type: 'json' };
+import { componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
+import { documentedScenarios } from '../data/component-documentation.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const markdown = await paths(root, '.md');
@@ -24,6 +26,9 @@ for (const page of ['structures', 'state-and-text', 'transitions', 'composition'
 
 for (const path of markdown) {
   const source = await readFile(path, 'utf8');
+  assert.equal(source.toLowerCase().includes('playground'), false, `${relative(root, path)} must describe the documentation surface, not a separate playground`);
+  assert.equal(source.includes('Use this case to inspect'), false, `${relative(root, path)} contains placeholder scenario copy`);
+  assert.equal(/demonstrates\s+\S+\s+as a separate/iu.test(source), false, `${relative(root, path)} contains generated placeholder copy`);
   const withoutFrontmatter = source.replace(/^---\n[\s\S]*?\n---\n/u, '');
   const isHome = /^---\n[\s\S]*?\blayout:\s*home\b[\s\S]*?\n---\n/u.test(source);
   if (!isHome) assert.match(withoutFrontmatter, /^#\s+\S+/mu, `${relative(root, path)} requires an H1`);
@@ -70,79 +75,71 @@ for (const localeRoot of ['', 'ko']) {
   for (const componentId of componentIds) {
     const component = await readFile(resolve(root, localeRoot, 'components', `${componentId}.md`), 'utf8');
     assert.equal(component.includes('<HostInstall />'), false, `${localeRoot || 'English'} ${componentId} must not repeat installation guidance`);
-    if (componentId !== 'checkbox') {
-      const anatomyHeading = localeRoot === 'ko' ? '## 구성' : '## Anatomy';
-      assert.equal(component.includes(anatomyHeading), true, `${localeRoot || 'English'} ${componentId} requires ${anatomyHeading}`);
+    const catalogEntry = catalog.components.find((entry) => entry.id === componentId);
+    assert.ok(catalogEntry, `catalog entry required for ${componentId}`);
+    const scenarios = documentedScenarios(catalogEntry);
+    assert.ok(scenarios.length >= 1, `${componentId} requires at least one meaningful DOM documentation example`);
+    for (const scenario of scenarios) {
+      const marker = `<ComponentExample component="${componentId}" scenario="${scenario}"`;
       assert.equal(
-        component.includes(`<ComponentAnatomy component="${componentId}" />`),
-        true,
-        `${localeRoot || 'English'} ${componentId} must render its anatomy explorer`,
+        component.split(marker).length - 1,
+        1,
+        `${localeRoot || 'English'} ${componentId} must render scenario ${scenario} exactly once`,
+      );
+    }
+    const renderedScenarios = [...component.matchAll(/<ComponentExample\s+component="[^"]+"\s+scenario="([^"]+)"/gu)]
+      .map((match) => match[1]);
+    assert.deepEqual(
+      renderedScenarios,
+      [...scenarios],
+      `${localeRoot || 'English'} ${componentId} must render only its curated DOM examples in order`,
+    );
+    const requiredHeadings = localeRoot === 'ko'
+      ? ['## 예시', '## 구성', '## 공개 API', '## 파트', '## 키보드 동작', '## 접근성']
+      : ['## Examples', '## Anatomy', '## API reference', '## Parts', '## Keyboard interaction', '## Accessibility'];
+    for (const heading of requiredHeadings) {
+      assert.equal(component.includes(heading), true, `${localeRoot || 'English'} ${componentId} requires ${heading}`);
+    }
+    for (const heading of ['## Features', '## 지원 기능', '## Example cases', '## 추가 예시']) {
+      assert.equal(component.includes(heading), false, `${localeRoot || 'English'} ${componentId} must expose specific behavior sections instead of ${heading}`);
+    }
+    assert.equal(
+      component.split(`<ComponentAnatomy component="${componentId}" />`).length - 1,
+      1,
+      `${localeRoot || 'English'} ${componentId} must render its anatomy explorer exactly once`,
+    );
+    assert.equal(
+      component.includes(`@sectile/vue/${componentId}`),
+      true,
+      `${localeRoot || 'English'} ${componentId} must identify its public Vue package`,
+    );
+    const anatomy = componentAnatomy[componentId];
+    assert.ok(anatomy, `anatomy definition required for ${componentId}`);
+    for (const part of anatomy.parts) {
+      const marker = part === 'provider'
+        ? localeRoot === 'ko'
+          ? '`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.'
+          : '`provider` is a state provider that does not render a DOM element.'
+        : `<code class="component-part-token">${part}</code>`;
+      assert.equal(
+        component.split(marker).length - 1,
+        1,
+        `${localeRoot || 'English'} ${componentId} must document public part ${part} exactly once`,
+      );
+    }
+    assert.equal(component.includes('Stable attributes'), false, `${localeRoot || 'English'} ${componentId} must not repeat stable attributes per part`);
+    assert.equal(component.includes('안정 속성'), false, `${localeRoot || 'English'} ${componentId} must not repeat stable attributes per part`);
+    const repeatedHeadings = localeRoot === 'ko'
+      ? ['## 상태 관리 방식', '## 비활성 상태와 읽기 전용 상태', '## 패키지 지원', '## 의미 규칙']
+      : ['## State ownership', '## Disabled and readonly', '## Package availability', '## Semantics'];
+    for (const heading of repeatedHeadings) {
+      assert.equal(
+        component.includes(heading),
+        false,
+        `${localeRoot || 'English'} ${componentId} must keep shared guidance out of component pages: ${heading}`,
       );
     }
   }
-}
-
-const checkbox = await readFile(resolve(root, 'components/checkbox.md'), 'utf8');
-for (const heading of [
-  '## Basic usage',
-  '## Indeterminate state',
-  '## State ownership',
-  '## Form participation',
-  '## Disabled and readonly',
-  '## Anatomy',
-  '## API reference',
-  '## Data attributes',
-  '## Keyboard interaction',
-  '## Accessibility',
-]) {
-  assert.equal(checkbox.includes(heading), true, `checkbox.md requires ${heading}`);
-}
-assert.equal(checkbox.includes('<CheckboxDemo />'), true, 'checkbox.md must render the real example');
-assert.equal(checkbox.includes('<CheckboxIndeterminateDemo />'), true, 'checkbox.md must separate the indeterminate example');
-assert.equal(checkbox.includes('<CheckboxAttributesDemo />'), true, 'checkbox.md must render the data-attribute explorer');
-for (const example of [
-  'CheckboxOwnershipDemo',
-  'CheckboxFormDemo',
-  'CheckboxInteractionDemo',
-]) {
-  assert.equal(checkbox.includes(`<${example} />`), true, `checkbox.md must render ${example}`);
-}
-for (const example of [
-  'BasicCheckbox.vue',
-  'ControlledCheckbox.vue',
-  'DataAttributes.vue',
-  'FormCheckbox.vue',
-  'IndeterminateCheckbox.vue',
-  'InteractionCheckboxes.vue',
-]) {
-  await access(resolve(root, 'examples/checkbox', example));
-}
-await access(resolve(root, 'examples/checkbox/sources.ts'));
-
-const koCheckbox = await readFile(resolve(root, 'ko/components/checkbox.md'), 'utf8');
-for (const heading of [
-  '## 기본 사용법',
-  '## 일부 선택 상태',
-  '## 상태 관리 방식',
-  '## 양식 제출',
-  '## 비활성 상태와 읽기 전용 상태',
-  '## 구성',
-  '## 속성',
-  '## 상태 속성',
-  '## 키보드 동작',
-  '## 접근성',
-]) {
-  assert.equal(koCheckbox.includes(heading), true, `ko/components/checkbox.md requires ${heading}`);
-}
-assert.equal(koCheckbox.includes('<CheckboxDemo />'), true, 'Korean checkbox docs must render the real example');
-assert.equal(koCheckbox.includes('<CheckboxIndeterminateDemo />'), true, 'Korean checkbox docs must separate the indeterminate example');
-assert.equal(koCheckbox.includes('<CheckboxAttributesDemo />'), true, 'Korean checkbox docs must render the data-attribute explorer');
-for (const example of [
-  'CheckboxOwnershipDemo',
-  'CheckboxFormDemo',
-  'CheckboxInteractionDemo',
-]) {
-  assert.equal(koCheckbox.includes(`<${example} />`), true, `Korean checkbox docs must render ${example}`);
 }
 
 console.log(JSON.stringify({ status: 'passed', markdown: markdown.length, publicMarkdown: publicMarkdown.length, components: componentIds.length }, null, 2));

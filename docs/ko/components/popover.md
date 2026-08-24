@@ -1,51 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 팝오버
 
-팝오버는 열림 상태와 포커스 이동, 닫힘 동작을 다룹니다.
+페이지를 막지 않고 실행 요소에 상호작용 가능한 내용을 붙입니다.
 
-## 기본 사용법
+## 예시
 
-기준 요소에 연결된 설정에서 팝오버의 실제 동작을 확인할 수 있습니다.
+### 기준 요소에 연결된
 
-<ComponentExample component="popover" scenario="anchored" title="팝오버" description="기준 요소에 연결된 설정에서 팝오버의 실제 동작을 확인할 수 있습니다." :index="0" />
+주변 배치가 바뀌어도 팝업을 실행 요소에 붙여 둡니다.
 
-## 지원 기능
-
-- 열림 상태 상태
-- 비모달 모달 대화상자 기본 동작
-- 바깥 영역 클릭 직접 닫기
-- Esc 키 닫기
-- 포커스 복원
-- 기준 요소에 연결된 배치
-- 화면 경계 회피 반대편 배치
-- 부모가 관리하는 열림 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="popover" scenario="anchored" title="기준 요소에 연결된" description="주변 배치가 바뀌어도 팝업을 실행 요소에 붙여 둡니다." :index="0" />
 
 ### 화면 경계 회피
 
-화면 경계 회피 설정에서 팝오버의 실제 동작을 확인할 수 있습니다.
+원하는 위치가 화면을 벗어나면 팝업을 반대편으로 옮기거나 안쪽으로 밀어 넣습니다.
 
-<ComponentExample component="popover" scenario="collision" title="화면 경계 회피" description="화면 경계 회피 설정에서 팝오버의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 팝오버에 전달합니다.
-
-<ComponentExample component="popover" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 팝오버에 전달합니다." :index="2" />
-### 닫힌 상태
-
-팝오버는 닫힌 상태에서 시작하며 실행 요소를 눌렀을 때만 열립니다.
-
-<ComponentExample component="popover" scenario="closed" title="닫힌 상태" description="팝오버는 닫힌 상태에서 시작하며 실행 요소를 눌렀을 때만 열립니다." :index="3" />
-### 열림 상태
-
-팝오버가 열린 상태에서 시작해 포커스 이동과 닫힘 동작을 바로 확인할 수 있습니다.
-
-<ComponentExample component="popover" scenario="open" title="열림 상태" description="팝오버가 열린 상태에서 시작해 포커스 이동과 닫힘 동작을 바로 확인할 수 있습니다." :index="4" />
+<ComponentExample component="popover" scenario="collision" title="화면 경계 회피" description="원하는 위치가 화면을 벗어나면 팝업을 반대편으로 옮기거나 안쪽으로 밀어 넣습니다." :index="1" />
 
 ## 구성
 
@@ -53,23 +23,61 @@
 
 <ComponentAnatomy component="popover" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/popover`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">PopoverRoot</code></li>
+  <li><code class="component-api-token">PopoverTrigger</code></li>
+  <li><code class="component-api-token">PopoverAnchor</code></li>
+  <li><code class="component-api-token">PopoverPortal</code></li>
+  <li><code class="component-api-token">PopoverContent</code></li>
+  <li><code class="component-api-token">PopoverTitle</code></li>
+  <li><code class="component-api-token">PopoverDescription</code></li>
+  <li><code class="component-api-token">PopoverClose</code></li>
+  <li><code class="component-api-token">PopoverArrow</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">PopoverRootProps</code></li>
+  <li><code class="component-api-token">PopoverRootSlotProps</code></li>
+  <li><code class="component-api-token">PopoverPartProps</code></li>
+  <li><code class="component-api-token">PopoverPortalProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/popover` | 배포됨 |
-| 브라우저 | `@sectile/dom/popover` | 배포됨 |
-| 터미널 | `@sectile/terminal/popover` | 배포됨 |
-| Vue | `@sectile/vue/popover` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="popover"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">trigger</code></li>
+  <li><code class="component-part-token">anchor</code></li>
+  <li><code class="component-part-token">content</code></li>
+  <li><code class="component-part-token">title</code></li>
+  <li><code class="component-part-token">description</code></li>
+  <li><code class="component-part-token">close</code></li>
+  <li><code class="component-part-token">arrow</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 실행 요소나 포커스된 작업을 실행합니다. |
+| <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> | 사용 가능한 컨트롤 사이를 이동하며 모달 내용은 포커스를 내부에 유지합니다. |
+| <kbd>Escape</kbd> | 팝업을 닫고 설정된 경우 포커스를 복원합니다. |
+
+## 접근성
+
+실행 요소가 열림 상태와 팝업 연결을 노출하고 선택적인 제목과 설명이 떠 있는 내용의 이름을 제공합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

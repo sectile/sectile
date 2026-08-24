@@ -1,50 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 이동 메뉴
 
-이동 메뉴는 링크의 기본 동작을 유지하면서 여러 화면으로 이동하는 방식을 다룹니다.
+기본 링크와 펼쳐지는 이동 패널을 하나의 막대에 구성합니다.
 
-## 기본 사용법
+## 예시
 
-제품 이동 메뉴 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다.
+### 제품 이동 메뉴
 
-<ComponentExample component="navigation-menu" scenario="product" title="이동 메뉴" description="제품 이동 메뉴 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다." :index="0" />
+제품 링크와 하위 메뉴 실행 요소를 하나의 이동 영역에 배치합니다.
 
-## 지원 기능
-
-- 브라우저 기본 색상 선택기 이동 기본 동작
-- 가로 방향 최상위 현재 위치
-- 하위 메뉴 패널 경로
-- 실행 요소 선택 상태 전환
-- Esc 키 닫기
-- 화면 경계를 고려한 배치
-- 브라우저 기본 색상 선택기 링크 이동
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-## 터미널 키보드 동작
-
-최상위 이동 메뉴는 가로로, 열린 하위 패널은 세로 계층으로 다룹니다.
-
-| 위치 | 키 | 동작 |
-| --- | --- | --- |
-| 최상위 | <kbd>←</kbd> / <kbd>→</kbd> | 최상위 링크와 실행 요소 사이를 이동합니다. |
-| 최상위 | <kbd>↑</kbd> / <kbd>↓</kbd> | 현재 하위 메뉴를 엽니다. |
-| 하위 패널 | <kbd>↑</kbd> / <kbd>↓</kbd> | 패널 안의 항목 사이를 이동합니다. |
-| 하위 패널 | <kbd>←</kbd> / <kbd>Esc</kbd> | 패널을 연 최상위 항목으로 돌아갑니다. |
-| 모든 단계 | <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 항목을 실행합니다. |
-
-## 추가 예시
+<ComponentExample component="navigation-menu" scenario="product" title="제품 이동 메뉴" description="제품 링크와 하위 메뉴 실행 요소를 하나의 이동 영역에 배치합니다." :index="0" />
 
 ### 링크 이동
 
-링크 이동 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다.
+복합 메뉴 실행 요소와 함께 써도 링크의 기본 이동 동작을 유지합니다.
 
-<ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="링크 이동 설정에서 이동 메뉴의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="복합 메뉴 실행 요소와 함께 써도 링크의 기본 이동 동작을 유지합니다." :index="1" />
+
 ### 비활성 항목
 
-이동 메뉴는 키보드와 포인터 입력을 받지 않습니다.
+키보드와 포인터 입력을 받지 않습니다.
 
-<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="이동 메뉴는 키보드와 포인터 입력을 받지 않습니다." :index="2" />
+<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="2" />
 
 ## 구성
 
@@ -52,23 +29,66 @@
 
 <ComponentAnatomy component="navigation-menu" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/navigation-menu`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">NavigationMenuList</code></li>
+  <li><code class="component-api-token">NavigationMenuItem</code></li>
+  <li><code class="component-api-token">NavigationMenuViewport</code></li>
+  <li><code class="component-api-token">NavigationMenuIndicator</code></li>
+  <li><code class="component-api-token">NavigationMenuRoot</code></li>
+  <li><code class="component-api-token">NavigationMenuLink</code></li>
+  <li><code class="component-api-token">NavigationMenuTrigger</code></li>
+  <li><code class="component-api-token">NavigationMenuContent</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">NavigationMenuItemProps</code></li>
+  <li><code class="component-api-token">NavigationMenuItemSlotProps</code></li>
+  <li><code class="component-api-token">NavigationMenuRootProps</code></li>
+  <li><code class="component-api-token">NavigationMenuRootSlotProps</code></li>
+  <li><code class="component-api-token">NavigationMenuContentProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/navigation-menu` | 배포됨 |
-| 브라우저 | `@sectile/dom/navigation-menu` | 배포됨 |
-| 터미널 | `@sectile/terminal/navigation-menu` | 배포됨 |
-| Vue | `@sectile/vue/navigation-menu` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="navigation-menu"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">list</code></li>
+  <li><code class="component-part-token">item-container</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">sub-content</code></li>
+  <li><code class="component-part-token">viewport</code></li>
+  <li><code class="component-part-token">indicator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+**예외와 추가 속성**
+
+- `item`: 모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분 · `data-level="<depth>"` 추가
+- `sub-content`: 상위 메뉴 항목이 소유하는 팝업 콘텐츠 · `data-level="<depth>"` 추가
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 최상위 메뉴 항목 사이를 이동합니다. |
+| <kbd>Arrow Down</kbd> / <kbd>Arrow Up</kbd> | 하위 메뉴를 열거나 세로 항목 목록 안에서 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 첫 번째 또는 마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 항목을 실행합니다. |
+| <kbd>Escape</kbd> | 하위 메뉴를 닫고 이를 연 항목으로 돌아갑니다. |
+
+## 접근성
+
+기본 링크 의미를 유지하고 펼침 실행 요소가 복합 패널의 열림 상태를 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

@@ -1,40 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 날짜·시간 범위 선택기
 
-날짜·시간 범위 선택기는 시간대와 무관한 날짜·시간 값과 달력 이동을 다룹니다.
+시작·종료 날짜와 각각의 현지 시각을 선택합니다.
 
-## 기본 사용법
+## 예시
 
-유지 보수 기간 설정에서 날짜·시간 범위 선택기의 실제 동작을 확인할 수 있습니다.
+### 유지 보수 기간
 
-<ComponentExample component="date-time-range-picker" scenario="maintenance" title="날짜·시간 범위 선택기" description="유지 보수 기간 설정에서 날짜·시간 범위 선택기의 실제 동작을 확인할 수 있습니다." :index="0" />
+여러 날에 걸친 유지 보수 기간의 시작·종료 시각을 각각 선택합니다.
 
-## 지원 기능
-
-- 시간대에 영향받지 않는 날짜·시간 범위
-- 범위 기준점
-- 종료일을 먼저 골라도 올바른 날짜 순서로 정리
-- 시작과 종료 시간의 독립 관리
-- 같은 날의 시작·종료 순서 검증
-- 팝업 상태
-- 부모가 관리하는 범위·현재 날짜·열림 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="date-time-range-picker" scenario="maintenance" title="유지 보수 기간" description="여러 날에 걸친 유지 보수 기간의 시작·종료 시각을 각각 선택합니다." :index="0" />
 
 ### 업무 시간
 
-업무 시간 설정에서 날짜·시간 범위 선택기의 실제 동작을 확인할 수 있습니다.
+일반 업무 시간 안에서 시작 시각과 종료 시각을 선택합니다.
 
-<ComponentExample component="date-time-range-picker" scenario="office-hours" title="업무 시간" description="업무 시간 설정에서 날짜·시간 범위 선택기의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 날짜·시간 범위 선택기에 전달합니다.
-
-<ComponentExample component="date-time-range-picker" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 날짜·시간 범위 선택기에 전달합니다." :index="2" />
+<ComponentExample component="date-time-range-picker" scenario="office-hours" title="업무 시간" description="일반 업무 시간 안에서 시작 시각과 종료 시각을 선택합니다." :index="1" />
 
 ## 구성
 
@@ -42,23 +23,89 @@
 
 <ComponentAnatomy component="date-time-range-picker" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/date-time-range-picker`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">DateTimeRangePickerRoot</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerTrigger</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerContent</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerGrid</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerCell</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerMonthCell</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerStartDateTimeInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerEndDateTimeInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerStartDateInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerEndDateInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerStartTimeInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerEndTimeInput</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerPreviousWeek</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerNextWeek</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerPreviousMonth</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerNextMonth</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerPreviousYear</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerNextYear</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerWeekViewTrigger</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerMonthViewTrigger</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerYearViewTrigger</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">DateTimeRangePickerRootProps</code></li>
+  <li><code class="component-api-token">DateTimeRange</code></li>
+  <li><code class="component-api-token">DateValue</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerCellSlotProps</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerMonthCellSlotProps</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerPartProps</code></li>
+  <li><code class="component-api-token">DateTimeRangePickerRootSlotProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/date-time-range-picker` | 배포됨 |
-| 브라우저 | `@sectile/dom/date-time-range-picker` | 배포됨 |
-| 터미널 | `@sectile/terminal/date-time-range-picker` | 배포됨 |
-| Vue | `@sectile/vue/date-time-range-picker` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="date-time-range-picker"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">start-date-time-input</code></li>
+  <li><code class="component-part-token">end-date-time-input</code></li>
+  <li><code class="component-part-token">start-date-input</code></li>
+  <li><code class="component-part-token">end-date-input</code></li>
+  <li><code class="component-part-token">start-time-input</code></li>
+  <li><code class="component-part-token">end-time-input</code></li>
+  <li><code class="component-part-token">trigger</code></li>
+  <li><code class="component-part-token">content</code></li>
+  <li><code class="component-part-token">week-view-trigger</code></li>
+  <li><code class="component-part-token">month-view-trigger</code></li>
+  <li><code class="component-part-token">year-view-trigger</code></li>
+  <li><code class="component-part-token">previous-week</code></li>
+  <li><code class="component-part-token">next-week</code></li>
+  <li><code class="component-part-token">previous-month</code></li>
+  <li><code class="component-part-token">next-month</code></li>
+  <li><code class="component-part-token">previous-year</code></li>
+  <li><code class="component-part-token">next-year</code></li>
+  <li><code class="component-part-token">grid</code></li>
+  <li><code class="component-part-token">cell</code></li>
+  <li><code class="component-part-token">month-cell</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/composition)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 강조된 날짜를 하루 또는 일주일 단위로 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 한 주의 시작 또는 끝으로 이동합니다. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 한 달 단위로 이동하고, Shift와 함께 누르면 일 년 단위로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 강조된 날짜를 선택합니다. |
+| <kbd>Escape</kbd> | 다른 날짜를 선택하지 않고 달력을 닫습니다. |
+
+## 접근성
+
+네 개의 양 끝 입력과 달력 격자가 시작·종료 의미를 합치지 않고 범위를 노출합니다.

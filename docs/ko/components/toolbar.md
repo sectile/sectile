@@ -1,38 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 도구 막대
 
-도구 막대는 순서가 있는 작업 사이의 포커스 이동과 실행을 다룹니다.
+관련 작업을 짧은 막대에 모아 이동하고 현재 도구를 실행합니다.
 
-## 기본 사용법
+## 예시
 
-가로 방향 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다.
+### 가로 방향
 
-<ComponentExample component="toolbar" scenario="horizontal" title="도구 막대" description="가로 방향 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다." :index="0" />
+같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다.
 
-## 지원 기능
-
-- 현재 위치
-- 작업 실행
-- 배치 방향
-- 사용 가능 여부
-- 경계 처리
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="toolbar" scenario="horizontal" title="가로 방향" description="같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다." :index="0" />
 
 ### 세로 방향 비활성 항목
 
-세로 방향 비활성 항목 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다.
+사용할 수 없는 항목을 건너뛰면서 작업 사이를 세로로 이동합니다.
 
-<ComponentExample component="toolbar" scenario="vertical-disabled" title="세로 방향 비활성 항목" description="세로 방향 비활성 항목 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 부모가 관리하는 포커스
-
-부모가 관리하는 포커스 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="toolbar" scenario="controlled-focus" title="부모가 관리하는 포커스" description="부모가 관리하는 포커스 설정에서 도구 막대의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="toolbar" scenario="vertical-disabled" title="세로 방향 비활성 항목" description="사용할 수 없는 항목을 건너뛰면서 작업 사이를 세로로 이동합니다." :index="1" />
 
 ## 구성
 
@@ -40,23 +23,50 @@
 
 <ComponentAnatomy component="toolbar" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/toolbar`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ToolbarRoot</code></li>
+  <li><code class="component-api-token">ToolbarItem</code></li>
+  <li><code class="component-api-token">ToolbarSeparator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">ToolbarRootProps</code></li>
+  <li><code class="component-api-token">ToolbarRootSlotProps</code></li>
+  <li><code class="component-api-token">ToolbarItemProps</code></li>
+  <li><code class="component-api-token">ToolbarItemSlotProps</code></li>
+  <li><code class="component-api-token">ToolbarPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/toolbar` | 배포됨 |
-| 브라우저 | `@sectile/dom/toolbar` | 배포됨 |
-| 터미널 | `@sectile/terminal/toolbar` | 배포됨 |
-| Vue | `@sectile/vue/toolbar` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="toolbar"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">separator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 설정된 방향에 따라 도구 항목 사이를 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 활성화된 첫 번째 또는 마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 포커스된 도구를 실행합니다. |
+
+## 접근성
+
+이름이 있는 도구 막대가 하나의 이동 탭 위치를 사용하고 구분선을 포커스 순서에서 제외합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

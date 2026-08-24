@@ -1,45 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 계층 격자
 
-계층 격자는 여러 항목 사이의 이동, 선택, 화면 표시를 함께 다룹니다.
+계층형 행과 편집 가능한 열을 하나의 구조화된 격자로 탐색합니다.
 
-## 기본 사용법
+## 예시
 
-펼친 상태 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다.
+### 펼친 상태
 
-<ComponentExample component="tree-grid" scenario="expanded" title="계층 격자" description="펼친 상태 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다." :index="0" />
+하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다.
 
-## 지원 기능
+<ComponentExample component="tree-grid" scenario="expanded" title="펼친 상태" description="하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다." :index="0" />
 
-- 계층 행 계층
-- 격자 칸 현재 위치
-- 펼침 상태
-- 선택
-- 편집 상태
-- 사용 가능 여부
-- 부모가 관리하는 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
-
-### 접힌 상태
-
-접힌 상태 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="tree-grid" scenario="collapsed" title="접힌 상태" description="접힌 상태 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다." :index="1" />
 ### 선택할 수 없는 칸
 
-선택할 수 없는 칸 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다.
+행 구조를 유지하면서 포커스하거나 편집할 수 없는 칸을 건너뜁니다.
 
-<ComponentExample component="tree-grid" scenario="unavailable-cells" title="선택할 수 없는 칸" description="선택할 수 없는 칸 설정에서 계층 격자의 실제 동작을 확인할 수 있습니다." :index="2" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 계층 격자에 전달합니다.
-
-<ComponentExample component="tree-grid" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 계층 격자에 전달합니다." :index="3" />
+<ComponentExample component="tree-grid" scenario="unavailable-cells" title="선택할 수 없는 칸" description="행 구조를 유지하면서 포커스하거나 편집할 수 없는 칸을 건너뜁니다." :index="1" />
 
 ## 구성
 
@@ -47,23 +23,58 @@
 
 <ComponentAnatomy component="tree-grid" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/tree-grid`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TreeGridRoot</code></li>
+  <li><code class="component-api-token">TreeGridRow</code></li>
+  <li><code class="component-api-token">TreeGridCell</code></li>
+  <li><code class="component-api-token">TreeGridDisclosure</code></li>
+  <li><code class="component-api-token">TreeGridEditor</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">TreeGridRootProps</code></li>
+  <li><code class="component-api-token">TreeGridRootSlotProps</code></li>
+  <li><code class="component-api-token">TreeGridRowSlotProps</code></li>
+  <li><code class="component-api-token">TreeGridCellSlotProps</code></li>
+  <li><code class="component-api-token">TreeGridPartProps</code></li>
+  <li><code class="component-api-token">TreeGridEditMode</code></li>
+  <li><code class="component-api-token">TreeGridPolicies</code></li>
+  <li><code class="component-api-token">TreeGridRowInput</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/tree-grid` | 배포됨 |
-| 브라우저 | `@sectile/dom/tree-grid` | 배포됨 |
-| 터미널 | `@sectile/terminal/tree-grid` | 배포됨 |
-| Vue | `@sectile/vue/tree-grid` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="tree-grid"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">row</code></li>
+  <li><code class="component-part-token">cell</code></li>
+  <li><code class="component-part-token">disclosure</code></li>
+  <li><code class="component-part-token">editor</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 격자 칸 사이를 이동합니다. |
+| <kbd>Space</kbd> | 현재 칸이나 행을 선택합니다. |
+| <kbd>Enter</kbd> / <kbd>F2</kbd> | 현재 칸이 편집을 지원하면 편집 모드로 들어갑니다. |
+| <kbd>Escape</kbd> | 현재 편집을 취소합니다. |
+
+## 접근성
+
+이름이 있는 격자 안에서 행과 칸이 계층·위치·펼침·선택·편집 상태를 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/treegrid/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

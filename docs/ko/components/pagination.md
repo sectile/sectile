@@ -1,50 +1,33 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 페이지 나누기
 
-페이지 나누기는 큰 범위를 짧은 페이지 목록으로 보여줍니다.
+큰 결과 목록을 직접 이동 가능한 페이지와 경계 버튼으로 줄여 보여 줍니다.
 
-## 기본 사용법
+## 예시
 
-공간이 좁은 화면에서는 꼭 필요한 이동 버튼만 표시합니다.
+### 간결한 표시
 
-<ComponentExample component="pagination" scenario="compact" title="페이지 나누기" description="공간이 좁은 화면에서는 꼭 필요한 이동 버튼만 표시합니다." :index="0" />
+가로 공간이 좁을 때 필요한 제어 요소만 표시합니다.
 
-## 지원 기능
-
-- 전체 페이지 수
-- 항목 범위
-- 페이지당 항목 수 변경
-- 현재 페이지 주변 표시 구간
-- 양 끝과 줄임표 표시
-- 처음·이전·다음·마지막 페이지 이동
-- 부모가 관리하는 페이지
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="pagination" scenario="compact" title="간결한 표시" description="가로 공간이 좁을 때 필요한 제어 요소만 표시합니다." :index="0" />
 
 ### 긴 범위
 
-모든 페이지 번호를 늘어놓지 않고도 큰 결과 목록을 이동합니다.
+모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다.
 
-<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="모든 페이지 번호를 늘어놓지 않고도 큰 결과 목록을 이동합니다." :index="1" />
+<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다." :index="1" />
+
 ### 페이지당 항목 수
 
-페이지당 항목 수를 바꾸면 유효한 첫 페이지로 안전하게 이동합니다.
+페이지당 항목 수를 바꾸고 필요하면 유효한 첫 페이지로 이동합니다.
 
-<ComponentExample component="pagination" scenario="page-size" title="페이지당 항목 수" description="페이지당 항목 수를 바꾸면 유효한 첫 페이지로 안전하게 이동합니다." :index="2" />
+<ComponentExample component="pagination" scenario="page-size" title="페이지당 항목 수" description="페이지당 항목 수를 바꾸고 필요하면 유효한 첫 페이지로 이동합니다." :index="2" />
+
 ### 페이지 번호만 표시
 
 처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다.
 
 <ComponentExample component="pagination" scenario="pages-only" title="페이지 번호만 표시" description="처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다." :index="3" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 페이지 나누기에 전달합니다.
-
-<ComponentExample component="pagination" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 페이지 나누기에 전달합니다." :index="4" />
 
 ## 구성
 
@@ -52,23 +35,53 @@
 
 <ComponentAnatomy component="pagination" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/pagination`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">PaginationRoot</code></li>
+  <li><code class="component-api-token">PaginationItem</code></li>
+  <li><code class="component-api-token">PaginationFirst</code></li>
+  <li><code class="component-api-token">PaginationPrevious</code></li>
+  <li><code class="component-api-token">PaginationNext</code></li>
+  <li><code class="component-api-token">PaginationLast</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">PaginationRootProps</code></li>
+  <li><code class="component-api-token">PaginationRootSlotProps</code></li>
+  <li><code class="component-api-token">PaginationItemProps</code></li>
+  <li><code class="component-api-token">PaginationItemSlotProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/pagination` | 배포됨 |
-| 브라우저 | `@sectile/dom/pagination` | 배포됨 |
-| 터미널 | `@sectile/terminal/pagination` | 배포됨 |
-| Vue | `@sectile/vue/pagination` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="pagination"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">first</code></li>
+  <li><code class="component-part-token">previous</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">next</code></li>
+  <li><code class="component-part-token">last</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/composition)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Tab</kbd> | 버튼이나 링크로 제공되는 페이지 이동 컨트롤 사이를 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 포커스된 페이지나 경계 이동 컨트롤을 실행합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 터미널에서는 첫 번째 또는 마지막 페이지로 이동합니다. |
+
+## 접근성
+
+페이지 링크나 버튼이 기본 실행 의미를 유지하고 위치에만 의존하지 않고 현재 페이지를 식별합니다.

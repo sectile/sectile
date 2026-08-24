@@ -1,43 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 회전 목록
 
-회전 목록는 여러 항목 사이의 이동, 선택, 화면 표시를 함께 다룹니다.
+이전·다음·직접 이동 제어로 연속된 슬라이드를 탐색합니다.
 
-## 기본 사용법
+## 예시
 
-순환 이동 설정에서 회전 목록의 실제 동작을 확인할 수 있습니다.
+### 순환 이동
 
-<ComponentExample component="carousel" scenario="wrapping" title="회전 목록" description="순환 이동 설정에서 회전 목록의 실제 동작을 확인할 수 있습니다." :index="0" />
+마지막 슬라이드 다음에는 첫 슬라이드로, 첫 슬라이드 이전에는 마지막으로 이동합니다.
 
-## 지원 기능
-
-- 슬라이드 현재 위치
-- 경계 처리 규칙
-- 일시 정지 상태
-- 화면 읽기 알림 명령
-- 부모가 관리하는 현재 항목 및 일시 정지
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="carousel" scenario="wrapping" title="순환 이동" description="마지막 슬라이드 다음에는 첫 슬라이드로, 첫 슬라이드 이전에는 마지막으로 이동합니다." :index="0" />
 
 ### 범위 제한
 
-표시된 최솟값과 최댓값 안에서만 값을 확정합니다.
+설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
 
-<ComponentExample component="carousel" scenario="bounded" title="범위 제한" description="표시된 최솟값과 최댓값 안에서만 값을 확정합니다." :index="1" />
+<ComponentExample component="carousel" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
+
 ### 일시 정지
 
-일시 정지 설정에서 회전 목록의 실제 동작을 확인할 수 있습니다.
+자동 이동을 멈춘 상태에서도 직접 이전·다음 항목으로 이동할 수 있습니다.
 
-<ComponentExample component="carousel" scenario="paused" title="일시 정지" description="일시 정지 설정에서 회전 목록의 실제 동작을 확인할 수 있습니다." :index="2" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 회전 목록에 전달합니다.
-
-<ComponentExample component="carousel" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 회전 목록에 전달합니다." :index="3" />
+<ComponentExample component="carousel" scenario="paused" title="일시 정지" description="자동 이동을 멈춘 상태에서도 직접 이전·다음 항목으로 이동할 수 있습니다." :index="2" />
 
 ## 구성
 
@@ -45,23 +29,61 @@
 
 <ComponentAnatomy component="carousel" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/carousel`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CarouselRoot</code></li>
+  <li><code class="component-api-token">CarouselViewport</code></li>
+  <li><code class="component-api-token">CarouselTrack</code></li>
+  <li><code class="component-api-token">CarouselIndicatorGroup</code></li>
+  <li><code class="component-api-token">CarouselPrevious</code></li>
+  <li><code class="component-api-token">CarouselNext</code></li>
+  <li><code class="component-api-token">CarouselPause</code></li>
+  <li><code class="component-api-token">CarouselSlide</code></li>
+  <li><code class="component-api-token">CarouselIndicator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CarouselRootProps</code></li>
+  <li><code class="component-api-token">CarouselRootSlotProps</code></li>
+  <li><code class="component-api-token">CarouselSlideSlotProps</code></li>
+  <li><code class="component-api-token">CarouselPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/carousel` | 배포됨 |
-| 브라우저 | `@sectile/dom/carousel` | 배포됨 |
-| 터미널 | `@sectile/terminal/carousel` | 배포됨 |
-| Vue | `@sectile/vue/carousel` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="carousel"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">viewport</code></li>
+  <li><code class="component-part-token">track</code></li>
+  <li><code class="component-part-token">slide</code></li>
+  <li><code class="component-part-token">previous</code></li>
+  <li><code class="component-part-token">next</code></li>
+  <li><code class="component-part-token">pause</code></li>
+  <li><code class="component-part-token">indicator-group</code></li>
+  <li><code class="component-part-token">indicator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 이전 또는 다음 슬라이드로 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 첫 번째 또는 마지막 슬라이드로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 기본 이전·다음·일시 정지·표시 컨트롤을 실행합니다. |
+
+## 접근성
+
+슬라이드, 이동 버튼, 일시 정지 버튼, 표시 항목을 각각 이름이 있고 조작 가능한 요소로 유지합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

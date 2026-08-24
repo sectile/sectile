@@ -1,39 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 영역 크기 조절
 
-영역 크기 조절는 일정한 간격으로 나뉜 수치 범위를 정확하게 다룹니다.
+키보드로도 조작할 수 있는 구분선으로 인접 영역의 크기를 바꿉니다.
 
-## 기본 사용법
+## 예시
 
-가로 방향 설정에서 영역 크기 조절의 실제 동작을 확인할 수 있습니다.
+### 가로 방향
 
-<ComponentExample component="window-splitter" scenario="horizontal" title="영역 크기 조절" description="가로 방향 설정에서 영역 크기 조절의 실제 동작을 확인할 수 있습니다." :index="0" />
+같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다.
 
-## 지원 기능
-
-- 일정 간격의 값 값
-- 증감 간격
-- 페이지 증감 간격
-- 구분선 화면 표현
-- 배치 방향
-- 부모가 관리하는 값
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="window-splitter" scenario="horizontal" title="가로 방향" description="같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다." :index="0" />
 
 ### 세로 방향
 
-세로 방향 설정에서 영역 크기 조절의 실제 동작을 확인할 수 있습니다.
+같은 크기 규칙을 유지하면서 세로 방향으로 영역을 조절합니다.
 
-<ComponentExample component="window-splitter" scenario="vertical" title="세로 방향" description="세로 방향 설정에서 영역 크기 조절의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 영역 크기 조절에 전달합니다.
-
-<ComponentExample component="window-splitter" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 영역 크기 조절에 전달합니다." :index="2" />
+<ComponentExample component="window-splitter" scenario="vertical" title="세로 방향" description="같은 크기 규칙을 유지하면서 세로 방향으로 영역을 조절합니다." :index="1" />
 
 ## 구성
 
@@ -41,23 +23,48 @@
 
 <ComponentAnatomy component="window-splitter" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/window-splitter`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">WindowSplitterRoot</code></li>
+  <li><code class="component-api-token">WindowSplitterPane</code></li>
+  <li><code class="component-api-token">WindowSplitterHandle</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">WindowSplitterRootProps</code></li>
+  <li><code class="component-api-token">WindowSplitterPaneProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/window-splitter` | 배포됨 |
-| 브라우저 | `@sectile/dom/window-splitter` | 배포됨 |
-| 터미널 | `@sectile/terminal/window-splitter` | 배포됨 |
-| Vue | `@sectile/vue/window-splitter` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="window-splitter"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">pane</code></li>
+  <li><code class="component-part-token">handle</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Right</kbd> / <kbd>Arrow Up</kbd> | 값을 한 단계 증가시킵니다. |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Down</kbd> | 값을 한 단계 감소시킵니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 최솟값 또는 최댓값으로 이동합니다. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 지원되는 경우 설정된 큰 단계만큼 값을 바꿉니다. |
+
+## 접근성
+
+핸들이 구분선 방향과 현재·최소·최대 영역 크기를 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

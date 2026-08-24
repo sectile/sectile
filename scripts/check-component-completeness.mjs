@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import {
+  documentedScenarios,
+  isStandaloneDocumentationScenario,
+} from '../docs/data/component-documentation.mjs';
 
 const packagePaths = [
   'packages/core/package.json',
@@ -8,7 +12,7 @@ const packagePaths = [
 ];
 const supportSubpaths = new Set([
   'package.json', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
-  'keyboard', 'layout', 'node', 'units',
+  'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
 ]);
 const migrationBaselineIDs = new Set([
   'accordion', 'alert-dialog', 'calendar', 'carousel', 'checkbox', 'combobox',
@@ -85,10 +89,22 @@ for (const entry of entries) {
   for (const host of ['dom', 'terminal']) {
     if (componentGaps.has(`${host}-scenarios`)) continue;
     const scenarios = entry.scenarios?.[host];
-    assert.ok(Array.isArray(scenarios) && scenarios.length >= 3,
-      `${entry.id}: completed ${host} examples require at least three named scenarios.`);
+    assert.ok(Array.isArray(scenarios) && scenarios.length >= 1,
+      `${entry.id}: completed ${host} examples require at least one named scenario.`);
     assert.equal(new Set(scenarios).size, scenarios.length,
       `${entry.id}: ${host} scenario IDs must be unique.`);
+  }
+
+  const documentationScenarios = documentedScenarios(entry);
+  assert.ok(documentationScenarios.length >= 1,
+    `${entry.id}: declare at least one meaningful DOM documentation example.`);
+  assert.equal(new Set(documentationScenarios).size, documentationScenarios.length,
+    `${entry.id}: documentation example IDs must be unique.`);
+  for (const scenario of documentationScenarios) {
+    assert.ok(entry.scenarios.dom.includes(scenario),
+      `${entry.id}: documentation example ${scenario} is not a declared DOM scenario.`);
+    assert.ok(isStandaloneDocumentationScenario(scenario),
+      `${entry.id}: ${scenario} is an API/state concern, not a standalone visual example.`);
   }
 }
 

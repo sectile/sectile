@@ -1,38 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 선택 상자
 
-선택 상자는 순서가 있는 항목 사이의 이동과 선택을 다룹니다.
+실행 요소가 여는 팝업 목록에서 값 하나를 고릅니다.
 
-## 기본 사용법
+## 예시
 
-실행 환경 선택 설정에서 선택 상자의 실제 동작을 확인할 수 있습니다.
+### 실행 환경 선택
 
-<ComponentExample component="select" scenario="environment" title="선택 상자" description="실행 환경 선택 설정에서 선택 상자의 실제 동작을 확인할 수 있습니다." :index="0" />
+팝업 목록에서 하나의 배포 환경을 고릅니다.
 
-## 지원 기능
-
-- 팝업 상태
-- 현재 위치
-- 하나만 선택 선택
-- 사용 가능 여부
-- 부모가 관리하는 열림 상태 및 값
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="select" scenario="environment" title="실행 환경 선택" description="팝업 목록에서 하나의 배포 환경을 고릅니다." :index="0" />
 
 ### 비활성 항목 선택 항목
 
-비활성 항목 선택 항목 설정에서 선택 상자의 실제 동작을 확인할 수 있습니다.
+사용할 수 없는 항목을 표시하면서 포커스와 선택 대상에서는 제외합니다.
 
-<ComponentExample component="select" scenario="disabled-option" title="비활성 항목 선택 항목" description="비활성 항목 선택 항목 설정에서 선택 상자의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 선택 상자에 전달합니다.
-
-<ComponentExample component="select" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 선택 상자에 전달합니다." :index="2" />
+<ComponentExample component="select" scenario="disabled-option" title="비활성 항목 선택 항목" description="사용할 수 없는 항목을 표시하면서 포커스와 선택 대상에서는 제외합니다." :index="1" />
 
 ## 구성
 
@@ -40,23 +23,57 @@
 
 <ComponentAnatomy component="select" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/select`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SelectRoot</code></li>
+  <li><code class="component-api-token">SelectTrigger</code></li>
+  <li><code class="component-api-token">SelectValue</code></li>
+  <li><code class="component-api-token">SelectContent</code></li>
+  <li><code class="component-api-token">SelectItem</code></li>
+  <li><code class="component-api-token">SelectItemIndicator</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SelectRootProps</code></li>
+  <li><code class="component-api-token">SelectRootSlotProps</code></li>
+  <li><code class="component-api-token">SelectItemProps</code></li>
+  <li><code class="component-api-token">SelectItemSlotProps</code></li>
+  <li><code class="component-api-token">SelectPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/select` | 배포됨 |
-| 브라우저 | `@sectile/dom/select` | 배포됨 |
-| 터미널 | `@sectile/terminal/select` | 배포됨 |
-| Vue | `@sectile/vue/select` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="select"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">trigger</code></li>
+  <li><code class="component-part-token">value</code></li>
+  <li><code class="component-part-token">content</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">item-indicator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 보이는 방향에 따라 현재 선택 항목을 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 선택 가능한 첫 번째 또는 마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 현재 항목을 선택하거나 실행합니다. |
+| <kbd>Printable text</kbd> | 글자 검색을 지원하면 다음 일치 항목으로 이동합니다. |
+
+## 접근성
+
+실행 요소가 열림 상태를 노출하고 팝업 목록 상자가 선택·강조·비활성 항목을 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

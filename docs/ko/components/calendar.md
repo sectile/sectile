@@ -1,38 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 달력
 
-달력는 여러 항목 사이의 이동, 선택, 화면 표시를 함께 다룹니다.
+날짜 격자를 이동하고 사용할 수 없는 날을 건너뛰어 날짜를 고릅니다.
 
-## 기본 사용법
+## 예시
 
-월간 달력 설정에서 달력의 실제 동작을 확인할 수 있습니다.
+### 월간 달력
 
-<ComponentExample component="calendar" scenario="month" title="달력" description="월간 달력 설정에서 달력의 실제 동작을 확인할 수 있습니다." :index="0" />
+완전한 한 달 격자에서 날짜를 이동하고 선택합니다.
 
-## 지원 기능
+<ComponentExample component="calendar" scenario="month" title="월간 달력" description="완전한 한 달 격자에서 날짜를 이동하고 선택합니다." :index="0" />
 
-- 격자 현재 위치
-- 선택
-- 페이지 자료 요청
-- 사용 가능 여부
-- 부모가 관리하는 선택 및 현재 항목
+### 주간 달력
 
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
+선택과 날짜 이동 기능을 유지하면서 한 주의 7일만 집중해 봅니다.
 
-
-
-## 추가 예시
+<ComponentExample component="calendar" scenario="week" title="주간 달력" description="선택과 날짜 이동 기능을 유지하면서 한 주의 7일만 집중해 봅니다." :index="1" />
 
 ### 비활성 항목 주말 비활성
 
-비활성 항목 주말 비활성 설정에서 달력의 실제 동작을 확인할 수 있습니다.
+주말 날짜는 보여 주되 선택할 수 없게 합니다.
 
-<ComponentExample component="calendar" scenario="disabled-weekends" title="비활성 항목 주말 비활성" description="비활성 항목 주말 비활성 설정에서 달력의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 달력에 전달합니다.
-
-<ComponentExample component="calendar" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 달력에 전달합니다." :index="2" />
+<ComponentExample component="calendar" scenario="disabled-weekends" title="비활성 항목 주말 비활성" description="주말 날짜는 보여 주되 선택할 수 없게 합니다." :index="2" />
 
 ## 구성
 
@@ -40,23 +29,46 @@
 
 <ComponentAnatomy component="calendar" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/calendar`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CalendarRoot</code></li>
+  <li><code class="component-api-token">CalendarCell</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">CalendarRootProps</code></li>
+  <li><code class="component-api-token">CalendarRootSlotProps</code></li>
+  <li><code class="component-api-token">CalendarCellProps</code></li>
+  <li><code class="component-api-token">CalendarCellSlotProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/calendar` | 배포됨 |
-| 브라우저 | `@sectile/dom/calendar` | 배포됨 |
-| 터미널 | `@sectile/terminal/calendar` | 배포됨 |
-| Vue | `@sectile/vue/calendar` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="calendar"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">cell</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/composition)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 하루 전 또는 다음 날로 이동합니다. |
+| <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | 일주일 전 또는 다음 주로 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 한 주의 시작 또는 끝으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 현재 강조된 날짜를 선택합니다. |
+
+## 접근성
+
+루트는 이름이 있는 격자이며 각 칸은 행·열·선택·강조·비활성 상태를 노출합니다.

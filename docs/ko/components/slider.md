@@ -1,39 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 슬라이더
 
-슬라이더는 일정한 간격으로 나뉜 수치 범위를 정확하게 다룹니다.
+포인터나 키보드로 일정 간격의 숫자 하나를 조절합니다.
 
-## 기본 사용법
+## 예시
 
-하나만 선택 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다.
+### 하나만 선택 값
 
-<ComponentExample component="slider" scenario="single-value" title="슬라이더" description="하나만 선택 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다." :index="0" />
+포인터나 키보드로 하나의 가로 값을 선택합니다.
 
-## 지원 기능
-
-- 일정 간격의 값 값
-- 증감 간격
-- 페이지 증감 간격
-- 직접 단계값
-- 배치 방향
-- 부모가 관리하는 값
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="slider" scenario="single-value" title="하나만 선택 값" description="포인터나 키보드로 하나의 가로 값을 선택합니다." :index="0" />
 
 ### 세로 방향 값
 
-세로 방향 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다.
+포인터나 키보드로 하나의 세로 값을 선택합니다.
 
-<ComponentExample component="slider" scenario="vertical-value" title="세로 방향 값" description="세로 방향 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다." :index="1" />
-### 부모가 관리하는 값
-
-부모가 관리하는 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다.
-
-<ComponentExample component="slider" scenario="controlled-value" title="부모가 관리하는 값" description="부모가 관리하는 값 설정에서 슬라이더의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="slider" scenario="vertical-value" title="세로 방향 값" description="포인터나 키보드로 하나의 세로 값을 선택합니다." :index="1" />
 
 ## 구성
 
@@ -41,23 +23,51 @@
 
 <ComponentAnatomy component="slider" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/slider`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SliderRoot</code></li>
+  <li><code class="component-api-token">SliderTrack</code></li>
+  <li><code class="component-api-token">SliderRange</code></li>
+  <li><code class="component-api-token">SliderThumb</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SliderRootProps</code></li>
+  <li><code class="component-api-token">SliderSlotProps</code></li>
+  <li><code class="component-api-token">SliderPartProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/slider` | 배포됨 |
-| 브라우저 | `@sectile/dom/slider` | 배포됨 |
-| 터미널 | `@sectile/terminal/slider` | 배포됨 |
-| Vue | `@sectile/vue/slider` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="slider"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">track</code></li>
+  <li><code class="component-part-token">range</code></li>
+  <li><code class="component-part-token">thumb</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/slider/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Right</kbd> / <kbd>Arrow Up</kbd> | 값을 한 단계 증가시킵니다. |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Down</kbd> | 값을 한 단계 감소시킵니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 최솟값 또는 최댓값으로 이동합니다. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 지원되는 경우 설정된 큰 단계만큼 값을 바꿉니다. |
+
+## 접근성
+
+핸들이 이름, 최솟값, 최댓값, 현재 값, 방향, 상호작용 상태를 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/slider/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

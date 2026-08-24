@@ -1,36 +1,15 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 스위치
 
-스위치는 선택 여부가 유지되는 값을 다룹니다.
+즉시 반영되는 설정 하나를 켜거나 끕니다.
 
-## 기본 사용법
+## 예시
 
-스위치가 꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다.
+### 꺼짐
 
-<ComponentExample component="switch" scenario="off" title="스위치" description="스위치가 꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다." :index="0" />
+꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다.
 
-## 지원 기능
-
-- 선택 또는 해제 값
-- 선택 상태 전환
-- 같은 값 재설정 설정
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
-
-### 켜짐
-
-스위치가 켜진 상태에서 시작하며, 이름을 바꾸지 않고 현재 상태를 드러냅니다.
-
-<ComponentExample component="switch" scenario="on" title="켜짐" description="스위치가 켜진 상태에서 시작하며, 이름을 바꾸지 않고 현재 상태를 드러냅니다." :index="1" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 스위치에 전달합니다.
-
-<ComponentExample component="switch" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 스위치에 전달합니다." :index="2" />
+<ComponentExample component="switch" scenario="off" title="꺼짐" description="꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다." :index="0" />
 
 ## 구성
 
@@ -38,23 +17,45 @@
 
 <ComponentAnatomy component="switch" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/switch`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SwitchRoot</code></li>
+  <li><code class="component-api-token">SwitchThumb</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">SwitchRootProps</code></li>
+  <li><code class="component-api-token">SwitchSlotProps</code></li>
+  <li><code class="component-api-token">SwitchThumbProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/switch` | 배포됨 |
-| 브라우저 | `@sectile/dom/switch` | 배포됨 |
-| 터미널 | `@sectile/terminal/switch` | 배포됨 |
-| Vue | `@sectile/vue/switch` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="switch"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">thumb</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Space</kbd> | 현재 값을 전환합니다. |
+| <kbd>Tab</kbd> | 문서의 기본 포커스 순서로 이동합니다. |
+
+## 접근성
+
+루트는 스위치 의미를 제공하며 선택·비활성·읽기 전용 상태를 구분합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

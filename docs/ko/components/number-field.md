@@ -1,52 +1,33 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 숫자 입력
 
-숫자 입력는 입력 중인 값과 확정된 값을 분리해 다룹니다.
+문자열 입력을 검증하거나 계산하면서 정확한 십진수를 유지합니다.
 
-## 기본 사용법
+## 예시
 
-0.1을 십진수 그대로 입력하고 이진 부동소수점 오차 없이 정확한 값을 유지합니다.
+### 정확한 값 정확한 소수
 
-<ComponentExample component="number-field" scenario="exact-decimal" title="숫자 입력" description="0.1을 십진수 그대로 입력하고 이진 부동소수점 오차 없이 정확한 값을 유지합니다." :index="0" />
+0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다.
 
-## 지원 기능
-
-- 정확한 값 정확한 소수 값
-- 텍스트 편집 상태
-- 선택 및 글자 입력 위치
-- 한글 조합 입력 한글 조합 입력
-- 계산식 계산
-- 계산식 입력 계산기식 백분율
-- 정수 거듭제곱
-- 입력 확정과 취소
-- 부모가 관리하는 값 및 입력값 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="number-field" scenario="exact-decimal" title="정확한 값 정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="0" />
 
 ### 계산식 입력
 
 50-20%를 입력하면 계산 결과인 40으로 확정됩니다.
 
 <ComponentExample component="number-field" scenario="calculator" title="계산식 입력" description="50-20%를 입력하면 계산 결과인 40으로 확정됩니다." :index="1" />
+
 ### 거듭제곱
 
 2^3^2를 입력하면 거듭제곱을 오른쪽부터 계산합니다.
 
 <ComponentExample component="number-field" scenario="exponent" title="거듭제곱" description="2^3^2를 입력하면 거듭제곱을 오른쪽부터 계산합니다." :index="2" />
+
 ### 범위 제한
 
-표시된 최솟값과 최댓값 안에서만 값을 확정합니다.
+설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
 
-<ComponentExample component="number-field" scenario="bounded" title="범위 제한" description="표시된 최솟값과 최댓값 안에서만 값을 확정합니다." :index="3" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 숫자 입력에 전달합니다.
-
-<ComponentExample component="number-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 숫자 입력에 전달합니다." :index="4" />
+<ComponentExample component="number-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="3" />
 
 ## 구성
 
@@ -54,23 +35,39 @@
 
 <ComponentAnatomy component="number-field" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/number-field`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">NumberField</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">NumberFieldProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/number-field` | 배포됨 |
-| 브라우저 | `@sectile/dom/number-field` | 배포됨 |
-| 터미널 | `@sectile/terminal/number-field` | 배포됨 |
-| Vue | `@sectile/vue/number-field` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="number-field"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">input</code></li>
+</ul>
 
-이 컴포넌트는 [Sectile 조합 이론](/ko/theory/state-and-text#text)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Standard editing keys</kbd> | 호스트 입력 관례에 따라 텍스트를 편집하고 선택합니다. |
+| <kbd>Tab</kbd> | 기본 텍스트 동작을 유지하며 포커스를 이동합니다. |
+
+## 접근성
+
+이름이 있는 입력은 기본 편집 동작을 유지하며 오류·비활성·읽기 전용 상태를 노출합니다.

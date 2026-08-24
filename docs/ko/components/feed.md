@@ -1,39 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 피드
 
-피드는 여러 항목 사이의 이동, 선택, 화면 표시를 함께 다룹니다.
+버전이 있는 활동 목록을 이동하고 이전·다음 항목을 요청합니다.
 
-## 기본 사용법
+## 예시
 
-유한 목록 설정에서 피드의 실제 동작을 확인할 수 있습니다.
+### 유한 목록
 
-<ComponentExample component="feed" scenario="finite" title="피드" description="유한 목록 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="0" />
+이전·다음 경계가 분명한 활동 목록을 이동합니다.
 
-## 지원 기능
-
-- 표시 구간 현재 위치
-- 변경 차수
-- 요청 대기 자료 요청
-- 표시 구간 자료 요청 명령
-- 위치 위치 정보
-- 표시 구간 목록 동기화
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="feed" scenario="finite" title="유한 목록" description="이전·다음 경계가 분명한 활동 목록을 이동합니다." :index="0" />
 
 ### 불러오기 다음 항목 불러오기
 
-불러오기 다음 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다.
+현재 표시 구간이 최신 경계에 닿으면 새 활동을 요청합니다.
 
-<ComponentExample component="feed" scenario="load-after" title="불러오기 다음 항목 불러오기" description="불러오기 다음 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="feed" scenario="load-after" title="불러오기 다음 항목 불러오기" description="현재 표시 구간이 최신 경계에 닿으면 새 활동을 요청합니다." :index="1" />
+
 ### 불러오기 이전 항목 불러오기
 
-불러오기 이전 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다.
+현재 활동 순서를 바꾸지 않고 더 오래된 항목을 요청합니다.
 
-<ComponentExample component="feed" scenario="load-before" title="불러오기 이전 항목 불러오기" description="불러오기 이전 항목 불러오기 설정에서 피드의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="feed" scenario="load-before" title="불러오기 이전 항목 불러오기" description="현재 활동 순서를 바꾸지 않고 더 오래된 항목을 요청합니다." :index="2" />
 
 ## 구성
 
@@ -41,23 +29,52 @@
 
 <ComponentAnatomy component="feed" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/feed`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">FeedRoot</code></li>
+  <li><code class="component-api-token">FeedItem</code></li>
+  <li><code class="component-api-token">FeedLoadEarlier</code></li>
+  <li><code class="component-api-token">FeedLoadNewer</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">FeedRootProps</code></li>
+  <li><code class="component-api-token">FeedRootSlotProps</code></li>
+  <li><code class="component-api-token">FeedItemSlotProps</code></li>
+  <li><code class="component-api-token">FeedPartProps</code></li>
+  <li><code class="component-api-token">FeedDirection</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/feed` | 배포됨 |
-| 브라우저 | `@sectile/dom/feed` | 배포됨 |
-| 터미널 | `@sectile/terminal/feed` | 배포됨 |
-| Vue | `@sectile/vue/feed` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="feed"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">load-earlier</code></li>
+  <li><code class="component-part-token">load-newer</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/feed/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Down</kbd> / <kbd>Page Down</kbd> | 다음 글로 이동합니다. |
+| <kbd>Arrow Up</kbd> / <kbd>Page Up</kbd> | 이전 글로 이동합니다. |
+| <kbd>Tab</kbd> | 현재 글 안의 상호작용 컨트롤로 이동합니다. |
+
+## 접근성
+
+루트는 피드 의미를 사용하며 각 항목은 선택적인 위치와 전체 크기 정보가 있는 글로 노출됩니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/feed/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

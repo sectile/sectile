@@ -1,51 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 메뉴 막대
 
-메뉴 막대는 계층형 명령 사이를 이동하고 실행하는 방식을 다룹니다.
+최상위 메뉴 사이를 이동한 뒤 각 명령 계층을 탐색합니다.
 
-## 기본 사용법
+## 예시
 
-응용 프로그램 메뉴 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다.
+### 응용 프로그램 메뉴
 
-<ComponentExample component="menubar" scenario="application" title="메뉴 막대" description="응용 프로그램 메뉴 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다." :index="0" />
+최상위 응용 프로그램 메뉴 사이를 이동한 뒤 열린 명령 목록으로 들어갑니다.
 
-## 지원 기능
-
-- 최상위 축 현재 위치
-- 계층 현재 위치
-- 열림 상태 경로
-- 작업 실행
-- 비활성 항목 항목
-- 양 끝 이동
-- 글자 입력으로 이동
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-## 터미널 키보드 동작
-
-터미널에서는 메뉴를 세로 계층으로 표시합니다. 따라서 DOM의 가로 메뉴 규칙을 그대로 복사하지 않고, 화면에 보이는 방향과 화살표 키의 의미를 맞춥니다.
-
-| 키 | 동작 |
-| --- | --- |
-| <kbd>↑</kbd> / <kbd>↓</kbd> | 현재 단계의 이전·다음 항목으로 이동합니다. |
-| <kbd>→</kbd> | 하위 메뉴를 열고 첫 항목으로 들어갑니다. |
-| <kbd>←</kbd> / <kbd>Esc</kbd> | 상위 단계로 돌아갑니다. 최상위에서는 현재 메뉴 위치를 해제합니다. |
-| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 처음·마지막 항목으로 이동합니다. |
-| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 명령을 실행합니다. |
-| 글자 입력 | 입력한 글자로 시작하는 다음 항목으로 이동합니다. |
-
-## 추가 예시
+<ComponentExample component="menubar" scenario="application" title="응용 프로그램 메뉴" description="최상위 응용 프로그램 메뉴 사이를 이동한 뒤 열린 명령 목록으로 들어갑니다." :index="0" />
 
 ### 비활성 항목 최상위
 
-비활성 항목 최상위 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다.
+사용할 수 없는 최상위 메뉴를 건너뛰고 양옆 메뉴 사이를 이동합니다.
 
-<ComponentExample component="menubar" scenario="disabled-root" title="비활성 항목 최상위" description="비활성 항목 최상위 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="menubar" scenario="disabled-root" title="비활성 항목 최상위" description="사용할 수 없는 최상위 메뉴를 건너뛰고 양옆 메뉴 사이를 이동합니다." :index="1" />
+
 ### 글자 입력으로 이동
 
-글자 입력으로 이동 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다.
+입력한 글자로 시작하는 다음 메뉴로 이동합니다.
 
-<ComponentExample component="menubar" scenario="typeahead" title="글자 입력으로 이동" description="글자 입력으로 이동 설정에서 메뉴 막대의 실제 동작을 확인할 수 있습니다." :index="2" />
+<ComponentExample component="menubar" scenario="typeahead" title="글자 입력으로 이동" description="입력한 글자로 시작하는 다음 메뉴로 이동합니다." :index="2" />
 
 ## 구성
 
@@ -53,23 +29,61 @@
 
 <ComponentAnatomy component="menubar" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/menubar`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MenubarItem</code></li>
+  <li><code class="component-api-token">MenubarSeparator</code></li>
+  <li><code class="component-api-token">MenubarContent</code></li>
+  <li><code class="component-api-token">MenubarRoot</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">MenubarItemProps</code></li>
+  <li><code class="component-api-token">MenubarItemSlotProps</code></li>
+  <li><code class="component-api-token">MenubarPartProps</code></li>
+  <li><code class="component-api-token">MenubarRootProps</code></li>
+  <li><code class="component-api-token">MenubarRootSlotProps</code></li>
+  <li><code class="component-api-token">MenubarContentProps</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/menubar` | 배포됨 |
-| 브라우저 | `@sectile/dom/menubar` | 배포됨 |
-| 터미널 | `@sectile/terminal/menubar` | 배포됨 |
-| Vue | `@sectile/vue/menubar` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="menubar"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">item</code></li>
+  <li><code class="component-part-token">sub-content</code></li>
+  <li><code class="component-part-token">separator</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+**예외와 추가 속성**
+
+- `item`: 모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분 · `data-level="<depth>"` 추가
+- `sub-content`: 상위 메뉴 항목이 소유하는 팝업 콘텐츠 · `data-scope="menu"` 사용 · `data-level="<depth>"` 추가
+- `separator`: `data-scope="menu"` 사용
+
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | 최상위 메뉴 항목 사이를 이동합니다. |
+| <kbd>Arrow Down</kbd> / <kbd>Arrow Up</kbd> | 하위 메뉴를 열거나 세로 항목 목록 안에서 이동합니다. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | 현재 단계의 첫 번째 또는 마지막 항목으로 이동합니다. |
+| <kbd>Enter</kbd> / <kbd>Space</kbd> | 하위 메뉴를 열거나 현재 항목을 실행합니다. |
+| <kbd>Escape</kbd> | 하위 메뉴를 닫고 이를 연 항목으로 돌아갑니다. |
+
+## 접근성
+
+루트는 메뉴 막대 의미를 제공하고 열린 가지는 계층형 메뉴 항목과 이동 포커스를 사용합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

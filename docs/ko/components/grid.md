@@ -1,44 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 격자
 
-격자는 여러 항목 사이의 이동, 선택, 화면 표시를 함께 다룹니다.
+2차원 칸을 이동하고 값을 선택하거나 편집 상태로 들어갑니다.
 
-## 기본 사용법
+## 예시
 
-선택 가능 설정에서 격자의 실제 동작을 확인할 수 있습니다.
+### 선택 가능
 
-<ComponentExample component="grid" scenario="selectable" title="격자" description="선택 가능 설정에서 격자의 실제 동작을 확인할 수 있습니다." :index="0" />
+격자 사이를 이동하고 현재 칸을 선택합니다.
 
-## 지원 기능
-
-- 좌표 현재 위치
-- 선택
-- 편집 상태
-- 사용 가능 여부
-- 축 경계 처리
-- 부모가 관리하는 상태
-
-실행 환경마다 입력 방식과 화면 출력은 달라도, 같은 입력에는 같은 상태 변화가 일어납니다.
-
-
-
-## 추가 예시
+<ComponentExample component="grid" scenario="selectable" title="선택 가능" description="격자 사이를 이동하고 현재 칸을 선택합니다." :index="0" />
 
 ### 비활성 항목 끝에서 처음으로 이동
 
-비활성 항목 끝에서 처음으로 이동 설정에서 격자의 실제 동작을 확인할 수 있습니다.
+격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다.
 
-<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="비활성 항목 끝에서 처음으로 이동 설정에서 격자의 실제 동작을 확인할 수 있습니다." :index="1" />
+<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다." :index="1" />
+
 ### 편집 가능
 
-편집 가능 설정에서 격자의 실제 동작을 확인할 수 있습니다.
+격자 이동을 유지하면서 현재 칸의 값을 편집합니다.
 
-<ComponentExample component="grid" scenario="editable" title="편집 가능" description="편집 가능 설정에서 격자의 실제 동작을 확인할 수 있습니다." :index="2" />
-### 외부 상태 관리
-
-현재 값은 부모가 관리하며, 허용된 변경을 다시 격자에 전달합니다.
-
-<ComponentExample component="grid" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하며, 허용된 변경을 다시 격자에 전달합니다." :index="3" />
+<ComponentExample component="grid" scenario="editable" title="편집 가능" description="격자 이동을 유지하면서 현재 칸의 값을 편집합니다." :index="2" />
 
 ## 구성
 
@@ -46,23 +29,52 @@
 
 <ComponentAnatomy component="grid" />
 
-## 상태 관리 방식
+## 공개 API
 
-컴포넌트가 상태를 직접 관리하게 하려면 초깃값을 전달합니다. 저장, 검증, 여러 컴포넌트 사이의 연동이 필요하면 현재 값과 변경 알림을 부모에서 관리합니다.
+Vue 패키지: `@sectile/vue/grid`
 
-## 비활성 상태와 읽기 전용 상태
+<div class="component-api-group">
+<strong class="component-api-label">컴포넌트</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">GridRoot</code></li>
+  <li><code class="component-api-token">GridRow</code></li>
+  <li><code class="component-api-token">GridCell</code></li>
+</ul>
+</div>
 
-비활성 상태에서는 사용자 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 현재 값을 확인하고 포커스를 옮길 수 있지만 값을 바꿀 수 없습니다. 지원 여부는 각 컴포넌트의 성격에 따라 달라집니다.
+<div class="component-api-group">
+<strong class="component-api-label">타입</strong>
+<ul class="component-api-list">
+  <li><code class="component-api-token">GridRootProps</code></li>
+  <li><code class="component-api-token">GridRootSlotProps</code></li>
+  <li><code class="component-api-token">GridCellSlotProps</code></li>
+  <li><code class="component-api-token">GridPartProps</code></li>
+  <li><code class="component-api-token">GridEditMode</code></li>
+  <li><code class="component-api-token">GridPolicies</code></li>
+</ul>
+</div>
 
-## 패키지 지원
+## 파트
 
-| 패키지 | 가져오기 경로 | 상태 |
-| --- | --- | --- |
-| 코어 | `@sectile/core/grid` | 배포됨 |
-| 브라우저 | `@sectile/dom/grid` | 배포됨 |
-| 터미널 | `@sectile/terminal/grid` | 배포됨 |
-| Vue | `@sectile/vue/grid` | 개발 중 |
+렌더링되는 파트는 기본적으로 `data-scope="grid"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
 
-## 의미 규칙
+<ul class="component-parts">
+  <li><code class="component-part-token">root</code></li>
+  <li><code class="component-part-token">row</code></li>
+  <li><code class="component-part-token">cell</code></li>
+</ul>
 
-이 컴포넌트는 [관련 접근성 지침](https://www.w3.org/WAI/ARIA/apg/patterns/grid/)을 따릅니다. 패키지에는 시각 스타일이 포함되지 않으며, 상태 속성과 구성 요소를 이용해 원하는 모양을 적용합니다.
+## 키보드 동작
+
+| 키 | 동작 |
+| --- | --- |
+| <kbd>Arrow keys</kbd> | 격자 칸 사이를 이동합니다. |
+| <kbd>Space</kbd> | 현재 칸이나 행을 선택합니다. |
+| <kbd>Enter</kbd> / <kbd>F2</kbd> | 현재 칸이 편집을 지원하면 편집 모드로 들어갑니다. |
+| <kbd>Escape</kbd> | 현재 편집을 취소합니다. |
+
+## 접근성
+
+이름이 있는 격자가 행과 열 수를 전달하고 각 칸은 위치·선택·비활성 상태를 노출합니다.
+
+[관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/grid/)에서 호스트 접근성 규칙을 확인할 수 있습니다.
