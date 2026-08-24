@@ -1012,7 +1012,7 @@ function createLinearScenario(host, kind, scenario) {
       policies: { activation: scenario.activation },
       onUpdate: host.render,
     });
-    return linearSession(connection, scenario, items, (state, id) => state.selection.has(id));
+    return tabsSession(connection, scenario, items);
   }
   if (kind === 'radio-group') {
     const items = ['compact', 'comfortable', 'spacious'];
@@ -1055,6 +1055,85 @@ function createLinearScenario(host, kind, scenario) {
     onUpdate: host.render,
   });
   return linearSession(connection, scenario, items, () => false, () => `invoked=${invoked ?? '−'}`);
+}
+
+const tabContent = Object.freeze({
+  overview: Object.freeze({
+    label: 'Overview',
+    description: 'Release status and rollout summary.',
+  }),
+  changes: Object.freeze({
+    label: 'Changes',
+    description: 'Commits, files, and reviewers in this release.',
+  }),
+  checks: Object.freeze({
+    label: 'Checks',
+    description: 'Build, test, and accessibility verification.',
+  }),
+});
+
+function tabsSession(connection, scenario, items) {
+  const renderTab = (state, id, cellWidth) => {
+    const content = tabContent[id];
+    const current = state.cursor.current === id;
+    const selected = state.selection.has(id);
+    const label = plain(`${current ? '›' : ' '} ${selected ? '●' : ' '} ${content.label}`, cellWidth);
+    if (scenario.disabledItems.includes(id)) return `${ansi.disabled}${label}${ansi.reset}`;
+    if (current) return `${ansi.current}${label}${ansi.reset}`;
+    if (selected) return `${ansi.cyan}${ansi.bold}${label}${ansi.reset}`;
+    return label;
+  };
+
+  return {
+    handle: (input) => connection.handleKeyboardInput(input),
+    lines(width) {
+      const { state } = connection.getSnapshot();
+      const active = state.selection.selected[0] ?? items[0];
+      const panel = tabContent[active];
+      const frameWidth = Math.max(1, Math.min(64, width));
+      const innerWidth = Math.max(1, frameWidth - 2);
+      const vertical = scenario.orientation === 'vertical' || frameWidth < 36;
+      const controls = vertical
+        ? verticalTabs(state, items, innerWidth, renderTab, panel)
+        : horizontalTabs(state, items, innerWidth, renderTab, panel);
+      return [
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
+        `${ansi.dim}${scenario.activation} activation · arrows move${scenario.activation === 'manual' ? ' · Enter selects' : ''}${ansi.reset}`,
+        '',
+        ...controls,
+        '',
+        `focused=${state.cursor.current ?? '−'}  active=${active}`,
+      ];
+    },
+  };
+}
+
+function horizontalTabs(state, items, innerWidth, renderTab, panel) {
+  const separators = items.length - 1;
+  const available = Math.max(items.length, innerWidth - separators);
+  const baseWidth = Math.floor(available / items.length);
+  const widths = items.map((_, index) => index === items.length - 1
+    ? available - baseWidth * (items.length - 1)
+    : baseWidth);
+  return [
+    `┌${widths.map((cellWidth) => '─'.repeat(cellWidth)).join('┬')}┐`,
+    `│${items.map((id, index) => renderTab(state, id, widths[index])).join('│')}│`,
+    `├${'─'.repeat(innerWidth)}┤`,
+    `│${ansi.bold}${plain(panel.label, innerWidth)}${ansi.reset}│`,
+    `│${ansi.dim}${plain(panel.description, innerWidth)}${ansi.reset}│`,
+    `└${'─'.repeat(innerWidth)}┘`,
+  ];
+}
+
+function verticalTabs(state, items, innerWidth, renderTab, panel) {
+  const tabWidth = Math.max(10, Math.min(18, Math.floor((innerWidth - 1) / 3)));
+  const panelWidth = Math.max(1, innerWidth - tabWidth - 1);
+  const panelLines = [panel.label, panel.description, ''];
+  return [
+    `┌${'─'.repeat(tabWidth)}┬${'─'.repeat(panelWidth)}┐`,
+    ...items.map((id, index) => `│${renderTab(state, id, tabWidth)}│${index === 0 ? ansi.bold : ansi.dim}${plain(panelLines[index], panelWidth)}${ansi.reset}│`),
+    `└${'─'.repeat(tabWidth)}┴${'─'.repeat(panelWidth)}┘`,
+  ];
 }
 
 function linearSession(connection, scenario, items, selected, footer = () => '') {

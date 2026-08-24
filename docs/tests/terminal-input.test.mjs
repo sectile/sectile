@@ -134,6 +134,21 @@ test('documentation examples do not expose internal snapshot revisions', () => {
   assert.doesNotMatch(session.lines(80).join('\n'), /(?:^|\s)r\d+(?:\s|$)/m);
 });
 
+test('terminal tabs render a boxed tab strip with a distinct active panel', () => {
+  const session = createDocumentationSession('tabs', 0);
+  const initial = session.lines(80).join('\n');
+  assert.match(initial, /┌─+\u252c─+\u252c─+┐/u);
+  assert.match(initial, /├─+┤\n│.*Overview/u);
+  assert.match(initial, /Release status and rollout summary\./u);
+
+  session.handle({ key: 'right' });
+  assert.match(session.lines(80).join('\n'), /focused=changes\s+active=overview/u);
+  session.handle({ key: 'enter' });
+  const changed = session.lines(80).join('\n');
+  assert.match(changed, /focused=changes\s+active=changes/u);
+  assert.match(changed, /Commits, files, and reviewers in this release\./u);
+});
+
 test('tags input embeds the terminal caret at the draft insertion point for IME composition', () => {
   const definition = demos.find(({ id }) => id === 'tags-input');
   const session = definition.create({
