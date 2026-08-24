@@ -97,6 +97,7 @@
     "./menu-button": { "types": "./dist/menu-button.d.ts", "import": "./dist/menu-button.js", "default": "./dist/menu-button.js" },
     "./carousel": { "types": "./dist/carousel.d.ts", "import": "./dist/carousel.js", "default": "./dist/carousel.js" },
     "./feed": { "types": "./dist/feed.d.ts", "import": "./dist/feed.js", "default": "./dist/feed.js" },
+    "./form": { "types": "./dist/form.d.ts", "import": "./dist/form.js", "default": "./dist/form.js" },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",
@@ -147,6 +148,7 @@
     "@sectile/core": "workspace:*"
   },
   "devDependencies": {
+    "happy-dom": "^20.11.6",
     "typescript": "7.0.2"
   }
 }

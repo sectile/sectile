@@ -173,6 +173,15 @@ export {
   type CarouselScheduler,
 } from './carousel.js';
 export { createFeed, tryCreateFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
+export {
+  createForm, tryCreateForm,
+  type FormConnection,
+  type FormOptions,
+  type FormParticipant,
+  type FormParticipantValidation,
+  type FormSnapshot,
+  type FormSubmitDetails,
+} from './form.js';
 export { createGridControl, tryCreateGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {
   connectCalendar,
