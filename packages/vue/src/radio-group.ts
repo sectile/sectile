@@ -10,6 +10,7 @@ import {
 import { createListboxControllerFromItems, type ListboxController } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { usePartContract, type PartContract } from './internal/part-contract.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];
@@ -35,9 +36,10 @@ interface RootContext {
   readonly highlighted: ComputedRef<string | null>;
   readonly disabled: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly partContract: PartContract;
   select(value: string, target: HTMLElement): void;
 }
-interface ItemContext { readonly state: ComputedRef<RadioGroupItemSlotProps> }
+interface ItemContext { readonly state: ComputedRef<RadioGroupItemSlotProps>; readonly partContract: PartContract }
 const rootKey = Symbol('SectileRadioGroupRoot');
 const itemKey = Symbol('SectileRadioGroupItem');
 
@@ -107,8 +109,9 @@ export const RadioGroupRoot = defineComponent({
       if (root !== undefined) void nextTick(() => focusItem(root, result.snapshot.state.cursor.current));
       return true;
     };
+    const part = usePartContract('radio-group', 'root');
     provide<RootContext>(rootKey, {
-      value, highlighted, disabled, disabledItems,
+      value, highlighted, disabled, disabledItems, partContract: part,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="radiogroup"]') as HTMLElement | undefined),
     });
     const rootAttributes = computed(() => getRadioGroupRootAttributes({ orientation: props.orientation, disabled: props.disabled, readOnly: props.readonly }));
@@ -116,6 +119,7 @@ export const RadioGroupRoot = defineComponent({
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
         as: props.as, asChild: props.asChild,
+        'data-scope': part.scope,
         onKeydown: (event: KeyboardEvent) => {
           if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
           event.preventDefault();
@@ -146,16 +150,18 @@ export const RadioGroupItem = defineComponent({
   slots: Object as SlotsType<{ default: (props: RadioGroupItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('RadioGroupItem');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['item'] ?? 'item' };
     const state = computed<RadioGroupItemSlotProps>(() => ({
       value: props.value,
       checked: root.value.value === props.value,
       highlighted: root.highlighted.value === props.value,
       disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value),
     }));
-    provide<ItemContext>(itemKey, { state });
+    provide<ItemContext>(itemKey, { state, partContract: root.partContract });
     const attributes = computed(() => getRadioGroupItemAttributes({ id: props.value, checked: state.value.checked, highlighted: state.value.highlighted, disabled: state.value.disabled }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
+      'data-scope': part.scope,
       onClick: (event: MouseEvent) => {
         if (!event.defaultPrevented && !state.value.disabled) root.select(props.value, event.currentTarget as HTMLElement);
       },
@@ -174,12 +180,13 @@ export const RadioGroupIndicator = defineComponent({
   setup(props, { attrs, slots }) {
     const item = inject<ItemContext>(itemKey);
     if (item === undefined) throw new TypeError('RadioGroupIndicator must be used inside RadioGroupItem.');
+    const part = { scope: item.partContract.scope, part: item.partContract.parts['indicator'] ?? 'indicator' };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       hidden: !item.state.value.checked,
       'aria-hidden': 'true',
-      'data-scope': 'radio-group',
-      'data-part': 'indicator',
+      'data-scope': part.scope,
+      'data-part': part.part,
       'data-state': item.state.value.checked ? 'checked' : 'unchecked',
     }), { default: () => slots['default']?.(item.state.value) });
   },

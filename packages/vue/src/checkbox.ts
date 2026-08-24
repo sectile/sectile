@@ -21,6 +21,7 @@ import {
 } from '@sectile/dom/checkbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { usePartContract, type PartContract } from './internal/part-contract.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 
@@ -48,6 +49,7 @@ export interface CheckboxSlotProps {
 interface CheckboxContext {
   readonly slotProps: ComputedRef<CheckboxSlotProps>;
   readonly dataState: ComputedRef<string>;
+  readonly partContract: PartContract;
 }
 
 interface CheckboxControllerProps {
@@ -135,7 +137,8 @@ export const CheckboxRoot = defineComponent({
       disabled: props.disabled,
     }));
     const dataState = computed(() => attributes.value['data-state']);
-    provide<CheckboxContext>(checkboxContextKey, { slotProps, dataState });
+    const part = usePartContract('checkbox', 'root');
+    provide<CheckboxContext>(checkboxContextKey, { slotProps, dataState, partContract: part });
 
     const handleClick = (event: MouseEvent): void => {
       if (event.defaultPrevented) return;
@@ -150,6 +153,8 @@ export const CheckboxRoot = defineComponent({
           as: props.as,
           asChild: props.asChild,
           ...(props.as === 'button' && !props.asChild ? { type: 'button' } : {}),
+          'data-scope': part.scope,
+          'data-part': part.part,
           onClick: handleClick,
         },
       ), {
@@ -184,6 +189,7 @@ export const CheckboxIndicator = defineComponent({
     if (context === undefined) {
       throw new TypeError('CheckboxIndicator must be used inside CheckboxRoot.');
     }
+    const part = { scope: context.partContract.scope, part: context.partContract.parts['indicator'] ?? 'indicator' };
     return (): VNodeChild => {
       const state = context.slotProps.value;
       return h(Primitive, mergeProps(attrs, {
@@ -191,8 +197,8 @@ export const CheckboxIndicator = defineComponent({
         asChild: props.asChild,
         hidden: state.checked === false,
         'aria-hidden': 'true',
-        'data-scope': 'checkbox',
-        'data-part': 'indicator',
+        'data-scope': part.scope,
+        'data-part': part.part,
         'data-state': context.dataState.value,
       }), {
         default: () => slots['default']?.(state),

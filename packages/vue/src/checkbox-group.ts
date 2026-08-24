@@ -4,6 +4,7 @@ import {
 } from 'vue';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { CheckboxIndicator, CheckboxRoot, type CheckboxValue } from './checkbox.js';
+import { providePartContract } from './internal/part-contract.js';
 
 export interface CheckboxGroupRootProps {
   readonly modelValue?: readonly string[];
@@ -48,6 +49,7 @@ export const CheckboxGroupRoot = defineComponent({
   emits: { 'update:modelValue': (_value: readonly string[]): boolean => true },
   slots: Object as SlotsType<{ default: (props: CheckboxGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    providePartContract('checkbox-group', { root: 'item' });
     const local = shallowRef<readonly string[]>(props.modelValue ?? props.defaultValue);
     const state = computed<CheckboxGroupRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? local.value, disabled: props.disabled, readonly: props.readonly,
@@ -85,7 +87,6 @@ export const CheckboxGroupItem = defineComponent({
       readonly: root.state.value.readonly, required: props.required ?? root.required.value,
       name: root.name.value, form: root.form.value, value: props.value,
       'onUpdate:modelValue': (next: CheckboxValue) => root.toggle(props.value, next),
-      'data-scope': 'checkbox-group', 'data-part': 'item',
     }), { default: () => slots['default']?.({ checked: checked.value, disabled: root.state.value.disabled || props.disabled, readonly: root.state.value.readonly }) });
   },
 });

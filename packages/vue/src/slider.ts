@@ -12,6 +12,7 @@ import {
 } from '@sectile/dom/slider';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { usePartContract, type PartContract } from './internal/part-contract.js';
 
 export interface SliderRootProps {
   readonly min?: number | string;
@@ -43,6 +44,7 @@ interface SliderContext {
   readonly connection: ShallowRef<SliderConnection | undefined>;
   readonly label: ComputedRef<string | undefined>;
   readonly formatValue: ComputedRef<((value: string) => string) | undefined>;
+  readonly partContract: PartContract;
   refresh(): void;
 }
 const sliderKey = Symbol('SectileSliderRoot');
@@ -112,11 +114,12 @@ export const SliderRoot = defineComponent({
     const role = computed(() => props.role);
     const label = computed(() => props.label);
     const formatValue = computed(() => props.formatValue);
-    provide<SliderContext>(sliderKey, { controller, state, orientation, role, track, connection, label, formatValue, refresh });
+    const part = usePartContract('slider', 'root');
+    provide<SliderContext>(sliderKey, { controller, state, orientation, role, track, connection, label, formatValue, partContract: part, refresh });
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        'data-scope': 'slider', 'data-part': 'root',
+        'data-scope': part.scope, 'data-part': part.part,
         'data-orientation': props.orientation,
         'data-disabled': props.disabled ? '' : undefined,
         'data-readonly': props.readonly ? '' : undefined,
@@ -137,10 +140,11 @@ export const SliderTrack = defineComponent({
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useSlider('SliderTrack');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['track'] ?? 'track' };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { root.track.value = element instanceof HTMLElement ? element : undefined; },
-      'data-scope': 'slider', 'data-part': 'track', 'data-orientation': root.orientation.value,
+      'data-scope': part.scope, 'data-part': part.part, 'data-orientation': root.orientation.value,
     }), { default: () => slots['default']?.(root.state.value) });
   },
 });
@@ -150,9 +154,10 @@ export const SliderRange = defineComponent({
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useSlider('SliderRange');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['range'] ?? 'range' };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
-      'aria-hidden': 'true', 'data-scope': 'slider', 'data-part': 'range',
+      'aria-hidden': 'true', 'data-scope': part.scope, 'data-part': part.part,
       'data-percentage': String(root.state.value.percentage),
       style: { '--sectile-slider-percentage': `${root.state.value.percentage}%` },
     }), { default: () => slots['default']?.(root.state.value) });
@@ -164,6 +169,7 @@ export const SliderThumb = defineComponent({
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useSlider('SliderThumb');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['thumb'] ?? 'thumb' };
     const element = shallowRef<HTMLElement>();
     onMounted(() => {
       if (element.value === undefined) throw new TypeError('SliderThumb did not render an HTMLElement.');
@@ -171,6 +177,8 @@ export const SliderThumb = defineComponent({
         controller: root.controller,
         root: element.value,
         track: root.track.value ?? element.value,
+        scope: part.scope,
+        part: part.part,
         orientation: root.orientation.value,
         role: root.role.value,
         disabled: root.state.value.disabled,
@@ -182,6 +190,8 @@ export const SliderThumb = defineComponent({
     });
     onBeforeUnmount(() => root.connection.value?.disconnect());
     const attributes = computed(() => getSliderAttributes(root.controller, {
+      scope: part.scope,
+      part: part.part,
       orientation: root.orientation.value,
       role: root.role.value,
       disabled: root.state.value.disabled,
@@ -192,6 +202,8 @@ export const SliderThumb = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
+      'data-scope': part.scope,
+      'data-part': part.part,
       'data-percentage': String(root.state.value.percentage),
       style: { '--sectile-slider-percentage': `${root.state.value.percentage}%` },
     }), { default: () => slots['default']?.(root.state.value) });

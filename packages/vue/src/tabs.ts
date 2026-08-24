@@ -10,6 +10,7 @@ import {
 } from '@sectile/dom/tabs';
 import { createListboxControllerFromItems, type ListboxController, type ListboxEffect } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { usePartContract, type PartContract } from './internal/part-contract.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -40,6 +41,7 @@ interface RootContext {
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
+  readonly partContract: PartContract;
   select(value: string, target: HTMLElement): void;
   keydown(event: KeyboardEvent): void;
   ids(value: string): IDs;
@@ -126,8 +128,9 @@ export const TabsRoot = defineComponent({
       if (root !== undefined) void nextTick(() => focusTrigger(root, result.snapshot.state.cursor.current));
       return true;
     };
+    const part = usePartContract('tabs', 'root');
     provide<RootContext>(rootKey, {
-      value, highlighted, disabled, readonly, orientation, disabledItems, ids,
+      value, highlighted, disabled, readonly, orientation, disabledItems, partContract: part, ids,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="tablist"]') as HTMLElement | undefined),
       keydown: (event) => {
         if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
@@ -135,7 +138,7 @@ export const TabsRoot = defineComponent({
       },
     });
     const slotProps = computed<TabsRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), { as: props.as, asChild: props.asChild }), {
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), { as: props.as, asChild: props.asChild, 'data-scope': part.scope }), {
       default: () => slots['default']?.(slotProps.value),
     });
   },
@@ -152,13 +155,14 @@ export const TabsList = defineComponent({
   slots: Object as SlotsType<{ default: () => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TabsList');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['list'] ?? 'list' };
     const attributes = computed(() => getTabsListAttributes({
       orientation: root.orientation.value,
       ...(props.label === undefined ? {} : { label: props.label }),
       disabled: root.disabled.value,
       readOnly: root.readonly.value,
     }));
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, { as: props.as, asChild: props.asChild, onKeydown: root.keydown }), slots);
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, { as: props.as, asChild: props.asChild, 'data-scope': part.scope, onKeydown: root.keydown }), slots);
   },
 });
 
@@ -174,6 +178,7 @@ export const TabsTrigger = defineComponent({
   slots: Object as SlotsType<{ default: (props: TabsTriggerSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TabsTrigger');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['trigger'] ?? 'trigger' };
     const state = computed<TabsTriggerSlotProps>(() => ({
       value: props.value,
       selected: root.value.value === props.value,
@@ -186,6 +191,8 @@ export const TabsTrigger = defineComponent({
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
+      'data-scope': part.scope,
+      'data-part': part.part,
       onClick: (event: MouseEvent) => {
         if (!event.defaultPrevented && !state.value.disabled) root.select(props.value, event.currentTarget as HTMLElement);
       },
@@ -204,12 +211,13 @@ export const TabsContent = defineComponent({
   slots: Object as SlotsType<{ default: (props: TabsContentSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TabsContent');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['content'] ?? 'content' };
     const selected = computed(() => root.value.value === props.value);
     const attributes = computed(() => {
       const ids = root.ids(props.value);
       return getTabsContentAttributes({ selected: selected.value, contentID: ids.content, triggerID: ids.trigger });
     });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, { as: props.as, asChild: props.asChild }), {
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, { as: props.as, asChild: props.asChild, 'data-scope': part.scope }), {
       default: () => slots['default']?.({ value: props.value, selected: selected.value }),
     });
   },
@@ -225,11 +233,12 @@ export const TabsIndicator = defineComponent({
   slots: Object as SlotsType<{ default: (props: { value: string }) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('TabsIndicator');
+    const part = { scope: root.partContract.scope, part: root.partContract.parts['indicator'] ?? 'indicator' };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       'aria-hidden': 'true',
-      'data-scope': 'tabs',
-      'data-part': 'indicator',
+      'data-scope': part.scope,
+      'data-part': part.part,
       'data-value': root.value.value,
     }), { default: () => slots['default']?.({ value: root.value.value }) });
   },

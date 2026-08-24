@@ -21,6 +21,8 @@ test('Vue rating specializes radio semantics and exposes an optional clear contr
   assert.match(html, /aria-roledescription="rating"/);
   assert.match(html, /aria-label="2 rating"/);
   assert.match(html, /data-part="clear"/);
+  assert.equal((html.match(/data-scope="rating"/g) ?? []).length, 8);
+  assert.doesNotMatch(html, /data-scope="radio-group"/);
 });
 
 test('Vue stepper reuses linked tab semantics with manual activation', async () => {
@@ -42,4 +44,7 @@ test('Vue stepper reuses linked tab semantics with manual activation', async () 
   assert.match(html, /aria-roledescription="stepper"/);
   assert.match(html, /role="tablist"/);
   assert.match(html, /role="tabpanel"/);
+  assert.equal((html.match(/data-scope="stepper"/g) ?? []).length, 6);
+  assert.equal((html.match(/data-part="step"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /data-scope="tabs"|data-part="trigger"/);
 });

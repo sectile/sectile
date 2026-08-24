@@ -1,6 +1,7 @@
 import { defineComponent, h, mergeProps, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { SliderRoot, SliderThumb, type SliderRootProps, type SliderSlotProps } from './slider.js';
+import { providePartContract } from './internal/part-contract.js';
 
 export type WindowSplitterRootProps = Omit<SliderRootProps, 'readonly' | 'role'>;
 export interface WindowSplitterPaneProps { readonly side: 'before' | 'after'; readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -19,8 +20,9 @@ export const WindowSplitterRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    providePartContract('window-splitter', { thumb: 'handle' });
     return (): VNodeChild => h(SliderRoot, mergeProps(attrs, props, {
-      role: 'separator', readonly: false, 'data-scope': 'window-splitter',
+      role: 'separator', readonly: false,
       'onUpdate:modelValue': (value: string) => emit('update:modelValue', value),
     }), { default: (state: SliderSlotProps) => slots['default']?.(state) });
   },

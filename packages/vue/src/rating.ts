@@ -20,6 +20,7 @@ import {
   type RadioGroupRootSlotProps,
 } from './radio-group.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { providePartContract } from './internal/part-contract.js';
 
 export interface RatingRootProps {
   readonly items: readonly string[];
@@ -69,6 +70,7 @@ export const RatingRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: RatingRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    providePartContract('rating');
     const controlled = props.modelValue !== undefined;
     const localValue = ref(controlled ? props.modelValue as string : props.defaultValue);
     watch(() => props.modelValue, (value) => {
@@ -102,7 +104,6 @@ export const RatingRoot = defineComponent({
       as: props.as,
       asChild: props.asChild,
       'aria-roledescription': 'rating',
-      'data-scope': 'rating',
       'onUpdate:modelValue': update,
     }), {
       default: (root: RadioGroupRootSlotProps) => slots['default']?.({ ...root, clearable: props.clearable }),

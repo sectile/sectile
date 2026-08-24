@@ -9,6 +9,7 @@ import {
   type TabsRootSlotProps,
 } from './tabs.js';
 import type { PrimitiveAs } from './primitive.js';
+import { providePartContract } from './internal/part-contract.js';
 
 export type StepperRootProps = Omit<TabsRootProps, 'activationMode'>;
 
@@ -28,10 +29,10 @@ export const StepperRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TabsRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
+    providePartContract('stepper', { trigger: 'step' });
     return (): VNodeChild => h(TabsRoot as Component, mergeProps(attrs, props, {
       activationMode: 'manual',
       'aria-roledescription': 'stepper',
-      'data-scope': 'stepper',
     }), slots);
   },
 });

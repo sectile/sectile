@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { CheckboxGroupItem, CheckboxGroupRoot } from '../dist/checkbox-group.js';
+import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '../dist/checkbox-group.js';
 import { MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '../dist/multi-thumb-slider.js';
 import { PaginationItem, PaginationRoot } from '../dist/pagination.js';
 import { PinInputInput, PinInputRoot } from '../dist/pin-input.js';
@@ -13,11 +13,13 @@ async function render(component) { return renderToString(createSSRApp({ render: 
 
 test('Vue checkbox group keeps native checkbox form controls', async () => {
   const html = await render(() => h(CheckboxGroupRoot, { defaultValue: ['alpha'], name: 'channels' }, {
-    default: () => h(CheckboxGroupItem, { value: 'alpha' }, { default: ({ checked }) => String(checked) }),
+    default: () => h(CheckboxGroupItem, { value: 'alpha' }, { default: ({ checked }) => [String(checked), h(CheckboxGroupIndicator)] }),
   }));
   assert.match(html, /role="group"/);
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /name="channels"/);
+  assert.equal((html.match(/data-scope="checkbox-group"/g) ?? []).length, 3);
+  assert.doesNotMatch(html, /data-scope="checkbox"/);
 });
 
 test('Vue pagination exposes the calculated item model through its default slot', async () => {
@@ -57,4 +59,7 @@ test('Vue multi-thumb slider and window splitter project structural sizing hooks
   assert.match(slider, /data-sectile-multi-thumb="max"/);
   assert.match(splitter, /--sectile-slider-percentage:40%/);
   assert.match(splitter, /data-side="after"/);
+  assert.equal((splitter.match(/data-scope="window-splitter"/g) ?? []).length, 4);
+  assert.match(splitter, /data-part="handle"/);
+  assert.doesNotMatch(splitter, /data-scope="slider"|data-part="thumb"/);
 });
