@@ -22,6 +22,18 @@ export type {
   InteractionStateInput,
 } from './interaction.js';
 export type {
+  FormCommand,
+  FormEvent,
+  FormFieldInput,
+  FormFieldState,
+  FormIssue,
+  FormIssueSource,
+  FormState,
+  FormStateInput,
+  FormStatus,
+  FormUpdate,
+} from './form.js';
+export type {
   CalculatorExpressionOptions,
   NumberFieldCommand,
   NumberFieldEvent,

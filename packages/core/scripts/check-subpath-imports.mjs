@@ -24,16 +24,15 @@ try {
     import { createTreeGridModel, createTreeGridModelFromRows } from '@sectile/core/tree-grid';
     import { createRevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState } from '@sectile/core/text';
+    import { createFormState } from '@sectile/core/form';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
   const runtime = spawnSync(process.execPath, ['consumer.mjs'], { cwd: directory, encoding: 'utf8' });
   assert.equal(runtime.status, 0, runtime.stderr);
   await writeFile(join(directory, 'consumer.ts'), `
-    import type { Result } from '@sectile/core';
-    import { unwrap } from '@sectile/core/result';
     import { createSequence, type Sequence } from '@sectile/core/sequence';
     import { createRange, type QuantizedRange } from '@sectile/core/range';
     import { createGrid, type Grid } from '@sectile/core/grid';
@@ -46,26 +45,23 @@ try {
     import { createTreeGridModel, createTreeGridModelFromRows, type TreeGridModel, type TreeGridRowInput } from '@sectile/core/tree-grid';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
-    const a: Result<Sequence<string>> = createSequence(['a']);
-    const b: Result<QuantizedRange> = createRange({ origin: '0', step: '1', count: 1 });
-    const c: Result<Grid<string>> = createGrid([['a']]);
-    const d: Result<Tree<string>> = createTree([{ id: 'a', parentID: null }]);
-    if (!a.ok) throw new Error(a.error.message);
-    const e: Result<ListboxState<string>> = createListboxState(a.value);
-    const f: Result<RevisionSnapshot<string>> = createRevisionSnapshot('state');
-    if (!b.ok) throw new Error(b.error.message);
-    const g: Result<SliderState> = createSliderState(b.value);
-    if (!c.ok) throw new Error(c.error.message);
-    const h: Result<CalendarState<string>> = createCalendarState(c.value);
-    if (!d.ok) throw new Error(d.error.message);
-    const i: Result<TreeViewState<string>> = createTreeViewState(d.value);
-    const j: Result<ComboboxState<string>> = createComboboxState(a.value);
-    const k: Result<TextEditingState> = createTextEditingState();
-    const l: Result<TreeGridModel<string, string>> = createTreeGridModel(d.value, c.value, ['a']);
+    import { createFormState, type FormState } from '@sectile/core/form';
+    const a: Sequence<string> = createSequence(['a']);
+    const b: QuantizedRange = createRange({ origin: '0', step: '1', count: 1 });
+    const c: Grid<string> = createGrid([['a']]);
+    const d: Tree<string> = createTree([{ id: 'a', parentID: null }]);
+    const e: ListboxState<string> = createListboxState(a);
+    const f: RevisionSnapshot<string> = createRevisionSnapshot('state');
+    const g: SliderState = createSliderState(b);
+    const h: CalendarState<string> = createCalendarState(c);
+    const i: TreeViewState<string> = createTreeViewState(d);
+    const j: ComboboxState<string> = createComboboxState(a);
+    const k: TextEditingState = createTextEditingState();
+    const l: TreeGridModel<string, string> = createTreeGridModel(d, c, ['a']);
     const rows: readonly TreeGridRowInput<string, string>[] = [{ id: 'a', parentID: null, cells: ['a'] }];
-    const m: Result<TreeGridModel<string, string>> = createTreeGridModelFromRows(rows);
-    const sequence: Sequence<string> = unwrap(a);
-    void [a, b, c, d, e, f, g, h, i, j, k, l, m, sequence];
+    const m: TreeGridModel<string, string> = createTreeGridModelFromRows(rows);
+    const n: FormState = createFormState({ fields: [] });
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, n];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -79,7 +75,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 14, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 15, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

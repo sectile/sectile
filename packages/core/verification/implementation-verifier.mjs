@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { createGrid } from '../.verification-dist/structures/grid.js';
-import { createRange } from '../.verification-dist/structures/range.js';
-import { createSequence } from '../.verification-dist/structures/sequence.js';
-import { createTree } from '../.verification-dist/structures/tree.js';
+import { createGrid, tryCreateGrid } from '../.verification-dist/structures/grid.js';
+import { createRange, tryCreateRange } from '../.verification-dist/structures/range.js';
+import { createSequence, tryCreateSequence } from '../.verification-dist/structures/sequence.js';
+import { createTree, tryCreateTree } from '../.verification-dist/structures/tree.js';
 import { createCursorState, reconcileCursor } from '../.verification-dist/internal/state/cursor.js';
 import {
   createExpansionState,
@@ -200,10 +200,10 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   }
 }
 for (const result of [
-  createSequence(['a', 'a']),
-  createSequence(['']),
-  createSequence(['\ud800']),
-  createSequence(['a', 'b'], { maxItems: 1 }),
+  tryCreateSequence(['a', 'a']),
+  tryCreateSequence(['']),
+  tryCreateSequence(['\ud800']),
+  tryCreateSequence(['a', 'b'], { maxItems: 1 }),
 ]) {
   assert.equal(result.ok, false);
   counts.sequence.invalidConstructions += 1;
@@ -241,10 +241,10 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   }
 }
 for (const result of [
-  createRange({ origin: '0', step: '0', count: 1 }),
-  createRange({ origin: 'x', step: '1', count: 1 }),
-  createRange({ origin: '0', step: '1', count: -1 }),
-  createRange({ origin: '0', step: '1', count: 2, maxCount: 1 }),
+  tryCreateRange({ origin: '0', step: '0', count: 1 }),
+  tryCreateRange({ origin: 'x', step: '1', count: 1 }),
+  tryCreateRange({ origin: '0', step: '1', count: -1 }),
+  tryCreateRange({ origin: '0', step: '1', count: 2, maxCount: 1 }),
 ]) {
   assert.equal(result.ok, false);
   counts.range.invalidConstructions += 1;
@@ -295,10 +295,10 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   }
 }
 for (const result of [
-  createGrid([['a'], ['a']]),
-  createGrid([['']], {}),
-  createGrid([['a', 'b']], { columnCount: 1 }),
-  createGrid([['a']], { maxRows: 0 }),
+  tryCreateGrid([['a'], ['a']]),
+  tryCreateGrid([['']], {}),
+  tryCreateGrid([['a', 'b']], { columnCount: 1 }),
+  tryCreateGrid([['a']], { maxRows: 0 }),
 ]) {
   assert.equal(result.ok, false);
   counts.grid.invalidConstructions += 1;
@@ -346,10 +346,10 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   }
 }
 for (const result of [
-  createTree([{ id: 'a', parentID: null }, { id: 'a', parentID: null }]),
-  createTree([{ id: 'a', parentID: 'missing' }]),
-  createTree([{ id: 'a', parentID: 'a' }]),
-  createTree([{ id: 'a', parentID: 'b' }, { id: 'b', parentID: 'a' }]),
+  tryCreateTree([{ id: 'a', parentID: null }, { id: 'a', parentID: null }]),
+  tryCreateTree([{ id: 'a', parentID: 'missing' }]),
+  tryCreateTree([{ id: 'a', parentID: 'a' }]),
+  tryCreateTree([{ id: 'a', parentID: 'b' }, { id: 'b', parentID: 'a' }]),
 ]) {
   assert.equal(result.ok, false);
   counts.tree.invalidConstructions += 1;
