@@ -65,6 +65,24 @@ test('DOM slider maps pointer position onto an exact tick', () => {
   assert.equal(connection.getValue(), '0.75');
 });
 
+test('DOM slider preserves a composed public scope and part across refreshes', () => {
+  const root = new FakeElement();
+  const connection = createSlider({
+    min: '0',
+    max: '100',
+    step: '10',
+    root,
+    role: 'separator',
+    scope: 'window-splitter',
+    part: 'handle',
+  });
+  assert.equal(root.attributes.get('data-scope'), 'window-splitter');
+  assert.equal(root.attributes.get('data-part'), 'handle');
+  connection.handleKeyboardEvent(keyboardEvent('ArrowRight'));
+  assert.equal(root.attributes.get('data-scope'), 'window-splitter');
+  assert.equal(root.attributes.get('data-part'), 'handle');
+});
+
 test('DOM vertical slider maps its top edge to the upper value', () => {
   const root = new FakeElement();
   const connection = createSlider({

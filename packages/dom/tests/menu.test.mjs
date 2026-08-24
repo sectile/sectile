@@ -127,6 +127,9 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   menubar.setItemAttributes(file, 'file');
   menubar.setItemAttributes(child, 'new');
   menubar.setSubmenuAttributes(submenu, 'file');
+  assert.equal(file.dataset.level, '0');
+  assert.equal(child.dataset.level, '1');
+  assert.equal(submenu.dataset.level, '1');
   menubar.handleEvent('open-submenu');
 
   assert.equal(submenu.hidden, false);

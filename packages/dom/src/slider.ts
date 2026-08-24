@@ -64,6 +64,8 @@ export type SliderRangeControllerOptions = Omit<SliderControllerOptions, 'range'
   };
 
 export interface SliderAttributeOptions {
+  readonly scope?: string;
+  readonly part?: string;
   readonly label?: string;
   readonly role?: 'slider' | 'separator';
   readonly orientation?: 'horizontal' | 'vertical';
@@ -105,6 +107,8 @@ export interface SliderConnectionOptions {
   readonly controller: SliderController;
   readonly root: HTMLElement;
   readonly track?: HTMLElement;
+  readonly scope?: string;
+  readonly part?: string;
   readonly label?: string;
   readonly role?: 'slider' | 'separator';
   readonly orientation?: 'horizontal' | 'vertical';
@@ -182,8 +186,8 @@ export function getSliderAttributes(
     'aria-label': options.label,
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,
-    'data-scope': 'slider',
-    'data-part': 'thumb',
+    'data-scope': options.scope ?? 'slider',
+    'data-part': options.part ?? 'thumb',
     'data-disabled': options.disabled === true ? '' : undefined,
     'data-readonly': options.readOnly === true ? '' : undefined,
   });
@@ -248,6 +252,8 @@ class DOMSliderConnection implements SliderConnection {
   readonly #controller: SliderController;
   readonly #root: HTMLElement;
   readonly #track: HTMLElement;
+  readonly #scope: string;
+  readonly #part: string;
   readonly #label: string | undefined;
   readonly #role: 'slider' | 'separator';
   readonly #orientation: 'horizontal' | 'vertical';
@@ -266,6 +272,8 @@ class DOMSliderConnection implements SliderConnection {
     this.range = options.controller.range;
     this.#root = options.root;
     this.#track = options.track ?? options.root;
+    this.#scope = options.scope ?? 'slider';
+    this.#part = options.part ?? 'thumb';
     this.#label = options.label;
     this.#role = options.role ?? 'slider';
     this.#orientation = options.orientation ?? 'horizontal';
@@ -332,6 +340,8 @@ class DOMSliderConnection implements SliderConnection {
 
   public refreshAttributes(): void {
     applyAttributes(this.#root, getSliderAttributes(this.#controller, {
+      scope: this.#scope,
+      part: this.#part,
       role: this.#role,
       orientation: this.#orientation,
       ...(this.#label === undefined ? {} : { label: this.#label }),

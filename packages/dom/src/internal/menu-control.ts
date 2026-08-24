@@ -93,6 +93,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#options.root.hidden = !state.open;
     this.#options.trigger?.setAttribute('aria-haspopup', 'menu'); this.#options.trigger?.setAttribute('aria-expanded', String(state.open));
     for (const [id, element] of this.#elements) {
+      element.dataset['level'] = String(this.#tree.depthOf(id) ?? 0);
       if (this.#options.kind === 'navigation-menu') element.removeAttribute('role'); else element.setAttribute('role', 'menuitem');
       if (this.#policies.disabled?.(id) === true) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
       if (this.#tree.isLeaf(id) === false) {
@@ -103,6 +104,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     }
     for (const [parentID, submenu] of this.#submenus) {
       const open = state.open && state.openPath.includes(parentID);
+      submenu.dataset['level'] = String((this.#tree.depthOf(parentID) ?? 0) + 1);
       if (this.#options.kind === 'navigation-menu') submenu.removeAttribute('role'); else submenu.setAttribute('role', 'menu'); submenu.hidden = !open;
       if (!open) { submenu.removeAttribute('data-placement'); this.#elements.get(parentID)?.removeAttribute('data-submenu-placement'); }
     }
