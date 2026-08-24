@@ -11,6 +11,10 @@ import {
   type SliderController,
 } from '@sectile/dom/slider';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 
@@ -28,6 +32,7 @@ export interface SliderRootProps {
   readonly label?: string;
   readonly name?: string;
   readonly form?: string;
+  readonly required?: boolean;
   readonly formatValue?: (value: string) => string;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -42,6 +47,7 @@ interface SliderContext {
   readonly role: ComputedRef<'slider' | 'separator'>;
   readonly root: ShallowRef<HTMLElement | undefined>;
   readonly track: ShallowRef<HTMLElement | undefined>;
+  readonly thumb: ShallowRef<HTMLElement | undefined>;
   readonly connection: ShallowRef<SliderConnection | undefined>;
   readonly label: ComputedRef<string | undefined>;
   readonly formatValue: ComputedRef<((value: string) => string) | undefined>;
@@ -71,6 +77,7 @@ export const SliderRoot = defineComponent({
     label: { type: String, default: undefined },
     name: { type: String, default: undefined },
     form: { type: String, default: undefined },
+    required: { type: Boolean, default: false },
     formatValue: { type: Function as PropType<(value: string) => string>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
@@ -94,6 +101,8 @@ export const SliderRoot = defineComponent({
     const snapshot = shallowRef(controller.getSnapshot());
     const rootElement = shallowRef<HTMLElement>();
     const track = shallowRef<HTMLElement>();
+    const thumb = shallowRef<HTMLElement>();
+    const submission = shallowRef<HTMLInputElement>();
     const connection = shallowRef<SliderConnection>();
     const refresh = (): void => { snapshot.value = controller.getSnapshot(); };
     watch(() => props.modelValue, (value) => {
@@ -117,9 +126,17 @@ export const SliderRoot = defineComponent({
     const label = computed(() => props.label);
     const formatValue = computed(() => props.formatValue);
     const part = usePartContract('slider', 'root');
-    provide<SliderContext>(sliderKey, { controller, state, orientation, role, root: rootElement, track, connection, label, formatValue, partContract: part, refresh });
+    const participation = useCompositeFormControl({
+      root: () => rootElement.value ?? null,
+      focusTarget: () => thumb.value ?? null,
+      submissions: [{
+        element: () => submission.value ?? null,
+        capabilities: hiddenInputSubmissionCapabilities,
+      }],
+    });
+    provide<SliderContext>(sliderKey, { controller, state, orientation, role, root: rootElement, track, thumb, connection, label, formatValue, partContract: part, refresh });
     return (): VNodeChild => {
-      const root = h(Primitive, mergeProps(attrs, {
+      const root = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
         as: props.as, asChild: props.asChild,
         elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : undefined; },
         'data-scope': part.scope, 'data-part': part.part,
@@ -128,12 +145,16 @@ export const SliderRoot = defineComponent({
         'data-readonly': props.readonly ? '' : undefined,
         style: { '--sectile-slider-percentage': `${state.value.percentage}%` },
       }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined) return root;
+      if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return root;
       return [root, h('input', mergeProps(getSliderInputAttributes(controller, {
         ...(props.name === undefined ? {} : { name: props.name }),
         ...(props.form === undefined ? {} : { form: props.form }),
         disabled: props.disabled,
-      }) as Record<string, unknown>, { style: visuallyHiddenInputStyle }))];
+      }) as Record<string, unknown>, {
+        ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; },
+        required: props.required,
+        style: visuallyHiddenInputStyle,
+      }))];
     };
   },
 });
@@ -204,7 +225,10 @@ export const SliderThumb = defineComponent({
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
-      elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
+      elementRef: (node: unknown) => {
+        element.value = node instanceof HTMLElement ? node : undefined;
+        root.thumb.value = element.value;
+      },
       'data-scope': part.scope,
       'data-part': part.part,
       'data-percentage': String(root.state.value.percentage),

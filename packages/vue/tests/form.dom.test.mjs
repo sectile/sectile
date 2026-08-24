@@ -32,15 +32,28 @@ const {
 } = await import('../dist/form.js');
 const { CheckboxRoot } = await import('../dist/checkbox.js');
 const { CheckboxGroupRoot } = await import('../dist/checkbox-group.js');
+const { CalendarRoot } = await import('../dist/calendar.js');
+const { ColorPickerRoot } = await import('../dist/color-picker.js');
+const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../dist/date-range-field.js');
+const {
+  DateRangePickerContent,
+  DateRangePickerEndInput,
+  DateRangePickerRoot,
+  DateRangePickerStartInput,
+  DateRangePickerTrigger,
+} = await import('../dist/date-range-picker.js');
 const { EditableInput, EditablePreview, EditableRoot } = await import('../dist/editable.js');
 const { ListboxRoot } = await import('../dist/listbox.js');
+const { MultiThumbSliderRoot } = await import('../dist/multi-thumb-slider.js');
 const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
 const { RadioGroupRoot } = await import('../dist/radio-group.js');
 const { SelectRoot } = await import('../dist/select.js');
+const { SliderRoot } = await import('../dist/slider.js');
 const { SpinButtonInput, SpinButtonRoot } = await import('../dist/spin-button.js');
 const { SwitchRoot } = await import('../dist/switch.js');
 const { TagsInputInput, TagsInputRoot } = await import('../dist/tags-input.js');
 const { TextField } = await import('../dist/text.js');
+const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../dist/time-range-field.js');
 const { ToggleGroupRoot } = await import('../dist/toggle-group.js');
 const { formValueControlInventory } = await import('../dist/internal/form-control-inventory.js');
 
@@ -591,6 +604,226 @@ test('numeric and editable controls register the actual native input', async () 
   assert.equal(title.id, 'title-control');
   assert.equal(title.name, 'release.title');
   assert.equal(title.required, true);
+
+  app.unmount();
+  host.remove();
+});
+
+test('compound range fields inherit one FormField path and submit named endpoints', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, { id: 'schedule-form' }, {
+      default: () => [
+        h(FormField, { id: 'dates', name: ['availability', 'dates'], required: true }, {
+          default: () => [
+            h(FormLabel, null, { default: () => 'Available dates' }),
+            h(DateRangeFieldRoot, {
+              defaultValue: {
+                start: { year: 2026, month: 8, day: 22 },
+                end: { year: 2026, month: 8, day: 25 },
+              },
+            }, {
+              default: () => [h(DateRangeFieldStartInput), h(DateRangeFieldEndInput)],
+            }),
+          ],
+        }),
+        h(FormField, { id: 'hours', name: ['availability', 'hours'], required: true }, {
+          default: () => [
+            h(FormLabel, null, { default: () => 'Available hours' }),
+            h(TimeRangeFieldRoot, {
+              defaultValue: {
+                start: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+                end: { hour: 17, minute: 30, second: 0, millisecond: 0 },
+              },
+            }, {
+              default: () => [h(TimeRangeFieldStartInput), h(TimeRangeFieldEndInput)],
+            }),
+          ],
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+
+  const dateGroup = host.querySelector('[data-scope="date-range-field"][data-part="root"]');
+  const timeGroup = host.querySelector('[data-scope="time-range-field"][data-part="root"]');
+  const dateInputs = [...host.querySelectorAll('[data-scope="date-range-field"] input')];
+  const timeInputs = [...host.querySelectorAll('[data-scope="time-range-field"] input')];
+  assert.ok(dateGroup instanceof HTMLElement);
+  assert.ok(timeGroup instanceof HTMLElement);
+  assert.equal(dateGroup.getAttribute('aria-labelledby'), 'dates-label');
+  assert.equal(timeGroup.getAttribute('aria-labelledby'), 'hours-label');
+  assert.deepEqual(dateInputs.map((input) => input.name), [
+    'availability.dates.start',
+    'availability.dates.end',
+  ]);
+  assert.deepEqual(timeInputs.map((input) => input.name), [
+    'availability.hours.start',
+    'availability.hours.end',
+  ]);
+  assert.equal(dateInputs.every((input) => input.form?.id === 'schedule-form'), true);
+  assert.equal(timeInputs.every((input) => input.form?.id === 'schedule-form'), true);
+  assert.equal(dateInputs.every((input) => input.required), true);
+  assert.equal(timeInputs.every((input) => input.required), true);
+
+  app.unmount();
+  host.remove();
+});
+
+test('compound picker inputs inherit endpoint paths without duplicating the field name', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, null, {
+      default: () => h(FormField, {
+        id: 'booking-dates',
+        name: ['booking', 'dates'],
+        required: true,
+      }, {
+        default: () => [
+          h(FormLabel, null, { default: () => 'Booking dates' }),
+          h(DateRangePickerRoot, {
+            defaultOpen: true,
+            defaultValue: {
+              start: { year: 2026, month: 8, day: 22 },
+              end: { year: 2026, month: 8, day: 25 },
+            },
+          }, {
+            default: () => [
+              h(DateRangePickerTrigger, null, { default: () => 'Choose dates' }),
+              h(DateRangePickerStartInput),
+              h(DateRangePickerEndInput),
+              h(DateRangePickerContent),
+            ],
+          }),
+        ],
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+
+  const content = host.querySelector('[data-scope="date-range"][data-part="content"]');
+  const start = host.querySelector('[data-part="start-input"]');
+  const end = host.querySelector('[data-part="end-input"]');
+  assert.ok(content instanceof HTMLElement);
+  assert.ok(start instanceof HTMLInputElement);
+  assert.ok(end instanceof HTMLInputElement);
+  assert.equal(content.getAttribute('aria-labelledby'), 'booking-dates-label');
+  assert.equal(start.name, 'booking.dates.start');
+  assert.equal(end.name, 'booking.dates.end');
+  assert.equal(start.required, true);
+  assert.equal(end.required, true);
+
+  app.unmount();
+  host.remove();
+});
+
+const mountCompoundField = async ({ id, name, label, control }) => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, { id: 'filters-form' }, {
+      default: () => h(FormField, { id, name, required: true }, {
+        default: () => [
+          h(FormLabel, null, { default: () => label }),
+          control(),
+        ],
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  return { app, host };
+};
+
+test('slider submits a scalar value through a FormField path', async () => {
+  const { app, host } = await mountCompoundField({
+    id: 'traffic',
+    name: ['filters', 'traffic'],
+    label: 'Traffic',
+    control: () => h(SliderRoot, { defaultValue: 40 }),
+  });
+
+  const root = host.querySelector('[data-scope="slider"][data-part="root"]');
+  const input = host.querySelector('input[name="filters.traffic"]');
+  assert.equal(root?.getAttribute('aria-labelledby'), 'traffic-label');
+  assert.deepEqual([input?.name, input?.value, input?.form?.id], [
+    'filters.traffic', '40', 'filters-form',
+  ]);
+
+  app.unmount();
+  host.remove();
+});
+
+test('multi-thumb slider submits indexed values through a FormField path', async () => {
+  const { app, host } = await mountCompoundField({
+    id: 'price',
+    name: ['filters', 'price'],
+    label: 'Price range',
+    control: () => h(MultiThumbSliderRoot, {
+      thumbs: ['minimum', 'maximum'],
+      defaultValue: [47, 95],
+    }),
+  });
+
+  const root = host.querySelector('[data-scope="multi-thumb-slider"][data-part="root"]');
+  assert.equal(root?.getAttribute('aria-labelledby'), 'price-label');
+  assert.equal(root?.getAttribute('aria-required'), 'true');
+  assert.deepEqual(
+    [...host.querySelectorAll('input[type="hidden"]')].map((input) => [input.name, input.value]),
+    [['filters.price[0]', '47'], ['filters.price[1]', '95']],
+  );
+
+  app.unmount();
+  host.remove();
+});
+
+test('calendar submits a scalar value through a FormField path', async () => {
+  const { app, host } = await mountCompoundField({
+    id: 'release-date',
+    name: ['release', 'date'],
+    label: 'Release date',
+    control: () => h(CalendarRoot, {
+      rows: [['2026-08-22']],
+      defaultValue: '2026-08-22',
+      defaultHighlightedValue: '2026-08-22',
+    }),
+  });
+
+  const root = host.querySelector('[data-scope="calendar"][data-part="root"]');
+  const input = host.querySelector('input[type="hidden"]');
+  assert.equal(root?.getAttribute('aria-labelledby'), 'release-date-label');
+  assert.deepEqual([input?.name, input?.value, input?.form?.id], [
+    'release.date', '2026-08-22', 'filters-form',
+  ]);
+
+  app.unmount();
+  host.remove();
+});
+
+test('color picker submits a scalar value through a FormField path', async () => {
+  const { app, host } = await mountCompoundField({
+    id: 'accent',
+    name: ['theme', 'accent'],
+    label: 'Accent color',
+    control: () => h(ColorPickerRoot, { defaultValue: '#5b6df6' }),
+  });
+
+  const root = host.querySelector('[data-scope="color-picker"][data-part="root"]');
+  const input = host.querySelector('input[type="hidden"]');
+  assert.equal(root?.getAttribute('aria-labelledby'), 'accent-label');
+  assert.deepEqual([input?.name, input?.value, input?.form?.id], [
+    'theme.accent', '#5b6df6', 'filters-form',
+  ]);
 
   app.unmount();
   host.remove();

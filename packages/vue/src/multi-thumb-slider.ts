@@ -6,6 +6,11 @@ import {
   createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderPolicies,
 } from '@sectile/dom/multi-thumb-slider';
 import { createSliderControllerFromRange } from '@sectile/dom/slider';
+import type { FormSubmissionRegistration } from './form.js';
+import {
+  hiddenValueSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface MultiThumbSliderRootProps {
@@ -24,6 +29,7 @@ export interface MultiThumbSliderRootProps {
   readonly policies?: MultiThumbSliderPolicies;
   readonly name?: string;
   readonly form?: string;
+  readonly required?: boolean;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -56,12 +62,14 @@ export const MultiThumbSliderRoot = defineComponent({
     formatValue: { type: Function as PropType<(value: string, id: string) => string>, default: undefined },
     policies: { type: Object as PropType<MultiThumbSliderPolicies>, default: undefined },
     name: { type: String, default: undefined }, form: { type: String, default: undefined },
+    required: { type: Boolean, default: false },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
   emits: { 'update:modelValue': (_values: readonly string[]): boolean => true },
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const root = shallowRef<HTMLElement>(); const track = shallowRef<HTMLElement>();
+    const submissions = new Map<number, HTMLInputElement>();
     const connection = shallowRef<MultiThumbSliderConnection<string>>();
     const local = shallowRef<readonly string[]>(normalizeValues(props.modelValue ?? props.defaultValue ?? props.thumbs.map(() => props.min)));
     const controlled = props.modelValue !== undefined;
@@ -77,6 +85,18 @@ export const MultiThumbSliderRoot = defineComponent({
       return rangeController.value.range.count === 0 ? 0 : tick / rangeController.value.range.count * 100;
     }));
     const active = shallowRef<string | null>(props.thumbs[0] ?? null);
+    const participation = useCompositeFormControl({
+      root: () => root.value ?? null,
+      focusTarget: () => root.value?.querySelector<HTMLElement>('[data-sectile-multi-thumb]') ?? root.value ?? null,
+      submissions: () => current.value.flatMap<FormSubmissionRegistration>((_value, index) => {
+        const element = submissions.get(index);
+        return element === undefined ? [] : [{
+          element: () => element,
+          relativeName: [index],
+          capabilities: hiddenValueSubmissionCapabilities,
+        }];
+      }),
+    });
     const state = computed<MultiThumbSliderRootSlotProps>(() => Object.freeze({
       values: current.value, percentages: percentages.value, activeThumb: active.value,
       disabled: props.disabled, readonly: props.readonly,
@@ -135,13 +155,24 @@ export const MultiThumbSliderRoot = defineComponent({
     });
     return (): VNodeChild => {
       const style = Object.fromEntries(percentages.value.map((value, index) => [`--sectile-thumb-${index}-percentage`, `${value}%`]));
-      const visual = h(Primitive, mergeProps(attrs, {
+      const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
         role: 'group', 'aria-label': props.label, 'data-scope': 'multi-thumb-slider', 'data-part': 'root',
         'data-orientation': props.orientation, style,
       }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined) return visual;
-      return [visual, ...current.value.map((value) => h('input', { type: 'hidden', name: props.name, form: props.form, value, disabled: props.disabled }))];
+      if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual;
+      return [visual, ...current.value.map((value, index) => h('input', {
+        key: index,
+        ref: (element: unknown) => {
+          if (element instanceof HTMLInputElement) submissions.set(index, element);
+          else submissions.delete(index);
+        },
+        type: 'hidden',
+        name: props.name,
+        form: props.form,
+        value,
+        disabled: props.disabled,
+      }))];
     };
   },
 });

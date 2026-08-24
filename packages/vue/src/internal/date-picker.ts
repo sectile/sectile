@@ -10,6 +10,11 @@ import { createDateTimeRangePicker } from '@sectile/dom/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/date-field';
 import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/date-time-field';
 import { formatTimeValue, type TimeValue } from '@sectile/dom/time-field';
+import type { FormSubmissionRegistration } from '../form.js';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 
 export type PickerKind = 'date' | 'date-range' | 'date-time' | 'date-time-range';
@@ -119,6 +124,11 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
           highlightedValue: highlighted, open: props.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
           view: localView.value, viewMode: localViewMode.value, disabled: props.disabled, readonly: props.readonly,
         });
+      });
+      useCompositeFormControl({
+        root: () => elements.get('content') ?? elements.get('grid') ?? null,
+        focusTarget: () => elements.get('trigger') ?? firstPickerInput(elements, kind) ?? elements.get('grid') ?? null,
+        submissions: () => pickerFormSubmissions(elements, kind),
       });
       const periodAvailable = (value: DatePickerMonthValue | PickerYearValue): boolean => {
         const policies = props.policies as PeriodPolicies | undefined;
@@ -238,7 +248,9 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         });
         if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
       });
-      return (): VNodeChild => h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
+      return (): VNodeChild => {
+        return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
+      };
     },
   });
 }
@@ -356,9 +368,8 @@ export function createPickerInput(part: PickerInputPart, name: string) {
     name, inheritAttrs: false,
     props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
     setup(props, { attrs }) { const root = useRoot(name); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
-        if (root.granularity === 'day') root.register(part, node instanceof HTMLInputElement ? node : undefined);
-      },
+      as: props.as, asChild: props.asChild,
+      elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
       type: pickerInputType(part), name: props.name, form: props.form, disabled: root.state.value.disabled,
       readonly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
       required: false, value: inputValue(root.kind, root.granularity, part, root.state.value.value),
@@ -393,6 +404,59 @@ export function createPickerViewTrigger(view: DatePickerViewMode, name: string) 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside a date picker root.`); return root; }
 function pickerInputType(_part: PickerInputPart): 'text' {
   return 'text';
+}
+function firstPickerInput(
+  elements: ReadonlyMap<string, HTMLElement>,
+  kind: PickerKind,
+): HTMLInputElement | null {
+  for (const part of inputParts(kind)) {
+    const element = elements.get(part);
+    if (element instanceof HTMLInputElement) return element;
+  }
+  return null;
+}
+function pickerFormSubmissions(
+  elements: ReadonlyMap<string, HTMLElement>,
+  kind: PickerKind,
+): readonly FormSubmissionRegistration[] {
+  const submission = (
+    part: PickerInputPart,
+    relativeName?: string,
+  ): FormSubmissionRegistration | null => {
+    const element = elements.get(part);
+    if (!(element instanceof HTMLInputElement)) return null;
+    return {
+      element: () => element,
+      ...(relativeName === undefined ? {} : { relativeName }),
+      capabilities: hiddenInputSubmissionCapabilities,
+    };
+  };
+  if (kind === 'date') return compactSubmissions(submission('input'));
+  if (kind === 'date-range') {
+    return compactSubmissions(
+      submission('start-input', 'start'),
+      submission('end-input', 'end'),
+    );
+  }
+  if (kind === 'date-time') {
+    const combined = submission('date-time-input');
+    return combined === null
+      ? compactSubmissions(submission('date-input', 'date'), submission('time-input', 'time'))
+      : [combined];
+  }
+  const combinedStart = submission('start-date-time-input', 'start');
+  const combinedEnd = submission('end-date-time-input', 'end');
+  return compactSubmissions(
+    combinedStart ?? submission('start-date-input', 'start.date'),
+    combinedStart === null ? submission('start-time-input', 'start.time') : null,
+    combinedEnd ?? submission('end-date-input', 'end.date'),
+    combinedEnd === null ? submission('end-time-input', 'end.time') : null,
+  );
+}
+function compactSubmissions(
+  ...submissions: readonly (FormSubmissionRegistration | null)[]
+): readonly FormSubmissionRegistration[] {
+  return submissions.filter((submission): submission is FormSubmissionRegistration => submission !== null);
 }
 function monthFor(value: DateValue): readonly (readonly DateValue[])[] {
   return createDatePickerMonth({ year: value.year, month: value.month });

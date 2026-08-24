@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   applyFormEvent,
+  appendFormFieldPath,
   createFormFieldPath,
+  createFormRelativePath,
   createFormState,
   createFormValues,
   encodeFormFieldPath,
@@ -22,6 +24,12 @@ test('form field paths normalize dot, bracket, and explicit segment syntax', () 
   assert.equal(tryCreateFormFieldPath('profile..name').ok, false);
   assert.equal(tryCreateFormFieldPath(['items', -1, 'name']).ok, false);
   assert.equal(tryCreateFormFieldPath([0, 'name']).ok, false);
+  assert.deepEqual(createFormRelativePath(0), [0]);
+  assert.deepEqual(createFormRelativePath('start.date'), ['start', 'date']);
+  assert.deepEqual(
+    appendFormFieldPath('filters.price', [0]),
+    ['filters', 'price', 0],
+  );
 });
 
 test('form values build immutable nested objects, indexed arrays, and repeated leaves', () => {

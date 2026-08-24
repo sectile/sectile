@@ -3,9 +3,13 @@ import {
   nextTick, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createCalendar, type CalendarConnection, type CalendarPolicies } from '@sectile/dom/calendar';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
-export interface CalendarRootProps { readonly rows: readonly (readonly string[])[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly highlightedValue?: string | null; readonly defaultHighlightedValue?: string | null; readonly disabledValues?: readonly string[]; readonly disabled?: boolean; readonly label?: string; readonly policies?: CalendarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface CalendarRootProps { readonly rows: readonly (readonly string[])[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly highlightedValue?: string | null; readonly defaultHighlightedValue?: string | null; readonly disabledValues?: readonly string[]; readonly disabled?: boolean; readonly required?: boolean; readonly name?: string; readonly form?: string; readonly label?: string; readonly policies?: CalendarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface CalendarRootSlotProps { readonly value: string | null; readonly highlightedValue: string | null; readonly rows: readonly (readonly string[])[]; readonly disabled: boolean }
 export interface CalendarCellProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface CalendarCellSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly rowIndex: number; readonly columnIndex: number }
@@ -19,6 +23,7 @@ export const CalendarRoot = defineComponent({
     modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
     highlightedValue: { type: String as PropType<string | null>, default: undefined }, defaultHighlightedValue: { type: String as PropType<string | null>, default: null },
     disabledValues: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
+    required: { type: Boolean, default: false }, name: { type: String, default: undefined }, form: { type: String, default: undefined },
     label: { type: String, default: undefined }, policies: { type: Object as PropType<CalendarPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -26,6 +31,7 @@ export const CalendarRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: CalendarRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const root = shallowRef<HTMLElement>(); const connection = shallowRef<CalendarConnection<string>>();
+    const submission = shallowRef<HTMLInputElement>();
     const value = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const highlighted = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
     const controlled = { value: props.modelValue !== undefined, highlighted: props.highlightedValue !== undefined };
@@ -34,6 +40,14 @@ export const CalendarRoot = defineComponent({
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : highlighted.value,
       rows: props.rows, disabled: props.disabled,
     }));
+    const participation = useCompositeFormControl({
+      root: () => root.value ?? null,
+      focusTarget: () => root.value?.querySelector<HTMLElement>('[data-highlighted]') ?? root.value ?? null,
+      submissions: [{
+        element: () => submission.value ?? null,
+        capabilities: hiddenInputSubmissionCapabilities,
+      }],
+    });
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; value.value = snapshot.selection.selected[0] ?? null; highlighted.value = snapshot.cursor.current; refreshCells(); };
     const refreshCells = (): void => { if (root.value === undefined || connection.value === undefined) return; root.value.querySelectorAll<HTMLElement>('[data-sectile-calendar-id]').forEach((element) => { const id = element.dataset['sectileCalendarId']; if (id === undefined) return; const rowIndex = Number(element.dataset['rowIndex']); const columnIndex = Number(element.dataset['columnIndex']); connection.value?.setCellAttributes(element, { id, rowIndex, columnIndex, disabled: props.disabledValues.includes(id) }); }); };
     const connect = (): void => {
@@ -56,11 +70,23 @@ export const CalendarRoot = defineComponent({
       { flush: 'post' },
     );
     watch([() => props.modelValue, () => props.highlightedValue], () => { if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue as string | null } : {}), ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    return (): VNodeChild => {
+      const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
       role: 'grid', 'aria-rowcount': props.rows.length, 'aria-colcount': Math.max(0, ...props.rows.map((row) => row.length)), 'aria-label': props.label,
       'data-scope': 'calendar', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined,
-    }), { default: () => slots['default']?.(state.value) });
+      }), { default: () => slots['default']?.(state.value) });
+      if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual;
+      return [visual, h('input', {
+        ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; },
+        type: 'hidden',
+        name: props.name,
+        form: props.form,
+        required: props.required,
+        disabled: props.disabled,
+        value: state.value.value ?? '',
+      })];
+    };
   },
 });
 

@@ -5,6 +5,7 @@ import type { Result, StableID } from './shared.js';
 export type FormIssueSource = 'native' | 'field' | 'form' | 'server';
 export type FormPathSegment = string | number;
 export type FormFieldPath = string | readonly FormPathSegment[];
+export type FormRelativePath = FormPathSegment | readonly FormPathSegment[];
 
 export interface FormValueEntry<Value = unknown> {
   readonly path: FormFieldPath;
@@ -108,14 +109,47 @@ export function tryCreateFormFieldPath(
 ): Result<readonly FormPathSegment[]> {
   const segments = typeof path === 'string' ? parsePath(path) : ok([...path]);
   if (!segments.ok) return segments;
-  if (segments.value.length === 0 || typeof segments.value[0] !== 'string') {
+  return validatePathSegments(segments.value, true);
+}
+
+export function createFormRelativePath(path: FormRelativePath): readonly FormPathSegment[] {
+  return unwrap(tryCreateFormRelativePath(path));
+}
+
+export function tryCreateFormRelativePath(
+  path: FormRelativePath,
+): Result<readonly FormPathSegment[]> {
+  const segments = typeof path === 'string'
+    ? parsePath(path)
+    : ok(typeof path === 'number' ? [path] : [...path]);
+  if (!segments.ok) return segments;
+  return validatePathSegments(segments.value, false);
+}
+
+export function appendFormFieldPath(
+  base: FormFieldPath,
+  relative: FormRelativePath,
+): readonly FormPathSegment[] {
+  return Object.freeze([
+    ...createFormFieldPath(base),
+    ...createFormRelativePath(relative),
+  ]);
+}
+
+function validatePathSegments(
+  segments: readonly FormPathSegment[],
+  requireStringRoot: boolean,
+): Result<readonly FormPathSegment[]> {
+  if (segments.length === 0 || (requireStringRoot && typeof segments[0] !== 'string')) {
     return fail(
       'construction',
-      'form-field-path-root-invalid',
-      'A Form field path must start with a string segment.',
+      requireStringRoot ? 'form-field-path-root-invalid' : 'form-relative-path-empty',
+      requireStringRoot
+        ? 'A Form field path must start with a string segment.'
+        : 'A relative Form field path must not be empty.',
     );
   }
-  for (const segment of segments.value) {
+  for (const segment of segments) {
     if (typeof segment === 'number') {
       if (!Number.isSafeInteger(segment) || segment < 0) {
         return fail(
@@ -134,7 +168,7 @@ export function tryCreateFormFieldPath(
       );
     }
   }
-  return ok(Object.freeze([...segments.value]));
+  return ok(Object.freeze([...segments]));
 }
 
 export function encodeFormFieldPath(path: FormFieldPath): string {

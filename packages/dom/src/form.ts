@@ -16,10 +16,13 @@ import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 
 export {
+  appendFormFieldPath,
   createFormFieldPath,
+  createFormRelativePath,
   encodeFormFieldPath,
   type FormFieldPath,
   type FormPathSegment,
+  type FormRelativePath,
 } from '@sectile/core/form';
 
 export interface FormParticipantValidation<ID extends StableID = StableID> {

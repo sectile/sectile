@@ -18,6 +18,10 @@ import {
 } from 'vue';
 import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/date-range-field';
 import type { DateRange } from '@sectile/dom/date-field';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface DateRangeFieldRootProps {
@@ -74,6 +78,23 @@ export const DateRangeFieldRoot = defineComponent({
     const snapshot = shallowRef<DateRangeFieldState>(initial.value);
     const startInput = ref<HTMLInputElement | null>(null);
     const endInput = ref<HTMLInputElement | null>(null);
+    const root = ref<HTMLElement | null>(null);
+    const participation = useCompositeFormControl({
+      root,
+      focusTarget: startInput,
+      submissions: () => [
+        {
+          element: startInput,
+          relativeName: 'start',
+          capabilities: hiddenInputSubmissionCapabilities,
+        },
+        {
+          element: endInput,
+          relativeName: 'end',
+          capabilities: hiddenInputSubmissionCapabilities,
+        },
+      ],
+    });
     let connection: DateRangeFieldConnection | null = null;
 
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
@@ -120,9 +141,11 @@ export const DateRangeFieldRoot = defineComponent({
     }));
     provide<DateRangeFieldContext>(contextKey, { slotProps, startInput, endInput });
 
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, {
       as: props.as,
       asChild: props.asChild,
+      elementRef: (element: unknown) => { root.value = element as HTMLElement | null; },
+      role: 'group',
       'data-scope': 'date-range-field',
       'data-part': 'root',
       'data-disabled': props.disabled ? '' : undefined,

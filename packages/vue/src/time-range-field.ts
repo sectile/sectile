@@ -1,5 +1,6 @@
 import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/time-range-field';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -13,14 +14,18 @@ export const TimeRangeFieldRoot = defineComponent({
   emits: { 'update:modelValue': (_value: TimeRange | null): boolean => true }, slots: Object as SlotsType<{ default: (props: TimeRangeFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = props.modelValue !== undefined; const initial = tryCreateTimeRangeFieldState({ value: controlled ? props.modelValue as TimeRange | null : props.defaultValue }); if (!initial.ok) throw new TypeError(initial.error.message);
-    const snapshot = shallowRef<TimeRangeFieldState>(initial.value); const startInput = ref<HTMLInputElement | null>(null); const endInput = ref<HTMLInputElement | null>(null); let connection: TimeRangeFieldConnection | null = null;
+    const snapshot = shallowRef<TimeRangeFieldState>(initial.value); const startInput = ref<HTMLInputElement | null>(null); const endInput = ref<HTMLInputElement | null>(null); const root = ref<HTMLElement | null>(null); let connection: TimeRangeFieldConnection | null = null;
+    const participation = useCompositeFormControl({ root, focusTarget: startInput, submissions: () => [
+      { element: startInput, relativeName: 'start', capabilities: hiddenInputSubmissionCapabilities },
+      { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },
+    ] });
     const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
     const mount = (): void => { if (startInput.value === null || endInput.value === null) return; connection?.disconnect(); connection = createTimeRangeField({ startInput: startInput.value, endInput: endInput.value, ...(controlled ? { value: props.modelValue as TimeRange | null } : { defaultValue: snapshot.value.value }), ...(props.policies === undefined ? {} : { policies: props.policies }), disabled: props.disabled, readOnly: props.readonly, required: props.required, ...(props.startLabel === undefined ? {} : { startLabel: props.startLabel }), ...(props.endLabel === undefined ? {} : { endLabel: props.endLabel }), onValueChange: (value) => emit('update:modelValue', value), onUpdate: refresh }); refresh(); };
     onMounted(mount); onBeforeUnmount(() => connection?.disconnect());
     watch(() => props.modelValue, (value) => { if (!controlled || value === undefined || connection === null) return; const result = connection.syncControlledValues({ value }); if (!result.ok) throw new TypeError(result.error.message); snapshot.value = result.value.state; });
     watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.required, () => props.startLabel, () => props.endLabel], () => { void nextTick(mount); });
     const slotProps = computed<TimeRangeFieldRootSlotProps>(() => Object.freeze({ value: snapshot.value.value, startText: snapshot.value.start.inputState.snapshot.text, endText: snapshot.value.end.inputState.snapshot.text, active: snapshot.value.active, disabled: props.disabled, readonly: props.readonly })); provide<Context>(contextKey, { slotProps, startInput, endInput });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'time-range-field', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined }), { default: () => slots['default']?.(slotProps.value) });
+    return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { root.value = element as HTMLElement | null; }, role: 'group', 'data-scope': 'time-range-field', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
 export const TimeRangeFieldStartInput = createEndpointInput('start', 'SectileTimeRangeFieldStartInput');

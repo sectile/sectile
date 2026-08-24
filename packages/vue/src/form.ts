@@ -21,14 +21,15 @@ import {
   type VNodeChild,
 } from 'vue';
 import {
+  appendFormFieldPath,
   createForm,
-  createFormFieldPath,
   encodeFormFieldPath,
   type FormConnection,
   type FormFieldPath,
   type FormOptions,
   type FormParticipant,
   type FormParticipantValidation,
+  type FormRelativePath,
   type FormSubmissionElement,
   type FormSubmitDetails,
 } from '@sectile/dom/form';
@@ -122,7 +123,7 @@ export type FormElementSource<ElementType extends HTMLElement = HTMLElement> =
 
 export interface FormSubmissionRegistration {
   readonly element: FormElementSource<FormSubmissionElement>;
-  readonly relativeName?: FormFieldPath;
+  readonly relativeName?: FormRelativePath;
   readonly capabilities?: FormSubmissionCapabilities;
   readonly explicit?: readonly FormMetadataAttribute[];
 }
@@ -776,12 +777,9 @@ function nativeSubmissionCapabilities(
   });
 }
 
-function encodeSubmissionName(base: FormFieldPath, relative?: FormFieldPath): string {
+function encodeSubmissionName(base: FormFieldPath, relative?: FormRelativePath): string {
   if (relative === undefined) return encodeFormFieldPath(base);
-  return encodeFormFieldPath([
-    ...createFormFieldPath(base),
-    ...createFormFieldPath(relative),
-  ]);
+  return encodeFormFieldPath(appendFormFieldPath(base, relative));
 }
 
 function applyMetadata(
