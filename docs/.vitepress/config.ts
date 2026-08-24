@@ -164,7 +164,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
   nav: [
     { text: 'Guide', link: '/guide/getting-started' },
     { text: 'Theory', link: '/theory/' },
-    { text: 'Components', link: '/components/' },
+    { text: 'Components', link: '/components/', activeMatch: '^/components/' },
     { text: 'Packages', link: '/packages/' },
   ],
   sidebar: {
@@ -175,10 +175,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
       { text: 'State ownership', link: '/guide/state-ownership' },
       { text: 'Host model', link: '/guide/host-model' },
     ],
-    '/components/': [
-      { text: 'Component catalog', link: '/components/' },
-      ...componentSidebar,
-    ],
+    '/components/': componentSidebar,
     '/packages/': [
       { text: 'Packages', link: '/packages/' },
       { text: 'Core', link: '/packages/core' },
@@ -197,7 +194,7 @@ const koLocaleTheme: DefaultTheme.Config = {
   nav: [
     { text: '사용 안내', link: '/ko/guide/getting-started' },
     { text: '이론', link: '/ko/theory/' },
-    { text: '컴포넌트', link: '/ko/components/' },
+    { text: '컴포넌트', link: '/ko/components/', activeMatch: '^/ko/components/' },
     { text: '패키지', link: '/ko/packages/' },
   ],
   sidebar: {
@@ -208,10 +205,7 @@ const koLocaleTheme: DefaultTheme.Config = {
       { text: '상태 관리 방식', link: '/ko/guide/state-ownership' },
       { text: '실행 환경', link: '/ko/guide/host-model' },
     ],
-    '/ko/components/': [
-      { text: '컴포넌트 목록', link: '/ko/components/' },
-      ...koComponentSidebar,
-    ],
+    '/ko/components/': koComponentSidebar,
     '/ko/packages/': [
       { text: '패키지', link: '/ko/packages/' },
       { text: '코어', link: '/ko/packages/core' },

@@ -17,6 +17,12 @@ test('component sidebars use balanced task groups and official English component
   assert.doesNotMatch(config, /const koComponentNames/u);
   assert.doesNotMatch(config, /collapsed:/u);
   assert.doesNotMatch(config, /Paged Navigation|Linear Action|Tree Choice/u);
+  assert.doesNotMatch(config, /Component catalog|컴포넌트 목록/u);
+});
+
+test('component nav stays active throughout each localized component section', () => {
+  assert.match(config, /text: 'Components', link: '\/components\/', activeMatch: '\^\/components\/'/u);
+  assert.match(config, /text: '컴포넌트', link: '\/ko\/components\/', activeMatch: '\^\/ko\/components\/'/u);
 });
 
 test('component sidebar guards against missing, duplicate, and unknown entries', () => {
