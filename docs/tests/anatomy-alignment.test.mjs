@@ -48,6 +48,17 @@ test('tooltip anatomy positions content from its trigger anchor', () => {
   assert.match(source, /\.anatomy-node--tooltip-arrow\s*\{[^}]*bottom:\s*-7px;[^}]*border-top:\s*0;[^}]*border-left:\s*0;/s);
 });
 
+test('navigation anatomy opens sub-content without changing the menu row width', () => {
+  assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--list > \[data-part-name='item-container'\]\s*\{[^}]*flex:\s*none;/s);
+  assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--navigation-viewport\s*\{[^}]*position:\s*absolute;[^}]*top:\s*74px;[^}]*left:\s*20px;[^}]*overflow:\s*visible;/s);
+  assert.match(source, /\.anatomy-node--navigation-viewport > \.anatomy-node--navigation-panel\s*\{[^}]*border-radius:\s*inherit;/s);
+});
+
+test('menu anatomy uses explicit separators without duplicate item rules', () => {
+  assert.match(source, /\.anatomy-node--menu-panel > \.anatomy-node--item,[\s\S]*?border-bottom:\s*0;/u);
+  assert.match(source, /\.anatomy-node--separator\s*\{[^}]*height:\s*1px;/u);
+});
+
 test('generic and dedicated anatomy previews share one quiet selection treatment', () => {
   assert.match(source, /\.anatomy-part-active\s*\{[^}]*outline:\s*0\s*!important;[^}]*box-shadow:\s*inset 0 0 0 2px/s);
   for (const dedicatedSource of dedicatedSources) {

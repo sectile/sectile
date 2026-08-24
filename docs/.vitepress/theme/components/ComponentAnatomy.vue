@@ -103,6 +103,11 @@ function description(part: string, korean: boolean, currentAttributes: AnatomyAt
       ? '열린 명령 목록의 경계입니다. 공유 Menu 프리미티브이므로 data-scope="menu"를 사용합니다.'
       : 'The opened command-list boundary. It uses data-scope="menu" because Menubar reuses the shared Menu primitive.';
   }
+  if (props.component === 'navigation-menu' && part === 'viewport') {
+    return korean
+      ? '열린 하위 메뉴를 같은 위치에서 표시하고 전환하는 팝업 영역입니다.'
+      : 'The popup region that presents and switches open navigation content in one stable position.';
+  }
   return korean
     ? '강조된 화면 영역이 이 공개 파트에 해당합니다. 아래 속성을 선택자로 사용해 스타일을 적용할 수 있습니다.'
     : 'The highlighted region belongs to this public part. Use the attributes below as stable styling selectors.';
@@ -600,11 +605,40 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-node--menu-root,
 .component-anatomy__stage .anatomy-node--menu-button-root,
 .component-anatomy__stage .anatomy-node--navigation-root { min-height: 300px; }
+.component-anatomy__stage .anatomy-node--navigation-root { position: relative; }
 .component-anatomy__stage .anatomy-node--menu-panel { position: relative; width: 240px; }
 .component-anatomy__stage .anatomy-node--submenu { position: absolute; top: 90px; left: calc(100% - 8px); width: 170px; }
+.component-anatomy__stage .anatomy-node--menu-panel > .anatomy-node--item,
+.component-anatomy__stage .anatomy-node--submenu > .anatomy-node--item { border-bottom: 0; border-radius: 8px; }
 .component-anatomy__stage .anatomy-node--menubar { padding: 5px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
 .component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list { display: flex; overflow: visible; }
-.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--viewport { margin-top: 14px; padding: 18px; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list > [data-part-name='item-container'] { flex: none; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--navigation-viewport {
+  position: absolute;
+  z-index: 6;
+  top: 74px;
+  left: 20px;
+  width: min(460px, calc(100% - 40px));
+  overflow: visible;
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--vp-c-text-1) 14%, transparent);
+}
+.component-anatomy__stage .anatomy-node--navigation-viewport > .anatomy-node--navigation-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: inherit;
+}
+.component-anatomy__stage .anatomy-node--navigation-panel > .anatomy-node--item {
+  display: grid;
+  min-height: 68px;
+  align-content: center;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 8px;
+}
 
 .component-anatomy__stage .anatomy-node--data-grid { overflow: visible; padding: 0; }
 .component-anatomy__stage .anatomy-node--grid-header,

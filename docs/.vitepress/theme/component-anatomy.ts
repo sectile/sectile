@@ -290,15 +290,16 @@ function menuPreview(kind: string): AnatomyPreviewNode {
       n('list', 'list', undefined, [
         n('item', 'item-container', undefined, [
           item('item', 'Products', undefined, [n('indicator', undefined, undefined, undefined, { icon: 'chevron-down' })], 'products'),
-          n('panel', 'sub-content', undefined, [
-            n('text', undefined, 'Accessible components'),
-            n('muted', undefined, 'Headless building blocks for product teams'),
-          ], { className: 'menu-panel' }),
         ]),
         item('item', 'Docs', undefined, undefined, 'docs'),
       ]),
       n('indicator', 'indicator'),
-      n('viewport', 'viewport', undefined, [n('text', undefined, 'Build accessible interfaces'), n('muted', undefined, 'Headless components for every host')]),
+      n('viewport', 'viewport', undefined, [
+        n('panel', 'sub-content', undefined, [
+          item('item', 'New releases', 'What shipped in the latest version', undefined, 'new'),
+          item('item', 'Open source', 'Packages and contribution guides', undefined, 'open'),
+        ], { className: 'navigation-panel' }),
+      ], { className: 'navigation-viewport' }),
     ], 'navigation-root');
   }
   const items = [
@@ -312,7 +313,7 @@ function menuPreview(kind: string): AnatomyPreviewNode {
   ], { className: 'menu-panel' });
   if (kind === 'menu') return root([popup], 'menu-root');
   if (kind === 'menubar') return root([row([item('item', 'File', undefined, undefined, 'file'), item('item', 'Edit', undefined, undefined, 'edit'), item('item', 'View', undefined, undefined, 'view')], 'menubar'), popup], 'menu-root');
-  return n('root', undefined, undefined, [button('trigger', 'Actions', 'chevron-down'), popup], { className: 'menu-button-root' });
+  return n('root', undefined, undefined, [button('trigger', 'Create', 'chevron-down'), popup], { className: 'menu-button-root' });
 }
 
 function collectionPreview(kind: string): AnatomyPreviewNode {
