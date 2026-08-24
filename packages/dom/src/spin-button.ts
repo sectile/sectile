@@ -92,7 +92,9 @@ class DOMSpinButton implements SpinButtonConnection {
     const semantic = toSpinButtonEvent(event);
     if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); }
   };
-  readonly #blur = (): void => { this.handleEvent('commit'); };
+  readonly #blur = (): void => {
+    if (!this.handleEvent('commit')) this.handleEvent('cancel');
+  };
 
   public constructor(options: SpinButtonOptions, range: QuantizedRange, runtime: SemanticController<SpinButtonState, SpinButtonEvent, SpinButtonCommand>, valueControlled: boolean, draftControlled: boolean) {
     this.#options = options;

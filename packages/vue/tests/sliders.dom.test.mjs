@@ -31,6 +31,11 @@ const {
   MultiThumbSliderThumb,
   MultiThumbSliderTrack,
 } = await import('../dist/multi-thumb-slider.js');
+const {
+  WindowSplitterHandle,
+  WindowSplitterPane,
+  WindowSplitterRoot,
+} = await import('../dist/window-splitter.js');
 
 async function settle() {
   await nextTick();
@@ -133,6 +138,57 @@ test('Vue multi-thumb slider keeps both thumbs adjustable', async () => {
   await settle();
   assert.equal(renderedThumbs[1].getAttribute('aria-valuenow'), '80');
   assert.deepEqual(updates, [['31', '72'], ['31', '80']]);
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue window splitter drags against the complete pane surface', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const updates = [];
+  const app = createApp({
+    render: () => h(WindowSplitterRoot, {
+      defaultValue: 35,
+      min: 0,
+      max: 100,
+      step: 1,
+      'onUpdate:modelValue': (value) => updates.push(value),
+    }, {
+      default: () => [
+        h(WindowSplitterPane, { side: 'before' }),
+        h(WindowSplitterHandle),
+        h(WindowSplitterPane, { side: 'after' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  const root = host.querySelector('[data-part="root"]');
+  const handle = host.querySelector('[data-part="handle"]');
+  assert.ok(root instanceof HTMLElement);
+  assert.ok(handle instanceof HTMLElement);
+  horizontalTrack(root);
+
+  root.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true,
+    clientX: 60,
+    clientY: 5,
+    pointerId: 3,
+  }));
+  await settle();
+  assert.equal(handle.getAttribute('aria-valuenow'), '35');
+
+  handle.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true,
+    clientX: 72,
+    clientY: 5,
+    pointerId: 4,
+  }));
+  await settle();
+  assert.equal(handle.getAttribute('aria-valuenow'), '72');
+  assert.deepEqual(updates, ['72']);
 
   app.unmount();
   host.remove();

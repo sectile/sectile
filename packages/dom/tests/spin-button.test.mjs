@@ -22,6 +22,28 @@ test('DOM spin button preserves invalid drafts and exposes decimal values instea
   assert.equal(spin.getValue(), '1.5');
 });
 
+test('DOM spin button restores the accepted value when an invalid draft loses focus', () => {
+  const input = new FakeInput();
+  const spin = createSpinButton({ input, min: '0', max: '10', step: '1', defaultValue: '4' });
+  input.value = 'four';
+  input.emit('input', {});
+  input.emit('blur', {});
+  assert.deepEqual(spin.getSnapshot().state, { value: '4', draft: null });
+  assert.equal(input.value, '4');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
+});
+
+test('DOM spin button steps from the accepted value instead of an invalid draft', () => {
+  const input = new FakeInput();
+  const spin = createSpinButton({ input, min: '0', max: '10', step: '1', defaultValue: '4' });
+  input.value = 'not a number';
+  input.emit('input', {});
+  assert.equal(spin.handleEvent('increment'), true);
+  assert.deepEqual(spin.getSnapshot().state, { value: '5', draft: null });
+  assert.equal(input.value, '5');
+  assert.notEqual(input.value, 'NaN');
+});
+
 function keyboard(key) { return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} }; }
 class FakeInput {
   attributes = new Map(); listeners = new Map(); value = ''; disabled = false; readOnly = false;

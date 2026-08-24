@@ -40,6 +40,7 @@ interface SliderContext {
   readonly state: ComputedRef<SliderSlotProps>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
   readonly role: ComputedRef<'slider' | 'separator'>;
+  readonly root: ShallowRef<HTMLElement | undefined>;
   readonly track: ShallowRef<HTMLElement | undefined>;
   readonly connection: ShallowRef<SliderConnection | undefined>;
   readonly label: ComputedRef<string | undefined>;
@@ -91,6 +92,7 @@ export const SliderRoot = defineComponent({
     if (!result.ok) throw new TypeError(result.error.message);
     const controller = result.value;
     const snapshot = shallowRef(controller.getSnapshot());
+    const rootElement = shallowRef<HTMLElement>();
     const track = shallowRef<HTMLElement>();
     const connection = shallowRef<SliderConnection>();
     const refresh = (): void => { snapshot.value = controller.getSnapshot(); };
@@ -115,10 +117,11 @@ export const SliderRoot = defineComponent({
     const label = computed(() => props.label);
     const formatValue = computed(() => props.formatValue);
     const part = usePartContract('slider', 'root');
-    provide<SliderContext>(sliderKey, { controller, state, orientation, role, track, connection, label, formatValue, partContract: part, refresh });
+    provide<SliderContext>(sliderKey, { controller, state, orientation, role, root: rootElement, track, connection, label, formatValue, partContract: part, refresh });
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
+        elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : undefined; },
         'data-scope': part.scope, 'data-part': part.part,
         'data-orientation': props.orientation,
         'data-disabled': props.disabled ? '' : undefined,
@@ -176,7 +179,7 @@ export const SliderThumb = defineComponent({
       root.connection.value = connectSlider({
         controller: root.controller,
         root: element.value,
-        track: root.track.value ?? element.value,
+        track: root.track.value ?? root.root.value ?? element.value,
         scope: part.scope,
         part: part.part,
         orientation: root.orientation.value,

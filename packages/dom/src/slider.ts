@@ -252,6 +252,7 @@ class DOMSliderConnection implements SliderConnection {
   readonly #controller: SliderController;
   readonly #root: HTMLElement;
   readonly #track: HTMLElement;
+  readonly #pointerTarget: HTMLElement;
   readonly #scope: string;
   readonly #part: string;
   readonly #label: string | undefined;
@@ -276,6 +277,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#part = options.part ?? 'thumb';
     this.#label = options.label;
     this.#role = options.role ?? 'slider';
+    this.#pointerTarget = this.#role === 'separator' ? options.root : this.#track;
     this.#orientation = options.orientation ?? 'horizontal';
     this.#formatValue = options.formatValue ?? ((value) => value);
     this.#disabled = options.disabled ?? false;
@@ -288,7 +290,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#handlePointer = (event): void => {
       if (event.type === 'pointerdown') {
         this.#dragging = true;
-        this.#track.setPointerCapture?.(event.pointerId);
+        this.#pointerTarget.setPointerCapture?.(event.pointerId);
       } else if (!this.#dragging) {
         return;
       }
@@ -308,13 +310,13 @@ class DOMSliderConnection implements SliderConnection {
     this.#handlePointerUp = (event): void => {
       if (!this.#dragging) return;
       this.#dragging = false;
-      this.#track.releasePointerCapture?.(event.pointerId);
+      this.#pointerTarget.releasePointerCapture?.(event.pointerId);
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
-    this.#track.addEventListener('pointerdown', this.#handlePointer);
-    this.#track.addEventListener('pointermove', this.#handlePointer);
-    this.#track.addEventListener('pointerup', this.#handlePointerUp);
-    this.#track.addEventListener('pointercancel', this.#handlePointerUp);
+    this.#pointerTarget.addEventListener('pointerdown', this.#handlePointer);
+    this.#pointerTarget.addEventListener('pointermove', this.#handlePointer);
+    this.#pointerTarget.addEventListener('pointerup', this.#handlePointerUp);
+    this.#pointerTarget.addEventListener('pointercancel', this.#handlePointerUp);
     setInteractionAttributes(this.#root, options, { readOnly: this.#role === 'slider' });
     this.refreshAttributes();
   }
@@ -375,10 +377,10 @@ class DOMSliderConnection implements SliderConnection {
 
   public disconnect(): void {
     this.#root.removeEventListener('keydown', this.#handleKeydown);
-    this.#track.removeEventListener('pointerdown', this.#handlePointer);
-    this.#track.removeEventListener('pointermove', this.#handlePointer);
-    this.#track.removeEventListener('pointerup', this.#handlePointerUp);
-    this.#track.removeEventListener('pointercancel', this.#handlePointerUp);
+    this.#pointerTarget.removeEventListener('pointerdown', this.#handlePointer);
+    this.#pointerTarget.removeEventListener('pointermove', this.#handlePointer);
+    this.#pointerTarget.removeEventListener('pointerup', this.#handlePointerUp);
+    this.#pointerTarget.removeEventListener('pointercancel', this.#handlePointerUp);
   }
 }
 

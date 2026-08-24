@@ -29,6 +29,22 @@ test('DOM vertical window splitter follows its visual drag and arrow direction',
   assert.equal(splitter.getSnapshot().state.tick, 75);
 });
 
+test('DOM window splitter measures the pane surface but starts dragging only from its handle', () => {
+  const handle = new FakeElement();
+  const surface = new FakeElement();
+  const splitter = createWindowSplitter({
+    root: handle, track: surface, min: '0', max: '100', step: '1', defaultValue: 40,
+    orientation: 'vertical',
+  });
+
+  surface.emit('pointerdown', pointerEvent(70));
+  assert.equal(splitter.getSnapshot().state.tick, 40);
+
+  handle.emit('pointerdown', pointerEvent(70));
+  handle.emit('pointerup', pointerEvent(70));
+  assert.equal(splitter.getSnapshot().state.tick, 70);
+});
+
 function pointerEvent(clientY) {
   return { clientX: 0, clientY, pointerId: 1, preventDefault() {} };
 }
