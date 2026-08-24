@@ -172,7 +172,12 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
           onHighlightedValueChange: (value: DateValue) => { localHighlight.value = value; emit('update:highlightedValue', value); },
           onOpenChange: (value: boolean) => { localOpen.value = value; emit('update:open', value); }, onUpdate: refresh,
         };
-        for (const part of inputParts(kind)) { const element = elements.get(part); if (element !== undefined) base[toDOMInputKey(part)] = element; }
+        if (granularity === 'day') {
+          for (const part of inputParts(kind)) {
+            const element = elements.get(part);
+            if (element !== undefined) base[toDOMInputKey(part)] = element;
+          }
+        }
         const created = kind === 'date' ? createDatePicker(base as never)
           : kind === 'date-range' ? createDateRangePicker(base as never)
             : kind === 'date-time' ? createDateTimePicker(base as never) : createDateTimeRangePicker(base as never);
@@ -371,7 +376,7 @@ export function createPickerInput(part: PickerInputPart, name: string) {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
       type: pickerInputType(part), name: props.name, form: props.form, disabled: root.state.value.disabled,
-      readonly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
+      readOnly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
       required: false, value: inputValue(root.kind, root.granularity, part, root.state.value.value),
       'data-scope': root.scope, 'data-part': part,
     })); },

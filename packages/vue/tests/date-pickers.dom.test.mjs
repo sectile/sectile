@@ -121,11 +121,12 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   app.mount(host);
   await settle();
 
-  const inputs = host.querySelectorAll('input');
-  assert.equal(inputs[0]?.value, '2026-08');
-  assert.equal(inputs[0]?.readOnly, true);
-  assert.equal(inputs[1]?.value, '2028');
-  assert.equal(inputs[1]?.readOnly, true);
+  const monthInput = host.querySelector('input[data-scope="month-picker"][data-part="input"]:not([type="hidden"])');
+  const yearInput = host.querySelector('input[data-scope="year-picker"][data-part="input"]:not([type="hidden"])');
+  assert.equal(monthInput?.value, '2026-08');
+  assert.equal(monthInput?.readOnly, true);
+  assert.equal(yearInput?.value, '2028');
+  assert.equal(yearInput?.readOnly, true);
 
   const monthGrid = host.querySelector('[data-scope="month-picker"][data-part="grid"]');
   monthGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));

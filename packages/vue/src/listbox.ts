@@ -221,7 +221,7 @@ export const ListboxRoot = defineComponent({
         rootAttributes.value as Record<string, unknown>,
         {
           as: props.as, asChild: props.asChild, onKeydown: handleKeydown,
-          elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
+          elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
         },
         participation.controlProps.value,
       ), { default: () => slots['default']?.(slotProps.value) });

@@ -131,7 +131,7 @@ export const RadioGroupRoot = defineComponent({
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
+        elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
         'data-scope': part.scope,
         onKeydown: (event: KeyboardEvent) => {
           if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;

@@ -166,7 +166,7 @@ export const CheckboxRoot = defineComponent({
         attributes.value as unknown as Record<string, unknown>,
         {
           elementRef: (element: unknown) => {
-            rootElement.value = element instanceof HTMLElement ? element : null;
+            rootElement.value = element as HTMLElement | null;
           },
           as: props.as,
           asChild: props.asChild,

@@ -120,7 +120,7 @@ export const ToggleGroupRoot = defineComponent({
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, ...(props.label === undefined ? {} : { label: props.label }), disabled: props.disabled, readOnly: props.readonly }) as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
-      elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
+      elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
       onKeydown: (event: KeyboardEvent) => { if (apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) event.preventDefault(); },
       }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return root;
