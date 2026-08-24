@@ -27,6 +27,15 @@ test('Node keypresses normalize platform Alt variants before component dispatch'
   });
 });
 
+test('Node keypresses expose portable edge aliases', () => {
+  assert.deepEqual(toTerminalKeyboardInput('\u0001', { name: 'a', ctrl: true }), {
+    key: 'home',
+  });
+  assert.deepEqual(toTerminalKeyboardInput('\u0005', { name: 'e', ctrl: true }), {
+    key: 'end',
+  });
+});
+
 test('terminal text editing removes one grapheme and accepts printable text', () => {
   assert.equal(removeLastGrapheme('한글'), '한');
   assert.equal(removeLastGrapheme('A👨‍👩‍👧‍👦'), 'A');

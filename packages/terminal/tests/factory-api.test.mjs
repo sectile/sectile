@@ -4,8 +4,10 @@ import packageManifest from '../package.json' with { type: 'json' };
 
 const excludedSubpaths = new Set([
   './keyboard',
+  './appearance',
   './layout',
   './node',
+  './screen',
   './package.json',
 ]);
 

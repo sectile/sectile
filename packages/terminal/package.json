@@ -122,10 +122,20 @@
       "import": "./dist/keyboard.js",
       "default": "./dist/keyboard.js"
     },
+    "./appearance": {
+      "types": "./dist/appearance.d.ts",
+      "import": "./dist/appearance.js",
+      "default": "./dist/appearance.js"
+    },
     "./layout": {
       "types": "./dist/layout.d.ts",
       "import": "./dist/layout.js",
       "default": "./dist/layout.js"
+    },
+    "./screen": {
+      "types": "./dist/screen.d.ts",
+      "import": "./dist/screen.js",
+      "default": "./dist/screen.js"
     },
     "./node": {
       "types": "./dist/node.d.ts",

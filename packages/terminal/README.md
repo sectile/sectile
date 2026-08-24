@@ -8,8 +8,9 @@ Terminal bindings for Sectile interaction semantics.
 - Own controlled or uncontrolled runtime synchronization
 - Preserve grapheme-safe editing and rendered Unicode width
 - Provide optional Node TTY integration
+- Provide optional semantic appearance, screen layout, caret projection, and partial screen updates
 
-The package does not provide a terminal component framework, visual theme, screen layout, or application data. Consumers render their own interface from connection state and effects.
+The package does not prescribe an application theme or component markup and does not own application data. Consumers can render connections directly or compose the optional `appearance` and `screen` subpaths into rows, columns, boxes, and text regions.
 
 ## Keyboard conventions
 
