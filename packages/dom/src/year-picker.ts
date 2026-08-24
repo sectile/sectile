@@ -1,0 +1,9 @@
+export {
+  createDatePicker as createYearPicker,
+  tryCreateDatePicker as tryCreateYearPicker,
+} from './date-picker.js';
+export type {
+  DatePickerConnection as YearPickerConnection,
+  DatePickerControlledValues as YearPickerControlledValues,
+  DatePickerOptions as YearPickerOptions,
+} from './date-picker.js';

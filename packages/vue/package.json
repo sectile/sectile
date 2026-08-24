@@ -191,6 +191,31 @@
       "import": "./dist/date-range-picker.js",
       "default": "./dist/date-range-picker.js"
     },
+    "./range-calendar": {
+      "types": "./dist/range-calendar.d.ts",
+      "import": "./dist/range-calendar.js",
+      "default": "./dist/range-calendar.js"
+    },
+    "./month-picker": {
+      "types": "./dist/month-picker.d.ts",
+      "import": "./dist/month-picker.js",
+      "default": "./dist/month-picker.js"
+    },
+    "./month-range-picker": {
+      "types": "./dist/month-range-picker.d.ts",
+      "import": "./dist/month-range-picker.js",
+      "default": "./dist/month-range-picker.js"
+    },
+    "./year-picker": {
+      "types": "./dist/year-picker.d.ts",
+      "import": "./dist/year-picker.js",
+      "default": "./dist/year-picker.js"
+    },
+    "./year-range-picker": {
+      "types": "./dist/year-range-picker.d.ts",
+      "import": "./dist/year-range-picker.js",
+      "default": "./dist/year-range-picker.js"
+    },
     "./date-time-picker": {
       "types": "./dist/date-time-picker.d.ts",
       "import": "./dist/date-time-picker.js",

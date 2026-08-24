@@ -17,6 +17,7 @@ import type { TimeValue } from '@sectile/core/time-field';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 
@@ -286,9 +287,10 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     element.dataset['datePickerId'] = datePickerID(value);
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-selected', String(isSelected(state, value)));
-    element.setAttribute('aria-disabled', String(
-      !isDatePickerValueAvailable(value, this.options.policies?.date),
-    ));
+    setDatePickerCellAvailability(
+      element,
+      isDatePickerValueAvailable(value, this.options.policies?.date),
+    );
     element.tabIndex = compareDateValues(state.calendar.highlighted, value) === 0 ? 0 : -1;
   }
 

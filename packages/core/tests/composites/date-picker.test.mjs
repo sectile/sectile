@@ -4,6 +4,7 @@ import { createDateValue, formatDateValue } from '../../.verification-dist/date-
 import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
 import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState, createDatePickerWeek, createDatePickerYear } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
+import { createYearPickerPage } from '../../.verification-dist/year-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
 import { createTimeValue } from '../../.verification-dist/time-field.js';
@@ -18,6 +19,17 @@ test('date picker moves by semantic calendar units and selects atomically', () =
   assert.equal(formatDateValue(selected.value.state.value), '2024-02-29');
   assert.equal(selected.value.state.open, false);
   assert.deepEqual(selected.value.commands.map(({ type }) => type), ['value-committed', 'highlight-changed', 'open-changed']);
+});
+
+test('year picker projects a compact page around the active year', () => {
+  const page = createYearPickerPage(2026);
+  assert.equal(page.ok, true);
+  assert.equal(page.value.length, 3);
+  assert.deepEqual(page.value.flat().map(({ year }) => year), [
+    2020, 2021, 2022, 2023, 2024, 2025,
+    2026, 2027, 2028, 2029, 2030, 2031,
+  ]);
+  assert.equal(createYearPickerPage(2026, 0).ok, false);
 });
 
 test('date picker month projection is a stable six by seven grid', () => {

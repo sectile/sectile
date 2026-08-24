@@ -40,6 +40,25 @@ test('DOM date range field keeps endpoint drafts independent and commits an orde
   assert.equal(endInput.placeholder, 'YYYY-MM-DD');
 });
 
+test('DOM date range field increments the segment under the endpoint caret', () => {
+  const startInput = new FakeInput();
+  const endInput = new FakeInput();
+  const field = createDateRangeField({
+    startInput,
+    endInput,
+    defaultValue: unwrap(createDateRange(
+      unwrap(createDateValue(2026, 8, 22)),
+      unwrap(createDateValue(2026, 10, 28)),
+    )),
+  });
+
+  startInput.setSelectionRange(5, 5);
+  startInput.emit('keydown', keyboard('ArrowUp'));
+
+  assert.equal(formatDateValue(field.getValue().start), '2026-09-22');
+  assert.equal(formatDateValue(field.getValue().end), '2026-10-28');
+});
+
 test('DOM date range field rejects inverted controlled proposals', () => {
   const value = unwrap(createDateRange(
     unwrap(createDateValue(2026, 8, 22)),
@@ -59,6 +78,26 @@ test('DOM time range field commits ordered wall-clock endpoints', () => {
   assert.equal(formatTimeValue(field.getValue().end), '17:45');
 });
 
+test('DOM time fields increment the hour under the caret instead of the minute', () => {
+  const input = new FakeInput();
+  const field = createTimeField({ input, defaultValue: unwrap(createTimeValue(9, 30)) });
+  input.setSelectionRange(0, 0);
+  input.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(formatTimeValue(field.getValue()), '10:30');
+
+  const startInput = new FakeInput();
+  const endInput = new FakeInput();
+  const range = createTimeRangeField({
+    startInput,
+    endInput,
+    defaultValue: { start: unwrap(createTimeValue(9, 30)), end: unwrap(createTimeValue(17, 45)) },
+  });
+  startInput.setSelectionRange(0, 0);
+  startInput.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(formatTimeValue(range.getValue().start), '10:30');
+  assert.equal(formatTimeValue(range.getValue().end), '17:45');
+});
+
 test('DOM date picker composes an editable date field with calendar selection', () => {
   const input = new FakeInput();
   const picker = createDatePicker({
@@ -76,6 +115,28 @@ test('DOM date picker composes an editable date field with calendar selection', 
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2024-02-12');
   assert.equal(input.readOnly, false);
+});
+
+test('DOM date picker projects unavailable dates as disabled cells', () => {
+  const picker = createDatePicker({
+    root: new FakeElement(),
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    defaultValue: unwrap(createDateValue(2026, 8, 22)),
+    policies: { unavailable: (value) => value.year === 2026 && value.month === 8 && value.day === 27 },
+  });
+  const unavailable = new FakeElement();
+  const available = new FakeElement();
+
+  picker.setCellAttributes(unavailable, unwrap(createDateValue(2026, 8, 27)));
+  picker.setCellAttributes(available, unwrap(createDateValue(2026, 8, 28)));
+
+  assert.equal(unavailable.disabled, true);
+  assert.equal(unavailable.attributes.get('aria-disabled'), 'true');
+  assert.equal(unavailable.dataset.unavailable, '');
+  assert.equal(available.disabled, false);
+  assert.equal(available.attributes.get('aria-disabled'), 'false');
+  assert.equal('unavailable' in available.dataset, false);
 });
 
 test('DOM date picker can keep an inline calendar open while value remains uncontrolled', () => {
@@ -254,7 +315,7 @@ test('DOM date-time field rejects invalid arrow steps and restores on blur', () 
 function keyboard(key) { return { key, isComposing: false, preventDefault() {} }; }
 function replaceInput(input, value) { input.value = value; input.setSelectionRange(value.length, value.length); input.emit('input', { inputType: 'insertText' }); }
 class FakeElement {
-  attributes = new Map(); listeners = new Map(); disabled = false; hidden = false; tabIndex = 0;
+  attributes = new Map(); listeners = new Map(); dataset = {}; disabled = false; hidden = false; tabIndex = 0;
   addEventListener(type, listener) { const values = this.listeners.get(type) ?? new Set(); values.add(listener); this.listeners.set(type, values); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   emit(type, event) { for (const listener of this.listeners.get(type) ?? []) listener(event); }

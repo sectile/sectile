@@ -314,5 +314,10 @@ export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type
 export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
 export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
 export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
+export { createRangeCalendar, tryCreateRangeCalendar, type RangeCalendarConnection, type RangeCalendarControlledValues, type RangeCalendarOptions } from './range-calendar.js';
+export { createMonthPicker, tryCreateMonthPicker, createMonthPickerYear, type MonthPickerConnection, type MonthPickerControlledValues, type MonthPickerOptions, type MonthPickerValue } from './month-picker.js';
+export { createMonthRangePicker, tryCreateMonthRangePicker, createMonthRangePickerYear, type MonthRangePickerConnection, type MonthRangePickerControlledValues, type MonthRangePickerOptions } from './month-range-picker.js';
+export { createYearPicker, tryCreateYearPicker, type YearPickerConnection, type YearPickerControlledValues, type YearPickerOptions } from './year-picker.js';
+export { createYearRangePicker, tryCreateYearRangePicker, type YearRangePickerConnection, type YearRangePickerControlledValues, type YearRangePickerOptions } from './year-range-picker.js';
 export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';
 export { createDateTimeRangePicker, tryCreateDateTimeRangePicker, type DateTimeRangePickerConnection, type DateTimeRangePickerControlledValues, type DateTimeRangePickerOptions } from './date-time-range-picker.js';
