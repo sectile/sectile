@@ -20,8 +20,9 @@ import {
 import { useNativeInputFormControl } from './internal/form-control.js';
 
 export interface TextFieldProps {
-  readonly modelValue?: string;
-  readonly defaultValue?: string;
+  readonly modelValue?: string | number;
+  readonly defaultValue?: string | number;
+  readonly modelModifiers?: TextFieldModelModifiers;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly multiline?: boolean;
@@ -33,16 +34,22 @@ export interface TextFieldProps {
   readonly autocomplete?: string;
 }
 
-interface TextEmit {
-  (event: 'update:modelValue', value: string): void;
+export interface TextFieldModelModifiers {
+  readonly lazy?: boolean;
+  readonly number?: boolean;
+  readonly trim?: boolean;
 }
 
 export const TextField = defineComponent({
   name: 'SectileTextField',
   inheritAttrs: false,
   props: {
-    modelValue: { type: String, default: undefined },
-    defaultValue: { type: String, default: '' },
+    modelValue: { type: [String, Number], default: undefined },
+    defaultValue: { type: [String, Number], default: '' },
+    modelModifiers: {
+      type: Object as PropType<TextFieldModelModifiers>,
+      default: (): TextFieldModelModifiers => ({}),
+    },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
     multiline: { type: Boolean, default: false },
@@ -54,25 +61,27 @@ export const TextField = defineComponent({
     autocomplete: { type: String as PropType<string>, default: undefined },
   },
   emits: {
-    'update:modelValue': (_value: string): boolean => true,
+    'update:modelValue': (_value: string | number): boolean => true,
   },
   setup(props, { attrs, emit }) {
     const element = ref<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const participation = useNativeInputFormControl(element);
     const controlled = props.modelValue !== undefined;
-    const initialValue = controlled ? props.modelValue as string : props.defaultValue;
+    const initialValue = String(controlled ? props.modelValue : props.defaultValue);
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;
     let proposedState: TextState | null = null;
 
     const createController = (state: TextState): TextController => {
       const result = createTextController({
-        ...(controlled ? { value: state } : { defaultValue: state }),
+        ...(controlled && !props.modelModifiers.lazy
+          ? { value: state }
+          : { defaultValue: state }),
         disabled: props.disabled,
         readOnly: props.readonly,
         onValueChange: (change) => {
           proposedState = change.value;
-          emit('update:modelValue', change.value.snapshot.text);
+          if (!props.modelModifiers.lazy) emit('update:modelValue', change.value.snapshot.text);
         },
       });
       if (!result.ok) throw new TypeError(result.error.message);
@@ -96,16 +105,26 @@ export const TextField = defineComponent({
 
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined || connection === null) return;
-      const state = proposedState?.snapshot.text === value ? proposedState : createTextState(value);
+      const text = String(value);
+      const state = proposedState?.snapshot.text === text ? proposedState : createTextState(text);
       proposedState = null;
+      if (props.modelModifiers.lazy) {
+        mountConnection(state);
+        return;
+      }
       const result = connection.syncControlledValues({ value: state });
       if (!result.ok) throw new TypeError(result.error.message);
     });
     watch([() => props.disabled, () => props.readonly], () => {
       const state = controller?.getSnapshot().state
-        ?? createTextState(controlled ? props.modelValue as string : props.defaultValue);
+        ?? createTextState(String(controlled ? props.modelValue : props.defaultValue));
       mountConnection(state);
     });
+
+    const commitLazyValue = (): void => {
+      if (!props.modelModifiers.lazy || controller === null) return;
+      emit('update:modelValue', controller.getSnapshot().state.snapshot.text);
+    };
 
     return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(
       attrs,
@@ -120,6 +139,7 @@ export const TextField = defineComponent({
         form: props.form,
         placeholder: props.placeholder,
         autocomplete: props.autocomplete,
+        onChange: commitLazyValue,
         'data-scope': 'text',
         'data-part': 'input',
         'data-disabled': props.disabled ? '' : undefined,

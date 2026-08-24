@@ -135,7 +135,11 @@ export {
   type TooltipRootProps,
   type TooltipRootSlotProps,
 } from './tooltip.js';
-export { TextField, type TextFieldProps } from './text.js';
+export {
+  TextField,
+  type TextFieldModelModifiers,
+  type TextFieldProps,
+} from './text.js';
 export {
   EditableArea,
   EditableCancelTrigger,
