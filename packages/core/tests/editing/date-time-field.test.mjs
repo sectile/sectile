@@ -79,10 +79,11 @@ test('date field preserves drafts, commits atomically, and adjusts the active se
 
   const invalidDraft = applyDateFieldEvent(state, {
     type: 'text',
-    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: 'not-a-date', selection: { anchorCodeUnitOffset: 10, focusCodeUnitOffset: 10 } },
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: '2024-34-31', selection: { anchorCodeUnitOffset: 7, focusCodeUnitOffset: 7 } },
   }).value.state;
-  const rejectedStep = applyDateFieldEvent(invalidDraft, 'increment-segment');
-  assert.equal(rejectedStep.error.code, 'invalid-date-format');
+  const recoveredStep = applyDateFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(formatDateValue(recoveredStep.value.state.value), '2024-02-29');
+  assert.equal(recoveredStep.value.state.inputState.snapshot.text, '2024-02-29');
   assert.equal(formatDateValue(invalidDraft.value), '2024-01-31');
 });
 
@@ -108,10 +109,11 @@ test('time field commits, bounds, and adjusts its caret segment', () => {
 
   const invalidDraft = applyTimeFieldEvent(state, {
     type: 'text',
-    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: '12:30asdf', selection: { anchorCodeUnitOffset: 9, focusCodeUnitOffset: 9 } },
+    event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: state.inputState.snapshot.text.length, text: '34:30', selection: { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 2 } },
   }).value.state;
-  const rejectedStep = applyTimeFieldEvent(invalidDraft, 'increment-segment');
-  assert.equal(rejectedStep.error.code, 'invalid-time-format');
+  const recoveredStep = applyTimeFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(formatTimeValue(recoveredStep.value.state.value), '11:30');
+  assert.equal(recoveredStep.value.state.inputState.snapshot.text, '11:30');
   assert.equal(formatTimeValue(invalidDraft.value), '10:30');
 });
 
@@ -131,7 +133,7 @@ test('date-time arithmetic carries wall-clock changes across civil day boundarie
   assert.equal(formatDateTimeValue(backward.value), '2024-02-29T23:59:59.999');
 });
 
-test('date-time field steps the active segment and rejects invalid drafts atomically', () => {
+test('date-time field steps the active segment and recovers invalid drafts atomically', () => {
   let state = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 45)).value;
   state = applyDateTimeFieldEvent(state, {
     type: 'text',
@@ -160,11 +162,12 @@ test('date-time field steps the active segment and rejects invalid drafts atomic
       type: 'replace',
       startCodeUnitOffset: 0,
       endCodeUnitOffset: next.value.state.inputState.snapshot.text.length,
-      text: '2024-02-01T00:15oops',
-      selection: { anchorCodeUnitOffset: 20, focusCodeUnitOffset: 20 },
+      text: '2024-34-01T00:15',
+      selection: { anchorCodeUnitOffset: 7, focusCodeUnitOffset: 7 },
     },
   }).value.state;
-  const rejected = applyDateTimeFieldEvent(invalidDraft, 'increment-segment');
-  assert.equal(rejected.error.code, 'invalid-time-format');
+  const recovered = applyDateTimeFieldEvent(invalidDraft, 'increment-segment');
+  assert.equal(formatDateTimeValue(recovered.value.state.value), '2024-03-01T00:15');
+  assert.equal(recovered.value.state.inputState.snapshot.text, '2024-03-01T00:15');
   assert.equal(formatDateTimeValue(invalidDraft.value), '2024-02-01T00:15');
 });

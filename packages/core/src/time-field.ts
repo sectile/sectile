@@ -109,8 +109,9 @@ export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent
   }
   if (event === 'increment-segment' || event === 'decrement-segment') {
     const draft = parseTimeValue(valid.value.inputState.snapshot.text);
-    if (!draft.ok) return draft;
-    const base = draft.value;
+    if (!draft.ok && valid.value.value === null) return draft;
+    const base = draft.ok ? draft.value : valid.value.value;
+    if (base === null) return fail('transition-rejection', 'time-field-value-missing', 'Time field has no value to adjust.');
     const segment = timeSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
     const defaultStep = segment === 'hour' ? 3_600_000 : segment === 'minute' ? 60_000 : segment === 'second' ? 1_000 : 1;
     const requested = policies.step?.[segment] ?? 1;

@@ -212,7 +212,11 @@ export function applyDateTimeFieldEvent(
 
   if (event === 'increment-segment' || event === 'decrement-segment') {
     const draft = parseDateTimeValue(valid.value.inputState.snapshot.text);
-    if (!draft.ok) return draft;
+    if (!draft.ok && valid.value.value === null) return draft;
+    const base = draft.ok ? draft.value : valid.value.value;
+    if (base === null) {
+      return fail('transition-rejection', 'date-time-field-value-missing', 'Date-time field has no value to adjust.');
+    }
     const segment = dateTimeSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
     const requested = policies.step?.[segment] ?? 1;
     if (!Number.isSafeInteger(requested) || requested < 1) {
@@ -223,7 +227,7 @@ export function applyDateTimeFieldEvent(
       );
     }
     const direction = event === 'increment-segment' ? 1 : -1;
-    const adjusted = adjustSegment(draft.value, segment, requested * direction);
+    const adjusted = adjustSegment(base, segment, requested * direction);
     return adjusted.ok ? commitValue(adjusted.value, policies, segment) : adjusted;
   }
 

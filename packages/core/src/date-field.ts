@@ -181,8 +181,9 @@ export function applyDateFieldEvent(
   }
   if (event === 'increment-segment' || event === 'decrement-segment') {
     const draft = parseDateValue(valid.value.inputState.snapshot.text);
-    if (!draft.ok) return draft;
-    const base = draft.value;
+    if (!draft.ok && valid.value.value === null) return draft;
+    const base = draft.ok ? draft.value : valid.value.value;
+    if (base === null) return fail('transition-rejection', 'date-field-value-missing', 'Date field has no value to adjust.');
     const amount = event === 'increment-segment' ? 1 : -1;
     const segment = dateSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
     const adjusted = segment === 'year' ? addDateYears(base, amount)
