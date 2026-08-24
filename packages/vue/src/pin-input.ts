@@ -74,6 +74,7 @@ export const PinInputRoot = defineComponent({
     };
     const refresh = (): void => { if (connection.value !== undefined) value.value = connection.value.getSnapshot().state.values.join(''); };
     const register = (index: number, element?: HTMLInputElement): void => {
+      if (inputs.value[index] === element) return;
       const next = [...inputs.value]; next[index] = element; inputs.value = next;
     };
     provide<Context>(key, {

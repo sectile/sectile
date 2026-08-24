@@ -102,7 +102,15 @@ export const MultiThumbSliderRoot = defineComponent({
         ...(props.getThumbLabel === undefined ? {} : { getThumbLabel: props.getThumbLabel }),
         ...(props.formatValue === undefined ? {} : { formatValue: props.formatValue }),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
-        onValuesChange: () => { const next = connection.value?.getValues() ?? current.value; local.value = next; emit('update:modelValue', next); },
+        onValuesChange: (nextTicks) => {
+          const next = Object.freeze(nextTicks.map((tick) => {
+            const value = rangeController.value.range.valueAt(tick);
+            if (value === null) throw new TypeError(`Multi-thumb slider tick ${tick} is outside its exact range.`);
+            return value;
+          }));
+          local.value = next;
+          emit('update:modelValue', next);
+        },
         onUpdate: refresh,
       });
       refreshThumbs(); refresh();

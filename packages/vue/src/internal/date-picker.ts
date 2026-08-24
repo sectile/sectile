@@ -1,6 +1,6 @@
 import {
   Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
-  provide, shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType,
+  nextTick, provide, shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType,
   type VNodeChild,
 } from 'vue';
 import { createDatePicker, createDatePickerMonth, createDatePickerYear, type DatePickerConnection, type DatePickerMonthValue, type DatePickerViewMode } from '@sectile/dom/date-picker';
@@ -56,6 +56,7 @@ interface Context {
   registerCell(element: HTMLElement, value: DateValue): void;
   move(unit: PickerNavigationUnit, direction: -1 | 1): void;
   setViewMode(value: DatePickerViewMode): void;
+  selectDate(value: DateValue): void;
   selectMonth(value: DatePickerMonthValue): void;
 }
 const key = Symbol('SectileDatePickerRoot');
@@ -109,6 +110,7 @@ export function createPickerRoot(kind: PickerKind, name: string) {
           months.value = picked.viewMode === 'year' ? connection.value.getYear() : [];
         }
         refreshCells();
+        void nextTick(refreshCells);
       };
       const connect = (): void => {
         connection.value?.disconnect();
@@ -138,6 +140,11 @@ export function createPickerRoot(kind: PickerKind, name: string) {
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => { connection.value?.handleEvent(`${direction < 0 ? 'previous' : 'next'}-${unit}`); refresh(); },
         setViewMode: (value) => { connection.value?.handleEvent({ type: 'set-view-mode', value }); refresh(); },
+        selectDate: (value) => {
+          const type = kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
+          connection.value?.handleEvent({ type, value });
+          refresh();
+        },
         selectMonth: (value) => { connection.value?.handleEvent({ type: 'select-month', value }); refresh(); },
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
@@ -191,6 +198,8 @@ export const PickerCell = defineComponent({
   setup(props, { attrs, slots }) { const root = useRoot('PickerCell'); const state = computed<PickerCellSlotProps>(() => cellState(root.kind, root.state.value, props.value)); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
     elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerCell(node, props.value); },
+    disabled: state.value.disabled,
+    onClick: (event: MouseEvent) => { event.stopPropagation(); root.selectDate(props.value); },
     role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange), 'data-sectile-picker-date': formatDateValue(props.value),
     'data-scope': root.kind, 'data-part': 'cell', 'data-selected': state.value.selected ? '' : undefined,
     'data-in-range': state.value.inRange ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
