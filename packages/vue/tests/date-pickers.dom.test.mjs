@@ -16,7 +16,8 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick } = await import('vue');
+const { createApp, h, nextTick, ref } = await import('vue');
+const { CalendarCell, CalendarRoot } = await import('../dist/calendar.js');
 const {
   DatePickerCell,
   DatePickerContent,
@@ -64,6 +65,31 @@ async function settle() {
   await nextTick();
   await nextTick();
 }
+
+test('Vue calendar reconnects cells after the projected rows change', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const rows = ref([['2026-08-24', '2026-08-25']]);
+  const app = createApp({
+    render: () => h(CalendarRoot, { rows: rows.value }, {
+      default: () => rows.value.flat().map((value) => h(CalendarCell, { key: value, value }, { default: () => value })),
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  rows.value = [['2026-08-31', '2026-09-01']];
+  await settle();
+
+  assert.deepEqual(
+    [...host.querySelectorAll('[data-sectile-calendar-id]')].map((element) => element.textContent),
+    ['2026-08-31', '2026-09-01'],
+  );
+  assert.equal(host.querySelector('[data-sectile-calendar-id="2026-08-24"]'), null);
+
+  app.unmount();
+  host.remove();
+});
 
 test('Vue date picker routes direct cell clicks to the date selection event', async () => {
   const host = document.createElement('div');

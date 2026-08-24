@@ -1,6 +1,6 @@
 import {
   computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
-  shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  nextTick, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createCalendar, type CalendarConnection, type CalendarPolicies } from '@sectile/dom/calendar';
 import { Primitive, type PrimitiveAs } from './primitive.js';
@@ -50,7 +50,11 @@ export const CalendarRoot = defineComponent({
     };
     provide<Context>(key, { state, disabledValues: computed(() => new Set(props.disabledValues)), register: (element, id, disabled) => { const rowIndex = props.rows.findIndex((row) => row.includes(id)); const columnIndex = rowIndex < 0 ? -1 : props.rows[rowIndex]?.indexOf(id) ?? -1; connection.value?.setCellAttributes(element, { id, rowIndex: rowIndex + 1, columnIndex: columnIndex + 1, disabled }); } });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.rows, () => props.disabledValues, () => props.disabled, () => props.label, () => props.policies], connect);
+    watch(
+      [() => props.rows, () => props.disabledValues, () => props.disabled, () => props.label, () => props.policies],
+      () => { void nextTick(connect); },
+      { flush: 'post' },
+    );
     watch([() => props.modelValue, () => props.highlightedValue], () => { if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue as string | null } : {}), ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
