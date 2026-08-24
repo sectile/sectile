@@ -125,16 +125,34 @@ test('Vue period pickers expose distinct scopes and projections', async () => {
       }),
     })],
   }));
+  const boundedMonthPicker = await render(() => h(MonthPickerRoot, {
+    defaultValue: { year: 2026, month: 9, day: 1 },
+    defaultOpen: true,
+    policies: { min: { year: 2026, month: 9, day: 1 } },
+  }, {
+    default: ({ months }) => [h(MonthPickerTrigger), h(MonthPickerContent, null, {
+      default: () => h(MonthPickerGrid, null, {
+        default: () => months.flat().map((value) => h(MonthPickerCell, { value }, { default: () => String(value.month) })),
+      }),
+    })],
+  }));
 
   assert.match(rangeCalendar, /data-scope="range-calendar"/);
   assert.match(rangeCalendar, /data-in-range(?:[ >])/);
   assert.equal((monthPicker.match(/data-part="cell"/g) ?? []).length, 12);
   assert.match(monthPicker, /data-scope="month-picker"/);
+  assert.match(monthPicker, /value="2026-08"/);
+  assert.match(monthPicker, /data-sectile-picker-month="2026-08"[^>]*data-selected/u);
   assert.match(monthRange, /data-scope="month-range-picker"/);
   assert.match(monthRange, /data-part="start-input"/);
+  assert.match(monthRange, /value="2026-08"/);
   assert.match(yearPicker, /data-part="previous-page"/);
+  assert.match(yearPicker, /value="2026"/);
+  assert.match(yearPicker, /data-sectile-picker-year="2026"[^>]*data-selected/u);
   assert.match(yearPicker, /data-part="next-page"/);
   assert.equal((yearPicker.match(/data-part="cell"/g) ?? []).length, 12);
   assert.match(yearRange, /data-scope="year-range-picker"/);
   assert.match(yearRange, /data-part="end-input"/);
+  assert.match(boundedMonthPicker, /<button(?=[^>]*data-sectile-picker-month="2026-08")(?=[^>]*disabled)[^>]*>/u);
+  assert.match(boundedMonthPicker, /<button(?=[^>]*data-sectile-picker-month="2026-09")(?=[^>]*aria-disabled="false")[^>]*>/u);
 });

@@ -140,6 +140,6 @@ const example = computed(resolveExample);
 
 <template>
   <div class="component-example-stage" :data-component="component">
-    <component :is="example.component" v-bind="example.props" />
+    <component :is="example.component" :key="`${component}:${scenario}`" v-bind="example.props" />
   </div>
 </template>

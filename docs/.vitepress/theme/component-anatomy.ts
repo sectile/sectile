@@ -218,8 +218,8 @@ function periodPickerPreview(kind: string): AnatomyPreviewNode {
   const fields = isCalendar
     ? []
     : isRange
-      ? [input('start-input', isYear ? '2026' : 'Mar 2026', 'From'), input('end-input', isYear ? '2030' : 'Aug 2026', 'To')]
-      : [input('input', isYear ? '2028' : 'Aug 2026', isYear ? 'Year' : 'Month')];
+      ? [input('start-input', isYear ? '2026' : '2026-03', 'From'), input('end-input', isYear ? '2030' : '2026-08', 'To')]
+      : [input('input', isYear ? '2028' : '2026-08', isYear ? 'Year' : 'Month')];
   const cells = values.map((value, index) => n('cell', cellPart, value, undefined, {
     className: index === (isYear ? 4 : isCalendar ? 26 : 7)
       ? 'selected'

@@ -12,6 +12,7 @@ Object.assign(globalThis, {
   HTMLInputElement: browserWindow.HTMLInputElement,
   SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event,
+  KeyboardEvent: browserWindow.KeyboardEvent,
   MouseEvent: browserWindow.MouseEvent,
   MutationObserver: browserWindow.MutationObserver,
 });
@@ -51,6 +52,22 @@ const {
   DateTimeRangePickerStartDateInput,
   DateTimeRangePickerTrigger,
 } = await import('../dist/date-time-range-picker.js');
+const {
+  MonthPickerCell,
+  MonthPickerContent,
+  MonthPickerGrid,
+  MonthPickerInput,
+  MonthPickerRoot,
+  MonthPickerTrigger,
+} = await import('../dist/month-picker.js');
+const {
+  YearPickerCell,
+  YearPickerContent,
+  YearPickerGrid,
+  YearPickerInput,
+  YearPickerRoot,
+  YearPickerTrigger,
+} = await import('../dist/year-picker.js');
 
 const start = Object.freeze({
   date: Object.freeze({ year: 2026, month: 8, day: 18 }),
@@ -65,6 +82,68 @@ async function settle() {
   await nextTick();
   await nextTick();
 }
+
+test('Vue period pickers keep granularity-specific text and keyboard movement', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const monthUpdates = [];
+  const app = createApp({
+    render: () => h('div', [
+      h(MonthPickerRoot, {
+        defaultValue: { year: 2026, month: 8, day: 1 },
+        defaultOpen: true,
+        'onUpdate:modelValue': (value) => monthUpdates.push(value),
+      }, {
+        default: ({ months }) => [
+          h(MonthPickerInput),
+          h(MonthPickerTrigger),
+          h(MonthPickerContent, null, {
+            default: () => h(MonthPickerGrid, null, {
+              default: () => months.flat().map((value) => h(MonthPickerCell, { value }, { default: () => String(value.month) })),
+            }),
+          }),
+        ],
+      }),
+      h(YearPickerRoot, { defaultValue: { year: 2028, month: 1, day: 1 }, defaultOpen: true }, {
+        default: ({ years }) => [
+          h(YearPickerInput),
+          h(YearPickerTrigger),
+          h(YearPickerContent, null, {
+            default: () => h(YearPickerGrid, null, {
+              default: () => years.flat().map((value) => h(YearPickerCell, { value }, { default: () => String(value.year) })),
+            }),
+          }),
+        ],
+      }),
+    ]),
+  });
+
+  app.mount(host);
+  await settle();
+
+  const inputs = host.querySelectorAll('input');
+  assert.equal(inputs[0]?.value, '2026-08');
+  assert.equal(inputs[0]?.readOnly, true);
+  assert.equal(inputs[1]?.value, '2028');
+  assert.equal(inputs[1]?.readOnly, true);
+
+  const monthGrid = host.querySelector('[data-scope="month-picker"][data-part="grid"]');
+  monthGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-picker-month="2026-09"]')?.getAttribute('tabindex'), '0');
+
+  monthGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await settle();
+  assert.deepEqual(monthUpdates.at(-1), { year: 2026, month: 9, day: 1 });
+
+  const yearGrid = host.querySelector('[data-scope="year-picker"][data-part="grid"]');
+  yearGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  await settle();
+  assert.equal(host.querySelector('[data-sectile-picker-year="2032"]')?.getAttribute('tabindex'), '0');
+
+  app.unmount();
+  host.remove();
+});
 
 test('Vue calendar reconnects cells after the projected rows change', async () => {
   const host = document.createElement('div');

@@ -504,7 +504,7 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-node--separator { height: 1px; margin: 5px 0; background: var(--vp-c-divider); }
 
 .component-anatomy__stage .anatomy-node--picker-root { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
-.component-anatomy__stage .anatomy-node--picker-root > .anatomy-node--calendar { grid-column: 1 / -1; }
+.component-anatomy__stage .anatomy-node--picker-root > :is(.anatomy-node--calendar, .anatomy-node--picker-inputs) { grid-column: 1 / -1; }
 .component-anatomy__stage .anatomy-node--calendar { width: min(100%, 520px); padding: 16px; border: 1px solid var(--vp-c-divider); border-radius: 14px; background: var(--vp-c-bg); }
 .component-anatomy__stage .anatomy-node--view-switch { justify-content: center; margin-bottom: 10px; }
 .component-anatomy__stage .anatomy-node--view-switch .anatomy-node--button { min-height: 30px; padding: 0 10px; border-radius: 7px; font-size: 11px; }
@@ -513,6 +513,10 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-node--week-controls { justify-content: center; margin-bottom: 10px; }
 .component-anatomy__stage .anatomy-node--week-controls .anatomy-node--icon-button { width: 30px; min-height: 28px; font-size: 14px; }
 .component-anatomy__stage .anatomy-node--calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.component-anatomy__stage .anatomy-node--period-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+.component-anatomy__stage .anatomy-node--period-grid > .anatomy-node--cell { min-height: 48px; border-right: 1px solid var(--vp-c-divider); border-bottom: 1px solid var(--vp-c-divider); border-radius: 0; }
+.component-anatomy__stage .anatomy-node--period-grid > .anatomy-node--cell:nth-child(3n) { border-right: 0; }
+.component-anatomy__stage .anatomy-node--period-grid > .anatomy-node--cell:nth-last-child(-n + 3) { border-bottom: 0; }
 .component-anatomy__stage .anatomy-node--weekday { padding: 5px 0; color: var(--vp-c-text-3); font-size: 9px; font-weight: 700; text-align: center; }
 .component-anatomy__stage .anatomy-node--cell { display: grid; min-height: 36px; place-items: center; border-radius: 8px; font-size: 12px; }
 .component-anatomy__stage .anatomy-node--cell:hover { background: var(--vp-c-bg-soft); }

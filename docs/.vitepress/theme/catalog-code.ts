@@ -304,7 +304,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <strong>{{ view.year }}</strong>
       <MonthPickerNextYear>›</MonthPickerNextYear>
       <MonthPickerGrid>
-        <MonthPickerCell v-for="month in months.flat()" :key="month.month" :value="month">
+        <MonthPickerCell v-for="month in months.flat()" :key="month.year + '-' + month.month" :value="month">
           {{ monthNames[month.month - 1] }}
         </MonthPickerCell>
       </MonthPickerGrid>
@@ -315,16 +315,19 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'month-range-picker': sfc(
-    'MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerEndInput, MonthRangePickerTrigger, MonthRangePickerContent, MonthRangePickerGrid, MonthRangePickerCell',
-    `  <MonthRangePickerRoot :default-value="reportingPeriod" default-open v-slot="{ months }">
+    'MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerEndInput, MonthRangePickerTrigger, MonthRangePickerContent, MonthRangePickerPreviousYear, MonthRangePickerNextYear, MonthRangePickerGrid, MonthRangePickerCell',
+    `  <MonthRangePickerRoot :default-value="reportingPeriod" default-open v-slot="{ months, view }">
     <MonthRangePickerStartInput aria-label="First month" />
     <MonthRangePickerEndInput aria-label="Last month" />
     <MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker">
       <CalendarDays :size="18" aria-hidden="true" />
     </MonthRangePickerTrigger>
     <MonthRangePickerContent>
+      <MonthRangePickerPreviousYear aria-label="Previous year">‹</MonthRangePickerPreviousYear>
+      <strong>{{ view.year }}</strong>
+      <MonthRangePickerNextYear aria-label="Next year">›</MonthRangePickerNextYear>
       <MonthRangePickerGrid>
-        <MonthRangePickerCell v-for="month in months.flat()" :key="month.month" :value="month">
+        <MonthRangePickerCell v-for="month in months.flat()" :key="month.year + '-' + month.month" :value="month">
           {{ monthNames[month.month - 1] }}
         </MonthRangePickerCell>
       </MonthRangePickerGrid>
@@ -345,8 +348,9 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <CalendarDays :size="18" aria-hidden="true" />
     </YearPickerTrigger>
     <YearPickerContent>
-      <YearPickerPreviousPage>‹</YearPickerPreviousPage>
-      <YearPickerNextPage>›</YearPickerNextPage>
+      <YearPickerPreviousPage aria-label="Previous years">‹</YearPickerPreviousPage>
+      <strong>{{ years.flat()[0].year }}–{{ years.flat().at(-1).year }}</strong>
+      <YearPickerNextPage aria-label="Next years">›</YearPickerNextPage>
       <YearPickerGrid>
         <YearPickerCell v-for="year in years.flat()" :key="year.year" :value="year">
           {{ year.year }}
@@ -357,7 +361,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     `const graduationYear = { year: 2028, month: 1, day: 1 }`,
   ),
   'year-range-picker': sfc(
-    'YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerEndInput, YearRangePickerTrigger, YearRangePickerContent, YearRangePickerGrid, YearRangePickerCell',
+    'YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerEndInput, YearRangePickerTrigger, YearRangePickerContent, YearRangePickerPreviousPage, YearRangePickerNextPage, YearRangePickerGrid, YearRangePickerCell',
     `  <YearRangePickerRoot :default-value="roadmap" default-open v-slot="{ years }">
     <YearRangePickerStartInput aria-label="First year" />
     <YearRangePickerEndInput aria-label="Last year" />
@@ -365,6 +369,9 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <CalendarDays :size="18" aria-hidden="true" />
     </YearRangePickerTrigger>
     <YearRangePickerContent>
+      <YearRangePickerPreviousPage aria-label="Previous years">‹</YearRangePickerPreviousPage>
+      <strong>{{ years.flat()[0].year }}–{{ years.flat().at(-1).year }}</strong>
+      <YearRangePickerNextPage aria-label="Next years">›</YearRangePickerNextPage>
       <YearRangePickerGrid>
         <YearRangePickerCell v-for="year in years.flat()" :key="year.year" :value="year">
           {{ year.year }}
