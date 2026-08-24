@@ -11,17 +11,11 @@ Move across top-level application menus, then enter the open command list.
 
 <ComponentExample component="menubar" scenario="application" title="Application" description="Move across top-level application menus, then enter the open command list." :index="0" />
 
-### Disabled root
-
-Skip an unavailable top-level menu while preserving movement between its siblings.
-
-<ComponentExample component="menubar" scenario="disabled-root" title="Disabled root" description="Skip an unavailable top-level menu while preserving movement between its siblings." :index="1" />
-
 ### Typeahead
 
 Move to the next menu whose label matches the typed prefix.
 
-<ComponentExample component="menubar" scenario="typeahead" title="Typeahead" description="Move to the next menu whose label matches the typed prefix." :index="2" />
+<ComponentExample component="menubar" scenario="typeahead" title="Typeahead" description="Move to the next menu whose label matches the typed prefix." :index="1" />
 
 ## Anatomy
 

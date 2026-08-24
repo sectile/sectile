@@ -17,12 +17,6 @@
 
 <ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="복합 메뉴 실행 요소와 함께 써도 링크의 기본 이동 동작을 유지합니다." :index="1" />
 
-### 비활성 항목
-
-키보드와 포인터 입력을 받지 않습니다.
-
-<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="2" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

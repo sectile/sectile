@@ -11,12 +11,6 @@
 
 <ComponentExample component="cascade-select" scenario="location" title="지역" description="국가에서 도시까지 위치를 단계별로 선택합니다." :index="0" />
 
-### 비활성 항목
-
-키보드와 포인터 입력을 받지 않습니다.
-
-<ComponentExample component="cascade-select" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="1" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

@@ -17,12 +17,6 @@ Preserve native link navigation alongside compound menu triggers.
 
 <ComponentExample component="navigation-menu" scenario="links" title="Links" description="Preserve native link navigation alongside compound menu triggers." :index="1" />
 
-### Disabled
-
-Remove the control from keyboard and pointer interaction.
-
-<ComponentExample component="navigation-menu" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="2" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

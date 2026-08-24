@@ -17,12 +17,6 @@ Switch to a focused seven-day view while keeping selection and paging available.
 
 <ComponentExample component="calendar" scenario="week" title="Week" description="Switch to a focused seven-day view while keeping selection and paging available." :index="1" />
 
-### Disabled weekends
-
-Keep weekend dates visible while preventing them from becoming the selected date.
-
-<ComponentExample component="calendar" scenario="disabled-weekends" title="Disabled weekends" description="Keep weekend dates visible while preventing them from becoming the selected date." :index="2" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

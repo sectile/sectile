@@ -11,12 +11,6 @@ Choose one or more independent release channels.
 
 <ComponentExample component="checkbox-group" scenario="release-channels" title="Release channels" description="Choose one or more independent release channels." :index="0" />
 
-### Disabled choice
-
-Keep one choice visible but unavailable while other choices remain interactive.
-
-<ComponentExample component="checkbox-group" scenario="disabled-choice" title="Disabled choice" description="Keep one choice visible but unavailable while other choices remain interactive." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

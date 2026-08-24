@@ -11,12 +11,6 @@
 
 <ComponentExample component="select" scenario="environment" title="실행 환경 선택" description="팝업 목록에서 하나의 배포 환경을 고릅니다." :index="0" />
 
-### 비활성 항목 선택 항목
-
-사용할 수 없는 항목을 표시하면서 포커스와 선택 대상에서는 제외합니다.
-
-<ComponentExample component="select" scenario="disabled-option" title="비활성 항목 선택 항목" description="사용할 수 없는 항목을 표시하면서 포커스와 선택 대상에서는 제외합니다." :index="1" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

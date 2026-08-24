@@ -11,17 +11,11 @@
 
 <ComponentExample component="grid" scenario="selectable" title="선택 가능" description="격자 사이를 이동하고 현재 칸을 선택합니다." :index="0" />
 
-### 비활성 항목 끝에서 처음으로 이동
-
-격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다.
-
-<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다." :index="1" />
-
 ### 편집 가능
 
 격자 이동을 유지하면서 현재 칸의 값을 편집합니다.
 
-<ComponentExample component="grid" scenario="editable" title="편집 가능" description="격자 이동을 유지하면서 현재 칸의 값을 편집합니다." :index="2" />
+<ComponentExample component="grid" scenario="editable" title="편집 가능" description="격자 이동을 유지하면서 현재 칸의 값을 편집합니다." :index="1" />
 
 ## 구성
 

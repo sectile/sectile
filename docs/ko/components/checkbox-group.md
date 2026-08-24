@@ -11,12 +11,6 @@
 
 <ComponentExample component="checkbox-group" scenario="release-channels" title="배포 채널 색상 채널 조절" description="서로 독립된 배포 채널을 하나 이상 선택합니다." :index="0" />
 
-### 비활성 항목 선택 항목
-
-사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다.
-
-<ComponentExample component="checkbox-group" scenario="disabled-choice" title="비활성 항목 선택 항목" description="사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다." :index="1" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

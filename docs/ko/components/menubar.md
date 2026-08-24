@@ -11,17 +11,11 @@
 
 <ComponentExample component="menubar" scenario="application" title="응용 프로그램 메뉴" description="최상위 응용 프로그램 메뉴 사이를 이동한 뒤 열린 명령 목록으로 들어갑니다." :index="0" />
 
-### 비활성 항목 최상위
-
-사용할 수 없는 최상위 메뉴를 건너뛰고 양옆 메뉴 사이를 이동합니다.
-
-<ComponentExample component="menubar" scenario="disabled-root" title="비활성 항목 최상위" description="사용할 수 없는 최상위 메뉴를 건너뛰고 양옆 메뉴 사이를 이동합니다." :index="1" />
-
 ### 글자 입력으로 이동
 
 입력한 글자로 시작하는 다음 메뉴로 이동합니다.
 
-<ComponentExample component="menubar" scenario="typeahead" title="글자 입력으로 이동" description="입력한 글자로 시작하는 다음 메뉴로 이동합니다." :index="2" />
+<ComponentExample component="menubar" scenario="typeahead" title="글자 입력으로 이동" description="입력한 글자로 시작하는 다음 메뉴로 이동합니다." :index="1" />
 
 ## 구성
 

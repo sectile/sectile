@@ -11,12 +11,6 @@ Choose one deployment environment from a popup collection.
 
 <ComponentExample component="select" scenario="environment" title="Environment" description="Choose one deployment environment from a popup collection." :index="0" />
 
-### Disabled option
-
-Show an unavailable option without allowing focus or selection to land on it.
-
-<ComponentExample component="select" scenario="disabled-option" title="Disabled option" description="Show an unavailable option without allowing focus or selection to land on it." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

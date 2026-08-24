@@ -11,12 +11,6 @@ Choose a location progressively from country to city.
 
 <ComponentExample component="cascade-select" scenario="location" title="Location" description="Choose a location progressively from country to city." :index="0" />
 
-### Disabled
-
-Remove the control from keyboard and pointer interaction.
-
-<ComponentExample component="cascade-select" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

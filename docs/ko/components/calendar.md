@@ -17,12 +17,6 @@
 
 <ComponentExample component="calendar" scenario="week" title="주간 달력" description="선택과 날짜 이동 기능을 유지하면서 한 주의 7일만 집중해 봅니다." :index="1" />
 
-### 비활성 항목 주말 비활성
-
-주말 날짜는 보여 주되 선택할 수 없게 합니다.
-
-<ComponentExample component="calendar" scenario="disabled-weekends" title="비활성 항목 주말 비활성" description="주말 날짜는 보여 주되 선택할 수 없게 합니다." :index="2" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

@@ -11,17 +11,11 @@ Move through commands, skip unavailable items, and invoke the current command.
 
 <ComponentExample component="menu" scenario="commands" title="Commands" description="Move through commands, skip unavailable items, and invoke the current command." :index="0" />
 
-### Disabled
-
-Remove the control from keyboard and pointer interaction.
-
-<ComponentExample component="menu" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="1" />
-
 ### Nested
 
 Open a child command list only from its owning parent item.
 
-<ComponentExample component="menu" scenario="nested" title="Nested" description="Open a child command list only from its owning parent item." :index="2" />
+<ComponentExample component="menu" scenario="nested" title="Nested" description="Open a child command list only from its owning parent item." :index="1" />
 
 ## Anatomy
 

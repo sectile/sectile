@@ -11,12 +11,6 @@ Use vertical movement while preserving the same pane-size rules.
 
 <ComponentExample component="radio-group" scenario="vertical" title="Vertical" description="Use vertical movement while preserving the same pane-size rules." :index="0" />
 
-### Horizontal disabled
-
-Move horizontally through radio choices while skipping an unavailable option.
-
-<ComponentExample component="radio-group" scenario="horizontal-disabled" title="Horizontal disabled" description="Move horizontally through radio choices while skipping an unavailable option." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

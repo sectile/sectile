@@ -11,17 +11,11 @@
 
 <ComponentExample component="menu" scenario="commands" title="명령 실행" description="사용할 수 없는 항목은 건너뛰면서 명령 사이를 이동하고 현재 명령을 실행합니다." :index="0" />
 
-### 비활성 항목
-
-키보드와 포인터 입력을 받지 않습니다.
-
-<ComponentExample component="menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="1" />
-
 ### 하위 메뉴
 
 하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다.
 
-<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다." :index="2" />
+<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다." :index="1" />
 
 ## 구성
 

@@ -11,12 +11,6 @@ Use horizontal movement while preserving the same value and boundary rules.
 
 <ComponentExample component="toolbar" scenario="horizontal" title="Horizontal" description="Use horizontal movement while preserving the same value and boundary rules." :index="0" />
 
-### Vertical disabled
-
-Move vertically through actions while skipping an unavailable item.
-
-<ComponentExample component="toolbar" scenario="vertical-disabled" title="Vertical disabled" description="Move vertically through actions while skipping an unavailable item." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

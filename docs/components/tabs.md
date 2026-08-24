@@ -17,12 +17,6 @@ Advance automatically while still exposing pause and direct navigation controls.
 
 <ComponentExample component="tabs" scenario="automatic" title="Automatic" description="Advance automatically while still exposing pause and direct navigation controls." :index="1" />
 
-### Vertical disabled
-
-Move vertically through actions while skipping an unavailable item.
-
-<ComponentExample component="tabs" scenario="vertical-disabled" title="Vertical disabled" description="Move vertically through actions while skipping an unavailable item." :index="2" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

@@ -11,12 +11,6 @@
 
 <ComponentExample component="radio-group" scenario="vertical" title="세로 방향" description="같은 크기 규칙을 유지하면서 세로 방향으로 영역을 조절합니다." :index="0" />
 
-### 가로 방향 비활성 항목
-
-사용할 수 없는 항목을 건너뛰면서 라디오 버튼 사이를 가로로 이동합니다.
-
-<ComponentExample component="radio-group" scenario="horizontal-disabled" title="가로 방향 비활성 항목" description="사용할 수 없는 항목을 건너뛰면서 라디오 버튼 사이를 가로로 이동합니다." :index="1" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

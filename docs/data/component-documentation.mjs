@@ -1,6 +1,7 @@
-const ownershipOnlyScenarios = Object.freeze([
+const secondaryStateScenarios = Object.freeze([
   /^controlled(?:-|$)/u,
   /^readonly$/u,
+  /(?:^|-)disabled(?:-|$)/u,
 ]);
 
 const curatedScenarios = Object.freeze({
@@ -12,25 +13,25 @@ const curatedScenarios = Object.freeze({
   'tree-view': ['expanded', 'multiple', 'unavailable'],
 });
 
-function isOwnershipOnlyScenario(scenario) {
-  return ownershipOnlyScenarios.some((pattern) => pattern.test(scenario));
+function isSecondaryStateScenario(scenario) {
+  return secondaryStateScenarios.some((pattern) => pattern.test(scenario));
 }
 
 /**
  * Visual examples teach behavior that can be seen or exercised in the DOM.
- * State ownership remains documented by the public API and source examples;
- * it is not promoted to a full visual section on every component page.
+ * State ownership, readonly, and disabled behavior remain documented by the
+ * public API and accessibility contract. They are not promoted to standalone
+ * visual sections at the expense of representative component workflows.
  */
 export function documentedScenarios(component) {
   const declared = component.scenarios?.dom;
   if (!Array.isArray(declared)) return Object.freeze([]);
 
-  const selected = curatedScenarios[component.id]
-    ?? declared.filter((scenario) => !isOwnershipOnlyScenario(scenario));
+  const selected = curatedScenarios[component.id] ?? declared;
 
-  return Object.freeze([...selected]);
+  return Object.freeze(selected.filter((scenario) => !isSecondaryStateScenario(scenario)));
 }
 
 export function isStandaloneDocumentationScenario(scenario) {
-  return !isOwnershipOnlyScenario(scenario);
+  return !isSecondaryStateScenario(scenario);
 }

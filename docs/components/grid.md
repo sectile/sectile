@@ -11,17 +11,11 @@ Move through a grid and select the active cell.
 
 <ComponentExample component="grid" scenario="selectable" title="Selectable" description="Move through a grid and select the active cell." :index="0" />
 
-### Disabled wrap
-
-Skip unavailable cells when movement wraps across a grid boundary.
-
-<ComponentExample component="grid" scenario="disabled-wrap" title="Disabled wrap" description="Skip unavailable cells when movement wraps across a grid boundary." :index="1" />
-
 ### Editable
 
 Move through grid cells and edit the active value without losing two-dimensional navigation.
 
-<ComponentExample component="grid" scenario="editable" title="Editable" description="Move through grid cells and edit the active value without losing two-dimensional navigation." :index="2" />
+<ComponentExample component="grid" scenario="editable" title="Editable" description="Move through grid cells and edit the active value without losing two-dimensional navigation." :index="1" />
 
 ## Anatomy
 
