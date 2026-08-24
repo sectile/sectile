@@ -137,9 +137,18 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   assert.deepEqual(monthUpdates.at(-1), { year: 2026, month: 9, day: 1 });
 
   const yearGrid = host.querySelector('[data-scope="year-picker"][data-part="grid"]');
+  const initialYearPage = Array.from(yearGrid?.querySelectorAll('[data-sectile-picker-year]') ?? [], (cell) => cell.dataset.sectilePickerYear);
+  host.querySelector('[data-sectile-picker-year="2023"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await settle();
+  assert.deepEqual(Array.from(yearGrid?.querySelectorAll('[data-sectile-picker-year]') ?? [], (cell) => cell.dataset.sectilePickerYear), initialYearPage);
+
   yearGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
   await settle();
-  assert.equal(host.querySelector('[data-sectile-picker-year="2032"]')?.getAttribute('tabindex'), '0');
+  assert.equal(host.querySelector('[data-sectile-picker-year="2027"]')?.getAttribute('tabindex'), '0');
+
+  const currentYear = String(new Date().getFullYear());
+  assert.equal(host.querySelector(`[data-sectile-picker-year="${currentYear}"]`)?.hasAttribute('data-current'), true);
+  assert.equal(host.querySelector(`[data-sectile-picker-year="${currentYear}"]`)?.getAttribute('aria-current'), 'date');
 
   app.unmount();
   host.remove();

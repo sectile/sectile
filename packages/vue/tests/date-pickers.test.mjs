@@ -149,6 +149,7 @@ test('Vue period pickers expose distinct scopes and projections', async () => {
   assert.match(yearPicker, /data-part="previous-page"/);
   assert.match(yearPicker, /value="2026"/);
   assert.match(yearPicker, /data-sectile-picker-year="2026"[^>]*data-selected/u);
+  assert.match(yearPicker, /<button(?=[^>]*data-sectile-picker-year="2026")(?=[^>]*data-current)(?=[^>]*aria-current="date")[^>]*>/u);
   assert.match(yearPicker, /data-part="next-page"/);
   assert.equal((yearPicker.match(/data-part="cell"/g) ?? []).length, 12);
   assert.match(yearRange, /data-scope="year-range-picker"/);

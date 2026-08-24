@@ -20,7 +20,7 @@ export interface PickerYearValue { readonly year: number }
 export interface PickerRootSlotProps { readonly value: PickerValue; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly DatePickerMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: DatePickerViewMode; readonly disabled: boolean; readonly: boolean }
 export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
 export interface PickerMonthCellSlotProps { readonly value: DatePickerMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
-export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
+export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 export interface PickerRootConfig {
@@ -105,9 +105,10 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       const localValue = shallowRef<PickerValue>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
       const localOpen = shallowRef(props.open ?? props.defaultOpen);
       const localHighlight = shallowRef<DateValue>(props.highlightedValue ?? props.defaultHighlightedValue ?? dateOf(localValue.value) ?? Object.freeze({ year: 1970, month: 1, day: 1 }));
+      const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
       const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
       const months = shallowRef<readonly (readonly DatePickerMonthValue[])[]>(yearFor(localHighlight.value.year));
-      const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFor(localHighlight.value.year, yearPageSize));
+      const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFrom(yearPageStart.value, yearPageSize));
       const localView = shallowRef(Object.freeze({ year: localHighlight.value.year, month: localHighlight.value.month }));
       const localViewMode = shallowRef<DatePickerViewMode>(props.defaultView);
       const controlled = { value: props.modelValue !== undefined, open: props.open !== undefined, highlighted: props.highlightedValue !== undefined };
@@ -139,7 +140,10 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         if (connection.value !== undefined) {
           dates.value = picked.viewMode === 'week' ? [connection.value.getWeek()] : picked.viewMode === 'month' ? connection.value.getMonth() : [];
           months.value = picked.viewMode === 'year' ? connection.value.getYear() : [];
-          years.value = yearsFor(picked.view.year, yearPageSize);
+          if (granularity === 'year') {
+            yearPageStart.value = pageStartContaining(picked.highlighted.year, yearPageStart.value, yearPageSize);
+            years.value = yearsFrom(yearPageStart.value, yearPageSize);
+          }
         }
         refreshCells();
         void nextTick(refreshCells);
@@ -319,11 +323,13 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
     slots: Object as SlotsType<{ default: (props: PickerYearCellSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
       const root = useRoot(name);
+      const currentYear = new Date().getFullYear();
       const state = computed<PickerYearCellSlotProps>(() => ({
         value: props.value,
         selected: yearContainsValue(root.state.value.value, props.value),
         inRange: periodInRange(root.state.value.value, { year: props.value.year, month: 1, day: 1 }, { year: props.value.year, month: 12, day: 31 }),
         highlighted: root.state.value.highlightedValue.year === props.value.year,
+        current: props.value.year === currentYear,
         disabled: root.state.value.disabled || !root.periodAvailable(props.value),
       }));
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -332,9 +338,11 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
         onClick: (event: MouseEvent) => { event.stopPropagation(); if (!state.value.disabled) root.selectYear(props.value); },
         role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange),
         'aria-disabled': String(state.value.disabled),
+        'aria-current': state.value.current ? 'date' : undefined,
         'data-sectile-picker-year': String(props.value.year),
         'data-scope': root.scope, 'data-part': part, 'data-selected': state.value.selected ? '' : undefined,
         'data-in-range': state.value.inRange ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
+        'data-current': state.value.current ? '' : undefined,
       }), { default: () => slots['default']?.(state.value) });
     },
   });
@@ -388,12 +396,16 @@ function pickerInputType(_part: PickerInputPart): 'text' {
 }
 function monthFor(value: DateValue): readonly (readonly DateValue[])[] { const result = createDatePickerMonth({ year: value.year, month: value.month }); if (!result.ok) throw new TypeError(result.error.message); return result.value; }
 function yearFor(year: number): readonly (readonly DatePickerMonthValue[])[] { const result = createDatePickerYear(year); if (!result.ok) throw new TypeError(result.error.message); return result.value; }
-function yearsFor(year: number, pageSize: number): readonly (readonly PickerYearValue[])[] {
-  const start = year - Math.floor(pageSize / 2);
+function yearsFrom(start: number, pageSize: number): readonly (readonly PickerYearValue[])[] {
   const columns = 4;
   return Array.from({ length: Math.ceil(pageSize / columns) }, (_row, rowIndex) =>
     Array.from({ length: columns }, (_column, columnIndex) => Object.freeze({ year: start + rowIndex * columns + columnIndex })),
   );
+}
+function pageStartContaining(year: number, currentStart: number, pageSize: number): number {
+  if (year < currentStart) return currentStart - Math.ceil((currentStart - year) / pageSize) * pageSize;
+  if (year >= currentStart + pageSize) return currentStart + Math.floor((year - currentStart) / pageSize) * pageSize;
+  return currentStart;
 }
 interface PeriodPolicies {
   readonly min?: DateValue;

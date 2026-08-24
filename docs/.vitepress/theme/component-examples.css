@@ -749,7 +749,9 @@
   .catalog-month-grid { display: grid; grid-template-columns: repeat(3, minmax(5rem, 1fr)); overflow: hidden; border: 1px solid var(--demo-border); border-radius: 0.75rem; }
   .catalog-month-grid button { min-height: 4rem; border: 0; border-right: 1px solid var(--demo-divider); border-bottom: 1px solid var(--demo-divider); border-radius: 0; color: var(--demo-text-2); background: var(--demo-surface); }
   .catalog-month-grid button[data-selected] { color: var(--demo-on-brand); background: var(--demo-brand); }
-  .catalog-year-grid button { min-height: 3.25rem; }
+  .catalog-year-grid button { position: relative; min-height: 3.25rem; }
+  .catalog-year-grid button[data-current]::after { position: absolute; bottom: 0.4rem; left: 50%; width: 0.3rem; height: 0.3rem; border-radius: 50%; background: var(--demo-brand); content: ''; transform: translateX(-50%); }
+  .catalog-year-grid button[data-selected][data-current]::after { background: var(--demo-on-brand); }
   .catalog-range-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: var(--catalog-temporal-gap, 0.5rem); }
   .catalog-range-fields--single { grid-template-columns: minmax(0, 1fr) auto; }
   .catalog-field { display: grid; min-width: 0; gap: 0.35rem; color: var(--demo-muted); font-size: 0.75rem; font-weight: 700; }
