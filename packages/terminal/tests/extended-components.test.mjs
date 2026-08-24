@@ -90,6 +90,9 @@ test('terminal pin and tags inputs handle text, deletion, and completion', () =>
 
   const tags = createTagsInput({ defaultValue: ['dom'] });
   for (const text of ['t', 'u', 'i']) tags.handleKeyboardInput({ text });
+  tags.handleKeyboardInput({ key: 'backspace' });
+  assert.equal(tags.getSnapshot().state.draft, 'tu');
+  tags.handleKeyboardInput({ text: 'i' });
   tags.handleKeyboardInput({ key: 'enter' });
   assert.deepEqual(tags.getSnapshot().state.tags, ['dom', 'tui']);
   tags.handleKeyboardInput({ key: 'backspace' });

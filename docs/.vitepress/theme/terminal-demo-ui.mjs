@@ -9,12 +9,18 @@ export const ansi = Object.freeze({
   reset: appearance.reset,
   bold: appearance.open({ bold: true }),
   dim: appearance.open('muted'),
+  disabled: appearance.open({ dim: true, strikethrough: true }),
   cyan: appearance.open('accent'),
   yellow: appearance.open('warning'),
   inverse: appearance.open({ inverse: true }),
   current: appearance.open('current'),
   editing: appearance.open('editing'),
 });
+
+// Save the actual xterm cursor at the logical text insertion point. The
+// renderer restores it after redrawing the whole example, so IME composition
+// stays attached to the owning input even when state updates re-render it.
+export const terminalInputCursor = '\u001b[s';
 
 export function styled(style, value, width) {
   return `${style}${fitTerminalText(value, width)}${ansi.reset}`;

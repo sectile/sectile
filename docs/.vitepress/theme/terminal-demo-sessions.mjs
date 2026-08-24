@@ -23,6 +23,11 @@ import { createDatePicker } from '@sectile/terminal/date-picker';
 import { createDateRangePicker } from '@sectile/terminal/date-range-picker';
 import { createDateTimePicker } from '@sectile/terminal/date-time-picker';
 import { createDateTimeRangePicker } from '@sectile/terminal/date-time-range-picker';
+import { createRangeCalendar } from '@sectile/terminal/range-calendar';
+import { createMonthPicker } from '@sectile/terminal/month-picker';
+import { createMonthRangePicker } from '@sectile/terminal/month-range-picker';
+import { createYearPicker } from '@sectile/terminal/year-picker';
+import { createYearRangePicker } from '@sectile/terminal/year-range-picker';
 import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
@@ -37,7 +42,7 @@ import { createTimeRangeField } from '@sectile/terminal/time-range-field';
 import { createTimer } from '@sectile/terminal/timer';
 import { createToast } from '@sectile/terminal/toast';
 import { createToggleGroup } from '@sectile/terminal/toggle-group';
-import { ansi, plain, styled, terminalCell } from './terminal-demo-ui.mjs';
+import { ansi, plain, styled, terminalCell, terminalInputCursor } from './terminal-demo-ui.mjs';
 
 const terminalCalendarMonthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'long',
@@ -77,6 +82,11 @@ export const demos = Object.freeze([
   { id: 'date-range-picker', label: 'Date range picker', description: 'range anchor · inclusive selection · [/] cases', readOnly: true, create: createDateRangePickerDemo },
   { id: 'date-time-picker', label: 'Date-time picker', description: 'civil date-time · calendar · wall clock · [/] cases', readOnly: true, create: createDateTimePickerDemo },
   { id: 'date-time-range-picker', label: 'Date-time range picker', description: 'civil range · endpoint times · [/] cases', readOnly: true, create: createDateTimeRangePickerDemo },
+  { id: 'range-calendar', label: 'Range calendar', description: 'inclusive range · calendar grid · [/] cases', readOnly: true, create: createRangeCalendarDemo },
+  { id: 'month-picker', label: 'Month picker', description: 'month grid · year paging · [/] cases', readOnly: true, create: createMonthPickerDemo },
+  { id: 'month-range-picker', label: 'Month range picker', description: 'inclusive month span · year paging · [/] cases', readOnly: true, create: createMonthRangePickerDemo },
+  { id: 'year-picker', label: 'Year picker', description: 'year grid · page navigation · [/] cases', readOnly: true, create: createYearPickerDemo },
+  { id: 'year-range-picker', label: 'Year range picker', description: 'inclusive year span · page navigation · [/] cases', readOnly: true, create: createYearRangePickerDemo },
   { id: 'dialog', label: 'Dialog', description: 'modal · non-modal · controlled · [/] cases', create: (host) => createPopupDemo(host, 'dialog') },
   { id: 'alert-dialog', label: 'Alert dialog', description: 'destructive · unsaved · controlled · [/] cases', create: (host) => createPopupDemo(host, 'alert-dialog') },
   { id: 'tooltip', label: 'Tooltip', description: 'closed · open · controlled · [/] cases', create: (host) => createPopupDemo(host, 'tooltip') },
@@ -146,7 +156,7 @@ function createGridDemo(host) {
           `${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}${notice}${ansi.reset}`, '',
           ...rows.map((row) => row.map((id) => scenario.disabled.includes(id)
             ? `${ansi.dim}${plain(`× ${id}`, cellWidth)}${ansi.reset}`
-            : terminalCell(id, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' })).join(' ')),
+            : `${terminalCell(id, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' })}${state.cursor.current === id && state.editMode === 'editing' ? terminalInputCursor : ''}`).join(' ')),
           '', `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}  mode=${state.editMode}`, `boundary=${scenario.boundary}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },
@@ -425,7 +435,7 @@ function createPinInputDemo(host) {
   ], (scenario) => {
     let value = scenario.value; let completed = null; let connection;
     connection = createPinInput({ ...scenario.interaction, length: scenario.length, policies: { accept: (part) => scenario.mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(scenario.controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: value }), onComplete: (next) => { completed = next; host.render(); }, onUpdate: host.render });
-    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}type characters · left/right · backspace/delete${ansi.reset}`, '', state.values.map((part, index) => state.current === index ? `${ansi.inverse} ${part || '·'} ${ansi.reset}` : `[${part || '·'}]`).join(' '), '', `value=${state.values.join('')}  current=${state.current + 1}/${scenario.length}`, `complete=${completed ?? 'no'}  mode=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}type characters · left/right · backspace/delete${ansi.reset}`, '', state.values.map((part, index) => state.current === index ? `${terminalInputCursor}${ansi.inverse} ${part || '·'} ${ansi.reset}` : `[${part || '·'}]`).join(' '), '', `value=${state.values.join('')}  current=${state.current + 1}/${scenario.length}`, `complete=${completed ?? 'no'}  mode=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -438,7 +448,22 @@ function createTagsInputDemo(host) {
     let value = [...scenario.tags]; let inputValue = ''; let connection;
     connection = createTagsInput({ ...scenario.interaction, policies: { maxTags: scenario.maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(scenario.controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: value }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, inputValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}type · enter/comma adds · backspace removes${ansi.reset}`, '', state.tags.map((tag, index) => state.current === index ? `${ansi.inverse} ${tag} × ${ansi.reset}` : `[${tag} ×]`).join(' ') || `${ansi.dim}No tags${ansi.reset}`, '', `draft=${state.draft || '−'}  tags=${state.tags.length}/${scenario.maxTags}  current=${state.current ?? 'input'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return {
+      handle: (input) => connection.handleKeyboardInput(input),
+      lines() {
+        const { state } = connection.getSnapshot();
+        return [
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
+          `${ansi.dim}type · enter/comma adds · backspace removes${ansi.reset}`,
+          '',
+          state.tags.map((tag, index) => state.current === index ? `${ansi.inverse} ${tag} × ${ansi.reset}` : `[${tag} ×]`).join(' ') || `${ansi.dim}No tags${ansi.reset}`,
+          '',
+          `${ansi.dim}Draft${ansi.reset}  ${state.draft}${terminalInputCursor}`,
+          '',
+          `tags=${state.tags.length}/${scenario.maxTags}  current=${state.current ?? 'input'}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+        ];
+      },
+    };
   });
 }
 
@@ -523,7 +548,7 @@ function createColorPickerDemo(host) {
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ channel · ↑/↓ value · F format${ansi.reset}`, '',
           `${state.channel.padEnd(7)} [${bar}] ${value}`,
-          '', `format=${state.format}  value=${plain(connection.getText(), Math.max(1, width - 22))}`,
+          '', `format=${state.format}  value=${plain(`${connection.getText()}${terminalInputCursor}`, Math.max(1, width - 22))}`,
           `css=${connection.getCSSColor()}`,
         ];
       },
@@ -560,11 +585,11 @@ function createRangeFieldDemo(host, kind) {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
         const { state } = connection.getSnapshot();
-        const line = (endpoint) => terminalCell(
+        const line = (endpoint) => `${terminalCell(
           `${endpoint === 'start' ? 'Start' : 'End  '}  ${connection.getText(endpoint) || '—'}`,
           Math.min(56, width),
           { current: state.active === endpoint },
-        );
+        )}${state.active === endpoint ? terminalInputCursor : ''}`;
         return [
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Tab endpoint · type · arrows adjust · Enter commit${ansi.reset}`, '',
@@ -596,7 +621,7 @@ function createEditableDemo(host) {
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Enter edit/commit · Escape cancel · type while editing${ansi.reset}`, '',
           state.editing
-            ? `${ansi.editing}${plain(` ${state.draft || 'type a value…'} `, Math.min(56, width))}${ansi.reset}`
+            ? `${ansi.editing}${plain(` ${state.draft || 'type a value…'}${terminalInputCursor} `, Math.min(56, width))}${ansi.reset}`
             : plain(state.value || '—', Math.min(56, width)),
           '', `mode=${state.editing ? 'editing' : 'preview'}  value=${state.value || '−'}`,
         ];
@@ -810,6 +835,17 @@ function scenarioDemo(host, scenarios, create, options = {}) {
   ];
   let index = Math.max(0, Math.min(host.initialCase ?? 0, scenarios.length - 1));
   let session = create(scenarios[index]);
+  function prefixLines() {
+    const interaction = scenarios[index]?.interaction?.disabled
+      ? 'disabled · input rejected'
+      : scenarios[index]?.interaction?.readOnly
+        ? 'read-only · navigation allowed, mutation rejected'
+        : null;
+    return [
+      ...(host.documentation ? [] : [`${ansi.dim}case ${index + 1}/${scenarios.length} · ${previousCaseKey} / ${nextCaseKey} change case${ansi.reset}`]),
+      ...(interaction === null ? [] : [`${ansi.yellow}${interaction}${ansi.reset}`]),
+    ];
+  }
   return {
     handle(input) {
       if (!host.documentation && (input.key === previousCaseKey || input.key === nextCaseKey)) {
@@ -822,14 +858,8 @@ function scenarioDemo(host, scenarios, create, options = {}) {
       return session.handle(input);
     },
     lines(width) {
-      const interaction = scenarios[index]?.interaction?.disabled
-        ? 'disabled · input rejected'
-        : scenarios[index]?.interaction?.readOnly
-          ? 'read-only · navigation allowed, mutation rejected'
-          : null;
       return [
-        ...(host.documentation ? [] : [`${ansi.dim}case ${index + 1}/${scenarios.length} · ${previousCaseKey} / ${nextCaseKey} change case${ansi.reset}`]),
-        ...(interaction === null ? [] : [`${ansi.yellow}${interaction}${ansi.reset}`]),
+        ...prefixLines(),
         ...session.lines(width),
       ];
     },
@@ -1242,7 +1272,7 @@ function createSpinButtonDemo(host) {
         return [
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}type draft · Enter commit · Escape cancel${ansi.reset}`,
-          '', `[-]  ${styled(ansi.cyan, connection.getText(), 12)}  [+]`, '',
+          '', `[-]  ${styled(ansi.cyan, `${connection.getText()}${terminalInputCursor}`, 12)}  [+]`, '',
           `value=${state.value}  draft=${state.draft ?? '−'}`,
           `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
@@ -1284,7 +1314,7 @@ function createNumberFieldDemo(host) {
         const { state } = connection.getSnapshot();
         const text = connection.getText();
         const caret = connection.getCaret();
-        const editing = `${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
+        const editing = `${text.slice(0, caret)}${terminalInputCursor}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
         return [
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.detail} · Enter commit · Escape cancel${ansi.reset}`,
@@ -1366,7 +1396,7 @@ function createQuantityFieldDemo(host) {
         const { state } = connection.getSnapshot();
         const text = connection.getText();
         const caret = connection.getCaret();
-        const editing = `${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
+        const editing = `${text.slice(0, caret)}${terminalInputCursor}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
         const displaySymbol = scenario.registry.get(state.displayUnit)?.symbol ?? state.displayUnit;
         const canonicalSymbol = scenario.registry.get(scenario.canonicalUnit)?.symbol ?? scenario.canonicalUnit;
         if (host.documentation) {
@@ -1439,7 +1469,7 @@ function createTerminalTemporalField(host, scenario, kind) {
       return [
         `${ansi.bold}${scenario.title}${ansi.reset}`,
         `${ansi.dim}${scenario.detail} · ↑/↓ segment · Enter commit · Escape cancel${ansi.reset}`,
-        '', plain(`${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`, Math.max(1, width - 2)), '',
+        '', plain(`${text.slice(0, caret)}${terminalInputCursor}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`, Math.max(1, width - 2)), '',
         `value=${state.value === null ? '−' : format(state.value)}  caret=${caret}`,
         `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
       ];
@@ -1477,6 +1507,180 @@ function createDateTimeRangePickerDemo(host) {
     { title: 'Multi-day office hours', controlled: false },
     { title: 'Controlled date-time range', controlled: true },
   ], (scenario) => createTerminalDateTimePicker(host, scenario, true));
+}
+
+function createRangeCalendarDemo(host) {
+  return scenarioDemo(host, [
+    { title: 'Booking range', controlled: false, bounded: false },
+    { title: 'Bounded booking range', controlled: false, bounded: true },
+    { title: 'Controlled calendar range', controlled: true, bounded: false },
+  ], (scenario) => createTerminalPicker(host, scenario, true, createRangeCalendar));
+}
+
+function createMonthPickerDemo(host) {
+  return createPeriodPickerDemo(host, 'month', false, createMonthPicker, [
+    'Billing month', 'Fiscal year start', 'Controlled month',
+  ]);
+}
+
+function createMonthRangePickerDemo(host) {
+  return createPeriodPickerDemo(host, 'month', true, createMonthRangePicker, [
+    'Reporting period', 'Bounded quarter', 'Controlled month range',
+  ]);
+}
+
+function createYearPickerDemo(host) {
+  return createPeriodPickerDemo(host, 'year', false, createYearPicker, [
+    'Graduation year', 'Planning year', 'Controlled year',
+  ]);
+}
+
+function createYearRangePickerDemo(host) {
+  return createPeriodPickerDemo(host, 'year', true, createYearRangePicker, [
+    'Roadmap horizon', 'Bounded roadmap', 'Controlled year range',
+  ]);
+}
+
+function createPeriodPickerDemo(host, unit, range, create, titles) {
+  return scenarioDemo(host, titles.map((title, index) => ({
+    title,
+    controlled: index === 2,
+    bounded: index === 1,
+  })), (scenario) => createTerminalPeriodPicker(host, scenario, unit, range, create));
+}
+
+function createTerminalPeriodPicker(host, scenario, unit, range, create) {
+  const currentYear = new Date().getFullYear();
+  const initialHighlight = unwrap(createDateValue(currentYear, unit === 'month' ? 4 : 1, 1));
+  let externalValue = range
+    ? unwrap(createDateRange(
+        initialHighlight,
+        unwrap(createDateValue(currentYear + (unit === 'year' ? 3 : 0), unit === 'month' ? 9 : 1, 1)),
+      ))
+    : initialHighlight;
+  let externalHighlight = initialHighlight;
+  let externalOpen = true;
+  let pageStart = Math.floor((currentYear - 1) / 12) * 12 + 1;
+  let syncScheduled = false;
+  let connection;
+  const policies = scenario.bounded
+    ? {
+        min: unwrap(createDateValue(currentYear - 2, 1, 1)),
+        max: unwrap(createDateValue(currentYear + 6, 12, 31)),
+      }
+    : {};
+  connection = create({
+    ...scenario.interaction,
+    policies,
+    ...(scenario.controlled
+      ? {
+          value: externalValue,
+          highlightedValue: externalHighlight,
+          open: externalOpen,
+          onValueChange: (value) => { externalValue = value; scheduleSync(); },
+          onHighlightedValueChange: (value) => { externalHighlight = value; scheduleSync(); },
+          onOpenChange: (open) => { externalOpen = open; scheduleSync(); },
+        }
+      : {
+          defaultValue: externalValue,
+          defaultHighlightedValue: externalHighlight,
+          defaultOpen: true,
+        }),
+    onUpdate: host.render,
+  });
+  function scheduleSync() {
+    if (!scenario.controlled || syncScheduled) return;
+    syncScheduled = true;
+    queueMicrotask(() => {
+      syncScheduled = false;
+      connection.syncControlledValues({
+        value: externalValue,
+        highlightedValue: externalHighlight,
+        open: externalOpen,
+      });
+    });
+  }
+  function repeat(event, count) {
+    let handled = false;
+    for (let index = 0; index < count; index += 1) handled = connection.handleEvent(event) || handled;
+    const highlighted = range
+      ? connection.getSnapshot().state.calendar.highlighted
+      : connection.getSnapshot().state.highlighted;
+    while (highlighted.year < pageStart) pageStart -= 12;
+    while (highlighted.year > pageStart + 11) pageStart += 12;
+    return handled;
+  }
+  function handle(input) {
+    if (input.ctrlKey || input.altKey) return false;
+    if (unit === 'month') {
+      if (input.key === 'left') return repeat('previous-month', 1);
+      if (input.key === 'right') return repeat('next-month', 1);
+      if (input.key === 'up') return repeat('previous-month', 3);
+      if (input.key === 'down') return repeat('next-month', 3);
+      if (input.key === 'page-up') return repeat('previous-year', 1);
+      if (input.key === 'page-down') return repeat('next-year', 1);
+    } else {
+      if (input.key === 'left') return repeat('previous-year', 1);
+      if (input.key === 'right') return repeat('next-year', 1);
+      if (input.key === 'up') return repeat('previous-year', 3);
+      if (input.key === 'down') return repeat('next-year', 3);
+      if (input.key === 'page-up') return repeat('previous-year', 12);
+      if (input.key === 'page-down') return repeat('next-year', 12);
+    }
+    if (input.key === 'enter' || input.key === 'space') return connection.handleEvent('select-highlighted');
+    if (input.key === 'escape') return connection.handleEvent('close');
+    return false;
+  }
+  return {
+    handle,
+    lines(width) {
+      const snapshot = connection.getSnapshot().state;
+      const calendar = range ? snapshot.calendar : snapshot;
+      const selected = snapshot.value;
+      const pendingAnchor = range ? snapshot.anchor : null;
+      const cellWidth = Math.max(12, Math.min(20, Math.floor((width - 2) / 3)));
+      const values = unit === 'month'
+        ? Array.from({ length: 12 }, (_, index) => unwrap(createDateValue(calendar.highlighted.year, index + 1, 1)))
+        : Array.from({ length: 12 }, (_, index) => unwrap(createDateValue(pageStart + index, 1, 1)));
+      const key = (value) => unit === 'month' ? value.year * 12 + value.month : value.year;
+      const isAnchor = (value) => pendingAnchor !== null && key(pendingAnchor) === key(value);
+      const isSelected = (value) => pendingAnchor !== null
+        ? isAnchor(value)
+        : selected !== null && (range
+          ? key(selected.start) <= key(value) && key(value) <= key(selected.end)
+          : key(selected) === key(value));
+      const label = (value) => unit === 'month'
+        ? `${terminalCalendarShortMonthFormatter.format(new Date(value.year, value.month - 1, 1))}${isAnchor(value) ? ' start' : ''}`
+        : `${value.year}${isAnchor(value) ? ' start' : value.year === currentYear ? ' •' : ''}`;
+      const rows = Array.from({ length: 4 }, (_, row) => values.slice(row * 3, row * 3 + 3)
+        .map((value) => terminalCell(label(value), cellWidth, {
+          current: key(value) === key(calendar.highlighted),
+          selected: isSelected(value),
+        })).join(' '));
+      const selectedText = selected === null
+        ? '−'
+        : range
+          ? `${unit === 'month' ? formatDateValue(selected.start).slice(0, 7) : selected.start.year} → ${unit === 'month' ? formatDateValue(selected.end).slice(0, 7) : selected.end.year}`
+          : unit === 'month' ? formatDateValue(selected).slice(0, 7) : String(selected.year);
+      const highlightedText = unit === 'month'
+        ? formatDateValue(calendar.highlighted).slice(0, 7)
+        : calendar.highlighted.year;
+      const anchorText = pendingAnchor === null
+        ? null
+        : unit === 'month' ? formatDateValue(pendingAnchor).slice(0, 7) : pendingAnchor.year;
+      return [
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
+        `${ansi.dim}${anchorText === null
+          ? `arrows move · PgUp/PgDn page · Enter ${range ? 'set start' : 'select'}`
+          : `start ${anchorText} selected · move to end · Enter finish range`}${unit === 'year' ? ` · ${currentYear} • current` : ''}${ansi.reset}`,
+        '', ...rows, '',
+        ...(anchorText === null
+          ? [`${range ? 'range' : 'value'}=${selectedText}  highlighted=${highlightedText}`]
+          : [`start=${anchorText}  end=pending  highlighted=${highlightedText}`, `${ansi.dim}previous range=${selectedText}${ansi.reset}`]),
+        `open=${calendar.open}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+      ];
+    },
+  };
 }
 
 function createTerminalDateTimePicker(host, scenario, range) {
@@ -1525,7 +1729,7 @@ function createTerminalDateTimePicker(host, scenario, range) {
   };
 }
 
-function createTerminalPicker(host, scenario, range) {
+function createTerminalPicker(host, scenario, range, factory) {
   const initial = unwrap(createDateValue(2026, 8, 22));
   let externalValue = range ? unwrap(createDateRange(unwrap(createDateValue(2026, 8, 18)), initial)) : initial;
   let externalHighlight = initial; let externalOpen = true; let syncScheduled = false; let connection;
@@ -1533,7 +1737,7 @@ function createTerminalPicker(host, scenario, range) {
     ...(scenario.weekdaysOnly ? { unavailable: (value) => terminalISOWeekday(value) >= 6 } : {}),
     ...(scenario.bounded ? { min: unwrap(createDateValue(2026, 8, 1)), max: unwrap(createDateValue(2026, 10, 31)) } : {}),
   };
-  const create = range ? createDateRangePicker : createDatePicker;
+  const create = factory ?? (range ? createDateRangePicker : createDatePicker);
   connection = create({
     ...scenario.interaction, policies,
     ...(scenario.controlled
@@ -1861,10 +2065,19 @@ function createCalendarDemo(host) {
         const { state } = connection.getSnapshot(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
         return [
           `${ansi.bold}${scenario.title} · ${page.label}${ansi.reset}`, '',
-          ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
-          ...page.rows.map((week) => week.map((id) => isTerminalWeekend(id) && scenario.disabledWeekends
-            ? `${ansi.dim}${plain(calendarCellLabel(id, page), cellWidth)}${ansi.reset}`
-            : terminalCell(calendarCellLabel(id, page), cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id) })).join(' ')),
+          ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(`  ${day}`, cellWidth)).join(' '),
+          ...page.rows.map((week) => week.map((id) => {
+            if (isTerminalWeekend(id) && scenario.disabledWeekends) {
+              return terminalCalendarStatusCell(id, cellWidth, ansi.disabled);
+            }
+            if (!isTerminalCalendarMonth(id, page)) {
+              return terminalCalendarStatusCell(id, cellWidth, ansi.dim);
+            }
+            return terminalCell(calendarCellLabel(id), cellWidth, {
+              current: state.cursor.current === id,
+              selected: state.selection.has(id),
+            });
+          }).join(' ')),
           '', `view=${page.key}  current=${state.cursor.current ?? '−'}`, `selected=${selectedDate ?? '−'}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },
@@ -1896,11 +2109,19 @@ function shiftCalendarMonth(view, direction, from) {
   return new Date(first.getFullYear(), first.getMonth(), Math.min(source.getDate(), lastDay));
 }
 
-function calendarCellLabel(id, page) {
+function calendarCellLabel(id) {
+  return String(calendarDateFromID(id).getDate());
+}
+
+function terminalCalendarStatusCell(id, width, style) {
+  const label = calendarCellLabel(id);
+  return `  ${style}${label}${ansi.reset}${' '.repeat(Math.max(0, width - 2 - label.length))}`;
+}
+
+function isTerminalCalendarMonth(id, page) {
   const date = calendarDateFromID(id);
-  return date.getMonth() === page.date.getMonth()
-    ? String(date.getDate())
-    : `${terminalCalendarShortMonthFormatter.format(date)}${date.getDate()}`;
+  return date.getFullYear() === page.date.getFullYear()
+    && date.getMonth() === page.date.getMonth();
 }
 
 function addCalendarDays(date, amount) {
@@ -2004,12 +2225,14 @@ function createTextDemo(host) {
       lines(width) {
         const { state } = connection.getSnapshot();
         const value = connection.getValue();
-        const caret = Math.min(width - 1, state.snapshot.selection.focusCodeUnitOffset);
+        const focus = state.snapshot.selection.focusCodeUnitOffset;
+        const caret = Math.min(width - 1, focus);
+        const valueWithCursor = `${value.slice(0, focus)}${terminalInputCursor}${value.slice(focus)}`;
         return [
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Unicode-safe replace · ${scenario.controlled ? 'controlled' : 'uncontrolled'}${ansi.reset}`,
           '',
-          ...value.split('\n').map((line) => plain(line || ' ', width)),
+          ...valueWithCursor.split('\n').map((line) => plain(line || ' ', width)),
           `${' '.repeat(Math.max(0, caret))}${ansi.cyan}▲${ansi.reset}`,
           '',
           `length=${value.length}  selection=${state.snapshot.selection.startCodeUnitOffset}:${state.snapshot.selection.endCodeUnitOffset}`,
@@ -2053,7 +2276,7 @@ function createComboboxDemo(host) {
       lines(width) {
         const { state } = connection.getSnapshot(); const query = connection.getInputValue(); const candidates = items.filter((item) => matches(item.label, query));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}`, '', `query  ${plain(query || 'type to filter…', Math.max(1, width - 7))}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, '', `query  ${plain(`${query || ''}${terminalInputCursor}${query ? '' : 'type to filter…'}`, Math.max(1, width - 7))}`, '',
           ...(state.popupOpen ? candidates.map((item) => terminalCell(item.label, Math.min(48, width), { current: state.cursor.current === item.id, selected: state.selection.has(item.id) })) : [`${ansi.dim}popup closed${ansi.reset}`]),
           '', `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}  accepted=${accepted ?? '−'}`, `matching=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
@@ -2100,7 +2323,7 @@ function createTreeGridDemo(host) {
         const { model } = connection; const { tree, grid } = model; const { state } = connection.getSnapshot(); const visibleRows = new Set(tree.visible(state.expansion).ids); const statusWidth = Math.max(10, Math.min(20, Math.floor(width * 0.28))); const nameWidth = Math.max(18, width - statusWidth - 1); const table = [`${ansi.dim}${plain('  Name', nameWidth)} ${plain('Status', statusWidth)}${ansi.reset}`];
         for (let rowIndex = 0; rowIndex < grid.rowCount; rowIndex += 1) {
           const rowID = model.rowIDs[rowIndex]; if (rowID === undefined || !visibleRows.has(rowID)) continue; const nameID = grid.cellAt(rowIndex, 0); const statusID = grid.cellAt(rowIndex, 1); if (nameID === null || statusID === null) continue; const depth = tree.depthOf(rowID) ?? 0; const disclosure = tree.isLeaf(rowID) === false ? state.expansion.has(rowID) ? '▾' : '▸' : '·';
-          const cell = (id, label, cellWidth, prefix = '') => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`${prefix}× ${label}`, cellWidth)}${ansi.reset}` : terminalCell(`${prefix}${label}`, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' });
+          const cell = (id, label, cellWidth, prefix = '') => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`${prefix}× ${label}`, cellWidth)}${ansi.reset}` : `${terminalCell(`${prefix}${label}`, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' })}${state.cursor.current === id && state.editMode === 'editing' ? terminalInputCursor : ''}`;
           table.push(`${cell(nameID, values.get(nameID) ?? '', nameWidth, `${'  '.repeat(depth)}${disclosure} `)} ${cell(statusID, values.get(statusID) ?? '', statusWidth)}`);
         }
         return [

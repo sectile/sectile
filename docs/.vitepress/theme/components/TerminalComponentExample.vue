@@ -39,9 +39,7 @@ function createSession() {
   session?.disconnect?.();
   const current = definition.value;
   if (!current) {
-    session = undefined;
-    queueRender();
-    return;
+    throw new Error(`Missing terminal example for component: ${props.component}`);
   }
 
   const host = {
@@ -71,23 +69,17 @@ function stripUnsupportedAnsi(value) {
 }
 
 function renderTerminal() {
-  if (!terminal) return;
+  if (!terminal || !session) return;
   const width = Math.max(28, terminal.cols || 72);
-  const lines = session
-    ? session.lines(width).map(stripUnsupportedAnsi)
-    : [
-        `\u001b[1m${props.title}\u001b[0m`,
-        '',
-        isKorean.value
-          ? '이 컴포넌트의 터미널 예시는 아직 제공되지 않습니다.'
-          : 'A terminal example is not available for this component yet.',
-      ];
+  const lines = session.lines(width).map(stripUnsupportedAnsi);
   const visible = lines.slice(0, Math.max(1, terminal.rows));
+  const hasInputCursor = visible.some((line) => line.includes('\u001b[s'));
   terminal.write('\u001b[?25l\u001b[H');
   visible.forEach((line, index) => {
     terminal.write(`\u001b[2K${line}${index === visible.length - 1 ? '' : '\r\n'}`);
   });
   terminal.write('\u001b[J');
+  if (hasInputCursor) terminal.write('\u001b[u');
 }
 
 function handleTerminalInput(data) {
