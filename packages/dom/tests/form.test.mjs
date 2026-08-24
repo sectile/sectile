@@ -72,6 +72,7 @@ test('DOM Form reads successful native controls through FormData and observes su
     formElement.append(email, ignored);
     document.body.append(formElement);
     let entries = [];
+    let values;
 
     const form = createForm({
       form: formElement,
@@ -79,6 +80,7 @@ test('DOM Form reads successful native controls through FormData and observes su
       onSubmit(details) {
         details.event.preventDefault();
         entries = [...details.formData.entries()];
+        values = details.values;
       },
     });
 
@@ -87,6 +89,7 @@ test('DOM Form reads successful native controls through FormData and observes su
     formElement.requestSubmit();
 
     assert.deepEqual(entries, [['email', 'release@sectile.dev']]);
+    assert.equal(values.email, 'release@sectile.dev');
     assert.equal(form.state.fields[0].dirty, true);
     assert.equal(form.state.status, 'ready');
     assert.equal(form.submitStarted(), true);
@@ -99,6 +102,107 @@ test('DOM Form reads successful native controls through FormData and observes su
     }]), true);
     assert.equal(form.state.status, 'failed');
     assert.equal(form.state.fields[0].issues[0].source, 'server');
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form derives nested values from the exact submitter-aware successful controls', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const email = document.createElement('input');
+    const city = document.createElement('input');
+    const firstTag = document.createElement('input');
+    const secondTag = document.createElement('input');
+    const disabled = document.createElement('input');
+    const submitter = document.createElement('button');
+    email.name = 'profile.email';
+    email.value = 'team@sectile.dev';
+    city.name = 'addresses[0].city';
+    city.value = 'Seoul';
+    firstTag.name = 'tags';
+    firstTag.value = 'vue';
+    secondTag.name = 'tags';
+    secondTag.value = 'a11y';
+    disabled.name = 'ignored';
+    disabled.value = 'not successful';
+    disabled.disabled = true;
+    submitter.type = 'submit';
+    submitter.name = 'intent.action';
+    submitter.value = 'save';
+    formElement.append(email, city, firstTag, secondTag, disabled, submitter);
+    document.body.append(formElement);
+    let details;
+
+    createForm({
+      form: formElement,
+      onSubmit(next) {
+        next.event.preventDefault();
+        details = next;
+      },
+    });
+
+    formElement.requestSubmit(submitter);
+
+    assert.equal(details.submitter, submitter);
+    assert.deepEqual([...details.formData.entries()], [
+      ['profile.email', 'team@sectile.dev'],
+      ['addresses[0].city', 'Seoul'],
+      ['tags', 'vue'],
+      ['tags', 'a11y'],
+      ['intent.action', 'save'],
+    ]);
+    assert.equal(details.values.profile.email, 'team@sectile.dev');
+    assert.equal(details.values.addresses[0].city, 'Seoul');
+    assert.deepEqual(details.values.tags, ['vue', 'a11y']);
+    assert.equal(details.values.intent.action, 'save');
+    assert.equal('ignored' in details.values, false);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form keeps field, semantic, focus, and submission targets distinct', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const field = document.createElement('div');
+    const semanticControl = document.createElement('div');
+    const focusTarget = document.createElement('button');
+    const submission = document.createElement('input');
+    submission.type = 'hidden';
+    submission.name = 'profile.preference';
+    submission.value = 'compact';
+    field.append(semanticControl, focusTarget, submission);
+    formElement.append(field);
+    document.body.append(formElement);
+
+    const form = createForm({ form: formElement });
+    form.registerParticipant({
+      id: 'preference',
+      element: field,
+      semanticControl,
+      focusTarget,
+      submissionElements: [submission],
+      name: ['profile', 'preference'],
+      validate: () => ({
+        valid: false,
+        issues: [{
+          id: 'preference:required',
+          fieldId: 'preference',
+          source: 'field',
+          message: 'Choose a preference.',
+        }],
+      }),
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(form.state.fields[0].name, 'profile.preference');
+    assert.equal(document.activeElement, focusTarget);
   } finally {
     dom.restore();
   }

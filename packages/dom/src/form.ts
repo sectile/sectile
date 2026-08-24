@@ -1,12 +1,16 @@
 import {
   applyFormEvent,
+  createFormValues,
+  encodeFormFieldPath,
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
+  type FormFieldPath,
   type FormFieldState,
   type FormIssue,
   type FormIssueSource,
   type FormState,
+  type FormValues,
 } from '@sectile/core/form';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
@@ -16,11 +20,21 @@ export interface FormParticipantValidation<ID extends StableID = StableID> {
   readonly issues?: readonly FormIssue<ID>[];
 }
 
+export type FormSubmissionElement =
+  | HTMLButtonElement
+  | HTMLInputElement
+  | HTMLSelectElement
+  | HTMLTextAreaElement;
+
 export interface FormParticipant<ID extends StableID = StableID> {
   readonly id: ID;
   readonly element: HTMLElement;
+  /** @deprecated Use semanticControl. */
   readonly control?: HTMLElement;
-  readonly name?: string | null;
+  readonly semanticControl?: HTMLElement;
+  readonly focusTarget?: HTMLElement;
+  readonly submissionElements?: readonly FormSubmissionElement[];
+  readonly name?: FormFieldPath | null;
   readonly validate?: () => FormParticipantValidation<ID>;
   readonly focus?: () => boolean | void;
   readonly reset?: () => void;
@@ -29,6 +43,7 @@ export interface FormParticipant<ID extends StableID = StableID> {
 export interface FormSubmitDetails<ID extends StableID = StableID> {
   readonly event: SubmitEvent;
   readonly formData: FormData;
+  readonly values: FormValues;
   readonly submitter: HTMLElement | null;
   readonly state: FormState<ID>;
 }
@@ -53,7 +68,7 @@ export interface FormOptions<ID extends StableID = StableID> {
 export interface FormConnection<ID extends StableID = StableID> {
   readonly state: FormState<ID>;
   getSnapshot(): FormSnapshot<ID>;
-  getFormData(): FormData;
+  getFormData(submitter?: HTMLElement | null): FormData;
   registerParticipant(participant: FormParticipant<ID>): () => void;
   refreshParticipant(id: ID): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
@@ -114,21 +129,23 @@ export function tryCreateForm<ID extends StableID = StableID>(
     state.fields.find((candidate) => candidate.id === id)
   );
   const nativeIssue = (participant: FormParticipant<ID>): FormIssue<ID> | null => {
-    const control = participant.control ?? participant.element;
-    const candidate = control as HTMLElement & {
-      readonly validity?: ValidityState;
-      readonly validationMessage?: string;
-      readonly willValidate?: boolean;
-    };
-    if (candidate.willValidate === false || candidate.validity?.valid !== false) return null;
-    const message = candidate.validationMessage?.trim()
-      || `${participant.name ?? readControlName(control) ?? participant.id} is invalid.`;
-    return Object.freeze({
-      id: `${participant.id}:native`,
-      fieldId: participant.id,
-      message,
-      source: 'native',
-    });
+    for (const control of validationTargets(participant)) {
+      const candidate = control as HTMLElement & {
+        readonly validity?: ValidityState;
+        readonly validationMessage?: string;
+        readonly willValidate?: boolean;
+      };
+      if (candidate.willValidate === false || candidate.validity?.valid !== false) continue;
+      const message = candidate.validationMessage?.trim()
+        || `${readParticipantName(participant) ?? participant.id} is invalid.`;
+      return Object.freeze({
+        id: `${participant.id}:native`,
+        fieldId: participant.id,
+        message,
+        source: 'native',
+      });
+    }
+    return null;
   };
   const participantIssues = (
     participant: FormParticipant<ID>,
@@ -181,7 +198,10 @@ export function tryCreateForm<ID extends StableID = StableID>(
         if (participant.focus() !== false) return;
         continue;
       }
-      const control = participant.control ?? participant.element;
+      const control = participant.focusTarget
+        ?? participant.semanticControl
+        ?? participant.control
+        ?? participant.element;
       const focusable = control as HTMLElement & { readonly disabled?: boolean };
       if (focusable.hidden || focusable.disabled === true) continue;
       focusable.focus();
@@ -212,10 +232,14 @@ export function tryCreateForm<ID extends StableID = StableID>(
       event.preventDefault();
       return;
     }
-    const submitter = event.submitter instanceof HTMLElement ? event.submitter : null;
+    const submitter = event.submitter instanceof HTMLElement && isNativeSubmitter(event.submitter)
+      ? event.submitter
+      : null;
+    const formData = createNativeFormData(options.form, submitter);
     options.onSubmit?.({
       event,
-      formData: new FormData(options.form),
+      formData,
+      values: createFormValues([...formData.entries()].map(([path, value]) => ({ path, value }))),
       submitter,
       state,
     });
@@ -230,8 +254,10 @@ export function tryCreateForm<ID extends StableID = StableID>(
   const participantFor = (target: EventTarget | null): FormParticipant<ID> | undefined => {
     if (!(target instanceof Node)) return undefined;
     return [...participants.values()].find((participant) => {
-      const control = participant.control ?? participant.element;
-      return control === target || participant.element === target || participant.element.contains(target);
+      const controls = participantTargets(participant);
+      return controls.includes(target as HTMLElement)
+        || participant.element === target
+        || participant.element.contains(target);
     });
   };
   const onInput = (event: Event): void => {
@@ -276,7 +302,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       type: 'register-field',
       field: {
         id: participant.id,
-        name: participant.name ?? readControlName(participant.control ?? participant.element),
+        name: readParticipantName(participant),
         valid: validation.valid,
         issues: validation.issues ?? [],
       },
@@ -294,7 +320,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
   const connection: FormConnection<ID> = {
     get state() { return state; },
     getSnapshot: snapshot,
-    getFormData: () => new FormData(options.form),
+    getFormData: (submitter = null) => createNativeFormData(options.form, submitter),
     registerParticipant,
     refreshParticipant: (id) => {
       const participant = participants.get(id);
@@ -328,6 +354,61 @@ export function tryCreateForm<ID extends StableID = StableID>(
 function readControlName(element: HTMLElement): string | null {
   const name = (element as HTMLElement & { readonly name?: string }).name?.trim();
   return name === undefined || name.length === 0 ? null : name;
+}
+
+function readParticipantName<ID extends StableID>(
+  participant: FormParticipant<ID>,
+): string | null {
+  if (participant.name !== undefined && participant.name !== null) {
+    return encodeFormFieldPath(participant.name);
+  }
+  for (const element of participant.submissionElements ?? []) {
+    const name = readControlName(element);
+    if (name !== null) return name;
+  }
+  return readControlName(
+    participant.semanticControl ?? participant.control ?? participant.element,
+  );
+}
+
+function participantTargets<ID extends StableID>(
+  participant: FormParticipant<ID>,
+): readonly HTMLElement[] {
+  return [...new Set([
+    participant.element,
+    participant.semanticControl,
+    participant.control,
+    participant.focusTarget,
+    ...(participant.submissionElements ?? []),
+  ].filter((element): element is HTMLElement => element !== undefined))];
+}
+
+function validationTargets<ID extends StableID>(
+  participant: FormParticipant<ID>,
+): readonly HTMLElement[] {
+  const semantic = participant.semanticControl ?? participant.control;
+  const submissions = participant.submissionElements ?? [];
+  const targets = [...new Set([semantic, ...submissions].filter(
+    (element): element is HTMLElement => element !== undefined,
+  ))];
+  return targets.length > 0 ? targets : [participant.element];
+}
+
+function createNativeFormData(
+  form: HTMLFormElement,
+  submitter: HTMLElement | null,
+): FormData {
+  return submitter === null ? new FormData(form) : new FormData(form, submitter);
+}
+
+function isNativeSubmitter(element: HTMLElement): boolean {
+  if (element.tagName === 'BUTTON') {
+    const type = element.getAttribute('type')?.toLowerCase() ?? 'submit';
+    return type === 'submit';
+  }
+  if (element.tagName !== 'INPUT') return false;
+  const type = element.getAttribute('type')?.toLowerCase() ?? 'text';
+  return type === 'submit' || type === 'image';
 }
 
 function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly FormIssue<ID>[] {
