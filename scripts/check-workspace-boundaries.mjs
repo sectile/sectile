@@ -134,5 +134,7 @@ async function sourcePaths(directory) {
 
 function importSpecifiers(source) {
   const matches = source.matchAll(/(?:from\s+|import\s*(?:\(|))(['"])([^'"]+)\1/gu);
-  return [...matches].map((match) => match[2]);
+  return [...matches]
+    .map((match) => match[2])
+    .filter((specifier) => !specifier.includes('${'));
 }

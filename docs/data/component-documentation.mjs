@@ -4,6 +4,10 @@ const secondaryStateScenarios = Object.freeze([
   /(?:^|-)disabled(?:-|$)/u,
 ]);
 
+const standaloneStateScenarios = new Set([
+  'disabled-weekends',
+]);
+
 const curatedScenarios = Object.freeze({
   calendar: ['month', 'week', 'disabled-weekends'],
   'range-calendar': ['booking'],
@@ -43,5 +47,5 @@ export function documentedScenarios(component) {
 }
 
 export function isStandaloneDocumentationScenario(scenario) {
-  return !isSecondaryStateScenario(scenario);
+  return standaloneStateScenarios.has(scenario) || !isSecondaryStateScenario(scenario);
 }
