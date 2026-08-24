@@ -10,6 +10,23 @@ function pascal(value: string): string {
 }
 
 function terminalSource(component: string): string {
+  if (component === 'form') {
+    return `import { createForm } from '@sectile/terminal/form'
+
+const fields = [
+  { id: 'name', name: 'name', label: 'Display name' },
+  { id: 'email', name: 'email', label: 'Email address' },
+] as const
+
+const form = createForm({
+  fields,
+  onSubmit: ({ state }) => console.log('submit', state.valid),
+  onAnnounceSummary: (issues) => console.log(issues.map(issue => issue.message)),
+})
+
+form.handleKeyboardInput({ key: 'tab' })
+form.handleKeyboardInput({ key: 'enter' })`;
+  }
   const name = pascal(component);
   const specifier = `@sectile/terminal/${component}`;
   return `import { create${name} } from '${specifier}'

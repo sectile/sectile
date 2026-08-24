@@ -28,6 +28,10 @@ const profiles = Object.freeze({
     row('Escape', 'Cancel editing and restore the accepted value.', '편집을 취소하고 확정된 값을 복원합니다.'),
     row('Tab', 'Move through the preview, input, and explicit action controls.', '미리보기, 입력, 작업 컨트롤 사이를 이동합니다.'),
   ],
+  form: [
+    row('Tab / Shift+Tab', 'Move through native form controls in document order.', '네이티브 폼 컨트롤을 문서 순서대로 이동합니다.'),
+    row('Enter', 'Submit from an eligible native control and validate registered fields.', '제출 가능한 네이티브 컨트롤에서 폼을 제출하고 등록된 필드를 검증합니다.'),
+  ],
   listChoice: [
     row('Arrow keys', 'Move the active option in the visible orientation.', '보이는 방향에 따라 현재 선택 항목을 이동합니다.'),
     row('Home / End', 'Move to the first or last eligible option.', '선택 가능한 첫 번째 또는 마지막 항목으로 이동합니다.'),
@@ -165,7 +169,7 @@ const profileByComponent = Object.freeze({
   'date-picker': 'datePicker', 'date-range-picker': 'datePicker', dialog: 'popup', disclosure: 'disclosure',
   'range-calendar': 'datePicker', 'month-picker': 'monthPicker', 'month-range-picker': 'monthPicker',
   'year-picker': 'yearPicker', 'year-range-picker': 'yearPicker',
-  editable: 'editable', feed: 'feed', grid: 'grid', listbox: 'listChoice', menu: 'menu',
+  editable: 'editable', form: 'form', feed: 'feed', grid: 'grid', listbox: 'listChoice', menu: 'menu',
   'menu-button': 'menu', menubar: 'menubar', 'multi-thumb-slider': 'range', 'navigation-menu': 'menubar',
   'number-field': 'textInput', pagination: 'pagination', 'pin-input': 'pin', popover: 'popup',
   'quantity-field': 'textInput', 'radio-group': 'listChoice', rating: 'listChoice', select: 'listChoice',
@@ -200,6 +204,7 @@ const accessibilityByComponent = Object.freeze({
   dialog: ['The dialog connects title and description, traps focus only in modal mode, and restores focus when it closes.', '대화상자는 제목과 설명을 연결하고 모달일 때만 포커스를 가둔 뒤 닫힐 때 복원합니다.'],
   disclosure: ['The trigger exposes expanded state and its relationship to the controlled content.', '실행 요소가 펼침 상태와 연결된 내용의 관계를 노출합니다.'],
   editable: ['Preview and input states remain distinguishable; invalid drafts are announced on the real input.', '미리보기와 입력 상태를 구분하고 잘못된 입력은 실제 입력 요소에서 전달합니다.'],
+  form: ['The native form and controls retain their semantics while labels, descriptions, messages, and the issue summary expose validation state; the first invalid control receives focus.', '네이티브 폼과 컨트롤의 의미를 유지하면서 레이블·설명·오류 메시지·오류 요약이 검증 상태를 전달하고 첫 번째 잘못된 컨트롤로 포커스를 옮깁니다.'],
   feed: ['The root uses feed semantics and each item is an article with optional position and set-size metadata.', '루트는 피드 의미를 사용하며 각 항목은 선택적인 위치와 전체 크기 정보가 있는 글로 노출됩니다.'],
   grid: ['The labeled grid reports row and column counts while each cell exposes position, selection, and disabled state.', '이름이 있는 격자가 행과 열 수를 전달하고 각 칸은 위치·선택·비활성 상태를 노출합니다.'],
   listbox: ['The labeled listbox exposes active, selected, and disabled option state without moving DOM focus to every item.', '이름이 있는 목록 상자가 모든 항목으로 DOM 포커스를 옮기지 않고 현재·선택·비활성 상태를 노출합니다.'],

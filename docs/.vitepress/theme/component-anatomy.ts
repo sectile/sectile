@@ -192,6 +192,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   dialog: anatomy('dialog', popupParts),
   disclosure: anatomy('disclosure', ['root', 'trigger', 'content']),
   editable: anatomy('editable', ['root', 'area', 'preview', 'input', 'edit-trigger', 'submit-trigger', 'cancel-trigger']),
+  form: anatomy('form', ['root', 'field', 'label', 'description', 'message', 'summary', 'submit']),
   feed: anatomy('feed', ['root', 'item', 'load-earlier', 'load-newer']),
   grid: anatomy('grid', ['root', 'row', 'cell']),
   listbox: anatomy('listbox', ['root', 'item', 'item-text', 'item-indicator']),

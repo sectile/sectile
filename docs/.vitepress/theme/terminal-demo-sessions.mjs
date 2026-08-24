@@ -42,6 +42,7 @@ import { createTimeRangeField } from '@sectile/terminal/time-range-field';
 import { createTimer } from '@sectile/terminal/timer';
 import { createToast } from '@sectile/terminal/toast';
 import { createToggleGroup } from '@sectile/terminal/toggle-group';
+import { createForm } from '@sectile/terminal/form';
 import { ansi, plain, styled, terminalCell, terminalInputCursor } from './terminal-demo-ui.mjs';
 
 const terminalCalendarMonthFormatter = new Intl.DateTimeFormat('en-US', {
@@ -97,6 +98,7 @@ export const demos = Object.freeze([
   { id: 'menu-button', label: 'Menu button', description: 'actions · nested · controlled · [/] cases', create: (host) => createMenuDemo(host, 'menu-button') },
   { id: 'carousel', label: 'Carousel', description: 'wrap · bounded · autoplay · direct select · [/] cases', create: createCarouselDemo },
   { id: 'feed', label: 'Feed', description: 'finite · before/after windows · [/] cases', create: createFeedDemo },
+  { id: 'form', label: 'Form', description: 'field focus · validation · submit · reset', create: createFormDemo },
   { id: 'checkbox-group', label: 'Checkbox group', description: 'multiple values · disabled · controlled · [/] cases', readOnly: true, create: createCheckboxGroupDemo },
   { id: 'select', label: 'Select', description: 'open · move · choose · controlled · [/] cases', readOnly: true, create: createSelectDemo },
   { id: 'pagination', label: 'Pagination', description: 'totals · windows · ellipsis · controls · [/] cases', readOnly: true, create: createPaginationDemo },
@@ -124,6 +126,79 @@ function stateDemo(host, title, result) {
       const { state } = connection.getSnapshot();
       return [`${ansi.bold}${title}${ansi.reset}`, '', ...JSON.stringify(state, null, 2).split('\n')];
     },
+  };
+}
+
+function createFormDemo(host) {
+  const values = { name: 'Mina Kim', email: 'mina@sectile.dev' };
+  let notice = 'Tab moves between fields · Enter submits · Backspace edits';
+  let connection;
+  const issue = (id, message) => ({
+    id: `${id}-invalid`,
+    fieldId: id,
+    source: 'field',
+    message,
+  });
+  const fields = [
+    {
+      id: 'name',
+      name: 'name',
+      label: 'Display name',
+      validate: () => values.name.trim().length >= 2
+        ? { valid: true, issues: [] }
+        : { valid: false, issues: [issue('name', 'Enter at least two characters.')] },
+      reset: () => { values.name = 'Mina Kim'; },
+    },
+    {
+      id: 'email',
+      name: 'email',
+      label: 'Email address',
+      validate: () => values.email.includes('@')
+        ? { valid: true, issues: [] }
+        : { valid: false, issues: [issue('email', 'Enter a valid email address.')] },
+      reset: () => { values.email = 'mina@sectile.dev'; },
+    },
+  ];
+  connection = createForm({
+    fields,
+    onSubmit: () => { notice = 'Account settings submitted.'; },
+    onAnnounceSummary: (issues) => { notice = issues.map(({ message }) => message).join(' '); },
+    onUpdate: host.render,
+  });
+  return {
+    handle(input) {
+      if (input.key === 'backspace') {
+        const id = connection.currentFieldId;
+        if (id === null) return false;
+        values[id] = values[id].slice(0, -1);
+        return connection.refreshField(id, { dirty: true, touched: true });
+      }
+      if (input.key.length === 1 && !input.ctrlKey && !input.metaKey) {
+        const id = connection.currentFieldId;
+        if (id === null) return false;
+        values[id] += input.key;
+        return connection.refreshField(id, { dirty: true });
+      }
+      return connection.handleKeyboardInput(input);
+    },
+    lines(width) {
+      const snapshot = connection.getSnapshot();
+      return [
+        `${ansi.bold}Account settings${ansi.reset}`,
+        `${ansi.dim}${notice}${ansi.reset}`,
+        '',
+        ...fields.map((field) => {
+          const current = snapshot.currentFieldId === field.id;
+          const state = snapshot.state.fields.find(({ id }) => id === field.id);
+          const value = `${field.label.padEnd(16)} ${values[field.id]}`;
+          return `${terminalCell(value, Math.min(width, 52), { current })}${state?.valid === false ? `  ${ansi.yellow}invalid${ansi.reset}` : ''}`;
+        }),
+        '',
+        `status=${snapshot.state.status}  valid=${snapshot.state.valid}  submitCount=${snapshot.state.submitCount}`,
+        'Field values remain outside the form coordinator.',
+      ];
+    },
+    disconnect: () => connection.destroy(),
   };
 }
 

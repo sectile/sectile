@@ -447,6 +447,26 @@ for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
 }
 window.addEventListener('pagehide', () => feed.disconnect(), { once: true })`),
 
+  form: example('form', 'createForm', `const formElement = document.querySelector<HTMLFormElement>('[data-account-form]')!
+const summary = document.querySelector<HTMLElement>('[data-form-summary]')!
+const email = document.querySelector<HTMLInputElement>('[name="email"]')!
+const name = document.querySelector<HTMLInputElement>('[name="name"]')!
+
+const form = createForm({
+  form: formElement,
+  summary,
+  participants: [
+    { id: 'name', name: 'name', element: name, control: name },
+    { id: 'email', name: 'email', element: email, control: email },
+  ],
+  onSubmit: ({ event, formData }) => {
+    event.preventDefault()
+    console.log(Object.fromEntries(formData))
+  },
+})
+
+window.addEventListener('pagehide', () => form.destroy(), { once: true })`),
+
   calendar: example('calendar', 'createCalendar', `const rows = [[
   '2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20',
   '2026-08-21', '2026-08-22', '2026-08-23',

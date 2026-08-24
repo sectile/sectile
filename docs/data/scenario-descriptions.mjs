@@ -1,4 +1,5 @@
 export const scenarioDescriptions = Object.freeze({
+  account: 'Validate and submit account settings while native inputs keep ownership of their values.',
   actions: 'Open a short list of contextual actions from a single trigger.',
   alert: 'Keep an alert-watching action active until the user turns it off.',
   alpha: 'Edit the alpha channel together with the visible color channels.',
@@ -121,6 +122,7 @@ export const scenarioDescriptions = Object.freeze({
 });
 
 export const koScenarioDescriptions = Object.freeze({
+  account: '네이티브 입력이 값을 소유한 채 계정 설정을 검증하고 제출합니다.',
   actions: '하나의 버튼에서 현재 상황에 맞는 작업 목록을 엽니다.',
   alert: '알림 감시 기능을 다시 끌 때까지 활성 상태로 유지합니다.',
   alpha: '화면에 보이는 색상 채널과 투명도를 함께 조절합니다.',

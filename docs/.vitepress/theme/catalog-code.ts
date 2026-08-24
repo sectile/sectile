@@ -752,6 +752,35 @@ const loadWindow = (direction: 'before' | 'after') => {
   revision.value += 1
 }`,
   ),
+  form: sfc(
+    'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormSubmit',
+    `  <FormRoot @submit="saveAccount">
+    <FormSummary v-slot="{ state }">
+      {{ state.issues.map(issue => issue.message).join(' ') }}
+    </FormSummary>
+
+    <FormField id="account-name" name="name">
+      <FormLabel>Display name</FormLabel>
+      <input name="name" value="Mina Kim" minlength="2" required>
+      <FormDescription>Shown to teammates in release activity.</FormDescription>
+      <FormMessage />
+    </FormField>
+
+    <FormField id="account-email" name="email">
+      <FormLabel>Email address</FormLabel>
+      <input name="email" value="mina@sectile.dev" type="email" required>
+      <FormDescription>Receives deployment notifications.</FormDescription>
+      <FormMessage />
+    </FormField>
+
+    <button type="reset">Reset</button>
+    <FormSubmit>Save settings</FormSubmit>
+  </FormRoot>`,
+    `function saveAccount({ event, formData }: { event: SubmitEvent; formData: FormData }) {
+  event.preventDefault()
+  console.log(Object.fromEntries(formData))
+}`,
+  ),
   calendar: sfc(
     'CalendarRoot, CalendarCell',
     `  <CalendarRoot :rows="weeks" default-value="2026-08-22">

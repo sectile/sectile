@@ -537,6 +537,34 @@ const update = applyEditableEvent(state, '${validated ? 'commit' : 'input'}'${va
 
 console.log(update.state, update.commands)`;
     }
+    case 'form': {
+      return `import { applyFormEvent, createFormState } from '@sectile/core/form'
+
+const state = createFormState({
+  fields: [
+    { id: 'name', name: 'name', valid: true },
+    { id: 'email', name: 'email', valid: true },
+  ],
+})
+
+const validation = applyFormEvent(state, {
+  type: 'update-field',
+  id: 'email',
+  touched: true,
+  dirty: true,
+  valid: false,
+  issues: [{
+    id: 'email-format',
+    fieldId: 'email',
+    source: 'field',
+    message: 'Enter a valid email address.',
+  }],
+}).value
+
+const submission = applyFormEvent(validation.state, 'submit').value
+
+console.log(submission.state.status, submission.commands)`;
+    }
     case 'feed': {
       const direction = scenario === 'load-after' ? 'after' : 'before';
       return `import { applyFeedEvent, createFeedState } from '@sectile/core/feed'
