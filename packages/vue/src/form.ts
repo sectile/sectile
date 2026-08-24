@@ -94,6 +94,7 @@ export type FormMetadataAttribute =
   | 'aria-errormessage'
   | 'aria-invalid'
   | 'aria-labelledby'
+  | 'aria-disabled'
   | 'aria-required'
   | 'aria-readonly';
 
@@ -126,17 +127,22 @@ export interface FormSubmissionRegistration {
   readonly explicit?: readonly FormMetadataAttribute[];
 }
 
+export type FormSubmissionSource =
+  | readonly FormSubmissionRegistration[]
+  | (() => readonly FormSubmissionRegistration[]);
+
 export interface FormControlRegistration {
   readonly element: FormElementSource;
   readonly semanticControl?: FormElementSource;
   readonly focusTarget?: FormElementSource;
-  readonly submissions?: readonly FormSubmissionRegistration[];
+  readonly submissions?: FormSubmissionSource;
   readonly labelMode?: FormLabelMode;
   readonly capabilities?: FormControlCapabilities;
   readonly explicit?: readonly FormMetadataAttribute[];
 }
 
 export interface FormControlParticipation {
+  readonly participating: boolean;
   readonly controlProps: ComputedRef<Readonly<Record<string, unknown>>>;
 }
 
@@ -168,6 +174,7 @@ interface FormFieldContext {
 
 const formContextKey = Symbol('SectileForm');
 const formFieldContextKey = Symbol('SectileFormField');
+const formControlOwnerKey = Symbol('SectileFormControlOwner');
 const emptyState: FormState = Object.freeze({
   status: 'idle',
   submitCount: 0,
@@ -350,6 +357,7 @@ export const FormField = defineComponent({
       if (capabilities.required === true && props.required === true) assign('required', true);
       else if (labelMode.value !== 'for' && props.required === true) assign('aria-required', 'true');
       if (capabilities.disabled === true && props.disabled === true) assign('disabled', true);
+      else if (labelMode.value !== 'for' && props.disabled === true) assign('aria-disabled', 'true');
       if (capabilities.readonly === true && props.readonly === true) assign('readonly', true);
       else if (labelMode.value !== 'for' && props.readonly === true) assign('aria-readonly', 'true');
       return Object.freeze(attributes);
@@ -408,7 +416,7 @@ export const FormField = defineComponent({
       if (
         current !== null
         && resolveElement(current.semanticControl ?? current.element) === semantic
-        && sameSubmissionElements(current.submissions ?? [], submissions)
+        && sameSubmissionElements(resolveSubmissionRegistrations(current), submissions)
       ) return;
       fallback.value = {
         element: () => semantic,
@@ -642,6 +650,7 @@ export function useFormControl(
   registration: FormControlRegistration,
 ): FormControlParticipation {
   const field = inject<FormFieldContext | null>(formFieldContextKey, null);
+  const owned = inject(formControlOwnerKey, false);
   const instance = getCurrentInstance();
   const explicit = Object.freeze([
     ...new Set([
@@ -651,13 +660,17 @@ export function useFormControl(
   ]);
   const normalized = Object.freeze({ ...registration, explicit });
   const controlProps = computed<Readonly<Record<string, unknown>>>(() => (
-    field?.attributesFor(normalized) ?? Object.freeze({})
+    field !== null && !owned ? field.attributesFor(normalized) : Object.freeze({})
   ));
-  if (field !== null) {
+  if (field !== null && !owned) {
     const unregister = field.registerControl(normalized);
     onBeforeUnmount(unregister);
   }
-  return Object.freeze({ controlProps });
+  return Object.freeze({ participating: field !== null && !owned, controlProps });
+}
+
+export function provideFormControlOwner(): void {
+  provide(formControlOwnerKey, true);
 }
 
 function useFormContext(part: string): FormContext {
@@ -681,7 +694,11 @@ function resolveElement<ElementType extends HTMLElement>(
 function resolveSubmissionRegistrations(
   registration: FormControlRegistration,
 ): readonly FormSubmissionRegistration[] {
-  if (registration.submissions !== undefined) return registration.submissions;
+  if (registration.submissions !== undefined) {
+    return typeof registration.submissions === 'function'
+      ? registration.submissions()
+      : registration.submissions;
+  }
   const element = resolveElement(registration.element);
   if (element === null || !isFormSubmissionElement(element)) return [];
   return [{
@@ -719,7 +736,7 @@ function nativeSemanticControl(candidates: readonly HTMLElement[]): HTMLElement 
 }
 
 function isFormSubmissionElement(element: HTMLElement): element is FormSubmissionElement {
-  return ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName);
+  return ['INPUT', 'SELECT', 'TEXTAREA'].includes(element.tagName);
 }
 
 function nativeLabelMode(element: HTMLElement): FormLabelMode {
@@ -742,7 +759,7 @@ function nativeControlCapabilities(element: HTMLElement): FormControlCapabilitie
     labelledBy: !labelable,
     required: ['INPUT', 'SELECT', 'TEXTAREA'].includes(tag),
     disabled: ['BUTTON', 'FIELDSET', 'INPUT', 'SELECT', 'TEXTAREA'].includes(tag),
-    readonly: ['INPUT', 'TEXTAREA'].includes(tag),
+    readonly: tag === 'TEXTAREA' || (tag === 'INPUT' && supportsReadonly(element as HTMLInputElement)),
   });
 }
 
@@ -755,7 +772,7 @@ function nativeSubmissionCapabilities(
     form: true,
     required: ['INPUT', 'SELECT', 'TEXTAREA'].includes(tag),
     disabled: true,
-    readonly: ['INPUT', 'TEXTAREA'].includes(tag),
+    readonly: tag === 'TEXTAREA' || (tag === 'INPUT' && supportsReadonly(element as HTMLInputElement)),
   });
 }
 
@@ -807,10 +824,18 @@ function explicitMetadataAttributes(
     'aria-errormessage': ['aria-errormessage', 'ariaErrormessage'],
     'aria-invalid': ['aria-invalid', 'ariaInvalid'],
     'aria-labelledby': ['aria-labelledby', 'ariaLabelledby'],
+    'aria-disabled': ['aria-disabled', 'ariaDisabled'],
     'aria-required': ['aria-required', 'ariaRequired'],
     'aria-readonly': ['aria-readonly', 'ariaReadonly'],
   };
   return (Object.entries(aliases) as [FormMetadataAttribute, readonly string[]][])
     .filter(([, names]) => names.some((name) => Object.hasOwn(vnodeProps, name)))
     .map(([attribute]) => attribute);
+}
+
+function supportsReadonly(element: HTMLInputElement): boolean {
+  return !new Set([
+    'button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range',
+    'reset', 'submit',
+  ]).has(element.type.toLowerCase());
 }

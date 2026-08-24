@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, nextTick, provide, shallowRef, watch,
+  computed, defineComponent, h, inject, mergeProps, nextTick, provide, ref, shallowRef, watch,
   type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
@@ -11,6 +11,8 @@ import { createListboxControllerFromItems, type ListboxController } from '@secti
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
+import { provideFormControlOwner } from './form.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];
@@ -66,6 +68,16 @@ export const RadioGroupRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: RadioGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const rootElement = ref<HTMLElement | null>(null);
+    const inputElements: Array<HTMLInputElement | null> = [];
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      submissions: () => props.items.map((_, index) => ({
+        element: () => inputElements[index] ?? null,
+        capabilities: hiddenInputSubmissionCapabilities,
+      })),
+    });
+    provideFormControlOwner();
     const controlled = props.modelValue !== undefined;
     const makeController = (value: string): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
@@ -119,21 +131,27 @@ export const RadioGroupRoot = defineComponent({
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
         as: props.as, asChild: props.asChild,
+        elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
         'data-scope': part.scope,
         onKeydown: (event: KeyboardEvent) => {
           if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
           event.preventDefault();
         },
-      }), { default: () => slots['default']?.(slotProps.value) });
-      if (props.name === undefined && props.form === undefined && !props.required) return root;
-      return [root, ...props.items.map((id) => h('input', mergeProps(getRadioGroupInputAttributes({
+      }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return root;
+      return [root, ...props.items.map((id, index) => h('input', mergeProps(getRadioGroupInputAttributes({
         ...(props.name === undefined ? {} : { name: props.name }),
         ...(props.form === undefined ? {} : { form: props.form }),
         value: id,
         checked: value.value === id,
         required: props.required,
         disabled: props.disabled || props.disabledItems.includes(id),
-      }) as Record<string, unknown>, { style: visuallyHiddenInputStyle })))];
+      }) as Record<string, unknown>, {
+        ref: (element: unknown) => {
+          inputElements[index] = element instanceof HTMLInputElement ? element : null;
+        },
+        style: visuallyHiddenInputStyle,
+      })))];
     };
   },
 });

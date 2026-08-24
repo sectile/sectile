@@ -5,6 +5,7 @@ import {
   inject,
   mergeProps,
   provide,
+  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -20,6 +21,10 @@ import {
 } from '@sectile/dom/switch';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export interface SwitchRootProps {
   readonly modelValue?: boolean;
@@ -83,6 +88,16 @@ export const SwitchRoot = defineComponent({
     default: (props: SwitchSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
+    const rootElement = ref<HTMLElement | null>(null);
+    const inputElement = ref<HTMLInputElement | null>(null);
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      focusTarget: rootElement,
+      submissions: [{
+        element: inputElement,
+        capabilities: hiddenInputSubmissionCapabilities,
+      }],
+    });
     const controlled = props.modelValue !== undefined;
     const controller = shallowRef(createController(
       controlled,
@@ -137,18 +152,28 @@ export const SwitchRoot = defineComponent({
         attrs,
         attributes.value as unknown as Record<string, unknown>,
         {
+          elementRef: (element: unknown) => {
+            rootElement.value = element instanceof HTMLElement ? element : null;
+          },
           as: props.as,
           asChild: props.asChild,
           ...(props.as === 'button' && !props.asChild ? { type: 'button' } : {}),
           onClick: handleClick,
         },
+        participation.controlProps.value,
       ), {
         default: () => slots['default']?.(slotProps.value),
       });
-      if (props.name === undefined && props.form === undefined && !props.required) return root;
+      if (!participation.participating
+        && props.name === undefined
+        && props.form === undefined
+        && !props.required) return root;
       return [root, h('input', mergeProps(
         inputAttributes.value as unknown as Record<string, unknown>,
-        { style: visuallyHiddenInputStyle },
+        {
+          ref: inputElement,
+          style: visuallyHiddenInputStyle,
+        },
       ))];
     };
   },

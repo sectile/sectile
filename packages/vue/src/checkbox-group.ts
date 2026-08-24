@@ -1,10 +1,16 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, provide, shallowRef,
+  computed, defineComponent, h, inject, mergeProps, provide, ref, shallowRef,
   type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { CheckboxIndicator, CheckboxRoot, type CheckboxValue } from './checkbox.js';
 import { providePartContract } from './internal/part-contract.js';
+import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { provideFormControlOwner } from './form.js';
+import {
+  hiddenValueSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export interface CheckboxGroupRootProps {
   readonly modelValue?: readonly string[];
@@ -50,6 +56,16 @@ export const CheckboxGroupRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: CheckboxGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     providePartContract('checkbox-group', { root: 'item' });
+    const rootElement = ref<HTMLElement | null>(null);
+    const submissionElements: Array<HTMLInputElement | null> = [];
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      submissions: () => state.value.value.map((_, index) => ({
+        element: () => submissionElements[index] ?? null,
+        capabilities: hiddenValueSubmissionCapabilities,
+      })),
+    });
+    provideFormControlOwner();
     const local = shallowRef<readonly string[]>(props.modelValue ?? props.defaultValue);
     const state = computed<CheckboxGroupRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? local.value, disabled: props.disabled, readonly: props.readonly,
@@ -63,11 +79,23 @@ export const CheckboxGroupRoot = defineComponent({
         const next = Object.freeze([...selected]); local.value = next; emit('update:modelValue', next);
       },
     });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild, role: 'group', 'aria-label': props.label,
+    return (): VNodeChild => {
+      const root = h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild,
+      elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
+      role: 'group', 'aria-label': props.label,
       'aria-disabled': props.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
       'data-scope': 'checkbox-group', 'data-part': 'root',
-    }), { default: () => slots['default']?.(state.value) });
+      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined) return root;
+      return [root, ...state.value.value.map((value, index) => h('input', {
+        ref: (element: unknown) => {
+          submissionElements[index] = element instanceof HTMLInputElement ? element : null;
+        },
+        type: 'hidden', name: props.name, form: props.form, value,
+        disabled: props.disabled, style: visuallyHiddenInputStyle,
+      }))];
+    };
   },
 });
 
@@ -85,7 +113,7 @@ export const CheckboxGroupItem = defineComponent({
     return (): VNodeChild => h(CheckboxRoot, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, modelValue: checked.value, disabled: root.state.value.disabled || props.disabled,
       readonly: root.state.value.readonly, required: props.required ?? root.required.value,
-      name: root.name.value, form: root.form.value, value: props.value,
+      value: props.value,
       'onUpdate:modelValue': (next: CheckboxValue) => root.toggle(props.value, next),
     }), { default: () => slots['default']?.({ checked: checked.value, disabled: root.state.value.disabled || props.disabled, readonly: root.state.value.readonly }) });
   },

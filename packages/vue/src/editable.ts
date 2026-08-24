@@ -23,6 +23,7 @@ import {
   type EditableState,
 } from '@sectile/dom/editable';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useNativeInputFormControl } from './internal/form-control.js';
 
 export interface EditableRootProps {
   readonly modelValue?: string;
@@ -188,19 +189,26 @@ export const EditableInput = defineComponent({
   props: {
     multiline: { type: Boolean, default: false },
     type: { type: String, default: 'text' },
+    name: { type: String, default: undefined },
+    form: { type: String, default: undefined },
+    required: { type: Boolean, default: false },
   },
   setup(props, { attrs }) {
     const context = useEditableContext('EditableInput');
+    const participation = useNativeInputFormControl(context.input);
     context.multiline.value = props.multiline;
     return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(attrs, {
       ref: (element: unknown) => { context.input.value = element as HTMLInputElement | HTMLTextAreaElement | null; },
       ...(!props.multiline ? { type: props.type } : {}),
+      name: props.name,
+      form: props.form,
+      required: props.required,
       value: context.slotProps.value.draft,
       hidden: !context.slotProps.value.editing,
       disabled: context.slotProps.value.disabled,
       readonly: context.slotProps.value.readonly,
       'data-scope': 'editable', 'data-part': 'input',
-    }));
+    }, participation.controlProps.value));
   },
 });
 

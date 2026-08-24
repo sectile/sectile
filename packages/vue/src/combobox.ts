@@ -7,6 +7,7 @@ import {
 } from '@sectile/dom/combobox';
 import { createTextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useNativeInputFormControl } from './internal/form-control.js';
 
 export interface ComboboxRootProps {
   readonly items: readonly ComboboxItemDefinition<string>[];
@@ -125,12 +126,20 @@ export const ComboboxRoot = defineComponent({
 export const ComboboxInput = defineComponent({
   name: 'SectileComboboxInput', inheritAttrs: false,
   props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
-  setup(props, { attrs }) { const root = useRoot('ComboboxInput'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerInput(node instanceof HTMLInputElement ? node : undefined),
+  setup(props, { attrs }) {
+    const root = useRoot('ComboboxInput');
+    const input = shallowRef<HTMLInputElement | null>(null);
+    const participation = useNativeInputFormControl(input);
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
+      input.value = node instanceof HTMLInputElement ? node : null;
+      root.registerInput(input.value ?? undefined);
+    },
     type: 'text', role: 'combobox', value: root.state.value.inputValue, name: props.name, form: props.form, required: props.required,
     disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': root.label.value,
     'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open), 'data-scope': 'combobox', 'data-part': 'input',
-  })); },
+  }, participation.controlProps.value));
+  },
 });
 
 export const ComboboxContent = defineComponent({

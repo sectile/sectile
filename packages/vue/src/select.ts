@@ -1,10 +1,11 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 
 export interface SelectRootProps {
   readonly items: readonly string[];
@@ -61,7 +62,15 @@ export const SelectRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLButtonElement>(); const popup = shallowRef<HTMLElement>();
+    const root = shallowRef<HTMLElement>();
+    const trigger = shallowRef<HTMLButtonElement>();
+    const popup = shallowRef<HTMLElement>();
+    const submissionElement = ref<HTMLSelectElement | null>(null);
+    const participation = useCompositeFormControl({
+      root: () => root.value ?? null,
+      focusTarget: () => trigger.value ?? root.value ?? null,
+      submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
+    });
     const connection = shallowRef<SelectConnection<string>>();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value);
@@ -117,9 +126,10 @@ export const SelectRoot = defineComponent({
       const visual = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
         'data-scope': 'select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
-      }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined && !props.required) return visual;
+      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
       return [visual, h('select', {
+        ref: submissionElement,
         name: props.name, form: props.form, required: props.required, disabled: props.disabled,
         value: state.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
       }, [h('option', { value: '' }), ...props.items.map((id) => h('option', { value: id, disabled: props.disabledItems.includes(id) }, props.textValue?.(id) ?? id))])];

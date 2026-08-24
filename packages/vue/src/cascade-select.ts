@@ -8,6 +8,11 @@ import {
 } from '@sectile/dom/cascade-select';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { provideFormControlOwner } from './form.js';
+import {
+  hiddenSelectSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export interface CascadeSelectRootProps {
   readonly nodes: readonly CascadeSelectItemDefinition<string>[];
@@ -61,18 +66,52 @@ export const CascadeSelectRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:open': (_value: boolean): boolean => true, highlight: (_value: string | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: CascadeSelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLButtonElement>(); const popup = shallowRef<HTMLElement>(); const connection = shallowRef<CascadeSelectConnection<string>>();
+    const root = shallowRef<HTMLElement | null>(null);
+    const trigger = shallowRef<HTMLButtonElement | null>(null);
+    const popup = shallowRef<HTMLElement>();
+    const submission = shallowRef<HTMLSelectElement | null>(null);
+    const connection = shallowRef<CascadeSelectConnection<string>>();
+    const participation = useCompositeFormControl({
+      root,
+      focusTarget: trigger,
+      submissions: [{
+        element: submission,
+        capabilities: hiddenSelectSubmissionCapabilities,
+      }],
+    });
+    provideFormControlOwner();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue); const initialValuePath = itemPath(props.nodes, localValue.value); const initialBranchPath = initialValuePath.slice(0, -1); const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value); const path = shallowRef<readonly string[]>(initialBranchPath); const columns = shallowRef<readonly (readonly string[])[]>(initialColumns(props.nodes, initialBranchPath)); const valuePath = shallowRef<readonly string[]>(initialValuePath);
     const valueControlled = props.modelValue !== undefined; const openControlled = props.open !== undefined;
     const state = computed<CascadeSelectRootSlotProps>(() => Object.freeze({ value: props.modelValue !== undefined ? props.modelValue : localValue.value, valuePath: valuePath.value, highlightedValue: highlighted.value, path: path.value, columns: columns.value, open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly }));
     const refresh = (): void => { const current = connection.value?.getSnapshot().state; if (current === undefined) return; localValue.value = current.value; localOpen.value = current.open; highlighted.value = current.highlighted; path.value = current.path; columns.value = connection.value?.getColumns() ?? []; valuePath.value = connection.value?.getValuePath() ?? []; refreshItems(); };
     const refreshItems = (): void => { if (popup.value === undefined || connection.value === undefined) return; popup.value.querySelectorAll<HTMLElement>('[data-sectile-cascade-select-id]').forEach((element) => { const id = element.dataset['sectileCascadeSelectId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, props.disabledItems.includes(id)); }); };
-    const connect = (): void => { connection.value?.disconnect(); if (root.value === undefined || trigger.value === undefined || popup.value === undefined) return; connection.value = createCascadeSelect({ root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (value) => { localValue.value = value; emit('update:modelValue', value); }, onHighlightedValueChange: (value) => { highlighted.value = value; emit('highlight', value); }, onOpenChange: (value) => { localOpen.value = value; emit('update:open', value); }, onUpdate: refresh }); refresh(); };
+    const connect = (): void => { connection.value?.disconnect(); if (root.value === null || trigger.value === null || popup.value === undefined) return; connection.value = createCascadeSelect({ root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (value) => { localValue.value = value; emit('update:modelValue', value); }, onHighlightedValueChange: (value) => { highlighted.value = value; emit('highlight', value); }, onOpenChange: (value) => { localOpen.value = value; emit('update:open', value); }, onUpdate: refresh }); refresh(); };
     const branches = computed(() => new Set(props.nodes.filter((node) => props.nodes.some((candidate) => candidate.parentID === node.id)).map((node) => node.id)));
-    provide<RootContext>(rootKey, { state, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, registerTrigger: (element) => { trigger.value = element; }, registerPopup: (element) => { popup.value = element; }, registerColumn: (element, depth) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
+    provide<RootContext>(rootKey, { state, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, registerTrigger: (element) => { trigger.value = element ?? null; }, registerPopup: (element) => { popup.value = element; }, registerColumn: (element, depth) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect()); watch([() => props.nodes, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
     watch([() => props.modelValue, () => props.open], () => { if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(valueControlled ? { value: props.modelValue as string | null } : {}), ...(openControlled ? { open: props.open as boolean } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
-    return (): VNodeChild => { const visual = h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; }, 'data-scope': 'cascade-select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed' }), { default: () => slots['default']?.(state.value) }); if (props.name === undefined && props.form === undefined && !props.required) return visual; return [visual, h('select', { name: props.name, form: props.form, required: props.required, disabled: props.disabled, value: state.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle }, [h('option', { value: '' }), ...props.nodes.filter((node) => !branches.value.has(node.id)).map((node) => h('option', { value: node.id, disabled: props.disabledItems.includes(node.id) }, props.textValue?.(node.id) ?? node.id))])]; };
+    return (): VNodeChild => {
+      const visual = h(Primitive, mergeProps(attrs, {
+        as: props.as,
+        asChild: props.asChild,
+        elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
+        'data-scope': 'cascade-select',
+        'data-part': 'root',
+        'data-state': state.value.open ? 'open' : 'closed',
+      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
+      return [visual, h('select', {
+        ref: (element: unknown) => { submission.value = element instanceof HTMLSelectElement ? element : null; },
+        name: props.name,
+        form: props.form,
+        required: props.required,
+        disabled: props.disabled,
+        value: state.value.value ?? '',
+        tabindex: -1,
+        'aria-hidden': 'true',
+        style: visuallyHiddenInputStyle,
+      }, [h('option', { value: '' }), ...props.nodes.filter((node) => !branches.value.has(node.id)).map((node) => h('option', { value: node.id, disabled: props.disabledItems.includes(node.id) }, props.textValue?.(node.id) ?? node.id))])];
+    };
   },
 });
 

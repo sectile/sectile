@@ -6,6 +6,7 @@ import {
   mergeProps,
   nextTick,
   provide,
+  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -22,6 +23,7 @@ import {
 } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];
@@ -131,6 +133,12 @@ export const ListboxRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: ListboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const rootElement = ref<HTMLElement | null>(null);
+    const submissionElement = ref<HTMLSelectElement | null>(null);
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
+    });
     const controlled = props.modelValue !== undefined;
     const controller = shallowRef(createController(
       controlled,
@@ -211,10 +219,15 @@ export const ListboxRoot = defineComponent({
       const root = h(Primitive, mergeProps(
         attrs,
         rootAttributes.value as Record<string, unknown>,
-        { as: props.as, asChild: props.asChild, onKeydown: handleKeydown },
+        {
+          as: props.as, asChild: props.asChild, onKeydown: handleKeydown,
+          elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
+        },
+        participation.controlProps.value,
       ), { default: () => slots['default']?.(slotProps.value) });
-      if (props.name === undefined && props.form === undefined && !props.required) return root;
+      if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return root;
       return [root, h('select', {
+        ref: submissionElement,
         name: props.name,
         form: props.form,
         required: props.required,

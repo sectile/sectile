@@ -4,6 +4,12 @@ import {
 } from 'vue';
 import { createPinInput, type PinInputConnection, type PinInputPolicies } from '@sectile/dom/pin-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { provideFormControlOwner } from './form.js';
+import {
+  hiddenValueSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export interface PinInputRootProps {
   readonly length?: number;
@@ -50,7 +56,17 @@ export const PinInputRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: PinInputRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     if (!Number.isInteger(props.length) || props.length < 1) throw new TypeError('PinInput length must be a positive integer.');
-    const root = shallowRef<HTMLElement>();
+    const root = shallowRef<HTMLElement | null>(null);
+    const hiddenInput = shallowRef<HTMLInputElement | null>(null);
+    const participation = useCompositeFormControl({
+      root,
+      focusTarget: () => inputs.value.find((candidate) => candidate !== undefined) ?? null,
+      submissions: [{
+        element: hiddenInput,
+        capabilities: hiddenValueSubmissionCapabilities,
+      }],
+    });
+    provideFormControlOwner();
     const inputs = shallowRef<Array<HTMLInputElement | undefined>>(Array.from({ length: props.length }));
     const connection = shallowRef<PinInputConnection>();
     const value = shallowRef(props.modelValue ?? props.defaultValue);
@@ -62,7 +78,7 @@ export const PinInputRoot = defineComponent({
     const connect = (): void => {
       connection.value?.disconnect();
       const nodes = inputs.value.filter((input): input is HTMLInputElement => input !== undefined);
-      if (root.value === undefined || nodes.length !== props.length) return;
+      if (root.value === null || nodes.length !== props.length) return;
       connection.value = createPinInput({
         root: root.value, inputs: nodes, ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(controlled ? { value: props.modelValue as string } : { defaultValue: value.value }),
@@ -93,14 +109,15 @@ export const PinInputRoot = defineComponent({
     });
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
         role: 'group', 'aria-label': props.label, 'data-scope': 'pin-input', 'data-part': 'root',
         'data-complete': state.value.complete ? '' : undefined,
-      }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined && !props.required) return visual;
+      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined) return visual;
       return [visual, h('input', {
+        ref: (element: unknown) => { hiddenInput.value = element instanceof HTMLInputElement ? element : null; },
         type: 'hidden', name: props.name, form: props.form, value: state.value.value,
-        required: props.required, disabled: props.disabled,
+        disabled: props.disabled, style: visuallyHiddenInputStyle,
       })];
     };
   },

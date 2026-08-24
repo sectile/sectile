@@ -6,6 +6,7 @@ import {
   createQuantityField, type QuantityFieldConnection, type QuantityFieldPolicies, type QuantityValue,
 } from '@sectile/dom/quantity-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useNativeInputFormControl } from './internal/form-control.js';
 
 export {
   createStandardQuantityPolicies,
@@ -113,12 +114,17 @@ export const QuantityFieldInput = defineComponent({
   },
   setup(props, { attrs }) {
     const root = useRoot('QuantityFieldInput');
+    const input = shallowRef<HTMLInputElement | null>(null);
+    const participation = useNativeInputFormControl(input);
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerInput(node instanceof HTMLInputElement ? node : undefined),
+      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
+        input.value = node instanceof HTMLInputElement ? node : null;
+        root.registerInput(input.value ?? undefined);
+      },
       type: 'text', name: props.name, form: props.form, required: props.required,
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
       'aria-label': root.label.value, 'data-scope': 'quantity-field', 'data-part': 'input',
-    }));
+    }, participation.controlProps.value));
   },
 });
 

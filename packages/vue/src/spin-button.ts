@@ -21,6 +21,7 @@ import {
   type SpinButtonOptions,
 } from '@sectile/dom/spin-button';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useNativeInputFormControl } from './internal/form-control.js';
 
 export interface SpinButtonRootProps {
   readonly min: number | string;
@@ -169,24 +170,31 @@ export const SpinButtonInput = defineComponent({
   name: 'SectileSpinButtonInput',
   inheritAttrs: false,
   props: {
+    name: { type: String, default: undefined },
+    form: { type: String, default: undefined },
+    required: { type: Boolean, default: false },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' },
     asChild: { type: Boolean, default: false },
   },
   slots: Object as SlotsType<{ default: (props: SpinButtonSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useSpinButton('SpinButtonInput');
-    const input = shallowRef<HTMLInputElement>();
+    const input = shallowRef<HTMLInputElement | null>(null);
+    const participation = useNativeInputFormControl(input);
     onMounted(() => {
-      if (input.value === undefined) throw new TypeError('SpinButtonInput must render an input element.');
+      if (input.value === null) throw new TypeError('SpinButtonInput must render an input element.');
       root.connect(input.value);
     });
     onBeforeUnmount(root.disconnect);
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
       asChild: props.asChild,
-      elementRef: (element: unknown) => { input.value = element instanceof HTMLInputElement ? element : undefined; },
+      elementRef: (element: unknown) => { input.value = element instanceof HTMLInputElement ? element : null; },
       role: 'spinbutton',
       type: 'text',
+      name: props.name,
+      form: props.form,
+      required: props.required,
       inputmode: 'decimal',
       value: root.state.value.text,
       disabled: root.state.value.disabled,
@@ -199,7 +207,7 @@ export const SpinButtonInput = defineComponent({
       'aria-readonly': String(root.state.value.readonly),
       'data-scope': 'spin-button',
       'data-part': 'input',
-    }), { default: () => slots['default']?.(root.state.value) });
+    }, participation.controlProps.value), { default: () => slots['default']?.(root.state.value) });
   },
 });
 

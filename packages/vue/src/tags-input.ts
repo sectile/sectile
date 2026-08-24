@@ -5,6 +5,11 @@ import {
 import { createTagsInput, type TagsInputConnection, type TagsInputPolicies } from '@sectile/dom/tags-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
+import { provideFormControlOwner } from './form.js';
+import {
+  hiddenValueSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export interface TagsInputRootProps {
   readonly modelValue?: readonly string[];
@@ -59,7 +64,17 @@ export const TagsInputRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TagsInputRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const root = shallowRef<HTMLElement>(); const input = shallowRef<HTMLInputElement>();
+    const root = shallowRef<HTMLElement | null>(null); const input = shallowRef<HTMLInputElement | null>(null);
+    const submissionElements: Array<HTMLInputElement | null> = [];
+    const participation = useCompositeFormControl({
+      root,
+      focusTarget: input,
+      submissions: () => state.value.value.map((_, index) => ({
+        element: () => submissionElements[index] ?? null,
+        capabilities: hiddenValueSubmissionCapabilities,
+      })),
+    });
+    provideFormControlOwner();
     const connection = shallowRef<TagsInputConnection>();
     const localTags = shallowRef<readonly string[]>(props.modelValue ?? props.defaultValue);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue);
@@ -75,14 +90,14 @@ export const TagsInputRoot = defineComponent({
       refreshDeletes();
     };
     const refreshDeletes = (): void => {
-      if (root.value === undefined || connection.value === undefined) return;
+      if (root.value === null || connection.value === undefined) return;
       root.value.querySelectorAll<HTMLElement>('[data-sectile-tags-delete]').forEach((element) => {
         connection.value?.setTagAttributes(element, Number(element.dataset['sectileTagsDelete']));
       });
     };
     const connect = (): void => {
       connection.value?.disconnect();
-      if (root.value === undefined || input.value === undefined) return;
+      if (root.value === null || input.value === null) return;
       connection.value = createTagsInput({
         root: root.value, input: input.value,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
@@ -97,7 +112,7 @@ export const TagsInputRoot = defineComponent({
     };
     provide<RootContext>(rootKey, {
       state, label: computed(() => props.label),
-      registerRoot: (element) => { root.value = element; }, registerInput: (element) => { input.value = element; },
+      registerRoot: (element) => { root.value = element ?? null; }, registerInput: (element) => { input.value = element ?? null; },
       registerDelete: (element, index) => connection.value?.setTagAttributes(element, index),
       clear: () => { for (let index = state.value.value.length - 1; index >= 0; index -= 1) connection.value?.handleEvent({ type: 'remove', index }); },
     });
@@ -114,14 +129,17 @@ export const TagsInputRoot = defineComponent({
     });
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
         role: 'group', 'aria-label': props.label, 'data-scope': 'tags-input', 'data-part': 'root',
         'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined,
-      }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined && !props.required) return visual;
-      return [visual, ...state.value.value.map((tag) => h('input', {
+      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
+      if (!participation.participating && props.name === undefined && props.form === undefined) return visual;
+      return [visual, ...state.value.value.map((tag, index) => h('input', {
+        ref: (element: unknown) => {
+          submissionElements[index] = element instanceof HTMLInputElement ? element : null;
+        },
         type: 'hidden', name: props.name, form: props.form, value: tag, disabled: props.disabled,
-        required: props.required, style: visuallyHiddenInputStyle,
+        style: visuallyHiddenInputStyle,
       }))];
     };
   },

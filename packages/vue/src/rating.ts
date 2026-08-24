@@ -1,6 +1,7 @@
 import {
   computed,
   defineComponent,
+  getCurrentInstance,
   h,
   inject,
   mergeProps,
@@ -70,6 +71,7 @@ export const RatingRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: RatingRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const instance = getCurrentInstance();
     providePartContract('rating');
     const controlled = props.modelValue !== undefined;
     const localValue = ref(controlled ? props.modelValue as string : props.defaultValue);
@@ -95,21 +97,35 @@ export const RatingRoot = defineComponent({
       items: props.items,
       modelValue: localValue.value,
       disabledItems: props.disabledItems,
-      disabled: props.disabled,
-      readonly: props.readonly,
       orientation: 'horizontal',
-      name: props.name,
-      form: props.form,
-      required: props.required,
       as: props.as,
       asChild: props.asChild,
       'aria-roledescription': 'rating',
       'onUpdate:modelValue': update,
+      ...explicitFormProps(instance?.vnode.props ?? null, props),
     }), {
       default: (root: RadioGroupRootSlotProps) => slots['default']?.({ ...root, clearable: props.clearable }),
     });
   },
 });
+
+function explicitFormProps(
+  vnodeProps: Readonly<Record<string, unknown>> | null,
+  props: Readonly<{
+    disabled: boolean;
+    readonly: boolean;
+    name: string | undefined;
+    form: string | undefined;
+    required: boolean;
+  }>,
+): Readonly<Record<string, unknown>> {
+  if (vnodeProps === null) return {};
+  const result: Record<string, unknown> = {};
+  for (const key of ['disabled', 'readonly', 'name', 'form', 'required'] as const) {
+    if (Object.prototype.hasOwnProperty.call(vnodeProps, key)) result[key] = props[key];
+  }
+  return result;
+}
 
 export const RatingItem = defineComponent({
   name: 'SectileRatingItem',

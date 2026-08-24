@@ -10,6 +10,7 @@ import {
   type PropType,
   type VNodeChild,
 } from 'vue';
+import { useNativeInputFormControl } from './form-control.js';
 
 export interface NativeFieldConnection<Value> {
   getSnapshot(): { readonly revision: number };
@@ -76,6 +77,7 @@ export function createNativeFieldComponent<Value>(
     },
     setup(props, { attrs, emit }) {
       const input = shallowRef<HTMLInputElement>();
+      const participation = useNativeInputFormControl(input);
       const connection = shallowRef<NativeFieldConnection<Value>>();
       const controlled = props.modelValue !== undefined;
 
@@ -132,7 +134,7 @@ export function createNativeFieldComponent<Value>(
           const value = controlled ? props.modelValue : props.defaultValue;
           return value === null || value === undefined ? '' : config.formatValue(value as Value);
         })(),
-      }));
+      }, participation.controlProps.value));
     },
   });
   return component as unknown as DefineComponent<NativeFieldPublicProps<Value>>;

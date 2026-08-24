@@ -5,6 +5,7 @@ import {
   inject,
   mergeProps,
   provide,
+  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -22,6 +23,10 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
+import {
+  hiddenInputSubmissionCapabilities,
+  useCompositeFormControl,
+} from './internal/form-control.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 
@@ -85,6 +90,16 @@ export const CheckboxRoot = defineComponent({
     default: (props: CheckboxSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
+    const rootElement = ref<HTMLElement | null>(null);
+    const inputElement = ref<HTMLInputElement | null>(null);
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      focusTarget: rootElement,
+      submissions: [{
+        element: inputElement,
+        capabilities: hiddenInputSubmissionCapabilities,
+      }],
+    });
     const controlled = props.modelValue !== undefined;
     const controller = shallowRef(createController(
       controlled,
@@ -150,6 +165,9 @@ export const CheckboxRoot = defineComponent({
         attrs,
         attributes.value as unknown as Record<string, unknown>,
         {
+          elementRef: (element: unknown) => {
+            rootElement.value = element instanceof HTMLElement ? element : null;
+          },
           as: props.as,
           asChild: props.asChild,
           ...(props.as === 'button' && !props.asChild ? { type: 'button' } : {}),
@@ -157,13 +175,20 @@ export const CheckboxRoot = defineComponent({
           'data-part': part.part,
           onClick: handleClick,
         },
+        participation.controlProps.value,
       ), {
         default: () => slots['default']?.(slotProps.value),
       });
-      if (props.name === undefined && props.form === undefined && !props.required) return root;
+      if (!participation.participating
+        && props.name === undefined
+        && props.form === undefined
+        && !props.required) return root;
       return [root, h('input', mergeProps(
         inputAttributes.value as unknown as Record<string, unknown>,
-        { style: visuallyHiddenInputStyle },
+        {
+          ref: inputElement,
+          style: visuallyHiddenInputStyle,
+        },
       ))];
     };
   },
