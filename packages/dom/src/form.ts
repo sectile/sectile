@@ -15,6 +15,13 @@ import {
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 
+export {
+  createFormFieldPath,
+  encodeFormFieldPath,
+  type FormFieldPath,
+  type FormPathSegment,
+} from '@sectile/core/form';
+
 export interface FormParticipantValidation<ID extends StableID = StableID> {
   readonly valid: boolean;
   readonly issues?: readonly FormIssue<ID>[];

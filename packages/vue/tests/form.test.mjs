@@ -18,10 +18,16 @@ test('Vue Form renders native semantics and stable compound part boundaries duri
       default: ({ status }) => [
         h(FormSummary, null, { default: () => `Status: ${status}` }),
         h(FormField, { id: 'email', name: 'email' }, {
-          default: (field) => [
+          default: () => [
             h(FormLabel, null, { default: () => 'Email address' }),
             h(FormDescription, null, { default: () => 'Used for release notices.' }),
-            h('input', { ...field.controlProps, name: 'email', type: 'email', required: true }),
+            h('input', {
+              id: 'email-control',
+              name: 'email',
+              type: 'email',
+              required: true,
+              'aria-describedby': 'email-description email-message',
+            }),
             h(FormMessage),
           ],
         }),
