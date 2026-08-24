@@ -48,7 +48,9 @@ function publicPart(component, value) {
   // boundary and therefore do not belong in the interactive Anatomy diagram.
   if (value.endsWith('Provider')) return null;
   if (['alert-dialog', 'date-picker', 'date-range-picker', 'date-time-picker',
-    'date-time-range-picker', 'dialog', 'menu-button', 'popover', 'tooltip']
+    'date-time-range-picker', 'dialog', 'menu-button', 'month-picker',
+    'month-range-picker', 'popover', 'range-calendar', 'tooltip', 'year-picker',
+    'year-range-picker']
     .includes(component) && value.endsWith('Root')) return null;
 
   if (component === 'menu-button') {

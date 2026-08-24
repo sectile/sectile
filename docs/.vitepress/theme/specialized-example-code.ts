@@ -468,7 +468,7 @@ const value = ref(${initial})${policies}
 <template>
   <label>
     <span>${component === 'date-field' ? 'Release date' : component === 'time-field' ? 'Start time' : 'Starts at'}</span>
-    <${name} v-model="value"${policyBinding} native />
+    <${name} v-model="value"${policyBinding} />
   </label>
 </template>`;
 }

@@ -46,8 +46,8 @@ test('Calendar month and week examples expose their actual paging projections', 
   assert.notEqual(month, week);
 });
 
-test('Temporal field examples use product-facing native inputs and distinct policies', () => {
-  assert.match(specializedVueCodeFor('date-time-field', 'local-schedule'), / native \/>/);
+test('Temporal field examples use canonical text formats and distinct policies', () => {
+  assert.doesNotMatch(specializedVueCodeFor('date-time-field', 'local-schedule'), / native \/>/);
   assert.match(specializedVueCodeFor('date-time-field', 'cross-midnight'), /hour: 23, minute: 45/);
   assert.match(specializedVueCodeFor('date-range-field', 'bounded'), /min: \{ year: 2026, month: 9, day: 1 \}/);
   assert.match(specializedVueCodeFor('time-range-field', 'stepped'), /step: \{ minute: 15 \}/);

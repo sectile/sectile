@@ -271,6 +271,7 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-part-active {
   position: relative;
   z-index: 4;
+  overflow: visible !important;
   outline: 0 !important;
   box-shadow: inset 0 0 0 2px var(--vp-c-brand-1) !important;
 }
@@ -580,8 +581,9 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-node--menu-panel > .anatomy-node--item,
 .component-anatomy__stage .anatomy-node--submenu > .anatomy-node--item { border-bottom: 0; border-radius: 8px; }
 .component-anatomy__stage .anatomy-node--menubar { padding: 5px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
-.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list { position: relative; display: flex; overflow: hidden; padding: 4px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
-.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list > [data-part-name='item-container'] { flex: none; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list { position: relative; display: flex; overflow: visible; padding: 4px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list > [data-part-name='item-container'] { min-height: 0; flex: none; padding: 0; border: 0; }
+.component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list > [data-part-name='item-container'] > [data-part-name='item'] { min-height: 40px; padding: 7px 12px; border: 0; border-radius: 7px; }
 .component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list > .anatomy-node--indicator { position: absolute; bottom: 0; left: 12px; width: 88px; height: 2px; background: var(--vp-c-brand-1); }
 .component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--navigation-viewport {
   position: static;
@@ -814,7 +816,7 @@ function activatePreview(node: AnatomyActivation): void {
 .component-anatomy__stage .anatomy-node--toggle-group,
 .component-anatomy__stage .anatomy-node--pagination-root,
 .component-anatomy__stage .anatomy-node--toolbar-root { display: flex; width: auto; gap: 6px; }
-.component-anatomy__stage .anatomy-node--pagination-root { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; }
+.component-anatomy__stage .anatomy-node--pagination-root { max-width: 100%; flex-wrap: nowrap; justify-content: center; overflow: visible; }
 .component-anatomy__stage .anatomy-node--pagination-ellipsis { display: grid; width: 32px; flex: 0 0 32px; place-items: center; color: var(--vp-c-text-3); }
 .component-anatomy__stage .anatomy-node--toggle-group .anatomy-node--item,
 .component-anatomy__stage .anatomy-node--pagination-root .anatomy-node--item { min-width: 40px; justify-content: center; border: 1px solid var(--vp-c-divider); border-radius: 9px; }

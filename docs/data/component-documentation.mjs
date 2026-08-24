@@ -6,6 +6,11 @@ const secondaryStateScenarios = Object.freeze([
 
 const curatedScenarios = Object.freeze({
   calendar: ['month', 'week', 'disabled-weekends'],
+  'range-calendar': ['booking'],
+  'month-picker': ['billing-month'],
+  'month-range-picker': ['reporting-period'],
+  'year-picker': ['graduation-year'],
+  'year-range-picker': ['roadmap-horizon'],
   disclosure: ['closed'],
   switch: ['off'],
   'tags-input': ['skills'],

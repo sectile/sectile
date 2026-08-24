@@ -28,10 +28,12 @@ const koNames: Record<string, string> = {
   'date-time-picker': '날짜·시간 선택기', 'date-time-range-picker': '날짜·시간 범위 선택기', dialog: '대화상자',
   disclosure: '상세 내용 펼치기', editable: '인라인 편집', feed: '피드', grid: '격자', listbox: '목록 상자',
   menu: '메뉴', 'menu-button': '메뉴 버튼', menubar: '메뉴 막대', 'multi-thumb-slider': '다중 슬라이더',
+  'month-picker': '월 선택기', 'month-range-picker': '월 범위 선택기',
   'navigation-menu': '이동 메뉴', 'number-field': '숫자 입력', pagination: '페이지 나누기', 'pin-input': '인증 번호 입력',
   popover: '팝오버', 'quantity-field': '수량 입력', 'radio-group': '라디오 버튼 묶음', rating: '평점', select: '선택 상자',
   slider: '슬라이더', 'spin-button': '증감 입력', stepper: '단계 진행', switch: '스위치', tabs: '탭',
   'tags-input': '태그 입력', text: '텍스트 입력', 'time-field': '시간 입력', 'time-range-field': '시간 범위 입력',
+  'range-calendar': '날짜 범위 달력', 'year-picker': '연도 선택기', 'year-range-picker': '연도 범위 선택기',
   timer: '타이머', toast: '토스트 알림', 'toggle-button': '토글 버튼', 'toggle-group': '토글 버튼 묶음',
   toolbar: '도구 막대', tooltip: '도움말', 'tree-grid': '계층 격자', 'tree-view': '계층 보기', 'window-splitter': '영역 크기 조절',
 };

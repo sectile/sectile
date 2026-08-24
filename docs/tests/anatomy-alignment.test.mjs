@@ -6,6 +6,10 @@ const source = await readFile(
   new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url),
   'utf8',
 );
+const previewSource = await readFile(
+  new URL('../.vitepress/theme/component-anatomy.ts', import.meta.url),
+  'utf8',
+);
 const dedicatedSources = await Promise.all([
   'CalendarAnatomy.vue',
   'DateTimePickerAnatomy.vue',
@@ -51,8 +55,19 @@ test('tooltip anatomy positions content from its trigger anchor', () => {
 
 test('navigation anatomy opens sub-content without changing the menu row width', () => {
   assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--list > \[data-part-name='item-container'\]\s*\{[^}]*flex:\s*none;/s);
+  assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--list > \[data-part-name='item-container'\][^{]*\{[^}]*padding:\s*0;[^}]*border:\s*0;/s);
   assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--navigation-viewport\s*\{[^}]*position:\s*static;[^}]*width:\s*100%;[^}]*overflow:\s*hidden;/s);
   assert.match(source, /\.anatomy-node--navigation-viewport > \.anatomy-node--navigation-panel\s*\{[^}]*border-radius:\s*inherit;/s);
+});
+
+test('active anatomy labels escape every part boundary without clipping', () => {
+  assert.match(source, /\.anatomy-part-active\s*\{[^}]*overflow:\s*visible\s*!important;/s);
+  assert.match(source, /\.anatomy-node--pagination-root\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*overflow:\s*visible;/s);
+});
+
+test('range calendar anatomy keeps weekday labels in a seven-column row', () => {
+  assert.match(previewSource, /className: 'calendar-grid calendar-weekdays'/u);
+  assert.doesNotMatch(previewSource, /contentChildren\.push\(\.\.\.\['Mon'/u);
 });
 
 test('menu anatomy uses explicit separators without duplicate item rules', () => {

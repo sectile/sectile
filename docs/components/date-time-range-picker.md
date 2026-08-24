@@ -106,4 +106,4 @@ Rendered parts use `data-scope="date-time-range-picker"` by default. Each name b
 
 ## Accessibility
 
-Four labeled endpoint inputs and the calendar grid expose the range without collapsing its start and end semantics.
+Two labeled date-time fields and the calendar grid keep the start and end endpoints distinct.

@@ -63,7 +63,8 @@ export function adjustTemporalAnatomyValue(
 
 const popupComponents = new Set([
   'dialog', 'alert-dialog', 'popover', 'tooltip', 'menu-button',
-  'navigation-menu', 'select', 'cascade-select',
+  'navigation-menu', 'select', 'cascade-select', 'month-picker',
+  'month-range-picker', 'year-picker', 'year-range-picker',
 ]);
 const selectionComponents = new Set([
   'listbox', 'select', 'cascade-select', 'combobox', 'radio-group',
@@ -74,7 +75,8 @@ const activationParts = new Set([
   'disclosure', 'clear', 'item-delete', 'increment', 'decrement', 'first',
   'previous', 'next', 'last', 'pause', 'indicator', 'load-earlier',
   'load-newer', 'action-trigger', 'edit-trigger', 'submit-trigger',
-  'cancel-trigger', 'handle', 'slide',
+  'cancel-trigger', 'handle', 'slide', 'previous-month', 'next-month',
+  'previous-year', 'next-year', 'previous-page', 'next-page',
 ]);
 
 function toggle(state: AnatomyPreviewState, key: string): void {
@@ -113,6 +115,7 @@ export function initializeAnatomyInteraction(
     'open:general': 'false',
     'open:deployments': 'true',
     'open:danger': 'false',
+    periodOffset: '0',
   });
   values['split'] = '35';
   if (component === 'timer') {
@@ -210,6 +213,15 @@ export function activateAnatomyInteraction(
   if (component === 'rating' && part === 'clear') state['selected'] = '0';
 
   if (component === 'calendar' && part === 'cell' && node.text !== undefined) state['selected'] = node.text;
+  if (['range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker'].includes(component)) {
+    if (part === 'cell' && node.text !== undefined) state['selected'] = node.text;
+    if (['previous-month', 'previous-year', 'previous-page'].includes(part)) {
+      state['periodOffset'] = String(Number(state['periodOffset'] ?? '0') - 1);
+    }
+    if (['next-month', 'next-year', 'next-page'].includes(part)) {
+      state['periodOffset'] = String(Number(state['periodOffset'] ?? '0') + 1);
+    }
+  }
   if (['grid', 'tree-grid'].includes(component)
     && ['row', 'cell'].includes(part) && node.text !== undefined) state['selected'] = nodeIdentity;
   if (component === 'tree-view' && part === 'disclosure') {
@@ -291,7 +303,8 @@ export function isAnatomyNodeActive(
   if (component === 'pagination' && part === 'item') return nodeIdentity === state['page'];
   if (component === 'carousel' && part === 'indicator') return nodeIdentity === state['slide'];
   if (component === 'rating' && part === 'item') return Number(nodeIdentity) <= Number(state['selected']);
-  if (['calendar', 'grid', 'tree-grid'].includes(component) && ['cell', 'row'].includes(part)) return nodeIdentity === state['selected'];
+  if (['calendar', 'range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker', 'grid', 'tree-grid'].includes(component)
+    && ['cell', 'row'].includes(part)) return nodeIdentity === state['selected'];
   if (component === 'tree-view' && part === 'item') return nodeIdentity === state['selected'];
   if (selectionComponents.has(component)) return ['item', 'item-indicator', 'indicator', 'trigger', 'step'].includes(part)
     && nodeIdentity === state['selected'];

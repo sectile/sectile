@@ -202,6 +202,64 @@ function datePickerPreview(kind: string): AnatomyPreviewNode {
   return kind === 'calendar' ? main[main.length - 1]! : n('root', undefined, undefined, main, { className: 'picker-root' });
 }
 
+function periodPickerPreview(kind: string): AnatomyPreviewNode {
+  const isRange = kind.includes('range');
+  const isCalendar = kind === 'range-calendar';
+  const isYear = kind.startsWith('year');
+  const cellPart = 'cell';
+  const previousPart = isYear ? 'previous-page' : isCalendar ? 'previous-month' : 'previous-year';
+  const nextPart = isYear ? 'next-page' : isCalendar ? 'next-month' : 'next-year';
+  const heading = isYear ? '2020–2031' : '2026';
+  const values = isYear
+    ? ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031']
+    : isCalendar
+      ? ['27', '28', '29', '30', '31', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
+      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const fields = isCalendar
+    ? []
+    : isRange
+      ? [input('start-input', isYear ? '2026' : 'Mar 2026', 'From'), input('end-input', isYear ? '2030' : 'Aug 2026', 'To')]
+      : [input('input', isYear ? '2028' : 'Aug 2026', isYear ? 'Year' : 'Month')];
+  const cells = values.map((value, index) => n('cell', cellPart, value, undefined, {
+    className: index === (isYear ? 4 : isCalendar ? 26 : 7)
+      ? 'selected'
+      : isRange && index > (isYear ? 1 : 2) && index < (isYear ? 7 : 8)
+        ? 'in-range'
+        : isCalendar && index < 5
+          ? 'outside'
+          : undefined,
+  }));
+  const navigation = isCalendar
+    ? [
+        iconButton('previous-year', 'chevrons-left', 'Previous year'),
+        iconButton(previousPart, 'chevron-left', 'Previous month'),
+        n('text', undefined, 'August 2026', undefined, { className: 'calendar-title' }),
+        iconButton(nextPart, 'chevron-right', 'Next month'),
+        iconButton('next-year', 'chevrons-right', 'Next year'),
+      ]
+    : [
+        iconButton(previousPart, 'chevron-left', isYear ? 'Previous years' : 'Previous year'),
+        n('text', undefined, heading, undefined, { className: 'calendar-title' }),
+        iconButton(nextPart, 'chevron-right', isYear ? 'Next years' : 'Next year'),
+      ];
+  const contentChildren: AnatomyPreviewNode[] = [row(navigation, 'calendar-header')];
+  if (isCalendar) {
+    contentChildren.push(n(
+      'grid',
+      undefined,
+      undefined,
+      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => n('weekday', undefined, day)),
+      { className: 'calendar-grid calendar-weekdays' },
+    ));
+  }
+  contentChildren.push(n('grid', 'grid', undefined, cells, { className: isCalendar ? 'calendar-grid' : 'period-grid' }));
+
+  return n('root', undefined, undefined, [
+    ...(fields.length > 0 ? [row([...fields, button('trigger', isYear ? 'Choose year' : 'Choose month', 'calendar')], 'picker-inputs')] : []),
+    n('calendar', 'content', undefined, contentChildren, { className: isCalendar ? 'calendar' : 'period-picker' }),
+  ], { className: 'picker-root' });
+}
+
 function sliderPreview(multiple = false): AnatomyPreviewNode {
   return root([
     row([n('label', undefined, multiple ? 'Price range' : 'Deployment traffic'), n('text', undefined, multiple ? '$30 – $72' : '40%')], 'split-label'),
@@ -291,7 +349,9 @@ function menuPreview(kind: string): AnatomyPreviewNode {
         n('item', 'item-container', undefined, [
           item('item', 'Products', undefined, [n('indicator', undefined, undefined, undefined, { icon: 'chevron-down' })], 'products'),
         ]),
-        item('item', 'Docs', undefined, undefined, 'docs'),
+        n('item', 'item-container', undefined, [
+          item('item', 'Docs', undefined, undefined, 'docs'),
+        ]),
         n('indicator', 'indicator'),
       ]),
       n('viewport', 'viewport', undefined, [
@@ -561,6 +621,7 @@ function previewFor(component: string): AnatomyPreviewNode {
   if (['text', 'number-field', 'date-field', 'date-time-field', 'time-field'].includes(component)) return fieldPreview(component);
   if (['date-range-field', 'time-range-field'].includes(component)) return rangeFieldPreview(component);
   if (['calendar', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(component)) return datePickerPreview(component);
+  if (['range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker'].includes(component)) return periodPickerPreview(component);
   if (component === 'slider') return sliderPreview();
   if (component === 'multi-thumb-slider') return sliderPreview(true);
   if (['dialog', 'alert-dialog', 'popover', 'tooltip'].includes(component)) return popupPreview(component);
@@ -604,6 +665,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   menu: anatomy('menu', ['root', 'item', 'sub-content', 'separator'], menuPartDetails()),
   'menu-button': anatomy('menu-button', ['trigger', 'content', 'item', 'sub-content', 'separator'], menuPartDetails('menu-button')),
   menubar: anatomy('menubar', ['root', 'item', 'sub-content', 'separator'], menuPartDetails('menubar')),
+  'month-picker': anatomy('month-picker', ['input', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
+  'month-range-picker': anatomy('month-range-picker', ['start-input', 'end-input', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'multi-thumb-slider': anatomy('multi-thumb-slider', ['root', 'track', 'range', 'thumb']),
   'navigation-menu': anatomy('navigation-menu', ['root', 'list', 'item-container', 'item', 'sub-content', 'viewport', 'indicator'], menuPartDetails('navigation-menu')),
   'number-field': anatomy('number-field', fieldParts),
@@ -612,6 +675,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   popover: anatomy('popover', ['trigger', 'anchor', 'content', 'title', 'description', 'close', 'arrow']),
   'quantity-field': anatomy('quantity-field', ['root', 'input', 'unit-select', 'value']),
   'radio-group': anatomy('radio-group', ['root', 'item', 'indicator']),
+  'range-calendar': anatomy('range-calendar', ['content', 'grid', 'cell', 'previous-month', 'next-month', 'previous-year', 'next-year']),
   rating: anatomy('rating', ['root', 'item', 'indicator', 'clear']),
   select: anatomy('select', ['root', 'trigger', 'value', 'content', 'item', 'item-indicator']),
   slider: anatomy('slider', ['root', 'track', 'range', 'thumb']),
@@ -632,6 +696,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'tree-grid': anatomy('tree-grid', ['root', 'row', 'cell', 'disclosure', 'editor']),
   'tree-view': anatomy('tree-view', ['root', 'group', 'item', 'disclosure']),
   'window-splitter': anatomy('window-splitter', ['root', 'pane', 'handle']),
+  'year-picker': anatomy('year-picker', ['input', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
+  'year-range-picker': anatomy('year-range-picker', ['start-input', 'end-input', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
 });
 
 function menuPartDetails(rootScope = 'menu'): Readonly<Record<string, AnatomyPartDetail>> {

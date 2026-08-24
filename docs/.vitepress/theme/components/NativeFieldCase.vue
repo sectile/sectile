@@ -69,7 +69,7 @@ import { ${component.value.name?.replace('Sectile', '') ?? 'Field'} } from '@sec
 <\/script>
 
 <template>
-  <${component.value.name?.replace('Sectile', '') ?? 'Field'}${props.controlled ? ' v-model="value"' : ' :default-value="initialValue"'}${props.kind === 'number-field' ? '' : ' native'} />
+  <${component.value.name?.replace('Sectile', '') ?? 'Field'}${props.controlled ? ' v-model="value"' : ' :default-value="initialValue"'} />
 </template>`);
 
 function update(next: FieldValue): void {
@@ -101,7 +101,6 @@ function update(next: FieldValue): void {
           v-bind="ownershipProps"
           :disabled="disabled"
           :readonly="readonly"
-          :native="temporal"
           :policies="policies"
           class="text-field temporal-field__input"
           @update:model-value="update"

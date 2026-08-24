@@ -63,8 +63,7 @@ import {
 import {
   DateTimeRangePickerCell,
   DateTimeRangePickerContent,
-  DateTimeRangePickerEndDateInput,
-  DateTimeRangePickerEndTimeInput,
+  DateTimeRangePickerEndDateTimeInput,
   DateTimeRangePickerGrid,
   DateTimeRangePickerMonthCell,
   DateTimeRangePickerMonthViewTrigger,
@@ -75,8 +74,7 @@ import {
   DateTimeRangePickerPreviousWeek,
   DateTimeRangePickerPreviousYear,
   DateTimeRangePickerRoot,
-  DateTimeRangePickerStartDateInput,
-  DateTimeRangePickerStartTimeInput,
+  DateTimeRangePickerStartDateTimeInput,
   DateTimeRangePickerTrigger,
   DateTimeRangePickerWeekViewTrigger,
   DateTimeRangePickerYearViewTrigger,
@@ -178,10 +176,8 @@ const pickerCatalog: Readonly<Record<PickerName, PickerDefinition>> = Object.fre
     Next: Object.freeze({ week: DateTimeRangePickerNextWeek, month: DateTimeRangePickerNextMonth, year: DateTimeRangePickerNextYear }),
     ViewTrigger: Object.freeze({ week: DateTimeRangePickerWeekViewTrigger, month: DateTimeRangePickerMonthViewTrigger, year: DateTimeRangePickerYearViewTrigger }),
     fields: Object.freeze([
-      { component: DateTimeRangePickerStartDateInput, part: 'start-date-input', en: 'Start date', ko: '시작 날짜' },
-      { component: DateTimeRangePickerEndDateInput, part: 'end-date-input', en: 'End date', ko: '종료 날짜' },
-      { component: DateTimeRangePickerStartTimeInput, part: 'start-time-input', en: 'Start time', ko: '시작 시간' },
-      { component: DateTimeRangePickerEndTimeInput, part: 'end-time-input', en: 'End time', ko: '종료 시간' },
+      { component: DateTimeRangePickerStartDateTimeInput, part: 'start-date-time-input', en: 'Start', ko: '시작' },
+      { component: DateTimeRangePickerEndDateTimeInput, part: 'end-date-time-input', en: 'End', ko: '종료' },
     ]),
     defaultValue: Object.freeze({
       start: Object.freeze({ date: initialDate, time: initialTime }),
@@ -197,10 +193,7 @@ const fieldGroups = computed<readonly PickerFieldGroup[]>(() => {
     return Object.freeze([{ key: 'date-time', en: 'Date and time', ko: '날짜 및 시간', fields }]);
   }
   if (props.component === 'date-time-range-picker') {
-    return Object.freeze([
-      { key: 'start', en: 'Start', ko: '시작', fields: Object.freeze([fields[0]!, fields[2]!]) },
-      { key: 'end', en: 'End', ko: '종료', fields: Object.freeze([fields[1]!, fields[3]!]) },
-    ]);
+    return fields.map((field) => Object.freeze({ key: field.part, en: field.en, ko: field.ko, fields: Object.freeze([field]) }));
   }
   return fields.map((field) => Object.freeze({ key: field.part, en: field.en, ko: field.ko, fields: Object.freeze([field]) }));
 });

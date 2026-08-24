@@ -45,6 +45,7 @@ test('menu button examples expose useful flat and nested command sets', () => {
 
 test('navigation menu panels honor their closed disclosure state', () => {
   assert.match(styles, /\.catalog-navigation-panel\[hidden\]\s*\{\s*display:\s*none;/);
+  assert.match(styles, /\.catalog-navigation-panel\s*\{[^}]*position:\s*static\s*!important;[^}]*inset:\s*auto\s*!important;/s);
 });
 
 test('navigation menu keeps equal insets, aligned items, and an anchored popup gap', () => {
@@ -95,17 +96,60 @@ test('calendar families use functional reusable calendar controls', () => {
   assert.doesNotMatch(pickerSource, />[‹›]</u);
 });
 
+test('period picker headings stay centered between symmetric navigation controls', () => {
+  assert.match(styles, /\.catalog-picker-navigation\s*\{[^}]*grid-template-columns:\s*2\.35rem minmax\(7rem, 1fr\) 2\.35rem;/su);
+  assert.match(styles, /\.catalog-picker-toolbar strong,\s*\.catalog-picker-navigation strong\s*\{[^}]*text-align:\s*center;/su);
+});
+
+test('date range picker demonstrates unavailable dates and projects their state visibly', () => {
+  assert.match(source, /const unavailableBookingDates = new Set\(\['2026-08-27', '2026-08-29'\]\)/u);
+  assert.match(source, /<DateRangePickerRoot[^>]+:policies="dateRangePickerPolicies"/u);
+  assert.match(catalogCodeSource, /<DateRangePickerRoot[^>]+:policies="policies"/u);
+  assert.match(catalogCodeSource, /const unavailableDates = new Set/u);
+  assert.match(styles, /\.catalog-calendar button\[data-outside-month\]/u);
+  assert.match(styles, /\.catalog-calendar button\[aria-disabled="true"\]/u);
+});
+
 test('date and time pickers group endpoint values and share one spacing rhythm', () => {
   assert.match(source, /class="catalog-date-time-control"/u);
+  assert.match(source, /<DateTimeRangePickerStartDateTimeInput class="catalog-input"/u);
+  assert.match(source, /<DateTimeRangePickerEndDateTimeInput class="catalog-input"/u);
+  assert.doesNotMatch(source, /<DateTimeRangePickerStartDateInput/u);
+  assert.doesNotMatch(source, /<DateTimeRangePickerEndTimeInput/u);
   assert.match(source, /class="catalog-range-fields catalog-range-fields--single"/u);
-  assert.match(styles, /\.catalog-temporal-picker\s*\{[^}]*gap:\s*0\.4rem;/su);
-  assert.match(styles, /\.catalog-temporal-picker > \.catalog-inline\s*\{[^}]*gap:\s*0\.4rem;/su);
-  assert.match(styles, /\.catalog-range-fields\s*\{[^}]*gap:\s*0\.4rem;/su);
+  assert.match(styles, /\.catalog-temporal-picker\s*\{[^}]*--catalog-temporal-gap:\s*0\.5rem;[^}]*gap:\s*var\(--catalog-temporal-gap\);/su);
+  assert.match(styles, /\.catalog-temporal-picker > \.catalog-inline\s*\{[^}]*gap:\s*var\(--catalog-temporal-gap\);/su);
+  assert.match(styles, /\.catalog-range-fields\s*\{[^}]*gap:\s*var\(--catalog-temporal-gap, 0\.5rem\);/su);
+  assert.match(styles, /\.catalog-picker-trigger\s*\{[^}]*width:\s*2\.8rem;[^}]*height:\s*2\.8rem;[^}]*place-items:\s*center;/su);
   assert.match(styles, /\.catalog-date-time-control\s*\{[^}]*overflow:\s*hidden;/su);
   assert.match(catalogCodeSource, /class="catalog-date-time-control"/u);
+  assert.match(catalogCodeSource, /DateTimeRangePickerStartDateTimeInput/u);
+  assert.doesNotMatch(catalogCodeSource, /DateTimeRangePickerStartDateInput/u);
   assert.match(pickerAnatomySource, /const fieldGroups = computed/u);
+  assert.match(pickerAnatomySource, /DateTimeRangePickerStartDateTimeInput/u);
   assert.match(pickerAnatomySource, /date-time-anatomy__input-group--compound/u);
   assert.match(pickerAnatomySource, /\.date-time-anatomy__content\s*\{[^}]*margin-top:\s*8px;/su);
+});
+
+test('temporal picker triggers use accessible icon buttons in previews and code', () => {
+  const triggerNames = [
+    'DatePickerTrigger',
+    'DateRangePickerTrigger',
+    'MonthPickerTrigger',
+    'MonthRangePickerTrigger',
+    'YearPickerTrigger',
+    'YearRangePickerTrigger',
+    'DateTimePickerTrigger',
+    'DateTimeRangePickerTrigger',
+  ];
+
+  for (const trigger of triggerNames) {
+    assert.match(source, new RegExp(`<${trigger} class="catalog-picker-trigger" aria-label="[^"]+"><CalendarDays`));
+    assert.match(catalogCodeSource, new RegExp(`<${trigger} class="catalog-picker-trigger" aria-label="[^"]+">\\s*<CalendarDays`, 'u'));
+  }
+
+  assert.doesNotMatch(source, />\s*Calendar\s*</u);
+  assert.doesNotMatch(catalogCodeSource, />\s*Calendar\s*</u);
 });
 
 test('paused carousel example owns real autoplay state and visible feedback', () => {
