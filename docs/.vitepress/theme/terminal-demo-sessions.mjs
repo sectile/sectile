@@ -1,9 +1,9 @@
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
 import { createCalculatorExpression } from '@sectile/core/number-field';
-import { createDateValue, createDateRange, formatDateValue } from '@sectile/core/date-field';
-import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
-import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
+import { compareDateValues, createDateValue, createDateRange, formatDateValue, parseDateValue } from '@sectile/core/date-field';
+import { compareTimeValues, createTimeValue, formatTimeValue, parseTimeValue } from '@sectile/core/time-field';
+import { compareDateTimeValues, createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue, parseDateTimeValue } from '@sectile/core/date-time-field';
 import {
   createImperialUnitSystem,
   createMetricUnitSystem,
@@ -75,9 +75,9 @@ export const demos = Object.freeze([
   { id: 'spin-button', label: 'Spin Button', description: 'decimal step · invalid draft · controlled · [/] cases', readOnly: true, create: createSpinButtonDemo },
   { id: 'number-field', label: 'Number field', description: 'exact decimal · expressions · caret · controlled · [/] cases', readOnly: true, create: createNumberFieldDemo },
   { id: 'quantity-field', label: 'Quantity field', description: 'units · affine conversion · expressions · { } cases', readOnly: true, create: createQuantityFieldDemo },
-  { id: 'date-field', label: 'Date field', description: 'calendar value · caret segments · commit · [/] cases', readOnly: true, create: createDateFieldDemo },
+  { id: 'date-field', label: 'Date field', description: 'calendar value · segment focus · commit · [/] cases', readOnly: true, create: createDateFieldDemo },
   { id: 'date-time-field', label: 'Date-time field', description: 'civil date-time · midnight carry · commit · [/] cases', readOnly: true, create: createDateTimeFieldDemo },
-  { id: 'time-field', label: 'Time field', description: 'wall-clock value · caret segments · commit · [/] cases', readOnly: true, create: createTimeFieldDemo },
+  { id: 'time-field', label: 'Time field', description: 'wall-clock value · segment focus · commit · [/] cases', readOnly: true, create: createTimeFieldDemo },
   { id: 'date-picker', label: 'Date picker', description: 'month grid · bounds · single selection · [/] cases', readOnly: true, create: createDatePickerDemo },
   { id: 'date-range-picker', label: 'Date range picker', description: 'range anchor · inclusive selection · [/] cases', readOnly: true, create: createDateRangePickerDemo },
   { id: 'date-time-picker', label: 'Date-time picker', description: 'civil date-time · calendar · wall clock · [/] cases', readOnly: true, create: createDateTimePickerDemo },
@@ -401,7 +401,11 @@ function createPaginationDemo(host) {
 }
 
 function createStepperDemo(host) {
-  const items = [['details', '1 Details'], ['verify', '2 Verify'], ['review', '3 Review']];
+  const items = [
+    ['details', 'Details', 'Add contact and delivery information.'],
+    ['verify', 'Verify', 'Confirm payment and shipping details.'],
+    ['review', 'Review', 'Check the complete order before placing it.'],
+  ];
   return scenarioDemo(host, [
     { title: 'Checkout progress', value: 'details', disabled: [], controlled: false },
     { title: 'Gated verification', value: 'details', disabled: ['verify'], controlled: false },
@@ -410,7 +414,41 @@ function createStepperDemo(host) {
     let value = scenario.value; let highlightedValue = scenario.value; let connection;
     connection = createStepper({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}left/right moves focus · enter activates${ansi.reset}`, '', ...items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}× ${label}${ansi.reset}` : terminalCell(label, Math.min(40, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `step=${state.selection.selected[0] ?? '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return {
+      handle: (input) => connection.handleKeyboardInput(input),
+      lines(width) {
+        const { state } = connection.getSnapshot();
+        const selected = state.selection.selected[0] ?? null;
+        const selectedIndex = items.findIndex(([id]) => id === selected);
+        const focusedIndex = items.findIndex(([id]) => id === state.cursor.current);
+        const stepWidth = Math.max(12, Math.min(18, Math.floor((width - 8) / items.length)));
+        const progress = items.map(([id, label], index) => {
+          const marker = scenario.disabled.includes(id)
+            ? '×'
+            : index < selectedIndex
+              ? '✓'
+              : index === selectedIndex
+                ? '●'
+                : String(index + 1);
+          const content = plain(` ${marker} ${label} `, stepWidth);
+          if (scenario.disabled.includes(id)) return `${ansi.disabled}${content}${ansi.reset}`;
+          if (index === focusedIndex) return `${ansi.current}${content}${ansi.reset}`;
+          if (index < selectedIndex) return `${ansi.cyan}${content}${ansi.reset}`;
+          return content;
+        }).join(`${ansi.dim}──${ansi.reset}`);
+        const active = items[Math.max(0, selectedIndex)] ?? items[0];
+        const completed = Math.max(0, selectedIndex);
+        return [
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
+          `${ansi.dim}←/→ preview step · Enter makes it current${ansi.reset}`,
+          '', progress, '',
+          `${ansi.bold}Current task · ${active[1]}${ansi.reset}`,
+          plain(active[2], Math.max(1, width - 2)),
+          '', `progress=${completed}/${items.length} completed  current=${selected ?? '−'}  focused=${state.cursor.current ?? '−'}`,
+          `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+        ];
+      },
+    };
   });
 }
 
@@ -569,6 +607,7 @@ function createRangeFieldDemo(host, kind) {
       { title: 'Required times', start: '10:00', end: '12:00', required: true },
     ];
   return scenarioDemo(host, rangeScenarios, (scenario) => {
+    const draftTemplate = kind === 'date' ? '    -  -  ' : '  :  ';
     const makeEditing = (text) => unwrap(createTextEditingState(text, {
       anchorCodeUnitOffset: text.length,
       focusCodeUnitOffset: text.length,
@@ -576,25 +615,38 @@ function createRangeFieldDemo(host, kind) {
     const create = kind === 'date' ? createDateRangeField : createTimeRangeField;
     const connection = create({
       ...scenario.interaction,
-      defaultStartInputState: makeEditing(scenario.start),
-      defaultEndInputState: makeEditing(scenario.end),
+      defaultStartInputState: makeEditing(scenario.start || draftTemplate),
+      defaultEndInputState: makeEditing(scenario.end || draftTemplate),
       required: scenario.required,
       onUpdate: host.render,
     });
+    const segments = temporalSegments(kind);
     return {
-      handle: (input) => connection.handleKeyboardInput(input),
+      handle(input) {
+        const endpoint = connection.getSnapshot().state.active;
+        if (input.key === 'left' || input.key === 'right' || input.key === 'home' || input.key === 'end') {
+          return moveTemporalSegment(connection, segments, input.key, endpoint);
+        }
+        const segmentEdit = editTemporalSegment(connection, segments, input, endpoint);
+        if (segmentEdit !== null) return segmentEdit;
+        return connection.handleKeyboardInput(input);
+      },
       lines(width) {
         const { state } = connection.getSnapshot();
-        const line = (endpoint) => `${terminalCell(
-          `${endpoint === 'start' ? 'Start' : 'End  '}  ${connection.getText(endpoint) || '—'}`,
-          Math.min(56, width),
-          { current: state.active === endpoint },
-        )}${state.active === endpoint ? terminalInputCursor : ''}`;
+        const line = (endpoint) => {
+          const current = state.active === endpoint;
+          const text = connection.getText(endpoint);
+          const display = current
+            ? renderTemporalSegments(text, segments, activeTemporalSegment(connection, segments, endpoint))
+            : text.replaceAll(' ', '·');
+          return `${current ? '▸' : ' '} ${endpoint === 'start' ? 'Start' : 'End  '}  ${display || '—'}${current ? terminalInputCursor : ''}`;
+        };
         return [
           `${ansi.bold}${scenario.title}${ansi.reset}`,
-          `${ansi.dim}Tab endpoint · type · arrows adjust · Enter commit${ansi.reset}`, '',
+          `${ansi.dim}Tab endpoint · ←/→ segment · ↑/↓ adjust · Enter commit${ansi.reset}`, '',
           line('start'), line('end'), '',
-          `active=${state.active}  committed=${state.value === null ? '−' : 'yes'}  required=${scenario.required === true}`,
+          `active=${state.active}  segment=${activeTemporalSegment(connection, segments, state.active).label}`,
+          `committed=${state.value === null ? '−' : 'yes'}  required=${scenario.required === true}`,
         ];
       },
     };
@@ -1503,7 +1555,7 @@ function createDateFieldDemo(host) {
   const value = unwrap(createDateValue(2026, 8, 22));
   return scenarioDemo(host, [
     { title: 'Calendar date', value, controlled: false, policies: {}, detail: 'timezone-free YYYY-MM-DD' },
-    { title: 'Booking deadline', value, controlled: false, policies: { min: unwrap(createDateValue(2026, 8, 18)), max: unwrap(createDateValue(2026, 9, 30)) }, detail: 'bounded calendar value' },
+    { title: 'Booking deadline', value, controlled: false, policies: { min: unwrap(createDateValue(2026, 8, 18)), max: unwrap(createDateValue(2026, 9, 30)) }, detail: 'bounded 2026-08-18–2026-09-30' },
     { title: 'Controlled date', value, controlled: true, policies: {}, detail: 'external value ownership' },
   ], (scenario) => createTerminalTemporalField(host, scenario, 'date'));
 }
@@ -1531,6 +1583,7 @@ function createDateTimeFieldDemo(host) {
 
 function createTerminalTemporalField(host, scenario, kind) {
   let external = scenario.value;
+  let interactionFeedback = null;
   let connection;
   const create = kind === 'date' ? createDateField : kind === 'date-time' ? createDateTimeField : createTimeField;
   const format = kind === 'date' ? formatDateValue : kind === 'date-time' ? formatDateTimeValue : formatTimeValue;
@@ -1541,19 +1594,220 @@ function createTerminalTemporalField(host, scenario, kind) {
     onUpdate: host.render,
   });
   function sync() { connection.syncControlledValues({ value: external }); }
+  const segments = temporalSegments(kind);
   return {
-    handle: (input) => connection.handleKeyboardInput(input),
+    handle(input) {
+      if (input.key === 'left' || input.key === 'right' || input.key === 'home' || input.key === 'end') {
+        interactionFeedback = null;
+        return moveTemporalSegment(connection, segments, input.key);
+      }
+      const segmentEdit = editTemporalSegment(connection, segments, input);
+      if (segmentEdit !== null) {
+        interactionFeedback = null;
+        return segmentEdit;
+      }
+      const handled = connection.handleKeyboardInput(input);
+      if ((input.key === 'up' || input.key === 'down') && !handled) {
+        const boundary = input.key === 'up' ? scenario.policies.max : scenario.policies.min;
+        interactionFeedback = boundary === undefined
+          ? null
+          : `${input.key === 'up' ? 'Next value exceeds maximum' : 'Previous value precedes minimum'} ${format(boundary)}`;
+        if (interactionFeedback !== null) host.render();
+      } else if (handled) {
+        interactionFeedback = null;
+      }
+      return handled;
+    },
     lines(width) {
-      const { state } = connection.getSnapshot(); const text = connection.getText(); const caret = connection.getCaret();
+      const { state } = connection.getSnapshot();
+      const text = connection.getText();
+      const active = activeTemporalSegment(connection, segments);
+      const committed = state.value === null ? null : format(state.value);
+      const draft = temporalDraftStatus(kind, text, scenario.policies, committed);
+      const feedback = draft.type === 'invalid'
+        ? [
+            `${ansi.yellow}Invalid draft · ${draft.message}${ansi.reset}`,
+            `${ansi.dim}Committed value unchanged · ${committed ?? 'empty'} · Esc restores it${ansi.reset}`,
+          ]
+        : draft.type === 'pending'
+          ? [`${ansi.cyan}Ready to commit · Enter saves ${draft.value}${ansi.reset}`]
+          : [];
       return [
         `${ansi.bold}${scenario.title}${ansi.reset}`,
-        `${ansi.dim}${scenario.detail} · ↑/↓ segment · Enter commit · Escape cancel${ansi.reset}`,
-        '', plain(`${text.slice(0, caret)}${terminalInputCursor}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`, Math.max(1, width - 2)), '',
-        `value=${state.value === null ? '−' : format(state.value)}  caret=${caret}`,
+        `${ansi.dim}${scenario.detail} · ←/→ segment · ↑/↓ adjust · Enter commit · Esc restore${ansi.reset}`,
+        '', renderTemporalSegments(text, segments, active), '',
+        ...feedback,
+        ...(interactionFeedback === null ? [] : [`${ansi.yellow}${interactionFeedback}${ansi.reset}`]),
+        `value=${committed ?? '−'}  segment=${active.label}`,
         `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
       ];
     },
   };
+}
+
+function temporalDraftStatus(kind, text, policies, committed) {
+  const source = text.trim();
+  if (source.length === 0) {
+    if (policies.required === true) return { type: 'invalid', message: 'A value is required.' };
+    return committed === null ? { type: 'committed' } : { type: 'pending', value: 'an empty value' };
+  }
+
+  const parse = kind === 'date' ? parseDateValue : kind === 'date-time' ? parseDateTimeValue : parseTimeValue;
+  const compare = kind === 'date' ? compareDateValues : kind === 'date-time' ? compareDateTimeValues : compareTimeValues;
+  const format = kind === 'date' ? formatDateValue : kind === 'date-time' ? formatDateTimeValue : formatTimeValue;
+  const parsed = parse(source);
+  if (!parsed.ok) return { type: 'invalid', message: temporalDraftError(parsed.error.code) };
+  if (policies.min !== undefined && compare(parsed.value, policies.min) < 0) {
+    return { type: 'invalid', message: 'The value is earlier than the allowed minimum.' };
+  }
+  if (policies.max !== undefined && compare(parsed.value, policies.max) > 0) {
+    return { type: 'invalid', message: 'The value is later than the allowed maximum.' };
+  }
+  if (typeof policies.unavailable === 'function' && policies.unavailable(parsed.value)) {
+    return { type: 'invalid', message: 'This value is unavailable.' };
+  }
+
+  const value = format(parsed.value);
+  return value === committed ? { type: 'committed' } : { type: 'pending', value };
+}
+
+function temporalDraftError(code) {
+  switch (code) {
+    case 'invalid-date-format': return 'Use YYYY-MM-DD.';
+    case 'invalid-date-year': return 'Year must be 0001–9999.';
+    case 'invalid-date-month': return 'Month must be 01–12.';
+    case 'invalid-date-day': return 'That day does not exist in this month.';
+    case 'invalid-time-format': return 'Use HH:mm, optionally with seconds.';
+    case 'invalid-time-hour': return 'Hour must be 00–23.';
+    case 'invalid-time-minute': return 'Minute must be 00–59.';
+    case 'invalid-time-second': return 'Second must be 00–59.';
+    case 'invalid-time-millisecond': return 'Milliseconds must be 000–999.';
+    case 'invalid-date-time-format': return 'Use YYYY-MM-DDTHH:mm.';
+    default: return 'Enter a valid date or time.';
+  }
+}
+
+function temporalSegments(kind) {
+  const date = [
+    { id: 'year', label: 'year', start: 0, end: 4 },
+    { id: 'month', label: 'month', start: 5, end: 7 },
+    { id: 'day', label: 'day', start: 8, end: 10 },
+  ];
+  if (kind === 'date') return date;
+  const timeOffset = kind === 'date-time' ? 11 : 0;
+  const time = [
+    { id: 'hour', label: 'hour', start: timeOffset, end: timeOffset + 2 },
+    { id: 'minute', label: 'minute', start: timeOffset + 3, end: timeOffset + 5 },
+    { id: 'second', label: 'second', start: timeOffset + 6, end: timeOffset + 8 },
+    { id: 'millisecond', label: 'millisecond', start: timeOffset + 9, end: timeOffset + 12 },
+  ];
+  return kind === 'date-time' ? [...date, ...time] : time;
+}
+
+function availableTemporalSegments(text, segments) {
+  return segments.filter(({ start }) => start < text.length);
+}
+
+function temporalText(connection, endpoint) {
+  return endpoint === undefined ? connection.getText() : connection.getText(endpoint);
+}
+
+function temporalInputState(connection, endpoint) {
+  const state = connection.getSnapshot().state;
+  return endpoint === undefined ? state.inputState : state[endpoint].inputState;
+}
+
+function handleTemporalTextEvent(connection, endpoint, event) {
+  return endpoint === undefined
+    ? connection.handleEvent({ type: 'text', event })
+    : connection.handleEvent({ type: 'field', endpoint, event: { type: 'text', event } });
+}
+
+function activeTemporalSegment(connection, segments, endpoint) {
+  const available = availableTemporalSegments(temporalText(connection, endpoint), segments);
+  const selection = temporalInputState(connection, endpoint).snapshot.selection;
+  const offset = Math.min(selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset);
+  return available.find(({ start, end }) => offset >= start && offset <= end) ?? available.at(-1) ?? segments[0];
+}
+
+function moveTemporalSegment(connection, segments, key, endpoint) {
+  const text = temporalText(connection, endpoint);
+  const available = availableTemporalSegments(text, segments);
+  if (available.length === 0) return false;
+  const active = activeTemporalSegment(connection, available, endpoint);
+  const index = available.indexOf(active);
+  const target = key === 'home'
+    ? available[0]
+    : key === 'end'
+      ? available.at(-1)
+      : available[Math.max(0, Math.min(available.length - 1, index + (key === 'right' ? 1 : -1)))];
+  return handleTemporalTextEvent(connection, endpoint, {
+      type: 'replace',
+      startCodeUnitOffset: target.start,
+      endCodeUnitOffset: target.start,
+      text: '',
+      selection: {
+        anchorCodeUnitOffset: target.start,
+        focusCodeUnitOffset: Math.min(target.end, text.length),
+      },
+  });
+}
+
+function editTemporalSegment(connection, segments, input, endpoint) {
+  const insertsText = typeof input.text === 'string' && input.text.length > 0;
+  if (input.key !== 'backspace' && input.key !== 'delete' && !insertsText) return null;
+
+  const segment = activeTemporalSegment(connection, segments, endpoint);
+  const text = temporalText(connection, endpoint);
+  const selection = temporalInputState(connection, endpoint).snapshot.selection;
+  const width = segment.end - segment.start;
+  const content = text.slice(segment.start, segment.end).trimEnd();
+  const selectionStart = Math.max(
+    segment.start,
+    Math.min(selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset, segment.end),
+  );
+  const selectionEnd = Math.max(
+    selectionStart,
+    Math.min(Math.max(selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset), segment.end),
+  );
+  let replaceStart = Math.min(selectionStart - segment.start, content.length);
+  let replaceEnd = Math.min(selectionEnd - segment.start, content.length);
+  let inserted = insertsText ? input.text : '';
+
+  if (input.key === 'backspace' && replaceStart === replaceEnd) {
+    if (replaceStart === 0) return true;
+    replaceStart -= 1;
+  } else if (input.key === 'delete' && replaceStart === replaceEnd) {
+    if (replaceEnd === content.length) return true;
+    replaceEnd += 1;
+  }
+
+  const next = `${content.slice(0, replaceStart)}${inserted}${content.slice(replaceEnd)}`.slice(0, width);
+  const caret = segment.start + Math.min(width, replaceStart + inserted.length);
+  return handleTemporalTextEvent(connection, endpoint, {
+      type: 'replace',
+      startCodeUnitOffset: segment.start,
+      endCodeUnitOffset: segment.end,
+      text: next.padEnd(width, ' '),
+      selection: {
+        anchorCodeUnitOffset: caret,
+        focusCodeUnitOffset: caret,
+      },
+  });
+}
+
+function renderTemporalSegments(text, segments, active) {
+  const available = availableTemporalSegments(text, segments);
+  let offset = 0;
+  const output = [];
+  for (const segment of available) {
+    if (segment.start > offset) output.push(`${ansi.dim}${text.slice(offset, segment.start)}${ansi.reset}`);
+    const visible = text.slice(segment.start, Math.min(segment.end, text.length)).replaceAll(' ', '·');
+    output.push(segment.id === active.id ? `${ansi.current}${visible}${ansi.reset}` : visible);
+    offset = Math.min(segment.end, text.length);
+  }
+  if (offset < text.length) output.push(`${ansi.dim}${text.slice(offset)}${ansi.reset}`);
+  return output.join('');
 }
 
 function createDatePickerDemo(host) {

@@ -149,6 +149,157 @@ test('terminal tabs render a boxed tab strip with a distinct active panel', () =
   assert.match(changed, /Commits, files, and reviewers in this release\./u);
 });
 
+test('terminal stepper renders ordered progress instead of tab-like panels', () => {
+  const session = createDocumentationSession('stepper', 0);
+  const initial = session.lines(80).join('\n');
+  assert.match(initial, /Details.*──.*Verify.*──.*Review/u);
+  assert.match(initial, /Current task · Details/u);
+  assert.match(initial, /progress=0\/3 completed/u);
+  assert.doesNotMatch(initial, /├─+┤/u);
+
+  session.handle({ key: 'right' });
+  assert.match(session.lines(80).join('\n'), /current=details\s+focused=verify/u);
+  session.handle({ key: 'enter' });
+  const advanced = session.lines(80).join('\n');
+  assert.match(advanced, /Current task · Verify/u);
+  assert.match(advanced, /progress=1\/3 completed/u);
+});
+
+test('terminal temporal fields highlight whole segments without a fake text caret', () => {
+  for (const id of ['date-field', 'date-time-field', 'time-field']) {
+    const session = createDocumentationSession(id, 0);
+    const initial = session.lines(100).join('\n');
+    assert.doesNotMatch(initial, /caret=|\u001b\[s/u, id);
+    assert.match(initial, /segment=(?:day|minute)/u, id);
+
+    session.handle({ key: 'home' });
+    assert.match(session.lines(100).join('\n'), /segment=(?:year|hour)/u, id);
+    session.handle({ key: 'right' });
+    assert.match(session.lines(100).join('\n'), /segment=(?:month|minute)/u, id);
+  }
+});
+
+test('terminal temporal fields reject invalid drafts and explain recovery', () => {
+  const cases = [
+    { id: 'date-field', segment: 'month', error: /Month must be 01–12/u },
+    { id: 'date-time-field', segment: 'month', error: /Month must be 01–12/u },
+    { id: 'time-field', segment: 'hour', error: /Hour must be 00–23/u },
+  ];
+
+  for (const { id, segment, error } of cases) {
+    const session = createDocumentationSession(id, 0);
+    session.handle({ key: 'home' });
+    if (segment === 'month') session.handle({ key: 'right' });
+    session.handle({ key: '99', text: '99' });
+
+    const invalid = session.lines(120).join('\n');
+    assert.match(invalid, /Invalid draft/u, id);
+    assert.match(invalid, error, id);
+    assert.match(invalid, /Committed value unchanged/u, id);
+    assert.equal(session.handle({ key: 'enter' }), false, id);
+    assert.match(session.lines(120).join('\n'), /Invalid draft/u, id);
+
+    assert.equal(session.handle({ key: 'escape' }), true, id);
+    assert.doesNotMatch(session.lines(120).join('\n'), /Invalid draft/u, id);
+  }
+});
+
+test('terminal temporal arrows recover invalid segments from the committed value', () => {
+  const cases = [
+    { id: 'date-field', initialCase: 1, moveToSegment: ['home', 'right'], text: '34', expected: /value=2026-09-22\s+segment=month/u },
+    { id: 'date-time-field', initialCase: 0, moveToSegment: ['home', 'right'], text: '34', expected: /value=2026-09-22T16:30\s+segment=month/u },
+    { id: 'time-field', initialCase: 0, moveToSegment: ['home'], text: '34', expected: /value=10:30\s+segment=hour/u },
+  ];
+
+  for (const { id, initialCase, moveToSegment, text, expected } of cases) {
+    const session = createDocumentationSession(id, initialCase);
+    for (const key of moveToSegment) session.handle({ key });
+    session.handle({ key: text, text });
+    assert.match(session.lines(120).join('\n'), /Invalid draft/u, id);
+    assert.equal(session.handle({ key: 'up' }), true, id);
+    const recovered = session.lines(120).join('\n');
+    assert.doesNotMatch(recovered, /Invalid draft/u, id);
+    assert.match(recovered, expected, id);
+  }
+});
+
+test('bounded terminal temporal fields explain rejected boundary steps', () => {
+  const session = createDocumentationSession('date-field', 1);
+  session.handle({ key: 'home' });
+  session.handle({ key: 'right' });
+  session.handle({ key: 'up' });
+  assert.equal(session.handle({ key: 'up' }), false);
+  assert.match(session.lines(120).join('\n'), /Next value exceeds maximum 2026-09-30/u);
+});
+
+test('terminal temporal deletion stays inside the active segment', () => {
+  const session = createDocumentationSession('date-field', 0);
+  session.handle({ key: 'home' });
+
+  for (let index = 0; index < 8; index += 1) session.handle({ key: 'backspace' });
+
+  const clearedYear = session.lines(120).join('\n');
+  assert.match(clearedYear, /····.*08.*22/su);
+  assert.match(clearedYear, /segment=year/u);
+  assert.match(clearedYear, /value=2026-08-22/u);
+
+  for (const input of toKeyboardInputs('2030')) session.handle(input);
+  assert.match(session.lines(120).join('\n'), /2030.*08.*22/su);
+  assert.equal(session.handle({ key: 'enter' }), true);
+  assert.match(session.lines(120).join('\n'), /value=2030-08-22/u);
+});
+
+test('terminal temporal range fields use the same segment editing boundaries', () => {
+  const cases = [
+    {
+      id: 'date-range-field',
+      cleared: /Start.*····.*08.*22.*End.*2026-08-25/su,
+      restored: /Start.*2030.*08.*22.*End.*2026-08-25/su,
+      segment: /active=start\s+segment=year/u,
+      replacement: '2030',
+    },
+    {
+      id: 'time-range-field',
+      cleared: /Start.*··.*30.*End.*17:30/su,
+      restored: /Start.*11.*30.*End.*17:30/su,
+      segment: /active=start\s+segment=hour/u,
+      replacement: '11',
+    },
+  ];
+
+  for (const { id, cleared, restored, segment, replacement } of cases) {
+    const session = createDocumentationSession(id, 0);
+    session.handle({ key: 'home' });
+    for (let index = 0; index < 8; index += 1) session.handle({ key: 'backspace' });
+
+    const clearedSegment = session.lines(120).join('\n');
+    assert.match(clearedSegment, cleared, id);
+    assert.match(clearedSegment, segment, id);
+
+    for (const input of toKeyboardInputs(replacement)) session.handle(input);
+    assert.match(session.lines(120).join('\n'), restored, id);
+
+    session.handle({ key: 'tab' });
+    assert.match(session.lines(120).join('\n'), /active=end/u, id);
+  }
+});
+
+test('terminal temporal range fields keep identical active and inactive text geometry', () => {
+  const stripTerminalStyles = (value) => value.replaceAll(/\u001b\[[0-?]*[ -/]*[@-~]/gu, '');
+  const session = createDocumentationSession('date-range-field', 0);
+
+  const startActive = stripTerminalStyles(session.lines(120).join('\n'));
+  assert.match(startActive, /Start\s+2026-08-22/u);
+  assert.match(startActive, /End\s+2026-08-25/u);
+  assert.doesNotMatch(startActive, /2026\s+-\s+08\s+-\s+22/u);
+
+  session.handle({ key: 'tab' });
+  const endActive = stripTerminalStyles(session.lines(120).join('\n'));
+  assert.match(endActive, /Start\s+2026-08-22/u);
+  assert.match(endActive, /End\s+2026-08-25/u);
+  assert.doesNotMatch(endActive, /2026\s+-\s+08\s+-\s+25/u);
+});
+
 test('tags input embeds the terminal caret at the draft insertion point for IME composition', () => {
   const definition = demos.find(({ id }) => id === 'tags-input');
   const session = definition.create({
@@ -170,7 +321,6 @@ test('text-accepting terminal examples expose a logical IME cursor', () => {
   const directInputIDs = [
     'text', 'combobox', 'pin-input', 'tags-input', 'color-picker',
     'spin-button', 'number-field', 'quantity-field',
-    'date-field', 'date-time-field', 'time-field',
     'date-range-field', 'time-range-field',
   ];
   for (const id of directInputIDs) {
