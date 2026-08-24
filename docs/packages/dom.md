@@ -1,24 +1,157 @@
 # DOM
 
-`@sectile/dom` projects Sectile semantics into browser behavior: keyboard and pointer normalization, focus and composition handling, form semantics, ARIA attributes, and native element behavior.
+`@sectile/dom` connects Sectile's interaction semantics to real browser elements. It handles keyboard and pointer input, focus, composition, forms, ARIA projection, and element lifecycle without choosing markup or visual styles for the application.
 
 ```sh
 pnpm add @sectile/dom
 ```
 
+Import from a component subpath so the dependency stays explicit:
+
 ```ts
-import * as checkbox from '@sectile/dom/checkbox'
+import { createCheckbox } from '@sectile/dom/checkbox'
 ```
 
-DOM helpers remain unstyled and expose attributes or controllers rather than a visual component library.
+## Connect an existing element
 
-## Factory behavior
+Create the markup your application needs, then pass the interactive element to a DOM factory.
 
-Use `create*` for normal application setup. It returns the ready connection and throws a typed Sectile error when configuration is invalid. Use `tryCreate*` when setup failure must remain a recoverable `Result`.
+```html
+<button id="newsletter" type="button">
+  Receive product updates: <span id="newsletter-state"></span>
+</button>
+```
 
 ```ts
-const connection = checkbox.createCheckbox(options)
-const recoverable = checkbox.tryCreateCheckbox(options)
+import { createCheckbox } from '@sectile/dom/checkbox'
+
+const element = document.querySelector<HTMLElement>('#newsletter')
+const stateLabel = document.querySelector<HTMLElement>('#newsletter-state')
+
+if (element === null || stateLabel === null) {
+  throw new Error('Checkbox markup is missing.')
+}
+
+const checkbox = createCheckbox({
+  element,
+  defaultValue: false,
+  onValueChange(value) {
+    console.log('newsletter', value)
+  },
+})
+
+const render = () => {
+  stateLabel.textContent = checkbox.state.checked ? 'on' : 'off'
+}
+
+const unsubscribe = checkbox.subscribe(render)
+render()
+
+window.addEventListener('pagehide', () => {
+  unsubscribe()
+  checkbox.destroy()
+}, { once: true })
+```
+
+The factory registers the required listeners and immediately projects semantic state to the element. The checkbox above receives `role`, `aria-checked`, `data-state`, disabled state, and read-only state as they change.
+
+## Connection contract
+
+Every direct `create*` factory returns a ready connection with the same small lifecycle surface:
+
+| Member | Purpose |
+| --- | --- |
+| `state` | Read the current semantic state. |
+| `send(input)` | Send the component's normalized interaction input. |
+| `update(value)` | Synchronize an externally owned value when the component supports controlled state. |
+| `subscribe(listener)` | Observe accepted updates and receive an unsubscribe function. |
+| `destroy()` | Remove DOM listeners and release connection-owned resources. |
+
+Component-specific methods remain available on the same object. Use them when a component exposes richer operations such as focus movement, collection updates, or popup positioning.
+
+## State ownership
+
+Pass `defaultValue` when the connection should own its current value. Pass `value` with `onValueChange` when application state owns it.
+
+```ts
+const checkbox = createCheckbox({
+  element,
+  value: settings.newsletter,
+  onValueChange(nextValue) {
+    settings.newsletter = nextValue
+    checkbox.update(nextValue)
+  },
+})
+```
+
+Controlled interactions report the proposed value without silently replacing application state. Calling `update` reconciles the connection after the owner accepts that value. See [State ownership](/guide/state-ownership) for the shared model.
+
+## Controllers and attribute projection
+
+Use a `create*Controller` when state ownership and rendering have separate lifecycles. Controllers do not require an element. Pair them with `get*Attributes` to project a snapshot into any DOM structure.
+
+```ts
+import {
+  createCheckboxController,
+  getCheckboxAttributes,
+} from '@sectile/dom/checkbox'
+
+const result = createCheckboxController({ defaultValue: 'mixed' })
+if (!result.ok) throw new TypeError(result.error.message)
+
+const snapshot = result.value.getSnapshot()
+const attributes = getCheckboxAttributes(snapshot.state, { required: true })
+```
+
+Complex components also expose component-specific event translators and effect projectors. These lower-level APIs are useful for custom renderers, delegated event systems, and hosts that cannot let a direct connection own the element.
+
+## Native browser behavior
+
+The DOM package preserves native behavior where HTML already has the right semantics:
+
+- Text fields keep native editing, selection, and IME composition.
+- Form controls project `name`, `value`, `required`, `disabled`, and form ownership where supported.
+- Keyboard handling avoids replacing browser behavior that belongs to the focused element.
+- Focus effects target real elements instead of simulating a separate focus model.
+
+Use the component's native element when possible. Choose a non-native host only when the product requires a different structure, then apply the returned ARIA and data attributes completely.
+
+## Floating surfaces
+
+Popover and tooltip connections use Floating UI for offset, collision flipping, shifting, available-size data, arrow placement, detached-anchor hiding, and open-only automatic updates. Boundary, padding, strategy, observers, and middleware remain configurable. Floating UI middleware is re-exported from the relevant component subpaths for custom positioning.
+
+## Styling hooks
+
+DOM connections provide behavior, not a theme. Style the element through your own classes and the projected state attributes.
+
+```css
+#newsletter {
+  border: 1px solid var(--control-border);
+  border-radius: 0.5rem;
+}
+
+#newsletter[data-state='checked'] {
+  background: var(--control-accent);
+  color: var(--control-on-accent);
+}
+
+#newsletter[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+```
+
+Attribute helpers for compound components additionally expose stable `data-scope` and `data-part` boundaries. See [Styling](/guide/styling) for the complete convention.
+
+## Factory failures
+
+Use `create*` during normal application setup. It returns a ready connection and throws a typed Sectile error when configuration is invalid. Use the matching `tryCreate*` factory when construction failure must remain a recoverable `Result`.
+
+```ts
+import { createCheckbox, tryCreateCheckbox } from '@sectile/dom/checkbox'
+
+const connection = createCheckbox(options)
+const recoverable = tryCreateCheckbox(options)
 ```
 
 No `unwrap` is needed around a host `create*` call.

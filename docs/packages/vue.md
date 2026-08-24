@@ -1,15 +1,160 @@
 # Vue
 
-`@sectile/vue` provides headless compound components, normal Vue model ownership, HTML-shaped prop names, stable parts, and child composition.
+`@sectile/vue` provides headless Vue components backed by Sectile DOM semantics. It follows Vue's model conventions, renders accessible compound parts, and exposes stable styling boundaries while leaving layout and visual design to the application.
 
-::: warning Workspace preview
-The Vue package is not published yet. Its documentation describes the current workspace API so the surface can stabilize before publication.
-:::
+```sh
+pnpm add @sectile/vue vue
+```
+
+Import components from their public component subpath:
+
+```ts
+import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
+```
+
+## Basic usage
+
+The root owns interaction state and shares it with its compound parts. `v-model` uses controlled Vue state; `default-value` creates an uncontrolled component.
 
 ```vue
 <script setup lang="ts">
+import { ref } from 'vue'
 import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
+
+const accepted = ref(false)
 </script>
+
+<template>
+  <form class="terms" @submit.prevent>
+    <CheckboxRoot
+      v-model="accepted"
+      class="terms__control"
+      name="terms"
+      required
+      aria-label="Accept the terms"
+    >
+      <CheckboxIndicator class="terms__indicator">✓</CheckboxIndicator>
+    </CheckboxRoot>
+    <span>I accept the terms</span>
+  </form>
+</template>
+
+<style scoped>
+.terms {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.terms__control {
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: transparent;
+}
+
+.terms__control[data-state='checked'] {
+  background: currentColor;
+}
+
+.terms__indicator {
+  color: white;
+}
+</style>
 ```
 
-Vue components include no visual CSS. Apply classes and state selectors in the consuming application.
+The components include no visual CSS. The example styles are application-owned and can be replaced without changing behavior.
+
+## Controlled and uncontrolled state
+
+Use `v-model` when application state is authoritative:
+
+```vue
+<CheckboxRoot v-model="accepted" />
+```
+
+Use `default-value` when the component should own subsequent changes:
+
+```vue
+<CheckboxRoot :default-value="true" />
+```
+
+Do not pass both ownership modes. Controlled components emit their proposed value through `update:modelValue`; the parent decides whether to accept it.
+
+## Render ownership
+
+Most public parts accept `as` and `as-child`. `as` chooses the rendered element. `as-child` merges behavior and attributes into the single child so the application can own the element completely.
+
+```vue
+<script setup lang="ts">
+import {
+  PopoverContent,
+  PopoverRoot,
+  PopoverTrigger,
+} from '@sectile/vue/popover'
+</script>
+
+<template>
+  <PopoverRoot>
+    <PopoverTrigger as-child>
+      <button class="account-button">Account</button>
+    </PopoverTrigger>
+    <PopoverContent class="account-popover">
+      Account settings
+    </PopoverContent>
+  </PopoverRoot>
+</template>
+```
+
+The child must resolve to one element. Sectile merges its listeners, ARIA attributes, and data attributes with the child's existing props.
+
+## Slot state
+
+Root and part slots expose live semantic state. Use slot props for content that must change with interaction; use data attributes for CSS-only state.
+
+```vue
+<CheckboxRoot v-slot="{ isChecked, isIndeterminate }" default-value="indeterminate">
+  <span v-if="isIndeterminate">Partially selected</span>
+  <span v-else>{{ isChecked ? 'Selected' : 'Not selected' }}</span>
+</CheckboxRoot>
+```
+
+Slot names and values are component-specific. TypeScript infers them from the imported component.
+
+## Forms and native fields
+
+Form-capable components preserve browser submission semantics. For example, `CheckboxRoot` renders a visually hidden native checkbox when `name`, `form`, or `required` makes one necessary. Its `checked`, `indeterminate`, `required`, `disabled`, and form attributes follow the semantic state.
+
+Text-entry components retain native input, selection, and IME behavior instead of recreating text editing in Vue. Forward ordinary HTML attributes such as `autocomplete`, `inputmode`, and `aria-label` to the public field part.
+
+## Styling boundaries
+
+Every public compound part exposes stable attributes:
+
+```html
+<button
+  data-scope="checkbox"
+  data-part="root"
+  data-state="checked"
+></button>
+```
+
+- `data-scope` identifies the component family.
+- `data-part` identifies the public styling boundary.
+- `data-state` exposes the current semantic state when the part has one.
+- State flags such as `data-disabled`, `data-readonly`, and `data-invalid` appear only when active.
+
+Prefer these selectors over generated component names or internal DOM depth. See [Styling](/guide/styling) for selector and theming guidance.
+
+## DOM semantics and lifecycle
+
+Vue components reuse `@sectile/dom` for ARIA projection, normalized input, focus effects, popup positioning, and native-element behavior. Components create their connection during setup, synchronize controlled props through watchers, and release listeners when their rendered ownership ends.
+
+Use `@sectile/vue` for Vue templates and compound composition. Use `@sectile/dom` directly when markup is created outside Vue or when a custom renderer must own the connection lifecycle.
+
+## Explore components
+
+The [component catalog](/components/) documents each component's examples, public parts, keyboard behavior, accessibility contract, and API. Start with the basic example, then use Anatomy to inspect the exact `data-scope` and `data-part` boundaries exposed for styling.
