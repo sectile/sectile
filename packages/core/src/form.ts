@@ -3,6 +3,16 @@ import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 
 export type FormIssueSource = 'native' | 'field' | 'form' | 'server';
+export type FormPathSegment = string | number;
+export type FormFieldPath = string | readonly FormPathSegment[];
+
+export interface FormValueEntry<Value = unknown> {
+  readonly path: FormFieldPath;
+  readonly value: Value;
+}
+
+export type FormValues = Readonly<Record<string, unknown>>;
+
 export type FormStatus =
   | 'idle'
   | 'invalid'
@@ -87,6 +97,122 @@ export interface FormStateInput<ID extends StableID = StableID> {
   readonly submitted?: boolean;
   readonly fields?: readonly FormFieldInput<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
+}
+
+export function createFormFieldPath(path: FormFieldPath): readonly FormPathSegment[] {
+  return unwrap(tryCreateFormFieldPath(path));
+}
+
+export function tryCreateFormFieldPath(
+  path: FormFieldPath,
+): Result<readonly FormPathSegment[]> {
+  const segments = typeof path === 'string' ? parsePath(path) : ok([...path]);
+  if (!segments.ok) return segments;
+  if (segments.value.length === 0 || typeof segments.value[0] !== 'string') {
+    return fail(
+      'construction',
+      'form-field-path-root-invalid',
+      'A Form field path must start with a string segment.',
+    );
+  }
+  for (const segment of segments.value) {
+    if (typeof segment === 'number') {
+      if (!Number.isSafeInteger(segment) || segment < 0) {
+        return fail(
+          'construction',
+          'form-field-path-index-invalid',
+          'Form field path indices must be non-negative safe integers.',
+        );
+      }
+      continue;
+    }
+    if (segment.length === 0 || /[.\[\]]/u.test(segment)) {
+      return fail(
+        'construction',
+        'form-field-path-segment-invalid',
+        'Form field path string segments must be non-empty and must not contain dots or brackets.',
+      );
+    }
+  }
+  return ok(Object.freeze([...segments.value]));
+}
+
+export function encodeFormFieldPath(path: FormFieldPath): string {
+  const segments = createFormFieldPath(path);
+  return segments.map((segment, index) => (
+    typeof segment === 'number'
+      ? `[${segment}]`
+      : index === 0 ? segment : `.${segment}`
+  )).join('');
+}
+
+export function createFormValues<Value = unknown>(
+  entries: readonly FormValueEntry<Value>[],
+): FormValues {
+  return unwrap(tryCreateFormValues(entries));
+}
+
+export function tryCreateFormValues<Value = unknown>(
+  entries: readonly FormValueEntry<Value>[],
+): Result<FormValues> {
+  const root: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+  const branches = new WeakSet<object>();
+  const repeated = new Map<string, unknown[]>();
+  branches.add(root);
+
+  for (const entry of entries) {
+    const path = tryCreateFormFieldPath(entry.path);
+    if (!path.ok) return path;
+    const canonical = encodeSegments(path.value);
+    let container: Record<string, unknown> | unknown[] = root;
+
+    for (let index = 0; index < path.value.length - 1; index += 1) {
+      const segment = path.value[index]!;
+      const nextSegment = path.value[index + 1]!;
+      const existing = readContainer(container, segment);
+      const needsArray = typeof nextSegment === 'number';
+
+      if (!hasContainer(container, segment)) {
+        const branch: Record<string, unknown> | unknown[] = needsArray
+          ? []
+          : Object.create(null) as Record<string, unknown>;
+        branches.add(branch);
+        writeContainer(container, segment, branch);
+        container = branch;
+        continue;
+      }
+      if (
+        typeof existing !== 'object'
+        || existing === null
+        || !branches.has(existing)
+        || Array.isArray(existing) !== needsArray
+      ) {
+        return valueCollision(canonical);
+      }
+      container = existing as Record<string, unknown> | unknown[];
+    }
+
+    const leaf = path.value[path.value.length - 1]!;
+    const existing = readContainer(container, leaf);
+    if (!hasContainer(container, leaf)) {
+      writeContainer(container, leaf, entry.value);
+      continue;
+    }
+    if (typeof existing === 'object' && existing !== null && branches.has(existing)) {
+      return valueCollision(canonical);
+    }
+    const values = repeated.get(canonical);
+    if (values === undefined) {
+      const next = [existing, entry.value];
+      repeated.set(canonical, next);
+      writeContainer(container, leaf, next);
+    } else {
+      values.push(entry.value);
+    }
+  }
+
+  freezeBranches(root, branches);
+  return ok(root);
 }
 
 export function createFormState<ID extends StableID = StableID>(
@@ -509,4 +635,116 @@ function isStatus(value: string): value is FormStatus {
     || value === 'submitting'
     || value === 'succeeded'
     || value === 'failed';
+}
+
+function parsePath(path: string): Result<readonly FormPathSegment[]> {
+  if (path.length === 0) {
+    return fail(
+      'construction',
+      'form-field-path-empty',
+      'A Form field path must not be empty.',
+    );
+  }
+  const segments: FormPathSegment[] = [];
+  let index = 0;
+  let expectSegment = true;
+
+  while (index < path.length) {
+    if (path[index] === '.') {
+      if (expectSegment) return pathSyntaxError(path, index);
+      expectSegment = true;
+      index += 1;
+      continue;
+    }
+    if (path[index] === '[') {
+      if (expectSegment && segments.length > 0) return pathSyntaxError(path, index);
+      const close = path.indexOf(']', index + 1);
+      if (close < 0) return pathSyntaxError(path, index);
+      const value = path.slice(index + 1, close);
+      if (value.length === 0 || value.includes('[')) return pathSyntaxError(path, index);
+      segments.push(/^\d+$/u.test(value) ? Number(value) : value);
+      index = close + 1;
+      expectSegment = false;
+      if (index < path.length && path[index] !== '.' && path[index] !== '[') {
+        return pathSyntaxError(path, index);
+      }
+      continue;
+    }
+
+    const start = index;
+    while (index < path.length && path[index] !== '.' && path[index] !== '[') {
+      if (path[index] === ']') return pathSyntaxError(path, index);
+      index += 1;
+    }
+    if (!expectSegment || start === index) return pathSyntaxError(path, start);
+    segments.push(path.slice(start, index));
+    expectSegment = false;
+  }
+
+  return expectSegment ? pathSyntaxError(path, path.length) : ok(segments);
+}
+
+function pathSyntaxError(
+  path: string,
+  index: number,
+): Result<readonly FormPathSegment[]> {
+  return fail(
+    'construction',
+    'form-field-path-syntax-invalid',
+    'Form field paths must use dot properties and bracket indices without empty segments.',
+    { path, index },
+  );
+}
+
+function encodeSegments(segments: readonly FormPathSegment[]): string {
+  return segments.map((segment, index) => (
+    typeof segment === 'number'
+      ? `[${segment}]`
+      : index === 0 ? segment : `.${segment}`
+  )).join('');
+}
+
+function valueCollision(path: string): Result<FormValues> {
+  return fail(
+    'construction',
+    'form-value-path-collision',
+    'A Form value path cannot be both a leaf and a container.',
+    { path },
+  );
+}
+
+function readContainer(
+  container: Record<string, unknown> | unknown[],
+  segment: FormPathSegment,
+): unknown {
+  return Array.isArray(container)
+    ? container[segment as number]
+    : container[String(segment)];
+}
+
+function hasContainer(
+  container: Record<string, unknown> | unknown[],
+  segment: FormPathSegment,
+): boolean {
+  return Object.hasOwn(container, segment);
+}
+
+function writeContainer(
+  container: Record<string, unknown> | unknown[],
+  segment: FormPathSegment,
+  value: unknown,
+): void {
+  if (Array.isArray(container)) container[segment as number] = value;
+  else container[String(segment)] = value;
+}
+
+function freezeBranches(value: object, branches: WeakSet<object>): void {
+  for (const child of Object.values(value)) {
+    if (typeof child === 'object' && child !== null && branches.has(child)) {
+      freezeBranches(child, branches);
+    } else if (Array.isArray(child)) {
+      Object.freeze(child);
+    }
+  }
+  Object.freeze(value);
 }

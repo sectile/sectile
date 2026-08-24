@@ -2,9 +2,74 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   applyFormEvent,
+  createFormFieldPath,
   createFormState,
+  createFormValues,
+  encodeFormFieldPath,
   tryCreateFormState,
+  tryCreateFormFieldPath,
+  tryCreateFormValues,
 } from '../../.verification-dist/form.js';
+
+test('form field paths normalize dot, bracket, and explicit segment syntax', () => {
+  assert.deepEqual(createFormFieldPath('profile.name'), ['profile', 'name']);
+  assert.deepEqual(createFormFieldPath('addresses[0].city'), ['addresses', 0, 'city']);
+  assert.deepEqual(createFormFieldPath('profile[email]'), ['profile', 'email']);
+  assert.equal(
+    encodeFormFieldPath(['addresses', 0, 'city']),
+    'addresses[0].city',
+  );
+  assert.equal(tryCreateFormFieldPath('profile..name').ok, false);
+  assert.equal(tryCreateFormFieldPath(['items', -1, 'name']).ok, false);
+  assert.equal(tryCreateFormFieldPath([0, 'name']).ok, false);
+});
+
+test('form values build immutable nested objects, indexed arrays, and repeated leaves', () => {
+  const values = createFormValues([
+    { path: 'profile.name', value: 'Mina' },
+    { path: 'addresses[0].city', value: 'Seoul' },
+    { path: ['addresses', 1, 'city'], value: 'Busan' },
+    { path: 'roles', value: 'admin' },
+    { path: 'roles', value: 'reviewer' },
+    { path: 'profile.note', value: '' },
+  ]);
+
+  assert.equal(Object.getPrototypeOf(values), null);
+  assert.deepEqual({ ...values.profile }, { name: 'Mina', note: '' });
+  assert.deepEqual(values.addresses.map((address) => ({ ...address })), [
+    { city: 'Seoul' },
+    { city: 'Busan' },
+  ]);
+  assert.deepEqual(values.roles, ['admin', 'reviewer']);
+  assert.equal(Object.isFrozen(values), true);
+  assert.equal(Object.isFrozen(values.addresses), true);
+  assert.equal(Object.isFrozen(values.roles), true);
+});
+
+test('form values preserve opaque values and reject leaf-container collisions', () => {
+  const file = { name: 'avatar.png' };
+  const values = createFormValues([{ path: 'profile.avatar', value: file }]);
+  assert.equal(values.profile.avatar, file);
+
+  const leafFirst = tryCreateFormValues([
+    { path: 'profile', value: 'Mina' },
+    { path: 'profile.name', value: 'Mina' },
+  ]);
+  assert.equal(leafFirst.ok, false);
+  assert.equal(leafFirst.error.code, 'form-value-path-collision');
+
+  const objectFirst = tryCreateFormValues([
+    { path: 'profile.name', value: 'Mina' },
+    { path: 'profile', value: 'Mina' },
+  ]);
+  assert.equal(objectFirst.ok, false);
+  assert.equal(objectFirst.error.code, 'form-value-path-collision');
+
+  assert.equal(tryCreateFormValues([
+    { path: 'items[0]', value: 'first' },
+    { path: 'items.name', value: 'invalid' },
+  ]).ok, false);
+});
 
 const requiredIssue = {
   id: 'email-required',
