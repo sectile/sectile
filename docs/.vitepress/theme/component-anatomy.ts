@@ -6,9 +6,9 @@ export type AnatomyNodeKind =
   | 'toolbar' | 'tab-list' | 'tab' | 'calendar' | 'weekday' | 'spacer';
 
 export type AnatomyIconName =
-  | 'align-left' | 'arrow-left' | 'arrow-right' | 'bold' | 'calendar'
+  | 'align-left' | 'arrow-left' | 'arrow-right' | 'bold' | 'book-open' | 'calendar'
   | 'check' | 'chevron-down' | 'chevron-left' | 'chevron-right'
-  | 'chevrons-left' | 'chevrons-right' | 'ellipsis' | 'grip-vertical' | 'italic'
+  | 'chevrons-left' | 'chevrons-right' | 'ellipsis' | 'file-code-2' | 'folder' | 'folder-open' | 'grip-vertical' | 'italic'
   | 'minus' | 'pause' | 'play' | 'plus' | 'rotate-ccw' | 'star' | 'x';
 
 export interface AnatomyPreviewNode {
@@ -76,15 +76,15 @@ const item = (
   value?: string,
 ) => n('item', part || undefined, text, children, { detail, value });
 
-const popupParts = ['provider', 'trigger', 'overlay', 'content', 'title', 'description', 'close'] as const;
+const popupParts = ['trigger', 'overlay', 'content', 'title', 'description', 'close'] as const;
 const fieldParts = ['input'] as const;
 const rangePickerParts = [
-  'provider', 'start-input', 'end-input', 'trigger', 'content', 'week-view-trigger',
+  'start-input', 'end-input', 'trigger', 'content', 'week-view-trigger',
   'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week',
   'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell',
 ] as const;
 const pickerParts = [
-  'provider', 'input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger',
+  'input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger',
   'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month',
   'previous-year', 'next-year', 'grid', 'cell', 'month-cell',
 ] as const;
@@ -215,7 +215,7 @@ function sliderPreview(multiple = false): AnatomyPreviewNode {
 function popupPreview(kind: string): AnatomyPreviewNode {
   if (kind === 'popover') {
     return n('root', undefined, undefined, [
-      button('trigger', 'Edit profile'), n('spacer', 'anchor'),
+      n('row', 'anchor', undefined, [button('trigger', 'Edit profile')], { className: 'popover-anchor' }),
       n('panel', 'content', undefined, [
         n('text', 'title', 'Profile details'), n('muted', 'description', 'Change the public display name.'), input('', 'Sectile'),
         iconButton('close', 'x', 'Close'), n('indicator', 'arrow', undefined, undefined, { className: 'arrow' }),
@@ -292,8 +292,8 @@ function menuPreview(kind: string): AnatomyPreviewNode {
           item('item', 'Products', undefined, [n('indicator', undefined, undefined, undefined, { icon: 'chevron-down' })], 'products'),
         ]),
         item('item', 'Docs', undefined, undefined, 'docs'),
+        n('indicator', 'indicator'),
       ]),
-      n('indicator', 'indicator'),
       n('viewport', 'viewport', undefined, [
         n('panel', 'sub-content', undefined, [
           item('item', 'New releases', 'What shipped in the latest version', undefined, 'new'),
@@ -319,29 +319,110 @@ function menuPreview(kind: string): AnatomyPreviewNode {
 function collectionPreview(kind: string): AnatomyPreviewNode {
   if (kind === 'feed') {
     return root([
-      button('load-earlier', 'Load earlier'),
-      n('list', undefined, undefined, [item('item', 'DOM adapter published', '09:28 · Ready'), item('item', 'Playground refreshed', '10:15 · Complete'), item('item', 'Release checks passed', '10:34 · Complete')]),
-      button('load-newer', 'Load newer'),
+      row([
+        stack([n('text', undefined, 'Release activity'), n('muted', undefined, 'production · release-2026.08')]),
+        n('badge', undefined, 'Live'),
+      ], 'feed-anatomy-header'),
+      button('load-newer', '2 new updates', undefined, 'feed-anatomy-load feed-anatomy-load-newer'),
+      n('list', undefined, undefined, [
+        n('item', 'item', undefined, [
+          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
+          stack([n('text', undefined, 'Production deployment completed'), n('muted', undefined, 'Release 2026.08 is healthy in all regions.'), n('muted', undefined, 'Deploy bot · Just now')]),
+          n('badge', undefined, 'Healthy'),
+        ], { className: 'feed-anatomy-event', value: 'deployed' }),
+        n('item', 'item', undefined, [
+          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
+          stack([n('text', undefined, 'Release approved'), n('muted', undefined, 'Mina approved the production promotion.'), n('muted', undefined, 'Mina Kim · 18 min ago')]),
+        ], { className: 'feed-anatomy-event', value: 'approved' }),
+        n('item', 'item', undefined, [
+          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
+          stack([n('text', undefined, 'Required checks passed'), n('muted', undefined, 'All 12 release checks completed.'), n('muted', undefined, 'CI · 24 min ago')]),
+          n('badge', undefined, '12/12'),
+        ], { className: 'feed-anatomy-event', value: 'checks' }),
+      ], { className: 'feed-anatomy-list' }),
+      button('load-earlier', 'Load earlier events', undefined, 'feed-anatomy-load feed-anatomy-load-earlier'),
+      n('muted', undefined, 'Showing the current release window', undefined, { className: 'feed-anatomy-note' }),
     ], 'feed-root');
   }
   if (kind === 'tree-view') {
-    return root([n('list', 'group', undefined, [
-      item('item', 'Projects', undefined, [n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down' })]),
-      n('item', 'item', 'Atlas', [n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down' })], { className: 'tree-child' }),
-      n('item', 'item', 'Implementation', undefined, { className: 'tree-grandchild' }),
-    ])], 'tree-root');
+    const disclosure = (value: string) => n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down', value });
+    const treeItem = (value: string, label: string, detail: string, level: 1 | 2 | 3, expandable = false) => n('item', 'item', undefined, [
+      ...(expandable ? [disclosure(value)] : [n('spacer')]),
+      n('indicator', undefined, undefined, undefined, { icon: expandable ? 'folder-open' : 'file-code-2' }),
+      n('text', undefined, label),
+      n('muted', undefined, detail),
+    ], { className: `tree-view-row tree-view-level-${level}`, value });
+    return root([
+      treeItem('atlas', 'Atlas workspace', 'Workspace', 1, true),
+      n('list', 'group', undefined, [
+        treeItem('apps', 'Applications', '2 apps', 2, true),
+        n('list', 'group', undefined, [
+          treeItem('dashboard', 'Dashboard', '2 files', 3, true),
+          n('list', 'group', undefined, [
+            treeItem('overview', 'Overview.vue', '4.2 KB', 3),
+            treeItem('settings', 'Settings.vue', '3.8 KB', 3),
+          ], { className: 'tree-view-children tree-view-children-of-dashboard' }),
+        ], { className: 'tree-view-children tree-view-children-of-apps' }),
+        treeItem('tokens', 'tokens.ts', '6.1 KB', 2),
+      ], { className: 'tree-view-children tree-view-children-of-atlas' }),
+    ], 'tree-root');
   }
-  const tree = kind === 'tree-grid';
+  if (kind === 'tree-grid') {
+    const resource = (
+      label: string,
+      detail: string,
+      level: 1 | 2 | 3,
+      icon: AnatomyIconName,
+      expandable = false,
+    ): AnatomyPreviewNode => n('cell', 'cell', undefined, [
+      ...(expandable ? [n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down' })] : [n('spacer')]),
+      n('indicator', undefined, undefined, undefined, { icon }),
+      stack([n('text', undefined, label), n('muted', undefined, detail)]),
+    ], { className: `tree-grid-resource tree-grid-level-${level}`, value: `${label.toLowerCase().replaceAll(' ', '-')}-name` });
+
+    const status = (text: string, tone: string): AnatomyPreviewNode => n('cell', 'cell', undefined, [
+      n('badge', undefined, text, undefined, { className: `tree-grid-status tree-grid-status-${tone}` }),
+    ], { value: `${text.toLowerCase().replaceAll(' ', '-')}-status` });
+
+    return root([
+      row([
+        n('cell', undefined, 'Resource'),
+        n('cell', undefined, 'Owner'),
+        n('cell', undefined, 'Status'),
+      ], 'grid-header tree-grid-header'),
+      n('grid', undefined, undefined, [
+        n('row', 'row', undefined, [
+          resource('Commerce platform', 'Workspace', 1, 'folder-open', true),
+          n('cell', 'cell', 'Platform team', undefined, { value: 'platform-owner' }),
+          status('Healthy', 'success'),
+        ], { className: 'data-row tree-grid-row tree-grid-parent', value: 'platform' }),
+        n('row', 'row', undefined, [
+          resource('Storefront', 'Application', 2, 'folder-open', true),
+          n('cell', 'cell', undefined, [input('editor', 'Mina Kim', 'Storefront owner', 'tree-grid-editor')], { value: 'storefront-owner' }),
+          status('Modified', 'neutral'),
+        ], { className: 'data-row tree-grid-row tree-grid-child tree-child', value: 'storefront' }),
+        n('row', 'row', undefined, [
+          resource('Checkout flow', 'Feature', 3, 'file-code-2'),
+          n('cell', 'cell', 'Alex Chen', undefined, { value: 'checkout-owner' }),
+          status('In review', 'review'),
+        ], { className: 'data-row tree-grid-row tree-grid-grandchild tree-child', value: 'checkout' }),
+        n('row', 'row', undefined, [
+          resource('Documentation', 'Content', 2, 'book-open'),
+          n('cell', 'cell', 'Technical writing', undefined, { value: 'docs-owner' }),
+          status('Published', 'success'),
+        ], { className: 'data-row tree-grid-row tree-grid-child tree-child', value: 'docs' }),
+      ], { className: 'grid-body tree-grid-body' }),
+    ], 'data-grid tree-grid-root');
+  }
   return root([
     row([n('cell', undefined, 'Name'), n('cell', undefined, 'Status')], 'grid-header'),
     n('grid', undefined, undefined, [
       n('row', 'row', undefined, [
-        n('cell', 'cell', tree ? 'Projects' : 'Alpha', tree ? [n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down' })] : undefined),
-        n('cell', 'cell', tree ? 'Ready' : 'Stable'),
+        n('cell', 'cell', 'Alpha'),
+        n('cell', 'cell', 'Stable'),
       ]),
-      n('row', 'row', undefined, [n('cell', 'cell', tree ? 'Atlas' : 'Beta'), n('cell', 'cell', tree ? 'Active' : 'Preview')], { className: 'data-row tree-child' }),
-    ]),
-    ...(tree ? [input('editor', 'Atlas', 'Inline editor')] : []),
+      n('row', 'row', undefined, [n('cell', 'cell', 'Beta'), n('cell', 'cell', 'Preview')], { className: 'data-row' }),
+    ], { className: 'grid-body' }),
   ], 'data-grid');
 }
 
@@ -367,9 +448,20 @@ function feedbackPreview(kind: string): AnatomyPreviewNode {
 function inputCollectionPreview(kind: string): AnatomyPreviewNode {
   if (kind === 'tags-input') {
     return root([
-      n('item', 'item', 'TypeScript', [n('text', 'item-text', 'TypeScript'), n('indicator', 'item-delete', undefined, undefined, { icon: 'x', value: 'TypeScript' })], { value: 'TypeScript' }),
-      n('item', 'item', 'Accessibility', [n('text', 'item-text', 'Accessibility'), n('indicator', 'item-delete', undefined, undefined, { icon: 'x', value: 'Accessibility' })], { value: 'Accessibility' }),
-      input('input', 'Add a skill…'), iconButton('clear', 'x', 'Clear all'),
+      n('item', 'item', undefined, [
+        n('text', 'item-text', 'Vue'),
+        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'Vue' }),
+      ], { value: 'Vue' }),
+      n('item', 'item', undefined, [
+        n('text', 'item-text', 'DOM'),
+        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'DOM' }),
+      ], { value: 'DOM' }),
+      n('item', 'item', undefined, [
+        n('text', 'item-text', 'Accessibility'),
+        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'Accessibility' }),
+      ], { value: 'Accessibility' }),
+      input('input', 'Add a skill…'),
+      button('clear', 'Clear all', 'x', 'tags-clear'),
     ], 'tags-root');
   }
   if (kind === 'pin-input') return root(['4', '2', '7', '9'].map((value, index) => input('input', value, `Digit ${index + 1}`, 'pin-cell')), 'pin-root');
@@ -424,9 +516,9 @@ function navigationPreview(kind: string): AnatomyPreviewNode {
 }
 
 function expansionPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'disclosure') return root([button('trigger', 'Advanced options', 'chevron-down'), n('panel', 'content', 'Configure retry limits and rollout windows.')], 'disclosure-root');
+  if (kind === 'disclosure') return root([button('trigger', 'Deployment details', 'chevron-down'), n('panel', 'content', 'Build target, rollout window, and release protection.')], 'disclosure-root');
   return root([
-    n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'General', undefined, { icon: 'chevron-down', value: 'general' })])], { value: 'general' }),
+    n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'General', undefined, { icon: 'chevron-down', value: 'general' })]), n('panel', 'content', 'Workspace name, ownership, and visibility.', undefined, { value: 'general' })], { value: 'general' }),
     n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'Deployments', undefined, { icon: 'chevron-down', value: 'deployments' })]), n('panel', 'content', 'Build targets and release protection.', undefined, { value: 'deployments' })], { value: 'deployments' }),
     n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'Danger zone', undefined, { icon: 'chevron-down', value: 'danger' })]), n('panel', 'content', 'Delete and archive settings.', undefined, { value: 'danger' })], { value: 'danger' }),
   ], 'accordion-root');
@@ -434,9 +526,33 @@ function expansionPreview(kind: string): AnatomyPreviewNode {
 
 function utilityPreview(kind: string): AnatomyPreviewNode {
   if (kind === 'toolbar') return root([n('button', 'item', 'Bold', undefined, { icon: 'bold', value: 'Bold' }), n('button', 'item', 'Italic', undefined, { icon: 'italic', value: 'Italic' }), n('separator', 'separator'), n('button', 'item', 'Align left', undefined, { icon: 'align-left', value: 'Align left' })], 'toolbar-root');
-  if (kind === 'timer') return root([n('panel', 'area', undefined, [n('item', 'item', '00'), n('separator', 'separator', ':'), n('item', 'item', '18'), n('separator', 'separator', ':'), n('item', 'item', '42')]), n('toolbar', 'control', undefined, [n('button', 'action-trigger', 'Pause', undefined, { icon: 'pause', value: 'pause' }), n('button', 'action-trigger', 'Reset', undefined, { icon: 'rotate-ccw', value: 'reset' })])], 'timer-root');
+  if (kind === 'timer') return root([
+    row([
+      stack([n('text', undefined, 'Elapsed time'), n('muted', undefined, 'Session timer')]),
+      n('badge', undefined, 'Paused', undefined, { className: 'timer-anatomy-status' }),
+    ], 'timer-anatomy-heading'),
+    n('panel', 'area', undefined, [
+      n('item', 'item', '00', undefined, { value: 'minutes' }),
+      n('separator', 'separator', ':'),
+      n('item', 'item', '18', undefined, { value: 'seconds' }),
+    ], { className: 'timer-anatomy-area' }),
+    n('toolbar', 'control', undefined, [
+      n('button', 'action-trigger', 'Pause', undefined, { icon: 'pause', value: 'pause' }),
+      n('button', 'action-trigger', 'Reset', undefined, { icon: 'rotate-ccw', value: 'reset' }),
+    ], { className: 'timer-anatomy-actions' }),
+  ], 'timer-root');
   if (kind === 'toast') return n('viewport', 'viewport', undefined, [n('root', 'root', undefined, [n('text', 'title', 'Changes saved'), n('muted', 'description', 'Your project settings were updated.'), iconButton('close', 'x', 'Dismiss')], { className: 'toast-card' })], { className: 'toast-viewport' });
-  return root([n('pane', 'pane', 'Navigator'), n('handle', 'handle', undefined, undefined, { icon: 'grip-vertical' }), n('pane', 'pane', 'Editor')], 'splitter-root');
+  return root([
+    n('pane', 'pane', undefined, [
+      n('text', undefined, 'Project files'),
+      n('muted', undefined, 'src / components'),
+    ], { className: 'splitter-pane splitter-pane-navigation' }),
+    n('handle', 'handle'),
+    n('pane', 'pane', undefined, [
+      n('text', undefined, 'Editor'),
+      n('muted', undefined, 'SplitPane.vue'),
+    ], { className: 'splitter-pane splitter-pane-editor' }),
+  ], 'splitter-root');
 }
 
 function previewFor(component: string): AnatomyPreviewNode {
@@ -476,8 +592,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'date-range-field': anatomy('date-range-field', ['root', 'start-input', 'end-input']),
   'date-range-picker': anatomy('date-range-picker', rangePickerParts),
   'date-time-field': anatomy('date-time-field', fieldParts),
-  'date-time-picker': anatomy('date-time-picker', ['provider', 'date-time-input', 'date-input', 'time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
-  'date-time-range-picker': anatomy('date-time-range-picker', ['provider', 'start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
+  'date-time-picker': anatomy('date-time-picker', ['date-time-input', 'date-input', 'time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
+  'date-time-range-picker': anatomy('date-time-range-picker', ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
   'date-picker': anatomy('date-picker', pickerParts),
   dialog: anatomy('dialog', popupParts),
   disclosure: anatomy('disclosure', ['root', 'trigger', 'content']),
@@ -486,14 +602,14 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   grid: anatomy('grid', ['root', 'row', 'cell']),
   listbox: anatomy('listbox', ['root', 'item', 'item-text', 'item-indicator']),
   menu: anatomy('menu', ['root', 'item', 'sub-content', 'separator'], menuPartDetails()),
-  'menu-button': anatomy('menu-button', ['provider', 'trigger', 'content', 'item', 'sub-content', 'separator'], menuPartDetails('menu-button')),
+  'menu-button': anatomy('menu-button', ['trigger', 'content', 'item', 'sub-content', 'separator'], menuPartDetails('menu-button')),
   menubar: anatomy('menubar', ['root', 'item', 'sub-content', 'separator'], menuPartDetails('menubar')),
   'multi-thumb-slider': anatomy('multi-thumb-slider', ['root', 'track', 'range', 'thumb']),
   'navigation-menu': anatomy('navigation-menu', ['root', 'list', 'item-container', 'item', 'sub-content', 'viewport', 'indicator'], menuPartDetails('navigation-menu')),
   'number-field': anatomy('number-field', fieldParts),
   pagination: anatomy('pagination', ['root', 'first', 'previous', 'item', 'next', 'last']),
   'pin-input': anatomy('pin-input', ['root', 'input']),
-  popover: anatomy('popover', ['provider', 'trigger', 'anchor', 'content', 'title', 'description', 'close', 'arrow']),
+  popover: anatomy('popover', ['trigger', 'anchor', 'content', 'title', 'description', 'close', 'arrow']),
   'quantity-field': anatomy('quantity-field', ['root', 'input', 'unit-select', 'value']),
   'radio-group': anatomy('radio-group', ['root', 'item', 'indicator']),
   rating: anatomy('rating', ['root', 'item', 'indicator', 'clear']),
@@ -508,11 +624,11 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'time-field': anatomy('time-field', fieldParts),
   'time-range-field': anatomy('time-range-field', ['root', 'start-input', 'end-input']),
   timer: anatomy('timer', ['root', 'area', 'item', 'separator', 'control', 'action-trigger']),
-  toast: anatomy('toast', ['provider', 'viewport', 'root', 'title', 'description', 'close']),
+  toast: anatomy('toast', ['viewport', 'root', 'title', 'description', 'close']),
   'toggle-button': anatomy('toggle-button', ['root']),
   'toggle-group': anatomy('toggle-group', ['root', 'item']),
   toolbar: anatomy('toolbar', ['root', 'item', 'separator']),
-  tooltip: anatomy('tooltip', ['provider', 'trigger', 'content', 'arrow']),
+  tooltip: anatomy('tooltip', ['trigger', 'content', 'arrow']),
   'tree-grid': anatomy('tree-grid', ['root', 'row', 'cell', 'disclosure', 'editor']),
   'tree-view': anatomy('tree-view', ['root', 'group', 'item', 'disclosure']),
   'window-splitter': anatomy('window-splitter', ['root', 'pane', 'handle']),
@@ -549,7 +665,7 @@ function anatomy(
   const preview = previewFor(scope);
   const visibleParts = collectPreviewParts(preview);
   const declaredParts = new Set(parts);
-  const missingParts = parts.filter((part) => part !== 'provider' && !visibleParts.has(part));
+  const missingParts = parts.filter((part) => !visibleParts.has(part));
   if (missingParts.length > 0) {
     throw new Error(`Missing anatomy regions for ${scope}: ${missingParts.join(', ')}`);
   }

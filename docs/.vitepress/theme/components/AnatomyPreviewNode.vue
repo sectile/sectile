@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bold,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,
@@ -12,6 +13,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Ellipsis,
+  FileCode2,
+  Folder,
+  FolderOpen,
   GripVertical,
   Italic,
   Minus,
@@ -22,10 +26,11 @@ import {
   Star,
   X,
 } from '@lucide/vue';
-import { computed, ref, watch, type Component } from 'vue';
+import { computed, nextTick, ref, watch, type Component } from 'vue';
 import type { AnatomyIconName, AnatomyPreviewNode } from '../component-anatomy.js';
 import {
   anatomyDisplayIcon,
+  adjustTemporalAnatomyValue,
   isAnatomyNodeActive,
   isAnatomyNodeHidden,
   isAnatomyNodeKeyboardInteractive,
@@ -70,6 +75,7 @@ const iconComponents: Readonly<Record<AnatomyIconName, Component>> = Object.free
   'arrow-left': ArrowLeft,
   'arrow-right': ArrowRight,
   bold: Bold,
+  'book-open': BookOpen,
   calendar: CalendarDays,
   check: Check,
   'chevron-down': ChevronDown,
@@ -78,6 +84,9 @@ const iconComponents: Readonly<Record<AnatomyIconName, Component>> = Object.free
   'chevrons-left': ChevronsLeft,
   'chevrons-right': ChevronsRight,
   ellipsis: Ellipsis,
+  'file-code-2': FileCode2,
+  folder: Folder,
+  'folder-open': FolderOpen,
   'grip-vertical': GripVertical,
   italic: Italic,
   minus: Minus,
@@ -101,17 +110,20 @@ const displayText = computed(() => {
   if (props.node.part === 'value' && props.previewValues['input'] !== undefined && props.previewValues['unit-select'] !== undefined) {
     return `${props.previewValues['input']} ${props.previewValues['unit-select']}`;
   }
-  if (props.component === 'switch' && props.node.part === 'root') return props.previewState['checked'] === 'true' ? 'On' : 'Off';
   if (props.component === 'carousel' && props.node.part === 'pause') return props.previewState['paused'] === 'true' ? 'Resume' : 'Pause';
   if (props.component === 'timer' && props.node.part === 'action-trigger' && props.node.text === 'Pause') return props.previewState['paused'] === 'true' ? 'Resume' : 'Pause';
+  if (props.component === 'timer' && props.node.className === 'timer-anatomy-status') return props.previewState['paused'] === 'true' ? 'Paused' : 'Running';
+  if (props.component === 'timer' && props.node.part === 'item' && props.previewState['timerReset'] !== '0') return '00';
   if (props.component === 'stepper' && props.node.part === 'content') {
     const labels: Readonly<Record<string, string>> = { account: 'Account', workspace: 'Workspace', review: 'Review' };
     const selected = props.previewState['selected'] ?? 'account';
     return `${labels[selected] ?? 'Account'} details`;
   }
-  if (props.component === 'feed' && props.node.part === 'item') {
+  if (props.component === 'feed' && props.node.className === 'feed-anatomy-note') {
     const offset = Number(props.previewState['feedOffset'] ?? '0');
-    return offset === 0 ? props.node.text : `${props.node.text} ${offset > 0 ? `+${offset}` : offset}`;
+    if (offset > 0) return 'Recent activity synchronized';
+    if (offset < 0) return 'Earlier release history appended';
+    return props.node.text;
   }
   return props.node.text;
 });
@@ -204,6 +216,21 @@ function handlePointerDown(node: AnatomyPreviewNode, event: PointerEvent): void 
 }
 
 function handleArrowKey(node: AnatomyPreviewNode, event: KeyboardEvent): void {
+  if (isTextInput.value && node.part !== undefined && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    const input = event.target instanceof HTMLInputElement ? event.target : null;
+    const adjusted = adjustTemporalAnatomyValue(
+      props.component,
+      effectiveValue.value,
+      input?.selectionStart ?? 0,
+      event.key === 'ArrowUp' ? 1 : -1,
+    );
+    if (adjusted !== null) {
+      event.preventDefault();
+      effectiveValue.value = adjusted.value;
+      void nextTick(() => input?.setSelectionRange(adjusted.selectionStart, adjusted.selectionEnd));
+      return;
+    }
+  }
   if (props.component !== 'window-splitter' || node.part !== 'handle') return;
   const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp'
     ? -1

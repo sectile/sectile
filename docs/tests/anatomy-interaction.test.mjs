@@ -3,12 +3,28 @@ import test from 'node:test';
 import { anatomyPartContract, componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
 import {
   activateAnatomyInteraction,
+  adjustTemporalAnatomyValue,
   anatomyDisplayIcon,
   initializeAnatomyInteraction,
   isAnatomyNodeActive,
   isAnatomyNodeHidden,
   isAnatomyNodeKeyboardInteractive,
 } from '../.vitepress/theme/anatomy-interaction.ts';
+
+test('temporal anatomy inputs apply ArrowUp and ArrowDown to the caret segment', () => {
+  assert.deepEqual(
+    adjustTemporalAnatomyValue('date-field', '2026 / 08 / 23', 8, 1),
+    { value: '2026 / 09 / 23', selectionStart: 7, selectionEnd: 9 },
+  );
+  assert.deepEqual(
+    adjustTemporalAnatomyValue('time-field', '09 : 30', 6, -1),
+    { value: '09 : 29', selectionStart: 5, selectionEnd: 7 },
+  );
+  assert.deepEqual(
+    adjustTemporalAnatomyValue('date-time-field', '2026 / 08 / 23   23 : 59', 25, 1),
+    { value: '2026 / 08 / 24   00 : 00', selectionStart: 22, selectionEnd: 24 },
+  );
+});
 
 function walk(node, visit) {
   visit(node);
@@ -39,7 +55,7 @@ test('every public visual anatomy part has a real preview region', () => {
     walk(definition.preview, (node) => {
       if (node.part !== undefined) rendered.add(node.part);
     });
-    const missing = definition.parts.filter((part) => part !== 'provider' && !rendered.has(part));
+    const missing = definition.parts.filter((part) => !rendered.has(part));
     assert.deepEqual(missing, [], component);
   }
 });
@@ -57,7 +73,7 @@ test('menu family contracts expose hierarchy depth and their real nested scopes'
     anatomyPartContract(componentAnatomy.menubar, 'separator').attributes,
     [['data-scope', 'menu'], ['data-part', 'separator']],
   );
-  assert.ok(componentAnatomy['menu-button'].parts.includes('provider'));
+  assert.equal(Object.values(componentAnatomy).some((definition) => definition.parts.includes('provider')), false);
   assert.equal(componentAnatomy['menu-button'].parts.includes('root'), false);
 });
 
@@ -120,6 +136,15 @@ test('generic anatomy interactions change the represented component state', () =
     assert.equal(state.open, 'true');
   }
   {
+    const values = { input: 'invalid' };
+    const state = { spinAccepted: '3' };
+    const node = find('spin-button', 'increment');
+    activateAnatomyInteraction('spin-button', node, values, state);
+    assert.equal(values.input, '4');
+    assert.equal(state.spinAccepted, '4');
+    assert.notEqual(values.input, 'NaN');
+  }
+  {
     const { state } = activate('pagination', 'next');
     assert.equal(state.page, '3');
   }
@@ -139,6 +164,26 @@ test('generic anatomy interactions change the represented component state', () =
     activateAnatomyInteraction('dialog', trigger, values, state);
     assert.equal(isAnatomyNodeHidden('dialog', content, state), false);
   }
+});
+
+test('tree view anatomy expands each parent independently and hides its own descendants', () => {
+  const values = {};
+  const state = {};
+  initializeAnatomyInteraction('tree-view', values, state);
+  const atlasDisclosure = find('tree-view', 'disclosure', ({ value }) => value === 'atlas');
+  const appsDisclosure = find('tree-view', 'disclosure', ({ value }) => value === 'apps');
+  const atlasChildren = find('tree-view', 'group', ({ className }) => className?.includes('children-of-atlas'));
+  const appsChildren = find('tree-view', 'group', ({ className }) => className?.includes('children-of-apps'));
+
+  activateAnatomyInteraction('tree-view', appsDisclosure, values, state);
+  assert.equal(state['expanded:apps'], 'false');
+  assert.equal(state['expanded:atlas'], 'true');
+  assert.equal(isAnatomyNodeHidden('tree-view', appsChildren, state), true);
+  assert.equal(isAnatomyNodeHidden('tree-view', atlasChildren, state), false);
+  assert.equal(anatomyDisplayIcon('tree-view', appsDisclosure, state), 'chevron-right');
+
+  activateAnatomyInteraction('tree-view', atlasDisclosure, values, state);
+  assert.equal(isAnatomyNodeHidden('tree-view', atlasChildren, state), true);
 });
 
 test('every generic interaction family has a working representative control', () => {
@@ -169,10 +214,10 @@ test('every generic interaction family has a working representative control', ()
     ['toolbar', 'item', ({ value }) => value === 'Italic'],
     ['calendar', 'cell', ({ text }) => text === '13'],
     ['grid', 'cell', ({ text }) => text === 'Beta'],
-    ['tree-grid', 'cell', ({ text }) => text === 'Atlas'],
+    ['tree-grid', 'cell', ({ text }) => text === 'Alex Chen'],
     ['tree-view', 'disclosure'],
     ['feed', 'load-newer'],
-    ['tags-input', 'item-delete', ({ value }) => value === 'TypeScript'],
+    ['tags-input', 'item-delete', ({ value }) => value === 'Vue'],
     ['spin-button', 'increment'],
     ['pagination', 'next'],
     ['carousel', 'next'],

@@ -4,10 +4,6 @@ import test from 'node:test';
 import catalog from '../data/components.json' with { type: 'json' };
 import { componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
 
-const providerRoots = new Set([
-  'alert-dialog', 'date-picker', 'date-range-picker', 'date-time-picker',
-  'date-time-range-picker', 'dialog', 'menu-button', 'popover', 'tooltip',
-]);
 const nativeFields = new Set(['date-field', 'date-time-field', 'number-field', 'text', 'time-field']);
 
 test('every documented part is backed by one public Vue component', async () => {
@@ -48,12 +44,16 @@ function publicPart(component, value) {
   if (nativeFields.has(component)) return 'input';
   if (component === 'toggle-button' && value === 'ToggleButton') return 'root';
   if (value.endsWith('Portal')) return null;
-  if (value.endsWith('Provider')) return 'provider';
-  if (providerRoots.has(component) && value.endsWith('Root')) return 'provider';
+  // State-only providers are public API, but do not create a visual styling
+  // boundary and therefore do not belong in the interactive Anatomy diagram.
+  if (value.endsWith('Provider')) return null;
+  if (['alert-dialog', 'date-picker', 'date-range-picker', 'date-time-picker',
+    'date-time-range-picker', 'dialog', 'menu-button', 'popover', 'tooltip']
+    .includes(component) && value.endsWith('Root')) return null;
 
   if (component === 'menu-button') {
     return new Map([
-      ['MenuButtonRoot', 'provider'], ['MenuButtonTrigger', 'trigger'],
+      ['MenuButtonRoot', null], ['MenuButtonTrigger', 'trigger'],
       ['MenuButtonContent', 'content'], ['MenuItem', 'item'],
       ['MenuSubContent', 'sub-content'], ['MenuSeparator', 'separator'],
     ]).get(value) ?? null;

@@ -10,6 +10,57 @@ export interface AnatomyActivation {
   readonly value?: string | undefined;
 }
 
+export function adjustTemporalAnatomyValue(
+  component: string,
+  value: string,
+  caret: number,
+  direction: -1 | 1,
+): { readonly value: string; readonly selectionStart: number; readonly selectionEnd: number } | null {
+  const temporal = ['date-field', 'date-range-field', 'date-time-field', 'time-field', 'time-range-field'].includes(component);
+  if (!temporal) return null;
+  const tokens = [...value.matchAll(/\d+/gu)].map((match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+    width: match[0].length,
+    value: Number(match[0]),
+  }));
+  if (tokens.length < 2) return null;
+  const matchedIndex = tokens.findIndex((token) => caret <= token.end);
+  const tokenIndex = matchedIndex < 0 ? tokens.length - 1 : matchedIndex;
+  const timeOnly = component === 'time-field' || component === 'time-range-field';
+  const values = tokens.map((token) => token.value);
+  const date = timeOnly
+    ? new Date(Date.UTC(2026, 0, 1, values[0] ?? 0, values[1] ?? 0))
+    : new Date(Date.UTC(values[0] ?? 2026, (values[1] ?? 1) - 1, values[2] ?? 1, values[3] ?? 0, values[4] ?? 0));
+
+  if (timeOnly) {
+    if (tokenIndex === 0) date.setUTCHours(date.getUTCHours() + direction);
+    else date.setUTCMinutes(date.getUTCMinutes() + direction);
+    values[0] = date.getUTCHours();
+    values[1] = date.getUTCMinutes();
+  } else {
+    if (tokenIndex === 0) date.setUTCFullYear(date.getUTCFullYear() + direction);
+    else if (tokenIndex === 1) date.setUTCMonth(date.getUTCMonth() + direction);
+    else if (tokenIndex === 2) date.setUTCDate(date.getUTCDate() + direction);
+    else if (tokenIndex === 3) date.setUTCHours(date.getUTCHours() + direction);
+    else date.setUTCMinutes(date.getUTCMinutes() + direction);
+    values[0] = date.getUTCFullYear();
+    values[1] = date.getUTCMonth() + 1;
+    values[2] = date.getUTCDate();
+    if (tokens.length > 3) values[3] = date.getUTCHours();
+    if (tokens.length > 4) values[4] = date.getUTCMinutes();
+  }
+
+  let next = value;
+  for (let index = tokens.length - 1; index >= 0; index -= 1) {
+    const token = tokens[index]!;
+    const replacement = String(values[index] ?? token.value).padStart(token.width, '0');
+    next = `${next.slice(0, token.start)}${replacement}${next.slice(token.end)}`;
+  }
+  const selected = tokens[tokenIndex] ?? tokens[0]!;
+  return Object.freeze({ value: next, selectionStart: selected.start, selectionEnd: selected.end });
+}
+
 const popupComponents = new Set([
   'dialog', 'alert-dialog', 'popover', 'tooltip', 'menu-button',
   'navigation-menu', 'select', 'cascade-select',
@@ -51,6 +102,9 @@ export function initializeAnatomyInteraction(
     slide: '0',
     subOpen: 'false',
     expanded: 'true',
+    'expanded:atlas': 'true',
+    'expanded:apps': 'true',
+    'expanded:dashboard': 'true',
     editing: 'false',
     toastVisible: 'true',
     feedOffset: '0',
@@ -61,11 +115,18 @@ export function initializeAnatomyInteraction(
     'open:danger': 'false',
   });
   values['split'] = '35';
+  if (component === 'timer') {
+    state['paused'] = 'true';
+    state['timerReset'] = '0';
+  }
   if (component === 'quantity-field') {
     values['input'] = '12.5';
     values['unit-select'] = 'km';
   }
-  if (component === 'spin-button') values['input'] = '3';
+  if (component === 'spin-button') {
+    values['input'] = '3';
+    state['spinAccepted'] = '3';
+  }
 }
 
 export function defaultSelection(component: string): string {
@@ -81,7 +142,7 @@ export function defaultSelection(component: string): string {
     toolbar: 'Bold',
     calendar: '22',
     grid: 'Alpha',
-    'tree-grid': 'Projects',
+    'tree-grid': 'Alex Chen',
   };
   return defaults[component] ?? '';
 }
@@ -151,7 +212,12 @@ export function activateAnatomyInteraction(
   if (component === 'calendar' && part === 'cell' && node.text !== undefined) state['selected'] = node.text;
   if (['grid', 'tree-grid'].includes(component)
     && ['row', 'cell'].includes(part) && node.text !== undefined) state['selected'] = nodeIdentity;
-  if (['tree-view', 'tree-grid'].includes(component) && part === 'disclosure') toggle(state, 'expanded');
+  if (component === 'tree-view' && part === 'disclosure') {
+    toggle(state, `expanded:${nodeIdentity}`);
+    return;
+  }
+  if (component === 'tree-grid' && part === 'disclosure') toggle(state, 'expanded');
+  if (component === 'tree-view' && part === 'item') state['selected'] = nodeIdentity;
 
   if (component === 'feed' && (part === 'load-earlier' || part === 'load-newer')) {
     const offset = Number(state['feedOffset'] ?? '0');
@@ -161,14 +227,20 @@ export function activateAnatomyInteraction(
   if (component === 'tags-input') {
     if (part === 'item-delete' && node.value !== undefined) state[`tag:${node.value}`] = 'hidden';
     if (part === 'clear') {
-      state['tag:TypeScript'] = 'hidden';
+      state['tag:Vue'] = 'hidden';
+      state['tag:DOM'] = 'hidden';
       state['tag:Accessibility'] = 'hidden';
     }
   }
 
   if (component === 'spin-button' && (part === 'increment' || part === 'decrement')) {
-    const current = Number(values['input'] ?? '3');
-    values['input'] = String(current + (part === 'increment' ? 1 : -1));
+    const draft = values['input']?.trim() ?? '';
+    const parsed = draft === '' ? Number.NaN : Number(draft);
+    const accepted = Number(state['spinAccepted'] ?? '3');
+    const current = Number.isFinite(parsed) ? parsed : Number.isFinite(accepted) ? accepted : 3;
+    const next = current + (part === 'increment' ? 1 : -1);
+    values['input'] = String(next);
+    state['spinAccepted'] = String(next);
   }
 
   if (component === 'pagination') {
@@ -191,7 +263,10 @@ export function activateAnatomyInteraction(
 
   if (component === 'timer' && part === 'action-trigger') {
     if (nodeIdentity === 'pause') toggle(state, 'paused');
-    if (nodeIdentity === 'reset') state['timerReset'] = String(Number(state['timerReset'] ?? '0') + 1);
+    if (nodeIdentity === 'reset') {
+      state['paused'] = 'true';
+      state['timerReset'] = String(Number(state['timerReset'] ?? '0') + 1);
+    }
   }
 
   if (component === 'toast' && part === 'close') state['toastVisible'] = 'false';
@@ -217,6 +292,7 @@ export function isAnatomyNodeActive(
   if (component === 'carousel' && part === 'indicator') return nodeIdentity === state['slide'];
   if (component === 'rating' && part === 'item') return Number(nodeIdentity) <= Number(state['selected']);
   if (['calendar', 'grid', 'tree-grid'].includes(component) && ['cell', 'row'].includes(part)) return nodeIdentity === state['selected'];
+  if (component === 'tree-view' && part === 'item') return nodeIdentity === state['selected'];
   if (selectionComponents.has(component)) return ['item', 'item-indicator', 'indicator', 'trigger', 'step'].includes(part)
     && nodeIdentity === state['selected'];
   return false;
@@ -232,7 +308,11 @@ export function isAnatomyNodeHidden(
   if (component === 'disclosure' && part === 'content') return state['open'] === 'false';
   if (popupComponents.has(component) && ['content', 'overlay'].includes(part)) return state['open'] === 'false';
   if (part === 'sub-content') return state['subOpen'] !== 'true';
-  if (['tree-view', 'tree-grid'].includes(component) && node.className?.includes('tree-child') === true) return state['expanded'] === 'false';
+  if (component === 'tree-view') {
+    const parent = node.className?.match(/tree-view-children-of-([\w-]+)/u)?.[1];
+    if (parent !== undefined) return state[`expanded:${parent}`] === 'false';
+  }
+  if (component === 'tree-grid' && node.className?.includes('tree-child') === true) return state['expanded'] === 'false';
   if (component === 'tags-input' && node.value !== undefined) return state[`tag:${node.value}`] === 'hidden';
   if (component === 'toast' && part === 'root') return state['toastVisible'] === 'false';
   if (component === 'carousel' && part === 'slide') return node.value !== state['slide'];
@@ -251,7 +331,8 @@ export function anatomyDisplayIcon(
   if (component === 'switch' && node.part === 'thumb') return undefined;
   if (component === 'accordion' && node.part === 'trigger') return state[`open:${identity(node)}`] === 'true' ? 'chevron-down' : 'chevron-right';
   if (component === 'disclosure' && node.part === 'trigger') return state['open'] === 'true' ? 'chevron-down' : 'chevron-right';
-  if (['tree-view', 'tree-grid'].includes(component) && node.part === 'disclosure') return state['expanded'] === 'true' ? 'chevron-down' : 'chevron-right';
+  if (component === 'tree-view' && node.part === 'disclosure') return state[`expanded:${identity(node)}`] === 'true' ? 'chevron-down' : 'chevron-right';
+  if (component === 'tree-grid' && node.part === 'disclosure') return state['expanded'] === 'true' ? 'chevron-down' : 'chevron-right';
   if (['carousel', 'timer'].includes(component) && node.part === 'pause') return state['paused'] === 'true' ? 'play' : 'pause';
   if (component === 'timer' && node.part === 'action-trigger' && node.value === 'pause') return state['paused'] === 'true' ? 'play' : 'pause';
   return node.icon;

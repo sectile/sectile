@@ -22,8 +22,9 @@ test('anatomy icons share one optical alignment contract', () => {
 test('tree disclosures align to the text center and keep hierarchy indentation', () => {
   assert.match(source, /\.anatomy-node--data-grid \.anatomy-node--cell > \.anatomy-node--indicator\s*\{[^}]*top:\s*50%;[^}]*transform:\s*translateY\(-50%\);/s);
   assert.match(source, /\.anatomy-node--tree-root \[data-part-name='disclosure'\][^{]*\{[^}]*margin-left:\s*0;/s);
-  assert.match(source, /\.anatomy-node--tree-root \.anatomy-node--tree-child\s*\{[^}]*padding-left:\s*36px;/s);
-  assert.match(source, /\.anatomy-node--tree-root \.anatomy-node--tree-grandchild\s*\{[^}]*padding-left:\s*64px;/s);
+  assert.match(source, /\.anatomy-node--tree-view-row\s*\{[^}]*grid-template-columns:\s*18px 20px minmax\(0, 1fr\) auto;[^}]*align-items:\s*center;/s);
+  assert.match(source, /\.anatomy-node--tree-view-level-2\s*\{[^}]*padding-left:\s*30px;/s);
+  assert.match(source, /\.anatomy-node--tree-view-level-3\s*\{[^}]*padding-left:\s*52px;/s);
 });
 
 test('leading indicators and trailing disclosure icons stay in their semantic positions', () => {
@@ -50,7 +51,7 @@ test('tooltip anatomy positions content from its trigger anchor', () => {
 
 test('navigation anatomy opens sub-content without changing the menu row width', () => {
   assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--list > \[data-part-name='item-container'\]\s*\{[^}]*flex:\s*none;/s);
-  assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--navigation-viewport\s*\{[^}]*position:\s*absolute;[^}]*top:\s*74px;[^}]*left:\s*20px;[^}]*overflow:\s*visible;/s);
+  assert.match(source, /\.anatomy-node--navigation-root > \.anatomy-node--navigation-viewport\s*\{[^}]*position:\s*static;[^}]*width:\s*100%;[^}]*overflow:\s*hidden;/s);
   assert.match(source, /\.anatomy-node--navigation-viewport > \.anatomy-node--navigation-panel\s*\{[^}]*border-radius:\s*inherit;/s);
 });
 

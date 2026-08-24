@@ -92,6 +92,13 @@ interface PickerField {
   readonly ko: string;
 }
 
+interface PickerFieldGroup {
+  readonly key: string;
+  readonly en: string;
+  readonly ko: string;
+  readonly fields: readonly PickerField[];
+}
+
 interface PickerDefinition {
   readonly Root: Component;
   readonly Trigger: Component;
@@ -184,7 +191,20 @@ const pickerCatalog: Readonly<Record<PickerName, PickerDefinition>> = Object.fre
 });
 
 const picker = computed(() => pickerCatalog[props.component]);
-const fieldLayout = computed(() => `date-time-anatomy__fields--${picker.value.fields.length}`);
+const fieldGroups = computed<readonly PickerFieldGroup[]>(() => {
+  const fields = picker.value.fields;
+  if (props.component === 'date-time-picker') {
+    return Object.freeze([{ key: 'date-time', en: 'Date and time', ko: '날짜 및 시간', fields }]);
+  }
+  if (props.component === 'date-time-range-picker') {
+    return Object.freeze([
+      { key: 'start', en: 'Start', ko: '시작', fields: Object.freeze([fields[0]!, fields[2]!]) },
+      { key: 'end', en: 'End', ko: '종료', fields: Object.freeze([fields[1]!, fields[3]!]) },
+    ]);
+  }
+  return fields.map((field) => Object.freeze({ key: field.part, en: field.en, ko: field.ko, fields: Object.freeze([field]) }));
+});
+const fieldLayout = computed(() => `date-time-anatomy__fields--${fieldGroups.value.length}`);
 const viewModes: readonly ViewMode[] = ['week', 'month', 'year'];
 
 const weekdayLabels = {
@@ -292,18 +312,26 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
       @pointerleave="clearHover"
     >
       <div class="date-time-anatomy__fields" :class="fieldLayout">
-        <label v-for="field in picker.fields" :key="field.part" class="date-time-anatomy__field">
-          <span class="date-time-anatomy__field-label">{{ korean ? field.ko : field.en }}</span>
-          <div class="date-time-anatomy__input-frame">
-            <component
-              :is="field.component"
-              class="date-time-anatomy__input"
-              :class="partClass(field.part)"
-              :aria-label="korean ? field.ko : field.en"
-            />
-            <span v-if="isPartActive(field.part)" class="date-time-anatomy__part-label anatomy-part-label">{{ field.part }}</span>
+        <div
+          v-for="group in fieldGroups"
+          :key="group.key"
+          class="date-time-anatomy__field"
+          role="group"
+          :aria-label="korean ? group.ko : group.en"
+        >
+          <span class="date-time-anatomy__field-label">{{ korean ? group.ko : group.en }}</span>
+          <div class="date-time-anatomy__input-group" :class="{ 'date-time-anatomy__input-group--compound': group.fields.length > 1 }">
+            <div v-for="field in group.fields" :key="field.part" class="date-time-anatomy__input-frame">
+              <component
+                :is="field.component"
+                class="date-time-anatomy__input"
+                :class="partClass(field.part)"
+                :aria-label="korean ? field.ko : field.en"
+              />
+              <span v-if="isPartActive(field.part)" class="date-time-anatomy__part-label anatomy-part-label">{{ field.part }}</span>
+            </div>
           </div>
-        </label>
+        </div>
         <component
           :is="picker.Trigger"
           class="date-time-anatomy__trigger"
@@ -421,12 +449,10 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
   display: grid;
   grid-template-columns: minmax(0, 1fr) 44px;
   align-items: end;
-  gap: 10px;
+  gap: 8px;
 }
-.date-time-anatomy__fields--2,
-.date-time-anatomy__fields--4 { grid-template-columns: repeat(2, minmax(0, 1fr)) 44px; }
-.date-time-anatomy__fields--2 .date-time-anatomy__trigger,
-.date-time-anatomy__fields--4 .date-time-anatomy__trigger { grid-column: 3; grid-row: 1; }
+.date-time-anatomy__fields--2 { grid-template-columns: repeat(2, minmax(0, 1fr)) 44px; }
+.date-time-anatomy__fields--2 .date-time-anatomy__trigger { grid-column: 3; grid-row: 1; }
 
 .date-time-anatomy__field { display: grid; gap: 6px; min-width: 0; }
 .date-time-anatomy__field-label {
@@ -436,7 +462,23 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
   letter-spacing: .06em;
   text-transform: uppercase;
 }
+.date-time-anatomy__input-group { min-width: 0; }
+.date-time-anatomy__input-group--compound {
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 0.48fr);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg);
+}
+.date-time-anatomy__input-group--compound:focus-within {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: inset 0 0 0 1px var(--vp-c-brand-1);
+}
 .date-time-anatomy__input-frame { position: relative; min-width: 0; }
+.date-time-anatomy__input-group--compound .date-time-anatomy__input-frame + .date-time-anatomy__input-frame {
+  border-left: 1px solid var(--vp-c-divider);
+}
 .date-time-anatomy__input-frame > .date-time-anatomy__part-label {
   top: -9px;
   right: 10px;
@@ -463,6 +505,14 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
   outline: none;
   font-family: var(--vp-font-family-mono) !important;
 }
+.date-time-anatomy__input-group--compound .date-time-anatomy__input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.date-time-anatomy__input-group--compound .date-time-anatomy__input:focus-visible {
+  outline-offset: -2px;
+}
 
 .date-time-anatomy__trigger,
 .date-time-anatomy__navigation {
@@ -478,7 +528,7 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
   position: relative;
   display: grid;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 8px;
   padding: 16px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 14px;
@@ -584,8 +634,7 @@ function navigationComponent(direction: 'previous' | 'next', viewMode: ViewMode)
 @media (max-width: 640px) {
   .date-time-anatomy { padding: 14px; }
   .date-time-anatomy__fields,
-  .date-time-anatomy__fields--2,
-  .date-time-anatomy__fields--4 { grid-template-columns: minmax(0, 1fr) 44px; }
+  .date-time-anatomy__fields--2 { grid-template-columns: minmax(0, 1fr) 44px; }
   .date-time-anatomy__field { grid-column: 1; }
   .date-time-anatomy__trigger { grid-column: 2; grid-row: 1; }
   .date-time-anatomy__content { padding: 12px; }
