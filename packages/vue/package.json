@@ -166,6 +166,11 @@
       "import": "./dist/feed.js",
       "default": "./dist/feed.js"
     },
+    "./form": {
+      "types": "./dist/form.d.ts",
+      "import": "./dist/form.js",
+      "default": "./dist/form.js"
+    },
     "./grid": {
       "types": "./dist/grid.d.ts",
       "import": "./dist/grid.js",

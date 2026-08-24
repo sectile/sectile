@@ -87,6 +87,23 @@ export {
   type DateTimeFieldProps,
   type DateTimeValue,
 } from './date-time-field.js';
+export {
+  FormDescription,
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormRoot,
+  FormSubmit,
+  FormSummary,
+  type FormFieldProps,
+  type FormFieldSlotProps,
+  type FormIssue,
+  type FormIssueSource,
+  type FormPartProps,
+  type FormRootProps,
+  type FormRootSlotProps,
+  type FormState,
+} from './form.js';
 export { NumberField, type NumberFieldProps } from './number-field.js';
 export {
   SwitchRoot,
