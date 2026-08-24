@@ -31,6 +31,7 @@ export interface DateTimeFieldOptions {
   readonly readOnly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
   readonly onValueChange?: (value: DateTimeValue | null) => void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
@@ -107,6 +108,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
 
   readonly #keydown = (event: KeyboardEvent): void => {
     if (this.#binding.isComposing || event.isComposing) return;
+    if (this.options.native === true && (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End')) return;
     const semantic = event.key === 'ArrowUp'
       ? 'increment-segment'
       : event.key === 'ArrowDown'
@@ -203,9 +205,9 @@ class DOMDateTimeField implements DateTimeFieldConnection {
 
   public refresh(): void {
     const input = this.options.input;
-    input.type = 'text';
-    input.inputMode = 'text';
-    input.placeholder = 'YYYY-MM-DDTHH:mm';
+    input.type = this.options.native === true ? 'datetime-local' : 'text';
+    input.inputMode = this.options.native === true ? '' : 'text';
+    input.placeholder = this.options.native === true ? '' : 'YYYY-MM-DDTHH:mm';
     input.required = this.options.required ?? this.options.policies?.required ?? false;
     setInteractionAttributes(input, this.options, { native: true, readOnly: true });
     if (this.options.label !== undefined) input.setAttribute('aria-label', this.options.label);

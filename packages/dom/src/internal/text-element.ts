@@ -95,10 +95,12 @@ export class DOMTextElementBinding {
     if (this.#composing) return;
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
-    this.#element.setSelectionRange(
-      snapshot.selection.anchorCodeUnitOffset,
-      snapshot.selection.focusCodeUnitOffset,
-    );
+    if (!('type' in this.#element) || this.#element.type === 'text' || this.#element.tagName === 'TEXTAREA') {
+      this.#element.setSelectionRange(
+        snapshot.selection.anchorCodeUnitOffset,
+        snapshot.selection.focusCodeUnitOffset,
+      );
+    }
   }
 
   public disconnect(): void {

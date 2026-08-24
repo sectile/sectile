@@ -16,12 +16,14 @@ export interface DateTimeFieldProps {
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
 }
 
 export const DateTimeField = createNativeFieldComponent<DateTimeValue>({
   name: 'SectileDateTimeField',
   scope: 'date-time-field',
   inputMode: 'text',
+  nativeInputType: 'datetime-local',
   placeholder: 'YYYY-MM-DDTHH:mm',
   formatValue: formatDateTimeValue,
   valueType: Object as PropType<DateTimeValue | null>,

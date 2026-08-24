@@ -16,12 +16,14 @@ export interface TimeFieldProps {
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
 }
 
 export const TimeField = createNativeFieldComponent<TimeValue>({
   name: 'SectileTimeField',
   scope: 'time-field',
   inputMode: 'numeric',
+  nativeInputType: 'time',
   placeholder: 'HH:mm',
   formatValue: formatTimeValue,
   valueType: Object as PropType<TimeValue | null>,

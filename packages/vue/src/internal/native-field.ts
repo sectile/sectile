@@ -28,6 +28,7 @@ export interface NativeFieldFactoryOptions<Value> {
   readonly readOnly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
   readonly onValueChange: (value: Value | null) => void;
   readonly onUpdate: () => void;
 }
@@ -37,6 +38,7 @@ export interface NativeFieldComponentConfig<Value> {
   readonly scope: string;
   readonly valueType: PropType<Value | null>;
   readonly inputMode: 'decimal' | 'numeric' | 'text';
+  readonly nativeInputType?: 'date' | 'time' | 'datetime-local';
   readonly placeholder?: string;
   formatValue(value: Value): string;
   create(options: NativeFieldFactoryOptions<Value>): NativeFieldConnection<Value>;
@@ -50,6 +52,7 @@ export interface NativeFieldPublicProps<Value> {
   readonly readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
 }
 
 export function createNativeFieldComponent<Value>(
@@ -66,6 +69,7 @@ export function createNativeFieldComponent<Value>(
       readonly: { type: Boolean, default: false },
       required: { type: Boolean, default: false },
       label: { type: String, default: undefined },
+      native: { type: Boolean, default: false },
     },
     emits: {
       'update:modelValue': (_value: Value | null): boolean => true,
@@ -88,6 +92,7 @@ export function createNativeFieldComponent<Value>(
           readOnly: props.readonly,
           required: props.required,
           ...(props.label === undefined ? {} : { label: props.label }),
+          native: props.native,
           onValueChange: (value) => emit('update:modelValue', value),
           onUpdate: () => {
             if (connection.value !== undefined) void connection.value.getSnapshot().revision;
@@ -104,7 +109,7 @@ export function createNativeFieldComponent<Value>(
       });
       watch(
         [() => props.policies, () => props.disabled, () => props.readonly,
-          () => props.required, () => props.label],
+          () => props.required, () => props.label, () => props.native],
         () => connect(connection.value?.getValue()),
       );
 
@@ -114,9 +119,9 @@ export function createNativeFieldComponent<Value>(
         },
         'data-scope': config.scope,
         'data-part': 'input',
-        type: 'text',
-        inputmode: config.inputMode,
-        placeholder: config.placeholder,
+        type: props.native && config.nativeInputType !== undefined ? config.nativeInputType : 'text',
+        inputmode: props.native ? undefined : config.inputMode,
+        placeholder: props.native ? undefined : config.placeholder,
         disabled: props.disabled,
         readonly: props.readonly,
         required: props.required,

@@ -16,12 +16,14 @@ export interface DateFieldProps {
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
 }
 
 export const DateField = createNativeFieldComponent<DateValue>({
   name: 'SectileDateField',
   scope: 'date-field',
   inputMode: 'numeric',
+  nativeInputType: 'date',
   placeholder: 'YYYY-MM-DD',
   formatValue: formatDateValue,
   valueType: Object as PropType<DateValue | null>,
