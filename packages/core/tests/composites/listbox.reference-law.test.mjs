@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   createListboxState,
   applyListboxEvent,
-  findListboxTypeaheadMatch,
+  findListboxTypeaheadMatch, tryCreateListboxState
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
   createReferenceListboxState,
@@ -17,8 +17,8 @@ import { canonicalIDs, powerset, unwrap } from '../support.mjs';
 const EVENTS = ['next', 'previous', 'first', 'last', 'toggle', 'activate', 'clear'];
 
 test('listbox direct events target an eligible identity atomically', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
-  const state = unwrap(createListboxState(domain, { current: 'a' }));
+  const domain = createSequence(['a', 'b']);
+  const state = createListboxState(domain, { current: 'a' });
   const activated = unwrap(applyListboxEvent(domain, state, { type: 'activate', id: 'b' }));
   assert.equal(activated.state.cursor.current, 'b');
   assert.deepEqual(activated.state.selection.selected, ['b']);
@@ -40,7 +40,7 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
 
   for (let size = 0; size <= 4; size += 1) {
     const ids = canonicalIDs(size);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     for (const eligibleIDs of powerset(ids)) {
       const eligible = new Set(eligibleIDs);
       for (const selectionFollowsFocus of [false, true]) {
@@ -50,8 +50,8 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
             selectionFollowsFocus,
             boundary,
           };
-          const starts = [unwrap(createListboxState(domain))];
-          if (size > 0) starts.push(unwrap(createListboxState(domain, { current: ids[0] })));
+          const starts = [createListboxState(domain)];
+          if (size > 0) starts.push(createListboxState(domain, { current: ids[0] }));
 
           for (const start of starts) {
             const queue = [{ state: start, depth: 0 }];
@@ -98,8 +98,8 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
 });
 
 test('listbox policies control movement, selection following, boundaries, and command order', () => {
-  const domain = unwrap(createSequence(['a', 'b', 'c']));
-  const initial = unwrap(createListboxState(domain, { selected: ['c'], anchor: 'c' }));
+  const domain = createSequence(['a', 'b', 'c']);
+  const initial = createListboxState(domain, { selected: ['c'], anchor: 'c' });
   const next = unwrap(applyListboxEvent(domain, initial, 'next', {
     eligible: (id) => id !== 'a',
   }));
@@ -114,7 +114,7 @@ test('listbox policies control movement, selection following, boundaries, and co
   assert.deepEqual(followed.state.selection.selected, ['b']);
   assert.equal(followed.state.selection.anchor, 'b');
 
-  const last = unwrap(createListboxState(domain, { current: 'c' }));
+  const last = createListboxState(domain, { current: 'c' });
   const stopped = unwrap(applyListboxEvent(domain, last, 'next', { boundary: 'stop' }));
   assert.equal(stopped.state, last);
   assert.deepEqual(stopped.commands, []);
@@ -134,11 +134,11 @@ test('listbox policies control movement, selection following, boundaries, and co
 });
 
 test('listbox supports single selection, edge movement, and deterministic typeahead', () => {
-  const domain = unwrap(createSequence(['alpha', 'beta', 'blocked', 'bravo']));
-  const initial = unwrap(createListboxState(domain, {
+  const domain = createSequence(['alpha', 'beta', 'blocked', 'bravo']);
+  const initial = createListboxState(domain, {
     current: 'beta',
     selected: ['beta'],
-  }, 'single'));
+  }, 'single');
   const policies = {
     selectionMode: 'single',
     eligible: (id) => id !== 'blocked',
@@ -146,7 +146,7 @@ test('listbox supports single selection, edge movement, and deterministic typeah
 
   const toggled = unwrap(applyListboxEvent(domain, initial, 'toggle', policies));
   assert.deepEqual(toggled.state.selection.selected, ['beta']);
-  assert.equal(createListboxState(domain, { selected: ['alpha', 'beta'] }, 'single').error.code,
+  assert.equal(tryCreateListboxState(domain, { selected: ['alpha', 'beta'] }, 'single').error.code,
     'invalid-selection-cardinality');
   assert.equal(unwrap(applyListboxEvent(domain, initial, 'first', policies)).state.cursor.current,
     'alpha');
@@ -168,11 +168,11 @@ test('listbox supports single selection, edge movement, and deterministic typeah
 });
 
 test('listbox rejects invalid snapshots and unknown semantics without partial state or commands', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
-  assert.equal(createListboxState(domain, { current: 'missing' }).error.code, 'listbox-cursor-outside-domain');
-  assert.equal(createListboxState(domain, { selected: ['missing'] }).error.code, 'selected-id-outside-domain');
+  const domain = createSequence(['a', 'b']);
+  assert.equal(tryCreateListboxState(domain, { current: 'missing' }).error.code, 'listbox-cursor-outside-domain');
+  assert.equal(tryCreateListboxState(domain, { selected: ['missing'] }).error.code, 'selected-id-outside-domain');
 
-  const empty = unwrap(createListboxState(domain));
+  const empty = createListboxState(domain);
   for (const event of ['toggle', 'activate']) {
     const result = applyListboxEvent(domain, empty, event);
     assert.equal(result.ok, false);

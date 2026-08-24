@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 
@@ -13,7 +14,11 @@ export type TimerCommand = { readonly type: 'timer-completed'; readonly valueMs:
 export interface TimerUpdate { readonly state: TimerState; readonly commands: readonly TimerCommand[] }
 export interface TimerParts { readonly days: number; readonly hours: number; readonly minutes: number; readonly seconds: number; readonly milliseconds: number }
 
-export function createTimerState(policies: TimerPolicies = {}, valueMs: number = policies.startMs ?? 0, running = false): Result<TimerState> {
+export function createTimerState(policies: TimerPolicies = {}, valueMs: number = policies.startMs ?? 0, running = false): TimerState {
+  return unwrap(tryCreateTimerState(policies, valueMs, running));
+}
+
+export function tryCreateTimerState(policies: TimerPolicies = {}, valueMs: number = policies.startMs ?? 0, running = false): Result<TimerState> {
   const valid = validatePolicies(policies);
   if (!valid.ok) return valid;
   if (!Number.isFinite(valueMs) || valueMs < 0) return fail('construction', 'timer-value-invalid', 'Timer value must be finite and non-negative.');
@@ -25,7 +30,7 @@ export function createTimerState(policies: TimerPolicies = {}, valueMs: number =
 }
 
 export function applyTimerEvent(state: TimerState, event: TimerEvent, policies: TimerPolicies = {}): Result<TimerUpdate> {
-  const valid = createTimerState(policies, state.valueMs, state.running);
+  const valid = tryCreateTimerState(policies, state.valueMs, state.running);
   if (!valid.ok) return fail('transition-rejection', valid.error.code, valid.error.message);
   const startMs = policies.startMs ?? 0;
   if (event === 'reset') return update(Object.freeze({ valueMs: startMs, running: false, completed: isComplete(startMs, policies) }));
@@ -55,7 +60,7 @@ export function getTimerParts(valueMs: number): Result<TimerParts> {
 }
 
 export function getTimerProgress(state: TimerState, policies: TimerPolicies = {}): Result<number | null> {
-  const valid = createTimerState(policies, state.valueMs, state.running);
+  const valid = tryCreateTimerState(policies, state.valueMs, state.running);
   if (!valid.ok) return valid;
   const start = policies.startMs ?? 0;
   const target = getTarget(policies);

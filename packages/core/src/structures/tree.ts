@@ -1,3 +1,4 @@
+import { unwrap } from '../result.js';
 import {
   DEFAULT_MAX_ID_CODE_UNITS,
   type ResourceCeilings,
@@ -169,6 +170,13 @@ interface TraversalFrame<ID extends StableID> {
 }
 
 export function createTree<ID extends StableID>(
+  nodes: readonly TreeNodeInput<ID>[],
+  options: TreeOptions = {},
+): Tree<ID> {
+  return unwrap(tryCreateTree(nodes, options));
+}
+
+export function tryCreateTree<ID extends StableID>(
   nodes: readonly TreeNodeInput<ID>[],
   options: TreeOptions = {},
 ): Result<Tree<ID>> {

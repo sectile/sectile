@@ -4,7 +4,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyEditableEvent,
-  createEditableState,
+  tryCreateEditableState,
   type EditableCommand,
   type EditableEvent,
   type EditablePolicies,
@@ -42,9 +42,9 @@ export function tryCreateEditable(options: EditableOptions = {}): Result<FacadeC
 function tryCreateEditableConnection(options: EditableOptions): Result<EditableConnection> {
   const controlled = options.value !== undefined;
   const runtime = createSemanticController<EditableState, EditableEvent, EditableCommand, EditableCommand>({
-    initial: createEditableState(options.value ?? options.defaultValue ?? ''),
+    initial: tryCreateEditableState(options.value ?? options.defaultValue ?? ''),
     reducer: (state, event) => applyEditableEvent(state, event, options.policies),
-    reconcile: (previous, proposed) => createEditableState(
+    reconcile: (previous, proposed) => tryCreateEditableState(
       controlled ? previous.value : proposed.value,
       proposed.editing ? proposed.draft : controlled ? previous.value : proposed.value,
       proposed.editing,
@@ -85,7 +85,7 @@ class TerminalEditable implements EditableConnection {
       return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled editable cannot be synchronized externally.' } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createEditableState(value, state.editing ? state.draft : value, state.editing));
+    const result = this.#runtime.replace(tryCreateEditableState(value, state.editing ? state.draft : value, state.editing));
     if (result.ok) this.#options.onUpdate?.();
     return result;
   }

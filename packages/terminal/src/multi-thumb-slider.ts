@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { applyMultiThumbSliderEvent, createMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
+import { applyMultiThumbSliderEvent, tryCreateMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
@@ -38,15 +38,15 @@ export function tryCreateMultiThumbSlider<ID extends StableID>(options: MultiThu
 }
 
 function tryCreateMultiThumbSliderConnection<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<MultiThumbSliderConnection<ID>> {
-  const thumbs = createSequence(options.thumbs);
+  const thumbs = tryCreateSequence(options.thumbs);
   if (!thumbs.ok) return thumbs;
-  const range = createBoundedRange(options);
+  const range = tryCreateBoundedRange(options);
   if (!range.ok) return range;
   const controlled = options.values !== undefined;
   const runtime = createSemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>, MultiThumbSliderCommand<ID>>({
-    initial: createMultiThumbSliderState(thumbs.value, range.value, options.values ?? options.defaultValues ?? options.thumbs.map(() => 0), options.defaultHighlightedValue ?? options.thumbs[0] ?? null, options.policies),
+    initial: tryCreateMultiThumbSliderState(thumbs.value, range.value, options.values ?? options.defaultValues ?? options.thumbs.map(() => 0), options.defaultHighlightedValue ?? options.thumbs[0] ?? null, options.policies),
     reducer: (state, event) => applyMultiThumbSliderEvent(thumbs.value, range.value, state, event, options.policies),
-    reconcile: (previous, proposed) => createMultiThumbSliderState(thumbs.value, range.value, controlled ? previous.ticks : proposed.ticks, proposed.cursor.current, options.policies),
+    reconcile: (previous, proposed) => tryCreateMultiThumbSliderState(thumbs.value, range.value, controlled ? previous.ticks : proposed.ticks, proposed.cursor.current, options.policies),
     notify: (previous, proposed) => { if (previous.ticks.some((tick, index) => tick !== proposed.ticks[index])) options.onValuesChange?.(proposed.ticks); },
     toEffect: (command) => command,
     interaction: options,
@@ -66,7 +66,7 @@ class TerminalMultiThumbSlider<ID extends StableID> implements MultiThumbSliderC
   public getValues(): readonly string[] { return Object.freeze(this.getSnapshot().state.ticks.map((tick) => this.range.valueAt(tick) as string)); }
   public syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>> {
     if (this.#options.values === undefined) return { ok: false, error: { class: 'construction', code: 'not-controlled', message: 'Only a controlled multi-thumb slider can be synchronized.' } };
-    return this.#runtime.replace(createMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
+    return this.#runtime.replace(tryCreateMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
   }
   public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event = toMultiThumbSliderEvent(input); return event === null ? false : this.handleEvent(event); }

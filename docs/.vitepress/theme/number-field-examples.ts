@@ -61,15 +61,18 @@ function policiesSource(config: NumberFieldExampleConfig): string {
 
 function calculatorSetup(config: NumberFieldExampleConfig): string {
   if (!config.calculator) return '';
-  return `const calculator = createCalculatorExpression({ precision: 12, rounding: 'half-even' })\nif (!calculator.ok) throw new Error(calculator.error.message)\nconst evaluator = calculator.value\n`;
+  return `const evaluator = createCalculatorExpression({
+  precision: 12,
+  rounding: 'half-even',
+})\n`;
 }
 
 function terminalSource(config: NumberFieldExampleConfig): string {
   const draftPrelude = config.draft === null ? '' : `import { createTextEditingState } from '@sectile/core/text'\n`;
-  const draftState = config.draft === null ? '' : `\nconst inputState = createTextEditingState('${config.draft}', {\n  anchorCodeUnitOffset: ${config.draft.length},\n  focusCodeUnitOffset: ${config.draft.length},\n})\nif (!inputState.ok) throw new Error(inputState.error.message)\n`;
+  const draftState = config.draft === null ? '' : `\nconst inputState = createTextEditingState('${config.draft}', {\n  anchorCodeUnitOffset: ${config.draft.length},\n  focusCodeUnitOffset: ${config.draft.length},\n})\n`;
   const controlledState = config.controlled
-    ? `\nlet value = '${config.initialValue}'\nlet input = inputState.value\nlet field\nfield = createNumberField({\n  value,\n  inputState: input,${policiesSource(config)}\n  onValueChange: (change) => { value = change.value ?? ''; sync() },\n  onInputStateChange: (change) => { input = change.value; sync() },\n  onUpdate: render,\n})\n\nfunction sync() {\n  field.syncControlledValues({ value, inputState: input })\n}`
-    : `\nconst field = createNumberField({\n  defaultValue: '${config.initialValue}',${config.draft === null ? '' : '\n  defaultInputState: inputState.value,'}${policiesSource(config)}\n  onUpdate: render,\n})`;
+    ? `\nlet value = '${config.initialValue}'\nlet input = inputState\nlet field\nfield = createNumberField({\n  value,\n  inputState: input,${policiesSource(config)}\n  onValueChange: (change) => { value = change.value ?? ''; sync() },\n  onInputStateChange: (change) => { input = change.value; sync() },\n  onUpdate: render,\n})\n\nfunction sync() {\n  field.syncControlledValues({ value, inputState: input })\n}`
+    : `\nconst field = createNumberField({\n  defaultValue: '${config.initialValue}',${config.draft === null ? '' : '\n  defaultInputState: inputState,'}${policiesSource(config)}\n  onUpdate: render,\n})`;
   const calculatorImport = config.calculator
     ? `import { createCalculatorExpression } from '@sectile/core/number-field'\n`
     : '';
@@ -86,7 +89,7 @@ function domSource(config: NumberFieldExampleConfig): string {
 function vueSource(config: NumberFieldExampleConfig): string {
   const hasPolicies = config.calculator || config.min !== undefined || config.max !== undefined;
   const policyExpression = config.calculator
-    ? `const calculator = createCalculatorExpression({ precision: 12, rounding: 'half-even' })\nif (!calculator.ok) throw new Error(calculator.error.message)\nconst policies = { evaluator: calculator.value${config.min === undefined ? '' : `, min: '${config.min}'`}${config.max === undefined ? '' : `, max: '${config.max}'`} }`
+    ? `const policies = {\n  evaluator: createCalculatorExpression({\n    precision: 12,\n    rounding: 'half-even',\n  }),${config.min === undefined ? '' : `\n  min: '${config.min}',`}${config.max === undefined ? '' : `\n  max: '${config.max}',`}\n}`
     : hasPolicies
       ? `const policies = {${config.min === undefined ? '' : ` min: '${config.min}',`}${config.max === undefined ? '' : ` max: '${config.max}',`} }`
       : '';
@@ -109,9 +112,9 @@ function coreSource(config: NumberFieldExampleConfig): string {
     : `\nimport { createTextEditingState } from '@sectile/core/text'`;
   const inputSetup = config.draft === null
     ? ''
-    : `\nconst input = createTextEditingState('${config.draft}', {\n  anchorCodeUnitOffset: ${config.draft.length},\n  focusCodeUnitOffset: ${config.draft.length},\n})\nif (!input.ok) throw new Error(input.error.message)\n`;
-  const initialInput = config.draft === null ? '' : ', input.value';
-  return `import { ${numberFieldImports.join(', ')} } from '@sectile/core/number-field'${inputImport}\n\n${calculatorSetup(config)}${inputSetup}const initial = createNumberFieldState('${config.initialValue}'${initialInput})\nif (!initial.ok) throw new Error(initial.error.message)\n\nconst update = applyNumberFieldEvent(initial.value, 'commit', {${config.calculator ? ' evaluator,' : ''}${config.min === undefined ? '' : ` min: '${config.min}',`}${config.max === undefined ? '' : ` max: '${config.max}',`} })\nif (!update.ok) throw new Error(update.error.message)\n\nconsole.log(update.value.state.value)`;
+    : `\nconst input = createTextEditingState('${config.draft}', {\n  anchorCodeUnitOffset: ${config.draft.length},\n  focusCodeUnitOffset: ${config.draft.length},\n})\n`;
+  const initialInput = config.draft === null ? '' : ', input';
+  return `import { ${numberFieldImports.join(', ')} } from '@sectile/core/number-field'${inputImport}\n\n${calculatorSetup(config)}${inputSetup}const initial = createNumberFieldState(\n  '${config.initialValue}'${initialInput},\n)\n\nconst update = applyNumberFieldEvent(initial, 'commit', {${config.calculator ? '\n  evaluator,' : ''}${config.min === undefined ? '' : `\n  min: '${config.min}',`}${config.max === undefined ? '' : `\n  max: '${config.max}',`}\n})\nif (!update.ok) throw new Error(update.error.message)\n\nconsole.log(update.value.state.value)`;
 }
 
 export function numberFieldExampleSources(scenario: string): Partial<Record<Host, string>> {

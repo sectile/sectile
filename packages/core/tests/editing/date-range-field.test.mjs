@@ -3,10 +3,10 @@ import test from 'node:test';
 import { applyDateRangeFieldEvent, createDateRangeFieldState } from '../../.verification-dist/date-range-field.js';
 import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
 
-const date = (year, month, day) => createDateValue(year, month, day).value;
+const date = (year, month, day) => createDateValue(year, month, day);
 
 test('date range field exposes only complete ordered ranges', () => {
-  let state = createDateRangeFieldState().value;
+  let state = createDateRangeFieldState();
   let update = applyDateRangeFieldEvent(state, { type: 'field', endpoint: 'start', event: { type: 'set-value', value: date(2026, 8, 22) } });
   assert.equal(update.ok, true);
   state = update.value.state;
@@ -22,7 +22,7 @@ test('date range field exposes only complete ordered ranges', () => {
 test('date range field rejects inverted endpoint changes atomically', () => {
   const state = createDateRangeFieldState({
     value: { start: date(2026, 8, 22), end: date(2026, 8, 28) },
-  }).value;
+  });
   const rejected = applyDateRangeFieldEvent(state, { type: 'field', endpoint: 'end', event: { type: 'set-value', value: date(2026, 8, 20) } });
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, 'inverted-date-range-field');

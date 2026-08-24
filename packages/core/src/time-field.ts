@@ -1,7 +1,8 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
-import { applyTextEvent, createTextEditingState, normalizeTextEditingState, type TextEditingState, type TextEvent } from './text.js';
+import { applyTextEvent, createTextEditingState, normalizeTextEditingState, type TextEditingState, type TextEvent,tryCreateTextEditingState } from './text.js';
 
 export interface TimeValue {
   readonly hour: number;
@@ -43,7 +44,11 @@ export interface TimeFieldUpdate {
 
 const TIME_FIELD_MAX_CODE_UNITS = 12;
 
-export function createTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): Result<TimeValue> {
+export function createTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): TimeValue {
+  return unwrap(tryCreateTimeValue(hour, minute, second, millisecond));
+}
+
+export function tryCreateTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): Result<TimeValue> {
   for (const [name, value, maximum] of [['hour', hour, 23], ['minute', minute, 59], ['second', second, 59], ['millisecond', millisecond, 999]] as const) {
     if (!Number.isSafeInteger(value) || value < 0 || value > maximum) {
       return fail('construction', `invalid-time-${name}`, `Time ${name} must be an integer from 0 through ${maximum}.`, { [name]: value });
@@ -56,7 +61,7 @@ export function parseTimeValue(text: string): Result<TimeValue> {
   if (typeof text !== 'string') return fail('construction', 'invalid-time-text', 'Time text must be a string.');
   const match = /^(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(text);
   if (match === null) return fail('transition-rejection', 'invalid-time-format', 'Time text must use HH:mm, HH:mm:ss, or HH:mm:ss.SSS.', { text });
-  return createTimeValue(Number(match[1]), Number(match[2]), Number(match[3] ?? 0), Number((match[4] ?? '0').padEnd(3, '0')));
+  return tryCreateTimeValue(Number(match[1]), Number(match[2]), Number(match[3] ?? 0), Number((match[4] ?? '0').padEnd(3, '0')));
 }
 
 export function formatTimeValue(value: TimeValue): string {
@@ -78,11 +83,15 @@ export function addTimeMilliseconds(value: TimeValue, amount: number): Result<Ti
   const hour = Math.floor(next / 3_600_000);
   const minute = Math.floor((next % 3_600_000) / 60_000);
   const second = Math.floor((next % 60_000) / 1_000);
-  return createTimeValue(hour, minute, second, next % 1_000);
+  return tryCreateTimeValue(hour, minute, second, next % 1_000);
 }
 
-export function createTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): Result<TimeFieldState> {
-  const valid = value === null ? ok(null) : createTimeValue(value.hour, value.minute, value.second, value.millisecond);
+export function createTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): TimeFieldState {
+  return unwrap(tryCreateTimeFieldState(value, inputState));
+}
+
+export function tryCreateTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): Result<TimeFieldState> {
+  const valid = value === null ? ok(null) : tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return valid;
   const input = inputState === undefined ? committedInput(valid.value) : normalizeTextEditingState(inputState);
   if (!input.ok) return input;
@@ -91,7 +100,7 @@ export function createTimeFieldState(value: TimeValue | null = null, inputState?
 }
 
 export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent, policies: TimeFieldPolicies = {}): Result<TimeFieldUpdate> {
-  const valid = createTimeFieldState(state.value, state.inputState);
+  const valid = tryCreateTimeFieldState(state.value, state.inputState);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -135,7 +144,7 @@ function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segme
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'time-field-value-required', 'Time field requires a value.');
   } else {
-    const valid = createTimeValue(value.hour, value.minute, value.second, value.millisecond);
+    const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
     if (!valid.ok) return invalidTransition(valid);
     value = valid.value;
     if (policies.min !== undefined && compareTimeValues(value, policies.min) < 0) return fail('transition-rejection', 'time-field-value-below-minimum', 'Time field value is below its minimum.');
@@ -152,12 +161,12 @@ function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segme
 function committedInput(value: TimeValue | null, segment?: TimeSegment): Result<TextEditingState> {
   const text = value === null ? '' : formatTimeValue(value);
   const range = segment === 'hour' ? [0, 2] : segment === 'minute' ? [3, 5] : segment === 'second' ? [6, 8] : segment === 'millisecond' ? [9, 12] : [text.length, text.length];
-  return createTextEditingState(text, { anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length), focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length) });
+  return tryCreateTextEditingState(text, { anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length), focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length) });
 }
 
 function validatePolicies(policies: TimeFieldPolicies): Result<true> {
-  if (policies.min !== undefined) { const min = createTimeValue(policies.min.hour, policies.min.minute, policies.min.second, policies.min.millisecond); if (!min.ok) return min; }
-  if (policies.max !== undefined) { const max = createTimeValue(policies.max.hour, policies.max.minute, policies.max.second, policies.max.millisecond); if (!max.ok) return max; }
+  if (policies.min !== undefined) { const min = tryCreateTimeValue(policies.min.hour, policies.min.minute, policies.min.second, policies.min.millisecond); if (!min.ok) return min; }
+  if (policies.max !== undefined) { const max = tryCreateTimeValue(policies.max.hour, policies.max.minute, policies.max.second, policies.max.millisecond); if (!max.ok) return max; }
   if (policies.min !== undefined && policies.max !== undefined && compareTimeValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-time-field-bounds', 'Time field minimum must not follow its maximum.');
   return ok(true);
 }

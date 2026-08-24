@@ -11,3 +11,5 @@ export {
   type ListboxTypeaheadOptions,
   type ListboxUpdate,
 } from './internal/composites/listbox.js';
+
+export { tryCreateListboxState } from './internal/composites/listbox.js';

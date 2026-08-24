@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyToolbarEvent,
-  createToolbarState,
+  tryCreateToolbarState,
   type ToolbarCommand,
   type ToolbarEvent,
   type ToolbarPolicies,
@@ -60,7 +60,7 @@ export function tryCreateToolbar<ID extends StableID>(
 function tryCreateToolbarConnection<ID extends StableID>(
   options: ToolbarOptions<ID>,
 ): Result<ToolbarConnection<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);
   if (!disabled.ok) return disabled;
@@ -74,13 +74,13 @@ function tryCreateToolbarConnection<ID extends StableID>(
     ToolbarState<ID>, ToolbarEvent<ID>, ToolbarCommand<ID>, ToolbarEffect<ID>
   >({
     interaction: options,
-    initial: createToolbarState(domain.value, {
+    initial: tryCreateToolbarState(domain.value, {
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }),
     reducer: (state, event) => applyToolbarEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createToolbarState(domain.value, {
+    reconcile: (previous, proposed) => tryCreateToolbarState(domain.value, {
       current: controlled ? previous.cursor.current : proposed.cursor.current,
     }),
     notify: (previous, proposed) => {
@@ -156,7 +156,7 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
       class: 'construction', code: 'uncontrolled-controller-sync',
       message: 'An uncontrolled toolbar cannot be synchronized externally.',
     } };
-    const result = this.#runtime.replace(createToolbarState(this.#domain, { current: value }));
+    const result = this.#runtime.replace(tryCreateToolbarState(this.#domain, { current: value }));
     if (result.ok) this.#options.onUpdate?.();
     return result;
   }

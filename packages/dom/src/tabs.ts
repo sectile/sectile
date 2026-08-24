@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyTabsEvent,
-  createTabsState,
+  tryCreateTabsState,
   type TabsCommand,
   type TabsEvent,
   type TabsPolicies,
@@ -149,7 +149,7 @@ export function tryCreateTabs<ID extends StableID>(
 function tryCreateTabsConnection<ID extends StableID>(
   options: TabsOptions<ID>,
 ): Result<TabsConnection<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);
   if (!disabled.ok) return disabled;
@@ -160,7 +160,7 @@ function tryCreateTabsConnection<ID extends StableID>(
   });
   const valueControlled = options.value !== undefined;
   const highlightControlled = options.highlightedValue !== undefined;
-  const initial = createTabsState(domain.value, {
+  const initial = tryCreateTabsState(domain.value, {
     selected: selected(options.value ?? options.defaultValue ?? null),
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
@@ -176,7 +176,7 @@ function tryCreateTabsConnection<ID extends StableID>(
     interactionIntent: tabsIntent,
     initial,
     reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createTabsState(domain.value, {
+    reconcile: (previous, proposed) => tryCreateTabsState(domain.value, {
       selected: valueControlled || options.readOnly === true ? previous.selection.selected : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
@@ -275,7 +275,7 @@ class DOMTabsConnection<ID extends StableID> implements TabsConnection<ID> {
       return controlledError('tabs');
     }
     const current = this.#runtime.getSnapshot().state;
-    const result = this.#runtime.replace(createTabsState(this.#domain, {
+    const result = this.#runtime.replace(tryCreateTabsState(this.#domain, {
       selected: this.#valueControlled ? selected(values.value ?? null) : current.selection.selected,
       current: this.#highlightControlled
         ? (values.highlightedValue ?? null)

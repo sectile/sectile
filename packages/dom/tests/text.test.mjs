@@ -16,7 +16,7 @@ test('DOM text facade owns beforeinput rendering and IME composition lifecycle',
   const transitions = [];
   const connection = createText({
     element,
-    defaultValue: unwrap(createTextEditingState('a', selection(1))),
+    defaultValue: createTextEditingState('a', selection(1)),
     onTransition: ({ input }) => transitions.push(input.type),
   });
   assert.equal(element.value, 'a');
@@ -46,7 +46,7 @@ test('DOM text adopts native word and line deletion results', () => {
   const transitions = [];
   const connection = createText({
     element,
-    defaultValue: unwrap(createTextEditingState(initialText, selection(initialText.length))),
+    defaultValue: createTextEditingState(initialText, selection(initialText.length)),
     onTransition: ({ input }) => transitions.push(input),
   });
   let prevented = false;
@@ -87,7 +87,7 @@ test('DOM text adopts non-cancelable and Unicode-safe native replacements', () =
   const element = new FakeTextElement();
   const connection = createText({
     element,
-    defaultValue: unwrap(createTextEditingState('A😀B', selection(3))),
+    defaultValue: createTextEditingState('A😀B', selection(3)),
   });
   let prevented = false;
   element.emit('beforeinput', {
@@ -108,7 +108,7 @@ test('DOM text adopts non-cancelable and Unicode-safe native replacements', () =
 });
 
 test('controlled DOM text proposes native edits and restores until synchronized', () => {
-  const initial = unwrap(createTextEditingState('alpha beta', selection(10)));
+  const initial = createTextEditingState('alpha beta', selection(10));
   const element = new FakeTextElement();
   let proposed = null;
   const connection = createText({
@@ -177,7 +177,7 @@ test('DOM beforeinput and composition inputs map to semantic text events', () =>
 
 test('uncontrolled DOM text owns replacement and IME composition state', () => {
   const controller = unwrap(createTextController({
-    defaultValue: unwrap(createTextEditingState('ab', selection(2))),
+    defaultValue: createTextEditingState('ab', selection(2)),
   }));
   assert.equal(controller.handleTextInput({
     type: 'composition-start',
@@ -199,7 +199,7 @@ test('uncontrolled DOM text owns replacement and IME composition state', () => {
 
 test('controlled DOM text emits a full-state proposal until synchronized', () => {
   const changes = [];
-  const initial = unwrap(createTextEditingState('a', selection(1)));
+  const initial = createTextEditingState('a', selection(1));
   const controller = unwrap(createTextController({
     value: initial,
     onValueChange(change) {

@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { unwrap } from '@sectile/core/result';
 import { createDateRange, createDateValue, formatDateValue } from '@sectile/core/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/core/time-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
@@ -16,7 +15,7 @@ import { createTimeRangeField } from '../dist/time-range-field.js';
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
   const input = new FakeInput();
-  const field = createDateField({ input, defaultValue: unwrap(createDateValue(2024, 1, 31)) });
+  const field = createDateField({ input, defaultValue: createDateValue(2024, 1, 31) });
   input.setSelectionRange(5, 5);
   input.emit('keydown', keyboard('ArrowUp'));
   assert.equal(formatDateValue(field.getValue()), '2024-02-29');
@@ -28,8 +27,8 @@ test('DOM date range field keeps endpoint drafts independent and commits an orde
   const startInput = new FakeInput();
   const endInput = new FakeInput();
   const field = createDateRangeField({ startInput, endInput });
-  const start = unwrap(createDateValue(2026, 8, 22));
-  const end = unwrap(createDateValue(2026, 8, 28));
+  const start = createDateValue(2026, 8, 22);
+  const end = createDateValue(2026, 8, 28);
 
   assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: start } }), true);
   assert.equal(field.getValue(), null);
@@ -46,10 +45,10 @@ test('DOM date range field increments the segment under the endpoint caret', () 
   const field = createDateRangeField({
     startInput,
     endInput,
-    defaultValue: unwrap(createDateRange(
-      unwrap(createDateValue(2026, 8, 22)),
-      unwrap(createDateValue(2026, 10, 28)),
-    )),
+    defaultValue: createDateRange(
+      createDateValue(2026, 8, 22),
+      createDateValue(2026, 10, 28),
+    ),
   });
 
   startInput.setSelectionRange(5, 5);
@@ -60,27 +59,27 @@ test('DOM date range field increments the segment under the endpoint caret', () 
 });
 
 test('DOM date range field rejects inverted controlled proposals', () => {
-  const value = unwrap(createDateRange(
-    unwrap(createDateValue(2026, 8, 22)),
-    unwrap(createDateValue(2026, 8, 28)),
-  ));
+  const value = createDateRange(
+    createDateValue(2026, 8, 22),
+    createDateValue(2026, 8, 28),
+  );
   const field = createDateRangeField({ startInput: new FakeInput(), endInput: new FakeInput(), value });
-  assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createDateValue(2026, 8, 20)) } }), false);
+  assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: createDateValue(2026, 8, 20) } }), false);
   assert.equal(formatDateValue(field.getValue().end), '2026-08-28');
 });
 
 test('DOM time range field commits ordered wall-clock endpoints', () => {
   const field = createTimeRangeField({ startInput: new FakeInput(), endInput: new FakeInput() });
-  field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: unwrap(createTimeValue(9, 30)) } });
+  field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: createTimeValue(9, 30) } });
   assert.equal(field.getValue(), null);
-  field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: unwrap(createTimeValue(17, 45)) } });
+  field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: createTimeValue(17, 45) } });
   assert.equal(formatTimeValue(field.getValue().start), '09:30');
   assert.equal(formatTimeValue(field.getValue().end), '17:45');
 });
 
 test('DOM time fields increment the hour under the caret instead of the minute', () => {
   const input = new FakeInput();
-  const field = createTimeField({ input, defaultValue: unwrap(createTimeValue(9, 30)) });
+  const field = createTimeField({ input, defaultValue: createTimeValue(9, 30) });
   input.setSelectionRange(0, 0);
   input.emit('keydown', keyboard('ArrowUp'));
   assert.equal(formatTimeValue(field.getValue()), '10:30');
@@ -90,7 +89,7 @@ test('DOM time fields increment the hour under the caret instead of the minute',
   const range = createTimeRangeField({
     startInput,
     endInput,
-    defaultValue: { start: unwrap(createTimeValue(9, 30)), end: unwrap(createTimeValue(17, 45)) },
+    defaultValue: { start: createTimeValue(9, 30), end: createTimeValue(17, 45) },
   });
   startInput.setSelectionRange(0, 0);
   startInput.emit('keydown', keyboard('ArrowUp'));
@@ -105,7 +104,7 @@ test('DOM date picker composes an editable date field with calendar selection', 
     grid: new FakeElement(),
     trigger: new FakeElement(),
     input,
-    defaultValue: unwrap(createDateValue(2024, 1, 31)),
+    defaultValue: createDateValue(2024, 1, 31),
   });
 
   input.value = '2024-02-12';
@@ -122,14 +121,14 @@ test('DOM date picker projects unavailable dates as disabled cells', () => {
     root: new FakeElement(),
     grid: new FakeElement(),
     trigger: new FakeElement(),
-    defaultValue: unwrap(createDateValue(2026, 8, 22)),
+    defaultValue: createDateValue(2026, 8, 22),
     policies: { unavailable: (value) => value.year === 2026 && value.month === 8 && value.day === 27 },
   });
   const unavailable = new FakeElement();
   const available = new FakeElement();
 
-  picker.setCellAttributes(unavailable, unwrap(createDateValue(2026, 8, 27)));
-  picker.setCellAttributes(available, unwrap(createDateValue(2026, 8, 28)));
+  picker.setCellAttributes(unavailable, createDateValue(2026, 8, 27));
+  picker.setCellAttributes(available, createDateValue(2026, 8, 28));
 
   assert.equal(unavailable.disabled, true);
   assert.equal(unavailable.attributes.get('aria-disabled'), 'true');
@@ -146,12 +145,12 @@ test('DOM date picker can keep an inline calendar open while value remains uncon
     root,
     grid: new FakeElement(),
     trigger: new FakeElement(),
-    defaultValue: unwrap(createDateValue(2026, 8, 22)),
+    defaultValue: createDateValue(2026, 8, 22),
     open: true,
     onOpenChange: (open) => { if (!open) closeRequests += 1; },
   });
 
-  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 25)) });
+  picker.handleEvent({ type: 'select', value: createDateValue(2026, 8, 25) });
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-08-25');
   assert.equal(picker.getSnapshot().state.open, true);
@@ -160,11 +159,11 @@ test('DOM date picker can keep an inline calendar open while value remains uncon
 });
 
 test('DOM controlled range picker exposes highlight changes and stays open after commit', () => {
-  const initialHighlight = unwrap(createDateValue(2026, 8, 22));
-  let value = unwrap(createDateRange(
-    unwrap(createDateValue(2026, 8, 18)),
+  const initialHighlight = createDateValue(2026, 8, 22);
+  let value = createDateRange(
+    createDateValue(2026, 8, 18),
     initialHighlight,
-  ));
+  );
   let highlightedValue = initialHighlight;
   let open = true;
   const picker = createDateRangePicker({
@@ -179,9 +178,9 @@ test('DOM controlled range picker exposes highlight changes and stays open after
     onOpenChange: (next) => { open = next; },
   });
 
-  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 25)) });
+  picker.handleEvent({ type: 'select', value: createDateValue(2026, 8, 25) });
   picker.syncControlledValues({ value, highlightedValue, open });
-  picker.handleEvent({ type: 'select', value: unwrap(createDateValue(2026, 8, 28)) });
+  picker.handleEvent({ type: 'select', value: createDateValue(2026, 8, 28) });
   picker.syncControlledValues({ value, highlightedValue, open });
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value.start), '2026-08-25');
@@ -198,14 +197,14 @@ test('DOM date-time picker keeps the wall-clock time when a calendar date is sel
     grid: new FakeElement(),
     trigger: new FakeElement(),
     dateTimeInput: input,
-    defaultValue: unwrap(createDateTimeValue(
-      unwrap(createDateValue(2026, 8, 22)),
-      unwrap(createTimeValue(16, 30)),
-    )),
+    defaultValue: createDateTimeValue(
+      createDateValue(2026, 8, 22),
+      createTimeValue(16, 30),
+    ),
     defaultOpen: true,
   });
 
-  picker.handleEvent({ type: 'select-date', value: unwrap(createDateValue(2026, 8, 25)) });
+  picker.handleEvent({ type: 'select-date', value: createDateValue(2026, 8, 25) });
 
   assert.equal(formatDateTimeValue(picker.getSnapshot().state.value), '2026-08-25T16:30');
   assert.equal(input.value, '2026-08-25T16:30');
@@ -213,10 +212,10 @@ test('DOM date-time picker keeps the wall-clock time when a calendar date is sel
 });
 
 test('DOM date-time range picker updates independent endpoint times', () => {
-  const initial = unwrap(createDateTimeRange(
-    unwrap(createDateTimeValue(unwrap(createDateValue(2026, 8, 25)), unwrap(createTimeValue(9, 0)))),
-    unwrap(createDateTimeValue(unwrap(createDateValue(2026, 8, 28)), unwrap(createTimeValue(17, 0)))),
-  ));
+  const initial = createDateTimeRange(
+    createDateTimeValue(createDateValue(2026, 8, 25), createTimeValue(9, 0)),
+    createDateTimeValue(createDateValue(2026, 8, 28), createTimeValue(17, 0)),
+  );
   const picker = createDateTimeRangePicker({
     root: new FakeElement(),
     grid: new FakeElement(),
@@ -225,8 +224,8 @@ test('DOM date-time range picker updates independent endpoint times', () => {
     defaultOpen: true,
   });
 
-  picker.handleEvent({ type: 'set-start-time', value: unwrap(createTimeValue(10, 15)) });
-  picker.handleEvent({ type: 'set-end-time', value: unwrap(createTimeValue(18, 45)) });
+  picker.handleEvent({ type: 'set-start-time', value: createTimeValue(10, 15) });
+  picker.handleEvent({ type: 'set-end-time', value: createTimeValue(18, 45) });
 
   assert.equal(
     formatDateTimeRange(picker.getSnapshot().state.value),
@@ -236,7 +235,7 @@ test('DOM date-time range picker updates independent endpoint times', () => {
 
 test('DOM date field exposes invalid drafts and restores the committed value on blur', () => {
   const input = new FakeInput();
-  createDateField({ input, defaultValue: unwrap(createDateValue(2024, 1, 31)) });
+  createDateField({ input, defaultValue: createDateValue(2024, 1, 31) });
 
   replaceInput(input, '2024-02-30');
   input.emit('keydown', keyboard('Enter'));
@@ -250,9 +249,9 @@ test('DOM date field exposes invalid drafts and restores the committed value on 
   assert.equal(input.validationMessage, '');
 });
 
-test('DOM time field exposes invalid drafts and restores the committed value on blur', () => {
+test('DOM time field steps from the committed value after an invalid draft', () => {
   const input = new FakeInput();
-  const field = createTimeField({ input, defaultValue: unwrap(createTimeValue(16, 3)) });
+  const field = createTimeField({ input, defaultValue: createTimeValue(16, 3) });
 
   replaceInput(input, '25:90');
   input.emit('keydown', keyboard('Enter'));
@@ -261,23 +260,23 @@ test('DOM time field exposes invalid drafts and restores the committed value on 
   assert.match(input.validationMessage, /hour must be/);
 
   input.emit('keydown', keyboard('ArrowUp'));
-  assert.equal(input.value, '25:90');
-  assert.equal(formatTimeValue(field.getValue()), '16:03');
-  assert.equal(input.attributes.get('aria-invalid'), 'true');
+  assert.equal(input.value, '16:04');
+  assert.equal(formatTimeValue(field.getValue()), '16:04');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 
   input.emit('blur', {});
-  assert.equal(input.value, '16:03');
-  assert.equal(formatTimeValue(field.getValue()), '16:03');
+  assert.equal(input.value, '16:04');
+  assert.equal(formatTimeValue(field.getValue()), '16:04');
   assert.equal(input.attributes.get('aria-invalid'), 'false');
   assert.equal(input.validationMessage, '');
 });
 
 test('DOM date-time field carries time segments across civil day boundaries', () => {
   const input = new FakeInput();
-  const value = unwrap(createDateTimeValue(
-    unwrap(createDateValue(2024, 1, 31)),
-    unwrap(createTimeValue(23, 45)),
-  ));
+  const value = createDateTimeValue(
+    createDateValue(2024, 1, 31),
+    createTimeValue(23, 45),
+  );
   const field = createDateTimeField({
     input,
     defaultValue: value,
@@ -291,24 +290,25 @@ test('DOM date-time field carries time segments across civil day boundaries', ()
   assert.equal(input.placeholder, 'YYYY-MM-DDTHH:mm');
 });
 
-test('DOM date-time field rejects invalid arrow steps and restores on blur', () => {
+test('DOM date-time field steps the selected committed segment after an invalid draft', () => {
   const input = new FakeInput();
   const field = createDateTimeField({
     input,
-    defaultValue: unwrap(createDateTimeValue(
-      unwrap(createDateValue(2026, 8, 22)),
-      unwrap(createTimeValue(16, 3)),
-    )),
+    defaultValue: createDateTimeValue(
+      createDateValue(2026, 8, 22),
+      createTimeValue(16, 3),
+    ),
   });
 
   replaceInput(input, '2026-08-22T16:03oops');
+  input.setSelectionRange(14, 14);
   input.emit('keydown', keyboard('ArrowUp'));
-  assert.equal(input.value, '2026-08-22T16:03oops');
-  assert.equal(formatDateTimeValue(field.getValue()), '2026-08-22T16:03');
-  assert.equal(input.attributes.get('aria-invalid'), 'true');
+  assert.equal(input.value, '2026-08-22T16:04');
+  assert.equal(formatDateTimeValue(field.getValue()), '2026-08-22T16:04');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 
   input.emit('blur', {});
-  assert.equal(input.value, '2026-08-22T16:03');
+  assert.equal(input.value, '2026-08-22T16:04');
   assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 

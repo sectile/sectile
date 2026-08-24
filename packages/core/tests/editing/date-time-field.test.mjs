@@ -10,6 +10,8 @@ import {
   dateDayOfWeek,
   formatDateValue,
   parseDateValue,
+  tryCreateDateRange,
+  tryCreateDateValue,
 } from '../../.verification-dist/date-field.js';
 import {
   addTimeMilliseconds,
@@ -29,14 +31,14 @@ import {
   parseDateTimeValue,
 } from '../../.verification-dist/date-time-field.js';
 
-const date = (year, month, day) => createDateValue(year, month, day).value;
-const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond).value;
+const date = (year, month, day) => createDateValue(year, month, day);
+const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
 const dateTime = (year, month, day, hour, minute, second = 0, millisecond = 0) =>
-  createDateTimeValue(date(year, month, day), time(hour, minute, second, millisecond)).value;
+  createDateTimeValue(date(year, month, day), time(hour, minute, second, millisecond));
 
 test('date values are strict Gregorian calendar values without host time', () => {
-  assert.equal(createDateValue(2024, 2, 29).ok, true);
-  assert.equal(createDateValue(2023, 2, 29).error.code, 'invalid-date-day');
+  assert.equal(formatDateValue(createDateValue(2024, 2, 29)), '2024-02-29');
+  assert.equal(tryCreateDateValue(2023, 2, 29).error.code, 'invalid-date-day');
   assert.equal(parseDateValue('2026-08-22').ok, true);
   assert.equal(parseDateValue('2026-8-22').error.code, 'invalid-date-format');
   assert.equal(formatDateValue(date(2026, 8, 22)), '2026-08-22');
@@ -47,11 +49,11 @@ test('date arithmetic clamps month fields and crosses calendar boundaries exactl
   assert.equal(formatDateValue(addDateMonths(date(2024, 1, 31), 1).value), '2024-02-29');
   assert.equal(formatDateValue(addDateDays(date(2024, 2, 28), 2).value), '2024-03-01');
   assert.equal(formatDateValue(addDateDays(date(2024, 3, 1), -2).value), '2024-02-28');
-  assert.equal(createDateRange(date(2026, 8, 22), date(2026, 8, 21)).error.code, 'inverted-date-range');
+  assert.equal(tryCreateDateRange(date(2026, 8, 22), date(2026, 8, 21)).error.code, 'inverted-date-range');
 });
 
 test('date field preserves drafts, commits atomically, and adjusts the active segment', () => {
-  let state = createDateFieldState(date(2024, 1, 31)).value;
+  let state = createDateFieldState(date(2024, 1, 31));
   state = applyDateFieldEvent(state, {
     type: 'text',
     event: { type: 'replace', startCodeUnitOffset: 5, endCodeUnitOffset: 7, text: '02', selection: { anchorCodeUnitOffset: 7, focusCodeUnitOffset: 7 } },
@@ -59,7 +61,7 @@ test('date field preserves drafts, commits atomically, and adjusts the active se
   assert.equal(state.value.month, 1);
   assert.equal(applyDateFieldEvent(state, 'commit').error.code, 'invalid-date-day');
 
-  state = createDateFieldState(date(2024, 1, 31), createDateFieldState(date(2024, 1, 31)).value.inputState).value;
+  state = createDateFieldState(date(2024, 1, 31), createDateFieldState(date(2024, 1, 31)).inputState);
   state = applyDateFieldEvent(state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 5, endCodeUnitOffset: 5, text: '', selection: { anchorCodeUnitOffset: 5, focusCodeUnitOffset: 5 } } }).value.state;
   const incremented = applyDateFieldEvent(state, 'increment-segment');
   assert.equal(formatDateValue(incremented.value.state.value), '2024-02-29');
@@ -95,7 +97,7 @@ test('time values use a 24-hour wall clock and wrap inside one day', () => {
 });
 
 test('time field commits, bounds, and adjusts its caret segment', () => {
-  let state = createTimeFieldState(time(10, 30)).value;
+  let state = createTimeFieldState(time(10, 30));
   state = applyTimeFieldEvent(state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 3, endCodeUnitOffset: 3, text: '', selection: { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 3 } } }).value.state;
   const next = applyTimeFieldEvent(state, 'increment-segment', { step: { minute: 15 } });
   assert.equal(formatTimeValue(next.value.state.value), '10:45');
@@ -134,7 +136,7 @@ test('date-time arithmetic carries wall-clock changes across civil day boundarie
 });
 
 test('date-time field steps the active segment and recovers invalid drafts atomically', () => {
-  let state = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 45)).value;
+  let state = createDateTimeFieldState(dateTime(2024, 1, 31, 23, 45));
   state = applyDateTimeFieldEvent(state, {
     type: 'text',
     event: {

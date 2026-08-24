@@ -6,3 +6,5 @@ export {
   type SliderState as WindowSplitterState,
   type SliderUpdate as WindowSplitterUpdate,
 } from './internal/composites/slider.js';
+
+export { tryCreateSliderState as tryCreateWindowSplitterState } from './internal/composites/slider.js';

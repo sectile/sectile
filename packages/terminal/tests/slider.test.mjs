@@ -73,5 +73,5 @@ test('uncontrolled terminal slider sync is rejected atomically', () => {
 });
 
 function range() {
-  return unwrap(createRange({ origin: '0', step: '0.5', count: 5 }));
+  return createRange({ origin: '0', step: '0.5', count: 5 });
 }

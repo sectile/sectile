@@ -1,21 +1,21 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
+import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
-  createBoundedRange,
+  tryCreateBoundedRange,
   type BoundedRangeInput,
   type QuantizedRange,
 } from '@sectile/core/range';
 import {
   applySliderEvent,
-  createSliderState,
+  tryCreateSliderState,
   type SliderCommand,
   type SliderEvent,
   type SliderState,
 } from '@sectile/core/slider';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
@@ -87,11 +87,11 @@ export type SliderOptions = Omit<SliderControllerOptions, 'range'>
 export function createSliderController(
   options: SliderControllerOptions,
 ): Result<SliderController> {
-  const initial = createSliderState(options.range, options.value ?? options.defaultValue ?? 0);
+  const initial = tryCreateSliderState(options.range, options.value ?? options.defaultValue ?? 0);
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new TerminalSliderController(options, interaction.value, snapshot.value) };
 }
@@ -105,7 +105,7 @@ export function tryCreateSlider(options: SliderOptions): Result<FacadeConnection
 }
 
 function tryCreateSliderConnection(options: SliderOptions): Result<SliderConnection> {
-  const range = createBoundedRange(options);
+  const range = tryCreateBoundedRange(options);
   if (!range.ok) return range;
   const controller = createSliderController({ ...options, range: range.value });
   if (!controller.ok) return controller;
@@ -203,7 +203,7 @@ class TerminalSliderController implements SliderController {
     if (error !== null) return { ok: false, error };
     const snapshot = synchronizeControllerState(
       this.#snapshot,
-      createSliderState(this.#range, values.value),
+      tryCreateSliderState(this.#range, values.value),
     );
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
@@ -235,7 +235,7 @@ class TerminalSliderController implements SliderController {
         semanticEvent,
         this.#page,
       ),
-      (previous, proposed) => createSliderState(
+      (previous, proposed) => tryCreateSliderState(
         this.#range,
         this.#controlled ? previous.tick : proposed.tick,
       ),

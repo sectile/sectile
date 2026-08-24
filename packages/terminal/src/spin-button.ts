@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
-import { createBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
+import { tryCreateBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applySpinButtonEvent,
-  createSpinButtonState,
+  tryCreateSpinButtonState,
   type SpinButtonCommand,
   type SpinButtonEvent,
   type SpinButtonPolicies,
@@ -47,14 +47,14 @@ export function tryCreateSpinButton(options: SpinButtonOptions): Result<FacadeCo
 }
 
 function tryCreateSpinButtonConnection(options: SpinButtonOptions): Result<SpinButtonConnection> {
-  const range = createBoundedRange(options);
+  const range = tryCreateBoundedRange(options);
   if (!range.ok) return range;
   const valueControlled = options.value !== undefined;
   const draftControlled = options.draft !== undefined;
   const runtime = createSemanticController<SpinButtonState, SpinButtonEvent, SpinButtonCommand, SpinButtonCommand>({
-    initial: createSpinButtonState(range.value, options.value ?? options.defaultValue ?? range.value.lower, options.draft !== undefined ? options.draft : options.defaultDraft ?? null),
+    initial: tryCreateSpinButtonState(range.value, options.value ?? options.defaultValue ?? range.value.lower, options.draft !== undefined ? options.draft : options.defaultDraft ?? null),
     reducer: (state, event) => applySpinButtonEvent(range.value, state, event, options.policies),
-    reconcile: (previous, proposed) => createSpinButtonState(range.value, valueControlled ? previous.value : proposed.value, draftControlled ? previous.draft : proposed.draft),
+    reconcile: (previous, proposed) => tryCreateSpinButtonState(range.value, valueControlled ? previous.value : proposed.value, draftControlled ? previous.draft : proposed.draft),
     notify: (previous, proposed) => {
       if (previous.value !== proposed.value) options.onValueChange?.(proposed.value);
       if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft);
@@ -90,7 +90,7 @@ class TerminalSpinButton implements SpinButtonConnection {
   public syncControlledValues(values: { readonly value?: string; readonly draft?: string | null }): Result<RevisionSnapshot<SpinButtonState>> {
     if (this.#valueControlled !== (values.value !== undefined) || this.#draftControlled !== (values.draft !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled spin button values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createSpinButtonState(this.range, this.#valueControlled ? values.value as string : state.value, this.#draftControlled ? values.draft as string | null : state.draft));
+    const result = this.#runtime.replace(tryCreateSpinButtonState(this.range, this.#valueControlled ? values.value as string : state.value, this.#draftControlled ? values.draft as string | null : state.draft));
     if (result.ok) this.#options.onUpdate?.();
     return result;
   }

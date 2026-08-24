@@ -159,7 +159,7 @@ test('invalid controlled tree-view synchronization is failure-atomic', () => {
 });
 
 function tree() {
-  return unwrap(createTree(nodes()));
+  return createTree(nodes());
 }
 
 function nodes() {

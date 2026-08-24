@@ -6,7 +6,7 @@ import { createTextEditingState } from '@sectile/core/text';
 import { createTextController as createTerminalTextController } from '@sectile/terminal/text';
 
 test('DOM and terminal text controllers produce equivalent replacement traces', () => {
-  const initial = unwrap(createTextEditingState('a😀b', selection(4)));
+  const initial = createTextEditingState('a😀b', selection(4));
   const DOMController = unwrap(createDOMTextController({ defaultValue: initial }));
   const terminalController = unwrap(createTerminalTextController({ defaultValue: initial }));
   assert.deepEqual(

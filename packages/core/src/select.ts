@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import { fail, ok } from './internal/kernel/foundation.js';
@@ -20,14 +21,18 @@ export interface SelectStateInput<ID extends StableID = StableID> { readonly ope
 export type SelectPolicies<ID extends StableID = StableID> = Omit<LinearChoicePolicies<ID>, 'selectionFollowsFocus'>;
 export interface SelectUpdate<ID extends StableID = StableID> { readonly state: SelectState<ID>; readonly commands: readonly SelectCommand<ID>[] }
 
-export function createSelectState<ID extends StableID>(domain: Sequence<ID>, input: SelectStateInput<ID> = {}): Result<SelectState<ID>> {
+export function createSelectState<ID extends StableID>(domain: Sequence<ID>, input: SelectStateInput<ID> = {}): SelectState<ID> {
+  return unwrap(tryCreateSelectState(domain, input));
+}
+
+export function tryCreateSelectState<ID extends StableID>(domain: Sequence<ID>, input: SelectStateInput<ID> = {}): Result<SelectState<ID>> {
   if (input.open !== undefined && typeof input.open !== 'boolean') return fail('construction', 'invalid-select-open', 'Select open state must be boolean.');
   const choice = createLinearChoiceState(domain, { selected: input.value === undefined || input.value === null ? [] : [input.value], current: input.current ?? input.value ?? null });
   return choice.ok ? ok(Object.freeze({ open: input.open ?? false, choice: choice.value })) : choice;
 }
 
 export function applySelectEvent<ID extends StableID>(domain: Sequence<ID>, state: SelectState<ID>, event: SelectEvent<ID>, policies: SelectPolicies<ID> = {}): Result<SelectUpdate<ID>> {
-  const valid = createSelectState(domain, { open: state.open, value: state.choice.selection.selected[0] ?? null, current: state.choice.cursor.current });
+  const valid = tryCreateSelectState(domain, { open: state.open, value: state.choice.selection.selected[0] ?? null, current: state.choice.cursor.current });
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (event === 'open' || event === 'close' || event === 'toggle') {
     const open = event === 'toggle' ? !state.open : event === 'open';

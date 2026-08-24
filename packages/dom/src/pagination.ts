@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
   applyPaginationEvent,
-  createPaginationModel,
-  createPaginationState,
+  tryCreatePaginationModel,
+  tryCreatePaginationState,
   getPaginationItemRange,
   getPaginationItems,
   getPaginationPageCount,
@@ -63,7 +63,7 @@ export interface PaginationView {
 /** Computes the renderable pagination view without requiring a DOM connection. */
 export function getPaginationView(options: Omit<PaginationOptions, 'root'>): Result<PaginationView> {
   const itemsPerPage = options.itemsPerPage ?? options.defaultItemsPerPage ?? 10;
-  const model = createPaginationModel({
+  const model = tryCreatePaginationModel({
     total: options.total,
     itemsPerPage,
     ...(options.siblingCount === undefined ? {} : { siblingCount: options.siblingCount }),
@@ -71,7 +71,7 @@ export function getPaginationView(options: Omit<PaginationOptions, 'root'>): Res
     ...(options.showControls === undefined ? {} : { showControls: options.showControls }),
   });
   if (!model.ok) return model;
-  const state = createPaginationState(model.value, options.page ?? options.defaultPage ?? 1, itemsPerPage);
+  const state = tryCreatePaginationState(model.value, options.page ?? options.defaultPage ?? 1, itemsPerPage);
   if (!state.ok) return state;
   const items = getPaginationItems(model.value, state.value);
   if (!items.ok) return items;
@@ -108,7 +108,7 @@ function tryCreatePaginationConnection(options: PaginationOptions): Result<Pagin
     } };
   }
   const initialItemsPerPage = options.itemsPerPage ?? options.defaultItemsPerPage ?? 10;
-  const model = createPaginationModel({
+  const model = tryCreatePaginationModel({
     total: options.total,
     itemsPerPage: initialItemsPerPage,
     ...(options.siblingCount === undefined ? {} : { siblingCount: options.siblingCount }),
@@ -119,13 +119,13 @@ function tryCreatePaginationConnection(options: PaginationOptions): Result<Pagin
   const runtime = createSemanticController<
     PaginationState, PaginationEvent, PaginationCommand, PaginationCommand
   >({
-    initial: createPaginationState(
+    initial: tryCreatePaginationState(
       model.value,
       options.page ?? options.defaultPage ?? 1,
       initialItemsPerPage,
     ),
     reducer: (state, event) => applyPaginationEvent(model.value, state, event),
-    reconcile: (previous, proposed) => createPaginationState(
+    reconcile: (previous, proposed) => tryCreatePaginationState(
       model.value,
       controlled || options.readOnly === true ? previous.page : proposed.page,
       controlled || options.readOnly === true ? previous.itemsPerPage : proposed.itemsPerPage,
@@ -208,7 +208,7 @@ class DOMPagination implements PaginationConnection {
       } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createPaginationState(
+    const result = this.#runtime.replace(tryCreatePaginationState(
       this.#model,
       this.#controlled ? values.page as number : state.page,
       this.#controlled ? values.itemsPerPage as number : state.itemsPerPage,

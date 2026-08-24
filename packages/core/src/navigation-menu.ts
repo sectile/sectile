@@ -12,3 +12,6 @@ export {
   type MenuModel as NavigationMenuModel,
 } from './menu.js';
 export type { TreeNodeInput as NavigationMenuItemDefinition } from './structures/tree.js';
+
+export { tryCreateMenuModel as tryCreateNavigationMenuModel } from './menu.js';
+export { tryCreateMenuState as tryCreateNavigationMenuState } from './internal/composites/menu.js';

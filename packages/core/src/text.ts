@@ -21,3 +21,6 @@ export {
   type TextSnapshot,
   type TextUpdate,
 } from './internal/editing/text.js';
+
+export { tryCreateTextEditingState } from './internal/editing/text.js';
+export { tryCreateTextSnapshot } from './internal/editing/text.js';

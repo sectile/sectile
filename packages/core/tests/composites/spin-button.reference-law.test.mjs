@@ -6,12 +6,12 @@ import { applyReferenceSpinButtonEvent, createReferenceSpinButtonState } from '.
 import { unwrap } from '../support.mjs';
 
 test('spin button committed decimal value and invalid draft authority match an independent reference', () => {
-  const range = unwrap(createRange({ origin: '0', step: '0.5', count: 6 }));
+  const range = createRange({ origin: '0', step: '0.5', count: 6 });
   for (let tick = 0; tick <= range.count; tick += 1) {
     const value = range.valueAt(tick);
     for (const draft of [null, '', '2', '2.25']) {
       for (const event of ['increment', 'decrement', 'home', 'end', 'commit', 'cancel', { type: 'input', text: '3' }]) {
-        const left = applySpinButtonEvent(range, unwrap(createSpinButtonState(range, value, draft)), event);
+        const left = applySpinButtonEvent(range, createSpinButtonState(range, value, draft), event);
         const right = applyReferenceSpinButtonEvent(range, createReferenceSpinButtonState(value, draft), event);
         assert.deepEqual(observe(left), observeReference(right));
       }

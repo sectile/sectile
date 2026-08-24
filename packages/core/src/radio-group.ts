@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import {
@@ -30,6 +31,13 @@ export type RadioGroupPolicies<ID extends StableID = StableID> =
   Omit<LinearChoicePolicies<ID>, 'selectionFollowsFocus'>;
 
 export function createRadioGroupState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: RadioGroupStateInput<ID> = {},
+): RadioGroupState<ID> {
+  return unwrap(tryCreateRadioGroupState(domain, input));
+}
+
+export function tryCreateRadioGroupState<ID extends StableID>(
   domain: Sequence<ID>,
   input: RadioGroupStateInput<ID> = {},
 ): Result<RadioGroupState<ID>> {

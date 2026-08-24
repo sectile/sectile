@@ -56,14 +56,14 @@ function observe(result) {
 }
 
 function fixtureTree() {
-  return unwrap(createTree([
+  return createTree([
     { id: 'root', parentID: null },
     { id: 'a', parentID: 'root' },
     { id: 'a-1', parentID: 'a' },
     { id: 'a-2', parentID: 'a' },
     { id: 'b', parentID: 'root' },
     { id: 'b-1', parentID: 'b' },
-  ]));
+  ]);
 }
 
 function random(seed) {

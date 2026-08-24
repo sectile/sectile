@@ -5,18 +5,18 @@ import {
   createImperialUnitSystem,
   createMetricUnitSystem,
   createStandardUnitRegistry,
-  createUnitRegistry,
+  createUnitRegistry, tryCreateUnitRegistry
 } from '../../.verification-dist/units.js';
 
 const length = { length: 1 };
 const temperature = { temperature: 1 };
 
 test('unit registry converts exact linear units without floating-point coercion', () => {
-  const registry = unwrap(createUnitRegistry([
+  const registry = createUnitRegistry([
     { id: 'meter', symbol: 'm', dimension: length, scale: '1' },
     { id: 'centimeter', symbol: 'cm', dimension: length, scale: '0.01' },
     { id: 'inch', symbol: 'in', dimension: length, scale: '0.0254' },
-  ]));
+  ]);
   assert.deepEqual(unwrap(registry.convert('10', 'centimeter', 'meter')), {
     value: '0.1', from: 'centimeter', to: 'meter',
   });
@@ -25,32 +25,32 @@ test('unit registry converts exact linear units without floating-point coercion'
 });
 
 test('unit registry supports affine temperature conversions', () => {
-  const registry = unwrap(createUnitRegistry([
+  const registry = createUnitRegistry([
     { id: 'kelvin', symbol: 'K', dimension: temperature, scale: '1' },
     { id: 'celsius', symbol: '°C', dimension: temperature, scale: '1', offset: '273.15' },
     { id: 'fahrenheit', symbol: '°F', dimension: temperature, scale: { numerator: '5', denominator: '9' }, offset: { numerator: '45967', denominator: '180' } },
-  ]));
+  ]);
   assert.equal(unwrap(registry.convert('0', 'celsius', 'kelvin')).value, '273.15');
   assert.equal(unwrap(registry.convert('32', 'fahrenheit', 'celsius', { precision: 9 })).value, '0');
   assert.equal(unwrap(registry.convert('100', 'celsius', 'fahrenheit', { precision: 9 })).value, '212');
 });
 
 test('unit registry rejects malformed definitions and incompatible conversions', () => {
-  assert.equal(createUnitRegistry([{ id: 'bad', symbol: 'x', dimension: length, scale: '0' }]).ok, false);
-  assert.equal(createUnitRegistry([
+  assert.equal(tryCreateUnitRegistry([{ id: 'bad', symbol: 'x', dimension: length, scale: '0' }]).ok, false);
+  assert.equal(tryCreateUnitRegistry([
     { id: 'meter', symbol: 'm', dimension: length, scale: '1' },
     { id: 'meter', symbol: 'm', dimension: length, scale: '1' },
   ]).ok, false);
-  const registry = unwrap(createUnitRegistry([
+  const registry = createUnitRegistry([
     { id: 'meter', symbol: 'm', dimension: length, scale: '1' },
     { id: 'second', symbol: 's', dimension: { time: 1 }, scale: '1' },
-  ]));
+  ]);
   assert.equal(registry.convert('1', 'meter', 'second').ok, false);
   assert.equal(registry.convert('bad', 'meter', 'meter').ok, false);
 });
 
 test('unit expressions compose dimensions, exact scales, and superscript exponents', () => {
-  const registry = unwrap(createStandardUnitRegistry());
+  const registry = createStandardUnitRegistry();
   const acceleration = unwrap(registry.parse('m/s²'));
   assert.deepEqual(acceleration.dimension, { length: 1, time: -2 });
   assert.equal(acceleration.resolvedUnit, 'metre-per-second-squared');
@@ -69,20 +69,20 @@ test('unit expressions compose dimensions, exact scales, and superscript exponen
 });
 
 test('unit expressions reject affine compounds, ambiguity, and incompatible targets', () => {
-  const registry = unwrap(createStandardUnitRegistry());
+  const registry = createStandardUnitRegistry();
   assert.equal(registry.parse('°C/m').ok, false);
   assert.equal(registry.parse('unknown').ok, false);
   assert.equal(registry.convertExpression('1', 'm/s', 'metre').ok, false);
-  assert.equal(createUnitRegistry([
+  assert.equal(tryCreateUnitRegistry([
     { id: 'one', symbol: 'x', dimension: {}, scale: '1' },
     { id: 'two', symbol: 'x', dimension: {}, scale: '2' },
   ]).ok, false);
 });
 
 test('standard unit systems select compatible metric and imperial display units', () => {
-  const registry = unwrap(createStandardUnitRegistry());
-  const metric = unwrap(createMetricUnitSystem(registry));
-  const imperial = unwrap(createImperialUnitSystem(registry));
+  const registry = createStandardUnitRegistry();
+  const metric = createMetricUnitSystem(registry);
+  const imperial = createImperialUnitSystem(registry);
   assert.equal(metric.getDefaultUnit('metre'), 'metre');
   assert.deepEqual(metric.getUnits('metre'), ['millimetre', 'centimetre', 'metre', 'kilometre']);
   assert.equal(imperial.getDefaultUnit('metre'), 'foot');

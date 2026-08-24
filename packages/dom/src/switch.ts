@@ -1,6 +1,6 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core'; import { applySwitchEvent, createSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch';
+import type { Result } from '@sectile/core'; import { applySwitchEvent, tryCreateSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch';
 import {
   createCheckedControlController,
   createDOMCheckedControl,
@@ -22,9 +22,9 @@ export type SwitchInputAttributes = CheckboxInputAttributes;
 export function createSwitchController(options: SwitchControllerOptions = {}): Result<SwitchController> {
   return createCheckedControlController<SwitchState, SwitchEvent, SwitchCommand, boolean>({
     controlled: options.checked !== undefined,
-    initial: createSwitchState(options.checked ?? options.defaultChecked ?? false),
+    initial: tryCreateSwitchState(options.checked ?? options.defaultChecked ?? false),
     reducer: applySwitchEvent,
-    create: createSwitchState,
+    create: tryCreateSwitchState,
     read: (state) => state.checked,
     onChange: options.onCheckedChange,
     interaction: options,
@@ -66,4 +66,4 @@ export function tryCreateSwitch(options: SwitchOptions): Result<FacadeConnection
   return createFacadeConnection(options, (options) => tryCreateSwitchConnection(options));
 }
 
-function tryCreateSwitchConnection(options: SwitchOptions): Result<SwitchConnection> { return createDOMCheckedControl<SwitchState, SwitchEvent, SwitchCommand, boolean>({ element: options.element, role: 'switch', attribute: 'aria-checked', controlled: options.checked !== undefined, initial: createSwitchState(options.checked ?? options.defaultChecked ?? false), toggleEvent: 'toggle', reducer: applySwitchEvent, create: createSwitchState, read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, onChange: options.onCheckedChange, onUpdate: options.onUpdate }); }
+function tryCreateSwitchConnection(options: SwitchOptions): Result<SwitchConnection> { return createDOMCheckedControl<SwitchState, SwitchEvent, SwitchCommand, boolean>({ element: options.element, role: 'switch', attribute: 'aria-checked', controlled: options.checked !== undefined, initial: tryCreateSwitchState(options.checked ?? options.defaultChecked ?? false), toggleEvent: 'toggle', reducer: applySwitchEvent, create: tryCreateSwitchState, read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, onChange: options.onCheckedChange, onUpdate: options.onUpdate }); }

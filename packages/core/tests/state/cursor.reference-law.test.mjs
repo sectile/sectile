@@ -13,7 +13,7 @@ test('CUR-01..04: reconciliation preserves valid cursors and applies explicit fa
   let cases = 0;
   for (let size = 0; size <= 8; size += 1) {
     const ids = canonicalIDs(size);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     const candidates = [null, ...ids, `outside-${size}`];
     for (const current of candidates) {
       for (const fallback of ['none', 'first', 'last']) {
@@ -34,13 +34,13 @@ test('CUR-01..04: reconciliation preserves valid cursors and applies explicit fa
 });
 
 test('cursor fallback remains explicit for missing current and empty domains', () => {
-  const domain = unwrap(createSequence(['first', 'middle', 'last']));
+  const domain = createSequence(['first', 'middle', 'last']);
   const missing = createCursorState('missing');
   assert.equal(reconcileCursor(missing, domain, 'none').current, null);
   assert.equal(reconcileCursor(missing, domain, 'first').current, 'first');
   assert.equal(reconcileCursor(missing, domain, 'last').current, 'last');
 
-  const empty = unwrap(createSequence([]));
+  const empty = createSequence([]);
   for (const fallback of ['none', 'first', 'last']) {
     assert.equal(reconcileCursor(missing, empty, fallback).current, null);
   }

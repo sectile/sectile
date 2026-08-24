@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
-import { applyCheckboxEvent, createCheckboxState, type CheckboxCommand, type CheckboxEvent, type CheckboxPolicies, type CheckboxState, type CheckboxValue } from '@sectile/core/checkbox';
+import { applyCheckboxEvent, tryCreateCheckboxState, type CheckboxCommand, type CheckboxEvent, type CheckboxPolicies, type CheckboxState, type CheckboxValue } from '@sectile/core/checkbox';
 import {
   createCheckedControlController,
   createDOMCheckedControl,
@@ -40,9 +40,9 @@ export interface CheckboxInputAttributes {
 export function createCheckboxController(options: CheckboxControllerOptions = {}): Result<CheckboxController> {
   return createCheckedControlController<CheckboxState, CheckboxEvent, CheckboxCommand, CheckboxValue>({
     controlled: options.value !== undefined,
-    initial: createCheckboxState(options.value ?? options.defaultValue ?? false, options.policies),
+    initial: tryCreateCheckboxState(options.value ?? options.defaultValue ?? false, options.policies),
     reducer: (state, event) => applyCheckboxEvent(state, event, options.policies),
-    create: (value) => createCheckboxState(value, options.policies),
+    create: (value) => tryCreateCheckboxState(value, options.policies),
     read: (state) => state.checked,
     interaction: options,
     onChange: options.onValueChange,
@@ -95,7 +95,7 @@ export function tryCreateCheckbox(options: CheckboxOptions): Result<FacadeConnec
   return createFacadeConnection(options, (options) => tryCreateCheckboxConnection(options));
 }
 
-function tryCreateCheckboxConnection(options: CheckboxOptions): Result<CheckboxConnection> { return createDOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxCommand, CheckboxValue>({ element: options.element, role: 'checkbox', attribute: 'aria-checked', controlled: options.value !== undefined, initial: createCheckboxState(options.value ?? options.defaultValue ?? false, options.policies), toggleEvent: 'toggle', reducer: (state, event) => applyCheckboxEvent(state, event, options.policies), create: (value) => createCheckboxState(value, options.policies), read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, applyValue: applyNativeCheckboxValue, onChange: options.onValueChange, onUpdate: options.onUpdate }); }
+function tryCreateCheckboxConnection(options: CheckboxOptions): Result<CheckboxConnection> { return createDOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxCommand, CheckboxValue>({ element: options.element, role: 'checkbox', attribute: 'aria-checked', controlled: options.value !== undefined, initial: tryCreateCheckboxState(options.value ?? options.defaultValue ?? false, options.policies), toggleEvent: 'toggle', reducer: (state, event) => applyCheckboxEvent(state, event, options.policies), create: (value) => tryCreateCheckboxState(value, options.policies), read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, applyValue: applyNativeCheckboxValue, onChange: options.onValueChange, onUpdate: options.onUpdate }); }
 
 function applyNativeCheckboxValue(element: HTMLElement, value: CheckboxValue): void {
   if (!('checked' in element) || !('indeterminate' in element)) return;

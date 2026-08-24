@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
-import { applyTooltipEvent, createTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
+import { applyTooltipEvent, tryCreateTooltipState, type TooltipCommand, type TooltipEvent, type TooltipState } from '@sectile/core/tooltip';
 import type {
   AutoUpdateOptions,
   Boundary,
@@ -81,10 +81,10 @@ function tryCreateTooltipConnection(o: TooltipOptions): Result<TooltipConnection
     ...(o.trigger === undefined ? {} : { trigger: o.trigger }),
     role: 'tooltip',
     controlled: o.open !== undefined,
-    initial: createTooltipState(o.open ?? o.defaultOpen ?? false),
+    initial: tryCreateTooltipState(o.open ?? o.defaultOpen ?? false),
     open: 'open', toggle: 'toggle', close: 'close',
     reducer: applyTooltipEvent,
-    create: createTooltipState,
+    create: tryCreateTooltipState,
     read: (state) => state.open,
     interaction: o,
     triggerMode: 'focus-hover',

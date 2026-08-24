@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import {
   decimalToString,
@@ -100,7 +101,11 @@ interface NormalizedUnit {
 
 interface Fraction { readonly numerator: bigint; readonly denominator: bigint }
 
-export function createUnitRegistry(definitions: readonly UnitDefinition[]): Result<UnitRegistry> {
+export function createUnitRegistry(definitions: readonly UnitDefinition[]): UnitRegistry {
+  return unwrap(tryCreateUnitRegistry(definitions));
+}
+
+export function tryCreateUnitRegistry(definitions: readonly UnitDefinition[]): Result<UnitRegistry> {
   if (!Array.isArray(definitions) || definitions.length === 0) {
     return fail('construction', 'empty-unit-registry', 'Unit registry requires at least one definition.');
   }
@@ -147,6 +152,13 @@ export function createUnitRegistry(definitions: readonly UnitDefinition[]): Resu
 }
 
 export function createUnitSystemProfile(
+  registry: UnitRegistry,
+  definition: UnitSystemDefinition,
+): UnitSystemProfile {
+  return unwrap(tryCreateUnitSystemProfile(registry, definition));
+}
+
+export function tryCreateUnitSystemProfile(
   registry: UnitRegistry,
   definition: UnitSystemDefinition,
 ): Result<UnitSystemProfile> {
@@ -591,12 +603,20 @@ export const standardUnitDefinitions: readonly UnitDefinition[] = Object.freeze(
   unit('mebibyte', 'MiB', INFORMATION, '1048576'),
 ]);
 
-export function createStandardUnitRegistry(): Result<UnitRegistry> {
-  return createUnitRegistry(standardUnitDefinitions);
+export function createStandardUnitRegistry(): UnitRegistry {
+  return unwrap(tryCreateStandardUnitRegistry());
 }
 
-export function createMetricUnitSystem(registry: UnitRegistry): Result<UnitSystemProfile> {
-  return createUnitSystemProfile(registry, {
+export function tryCreateStandardUnitRegistry(): Result<UnitRegistry> {
+  return tryCreateUnitRegistry(standardUnitDefinitions);
+}
+
+export function createMetricUnitSystem(registry: UnitRegistry): UnitSystemProfile {
+  return unwrap(tryCreateMetricUnitSystem(registry));
+}
+
+export function tryCreateMetricUnitSystem(registry: UnitRegistry): Result<UnitSystemProfile> {
+  return tryCreateUnitSystemProfile(registry, {
     id: 'metric',
     preferences: [
       preference('metre', 'metre', ['millimetre', 'centimetre', 'metre', 'kilometre']),
@@ -612,8 +632,12 @@ export function createMetricUnitSystem(registry: UnitRegistry): Result<UnitSyste
   });
 }
 
-export function createImperialUnitSystem(registry: UnitRegistry): Result<UnitSystemProfile> {
-  return createUnitSystemProfile(registry, {
+export function createImperialUnitSystem(registry: UnitRegistry): UnitSystemProfile {
+  return unwrap(tryCreateImperialUnitSystem(registry));
+}
+
+export function tryCreateImperialUnitSystem(registry: UnitRegistry): Result<UnitSystemProfile> {
+  return tryCreateUnitSystemProfile(registry, {
     id: 'imperial',
     preferences: [
       preference('metre', 'foot', ['inch', 'foot', 'yard', 'mile']),

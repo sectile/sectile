@@ -1,7 +1,7 @@
 /* Law evidence: GRD-01 GRD-02 GRD-03 GRD-04 GRD-05 GRD-06 GRD-07 GRD-08 GRD-09 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createGrid } from '../../.verification-dist/structures/grid.js';
+import { createGrid, tryCreateGrid } from '../../.verification-dist/structures/grid.js';
 import { ReferenceGrid } from '../../.verification-dist/internal/reference/structures/grid.js';
 import { canonicalIDs, powerset, unwrap } from '../support.mjs';
 
@@ -113,16 +113,16 @@ test('GRD-09: identity renaming preserves every coordinate observation', () => {
 });
 
 test('grid construction normalizes ragged rows and rejects invalid occupancy', () => {
-  const grid = unwrap(createGrid([['a', null, 'b'], ['c']], { columnCount: 4 }));
+  const grid = createGrid([['a', null, 'b'], ['c']], { columnCount: 4 });
   assert.equal(grid.rowCount, 2);
   assert.equal(grid.columnCount, 4);
   assert.equal(grid.cellAt(1, 1), null);
   assert.equal(grid.row(-1), null);
   assert.equal(grid.column(4), null);
-  assert.equal(createGrid([['a'], ['a']]).error.code, 'duplicate-id');
-  assert.equal(createGrid([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
-  assert.equal(createGrid([['a', 'b']], { columnCount: 1 }).error.code, 'column-count-too-small');
-  assert.equal(createGrid([['a']], { columnCount: 2, maxCells: 1 }).error.code, 'cell-ceiling-exceeded');
+  assert.equal(tryCreateGrid([['a'], ['a']]).error.code, 'duplicate-id');
+  assert.equal(tryCreateGrid([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
+  assert.equal(tryCreateGrid([['a', 'b']], { columnCount: 1 }).error.code, 'column-count-too-small');
+  assert.equal(tryCreateGrid([['a']], { columnCount: 2, maxCells: 1 }).error.code, 'cell-ceiling-exceeded');
   const rejected = grid.move('a', 'right', 'stop', { eligible: () => false, maxScan: 1 });
   assert.equal(rejected.kind, 'resource-rejected');
 });

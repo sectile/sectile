@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
-import { applyAlertDialogEvent, createAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
+import { applyAlertDialogEvent, tryCreateAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 export interface AlertDialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onAnnounce?: () => void; readonly onUpdate?: () => void }
 export type AlertDialogConnection = TerminalPopupConnection<AlertDialogState, AlertDialogEvent>;
@@ -13,4 +13,4 @@ export function tryCreateAlertDialog(o: AlertDialogOptions = {}): Result<FacadeC
   return createFacadeConnection(o, (o) => tryCreateAlertDialogConnection(o));
 }
 
-function tryCreateAlertDialogConnection(o: AlertDialogOptions = {}): Result<AlertDialogConnection> { return createTerminalPopup<AlertDialogState, AlertDialogEvent, AlertDialogCommand>({ controlled: o.open !== undefined, initial: createAlertDialogState(o.open ?? o.defaultOpen ?? false), reducer: applyAlertDialogEvent, create: createAlertDialogState, read: (s) => s.open, close: 'close', interaction: o, onOpenChange: o.onOpenChange, command: (c) => c.type === 'request-initial-focus' ? o.onInitialFocus?.() : c.type === 'request-focus-restore' ? o.onFocusRestore?.() : o.onAnnounce?.(), onUpdate: o.onUpdate }); }
+function tryCreateAlertDialogConnection(o: AlertDialogOptions = {}): Result<AlertDialogConnection> { return createTerminalPopup<AlertDialogState, AlertDialogEvent, AlertDialogCommand>({ controlled: o.open !== undefined, initial: tryCreateAlertDialogState(o.open ?? o.defaultOpen ?? false), reducer: applyAlertDialogEvent, create: tryCreateAlertDialogState, read: (s) => s.open, close: 'close', interaction: o, onOpenChange: o.onOpenChange, command: (c) => c.type === 'request-initial-focus' ? o.onInitialFocus?.() : c.type === 'request-focus-restore' ? o.onFocusRestore?.() : o.onAnnounce?.(), onUpdate: o.onUpdate }); }

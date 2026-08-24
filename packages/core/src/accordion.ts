@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { BoundaryPolicy, Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import { fail, ok } from './internal/kernel/foundation.js';
@@ -40,6 +41,14 @@ export function createAccordionState<ID extends StableID>(
   domain: Sequence<ID>,
   input: AccordionStateInput<ID> = {},
   policies: AccordionPolicies<ID> = {},
+): AccordionState<ID> {
+  return unwrap(tryCreateAccordionState(domain, input, policies));
+}
+
+export function tryCreateAccordionState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: AccordionStateInput<ID> = {},
+  policies: AccordionPolicies<ID> = {},
 ): Result<AccordionState<ID>> {
   const current = input.current ?? null;
   if (current !== null && !domain.contains(current)) {
@@ -68,7 +77,7 @@ export function applyAccordionEvent<ID extends StableID>(
   domain: Sequence<ID>, state: AccordionState<ID>, event: AccordionEvent<ID>,
   policies: AccordionPolicies<ID> = {},
 ): Result<AccordionUpdate<ID>> {
-  const normalized = createAccordionState(domain, {
+  const normalized = tryCreateAccordionState(domain, {
     current: state.cursor.current, openIDs: state.openIDs,
   }, policies);
   if (!normalized.ok) return { ok: false, error: { ...normalized.error, class: 'transition-rejection' } };

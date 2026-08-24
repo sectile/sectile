@@ -239,7 +239,7 @@ test('controlled DOM combobox emits full input-state proposals until synchronize
   const inputStates = [];
   const openValues = [];
   const highlights = [];
-  const initial = unwrap(createTextEditingState());
+  const initial = createTextEditingState();
   const controller = unwrap(createComboboxController({
     ...fixture(),
     inputState: initial,
@@ -296,7 +296,7 @@ test('DOM combobox rejects malformed state and unsupported input atomically', ()
 
 function fixture() {
   return {
-    domain: unwrap(createSequence(['a', 'b', 'c'])),
+    domain: createSequence(['a', 'b', 'c']),
     labels: new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]),
     policies: {
       matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),

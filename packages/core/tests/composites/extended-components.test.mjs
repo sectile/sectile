@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { applyCheckboxGroupEvent, createCheckboxGroupState } from '../../.verification-dist/checkbox-group.js';
-import { applyToggleGroupEvent, createToggleGroupState } from '../../.verification-dist/toggle-group.js';
+import { applyToggleGroupEvent, createToggleGroupState, tryCreateToggleGroupState } from '../../.verification-dist/toggle-group.js';
 import { applySelectEvent, createSelectState } from '../../.verification-dist/select.js';
 import {
   applyPaginationEvent,
@@ -10,7 +10,7 @@ import {
   createPaginationState,
   getPaginationItemRange,
   getPaginationItems,
-  getPaginationPageCount,
+  getPaginationPageCount, tryCreatePaginationModel
 } from '../../.verification-dist/pagination.js';
 import { applyStepperEvent, createStepperState } from '../../.verification-dist/stepper.js';
 import { applyRatingEvent, createRatingState } from '../../.verification-dist/rating.js';
@@ -18,10 +18,10 @@ import { applyPinInputEvent, createPinInputState } from '../../.verification-dis
 import { applyTagsInputEvent, createTagsInputState } from '../../.verification-dist/tags-input.js';
 import { unwrap } from '../support.mjs';
 
-const domain = unwrap(createSequence(['a', 'b', 'c']));
+const domain = createSequence(['a', 'b', 'c']);
 
 test('checkbox group composes multiple selection without coupling focus and value', () => {
-  const initial = unwrap(createCheckboxGroupState(domain, { current: 'a', selected: ['a'] }));
+  const initial = createCheckboxGroupState(domain, { current: 'a', selected: ['a'] });
   const moved = unwrap(applyCheckboxGroupEvent(domain, initial, 'next'));
   assert.equal(moved.state.cursor.current, 'b');
   assert.deepEqual(moved.state.selection.selected, ['a']);
@@ -30,22 +30,22 @@ test('checkbox group composes multiple selection without coupling focus and valu
 });
 
 test('toggle group supports deselectable single and independent multiple pressed values', () => {
-  const single = unwrap(createToggleGroupState(domain, { current: 'a', selected: ['a'] }));
+  const single = createToggleGroupState(domain, { current: 'a', selected: ['a'] });
   const released = unwrap(applyToggleGroupEvent(domain, single, 'press'));
   assert.deepEqual(released.state.selection.selected, []);
   const fixed = unwrap(applyToggleGroupEvent(domain, single, 'press', { deselectable: false }));
   assert.deepEqual(fixed.state.selection.selected, ['a']);
 
-  const multiple = unwrap(createToggleGroupState(domain, { current: 'a', selected: ['a'] }, true));
+  const multiple = createToggleGroupState(domain, { current: 'a', selected: ['a'] }, true);
   const moved = unwrap(applyToggleGroupEvent(domain, multiple, 'next', { multiple: true }));
   const pressed = unwrap(applyToggleGroupEvent(domain, moved.state, 'press', { multiple: true }));
   assert.deepEqual(pressed.state.selection.selected, ['a', 'b']);
-  assert.equal(createToggleGroupState(domain, {}, 'yes').ok, false);
+  assert.equal(tryCreateToggleGroupState(domain, {}, 'yes').ok, false);
   assert.equal(applyToggleGroupEvent(domain, single, 'press', { multiple: 'yes' }).ok, false);
 });
 
 test('select keeps navigation open and closes only after selection', () => {
-  const initial = unwrap(createSelectState(domain, { value: 'a' }));
+  const initial = createSelectState(domain, { value: 'a' });
   const moved = unwrap(applySelectEvent(domain, initial, 'next'));
   assert.equal(moved.state.open, true);
   assert.equal(moved.state.choice.cursor.current, 'b');
@@ -56,8 +56,8 @@ test('select keeps navigation open and closes only after selection', () => {
 });
 
 test('pagination derives page count, bounded movement, and item ranges from totals', () => {
-  const model = unwrap(createPaginationModel({ total: 23, itemsPerPage: 10 }));
-  const initial = unwrap(createPaginationState(model, 1));
+  const model = createPaginationModel({ total: 23, itemsPerPage: 10 });
+  const initial = createPaginationState(model, 1);
   const moved = unwrap(applyPaginationEvent(model, initial, 'next-page'));
   assert.equal(moved.state.page, 2);
   const direct = unwrap(applyPaginationEvent(model, moved.state, { type: 'go-to-page', page: 3 }));
@@ -68,8 +68,8 @@ test('pagination derives page count, bounded movement, and item ranges from tota
 });
 
 test('pagination changes page size while preserving the first visible item', () => {
-  const model = unwrap(createPaginationModel({ total: 100, itemsPerPage: 10 }));
-  const initial = unwrap(createPaginationState(model, 4));
+  const model = createPaginationModel({ total: 100, itemsPerPage: 10 });
+  const initial = createPaginationState(model, 4);
   const larger = unwrap(applyPaginationEvent(model, initial, { type: 'set-items-per-page', itemsPerPage: 25 }));
   assert.deepEqual(larger.state, { page: 2, itemsPerPage: 25 });
   assert.deepEqual(larger.commands, [
@@ -86,13 +86,13 @@ test('pagination changes page size while preserving the first visible item', () 
 });
 
 test('pagination projects sibling windows, edges, ellipses, and controls', () => {
-  const model = unwrap(createPaginationModel({
+  const model = createPaginationModel({
     total: 250,
     itemsPerPage: 10,
     siblingCount: 1,
     showEdges: true,
-  }));
-  const state = unwrap(createPaginationState(model, 13));
+  });
+  const state = createPaginationState(model, 13);
   assert.deepEqual(unwrap(getPaginationItems(model, state)), [
     { type: 'control', control: 'first-page', targetPage: 1, disabled: false },
     { type: 'control', control: 'previous-page', targetPage: 12, disabled: false },
@@ -107,14 +107,14 @@ test('pagination projects sibling windows, edges, ellipses, and controls', () =>
     { type: 'control', control: 'last-page', targetPage: 25, disabled: false },
   ]);
 
-  const windowed = unwrap(createPaginationModel({
+  const windowed = createPaginationModel({
     total: 250,
     itemsPerPage: 10,
     siblingCount: 1,
     showControls: false,
-  }));
+  });
   assert.deepEqual(
-    unwrap(getPaginationItems(windowed, unwrap(createPaginationState(windowed, 13)))),
+    unwrap(getPaginationItems(windowed, createPaginationState(windowed, 13))),
     [
       { type: 'page', page: 12, selected: false },
       { type: 'page', page: 13, selected: true },
@@ -124,17 +124,17 @@ test('pagination projects sibling windows, edges, ellipses, and controls', () =>
 });
 
 test('pagination handles empty collections and rejects unsafe projection inputs', () => {
-  const empty = unwrap(createPaginationModel({ total: 0 }));
-  const state = unwrap(createPaginationState(empty));
+  const empty = createPaginationModel({ total: 0 });
+  const state = createPaginationState(empty);
   assert.equal(unwrap(getPaginationPageCount(empty, state)), 1);
   assert.deepEqual(unwrap(getPaginationItemRange(empty, state)), { start: 0, end: 0, total: 0 });
-  assert.equal(createPaginationModel({ total: -1 }).ok, false);
-  assert.equal(createPaginationModel({ total: 10, itemsPerPage: 0 }).ok, false);
-  assert.equal(createPaginationModel({ total: 10, siblingCount: 1_001 }).ok, false);
+  assert.equal(tryCreatePaginationModel({ total: -1 }).ok, false);
+  assert.equal(tryCreatePaginationModel({ total: 10, itemsPerPage: 0 }).ok, false);
+  assert.equal(tryCreatePaginationModel({ total: 10, siblingCount: 1_001 }).ok, false);
 });
 
 test('stepper separates focus movement from step activation', () => {
-  const initial = unwrap(createStepperState(domain, 'a'));
+  const initial = createStepperState(domain, 'a');
   const moved = unwrap(applyStepperEvent(domain, initial, 'next-step'));
   assert.equal(moved.state.cursor.current, 'b');
   assert.deepEqual(moved.state.selection.selected, ['a']);
@@ -143,7 +143,7 @@ test('stepper separates focus movement from step activation', () => {
 });
 
 test('rating selects, increases, and clears one value', () => {
-  const initial = unwrap(createRatingState(domain, 'a'));
+  const initial = createRatingState(domain, 'a');
   const increased = unwrap(applyRatingEvent(domain, initial, 'increase'));
   assert.deepEqual(increased.state.selection.selected, ['b']);
   const cleared = unwrap(applyRatingEvent(domain, increased.state, 'clear'));
@@ -151,7 +151,7 @@ test('rating selects, increases, and clears one value', () => {
 });
 
 test('pin input advances cells and emits completion', () => {
-  let state = unwrap(createPinInputState(4));
+  let state = createPinInputState(4);
   for (const value of ['1', '2', '3', '4']) state = unwrap(applyPinInputEvent(4, state, { type: 'input', value }, { accept: (part) => /^\d$/.test(part) })).state;
   assert.deepEqual(state.values, ['1', '2', '3', '4']);
   const rejected = applyPinInputEvent(4, state, { type: 'input', value: 'x' }, { accept: (part) => /^\d$/.test(part) });
@@ -159,7 +159,7 @@ test('pin input advances cells and emits completion', () => {
 });
 
 test('tags input normalizes additions, rejects duplicates, and preserves focus after removal', () => {
-  const initial = unwrap(createTagsInputState(['dom'], ' terminal '));
+  const initial = createTagsInputState(['dom'], ' terminal ');
   const added = unwrap(applyTagsInputEvent(initial, { type: 'add' }));
   assert.deepEqual(added.state.tags, ['dom', 'terminal']);
   assert.equal(applyTagsInputEvent(added.state, { type: 'add', value: 'dom' }).ok, false);

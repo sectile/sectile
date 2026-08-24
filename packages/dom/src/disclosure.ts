@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
-  applyDisclosureEvent, createDisclosureState,
+  applyDisclosureEvent, tryCreateDisclosureState,
   type DisclosureCommand, type DisclosureEvent, type DisclosureState,
 } from '@sectile/core/disclosure';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
@@ -70,9 +70,9 @@ export function createDisclosureController(
 ): Result<DisclosureController> {
   const controlled = options.open !== undefined;
   const runtime = createSemanticController<DisclosureState, DisclosureEvent, DisclosureCommand, DisclosureCommand>({
-    initial: createDisclosureState(options.open ?? options.defaultOpen ?? false),
+    initial: tryCreateDisclosureState(options.open ?? options.defaultOpen ?? false),
     reducer: applyDisclosureEvent,
-    reconcile: (previous, proposed) => createDisclosureState(controlled ? previous.open : proposed.open),
+    reconcile: (previous, proposed) => tryCreateDisclosureState(controlled ? previous.open : proposed.open),
     notify: (previous, proposed) => {
       if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open);
     },
@@ -202,7 +202,7 @@ class DisclosureControllerImpl implements DisclosureController {
   public getSnapshot(): RevisionSnapshot<DisclosureState> { return this.#runtime.getSnapshot(); }
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<DisclosureState>> {
     if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled disclosure cannot be synchronized externally.' } };
-    return this.#runtime.replace(createDisclosureState(open));
+    return this.#runtime.replace(tryCreateDisclosureState(open));
   }
   public handleEvent(event: DisclosureEvent): boolean { return this.#runtime.handle(event).ok; }
 }

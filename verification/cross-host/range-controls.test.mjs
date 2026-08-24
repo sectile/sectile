@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
 import { createMultiThumbSlider as createDOMMultiThumbSlider } from '@sectile/dom/multi-thumb-slider';
 import { createSpinButton as createDOMSpinButton } from '@sectile/dom/spin-button';
 import { createNumberField as createDOMNumberField } from '@sectile/dom/number-field';
@@ -41,7 +40,7 @@ test('DOM and terminal spin buttons preserve decimal values, drafts, and control
 });
 
 test('DOM and terminal number fields preserve exact expression traces', () => {
-  const options = { defaultValue: '50', policies: { evaluator: unwrap(createCalculatorExpression()) } };
+  const options = { defaultValue: '50', policies: { evaluator: createCalculatorExpression() } };
   const DOM = createDOMNumberField({ ...options, input: new FakeInput() });
   const terminal = createTerminalNumberField(options);
   assertSemanticTrace(DOM, terminal, [
@@ -57,10 +56,10 @@ test('DOM and terminal number fields preserve exact expression traces', () => {
 });
 
 test('DOM and terminal quantity fields preserve canonical values across display units', () => {
-  const registry = unwrap(createStandardUnitRegistry());
-  const unitSystem = unwrap(createMetricUnitSystem(registry));
+  const registry = createStandardUnitRegistry();
+  const unitSystem = createMetricUnitSystem(registry);
   const options = {
-    policies: { registry, unitSystem, canonicalUnit: 'metre', evaluator: unwrap(createCalculatorExpression()) },
+    policies: { registry, unitSystem, canonicalUnit: 'metre', evaluator: createCalculatorExpression() },
     defaultQuantity: { value: '1', unit: 'metre' },
     defaultDisplayUnit: 'centimetre',
   };

@@ -17,12 +17,12 @@ test('linear action matches its independent reference across movement and direct
   let transitions = 0;
   for (let size = 0; size <= 5; size += 1) {
     const ids = Array.from({ length: size }, (_, index) => `i${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     for (const eligibleIDs of powerset(ids)) {
       const eligible = new Set(eligibleIDs);
       for (const boundary of ['stop', 'wrap']) {
         for (const current of [null, ...ids]) {
-          const optimized = unwrap(createLinearActionState(domain, { current }));
+          const optimized = createLinearActionState(domain, { current });
           const reference = createReferenceLinearActionState(domain, { current });
           const target = ids[0] ?? 'missing';
           const events = [
@@ -45,8 +45,8 @@ test('linear action matches its independent reference across movement and direct
 });
 
 test('toolbar facade exposes cursor-only focus and invocation', () => {
-  const domain = unwrap(createSequence(['bold', 'italic']));
-  const state = unwrap(createToolbarState(domain, { current: 'bold' }));
+  const domain = createSequence(['bold', 'italic']);
+  const state = createToolbarState(domain, { current: 'bold' });
   const moved = unwrap(applyToolbarEvent(domain, state, 'next'));
   assert.equal(moved.state.cursor.current, 'italic');
   assert.deepEqual(moved.commands, [{ type: 'focus', id: 'italic' }]);

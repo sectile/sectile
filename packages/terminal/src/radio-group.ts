@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyRadioGroupEvent,
-  createRadioGroupState,
+  tryCreateRadioGroupState,
   type RadioGroupCommand,
   type RadioGroupEvent,
   type RadioGroupPolicies,
@@ -59,7 +59,7 @@ export function tryCreateRadioGroup<ID extends StableID>(
 function tryCreateRadioGroupConnection<ID extends StableID>(
   options: RadioGroupOptions<ID>,
 ): Result<RadioGroupConnection<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);
   if (!disabled.ok) return disabled;
@@ -75,14 +75,14 @@ function tryCreateRadioGroupConnection<ID extends StableID>(
   >({
     interaction: options,
     interactionIntent: radioGroupIntent,
-    initial: createRadioGroupState(domain.value, {
+    initial: tryCreateRadioGroupState(domain.value, {
       selected: selected(options.value ?? options.defaultValue ?? null),
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null,
     }),
     reducer: (state, event) => applyRadioGroupEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createRadioGroupState(domain.value, {
+    reconcile: (previous, proposed) => tryCreateRadioGroupState(domain.value, {
       selected: valueControlled || options.readOnly === true
         ? previous.selection.selected
         : proposed.selection.selected,
@@ -151,7 +151,7 @@ class TerminalRadioGroupConnection<ID extends StableID> implements RadioGroupCon
       } };
     }
     const state = this.#runtime.getSnapshot().state;
-    const result = this.#runtime.replace(createRadioGroupState(this.#domain, {
+    const result = this.#runtime.replace(tryCreateRadioGroupState(this.#domain, {
       selected: this.#valueControlled ? selected(values.value ?? null) : state.selection.selected,
       current: this.#highlightControlled ? (values.highlightedValue ?? null) : state.cursor.current,
     }));

@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { Result, StableID } from '../../shared.js';
 import type { Tree } from '../../structures/tree.js';
 import { fail, ok } from '../kernel/foundation.js';
@@ -10,7 +11,11 @@ export type MenuCommand<ID extends StableID = StableID> = { readonly type: 'focu
 export interface MenuUpdate<ID extends StableID = StableID> { readonly state: MenuState<ID>; readonly commands: readonly MenuCommand<ID>[] }
 export interface MenuPolicies<ID extends StableID = StableID> { readonly disabled?: (id: ID) => boolean }
 
-export function createMenuState<ID extends StableID>(tree: Tree<ID>, open = false, current: ID | null = null, openPath: readonly ID[] = []): Result<MenuState<ID>> {
+export function createMenuState<ID extends StableID>(tree: Tree<ID>, open = false, current: ID | null = null, openPath: readonly ID[] = []): MenuState<ID> {
+  return unwrap(tryCreateMenuState(tree, open, current, openPath));
+}
+
+export function tryCreateMenuState<ID extends StableID>(tree: Tree<ID>, open = false, current: ID | null = null, openPath: readonly ID[] = []): Result<MenuState<ID>> {
   const normalized = tree.normalizeExpansion(openPath).ids;
   if (normalized.length !== openPath.length || normalized.some((id, index) => id !== openPath[index])) return fail('construction', 'invalid-menu-open-path', 'Menu open path must contain ordered branch identities.');
   for (let index = 1; index < openPath.length; index += 1) if (tree.parentOf(openPath[index] as ID) !== openPath[index - 1]) return fail('construction', 'disconnected-menu-open-path', 'Menu open path must be one ancestor chain.');
@@ -20,7 +25,7 @@ export function createMenuState<ID extends StableID>(tree: Tree<ID>, open = fals
 }
 
 export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>, event: MenuEvent<ID>, policies: MenuPolicies<ID> = {}): Result<MenuUpdate<ID>> {
-  const valid = createMenuState(tree, state.open, state.cursor.current, state.openPath); if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
+  const valid = tryCreateMenuState(tree, state.open, state.cursor.current, state.openPath); if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (event === 'open-popup') { if (state.open) return createMachineUpdate(state); const id = tree.roots.at(0); return createMachineUpdate(menuState(true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
   if (event === 'close-popup') return createMachineUpdate(menuState(false, null, []), state.open ? [{ type: 'restore-focus' }] : []);
   if (!state.open) return fail('transition-rejection', 'menu-closed', 'Menu events require an open menu.');

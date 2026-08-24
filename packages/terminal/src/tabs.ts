@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyTabsEvent,
-  createTabsState,
+  tryCreateTabsState,
   type TabsCommand,
   type TabsEvent,
   type TabsPolicies,
@@ -55,7 +55,7 @@ export function tryCreateTabs<ID extends StableID>(options: TabsOptions<ID>): Re
 }
 
 function tryCreateTabsConnection<ID extends StableID>(options: TabsOptions<ID>): Result<TabsConnection<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);
   if (!disabled.ok) return disabled;
@@ -68,14 +68,14 @@ function tryCreateTabsConnection<ID extends StableID>(options: TabsOptions<ID>):
   const highlightControlled = options.highlightedValue !== undefined;
   const runtime = createSemanticController<TabsState<ID>, TabsEvent<ID>, TabsCommand<ID>, TabsEffect<ID>>({
     interaction: options,
-    initial: createTabsState(domain.value, {
+    initial: tryCreateTabsState(domain.value, {
       selected: selected(options.value ?? options.defaultValue ?? null),
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }),
     reducer: (state, event) => applyTabsEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createTabsState(domain.value, {
+    reconcile: (previous, proposed) => tryCreateTabsState(domain.value, {
       selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }),
@@ -152,7 +152,7 @@ class TerminalTabsConnection<ID extends StableID> implements TabsConnection<ID> 
       } };
     }
     const state = this.#runtime.getSnapshot().state;
-    const result = this.#runtime.replace(createTabsState(this.#domain, {
+    const result = this.#runtime.replace(tryCreateTabsState(this.#domain, {
       selected: this.#valueControlled ? selected(values.value ?? null) : state.selection.selected,
       current: this.#highlightControlled ? (values.highlightedValue ?? null) : state.cursor.current,
     }));

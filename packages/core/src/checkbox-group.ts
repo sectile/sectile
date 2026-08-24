@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import {
@@ -9,6 +10,7 @@ import {
   type ListboxState,
   type ListboxStateInput,
   type ListboxUpdate,
+  tryCreateListboxState,
 } from './internal/composites/listbox.js';
 
 export type CheckboxGroupEvent<ID extends StableID = StableID> = Exclude<ListboxEvent<ID>, 'activate'>;
@@ -21,8 +23,15 @@ export type CheckboxGroupUpdate<ID extends StableID = StableID> = ListboxUpdate<
 export function createCheckboxGroupState<ID extends StableID>(
   domain: Sequence<ID>,
   input: CheckboxGroupStateInput<ID> = {},
+): CheckboxGroupState<ID> {
+  return unwrap(tryCreateCheckboxGroupState(domain, input));
+}
+
+export function tryCreateCheckboxGroupState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: CheckboxGroupStateInput<ID> = {},
 ): Result<CheckboxGroupState<ID>> {
-  return createListboxState(domain, input, 'multiple');
+  return tryCreateListboxState(domain, input, 'multiple');
 }
 
 export function applyCheckboxGroupEvent<ID extends StableID>(

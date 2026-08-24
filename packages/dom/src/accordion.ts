@@ -1,11 +1,11 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyAccordionEvent,
-  createAccordionState,
+  tryCreateAccordionState,
   type AccordionCommand,
   type AccordionEvent,
   type AccordionPolicies,
@@ -110,7 +110,7 @@ export interface AccordionConnection<ID extends StableID = StableID> {
 export function createAccordionController<ID extends StableID>(
   options: AccordionControllerOptions<ID>,
 ): Result<AccordionController<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems);
   if (!disabled.ok) return disabled;
@@ -124,14 +124,14 @@ export function createAccordionController<ID extends StableID>(
   >({
     interaction: options,
     interactionIntent: accordionIntent,
-    initial: createAccordionState(domain.value, {
+    initial: tryCreateAccordionState(domain.value, {
       openIDs: initialValue,
       current: options.highlightedValue !== undefined
         ? options.highlightedValue
         : options.defaultHighlightedValue ?? null,
     }, policies),
     reducer: (state, event) => applyAccordionEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createAccordionState(domain.value, {
+    reconcile: (previous, proposed) => tryCreateAccordionState(domain.value, {
       openIDs: valueControlled || options.readOnly === true ? previous.openIDs : proposed.openIDs,
       current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
     }, policies),
@@ -296,7 +296,7 @@ class DOMAccordionController<ID extends StableID> implements AccordionController
       } };
     }
     const state = this.#runtime.getSnapshot().state;
-    return this.#runtime.replace(createAccordionState(this.#domain, {
+    return this.#runtime.replace(tryCreateAccordionState(this.#domain, {
       openIDs: this.#valueControlled ? value as readonly ID[] : state.openIDs,
       current: this.#highlightControlled ? values.highlightedValue as ID | null : state.cursor.current,
     }, this.#policies));

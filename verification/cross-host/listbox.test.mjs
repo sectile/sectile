@@ -21,7 +21,7 @@ const INPUTS = [
 ];
 
 test('DOM and terminal packages produce equivalent semantic traces', () => {
-  const domain = unwrap(createSequence(['a', 'b', 'c']));
+  const domain = createSequence(['a', 'b', 'c']);
   const policies = { boundary: 'stop', selectionFollowsFocus: false };
   const DOMController = unwrap(createDOMListboxController({ domain, policies }));
   const terminalController = unwrap(createTerminalListboxController({ domain, policies }));
@@ -49,7 +49,7 @@ test('DOM and terminal packages remain equivalent across 40,000 host transitions
   let transitions = 0;
   for (let iteration = 0; iteration < 2_000; iteration += 1) {
     const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `a${iteration}-${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     const eligible = new Set(ids.filter(() => rng.bool()));
     const policies = {
       eligible: (id) => eligible.has(id),
@@ -71,7 +71,7 @@ test('DOM and terminal packages remain equivalent across 40,000 host transitions
 });
 
 test('DOM and terminal listboxes preserve edge movement and single-selection parity', () => {
-  const domain = unwrap(createSequence(['a', 'disabled', 'c']));
+  const domain = createSequence(['a', 'disabled', 'c']);
   const options = {
     domain,
     selectionMode: 'single',

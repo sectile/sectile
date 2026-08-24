@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 
@@ -10,7 +11,11 @@ export type ToastCommand<ID extends StableID = StableID> = { readonly type: 'ann
 export interface ToastPolicies { readonly defaultDurationMs?: number | null; readonly maxVisible?: number }
 export interface ToastUpdate<ID extends StableID = StableID> { readonly state: ToastState<ID>; readonly commands: readonly ToastCommand<ID>[] }
 
-export function createToastState<ID extends StableID>(items: readonly ToastInput<ID>[] = [], paused = false, policies: ToastPolicies = {}): Result<ToastState<ID>> {
+export function createToastState<ID extends StableID>(items: readonly ToastInput<ID>[] = [], paused = false, policies: ToastPolicies = {}): ToastState<ID> {
+  return unwrap(tryCreateToastState(items, paused, policies));
+}
+
+export function tryCreateToastState<ID extends StableID>(items: readonly ToastInput<ID>[] = [], paused = false, policies: ToastPolicies = {}): Result<ToastState<ID>> {
   const normalized: ToastItem<ID>[] = [];
   for (const item of items) {
     const result = normalizeToast(item, policies.defaultDurationMs ?? 5_000);
@@ -24,7 +29,7 @@ export function createToastState<ID extends StableID>(items: readonly ToastInput
 }
 
 export function applyToastEvent<ID extends StableID>(state: ToastState<ID>, event: ToastEvent<ID>, policies: ToastPolicies = {}): Result<ToastUpdate<ID>> {
-  const valid = createToastState(state.items.map((item) => ({ id: item.id, title: item.title, ...(item.description === null ? {} : { description: item.description }), kind: item.kind, durationMs: item.durationMs })), state.paused, policies);
+  const valid = tryCreateToastState(state.items.map((item) => ({ id: item.id, title: item.title, ...(item.description === null ? {} : { description: item.description }), kind: item.kind, durationMs: item.durationMs })), state.paused, policies);
   if (!valid.ok) return fail('transition-rejection', valid.error.code, valid.error.message);
   if (event === 'pause' || event === 'resume') return update(Object.freeze({ items: state.items, paused: event === 'pause' }));
   if (event === 'dismiss-all') return update(Object.freeze({ items: Object.freeze([]), paused: state.paused }), state.items.map((item) => ({ type: 'toast-dismissed', id: item.id, reason: 'manual' as const })));

@@ -7,7 +7,7 @@ import { createDatePickerMonth } from '@sectile/core/date-picker';
 import { addTimeMilliseconds } from '@sectile/core/time-field';
 import {
   applyDateTimePickerEvent,
-  createDateTimePickerState,
+  tryCreateDateTimePickerState,
   type DateTimePickerCommand,
   type DateTimePickerEvent,
   type DateTimePickerPolicies,
@@ -82,7 +82,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
     DateTimePickerCommand,
     DateTimePickerCommand
   >({
-    initial: createDateTimePickerState({
+    initial: tryCreateDateTimePickerState({
       ...(requestedValue === undefined ? {} : { value: requestedValue }),
       ...(requestedValue == null && options.policies?.defaultTime !== undefined
         ? { time: options.policies.defaultTime }
@@ -93,7 +93,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
       },
     }),
     reducer: (state, event) => applyDateTimePickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => createDateTimePickerState({
+    reconcile: (previous, proposed) => tryCreateDateTimePickerState({
       value: controls.value ? previous.value : proposed.value,
       time: controls.value ? previous.time : proposed.time,
       calendar: {
@@ -139,7 +139,7 @@ class TerminalDateTimePicker implements DateTimePickerConnection {
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
-    return unwrap(createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn));
+    return createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn);
   }
 
   public syncControlledValues(
@@ -156,7 +156,7 @@ class TerminalDateTimePicker implements DateTimePickerConnection {
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(createDateTimePickerState({
+    const result = this.runtime.replace(tryCreateDateTimePickerState({
       value: this.controls.value ? values.value as DateTimeValue | null : state.value,
       time: state.time,
       calendar: {

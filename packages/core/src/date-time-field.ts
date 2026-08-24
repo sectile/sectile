@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -10,12 +11,14 @@ import {
   formatDateValue,
   parseDateValue,
   type DateValue,
+  tryCreateDateValue,
 } from './date-field.js';
 import {
   createTimeValue,
   formatTimeValue,
   parseTimeValue,
   type TimeValue,
+  tryCreateTimeValue,
 } from './time-field.js';
 import {
   applyTextEvent,
@@ -23,6 +26,7 @@ import {
   normalizeTextEditingState,
   type TextEditingState,
   type TextEvent,
+  tryCreateTextEditingState,
 } from './text.js';
 
 export interface DateTimeValue {
@@ -77,10 +81,14 @@ export interface DateTimeFieldUpdate {
 const DATE_TIME_FIELD_MAX_CODE_UNITS = 23;
 const MILLISECONDS_PER_DAY = 86_400_000;
 
-export function createDateTimeValue(date: DateValue, time: TimeValue): Result<DateTimeValue> {
-  const validDate = createDateValue(date.year, date.month, date.day);
+export function createDateTimeValue(date: DateValue, time: TimeValue): DateTimeValue {
+  return unwrap(tryCreateDateTimeValue(date, time));
+}
+
+export function tryCreateDateTimeValue(date: DateValue, time: TimeValue): Result<DateTimeValue> {
+  const validDate = tryCreateDateValue(date.year, date.month, date.day);
   if (!validDate.ok) return validDate;
-  const validTime = createTimeValue(time.hour, time.minute, time.second, time.millisecond);
+  const validTime = tryCreateTimeValue(time.hour, time.minute, time.second, time.millisecond);
   if (!validTime.ok) return validTime;
   return ok(Object.freeze({ date: validDate.value, time: validTime.value }));
 }
@@ -101,7 +109,7 @@ export function parseDateTimeValue(text: string): Result<DateTimeValue> {
   const date = parseDateValue(text.slice(0, separator));
   if (!date.ok) return date;
   const time = parseTimeValue(text.slice(separator + 1));
-  return time.ok ? createDateTimeValue(date.value, time.value) : time;
+  return time.ok ? tryCreateDateTimeValue(date.value, time.value) : time;
 }
 
 export function formatDateTimeValue(value: DateTimeValue): string {
@@ -119,10 +127,17 @@ export function compareDateTimeValues(left: DateTimeValue, right: DateTimeValue)
 export function createDateTimeRange(
   start: DateTimeValue,
   end: DateTimeValue,
+): DateTimeRange {
+  return unwrap(tryCreateDateTimeRange(start, end));
+}
+
+export function tryCreateDateTimeRange(
+  start: DateTimeValue,
+  end: DateTimeValue,
 ): Result<DateTimeRange> {
-  const validStart = createDateTimeValue(start.date, start.time);
+  const validStart = tryCreateDateTimeValue(start.date, start.time);
   if (!validStart.ok) return validStart;
-  const validEnd = createDateTimeValue(end.date, end.time);
+  const validEnd = tryCreateDateTimeValue(end.date, end.time);
   if (!validEnd.ok) return validEnd;
   if (compareDateTimeValues(validStart.value, validEnd.value) > 0) {
     return fail(
@@ -148,14 +163,21 @@ export function addDateTimeMilliseconds(value: DateTimeValue, amount: number): R
   const date = addDateDays(value.date, dayDelta);
   if (!date.ok) return date;
   const time = millisecondsToTime(timeOfDay);
-  return time.ok ? createDateTimeValue(date.value, time.value) : time;
+  return time.ok ? tryCreateDateTimeValue(date.value, time.value) : time;
 }
 
 export function createDateTimeFieldState(
   value: DateTimeValue | null = null,
   inputState?: TextEditingState,
+): DateTimeFieldState {
+  return unwrap(tryCreateDateTimeFieldState(value, inputState));
+}
+
+export function tryCreateDateTimeFieldState(
+  value: DateTimeValue | null = null,
+  inputState?: TextEditingState,
 ): Result<DateTimeFieldState> {
-  const valid = value === null ? ok(null) : createDateTimeValue(value.date, value.time);
+  const valid = value === null ? ok(null) : tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return valid;
   const input = inputState === undefined
     ? committedInput(valid.value)
@@ -176,7 +198,7 @@ export function applyDateTimeFieldEvent(
   event: DateTimeFieldEvent,
   policies: DateTimeFieldPolicies = {},
 ): Result<DateTimeFieldUpdate> {
-  const valid = createDateTimeFieldState(state.value, state.inputState);
+  const valid = tryCreateDateTimeFieldState(state.value, state.inputState);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -268,7 +290,7 @@ function adjustSegment(
       : segment === 'month'
         ? addDateMonths(value.date, amount)
         : addDateDays(value.date, amount);
-    return date.ok ? createDateTimeValue(date.value, value.time) : date;
+    return date.ok ? tryCreateDateTimeValue(date.value, value.time) : date;
   }
   const unit = segment === 'hour'
     ? 3_600_000
@@ -290,7 +312,7 @@ function commitValue(
       return fail('transition-rejection', 'date-time-field-value-required', 'Date-time field requires a value.');
     }
   } else {
-    const valid = createDateTimeValue(value.date, value.time);
+    const valid = tryCreateDateTimeValue(value.date, value.time);
     if (!valid.ok) return invalidTransition(valid);
     value = valid.value;
     if (policies.min !== undefined && compareDateTimeValues(value, policies.min) < 0) {
@@ -336,7 +358,7 @@ function committedInput(
             : segment === 'second' ? [17, 19]
               : segment === 'millisecond' ? [20, 23]
                 : [text.length, text.length];
-  return createTextEditingState(text, {
+  return tryCreateTextEditingState(text, {
     anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length),
     focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length),
   });
@@ -351,11 +373,11 @@ function validatePolicies(policies: DateTimeFieldPolicies): Result<true> {
     );
   }
   if (policies.min !== undefined) {
-    const min = createDateTimeValue(policies.min.date, policies.min.time);
+    const min = tryCreateDateTimeValue(policies.min.date, policies.min.time);
     if (!min.ok) return min;
   }
   if (policies.max !== undefined) {
-    const max = createDateTimeValue(policies.max.date, policies.max.time);
+    const max = tryCreateDateTimeValue(policies.max.date, policies.max.time);
     if (!max.ok) return max;
   }
   if (
@@ -391,7 +413,7 @@ function millisecondsToTime(value: number): Result<TimeValue> {
   const hour = Math.floor(value / 3_600_000);
   const minute = Math.floor((value % 3_600_000) / 60_000);
   const second = Math.floor((value % 60_000) / 1_000);
-  return createTimeValue(hour, minute, second, value % 1_000);
+  return tryCreateTimeValue(hour, minute, second, value % 1_000);
 }
 
 function invalidTransition<T>(result: Result<T>): Result<never> {

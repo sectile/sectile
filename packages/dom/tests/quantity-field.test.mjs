@@ -12,12 +12,12 @@ import {
   createStandardQuantityPolicies,
 } from '../dist/quantity-field.js';
 
-const registry = unwrap(createUnitRegistry([
+const registry = createUnitRegistry([
   { id: 'meter', symbol: 'm', dimension: { length: 1 }, scale: '1' },
   { id: 'centimeter', symbol: 'cm', dimension: { length: 1 }, scale: '0.01' },
   { id: 'inch', symbol: 'in', dimension: { length: 1 }, scale: '0.0254' },
   { id: 'second', symbol: 's', dimension: { time: 1 }, scale: '1' },
-]));
+]);
 
 test('DOM quantity field owns compatible unit options, text editing, and canonical commit', () => {
   const input = new FakeInput();
@@ -58,8 +58,8 @@ test('DOM read-only quantity field rejects text mutation but allows display conv
 });
 
 test('DOM quantity field applies unit-system defaults and commits inline unit expressions', () => {
-  const standard = unwrap(createStandardUnitRegistry());
-  const imperial = unwrap(createImperialUnitSystem(standard));
+  const standard = createStandardUnitRegistry();
+  const imperial = createImperialUnitSystem(standard);
   const input = new FakeInput();
   const unitSelect = new FakeSelect();
   const field = createQuantityField({
@@ -69,7 +69,7 @@ test('DOM quantity field applies unit-system defaults and commits inline unit ex
       registry: standard,
       canonicalUnit: 'metre',
       unitSystem: imperial,
-      evaluator: unwrap(createCalculatorExpression()),
+      evaluator: createCalculatorExpression(),
     },
     defaultQuantity: { value: '1', unit: 'metre' },
   });

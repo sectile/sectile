@@ -10,3 +10,6 @@ export type {
   DateRangePickerUpdate as RangeCalendarUpdate,
 } from './date-range-picker.js';
 export { createDatePickerMonth as createRangeCalendarMonth } from './date-picker.js';
+
+export { tryCreateDatePickerMonth as tryCreateRangeCalendarMonth } from './date-picker.js';
+export { tryCreateDateRangePickerState as tryCreateRangeCalendarState } from './date-range-picker.js';

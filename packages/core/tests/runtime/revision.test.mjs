@@ -7,7 +7,7 @@ import {
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
   createRevisionSnapshot,
-  applyRevisionedEvent,
+  applyRevisionedEvent, tryCreateRevisionSnapshot
 } from '../../.verification-dist/internal/runtime/revision.js';
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { powerset, unwrap } from '../support.mjs';
@@ -16,11 +16,11 @@ test('revision wrapper reproduces all accepted stale and failure-atomic cases', 
   let cases = 0;
   for (let size = 0; size <= 4; size += 1) {
     const ids = Array.from({ length: size }, (_, index) => `i${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     for (const eligibleIDs of powerset(ids)) {
       const eligible = new Set(eligibleIDs);
-      const state = unwrap(createListboxState(domain));
-      const base = unwrap(createRevisionSnapshot(state, 7));
+      const state = createListboxState(domain);
+      const base = createRevisionSnapshot(state, 7);
       let calls = 0;
       const reducer = (current, event) => {
         calls += 1;
@@ -66,9 +66,9 @@ test('revision wrapper reproduces all accepted stale and failure-atomic cases', 
 });
 
 test('accepted semantic no-ops still advance exactly one revision', () => {
-  const domain = unwrap(createSequence(['a']));
-  const state = unwrap(createListboxState(domain, { current: 'a' }));
-  const base = unwrap(createRevisionSnapshot(state, 3));
+  const domain = createSequence(['a']);
+  const state = createListboxState(domain, { current: 'a' });
+  const base = createRevisionSnapshot(state, 3);
   const result = applyRevisionedEvent(base, 3, 'next', (current, event) =>
     applyListboxEvent(domain, current, event, { boundary: 'stop' }));
   assert.equal(result.ok, true);
@@ -79,8 +79,8 @@ test('accepted semantic no-ops still advance exactly one revision', () => {
 
 test('invalid and exhausted revisions reject before reducer execution', () => {
   const state = Object.freeze({ value: 1 });
-  assert.equal(createRevisionSnapshot(state, -1).error.code, 'invalid-revision');
-  const exhausted = unwrap(createRevisionSnapshot(state, Number.MAX_SAFE_INTEGER));
+  assert.equal(tryCreateRevisionSnapshot(state, -1).error.code, 'invalid-revision');
+  const exhausted = createRevisionSnapshot(state, Number.MAX_SAFE_INTEGER);
   let calls = 0;
   const result = applyRevisionedEvent(exhausted, Number.MAX_SAFE_INTEGER, 'input', () => {
     calls += 1;

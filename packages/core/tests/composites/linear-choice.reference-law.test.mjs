@@ -21,7 +21,7 @@ test('linear choice matches its independent reference over bounded domains and d
   let transitions = 0;
   for (let size = 0; size <= 4; size += 1) {
     const ids = Array.from({ length: size }, (_, index) => `i${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     for (const eligibleIDs of powerset(ids)) {
       const eligible = new Set(eligibleIDs);
       for (const follows of [false, true]) {
@@ -65,12 +65,12 @@ test('linear choice matches its independent reference over bounded domains and d
 });
 
 test('tabs preserve manual focus/selection separation and support automatic activation', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
-  const state = unwrap(createTabsState(domain, {
+  const domain = createSequence(['a', 'b']);
+  const state = createTabsState(domain, {
     current: 'a',
     selected: ['a'],
     anchor: 'a',
-  }));
+  });
   const manual = unwrap(applyTabsEvent(domain, state, 'next'));
   assert.equal(manual.state.cursor.current, 'b');
   assert.deepEqual(manual.state.selection.selected, ['a']);
@@ -84,12 +84,12 @@ test('tabs preserve manual focus/selection separation and support automatic acti
 });
 
 test('radio group wraps, follows focus, and checks direct targets without activation commands', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
-  const state = unwrap(createRadioGroupState(domain, {
+  const domain = createSequence(['a', 'b']);
+  const state = createRadioGroupState(domain, {
     current: 'b',
     selected: ['b'],
     anchor: 'b',
-  }));
+  });
   const wrapped = unwrap(applyRadioGroupEvent(domain, state, 'next'));
   assert.equal(wrapped.state.cursor.current, 'a');
   assert.deepEqual(wrapped.state.selection.selected, ['a']);

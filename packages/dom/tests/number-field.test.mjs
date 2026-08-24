@@ -11,7 +11,7 @@ test('DOM number field commits calculator expressions and retains invalid drafts
     input,
     defaultValue: '50',
     inputMode: 'text',
-    policies: { evaluator: unwrap(createCalculatorExpression()) },
+    policies: { evaluator: createCalculatorExpression() },
     onValueChange: (change) => changes.push(change),
   });
   input.setSelectionRange(0, 2);

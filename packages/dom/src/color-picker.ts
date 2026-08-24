@@ -1,5 +1,5 @@
 import type { Result } from '@sectile/core';
-import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerCommand, type ColorPickerEvent, type ColorPickerPolicies, type ColorPickerState, type ColorValue } from '@sectile/core/color-picker';
+import { applyColorPickerEvent, tryCreateColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerCommand, type ColorPickerEvent, type ColorPickerPolicies, type ColorPickerState, type ColorValue } from '@sectile/core/color-picker';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
@@ -57,9 +57,9 @@ function tryCreateColorPickerConnection(options: ColorPickerOptions): Result<Col
     ...(options.alphaStep === undefined ? {} : { alphaStep: options.alphaStep }),
   };
   const runtime = createSemanticController<ColorPickerState, ColorPickerEvent, ColorPickerCommand, ColorPickerCommand>({
-    initial: createColorPickerState({ value: options.value ?? options.defaultValue ?? '#000000', draft: options.draft !== undefined ? options.draft : options.defaultDraft ?? null, format: options.format ?? options.defaultFormat ?? 'hex' }, policies),
+    initial: tryCreateColorPickerState({ value: options.value ?? options.defaultValue ?? '#000000', draft: options.draft !== undefined ? options.draft : options.defaultDraft ?? null, format: options.format ?? options.defaultFormat ?? 'hex' }, policies),
     reducer: (state, event) => applyColorPickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => createColorPickerState({
+    reconcile: (previous, proposed) => tryCreateColorPickerState({
       value: valueControlled ? previous.value : proposed.value,
       draft: draftControlled ? previous.draft : proposed.draft,
       format: formatControlled ? previous.format : proposed.format,
@@ -106,7 +106,7 @@ class DOMColorPicker implements ColorPickerConnection {
   public syncControlledValues(values: { readonly value?: ColorValue | string; readonly draft?: string | null; readonly format?: ColorFormat }): Result<RevisionSnapshot<ColorPickerState>> {
     if (this.#controlled[0] !== (values.value !== undefined) || this.#controlled[1] !== (values.draft !== undefined) || this.#controlled[2] !== (values.format !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled color picker values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createColorPickerState({ value: values.value ?? state.value, draft: values.draft === undefined ? state.draft : values.draft, format: values.format ?? state.format, channel: state.channel }, this.#policies));
+    const result = this.#runtime.replace(tryCreateColorPickerState({ value: values.value ?? state.value, draft: values.draft === undefined ? state.draft : values.draft, format: values.format ?? state.format, channel: state.channel }, this.#policies));
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); }
     return result;
   }
@@ -192,7 +192,7 @@ class DOMColorPicker implements ColorPickerConnection {
 }
 
 function isValidDraft(text: string, policies: ColorPickerPolicies): boolean {
-  const result = createColorPickerState({ value: text }, policies); return result.ok;
+  const result = tryCreateColorPickerState({ value: text }, policies); return result.ok;
 }
 function sameColor(left: ColorValue, right: ColorValue): boolean { return left.red === right.red && left.green === right.green && left.blue === right.blue && left.alpha === right.alpha; }
 

@@ -139,7 +139,7 @@ test('optimized implementations are observationally equivalent to independent re
 function verifySequence(rng, iteration) {
   const size = rng.int(0, 80);
   const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `s${iteration}-${index}`));
-  const optimized = unwrap(createSequence(ids));
+  const optimized = createSequence(ids);
   const reference = new ReferenceSequence(ids);
   assert.deepEqual(optimized.ids, reference.ids);
   for (let probe = -1; probe <= size; probe += Math.max(1, Math.floor(size / 7) || 1)) {
@@ -169,7 +169,7 @@ function verifyRange(rng) {
   const origin = decimal(originInteger, originScale);
   const step = decimal(stepInteger, stepScale);
   const count = rng.int(0, 40);
-  const optimized = unwrap(createRange({ origin, step, count }));
+  const optimized = createRange({ origin, step, count });
   const reference = new ReferenceRange(origin, step, count);
   for (let probe = 0; probe < 12; probe += 1) {
     const tick = rng.int(0, count + 1);
@@ -207,7 +207,7 @@ function verifyGrid(rng, iteration) {
       ragged[row].push(id);
     }
   }
-  const optimized = unwrap(createGrid(ragged, { columnCount: columns }));
+  const optimized = createGrid(ragged, { columnCount: columns });
   const reference = new ReferenceGrid(rows, columns, cells);
   assert.equal(optimized.size, reference.size);
   for (let row = -1; row <= rows; row += 1) {
@@ -252,7 +252,7 @@ function verifyTree(rng, iteration) {
     for (const child of children.get(id)) visit(child);
   };
   for (const root of children.get(null)) visit(root);
-  const optimized = unwrap(createTree(ordered));
+  const optimized = createTree(ordered);
   const reference = new ReferenceTree(ordered);
   assert.deepEqual(optimized.roots.ids, reference.roots.ids);
   assert.deepEqual(optimized.preorder().ids, reference.preorder().ids);
@@ -275,7 +275,7 @@ function verifyTree(rng, iteration) {
 function verifyCursor(rng, iteration) {
   const size = rng.int(0, 80);
   const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `c${iteration}-${index}`));
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const current = rng.pick([null, ...ids, `missing-${iteration}`]);
   const state = createCursorState(current);
   for (const fallback of ['none', 'first', 'last']) {
@@ -290,8 +290,8 @@ function verifySelection(rng, iteration) {
   const size = rng.int(0, 80);
   const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `l${iteration}-${index}`));
   const missing = `missing-${iteration}`;
-  const domain = unwrap(createSequence(ids));
-  const previousDomain = unwrap(createSequence([...ids, missing]));
+  const domain = createSequence(ids);
+  const previousDomain = createSequence([...ids, missing]);
   const mode = rng.bool() ? 'single' : 'multiple';
   const selected = mode === 'single'
     ? (rng.bool() ? [] : [rng.pick([...ids, missing])])
@@ -340,7 +340,7 @@ function verifyExpansion(rng, iteration) {
       parentID: node === 0 || rng.next() < 0.25 ? null : `e${iteration}-${rng.int(0, node)}`,
     });
   }
-  const tree = unwrap(createTree(nodes));
+  const tree = createTree(nodes);
   const referenceTree = new ReferenceTree(nodes);
   const ids = tree.preorder().ids;
   const requested = [...ids.filter(() => rng.bool()), `missing-${iteration}`];
@@ -382,7 +382,7 @@ function verifyText(rng) {
     anchorCodeUnitOffset: rng.pick(boundaries),
     focusCodeUnitOffset: rng.pick(boundaries),
   };
-  const optimized = unwrap(createTextEditingState(text, initialSelection));
+  const optimized = createTextEditingState(text, initialSelection);
   const reference = createReferenceTextEditingState(text, initialSelection);
   const projected = referenceReplacePlainText(
     text,
@@ -469,14 +469,14 @@ function verifyListbox(rng, iteration) {
   const ids = rng.shuffle(
     Array.from({ length: rng.int(0, 40) }, (_, index) => `b${iteration}-${index}`),
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const eligible = new Set(ids.filter(() => rng.bool()));
   const input = {
     current: rng.pick([null, ...ids]),
     selected: ids.filter(() => rng.bool()),
     anchor: rng.pick([null, ...ids]),
   };
-  let optimized = unwrap(createListboxState(domain, input));
+  let optimized = createListboxState(domain, input);
   let reference = createReferenceListboxState(domain, input);
   const policies = {
     eligible: (id) => eligible.has(id),
@@ -498,9 +498,9 @@ function verifyListbox(rng, iteration) {
 
 function verifySlider(rng) {
   const count = rng.int(0, 81);
-  const range = unwrap(createRange({ origin: '-2', step: '0.5', count }));
+  const range = createRange({ origin: '-2', step: '0.5', count });
   const initial = rng.int(0, count + 1);
-  let optimized = unwrap(createSliderState(range, initial));
+  let optimized = createSliderState(range, initial);
   let reference = createReferenceSliderState(range, initial);
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['increment', 'decrement', 'page-up', 'page-down', 'home', 'end']);
@@ -526,11 +526,11 @@ function verifyCalendar(rng, iteration) {
       ids.push(id);
       return id;
     }));
-  const grid = unwrap(createGrid(rows, { columnCount }));
+  const grid = createGrid(rows, { columnCount });
   const current = rng.pick([null, ...ids]);
   const selected = ids.length > 0 && rng.bool() ? [rng.pick(ids)] : [];
   const input = { current, selected, anchor: selected[0] ?? null };
-  let optimized = unwrap(createCalendarState(grid, input));
+  let optimized = createCalendarState(grid, input);
   let reference = createReferenceCalendarState(grid, input);
   const eligible = new Set(ids.filter(() => rng.bool()));
   const policies = {
@@ -559,7 +559,7 @@ function verifyTreeView(rng, iteration) {
       parentID: node === 0 || rng.next() < 0.25 ? null : `v${iteration}-${rng.int(0, node)}`,
     });
   }
-  const tree = unwrap(createTree(nodes));
+  const tree = createTree(nodes);
   const ids = tree.preorder().ids;
   const branches = ids.filter((id) => tree.childrenOf(id).size > 0);
   const expanded = branches.filter(() => rng.bool());
@@ -570,7 +570,7 @@ function verifyTreeView(rng, iteration) {
     selected: ids.filter(() => rng.bool()),
     anchor: rng.pick([null, ...ids]),
   };
-  let optimized = unwrap(createTreeViewState(tree, input));
+  let optimized = createTreeViewState(tree, input);
   let reference = createReferenceTreeViewState(tree, input);
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['next', 'previous', 'right', 'left', 'toggle-select']);
@@ -586,15 +586,15 @@ function verifyTreeView(rng, iteration) {
 
 function verifyCombobox(rng, iteration) {
   const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `o${iteration}-${index}`);
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const labels = new Map(ids.map((id) => [id, randomText(rng, 6)]));
-  const text = unwrap(createTextEditingState(randomText(rng, 3)));
+  const text = createTextEditingState(randomText(rng, 3));
   const input = { popupOpen: true, current: rng.pick([null, ...ids]) };
   const policies = {
     matches: (label, query) => label.includes(query),
     boundary: rng.bool() ? 'stop' : 'wrap',
   };
-  let optimized = unwrap(createComboboxState(domain, text, input));
+  let optimized = createComboboxState(domain, text, input);
   let reference = createReferenceComboboxState(domain, text, input);
   for (let step = 0; step < 10; step += 1) {
     let event = rng.pick(['next', 'previous', 'close', 'accept']);

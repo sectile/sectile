@@ -11,7 +11,7 @@ test('disclosure boolean algebra is idempotent and matches its reference', () =>
   for (const open of [false, true]) for (const event of [
     'toggle', 'open', 'close', { type: 'set-open', open: false }, { type: 'set-open', open: true },
   ]) {
-    const left = applyDisclosureEvent(unwrap(createDisclosureState(open)), event);
+    const left = applyDisclosureEvent(createDisclosureState(open), event);
     const right = referenceApplyOpenEvent(referenceOpenState(open), event);
     assert.deepEqual(observeOpen(left), observeReference(right));
   }
@@ -21,12 +21,12 @@ test('accordion matches an independent keyed-open reference over bounded domains
   let transitions = 0;
   for (let size = 0; size <= 4; size += 1) {
     const ids = Array.from({ length: size }, (_, index) => `i${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     for (const expansion of ['single', 'multiple']) for (const candidate of powerset(ids)) {
       if (expansion === 'single' && candidate.length > 1) continue;
       for (const current of [null, ...ids]) {
         const policies = { expansion, collapsible: true, boundary: 'wrap' };
-        const optimized = unwrap(createAccordionState(domain, { current, openIDs: candidate }, policies));
+        const optimized = createAccordionState(domain, { current, openIDs: candidate }, policies);
         const reference = createReferenceAccordionState(domain, { current, openIDs: candidate }, policies).value.state;
         const target = ids[0] ?? 'missing';
         for (const event of ['next', 'previous', 'first', 'last', 'toggle',
@@ -45,9 +45,9 @@ test('accordion matches an independent keyed-open reference over bounded domains
 });
 
 test('non-collapsible single accordion rejects closing its last open item atomically', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
+  const domain = createSequence(['a', 'b']);
   const policies = { expansion: 'single', collapsible: false };
-  const state = unwrap(createAccordionState(domain, { current: 'a', openIDs: ['a'] }, policies));
+  const state = createAccordionState(domain, { current: 'a', openIDs: ['a'] }, policies);
   const rejected = applyAccordionEvent(domain, state, 'toggle', policies);
   assert.equal(rejected.ok, false);
   assert.equal(rejected.error.code, 'accordion-collapse-forbidden');

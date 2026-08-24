@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createTreeViewState,
-  applyTreeViewEvent,
+  applyTreeViewEvent, tryCreateTreeViewState
 } from '../../.verification-dist/internal/composites/tree-view.js';
 import {
   createReferenceTreeViewState,
@@ -15,11 +15,11 @@ import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
 const EVENTS = ['next', 'previous', 'right', 'left', 'toggle-select'];
 
 test('tree-view direct events target visible nodes and expansion', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
-  ]));
-  const state = unwrap(createTreeViewState(tree, { expanded: ['root'], current: 'root' }));
+  ]);
+  const state = createTreeViewState(tree, { expanded: ['root'], current: 'root' });
   const selected = unwrap(applyTreeViewEvent(tree, state, { type: 'toggle-select', id: 'child' }));
   assert.equal(selected.state.cursor.current, 'child');
   assert.deepEqual(selected.state.selection.selected, ['child']);
@@ -37,13 +37,13 @@ test('tree-view composition matches accepted exhaustive transition counts', () =
   let transitions = 0;
   for (let size = 0; size <= 4; size += 1) {
     for (const raw of enumerateOrderedForests(size)) {
-      const tree = unwrap(createTree(stringTree(raw)));
+      const tree = createTree(stringTree(raw));
       const ids = tree.preorder().ids;
       const branches = ids.filter((id) => tree.childrenOf(id).size > 0);
       for (const expanded of powerset(branches)) {
         const visible = tree.visible(expanded).ids;
         for (const current of [null, ...visible]) {
-          const start = unwrap(createTreeViewState(tree, { expanded, current }));
+          const start = createTreeViewState(tree, { expanded, current });
           const referenceStart = createReferenceTreeViewState(tree, { expanded, current });
           assert.deepEqual(stateObservation(start), stateObservation(referenceStart));
           const queue = [{ state: start, depth: 0 }];
@@ -84,12 +84,12 @@ test('tree-view composition matches accepted exhaustive transition counts', () =
 });
 
 test('tree-view right and left separate expansion from focus movement', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
     { id: 'leaf', parentID: 'child' },
-  ]));
-  const root = unwrap(createTreeViewState(tree, { current: 'root' }));
+  ]);
+  const root = createTreeViewState(tree, { current: 'root' });
   const opened = unwrap(applyTreeViewEvent(tree, root, 'right'));
   assert.deepEqual(opened.state.expansion.ids, ['root']);
   assert.equal(opened.state.cursor.current, 'root');
@@ -111,12 +111,12 @@ test('tree-view right and left separate expansion from focus movement', () => {
 });
 
 test('tree-view eligibility skips disabled visible nodes and rejects direct targeting', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'disabled', parentID: null },
     { id: 'target', parentID: null },
-  ]));
-  const state = unwrap(createTreeViewState(tree, { current: 'root' }));
+  ]);
+  const state = createTreeViewState(tree, { current: 'root' });
   const policies = { eligible: (id) => id !== 'disabled' };
   const moved = unwrap(applyTreeViewEvent(tree, state, 'next', policies));
   assert.equal(moved.state.cursor.current, 'target');
@@ -126,12 +126,12 @@ test('tree-view eligibility skips disabled visible nodes and rejects direct targ
 });
 
 test('tree-view rejects hidden cursors and unknown events atomically', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
-  ]));
-  assert.equal(createTreeViewState(tree, { current: 'child' }).error.code, 'tree-view-cursor-hidden');
-  const empty = unwrap(createTreeViewState(tree));
+  ]);
+  assert.equal(tryCreateTreeViewState(tree, { current: 'child' }).error.code, 'tree-view-cursor-hidden');
+  const empty = createTreeViewState(tree);
   assert.equal(applyTreeViewEvent(tree, empty, 'toggle-select').error.code, 'no-cursor');
   assert.equal(applyTreeViewEvent(tree, empty, 'unknown').error.code, 'invalid-tree-view-event');
 

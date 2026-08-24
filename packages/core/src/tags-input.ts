@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, freezeArray, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -8,13 +9,17 @@ export type TagsInputCommand = { readonly type: 'focus-tag'; readonly index: num
 export interface TagsInputPolicies { readonly maxTags?: number; readonly normalize?: (value: string) => string; readonly allowDuplicate?: boolean }
 export interface TagsInputUpdate { readonly state: TagsInputState; readonly commands: readonly TagsInputCommand[] }
 
-export function createTagsInputState(tags: readonly string[] = [], draft = '', current: number | null = null): Result<TagsInputState> {
+export function createTagsInputState(tags: readonly string[] = [], draft = '', current: number | null = null): TagsInputState {
+  return unwrap(tryCreateTagsInputState(tags, draft, current));
+}
+
+export function tryCreateTagsInputState(tags: readonly string[] = [], draft = '', current: number | null = null): Result<TagsInputState> {
   if (!Array.isArray(tags) || tags.some((tag) => typeof tag !== 'string' || tag.length === 0) || typeof draft !== 'string') return fail('construction', 'invalid-tags-input-value', 'Tags input requires non-empty text tags and a text draft.');
   if (current !== null && (!Number.isSafeInteger(current) || current < 0 || current >= tags.length)) return fail('construction', 'invalid-tags-input-current', 'Tags input current index must identify an existing tag.');
   return ok(Object.freeze({ tags: freezeArray(tags), draft, current }));
 }
 export function applyTagsInputEvent(state: TagsInputState, event: TagsInputEvent, policies: TagsInputPolicies = {}): Result<TagsInputUpdate> {
-  const valid = createTagsInputState(state.tags, state.draft, state.current); if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
+  const valid = tryCreateTagsInputState(state.tags, state.draft, state.current); if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   const focus = (current: number | null): Result<TagsInputUpdate> => createMachineUpdate(Object.freeze({ tags: state.tags, draft: state.draft, current }), [current === null ? { type: 'focus-input' } : { type: 'focus-tag', index: current }]);
   if (event === 'focus-input') return focus(null);
   if (event === 'next') return focus(state.current === null || state.current >= state.tags.length - 1 ? null : state.current + 1);

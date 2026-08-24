@@ -1,5 +1,5 @@
 import type { Result } from '@sectile/core';
-import { applyTimerEvent, createTimerState, getTimerParts, getTimerProgress, type TimerCommand, type TimerEvent, type TimerParts, type TimerPolicies, type TimerState } from '@sectile/core/timer';
+import { applyTimerEvent, tryCreateTimerState, getTimerParts, getTimerProgress, type TimerCommand, type TimerEvent, type TimerParts, type TimerPolicies, type TimerState } from '@sectile/core/timer';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
@@ -11,7 +11,7 @@ export interface TimerOptions extends TimerPolicies { readonly root: HTMLElement
 export interface TimerConnection { getSnapshot(): RevisionSnapshot<TimerState>; handleEvent(event: TimerEvent): boolean; start(): boolean; pause(): boolean; resume(): boolean; reset(): boolean; restart(): boolean; setItemAttributes(element: HTMLElement, type: TimerItemType): void; setActionAttributes(element: HTMLButtonElement, action: TimerAction): void; disconnect(): void }
 export function createTimer(options: TimerOptions): FacadeConnection<TimerConnection> { return unwrap(tryCreateTimer(options)); }
 export function tryCreateTimer(options: TimerOptions): Result<FacadeConnection<TimerConnection>> { return createFacadeConnection(options, (normalized) => tryCreateTimerConnection(normalized)); }
-function tryCreateTimerConnection(options: TimerOptions): Result<TimerConnection> { const policies: TimerPolicies = { ...(options.countdown === undefined ? {} : { countdown: options.countdown }), ...(options.startMs === undefined ? {} : { startMs: options.startMs }), ...(options.targetMs === undefined ? {} : { targetMs: options.targetMs }) }; const runtime = createSemanticController<TimerState, TimerEvent, TimerCommand, TimerCommand>({ initial: createTimerState(policies, policies.startMs ?? 0, options.autoStart ?? false), reducer: (state, event) => applyTimerEvent(state, event, policies), toEffect: (command) => command }); return runtime.ok ? { ok: true, value: new DOMTimer(options, policies, runtime.value) } : runtime; }
+function tryCreateTimerConnection(options: TimerOptions): Result<TimerConnection> { const policies: TimerPolicies = { ...(options.countdown === undefined ? {} : { countdown: options.countdown }), ...(options.startMs === undefined ? {} : { startMs: options.startMs }), ...(options.targetMs === undefined ? {} : { targetMs: options.targetMs }) }; const runtime = createSemanticController<TimerState, TimerEvent, TimerCommand, TimerCommand>({ initial: tryCreateTimerState(policies, policies.startMs ?? 0, options.autoStart ?? false), reducer: (state, event) => applyTimerEvent(state, event, policies), toEffect: (command) => command }); return runtime.ok ? { ok: true, value: new DOMTimer(options, policies, runtime.value) } : runtime; }
 
 class DOMTimer implements TimerConnection {
   readonly #options: TimerOptions; readonly #policies: TimerPolicies; readonly #runtime: SemanticController<TimerState, TimerEvent, TimerCommand>;

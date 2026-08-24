@@ -1,9 +1,9 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
+import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
@@ -12,6 +12,7 @@ import {
   applyTextEvent,
   createTextEditingState,
   normalizeTextEditingState,
+  tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
   type TextSelectionInput,
@@ -64,10 +65,10 @@ export interface TextValueChangeDetails {
 export type TextState = TextEditingState;
 
 export function createTextState(value = ''): TextEditingState {
-  return unwrap(createTextEditingState(value, {
+  return createTextEditingState(value, {
     anchorCodeUnitOffset: value.length,
     focusCodeUnitOffset: value.length,
-  }));
+  });
 }
 
 export interface TextControllerOptions {
@@ -125,12 +126,12 @@ export type TextOptions = TextControllerOptions & Omit<TextConnectionOptions, 'c
 export function createTextController(options: TextControllerOptions = {}): Result<TextController> {
   const requested = options.value !== undefined ? options.value : options.defaultValue;
   const initial = requested === undefined
-    ? createTextEditingState()
+    ? tryCreateTextEditingState()
     : normalizeTextEditingState(requested);
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new DOMTextController(options, interaction.value, snapshot.value) };
 }

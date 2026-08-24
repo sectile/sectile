@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { applyTagsInputEvent, createTagsInputState, type TagsInputCommand, type TagsInputEvent, type TagsInputPolicies, type TagsInputState } from '@sectile/core/tags-input';
+import { applyTagsInputEvent, tryCreateTagsInputState, type TagsInputCommand, type TagsInputEvent, type TagsInputPolicies, type TagsInputState } from '@sectile/core/tags-input';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 export interface TagsInputOptions { readonly policies?: TagsInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: readonly string[]; readonly defaultValue?: readonly string[]; readonly inputValue?: string; readonly defaultInputValue?: string; readonly onValueChange?: (value: readonly string[]) => void; readonly onInputValueChange?: (value: string) => void; readonly onUpdate?: () => void }
@@ -15,7 +15,7 @@ export function tryCreateTagsInput(options: TagsInputOptions = {}): Result<Facad
   return createFacadeConnection(options, (options) => tryCreateTagsInputConnection(options));
 }
 
-function tryCreateTagsInputConnection(options: TagsInputOptions = {}): Result<TagsInputConnection> { const controlled = { value: options.value !== undefined, input: options.inputValue !== undefined }; const runtime = createSemanticController<TagsInputState, TagsInputEvent, TagsInputCommand, TagsInputCommand>({ interaction: options, interactionIntent: (event) => event === 'next' || event === 'previous' || event === 'focus-input' || (typeof event === 'object' && event.type === 'focus-tag') ? 'navigate' : 'mutate', initial: createTagsInputState(options.value ?? options.defaultValue ?? [], options.inputValue ?? options.defaultInputValue ?? ''), reducer: (state, event) => applyTagsInputEvent(state, event, options.policies), reconcile: (previous, proposed) => createTagsInputState(controlled.value ? previous.tags : proposed.tags, controlled.input ? previous.draft : proposed.draft, proposed.current), notify: (previous, proposed) => { if (previous.tags.join('\u0000') !== proposed.tags.join('\u0000')) options.onValueChange?.(proposed.tags); if (previous.draft !== proposed.draft) options.onInputValueChange?.(proposed.draft); }, toEffect: (command) => command }); return runtime.ok ? { ok: true, value: new TerminalTagsInputConnection(options, runtime.value, controlled) } : runtime; }
+function tryCreateTagsInputConnection(options: TagsInputOptions = {}): Result<TagsInputConnection> { const controlled = { value: options.value !== undefined, input: options.inputValue !== undefined }; const runtime = createSemanticController<TagsInputState, TagsInputEvent, TagsInputCommand, TagsInputCommand>({ interaction: options, interactionIntent: (event) => event === 'next' || event === 'previous' || event === 'focus-input' || (typeof event === 'object' && event.type === 'focus-tag') ? 'navigate' : 'mutate', initial: tryCreateTagsInputState(options.value ?? options.defaultValue ?? [], options.inputValue ?? options.defaultInputValue ?? ''), reducer: (state, event) => applyTagsInputEvent(state, event, options.policies), reconcile: (previous, proposed) => tryCreateTagsInputState(controlled.value ? previous.tags : proposed.tags, controlled.input ? previous.draft : proposed.draft, proposed.current), notify: (previous, proposed) => { if (previous.tags.join('\u0000') !== proposed.tags.join('\u0000')) options.onValueChange?.(proposed.tags); if (previous.draft !== proposed.draft) options.onInputValueChange?.(proposed.draft); }, toEffect: (command) => command }); return runtime.ok ? { ok: true, value: new TerminalTagsInputConnection(options, runtime.value, controlled) } : runtime; }
 class TerminalTagsInputConnection implements TagsInputConnection {
   readonly #options: TagsInputOptions;
   readonly #runtime: SemanticController<TagsInputState, TagsInputEvent, TagsInputCommand>;
@@ -51,7 +51,7 @@ class TerminalTagsInputConnection implements TagsInputConnection {
     }
 
     const state = this.#runtime.getSnapshot().state;
-    const result = this.#runtime.replace(createTagsInputState(
+    const result = this.#runtime.replace(tryCreateTagsInputState(
       this.#controlled.value ? values.value ?? [] : state.tags,
       this.#controlled.input ? values.inputValue ?? '' : state.draft,
       state.current,

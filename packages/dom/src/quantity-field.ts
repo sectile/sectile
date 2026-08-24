@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
   applyQuantityFieldEvent,
-  createQuantityFieldState,
+  tryCreateQuantityFieldState,
   type QuantityFieldCommand,
   type QuantityFieldEvent,
   type QuantityFieldPolicies,
@@ -35,11 +35,11 @@ export function createStandardQuantityPolicies(
   canonicalUnit: string,
   unitSystem: StandardQuantityUnitSystem = 'all',
 ): QuantityFieldPolicies {
-  const registry = unwrap(createStandardUnitRegistry());
+  const registry = createStandardUnitRegistry();
   const profile = unitSystem === 'metric'
-    ? unwrap(createMetricUnitSystem(registry))
+    ? createMetricUnitSystem(registry)
     : unitSystem === 'imperial'
-      ? unwrap(createImperialUnitSystem(registry))
+      ? createImperialUnitSystem(registry)
       : undefined;
   return Object.freeze({
     registry,
@@ -97,14 +97,14 @@ function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result
   const displayUnitControlled = options.displayUnit !== undefined;
   const inputControlled = options.inputState !== undefined;
   const runtime = createSemanticController<QuantityFieldState, QuantityFieldEvent, QuantityFieldCommand, QuantityFieldCommand>({
-    initial: createQuantityFieldState(
+    initial: tryCreateQuantityFieldState(
       options.policies,
       options.quantity !== undefined ? options.quantity : options.defaultQuantity ?? null,
       options.displayUnit ?? options.defaultDisplayUnit,
       options.inputState !== undefined ? options.inputState : options.defaultInputState,
     ),
     reducer: (state, event) => applyQuantityFieldEvent(state, event, options.policies),
-    reconcile: (previous, proposed) => createQuantityFieldState(
+    reconcile: (previous, proposed) => tryCreateQuantityFieldState(
       options.policies,
       quantityControlled ? previous.quantity : proposed.quantity,
       displayUnitControlled ? previous.displayUnit : proposed.displayUnit,
@@ -176,7 +176,7 @@ class DOMQuantityField implements QuantityFieldConnection {
       return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled quantity field values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createQuantityFieldState(
+    const result = this.#runtime.replace(tryCreateQuantityFieldState(
       this.#options.policies,
       this.#quantityControlled ? values.quantity as QuantityValue | null : state.quantity,
       this.#displayUnitControlled ? values.displayUnit as string : state.displayUnit,

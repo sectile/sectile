@@ -81,7 +81,7 @@ test('unsupported terminal tree-view input is failure-atomic', () => {
 });
 
 function tree() {
-  return unwrap(createTree(nodes()));
+  return createTree(nodes());
 }
 
 function nodes() {

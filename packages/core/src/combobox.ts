@@ -1,8 +1,9 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import {
   applyComboboxEvent as applyInternalComboboxEvent,
-  createComboboxState as createInternalComboboxState,
+  tryCreateComboboxState as tryCreateInternalComboboxState,
   type ComboboxCommand,
   type ComboboxEvent,
   type ComboboxPolicies,
@@ -13,6 +14,7 @@ import {
   createTextEditingState,
   normalizeTextEditingState,
   type TextEditingState,
+  tryCreateTextEditingState,
 } from './internal/editing/text.js';
 
 export interface ComboboxStateInput<ID extends StableID = StableID> {
@@ -25,6 +27,13 @@ export interface ComboboxStateInput<ID extends StableID = StableID> {
 }
 
 export function createComboboxState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: ComboboxStateInput<ID> = {},
+): ComboboxState<ID> {
+  return unwrap(tryCreateComboboxState(domain, input));
+}
+
+export function tryCreateComboboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ComboboxStateInput<ID> = {},
 ): Result<ComboboxState<ID>> {
@@ -53,13 +62,13 @@ export function createComboboxState<ID extends StableID>(
         },
       };
     }
-    text = createTextEditingState(inputValue, {
+    text = tryCreateTextEditingState(inputValue, {
       anchorCodeUnitOffset: inputValue.length,
       focusCodeUnitOffset: inputValue.length,
     });
   }
   if (!text.ok) return text;
-  return createInternalComboboxState(domain, text.value, input);
+  return tryCreateInternalComboboxState(domain, text.value, input);
 }
 
 export function applyComboboxEvent<ID extends StableID>(

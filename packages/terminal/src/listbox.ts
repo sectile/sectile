@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
+import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   applyListboxEvent,
-  createListboxState,
+  tryCreateListboxState,
   findListboxTypeaheadMatch,
   type ListboxCommand,
   type ListboxEvent,
@@ -13,9 +13,9 @@ import {
   type ListboxState,
   type ListboxStateInput,
 } from '@sectile/core/listbox';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
@@ -122,16 +122,16 @@ export function createListboxController<ID extends StableID>(
 ): Result<ListboxController<ID>> {
   const policies = listboxPolicies(options);
   if (!policies.ok) return policies;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
-  const initial = createListboxState(options.domain, {
+  const initial = tryCreateListboxState(options.domain, {
     selected: options.value ?? options.defaultValue ?? [],
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
       : options.defaultHighlightedValue ?? null,
   }, options.selectionMode ?? options.policies?.selectionMode ?? 'multiple');
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   return { ok: true, value: new TerminalListboxController(options, policies.value, interaction.value, snapshot.value) };
 }
@@ -151,7 +151,7 @@ export function tryCreateListbox<ID extends StableID>(
 function tryCreateListboxConnection<ID extends StableID>(
   options: ListboxOptions<ID>,
 ): Result<ListboxConnection<ID>> {
-  const domain = createSequence(options.items);
+  const domain = tryCreateSequence(options.items);
   if (!domain.ok) return domain;
   const controller = createListboxController({ ...options, domain: domain.value });
   if (!controller.ok) return controller;
@@ -310,7 +310,7 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
       values,
     );
     if (inputError !== null) return { ok: false, error: inputError };
-    const state = createListboxState<ID>(this.#domain, {
+    const state = tryCreateListboxState<ID>(this.#domain, {
       selected: this.#valueControlled
         ? (values.value as readonly ID[])
         : this.#snapshot.state.selection.selected,
@@ -435,7 +435,7 @@ function controlledState<ID extends StableID>(
     anchor: proposed.selection.anchor,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
   };
-  return createListboxState(domain, input, selectionMode);
+  return tryCreateListboxState(domain, input, selectionMode);
 }
 
 function listboxPolicies<ID extends StableID>(

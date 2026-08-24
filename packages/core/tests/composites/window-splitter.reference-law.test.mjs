@@ -6,13 +6,13 @@ import { applyWindowSplitterEvent, createWindowSplitterState } from '../../.veri
 import { unwrap } from '../support.mjs';
 
 test('window splitter is observationally equivalent to the bounded slider algebra', () => {
-  const range = unwrap(createRange({ origin: '0', step: '1', count: 5 }));
+  const range = createRange({ origin: '0', step: '1', count: 5 });
   for (let tick = 0; tick <= range.count; tick += 1) for (const event of [
     'increment', 'decrement', 'page-up', 'page-down', 'home', 'end', { type: 'set-tick', tick: 3 },
   ]) {
     assert.deepEqual(
-      applyWindowSplitterEvent(range, unwrap(createWindowSplitterState(range, tick)), event),
-      applySliderEvent(range, unwrap(createSliderState(range, tick)), event),
+      applyWindowSplitterEvent(range, createWindowSplitterState(range, tick), event),
+      applySliderEvent(range, createSliderState(range, tick), event),
     );
   }
 });

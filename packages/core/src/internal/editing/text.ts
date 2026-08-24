@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { ErrorClass, Result } from '../../shared.js';
 import { fail, isWellFormedUTF16, ok } from '../kernel/foundation.js';
 import { createMachineUpdate } from '../kernel/machine.js';
@@ -76,11 +77,28 @@ export function isTextCodeUnitBoundary(text: string, offset: number): boolean {
 export function createTextSnapshot(
   text: string,
   selection: TextSelectionInput,
+): TextSnapshot {
+  return unwrap(tryCreateTextSnapshot(text, selection));
+}
+
+export function tryCreateTextSnapshot(
+  text: string,
+  selection: TextSelectionInput,
 ): Result<TextSnapshot> {
   return createSnapshot(text, selection, 'construction');
 }
 
 export function createTextEditingState(
+  text = '',
+  selection: TextSelectionInput = {
+    anchorCodeUnitOffset: 0,
+    focusCodeUnitOffset: 0,
+  },
+): TextEditingState {
+  return unwrap(tryCreateTextEditingState(text, selection));
+}
+
+export function tryCreateTextEditingState(
   text = '',
   selection: TextSelectionInput = {
     anchorCodeUnitOffset: 0,

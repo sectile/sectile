@@ -1,3 +1,4 @@
+import { unwrap } from '../result.js';
 import {
   DEFAULT_MAX_ID_CODE_UNITS,
   type BoundaryPolicy,
@@ -32,6 +33,13 @@ export interface Sequence<ID extends StableID = StableID> {
 }
 
 export function createSequence<ID extends StableID>(
+  ids: readonly ID[],
+  options: SequenceOptions = {},
+): Sequence<ID> {
+  return unwrap(tryCreateSequence(ids, options));
+}
+
+export function tryCreateSequence<ID extends StableID>(
   ids: readonly ID[],
   options: SequenceOptions = {},
 ): Result<Sequence<ID>> {

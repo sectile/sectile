@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { Result, SectileError } from '../../shared.js';
 import { fail, freezeArray, ok } from '../kernel/foundation.js';
 import type { EventReducer } from '../kernel/machine.js';
@@ -23,6 +24,13 @@ export type RevisionResult<State, Command> =
     };
 
 export function createRevisionSnapshot<State>(
+  state: State,
+  revision = 0,
+): RevisionSnapshot<State> {
+  return unwrap(tryCreateRevisionSnapshot(state, revision));
+}
+
+export function tryCreateRevisionSnapshot<State>(
   state: State,
   revision = 0,
 ): Result<RevisionSnapshot<State>> {

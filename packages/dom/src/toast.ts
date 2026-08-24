@@ -1,5 +1,5 @@
 import type { Result, StableID } from '@sectile/core';
-import { applyToastEvent, createToastState, type ToastCommand, type ToastEvent, type ToastInput, type ToastItem, type ToastPolicies, type ToastState } from '@sectile/core/toast';
+import { applyToastEvent, tryCreateToastState, type ToastCommand, type ToastEvent, type ToastInput, type ToastItem, type ToastPolicies, type ToastState } from '@sectile/core/toast';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
@@ -34,7 +34,7 @@ export function tryCreateToast<ID extends StableID>(options: ToastOptions<ID>): 
 function tryCreateToastConnection<ID extends StableID>(options: ToastOptions<ID>): Result<ToastConnection<ID>> {
   let connection: DOMToast<ID> | undefined;
   const runtime = createSemanticController<ToastState<ID>, ToastEvent<ID>, ToastCommand<ID>, ToastCommand<ID>>({
-    initial: createToastState(options.initialToasts ?? [], false, options),
+    initial: tryCreateToastState(options.initialToasts ?? [], false, options),
     reducer: (state, event) => applyToastEvent(state, event, options),
     notify: (_previous, proposed) => options.onItemsChange?.(proposed.items),
     toEffect: (command) => command,

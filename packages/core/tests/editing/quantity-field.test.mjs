@@ -13,20 +13,20 @@ import {
   createUnitRegistry,
 } from '../../.verification-dist/units.js';
 
-const registry = unwrap(createUnitRegistry([
+const registry = createUnitRegistry([
   { id: 'meter', symbol: 'm', dimension: { length: 1 }, scale: '1' },
   { id: 'centimeter', symbol: 'cm', dimension: { length: 1 }, scale: '0.01' },
   { id: 'inch', symbol: 'in', dimension: { length: 1 }, scale: '0.0254' },
   { id: 'second', symbol: 's', dimension: { time: 1 }, scale: '1' },
-]));
+]);
 
 test('quantity field normalizes storage and changes display units without changing quantity', () => {
   const policies = { registry, canonicalUnit: 'meter' };
-  let state = unwrap(createQuantityFieldState(
+  let state = createQuantityFieldState(
     policies,
     { value: '100', unit: 'centimeter' },
     'centimeter',
-  ));
+  );
   assert.deepEqual(state.quantity, { value: '1', unit: 'meter' });
   assert.equal(state.inputState.snapshot.text, '100');
   state = unwrap(applyQuantityFieldEvent(state, { type: 'set-display-unit', unit: 'meter' }, policies)).state;
@@ -38,9 +38,9 @@ test('quantity field composes NumberField expressions and commits canonical valu
   const policies = {
     registry,
     canonicalUnit: 'meter',
-    evaluator: unwrap(createCalculatorExpression()),
+    evaluator: createCalculatorExpression(),
   };
-  let state = unwrap(createQuantityFieldState(policies, { value: '0.5', unit: 'meter' }, 'centimeter'));
+  let state = createQuantityFieldState(policies, { value: '0.5', unit: 'meter' }, 'centimeter');
   state = edit(state, '50+20%', policies);
   const committed = unwrap(applyQuantityFieldEvent(state, 'commit', policies));
   assert.deepEqual(committed.state.quantity, { value: '0.6', unit: 'meter' });
@@ -55,7 +55,7 @@ test('quantity field composes NumberField expressions and commits canonical valu
 
 test('quantity field preserves canonical bounds and rejects incompatible display units', () => {
   const policies = { registry, canonicalUnit: 'meter', min: '0', max: '2' };
-  let state = unwrap(createQuantityFieldState(policies, { value: '1', unit: 'meter' }, 'centimeter'));
+  let state = createQuantityFieldState(policies, { value: '1', unit: 'meter' }, 'centimeter');
   state = edit(state, '250', policies);
   assert.equal(applyQuantityFieldEvent(state, 'commit', policies).ok, false);
   assert.equal(applyQuantityFieldEvent(state, { type: 'set-display-unit', unit: 'second' }, policies).ok, false);
@@ -65,8 +65,8 @@ test('quantity field preserves canonical bounds and rejects incompatible display
 });
 
 test('quantity input parses compact, calculator, and compound unit suffixes', () => {
-  const standard = unwrap(createStandardUnitRegistry());
-  const evaluator = unwrap(createCalculatorExpression());
+  const standard = createStandardUnitRegistry();
+  const evaluator = createCalculatorExpression();
   assert.deepEqual(unwrap(parseQuantityInput('150cm', { registry: standard })), {
     value: '150',
     expression: '150cm',
@@ -79,13 +79,13 @@ test('quantity input parses compact, calculator, and compound unit suffixes', ()
 });
 
 test('quantity field commits inline units and adopts a resolved display unit', () => {
-  const standard = unwrap(createStandardUnitRegistry());
+  const standard = createStandardUnitRegistry();
   const policies = {
     registry: standard,
     canonicalUnit: 'metre',
-    evaluator: unwrap(createCalculatorExpression()),
+    evaluator: createCalculatorExpression(),
   };
-  let state = unwrap(createQuantityFieldState(policies, { value: '1', unit: 'metre' }, 'metre'));
+  let state = createQuantityFieldState(policies, { value: '1', unit: 'metre' }, 'metre');
   state = edit(state, '100-20% cm', policies);
   const committed = unwrap(applyQuantityFieldEvent(state, 'commit', policies));
   assert.deepEqual(committed.state.quantity, { value: '0.8', unit: 'metre' });
@@ -94,13 +94,13 @@ test('quantity field commits inline units and adopts a resolved display unit', (
 });
 
 test('quantity field uses unit-system defaults while preserving explicit display units', () => {
-  const standard = unwrap(createStandardUnitRegistry());
-  const imperial = unwrap(createImperialUnitSystem(standard));
+  const standard = createStandardUnitRegistry();
+  const imperial = createImperialUnitSystem(standard);
   const policies = { registry: standard, canonicalUnit: 'metre', unitSystem: imperial };
-  const inferred = unwrap(createQuantityFieldState(policies, { value: '1', unit: 'metre' }));
+  const inferred = createQuantityFieldState(policies, { value: '1', unit: 'metre' });
   assert.equal(inferred.displayUnit, 'foot');
   assert.equal(inferred.inputState.snapshot.text, '3.280839895013');
-  const explicit = unwrap(createQuantityFieldState(policies, { value: '1', unit: 'metre' }, 'inch'));
+  const explicit = createQuantityFieldState(policies, { value: '1', unit: 'metre' }, 'inch');
   assert.equal(explicit.displayUnit, 'inch');
 });
 

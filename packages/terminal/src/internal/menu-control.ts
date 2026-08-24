@@ -3,8 +3,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { Tree, TreeNodeInput } from '@sectile/core/tree';
 import {
   applyMenuEvent,
-  createMenuModel,
-  createMenuState,
+  tryCreateMenuModel,
+  tryCreateMenuState,
   type MenuCommand,
   type MenuEvent,
   type MenuPolicies,
@@ -50,7 +50,7 @@ export interface MenuControl<ID extends StableID> {
 export function createMenuControl<ID extends StableID>(
   options: MenuControlOptions<ID>,
 ): Result<MenuControl<ID>> {
-  const model = createMenuModel(options.items);
+  const model = tryCreateMenuModel(options.items);
   if (!model.ok) return model;
 
   const disabled = new Set(options.disabledItems ?? []);
@@ -79,7 +79,7 @@ export function createMenuControl<ID extends StableID>(
     : true;
   const runtime = createSemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, MenuCommand<ID>>({
     interaction: options,
-    initial: createMenuState(
+    initial: tryCreateMenuState(
       model.value.tree,
       initialOpen,
       initialOpen ? options.defaultHighlightedValue ?? null : null,
@@ -90,7 +90,7 @@ export function createMenuControl<ID extends StableID>(
       const open = options.kind === 'menu-button'
         ? openControlled ? previous.open : proposed.open
         : true;
-      return createMenuState(
+      return tryCreateMenuState(
         model.value.tree,
         open,
         open ? proposed.cursor.current : null,
@@ -147,7 +147,7 @@ class TerminalMenuControl<ID extends StableID> implements MenuControl<ID> {
       };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createMenuState(
+    const result = this.#runtime.replace(tryCreateMenuState(
       this.#tree,
       open,
       open ? state.cursor.current : null,

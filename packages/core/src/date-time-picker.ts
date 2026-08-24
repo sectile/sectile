@@ -1,11 +1,13 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
-import { compareDateValues, createDateValue, type DateValue } from './date-field.js';
+import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
 import {
   compareDateTimeValues,
   createDateTimeValue,
   type DateTimeValue,
+  tryCreateDateTimeValue,
 } from './date-time-field.js';
 import {
   applyDatePickerEvent,
@@ -14,12 +16,14 @@ import {
   type DatePickerPolicies,
   type DatePickerState,
   type DatePickerViewMode,
+  tryCreateDatePickerState,
 } from './date-picker.js';
 import {
   compareTimeValues,
   createTimeValue,
   type TimeFieldPolicies,
   type TimeValue,
+  tryCreateTimeValue,
 } from './time-field.js';
 
 export interface DateTimePickerState {
@@ -80,9 +84,15 @@ export interface DateTimePickerStateInput {
 
 export function createDateTimePickerState(
   input: DateTimePickerStateInput = {},
+): DateTimePickerState {
+  return unwrap(tryCreateDateTimePickerState(input));
+}
+
+export function tryCreateDateTimePickerState(
+  input: DateTimePickerStateInput = {},
 ): Result<DateTimePickerState> {
   const value = input.value ?? null;
-  const validValue = value === null ? ok(null) : createDateTimeValue(value.date, value.time);
+  const validValue = value === null ? ok(null) : tryCreateDateTimeValue(value.date, value.time);
   if (!validValue.ok) return validValue;
   const requestedTime = validValue.value?.time ?? input.time ?? Object.freeze({
     hour: 0,
@@ -90,7 +100,7 @@ export function createDateTimePickerState(
     second: 0,
     millisecond: 0,
   });
-  const time = createTimeValue(
+  const time = tryCreateTimeValue(
     requestedTime.hour,
     requestedTime.minute,
     requestedTime.second,
@@ -98,7 +108,7 @@ export function createDateTimePickerState(
   );
   if (!time.ok) return time;
   const fallback = validValue.value?.date;
-  const calendar = createDatePickerState({
+  const calendar = tryCreateDatePickerState({
     value: null,
     ...(input.calendar?.highlighted === undefined && fallback !== undefined
       ? { highlighted: fallback }
@@ -114,7 +124,7 @@ export function applyDateTimePickerEvent(
   event: DateTimePickerEvent,
   policies: DateTimePickerPolicies = {},
 ): Result<DateTimePickerUpdate> {
-  const valid = createDateTimePickerState(state);
+  const valid = tryCreateDateTimePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -125,7 +135,7 @@ export function applyDateTimePickerEvent(
   if (typeof event === 'object' && event.type === 'set-time') {
     const time = validateTime(event.value, policies.time);
     if (!time.ok) return time;
-    const value = createDateTimeValue(valid.value.value?.date ?? valid.value.calendar.highlighted, time.value);
+    const value = tryCreateDateTimeValue(valid.value.value?.date ?? valid.value.calendar.highlighted, time.value);
     return value.ok ? commitValue(valid.value, value.value, policies) : value;
   }
   if (event === 'select-highlighted') {
@@ -149,7 +159,7 @@ function selectDate(
   requested: DateValue,
   policies: DateTimePickerPolicies,
 ): Result<DateTimePickerUpdate> {
-  const date = createDateValue(requested.year, requested.month, requested.day);
+  const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   if (!isDatePickerValueAvailable(date.value, policies.date)) {
     return fail(
@@ -158,7 +168,7 @@ function selectDate(
       'Date-time picker date is outside its selectable domain.',
     );
   }
-  const value = createDateTimeValue(date.value, state.time);
+  const value = tryCreateDateTimeValue(date.value, state.time);
   return value.ok ? commitValue(state, value.value, policies) : value;
 }
 
@@ -182,7 +192,7 @@ function commitValue(
   }
   const value = validateValue(requested, policies);
   if (!value.ok) return value;
-  const calendar = createDatePickerState({
+  const calendar = tryCreateDatePickerState({
     value: null,
     highlighted: value.value.date,
     view: { year: value.value.date.year, month: value.value.date.month },
@@ -208,7 +218,7 @@ function validateValue(
   requested: DateTimeValue,
   policies: DateTimePickerPolicies,
 ): Result<DateTimeValue> {
-  const value = createDateTimeValue(requested.date, requested.time);
+  const value = tryCreateDateTimeValue(requested.date, requested.time);
   if (!value.ok) return invalidTransition(value);
   if (!isDatePickerValueAvailable(value.value.date, policies.date)) {
     return fail('transition-rejection', 'date-time-picker-date-unavailable', 'Date-time picker date is outside its selectable domain.');
@@ -228,7 +238,7 @@ function validateValue(
 }
 
 function validateTime(value: TimeValue, policies: TimeFieldPolicies = {}): Result<TimeValue> {
-  const valid = createTimeValue(value.hour, value.minute, value.second, value.millisecond);
+  const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return invalidTransition(valid);
   if (policies.min !== undefined && compareTimeValues(valid.value, policies.min) < 0) {
     return fail('transition-rejection', 'date-time-picker-time-below-minimum', 'Date-time picker time is below its minimum.');

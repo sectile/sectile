@@ -16,7 +16,7 @@ const INPUTS = [
 ];
 
 test('DOM and terminal calendar controllers produce equivalent semantic traces', () => {
-  const grid = unwrap(createGrid([['a', 'b', 'c'], ['d', null, 'e']]));
+  const grid = createGrid([['a', 'b', 'c'], ['d', null, 'e']]);
   const options = { grid, defaultHighlightedValue: 'a', policies: { boundary: 'wrap-axis' } };
   const DOMController = unwrap(createDOMCalendarController(options));
   const terminalController = unwrap(createTerminalCalendarController(options));
@@ -30,7 +30,7 @@ test('DOM and terminal calendar controllers produce equivalent semantic traces',
 
 test('DOM and terminal calendar controllers remain equivalent across 20,000 transitions', () => {
   const rng = random(0xca1e);
-  const grid = unwrap(createGrid([['a', 'b', null], ['c', 'd', 'e'], [null, 'f', 'g']]));
+  const grid = createGrid([['a', 'b', null], ['c', 'd', 'e'], [null, 'f', 'g']]);
   const options = { grid, defaultHighlightedValue: 'd', policies: { boundary: 'stop' } };
   const DOMController = unwrap(createDOMCalendarController(options));
   const terminalController = unwrap(createTerminalCalendarController(options));

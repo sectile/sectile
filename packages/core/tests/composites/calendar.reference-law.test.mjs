@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createCalendarState,
-  applyCalendarEvent,
+  applyCalendarEvent, tryCreateCalendarState
 } from '../../.verification-dist/internal/composites/calendar.js';
 import {
   createReferenceCalendarState,
@@ -15,8 +15,8 @@ import { powerset, unwrap } from '../support.mjs';
 const EVENTS = ['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page'];
 
 test('calendar direct selection targets an eligible cell', () => {
-  const grid = unwrap(createGrid([['a', 'b']]));
-  const state = unwrap(createCalendarState(grid));
+  const grid = createGrid([['a', 'b']]);
+  const state = createCalendarState(grid);
   const selected = unwrap(applyCalendarEvent(grid, state, { type: 'select', id: 'b' }));
   assert.equal(selected.state.cursor.current, 'b');
   assert.deepEqual(selected.state.selection.selected, ['b']);
@@ -46,12 +46,12 @@ test('calendar composition matches its reference across bounded grid views', () 
           }
           cells.push(values);
         }
-        const grid = unwrap(createGrid(cells, { columnCount: columns }));
+        const grid = createGrid(cells, { columnCount: columns });
         for (const eligibleIDs of powerset(ids)) {
           const eligible = new Set(eligibleIDs);
           for (const current of [null, ...ids]) {
             for (const boundary of ['stop', 'wrap-axis']) {
-              const state = unwrap(createCalendarState(grid, { current }));
+              const state = createCalendarState(grid, { current });
               assert.deepEqual(
                 stateObservation(state),
                 stateObservation(createReferenceCalendarState(grid, { current })),
@@ -82,11 +82,11 @@ test('calendar composition matches its reference across bounded grid views', () 
 });
 
 test('calendar movement, selection, and page authority remain distinct', () => {
-  const grid = unwrap(createGrid([
+  const grid = createGrid([
     ['a', null, 'c'],
     ['d', 'e', 'f'],
-  ]));
-  const empty = unwrap(createCalendarState(grid));
+  ]);
+  const empty = createCalendarState(grid);
   const initial = unwrap(applyCalendarEvent(grid, empty, 'right'));
   assert.equal(initial.state.cursor.current, 'a');
   assert.deepEqual(initial.commands, [{ type: 'focus', id: 'a' }]);
@@ -113,10 +113,10 @@ test('calendar movement, selection, and page authority remain distinct', () => {
 });
 
 test('calendar rejects malformed state and policies without partial effects', () => {
-  const grid = unwrap(createGrid([['a', null, 'b']]));
-  const empty = unwrap(createCalendarState(grid));
-  assert.equal(createCalendarState(grid, { current: 'missing' }).error.code, 'calendar-cursor-outside-grid');
-  assert.equal(createCalendarState(grid, { selected: ['a', 'b'] }).error.code, 'invalid-selection-cardinality');
+  const grid = createGrid([['a', null, 'b']]);
+  const empty = createCalendarState(grid);
+  assert.equal(tryCreateCalendarState(grid, { current: 'missing' }).error.code, 'calendar-cursor-outside-grid');
+  assert.equal(tryCreateCalendarState(grid, { selected: ['a', 'b'] }).error.code, 'invalid-selection-cardinality');
 
   const invalidState = Object.freeze({
     cursor: Object.freeze({ current: 'missing' }),

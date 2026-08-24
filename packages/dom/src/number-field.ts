@@ -5,7 +5,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
 import {
   applyNumberFieldEvent,
-  createNumberFieldState,
+  tryCreateNumberFieldState,
   type NumberFieldCommand,
   type NumberFieldEvent,
   type NumberFieldPolicies,
@@ -75,12 +75,12 @@ function tryCreateNumberFieldConnection(options: NumberFieldOptions): Result<Num
     ...(required === undefined ? {} : { required }),
   });
   const runtime = createSemanticController<NumberFieldState, NumberFieldEvent, NumberFieldCommand, NumberFieldCommand>({
-    initial: createNumberFieldState(
+    initial: tryCreateNumberFieldState(
       options.value !== undefined ? options.value : options.defaultValue ?? null,
       options.inputState !== undefined ? options.inputState : options.defaultInputState,
     ),
     reducer: (state, event) => applyNumberFieldEvent(state, event, policies),
-    reconcile: (previous, proposed) => createNumberFieldState(
+    reconcile: (previous, proposed) => tryCreateNumberFieldState(
       valueControlled ? previous.value : proposed.value,
       inputControlled ? previous.inputState : proposed.inputState,
     ),
@@ -158,7 +158,7 @@ class DOMNumberField implements NumberFieldConnection {
       return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled number field values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createNumberFieldState(
+    const result = this.#runtime.replace(tryCreateNumberFieldState(
       this.#valueControlled ? values.value as string | null : state.value,
       this.#inputControlled ? values.inputState as TextEditingState : state.inputState,
     ));

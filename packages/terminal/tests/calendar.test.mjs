@@ -83,5 +83,5 @@ test('unsupported terminal calendar input is failure-atomic', () => {
 });
 
 function grid() {
-  return unwrap(createGrid([['a', 'b'], ['c', 'd']]));
+  return createGrid([['a', 'b'], ['c', 'd']]);
 }

@@ -8,13 +8,13 @@ test('checked algebra matches independent reference for binary and mixed values'
   for (const checked of [false, true, 'mixed']) for (const mixedToggle of [false, true]) for (const event of ['toggle',
     { type: 'set-checked', checked: false }, { type: 'set-checked', checked: true }, { type: 'set-checked', checked: 'mixed' }]) {
     const policies = { allowMixed: true, mixedToggle };
-    assert.deepEqual(observe(applyCheckboxEvent(unwrap(createCheckboxState(checked, policies)), event, policies)), observeReference(referenceApplyCheckedEvent(referenceCheckedState(checked), event, policies)));
+    assert.deepEqual(observe(applyCheckboxEvent(createCheckboxState(checked, policies), event, policies)), observeReference(referenceApplyCheckedEvent(referenceCheckedState(checked), event, policies)));
   }
 });
 test('switch and toggle button are binary projections with role-specific vocabulary', () => {
-  const switched = unwrap(applySwitchEvent(unwrap(createSwitchState(false)), 'toggle'));
+  const switched = unwrap(applySwitchEvent(createSwitchState(false), 'toggle'));
   assert.equal(switched.state.checked, true); assert.deepEqual(switched.commands, [{ type: 'checked-changed', checked: true }]);
-  const pressed = unwrap(applyToggleButtonEvent(unwrap(createToggleButtonState(false)), 'toggle'));
+  const pressed = unwrap(applyToggleButtonEvent(createToggleButtonState(false), 'toggle'));
   assert.equal(pressed.state.pressed, true); assert.deepEqual(pressed.commands, [{ type: 'pressed-changed', pressed: true }]);
 });
 function observe(result) { return result.ok ? { ok: true, checked: result.value.state.checked, commands: result.value.commands } : { ok: false, errorClass: result.error.class, errorCode: result.error.code }; }

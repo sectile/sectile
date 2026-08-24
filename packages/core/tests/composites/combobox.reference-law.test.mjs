@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   acceptComboboxCandidate,
   applyComboboxEvent,
-  createComboboxState,
+  createComboboxState, tryCreateComboboxState
 } from '../../.verification-dist/internal/composites/combobox.js';
 import {
   createReferenceComboboxState,
@@ -19,13 +19,13 @@ import { createSequence } from '../../.verification-dist/structures/sequence.js'
 import { unwrap } from '../support.mjs';
 
 test('combobox direct acceptance targets an eligible candidate', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
+  const domain = createSequence(['a', 'b']);
   const labels = new Map([['a', 'Alpha'], ['b', 'Beta']]);
-  const state = unwrap(createComboboxState(
+  const state = createComboboxState(
     domain,
-    unwrap(createTextEditingState()),
+    createTextEditingState(),
     { popupOpen: true },
-  ));
+  );
   const accepted = unwrap(applyComboboxEvent(
     domain,
     labels,
@@ -41,12 +41,12 @@ test('combobox acceptance matches all accepted authority cases', () => {
   let cases = 0;
   for (let size = 0; size <= 4; size += 1) {
     const ids = Array.from({ length: size }, (_, index) => `i${index}`);
-    const domain = unwrap(createSequence(ids));
+    const domain = createSequence(ids);
     const labels = new Map(ids.map((id) => [id, `item-${id}`]));
-    const text = unwrap(createTextEditingState(''));
+    const text = createTextEditingState('');
     for (const current of [null, ...ids]) {
       const input = { popupOpen: true, current };
-      const state = unwrap(createComboboxState(domain, text, input));
+      const state = createComboboxState(domain, text, input);
       const referenceState = createReferenceComboboxState(domain, text, input);
       assert.deepEqual(stateObservation(state), stateObservation(referenceState));
       const left = acceptComboboxCandidate(domain, labels, state);
@@ -72,7 +72,7 @@ test('combobox acceptance matches all accepted authority cases', () => {
           '가',
           { anchorCodeUnitOffset: 1, focusCodeUnitOffset: 1 },
         ));
-        const active = unwrap(createComboboxState(domain, composing, input));
+        const active = createComboboxState(domain, composing, input);
         const rejected = acceptComboboxCandidate(domain, labels, active);
         assert.equal(rejected.ok, false);
         assert.equal(rejected.error.code, 'composition-active');
@@ -86,12 +86,12 @@ test('combobox acceptance matches all accepted authority cases', () => {
 });
 
 test('combobox acceptance replaces text at a collapsed UTF-16 endpoint', () => {
-  const domain = unwrap(createSequence(['a']));
-  const text = unwrap(createTextEditingState('query', {
+  const domain = createSequence(['a']);
+  const text = createTextEditingState('query', {
     anchorCodeUnitOffset: 1,
     focusCodeUnitOffset: 4,
-  }));
-  const state = unwrap(createComboboxState(domain, text, { popupOpen: true, current: 'a' }));
+  });
+  const state = createComboboxState(domain, text, { popupOpen: true, current: 'a' });
   const result = unwrap(acceptComboboxCandidate(domain, new Map([['a', '가😀']]), state));
   assert.equal(result.state.text.snapshot.text, '가😀');
   assert.equal(result.state.text.snapshot.selection.anchorCodeUnitOffset, 3);
@@ -100,11 +100,11 @@ test('combobox acceptance replaces text at a collapsed UTF-16 endpoint', () => {
 });
 
 test('combobox rejects missing and malformed labels without partial state', () => {
-  const domain = unwrap(createSequence(['a']));
-  const text = unwrap(createTextEditingState('query'));
-  const state = unwrap(createComboboxState(domain, text, { popupOpen: true, current: 'a' }));
-  assert.equal(createComboboxState(domain, text, { current: 'missing' }).error.code, 'combobox-cursor-outside-domain');
-  assert.equal(createComboboxState(domain, text, { popupOpen: 'yes' }).error.code, 'invalid-popup-state');
+  const domain = createSequence(['a']);
+  const text = createTextEditingState('query');
+  const state = createComboboxState(domain, text, { popupOpen: true, current: 'a' });
+  assert.equal(tryCreateComboboxState(domain, text, { current: 'missing' }).error.code, 'combobox-cursor-outside-domain');
+  assert.equal(tryCreateComboboxState(domain, text, { popupOpen: 'yes' }).error.code, 'invalid-popup-state');
 
   const missing = acceptComboboxCandidate(domain, new Map(), state);
   assert.equal(missing.ok, false);
@@ -118,14 +118,14 @@ test('combobox rejects missing and malformed labels without partial state', () =
 });
 
 test('combobox text, filtering, popup, navigation, and acceptance match the reference', () => {
-  const domain = unwrap(createSequence(['a', 'b', 'c']));
+  const domain = createSequence(['a', 'b', 'c']);
   const labels = new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]);
   const policies = {
     matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),
     boundary: 'stop',
   };
-  let optimized = unwrap(createComboboxState(domain, unwrap(createTextEditingState())));
-  let reference = createReferenceComboboxState(domain, unwrap(createTextEditingState()));
+  let optimized = createComboboxState(domain, createTextEditingState());
+  let reference = createReferenceComboboxState(domain, createTextEditingState());
   const events = [
     {
       type: 'text',
@@ -177,8 +177,8 @@ test('combobox text, filtering, popup, navigation, and acceptance match the refe
 });
 
 test('combobox filtering rejects missing labels and invalid policies atomically', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
-  const state = unwrap(createComboboxState(domain, unwrap(createTextEditingState())));
+  const domain = createSequence(['a', 'b']);
+  const state = createComboboxState(domain, createTextEditingState());
   const textEvent = {
     type: 'text',
     event: {

@@ -86,17 +86,17 @@ function canonicalCommand(command) {
 }
 
 function fixtureModel() {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'a', parentID: 'root' },
     { id: 'a-1', parentID: 'a' },
     { id: 'a-2', parentID: 'a' },
     { id: 'b', parentID: 'root' },
     { id: 'b-1', parentID: 'b' },
-  ]));
+  ]);
   const rowIDs = tree.preorder().ids;
-  const grid = unwrap(createGrid(rowIDs.map((row) => [`${row}-name`, `${row}-value`])));
-  return unwrap(createTreeGridModel(tree, grid, rowIDs));
+  const grid = createGrid(rowIDs.map((row) => [`${row}-name`, `${row}-value`]));
+  return createTreeGridModel(tree, grid, rowIDs);
 }
 
 function random(seed) {

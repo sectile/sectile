@@ -1,6 +1,6 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core'; import { applyToggleButtonEvent, createToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/core/toggle-button';
+import type { Result } from '@sectile/core'; import { applyToggleButtonEvent, tryCreateToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/core/toggle-button';
 import {
   createCheckedControlController,
   createDOMCheckedControl,
@@ -19,9 +19,9 @@ export type ToggleButtonAttributes = CheckedControlAttributes & { readonly 'data
 export function createToggleButtonController(options: ToggleButtonControllerOptions = {}): Result<ToggleButtonController> {
   return createCheckedControlController<ToggleButtonState, ToggleButtonEvent, ToggleButtonCommand, boolean>({
     controlled: options.pressed !== undefined,
-    initial: createToggleButtonState(options.pressed ?? options.defaultPressed ?? false),
+    initial: tryCreateToggleButtonState(options.pressed ?? options.defaultPressed ?? false),
     reducer: applyToggleButtonEvent,
-    create: createToggleButtonState,
+    create: tryCreateToggleButtonState,
     read: (state) => state.pressed,
     onChange: options.onPressedChange,
     interaction: options,
@@ -53,4 +53,4 @@ export function tryCreateToggleButton(options: ToggleButtonOptions): Result<Faca
   return createFacadeConnection(options, (options) => tryCreateToggleButtonConnection(options));
 }
 
-function tryCreateToggleButtonConnection(options: ToggleButtonOptions): Result<ToggleButtonConnection> { return createDOMCheckedControl<ToggleButtonState, ToggleButtonEvent, ToggleButtonCommand, boolean>({ element: options.element, attribute: 'aria-pressed', controlled: options.pressed !== undefined, initial: createToggleButtonState(options.pressed ?? options.defaultPressed ?? false), toggleEvent: 'toggle', reducer: applyToggleButtonEvent, create: createToggleButtonState, read: (state) => state.pressed, format: String, interaction: options, onChange: options.onPressedChange, onUpdate: options.onUpdate }); }
+function tryCreateToggleButtonConnection(options: ToggleButtonOptions): Result<ToggleButtonConnection> { return createDOMCheckedControl<ToggleButtonState, ToggleButtonEvent, ToggleButtonCommand, boolean>({ element: options.element, attribute: 'aria-pressed', controlled: options.pressed !== undefined, initial: tryCreateToggleButtonState(options.pressed ?? options.defaultPressed ?? false), toggleEvent: 'toggle', reducer: applyToggleButtonEvent, create: tryCreateToggleButtonState, read: (state) => state.pressed, format: String, interaction: options, onChange: options.onPressedChange, onUpdate: options.onUpdate }); }

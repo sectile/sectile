@@ -4,15 +4,15 @@ import { createDateValue, formatDateValue } from '../../.verification-dist/date-
 import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
 import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState, createDatePickerWeek, createDatePickerYear } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
-import { createYearPickerPage } from '../../.verification-dist/year-picker.js';
+import { createYearPickerPage, tryCreateYearPickerPage } from '../../.verification-dist/year-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/date-time-range-picker.js';
 import { createTimeValue } from '../../.verification-dist/time-field.js';
 
-const date = (year, month, day) => createDateValue(year, month, day).value;
+const date = (year, month, day) => createDateValue(year, month, day);
 
 test('date picker moves by semantic calendar units and selects atomically', () => {
-  let state = createDatePickerState({ highlighted: date(2024, 1, 31), open: true }).value;
+  let state = createDatePickerState({ highlighted: date(2024, 1, 31), open: true });
   state = applyDatePickerEvent(state, 'next-month').value.state;
   assert.equal(formatDateValue(state.highlighted), '2024-02-29');
   const selected = applyDatePickerEvent(state, 'select-highlighted');
@@ -23,17 +23,16 @@ test('date picker moves by semantic calendar units and selects atomically', () =
 
 test('year picker projects a compact page around the active year', () => {
   const page = createYearPickerPage(2026);
-  assert.equal(page.ok, true);
-  assert.equal(page.value.length, 3);
-  assert.deepEqual(page.value.flat().map(({ year }) => year), [
+  assert.equal(page.length, 3);
+  assert.deepEqual(page.flat().map(({ year }) => year), [
     2020, 2021, 2022, 2023, 2024, 2025,
     2026, 2027, 2028, 2029, 2030, 2031,
   ]);
-  assert.equal(createYearPickerPage(2026, 0).ok, false);
+  assert.equal(tryCreateYearPickerPage(2026, 0).ok, false);
 });
 
 test('date picker month projection is a stable six by seven grid', () => {
-  const month = createDatePickerMonth({ year: 2026, month: 8 }).value;
+  const month = createDatePickerMonth({ year: 2026, month: 8 });
   assert.equal(month.length, 6);
   assert.equal(month.every((row) => row.length === 7), true);
   assert.equal(formatDateValue(month[0][0]), '2026-07-27');
@@ -41,15 +40,15 @@ test('date picker month projection is a stable six by seven grid', () => {
 });
 
 test('date picker exposes week and year projections', () => {
-  const week = createDatePickerWeek(date(2026, 8, 22)).value;
-  const year = createDatePickerYear(2026).value;
+  const week = createDatePickerWeek(date(2026, 8, 22));
+  const year = createDatePickerYear(2026);
   assert.deepEqual(week.map(formatDateValue), ['2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21', '2026-08-22', '2026-08-23']);
   assert.equal(year.length, 4);
   assert.deepEqual(year.flat(), Array.from({ length: 12 }, (_, index) => ({ year: 2026, month: index + 1 })));
 });
 
 test('date picker changes view mode and selects a month without committing a date', () => {
-  let state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year', open: true }).value;
+  let state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year', open: true });
   const selected = applyDatePickerEvent(state, { type: 'select-month', value: { year: 2026, month: 2 } });
   state = selected.value.state;
   assert.equal(state.viewMode, 'month');
@@ -61,7 +60,7 @@ test('date picker changes view mode and selects a month without committing a dat
 });
 
 test('date picker month selection never escapes an unavailable month', () => {
-  const state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year' }).value;
+  const state = createDatePickerState({ highlighted: date(2026, 8, 31), viewMode: 'year' });
   const selected = applyDatePickerEvent(state, { type: 'select-month', value: { year: 2026, month: 2 } }, {
     unavailable: (value) => value.year === 2026 && value.month === 2,
   });
@@ -70,13 +69,13 @@ test('date picker month selection never escapes an unavailable month', () => {
 });
 
 test('date picker skips unavailable dates under a bounded scan', () => {
-  const state = createDatePickerState({ highlighted: date(2026, 8, 21) }).value;
+  const state = createDatePickerState({ highlighted: date(2026, 8, 21) });
   const result = applyDatePickerEvent(state, 'next-day', { unavailable: (value) => value.day === 22 || value.day === 23 });
   assert.equal(formatDateValue(result.value.state.highlighted), '2026-08-24');
 });
 
 test('range picker keeps an anchor, normalizes direction, and stays open', () => {
-  let state = createDateRangePickerState({ calendar: { highlighted: date(2026, 8, 22), open: true } }).value;
+  let state = createDateRangePickerState({ calendar: { highlighted: date(2026, 8, 22), open: true } });
   state = applyDateRangePickerEvent(state, { type: 'select', value: date(2026, 8, 22) }).value.state;
   assert.equal(formatDateValue(state.anchor), '2026-08-22');
   const completed = applyDateRangePickerEvent(state, { type: 'select', value: date(2026, 8, 18) });
@@ -88,22 +87,22 @@ test('range picker keeps an anchor, normalizes direction, and stays open', () =>
 
 test('date-time picker combines calendar selection with its wall-clock time', () => {
   let state = createDateTimePickerState({
-    value: createDateTimeValue(date(2026, 8, 22), createTimeValue(16, 30).value).value,
+    value: createDateTimeValue(date(2026, 8, 22), createTimeValue(16, 30)),
     calendar: { open: true },
-  }).value;
+  });
   state = applyDateTimePickerEvent(state, { type: 'select-date', value: date(2026, 8, 25) }).value.state;
   assert.equal(formatDateTimeValue(state.value), '2026-08-25T16:30');
   assert.equal(state.calendar.open, true);
-  state = applyDateTimePickerEvent(state, { type: 'set-time', value: createTimeValue(18, 45).value }).value.state;
+  state = applyDateTimePickerEvent(state, { type: 'set-time', value: createTimeValue(18, 45) }).value.state;
   assert.equal(formatDateTimeValue(state.value), '2026-08-25T18:45');
 });
 
 test('date-time range picker owns independent endpoint times', () => {
   let state = createDateTimeRangePickerState({
-    startTime: createTimeValue(9, 15).value,
-    endTime: createTimeValue(17, 45).value,
+    startTime: createTimeValue(9, 15),
+    endTime: createTimeValue(17, 45),
     calendar: { highlighted: date(2026, 8, 22), open: true },
-  }).value;
+  });
   state = applyDateTimeRangePickerEvent(state, { type: 'select-date', value: date(2026, 8, 25) }).value.state;
   const completed = applyDateTimeRangePickerEvent(state, { type: 'select-date', value: date(2026, 8, 28) });
   assert.equal(formatDateTimeRange(completed.value.state.value), '2026-08-25T09:15/2026-08-28T17:45');
@@ -112,10 +111,10 @@ test('date-time range picker owns independent endpoint times', () => {
 
 test('date-time range picker rejects an inverted same-day time range', () => {
   let state = createDateTimeRangePickerState({
-    startTime: createTimeValue(18, 0).value,
-    endTime: createTimeValue(9, 0).value,
+    startTime: createTimeValue(18, 0),
+    endTime: createTimeValue(9, 0),
     calendar: { highlighted: date(2026, 8, 22), open: true },
-  }).value;
+  });
   state = applyDateTimeRangePickerEvent(state, 'select-highlighted').value.state;
   const rejected = applyDateTimeRangePickerEvent(state, 'select-highlighted');
   assert.equal(rejected.ok, false);

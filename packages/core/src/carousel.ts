@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import { fail, ok } from './internal/kernel/foundation.js';
@@ -39,6 +40,15 @@ export function createCarouselState<ID extends StableID>(
   current: ID | null = null,
   paused = false,
   pauseReasons: readonly CarouselPauseReason[] = [],
+): CarouselState<ID> {
+  return unwrap(tryCreateCarouselState(slides, current, paused, pauseReasons));
+}
+
+export function tryCreateCarouselState<ID extends StableID>(
+  slides: Sequence<ID>,
+  current: ID | null = null,
+  paused = false,
+  pauseReasons: readonly CarouselPauseReason[] = [],
 ): Result<CarouselState<ID>> {
   if (current !== null && !slides.contains(current)) return fail('construction', 'carousel-cursor-outside-slides', 'Carousel cursor must identify a slide.');
   return ok(Object.freeze({ cursor: createCursorState(current), paused, pauseReasons: Object.freeze([...new Set(pauseReasons)]) }));
@@ -58,7 +68,7 @@ export function applyCarouselEvent<ID extends StableID>(
   event: CarouselEvent<ID>,
   policies: CarouselPolicies = {},
 ): Result<CarouselUpdate<ID>> {
-  const valid = createCarouselState(slides, state.cursor.current, state.paused, state.pauseReasons);
+  const valid = tryCreateCarouselState(slides, state.cursor.current, state.paused, state.pauseReasons);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
 
   if (event === 'pause' || event === 'resume' || event === 'toggle-pause') {

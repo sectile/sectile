@@ -7,10 +7,12 @@ import {
   normalizeTextEditingState,
   type TextEditingState,
   type TextEvent,
+  tryCreateTextEditingState,
 } from '../editing/text.js';
 import { fail, ok } from '../kernel/foundation.js';
 import { findEligibleFromEdge } from '../kernel/indexed-sequence.js';
 import { createMachineUpdate } from '../kernel/machine.js';
+import { unwrap } from '../../result.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
 import {
   createSelectionState,
@@ -55,6 +57,14 @@ export interface ComboboxUpdate<ID extends StableID = StableID> {
 }
 
 export function createComboboxState<ID extends StableID>(
+  domain: Sequence<ID>,
+  text: TextEditingState,
+  input: ComboboxStateInput<ID> = {},
+): ComboboxState<ID> {
+  return unwrap(tryCreateComboboxState(domain, text, input));
+}
+
+export function tryCreateComboboxState<ID extends StableID>(
   domain: Sequence<ID>,
   text: TextEditingState,
   input: ComboboxStateInput<ID> = {},
@@ -190,7 +200,7 @@ export function acceptComboboxCandidate<ID extends StableID>(
       { current },
     );
   }
-  const text = createTextEditingState(label, {
+  const text = tryCreateTextEditingState(label, {
     anchorCodeUnitOffset: label.length,
     focusCodeUnitOffset: label.length,
   });

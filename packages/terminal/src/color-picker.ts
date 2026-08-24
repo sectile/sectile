@@ -1,5 +1,5 @@
 import type { Result } from '@sectile/core';
-import { applyColorPickerEvent, createColorPickerState, formatColorValue, type ColorChannel, type ColorFormat, type ColorPickerCommand, type ColorPickerEvent, type ColorPickerPolicies, type ColorPickerState, type ColorValue } from '@sectile/core/color-picker';
+import { applyColorPickerEvent, tryCreateColorPickerState, formatColorValue, type ColorChannel, type ColorFormat, type ColorPickerCommand, type ColorPickerEvent, type ColorPickerPolicies, type ColorPickerState, type ColorValue } from '@sectile/core/color-picker';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
@@ -35,9 +35,9 @@ function tryCreateConnection(options: ColorPickerOptions): Result<ColorPickerCon
   const controlled = [options.value !== undefined, options.draft !== undefined, options.format !== undefined] as const;
   const policies: ColorPickerPolicies = { ...(options.allowAlpha === undefined ? {} : { allowAlpha: options.allowAlpha }), ...(options.channelStep === undefined ? {} : { channelStep: options.channelStep }), ...(options.alphaStep === undefined ? {} : { alphaStep: options.alphaStep }) };
   const runtime = createSemanticController<ColorPickerState, ColorPickerEvent, ColorPickerCommand, ColorPickerCommand>({
-    initial: createColorPickerState({ value: options.value ?? options.defaultValue ?? '#000000', draft: options.draft !== undefined ? options.draft : options.defaultDraft ?? null, format: options.format ?? options.defaultFormat ?? 'hex' }, policies),
+    initial: tryCreateColorPickerState({ value: options.value ?? options.defaultValue ?? '#000000', draft: options.draft !== undefined ? options.draft : options.defaultDraft ?? null, format: options.format ?? options.defaultFormat ?? 'hex' }, policies),
     reducer: (state, event) => applyColorPickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => createColorPickerState({ value: controlled[0] ? previous.value : proposed.value, draft: controlled[1] ? previous.draft : proposed.draft, format: controlled[2] ? previous.format : proposed.format, channel: proposed.channel }, policies),
+    reconcile: (previous, proposed) => tryCreateColorPickerState({ value: controlled[0] ? previous.value : proposed.value, draft: controlled[1] ? previous.draft : proposed.draft, format: controlled[2] ? previous.format : proposed.format, channel: proposed.channel }, policies),
     notify: (previous, proposed) => { if (!sameColor(previous.value, proposed.value)) options.onValueChange?.(proposed.value); if (previous.draft !== proposed.draft) options.onDraftChange?.(proposed.draft); if (previous.format !== proposed.format) options.onFormatChange?.(proposed.format); },
     toEffect: (command) => command, interaction: options,
   });
@@ -51,7 +51,7 @@ class TerminalColorPicker implements ColorPickerConnection {
   public getCSSColor(): string { return unwrap(formatColorValue(this.getSnapshot().state.value, 'rgb')); }
   public syncControlledValues(values: { readonly value?: ColorValue | string; readonly draft?: string | null; readonly format?: ColorFormat }): Result<RevisionSnapshot<ColorPickerState>> {
     if (this.#controlled[0] !== (values.value !== undefined) || this.#controlled[1] !== (values.draft !== undefined) || this.#controlled[2] !== (values.format !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled color picker values must preserve their construction-time shape.' } };
-    const state = this.getSnapshot().state; const result = this.#runtime.replace(createColorPickerState({ value: values.value ?? state.value, draft: values.draft === undefined ? state.draft : values.draft, format: values.format ?? state.format, channel: state.channel }, this.#policies)); if (result.ok) this.#options.onUpdate?.(); return result;
+    const state = this.getSnapshot().state; const result = this.#runtime.replace(tryCreateColorPickerState({ value: values.value ?? state.value, draft: values.draft === undefined ? state.draft : values.draft, format: values.format ?? state.format, channel: state.channel }, this.#policies)); if (result.ok) this.#options.onUpdate?.(); return result;
   }
   public handleEvent(event: ColorPickerEvent): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean {

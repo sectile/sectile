@@ -7,7 +7,7 @@ import { createText, createTextController, toTextEvent } from '../dist/text.js';
 test('terminal text facade owns grapheme-safe keyboard editing', () => {
   let updates = 0;
   const connection = createText({
-    defaultValue: unwrap(createTextEditingState('a😀', selection(3))),
+    defaultValue: createTextEditingState('a😀', selection(3)),
     onUpdate: () => { updates += 1; },
   });
   assert.equal(connection.handleKeyboardInput({ key: 'backspace' }), true);
@@ -48,7 +48,7 @@ test('terminal insert, replace, and delete inputs map to semantic replacement', 
 
 test('uncontrolled terminal text owns UTF-16-safe editing state', () => {
   const controller = unwrap(createTextController({
-    defaultValue: unwrap(createTextEditingState('a😀b', selection(4))),
+    defaultValue: createTextEditingState('a😀b', selection(4)),
   }));
   const result = controller.handleTextInput({
     type: 'replace',
@@ -71,7 +71,7 @@ test('uncontrolled terminal text owns UTF-16-safe editing state', () => {
 
 test('controlled terminal text emits a full-state proposal until synchronized', () => {
   const changes = [];
-  const initial = unwrap(createTextEditingState('a', selection(1)));
+  const initial = createTextEditingState('a', selection(1));
   const controller = unwrap(createTextController({
     value: initial,
     onValueChange(change) {

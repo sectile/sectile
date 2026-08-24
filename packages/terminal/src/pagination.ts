@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
   applyPaginationEvent,
-  createPaginationModel,
-  createPaginationState,
+  tryCreatePaginationModel,
+  tryCreatePaginationState,
   getPaginationItemRange,
   getPaginationItems,
   getPaginationPageCount,
@@ -68,7 +68,7 @@ function tryCreatePaginationConnection(options: PaginationOptions): Result<Pagin
     } };
   }
   const initialItemsPerPage = options.itemsPerPage ?? options.defaultItemsPerPage ?? 10;
-  const model = createPaginationModel({
+  const model = tryCreatePaginationModel({
     total: options.total,
     itemsPerPage: initialItemsPerPage,
     ...(options.siblingCount === undefined ? {} : { siblingCount: options.siblingCount }),
@@ -79,13 +79,13 @@ function tryCreatePaginationConnection(options: PaginationOptions): Result<Pagin
   const runtime = createSemanticController<
     PaginationState, PaginationEvent, PaginationCommand, PaginationCommand
   >({
-    initial: createPaginationState(
+    initial: tryCreatePaginationState(
       model.value,
       options.page ?? options.defaultPage ?? 1,
       initialItemsPerPage,
     ),
     reducer: (state, event) => applyPaginationEvent(model.value, state, event),
-    reconcile: (previous, proposed) => createPaginationState(
+    reconcile: (previous, proposed) => tryCreatePaginationState(
       model.value,
       controlled || options.readOnly === true ? previous.page : proposed.page,
       controlled || options.readOnly === true ? previous.itemsPerPage : proposed.itemsPerPage,
@@ -147,7 +147,7 @@ class TerminalPagination implements PaginationConnection {
       } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createPaginationState(
+    const result = this.#runtime.replace(tryCreatePaginationState(
       this.#model,
       this.#controlled ? values.page as number : state.page,
       this.#controlled ? values.itemsPerPage as number : state.itemsPerPage,

@@ -1,9 +1,11 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
-import { createGrid } from './structures/grid.js';
-import { createTree } from './structures/tree.js';
+import { createGrid,tryCreateGrid } from './structures/grid.js';
+import { createTree,tryCreateTree } from './structures/tree.js';
 import {
   createTreeGridModel,
   type TreeGridModel,
+  tryCreateTreeGridModel,
 } from './internal/composites/tree-grid.js';
 
 export interface TreeGridRowInput<
@@ -20,12 +22,21 @@ export function createTreeGridModelFromRows<
   CellID extends StableID,
 >(
   rows: readonly TreeGridRowInput<RowID, CellID>[],
+): TreeGridModel<RowID, CellID> {
+  return unwrap(tryCreateTreeGridModelFromRows(rows));
+}
+
+export function tryCreateTreeGridModelFromRows<
+  RowID extends StableID,
+  CellID extends StableID,
+>(
+  rows: readonly TreeGridRowInput<RowID, CellID>[],
 ): Result<TreeGridModel<RowID, CellID>> {
-  const tree = createTree(rows.map((row) => ({ id: row.id, parentID: row.parentID })));
+  const tree = tryCreateTree(rows.map((row) => ({ id: row.id, parentID: row.parentID })));
   if (!tree.ok) return tree;
-  const grid = createGrid(rows.map((row) => row.cells));
+  const grid = tryCreateGrid(rows.map((row) => row.cells));
   if (!grid.ok) return grid;
-  return createTreeGridModel(tree.value, grid.value, rows.map((row) => row.id));
+  return tryCreateTreeGridModel(tree.value, grid.value, rows.map((row) => row.id));
 }
 
 export {
@@ -41,3 +52,6 @@ export {
   type TreeGridStateInput,
   type TreeGridUpdate,
 } from './internal/composites/tree-grid.js';
+
+export { tryCreateTreeGridModel } from './internal/composites/tree-grid.js';
+export { tryCreateTreeGridState } from './internal/composites/tree-grid.js';

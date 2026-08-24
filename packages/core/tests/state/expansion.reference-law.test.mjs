@@ -22,7 +22,7 @@ test('expansion transitions satisfy involution, idempotence, reconciliation, and
   for (let size = 0; size <= 6; size += 1) {
     for (const raw of enumerateOrderedForests(size)) {
       const nodes = stringTree(raw);
-      const tree = unwrap(createTree(nodes));
+      const tree = createTree(nodes);
       const referenceTree = new ReferenceTree(nodes);
       const ids = tree.preorder().ids;
       const branches = ids.filter((id) => tree.isLeaf(id) === false);
@@ -76,23 +76,23 @@ test('expansion transitions satisfy involution, idempotence, reconciliation, and
 });
 
 test('expansion reconciliation drops branches that become leaves or disappear', () => {
-  const original = unwrap(createTree([
+  const original = createTree([
     { id: 'root', parentID: null },
     { id: 'branch', parentID: 'root' },
     { id: 'leaf', parentID: 'branch' },
-  ]));
+  ]);
   const state = createExpansionState(original, ['root', 'branch']);
   assert.deepEqual(state.ids, ['root', 'branch']);
 
-  const branchBecameLeaf = unwrap(createTree([
+  const branchBecameLeaf = createTree([
     { id: 'root', parentID: null },
     { id: 'branch', parentID: 'root' },
-  ]));
+  ]);
   const reconciledLeaf = reconcileExpansion(state, branchBecameLeaf);
   assert.deepEqual(reconciledLeaf.ids, ['root']);
   assert.deepEqual(branchBecameLeaf.visible(reconciledLeaf).ids, ['root', 'branch']);
 
-  const branchDisappeared = unwrap(createTree([{ id: 'root', parentID: null }]));
+  const branchDisappeared = createTree([{ id: 'root', parentID: null }]);
   const reconciledMissing = reconcileExpansion(state, branchDisappeared);
   assert.deepEqual(reconciledMissing.ids, []);
   assert.deepEqual(branchDisappeared.visible(reconciledMissing).ids, ['root']);

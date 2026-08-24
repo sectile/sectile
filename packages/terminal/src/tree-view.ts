@@ -2,20 +2,20 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
-  createInteractionState,
+  tryCreateInteractionState,
   requireInteraction,
   type InteractionState,
 } from '@sectile/core/interaction';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
-import { createTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
+import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import {
   applyTreeViewEvent,
-  createTreeViewState,
+  tryCreateTreeViewState,
   type TreeViewCommand,
   type TreeViewEvent,
   type TreeViewPolicies,
@@ -108,7 +108,7 @@ export type TreeViewOptions<ID extends StableID = StableID> =
 export function createTreeViewController<ID extends StableID>(
   options: TreeViewControllerOptions<ID>,
 ): Result<TreeViewController<ID>> {
-  const initial = createTreeViewState(options.tree, {
+  const initial = tryCreateTreeViewState(options.tree, {
     selected: options.value ?? options.defaultValue ?? [],
     expanded: options.expandedValue ?? options.defaultExpandedValue ?? [],
     current: options.highlightedValue !== undefined
@@ -116,9 +116,9 @@ export function createTreeViewController<ID extends StableID>(
       : options.defaultHighlightedValue ?? null,
   });
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new TerminalTreeViewController(options, snapshot.value, interaction.value) };
 }
@@ -138,7 +138,7 @@ export function tryCreateTreeView<ID extends StableID>(
 function tryCreateTreeViewConnection<ID extends StableID>(
   options: TreeViewOptions<ID>,
 ): Result<TreeViewConnection<ID>> {
-  const tree = createTree(options.nodes);
+  const tree = tryCreateTree(options.nodes);
   if (!tree.ok) return tree;
   const disabled = new Set(options.disabledItems ?? []);
   for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled tree-view item must exist in the tree.', details: { id } } };
@@ -256,7 +256,7 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
       values,
     );
     if (error !== null) return { ok: false, error };
-    const state = createTreeViewState(this.#tree, {
+    const state = tryCreateTreeViewState(this.#tree, {
       selected: this.#valueControlled
         ? (values.value as readonly ID[])
         : this.#snapshot.state.selection.selected,
@@ -339,7 +339,7 @@ function controlledState<ID extends StableID>(
   expandedControlled: boolean,
   highlightControlled: boolean,
 ): Result<TreeViewState<ID>> {
-  return createTreeViewState(tree, {
+  return tryCreateTreeViewState(tree, {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
     expanded: expandedControlled ? previous.expansion.ids : proposed.expansion.ids,

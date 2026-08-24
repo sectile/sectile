@@ -2,7 +2,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, createDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/core/date-field';
+import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/core/date-field';
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
@@ -48,9 +48,9 @@ function construct(options: DateFieldOptions): Result<DateFieldConnection> {
   const inputControlled = options.inputState !== undefined;
   const policies = Object.freeze({ ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) });
   const runtime = createSemanticController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({
-    initial: createDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState),
+    initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState),
     reducer: (state, event) => applyDateFieldEvent(state, event, policies),
-    reconcile: (previous, proposed) => createDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState),
+    reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState),
     notify: (previous, proposed) => { if (JSON.stringify(previous.inputState) !== JSON.stringify(proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); },
     toEffect: (command) => command,
     interaction: options,
@@ -84,7 +84,7 @@ class DOMDateField implements DateFieldConnection {
   public syncControlledValues(values: DateFieldControlledValues): Result<RevisionSnapshot<DateFieldState>> {
     if (this.valueControlled !== (values.value !== undefined) || this.inputControlled !== (values.inputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date field values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
-    const result = this.runtime.replace(createDateFieldState(this.valueControlled ? values.value as DateValue | null : state.value, this.inputControlled ? values.inputState as TextEditingState : state.inputState));
+    const result = this.runtime.replace(tryCreateDateFieldState(this.valueControlled ? values.value as DateValue | null : state.value, this.inputControlled ? values.inputState as TextEditingState : state.inputState));
     if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result;
   }
   public handleEvent(event: DateFieldEvent): boolean {

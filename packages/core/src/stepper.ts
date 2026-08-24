@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import { applyLinearChoiceEvent, createLinearChoiceState, type LinearChoiceCommand, type LinearChoicePolicies, type LinearChoiceState, type LinearChoiceUpdate } from './internal/composites/linear-choice.js';
@@ -8,7 +9,11 @@ export type StepperState<ID extends StableID = StableID> = LinearChoiceState<ID>
 export type StepperPolicies<ID extends StableID = StableID> = Omit<LinearChoicePolicies<ID>, 'selectionFollowsFocus'>;
 export type StepperUpdate<ID extends StableID = StableID> = LinearChoiceUpdate<ID>;
 
-export function createStepperState<ID extends StableID>(domain: Sequence<ID>, value: ID | null = null, current: ID | null = value): Result<StepperState<ID>> {
+export function createStepperState<ID extends StableID>(domain: Sequence<ID>, value: ID | null = null, current: ID | null = value): StepperState<ID> {
+  return unwrap(tryCreateStepperState(domain, value, current));
+}
+
+export function tryCreateStepperState<ID extends StableID>(domain: Sequence<ID>, value: ID | null = null, current: ID | null = value): Result<StepperState<ID>> {
   return createLinearChoiceState(domain, { current, selected: value === null ? [] : [value] });
 }
 export function applyStepperEvent<ID extends StableID>(domain: Sequence<ID>, state: StepperState<ID>, event: StepperEvent<ID>, policies: StepperPolicies<ID> = {}): Result<StepperUpdate<ID>> {

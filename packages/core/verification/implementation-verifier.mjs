@@ -170,7 +170,7 @@ const counts = {
 for (let iteration = 0; iteration < iterations; iteration += 1) {
   const size = rng.int(0, 80);
   const ids = rng.shuffle(Array.from({ length: size }, (_, index) => `s${iteration}-${index}`));
-  const optimized = unwrap(createSequence(ids));
+  const optimized = createSequence(ids);
   const reference = new ReferenceSequence(ids);
   assert.deepEqual(optimized.ids, reference.ids);
   counts.sequence.models += 1;
@@ -213,7 +213,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   const origin = decimal(rng.int(-200, 201), rng.int(0, 3));
   const step = decimal(rng.int(1, 51), rng.int(0, 3));
   const count = rng.int(0, 40);
-  const optimized = unwrap(createRange({ origin, step, count }));
+  const optimized = createRange({ origin, step, count });
   const reference = new ReferenceRange(origin, step, count);
   counts.range.models += 1;
   const sampledTicks = new Set([0, count]);
@@ -263,7 +263,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
       input[row].push(id);
     }
   }
-  const optimized = unwrap(createGrid(input, { columnCount: columns }));
+  const optimized = createGrid(input, { columnCount: columns });
   const reference = new ReferenceGrid(rows, columns, cells);
   counts.grid.models += 1;
   for (let row = -1; row <= rows; row += 1) {
@@ -323,7 +323,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     for (const child of children.get(id)) visit(child);
   };
   for (const root of children.get(null)) visit(root);
-  const optimized = unwrap(createTree(nodes));
+  const optimized = createTree(nodes);
   const reference = new ReferenceTree(nodes);
   counts.tree.models += 1;
   assert.deepEqual(optimized.roots.ids, reference.roots.ids);
@@ -361,7 +361,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   const ids = cursorRng.shuffle(
     Array.from({ length: size }, (_, index) => `c${iteration}-${index}`),
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const current = cursorRng.pick([null, ...ids, `missing-${iteration}`]);
   const state = createCursorState(current);
   for (const fallback of ['none', 'first', 'last']) {
@@ -381,8 +381,8 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     Array.from({ length: size }, (_, index) => `l${iteration}-${index}`),
   );
   const missing = `missing-${iteration}`;
-  const domain = unwrap(createSequence(ids));
-  const previousDomain = unwrap(createSequence([...ids, missing]));
+  const domain = createSequence(ids);
+  const previousDomain = createSequence([...ids, missing]);
   const mode = selectionRng.bool() ? 'single' : 'multiple';
   const selected = mode === 'single'
     ? (selectionRng.bool() ? [] : [selectionRng.pick([...ids, missing])])
@@ -445,7 +445,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
           : `e${iteration}-${expansionRng.int(0, node)}`,
     });
   }
-  const tree = unwrap(createTree(nodes));
+  const tree = createTree(nodes);
   const referenceTree = new ReferenceTree(nodes);
   const ids = tree.preorder().ids;
   const missing = `missing-${iteration}`;
@@ -500,7 +500,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     anchorCodeUnitOffset: textRng.pick(boundaries),
     focusCodeUnitOffset: textRng.pick(boundaries),
   };
-  const optimized = unwrap(createTextEditingState(text, initialSelection));
+  const optimized = createTextEditingState(text, initialSelection);
   const reference = createReferenceTextEditingState(text, initialSelection);
   const projected = referenceReplacePlainText(
     text,
@@ -599,14 +599,14 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
   const ids = listboxRng.shuffle(
     Array.from({ length: listboxRng.int(0, 40) }, (_, index) => `b${iteration}-${index}`),
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const eligible = new Set(ids.filter(() => listboxRng.bool()));
   const input = {
     current: listboxRng.pick([null, ...ids]),
     selected: ids.filter(() => listboxRng.bool()),
     anchor: listboxRng.pick([null, ...ids]),
   };
-  let optimized = unwrap(createListboxState(domain, input));
+  let optimized = createListboxState(domain, input);
   let reference = createReferenceListboxState(domain, input);
   const policies = {
     eligible: (id) => eligible.has(id),
@@ -648,7 +648,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     { length: linearChoiceRng.int(0, 40) },
     (_, index) => `lc${iteration}-${index}`,
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const selected = ids.length > 0 && linearChoiceRng.bool()
     ? [linearChoiceRng.pick(ids)]
     : [];
@@ -690,9 +690,9 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     { length: linearActionRng.int(0, 40) },
     (_, index) => `la${iteration}-${index}`,
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const input = { current: linearActionRng.pick([null, ...ids]) };
-  let optimized = unwrap(createLinearActionState(domain, input));
+  let optimized = createLinearActionState(domain, input);
   let reference = createReferenceLinearActionState(domain, input);
   const eligible = new Set(ids.filter(() => linearActionRng.bool()));
   const policies = {
@@ -723,9 +723,9 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
 const sliderRng = createRng(seed ^ 0x511de);
 for (let iteration = 0; iteration < iterations; iteration += 1) {
   const count = sliderRng.int(0, 81);
-  const range = unwrap(createRange({ origin: '-2', step: '0.5', count }));
+  const range = createRange({ origin: '-2', step: '0.5', count });
   const initial = sliderRng.int(0, count + 1);
-  let optimized = unwrap(createSliderState(range, initial));
+  let optimized = createSliderState(range, initial);
   let reference = createReferenceSliderState(range, initial);
   for (let step = 0; step < 10; step += 1) {
     const target = sliderRng.int(-1, count + 2);
@@ -764,11 +764,11 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
       ids.push(id);
       return id;
     }));
-  const grid = unwrap(createGrid(rows, { columnCount }));
+  const grid = createGrid(rows, { columnCount });
   const current = calendarRng.pick([null, ...ids]);
   const selected = ids.length > 0 && calendarRng.bool() ? [calendarRng.pick(ids)] : [];
   const input = { current, selected, anchor: selected[0] ?? null };
-  let optimized = unwrap(createCalendarState(grid, input));
+  let optimized = createCalendarState(grid, input);
   let reference = createReferenceCalendarState(grid, input);
   const eligible = new Set(ids.filter(() => calendarRng.bool()));
   const policies = {
@@ -817,7 +817,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
           : `v${iteration}-${treeViewRng.int(0, node)}`,
     });
   }
-  const tree = unwrap(createTree(nodes));
+  const tree = createTree(nodes);
   const ids = tree.preorder().ids;
   const branches = ids.filter((id) => tree.childrenOf(id).size > 0);
   const expanded = branches.filter(() => treeViewRng.bool());
@@ -828,7 +828,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     selected: ids.filter(() => treeViewRng.bool()),
     anchor: treeViewRng.pick([null, ...ids]),
   };
-  let optimized = unwrap(createTreeViewState(tree, input));
+  let optimized = createTreeViewState(tree, input);
   let reference = createReferenceTreeViewState(tree, input);
   for (let step = 0; step < 10; step += 1) {
     const target = treeViewRng.pick([...ids, `missing-${iteration}`]);
@@ -865,9 +865,9 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     { length: comboboxRng.int(0, 40) },
     (_, index) => `o${iteration}-${index}`,
   );
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   const labels = new Map(ids.map((id) => [id, randomText(comboboxRng, 6)]));
-  let text = unwrap(createTextEditingState(randomText(comboboxRng, 6)));
+  let text = createTextEditingState(randomText(comboboxRng, 6));
   if (comboboxRng.bool()) {
     const offset = text.snapshot.text.length;
     text = unwrap(startTextComposition(
@@ -879,7 +879,7 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     ));
   }
   const input = { popupOpen: true, current: comboboxRng.pick([null, ...ids]) };
-  const optimized = unwrap(createComboboxState(domain, text, input));
+  const optimized = createComboboxState(domain, text, input);
   const reference = createReferenceComboboxState(domain, text, input);
   const target = comboboxRng.pick([...ids, `missing-${iteration}`]);
   const direct = comboboxRng.bool();
@@ -901,11 +901,11 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
 
 for (let size = 0; size <= 4; size += 1) {
   const ids = Array.from({ length: size }, (_, index) => `r${index}`);
-  const domain = unwrap(createSequence(ids));
+  const domain = createSequence(ids);
   for (const eligibleIDs of powerset(ids)) {
     const eligible = new Set(eligibleIDs);
-    const state = unwrap(createListboxState(domain));
-    const base = unwrap(createRevisionSnapshot(state, 7));
+    const state = createListboxState(domain);
+    const base = createRevisionSnapshot(state, 7);
     const reducer = (current, event) => applyListboxEvent(domain, current, event, {
       eligible: (id) => eligible.has(id),
       selectionFollowsFocus: false,

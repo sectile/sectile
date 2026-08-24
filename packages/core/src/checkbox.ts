@@ -7,3 +7,5 @@ export {
   type CheckedState as CheckboxState,
   type CheckedValue as CheckboxValue,
 } from './internal/state/checked.js';
+
+export { tryCreateCheckedState as tryCreateCheckboxState } from './internal/state/checked.js';

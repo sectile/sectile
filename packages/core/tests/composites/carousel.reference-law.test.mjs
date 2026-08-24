@@ -14,7 +14,7 @@ import {
 import { unwrap } from '../support.mjs';
 
 test('carousel movement and pause authority match an independent reference', () => {
-  const slides = unwrap(createSequence(['a', 'b', 'c']));
+  const slides = createSequence(['a', 'b', 'c']);
   const events = [
     'next', 'previous', 'first', 'last', 'pause', 'resume', 'toggle-pause',
     { type: 'focus', id: 'b' },
@@ -25,7 +25,7 @@ test('carousel movement and pause authority match an independent reference', () 
     for (const paused of [false, true]) {
       for (const pauseReasons of [[], ['focus']]) {
         for (const event of events) {
-          const actual = applyCarouselEvent(slides, unwrap(createCarouselState(slides, current, paused, pauseReasons)), event);
+          const actual = applyCarouselEvent(slides, createCarouselState(slides, current, paused, pauseReasons), event);
           const expected = applyReferenceCarouselEvent(slides, createReferenceCarouselState(current, paused, pauseReasons), event);
           assert.deepEqual(observe(actual), observeRef(expected));
         }
@@ -35,8 +35,8 @@ test('carousel movement and pause authority match an independent reference', () 
 });
 
 test('carousel exposes position and composes independent pause reasons', () => {
-  const slides = unwrap(createSequence(['a', 'b', 'c']));
-  let state = unwrap(createCarouselState(slides, 'b'));
+  const slides = createSequence(['a', 'b', 'c']);
+  let state = createCarouselState(slides, 'b');
   assert.deepEqual(getCarouselPosition(slides, state), { index: 1, count: 3 });
   state = unwrap(applyCarouselEvent(slides, state, { type: 'pause-for', reason: 'hover' })).state;
   state = unwrap(applyCarouselEvent(slides, state, { type: 'pause-for', reason: 'focus' })).state;

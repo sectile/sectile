@@ -51,9 +51,9 @@ const terminalCalendarMonthFormatter = new Intl.DateTimeFormat('en-US', {
 const terminalCalendarShortMonthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
 });
-const terminalStandardUnits = unwrap(createStandardUnitRegistry());
-const terminalMetricUnits = unwrap(createMetricUnitSystem(terminalStandardUnits));
-const terminalImperialUnits = unwrap(createImperialUnitSystem(terminalStandardUnits));
+const terminalStandardUnits = createStandardUnitRegistry();
+const terminalMetricUnits = createMetricUnitSystem(terminalStandardUnits);
+const terminalImperialUnits = createImperialUnitSystem(terminalStandardUnits);
 
 export const demos = Object.freeze([
   { id: 'listbox', label: 'Listbox', description: 'move · typeahead · single/multiple · [/] cases', readOnly: true, create: createListboxDemo },
@@ -603,8 +603,8 @@ function createRangeFieldDemo(host, kind) {
         start: '2026-09-08',
         end: '2026-09-18',
         policies: {
-          min: unwrap(createDateValue(2026, 9, 1)),
-          max: unwrap(createDateValue(2026, 9, 30)),
+          min: createDateValue(2026, 9, 1),
+          max: createDateValue(2026, 9, 30),
         },
       },
     ]
@@ -618,14 +618,14 @@ function createRangeFieldDemo(host, kind) {
       },
     ];
   return scenarioDemo(host, rangeScenarios, (scenario) => {
-    const makeEditing = (text) => unwrap(createTextEditingState(text, {
+    const makeEditing = (text) => createTextEditingState(text, {
       anchorCodeUnitOffset: text.length,
       focusCodeUnitOffset: text.length,
-    }));
+    });
     const startValue = unwrap(kind === 'date' ? parseDateValue(scenario.start) : parseTimeValue(scenario.start));
     const endValue = unwrap(kind === 'date' ? parseDateValue(scenario.end) : parseTimeValue(scenario.end));
     const defaultValue = kind === 'date'
-      ? unwrap(createDateRange(startValue, endValue))
+      ? createDateRange(startValue, endValue)
       : Object.freeze({ start: startValue, end: endValue });
     const create = kind === 'date' ? createDateRangeField : createTimeRangeField;
     const connection = create({
@@ -1430,7 +1430,7 @@ function createSpinButtonDemo(host) {
 }
 
 function createNumberFieldDemo(host) {
-  const evaluator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));
+  const evaluator = createCalculatorExpression({ precision: 12, rounding: 'half-even' });
   return scenarioDemo(host, [
     { title: 'Exact decimal input', initial: '0.1', draft: null, policies: {}, controlled: false, detail: 'decimal text stays exact without binary floating-point coercion' },
     { title: 'Calculator percentage', initial: '50', draft: '50-20%', policies: { evaluator }, controlled: false, detail: '50-20% commits 40' },
@@ -1476,7 +1476,7 @@ function createNumberFieldDemo(host) {
 }
 
 function createQuantityFieldDemo(host) {
-  const evaluator = unwrap(createCalculatorExpression({ precision: 12, rounding: 'half-even' }));
+  const evaluator = createCalculatorExpression({ precision: 12, rounding: 'half-even' });
   return scenarioDemo(host, [
     {
       title: 'Metric length', registry: terminalStandardUnits, unitSystem: terminalMetricUnits, canonicalUnit: 'metre',
@@ -1569,28 +1569,28 @@ function createQuantityFieldDemo(host) {
 }
 
 function createDateFieldDemo(host) {
-  const value = unwrap(createDateValue(2026, 8, 22));
+  const value = createDateValue(2026, 8, 22);
   return scenarioDemo(host, [
     { title: 'Calendar date', value, controlled: false, policies: {}, detail: 'timezone-free YYYY-MM-DD' },
-    { title: 'Booking deadline', value, controlled: false, policies: { min: unwrap(createDateValue(2026, 8, 18)), max: unwrap(createDateValue(2026, 9, 30)) }, detail: 'bounded 2026-08-18–2026-09-30' },
+    { title: 'Booking deadline', value, controlled: false, policies: { min: createDateValue(2026, 8, 18), max: createDateValue(2026, 9, 30) }, detail: 'bounded 2026-08-18–2026-09-30' },
     { title: 'Controlled date', value, controlled: true, policies: {}, detail: 'external value ownership' },
   ], (scenario) => createTerminalTemporalField(host, scenario, 'date'));
 }
 
 function createTimeFieldDemo(host) {
-  const morning = unwrap(createTimeValue(9, 30));
+  const morning = createTimeValue(9, 30);
   return scenarioDemo(host, [
     { title: 'Wall-clock time', value: morning, controlled: false, policies: {}, detail: '24-hour HH:mm' },
-    { title: '15-minute schedule', value: unwrap(createTimeValue(10, 15)), controlled: false, policies: { step: { minute: 15 } }, detail: 'segment-aware stepping' },
-    { title: 'Controlled time', value: unwrap(createTimeValue(14, 0)), controlled: true, policies: {}, detail: 'external value ownership' },
+    { title: '15-minute schedule', value: createTimeValue(10, 15), controlled: false, policies: { step: { minute: 15 } }, detail: 'segment-aware stepping' },
+    { title: 'Controlled time', value: createTimeValue(14, 0), controlled: true, policies: {}, detail: 'external value ownership' },
   ], (scenario) => createTerminalTemporalField(host, scenario, 'time'));
 }
 
 function createDateTimeFieldDemo(host) {
-  const at = (year, month, day, hour, minute) => unwrap(createDateTimeValue(
-    unwrap(createDateValue(year, month, day)),
-    unwrap(createTimeValue(hour, minute)),
-  ));
+  const at = (year, month, day, hour, minute) => createDateTimeValue(
+    createDateValue(year, month, day),
+    createTimeValue(hour, minute),
+  );
   return scenarioDemo(host, [
     { title: 'Local schedule', value: at(2026, 8, 22, 16, 30), controlled: false, policies: {}, detail: 'timezone-free date and wall clock' },
     { title: 'Cross-midnight stepping', value: at(2026, 8, 22, 23, 45), controlled: false, policies: { step: { minute: 30 } }, detail: 'time segments carry into the civil date' },
@@ -1901,12 +1901,12 @@ function createPeriodPickerDemo(host, unit, range, create, titles) {
 
 function createTerminalPeriodPicker(host, scenario, unit, range, create) {
   const currentYear = new Date().getFullYear();
-  const initialHighlight = unwrap(createDateValue(currentYear, unit === 'month' ? 4 : 1, 1));
+  const initialHighlight = createDateValue(currentYear, unit === 'month' ? 4 : 1, 1);
   let externalValue = range
-    ? unwrap(createDateRange(
+    ? createDateRange(
         initialHighlight,
-        unwrap(createDateValue(currentYear + (unit === 'year' ? 3 : 0), unit === 'month' ? 9 : 1, 1)),
-      ))
+        createDateValue(currentYear + (unit === 'year' ? 3 : 0), unit === 'month' ? 9 : 1, 1),
+      )
     : initialHighlight;
   let externalHighlight = initialHighlight;
   let externalOpen = true;
@@ -1915,8 +1915,8 @@ function createTerminalPeriodPicker(host, scenario, unit, range, create) {
   let connection;
   const policies = scenario.bounded
     ? {
-        min: unwrap(createDateValue(currentYear - 2, 1, 1)),
-        max: unwrap(createDateValue(currentYear + 6, 12, 31)),
+        min: createDateValue(currentYear - 2, 1, 1),
+        max: createDateValue(currentYear + 6, 12, 31),
       }
     : {};
   connection = create({
@@ -1990,8 +1990,8 @@ function createTerminalPeriodPicker(host, scenario, unit, range, create) {
       const pendingAnchor = range ? snapshot.anchor : null;
       const cellWidth = Math.max(12, Math.min(20, Math.floor((width - 2) / 3)));
       const values = unit === 'month'
-        ? Array.from({ length: 12 }, (_, index) => unwrap(createDateValue(calendar.highlighted.year, index + 1, 1)))
-        : Array.from({ length: 12 }, (_, index) => unwrap(createDateValue(pageStart + index, 1, 1)));
+        ? Array.from({ length: 12 }, (_, index) => createDateValue(calendar.highlighted.year, index + 1, 1))
+        : Array.from({ length: 12 }, (_, index) => createDateValue(pageStart + index, 1, 1));
       const key = (value) => unit === 'month' ? value.year * 12 + value.month : value.year;
       const isAnchor = (value) => pendingAnchor !== null && key(pendingAnchor) === key(value);
       const isSelected = (value) => pendingAnchor !== null
@@ -2034,12 +2034,12 @@ function createTerminalPeriodPicker(host, scenario, unit, range, create) {
 }
 
 function createTerminalDateTimePicker(host, scenario, range) {
-  const at = (year, month, day, hour, minute) => unwrap(createDateTimeValue(
-    unwrap(createDateValue(year, month, day)),
-    unwrap(createTimeValue(hour, minute)),
-  ));
+  const at = (year, month, day, hour, minute) => createDateTimeValue(
+    createDateValue(year, month, day),
+    createTimeValue(hour, minute),
+  );
   let externalValue = range
-    ? unwrap(createDateTimeRange(at(2026, 8, 25, 22, 0), at(2026, 8, 26, 2, 30)))
+    ? createDateTimeRange(at(2026, 8, 25, 22, 0), at(2026, 8, 26, 2, 30))
     : at(2026, 8, 22, 16, 30);
   let externalHighlight = range ? externalValue.end.date : externalValue.date;
   let externalOpen = true; let syncScheduled = false; let connection;
@@ -2080,12 +2080,12 @@ function createTerminalDateTimePicker(host, scenario, range) {
 }
 
 function createTerminalPicker(host, scenario, range, factory) {
-  const initial = unwrap(createDateValue(2026, 8, 22));
-  let externalValue = range ? unwrap(createDateRange(unwrap(createDateValue(2026, 8, 18)), initial)) : initial;
+  const initial = createDateValue(2026, 8, 22);
+  let externalValue = range ? createDateRange(createDateValue(2026, 8, 18), initial) : initial;
   let externalHighlight = initial; let externalOpen = true; let syncScheduled = false; let connection;
   const policies = {
     ...(scenario.weekdaysOnly ? { unavailable: (value) => terminalISOWeekday(value) >= 6 } : {}),
-    ...(scenario.bounded ? { min: unwrap(createDateValue(2026, 8, 1)), max: unwrap(createDateValue(2026, 10, 31)) } : {}),
+    ...(scenario.bounded ? { min: createDateValue(2026, 8, 1), max: createDateValue(2026, 10, 31) } : {}),
   };
   const create = factory ?? (range ? createDateRangePicker : createDatePicker);
   connection = create({
@@ -2123,10 +2123,10 @@ function compareTerminalDate(left, right) { const a = `${left.year.toString().pa
 function sameTerminalDate(left, right) { return compareTerminalDate(left, right) === 0; }
 
 function numberFieldEditing(text) {
-  return unwrap(createTextEditingState(text, {
+  return createTextEditingState(text, {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
-  }));
+  });
 }
 
 function createMultiThumbSliderDemo(host) {
@@ -2552,10 +2552,10 @@ function createTextDemo(host) {
     { title: 'Multiline draft', initial: 'First line\n둘째 줄', start: null, end: null, controlled: false },
     { title: 'Controlled editor', initial: 'Application-owned value', start: null, end: null, controlled: true },
   ], (scenario) => {
-    const initial = unwrap(createTextEditingState(scenario.initial, {
+    const initial = createTextEditingState(scenario.initial, {
       anchorCodeUnitOffset: scenario.start ?? scenario.initial.length,
       focusCodeUnitOffset: scenario.end ?? scenario.start ?? scenario.initial.length,
-    }));
+    });
     let external = initial;
     let connection;
     connection = createText({
@@ -2605,7 +2605,7 @@ function createComboboxDemo(host) {
     { title: 'Korean input search', mode: 'prefix', initial: '한', controlled: false },
     { title: 'Controlled command search', mode: 'prefix', initial: '', controlled: true },
   ], (scenario) => {
-    const initialInput = unwrap(createTextEditingState(scenario.initial, { anchorCodeUnitOffset: scenario.initial.length, focusCodeUnitOffset: scenario.initial.length }));
+    const initialInput = createTextEditingState(scenario.initial, { anchorCodeUnitOffset: scenario.initial.length, focusCodeUnitOffset: scenario.initial.length });
     const matches = (label, query) => scenario.mode === 'prefix' ? label.toLocaleLowerCase().startsWith(query.toLocaleLowerCase()) : label.toLocaleLowerCase().includes(query.toLocaleLowerCase());
     let accepted = null; let value = null; let inputState = initialInput; let open = scenario.initial.length > 0; let highlightedValue = null; let connection;
     connection = createCombobox({

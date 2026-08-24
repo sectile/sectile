@@ -9,7 +9,7 @@ import { unwrap } from '../../.verification-dist/result.js';
 import { createTextEditingState } from '../../.verification-dist/text.js';
 
 test('calculator expression evaluates precedence, calculator percentages, and integer powers', () => {
-  const evaluator = unwrap(createCalculatorExpression());
+  const evaluator = createCalculatorExpression();
   assert.equal(unwrap(evaluator.evaluate('2 + 3 * 4')).value, '14');
   assert.equal(unwrap(evaluator.evaluate('50-20%')).value, '40');
   assert.equal(unwrap(evaluator.evaluate('50+20%')).value, '60');
@@ -20,7 +20,7 @@ test('calculator expression evaluates precedence, calculator percentages, and in
 });
 
 test('calculator expression rounds division and rejects unsafe or undefined operations', () => {
-  const evaluator = unwrap(createCalculatorExpression({ precision: 4, rounding: 'half-even', maxExponent: 8 }));
+  const evaluator = createCalculatorExpression({ precision: 4, rounding: 'half-even', maxExponent: 8 });
   assert.equal(unwrap(evaluator.evaluate('1/3')).value, '0.3333');
   assert.equal(evaluator.evaluate('1/0').ok, false);
   assert.equal(evaluator.evaluate('9^0.5').ok, false);
@@ -29,8 +29,8 @@ test('calculator expression rounds division and rejects unsafe or undefined oper
 });
 
 test('number field composes text editing, commits expressions, and cancels atomically', () => {
-  const evaluator = unwrap(createCalculatorExpression());
-  let state = unwrap(createNumberFieldState('50'));
+  const evaluator = createCalculatorExpression();
+  let state = createNumberFieldState('50');
   state = edit(state, '50-20%', { evaluator });
   const committed = unwrap(applyNumberFieldEvent(state, 'commit', { evaluator }));
   assert.equal(committed.state.value, '40');
@@ -43,9 +43,9 @@ test('number field composes text editing, commits expressions, and cancels atomi
 });
 
 test('number field enforces optional bounds and required values', () => {
-  const below = unwrap(createNumberFieldState('5', editing('-1')));
+  const below = createNumberFieldState('5', editing('-1'));
   assert.equal(applyNumberFieldEvent(below, 'commit', { min: '0' }).ok, false);
-  const empty = unwrap(createNumberFieldState('5', editing('')));
+  const empty = createNumberFieldState('5', editing(''));
   const cleared = unwrap(applyNumberFieldEvent(empty, 'commit')).state;
   assert.equal(cleared.value, null);
   assert.equal(cleared.inputState.snapshot.text, '');
@@ -53,8 +53,8 @@ test('number field enforces optional bounds and required values', () => {
 });
 
 test('number field preserves exact decimals without binary floating-point coercion', () => {
-  const evaluator = unwrap(createCalculatorExpression());
-  let state = unwrap(createNumberFieldState('0'));
+  const evaluator = createCalculatorExpression();
+  let state = createNumberFieldState('0');
   state = edit(state, '0.1+0.2', { evaluator });
   state = unwrap(applyNumberFieldEvent(state, 'commit', { evaluator })).state;
   assert.equal(state.value, '0.3');
@@ -65,7 +65,7 @@ test('number field preserves exact decimals without binary floating-point coerci
 });
 
 test('number field rejects commit during active text composition', () => {
-  let state = unwrap(createNumberFieldState('1'));
+  let state = createNumberFieldState('1');
   state = unwrap(applyNumberFieldEvent(state, {
     type: 'text',
     event: {
@@ -80,10 +80,10 @@ test('number field rejects commit during active text composition', () => {
 });
 
 function editing(text) {
-  return unwrap(createTextEditingState(text, {
+  return createTextEditingState(text, {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
-  }));
+  });
 }
 
 function edit(state, text, policies = {}) {

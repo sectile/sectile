@@ -1,11 +1,11 @@
 import type { Result } from '@sectile/core';
 import {
-  createInteractionState,
+  tryCreateInteractionState,
   requireInteraction,
   type InteractionStateInput,
 } from '@sectile/core/interaction';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type EventReducer,
   type RevisionResult,
@@ -34,9 +34,9 @@ export function createSemanticController<State, Event, Command, Effect>(
   options: SemanticControllerOptions<State, Event, Command, Effect>,
 ): Result<SemanticController<State, Event, Effect>> {
   if (!options.initial.ok) return options.initial;
-  const interaction = createInteractionState(options.interaction);
+  const interaction = tryCreateInteractionState(options.interaction);
   if (!interaction.ok) return interaction;
-  const snapshot = createRevisionSnapshot(options.initial.value);
+  const snapshot = tryCreateRevisionSnapshot(options.initial.value);
   if (!snapshot.ok) return snapshot;
   let current = snapshot.value;
   return {

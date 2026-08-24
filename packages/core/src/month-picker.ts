@@ -13,3 +13,6 @@ export type {
   DatePickerStateInput as MonthPickerStateInput,
   DatePickerUpdate as MonthPickerUpdate,
 } from './date-picker.js';
+
+export { tryCreateDatePickerState as tryCreateMonthPickerState } from './date-picker.js';
+export { tryCreateDatePickerYear as tryCreateMonthPickerYear } from './date-picker.js';

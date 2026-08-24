@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { applyPinInputEvent, createPinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
+import { applyPinInputEvent, tryCreatePinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
 export type { PinInputPolicies } from '@sectile/core/pin-input';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
@@ -23,9 +23,9 @@ function tryCreatePinInputConnection(options: PinInputOptions): Result<PinInputC
   const runtime = createSemanticController<PinInputState, PinInputEvent, PinInputCommand, PinInputEffect>({
     interaction: options,
     interactionIntent: (event) => event === 'next' || event === 'previous' || (typeof event === 'object' && event.type === 'focus') ? 'navigate' : 'mutate',
-    initial: createPinInputState(options.inputs.length, options.value ?? options.defaultValue ?? ''),
+    initial: tryCreatePinInputState(options.inputs.length, options.value ?? options.defaultValue ?? ''),
     reducer: (state, event) => applyPinInputEvent(options.inputs.length, state, event, options.policies),
-    reconcile: (previous, proposed) => controlled ? createPinInputState(options.inputs.length, previous.values) : { ok: true, value: proposed },
+    reconcile: (previous, proposed) => controlled ? tryCreatePinInputState(options.inputs.length, previous.values) : { ok: true, value: proposed },
     notify: (previous, proposed) => { const before = previous.values.join(''); const after = proposed.values.join(''); if (before !== after) options.onValueChange?.(after); },
     toEffect: (command) => command,
   });
@@ -52,7 +52,7 @@ class DOMPinInputConnection implements PinInputConnection {
     this.#render();
   }
   getSnapshot(): RevisionSnapshot<PinInputState> { return this.#runtime.getSnapshot(); }
-  syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>> { if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Only a controlled pin input accepts external values.' } }; const result = this.#runtime.replace(createPinInputState(this.#options.inputs.length, value)); if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result; }
+  syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>> { if (!this.#controlled) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Only a controlled pin input accepts external values.' } }; const result = this.#runtime.replace(tryCreatePinInputState(this.#options.inputs.length, value)); if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result; }
   handleEvent(event: PinInputEvent): boolean { const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render(); for (const effect of result.commands) { if (effect.type === 'focus-cell') queueMicrotask(() => this.#options.inputs[effect.index]?.focus()); else this.#options.onComplete?.(effect.value); } this.#options.onUpdate?.(); return true; }
   disconnect(): void { for (const remove of this.#listeners) remove(); }
   #render(): void { const state = this.#runtime.getSnapshot().state; this.#options.inputs.forEach((input, index) => { input.value = state.values[index] ?? ''; input.tabIndex = state.current === index ? 0 : -1; }); }

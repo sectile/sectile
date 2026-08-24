@@ -17,7 +17,7 @@ const INPUTS = [
 ];
 
 test('DOM and terminal slider controllers produce equivalent semantic traces', () => {
-  const range = unwrap(createRange({ origin: '-1', step: '0.25', count: 8 }));
+  const range = createRange({ origin: '-1', step: '0.25', count: 8 });
   const DOMController = unwrap(createDOMSliderController({ range, defaultValue: 3, page: 3 }));
   const terminalController = unwrap(createTerminalSliderController({
     range,
@@ -35,7 +35,7 @@ test('DOM and terminal slider controllers produce equivalent semantic traces', (
 
 test('DOM and terminal slider controllers remain equivalent across 20,000 transitions', () => {
   const rng = random(0x51de);
-  const range = unwrap(createRange({ origin: '0', step: '1', count: 100 }));
+  const range = createRange({ origin: '0', step: '1', count: 100 });
   const DOMController = unwrap(createDOMSliderController({ range, defaultValue: 50, page: 7 }));
   const terminalController = unwrap(createTerminalSliderController({
     range,

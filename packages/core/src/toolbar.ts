@@ -8,3 +8,5 @@ export {
   type LinearActionStateInput as ToolbarStateInput,
   type LinearActionUpdate as ToolbarUpdate,
 } from './internal/composites/linear-action.js';
+
+export { tryCreateLinearActionState as tryCreateToolbarState } from './internal/composites/linear-action.js';

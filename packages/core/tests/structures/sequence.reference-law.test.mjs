@@ -1,7 +1,7 @@
 /* Law evidence: SEQ-01 SEQ-02 SEQ-03 SEQ-04 SEQ-05 SEQ-06 SEQ-07 SEQ-08 SEQ-09 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createSequence } from '../../.verification-dist/structures/sequence.js';
+import { createSequence, tryCreateSequence } from '../../.verification-dist/structures/sequence.js';
 import { ReferenceSequence } from '../../.verification-dist/internal/reference/structures/sequence.js';
 import { canonicalIDs, permutations, powerset, unwrap } from '../support.mjs';
 
@@ -83,15 +83,15 @@ test('SEQ-09: identity renaming commutes with every observation', () => {
 });
 
 test('sequence construction and scan ceilings use explicit failure classes', () => {
-  assert.equal(createSequence(['a', 'a']).ok, false);
-  assert.equal(createSequence(['']).ok, false);
-  assert.equal(createSequence([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
-  assert.equal(createSequence(['\ud800']).ok, false);
-  assert.equal(createSequence([1]).error.code, 'invalid-id-type');
-  const canonicallyEquivalent = unwrap(createSequence(['á', 'a\u0301']));
+  assert.equal(tryCreateSequence(['a', 'a']).ok, false);
+  assert.equal(tryCreateSequence(['']).ok, false);
+  assert.equal(tryCreateSequence([], { maxIDCodeUnits: 0 }).error.code, 'invalid-max-id-code-units');
+  assert.equal(tryCreateSequence(['\ud800']).ok, false);
+  assert.equal(tryCreateSequence([1]).error.code, 'invalid-id-type');
+  const canonicallyEquivalent = createSequence(['á', 'a\u0301']);
   assert.equal(canonicallyEquivalent.size, 2);
-  assert.equal(createSequence(['a', 'b'], { maxItems: 1 }).error.class, 'resource-rejection');
-  const sequence = unwrap(createSequence(['a', 'b', 'c']));
+  assert.equal(tryCreateSequence(['a', 'b'], { maxItems: 1 }).error.class, 'resource-rejection');
+  const sequence = createSequence(['a', 'b', 'c']);
   const result = sequence.move('a', 1, 'stop', { eligible: () => false, maxScan: 1 });
   assert.equal(result.kind, 'resource-rejected');
   assert.equal(result.error.class, 'resource-rejection');

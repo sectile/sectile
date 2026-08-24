@@ -1,7 +1,7 @@
 /* Law evidence: RNG-01 RNG-02 RNG-03 RNG-04 RNG-05 RNG-06 RNG-07 RNG-08 RNG-09 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createBoundedRange, createRange } from '../../.verification-dist/structures/range.js';
+import { createBoundedRange, createRange, tryCreateBoundedRange, tryCreateRange } from '../../.verification-dist/structures/range.js';
 import { ReferenceRange } from '../../.verification-dist/internal/reference/structures/range.js';
 import { unwrap } from '../support.mjs';
 
@@ -49,23 +49,21 @@ test('RNG-02..06: clamp and snap are closed, idempotent, monotone, and use expli
 });
 
 test('RNG-09: a billion-tick range remains intensional and exact', () => {
-  const range = unwrap(
-    createRange({ origin: '10', step: '0.5', count: 1_000_000_000, maxCount: 1_000_000_000 }),
-  );
+  const range = createRange({ origin: '10', step: '0.5', count: 1_000_000_000, maxCount: 1_000_000_000 });
   assert.equal(range.cardinality, 1_000_000_001);
   assert.equal(range.valueAt(999_999_999), '500000009.5');
   assert.equal(range.tickOf('500000009.5'), 999_999_999);
 });
 
 test('range construction is exact and rejects off-lattice or unbounded inputs', () => {
-  assert.equal(createRange({ origin: '0', step: '0', count: 1 }).error.code, 'non-positive-step');
-  assert.equal(createRange({ origin: '0', step: 'x', count: 1 }).error.code, 'invalid-decimal');
-  assert.equal(createRange({ origin: '0', step: '1', count: -1 }).ok, false);
-  assert.equal(createRange({ origin: '0', step: '1', count: Number.MAX_SAFE_INTEGER, maxCount: Number.MAX_SAFE_INTEGER }).error.code, 'cardinality-not-safe');
-  assert.equal(createBoundedRange({ min: '0', max: '1', step: '0.3' }).error.code, 'endpoint-off-lattice');
-  assert.equal(createBoundedRange({ min: '0', max: '0.001', step: '0.001', maxScale: 2 }).error.code, 'decimal-scale-ceiling-exceeded');
-  assert.equal(createBoundedRange({ min: '0', max: '1000', step: '1', maxDecimalCodeUnits: 3 }).error.code, 'decimal-code-unit-ceiling-exceeded');
-  const exact = unwrap(createBoundedRange({ min: '-0.3', max: '0.3', step: '0.1' }));
+  assert.equal(tryCreateRange({ origin: '0', step: '0', count: 1 }).error.code, 'non-positive-step');
+  assert.equal(tryCreateRange({ origin: '0', step: 'x', count: 1 }).error.code, 'invalid-decimal');
+  assert.equal(tryCreateRange({ origin: '0', step: '1', count: -1 }).ok, false);
+  assert.equal(tryCreateRange({ origin: '0', step: '1', count: Number.MAX_SAFE_INTEGER, maxCount: Number.MAX_SAFE_INTEGER }).error.code, 'cardinality-not-safe');
+  assert.equal(tryCreateBoundedRange({ min: '0', max: '1', step: '0.3' }).error.code, 'endpoint-off-lattice');
+  assert.equal(tryCreateBoundedRange({ min: '0', max: '0.001', step: '0.001', maxScale: 2 }).error.code, 'decimal-scale-ceiling-exceeded');
+  assert.equal(tryCreateBoundedRange({ min: '0', max: '1000', step: '1', maxDecimalCodeUnits: 3 }).error.code, 'decimal-code-unit-ceiling-exceeded');
+  const exact = createBoundedRange({ min: '-0.3', max: '0.3', step: '0.1' });
   assert.equal(exact.count, 6);
   assert.equal(exact.valueAt(3), '0');
 });

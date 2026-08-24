@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { Result } from '../../shared.js';
 import type { QuantizedRange } from '../../structures/range.js';
 import { fail, ok } from '../kernel/foundation.js';
@@ -27,6 +28,13 @@ export interface SliderUpdate {
 }
 
 export function createSliderState(
+  range: QuantizedRange,
+  tick = 0,
+): SliderState {
+  return unwrap(tryCreateSliderState(range, tick));
+}
+
+export function tryCreateSliderState(
   range: QuantizedRange,
   tick = 0,
 ): Result<SliderState> {

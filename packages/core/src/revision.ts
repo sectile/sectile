@@ -8,3 +8,5 @@ export {
   type RevisionSnapshot,
   type RevisionResult,
 } from './internal/runtime/revision.js';
+
+export { tryCreateRevisionSnapshot } from './internal/runtime/revision.js';

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createSliderState,
+  tryCreateSliderState,
   applySliderEvent,
 } from '../../.verification-dist/internal/composites/slider.js';
 import {
@@ -16,7 +17,7 @@ const EVENTS = ['increment', 'decrement', 'page-up', 'page-down', 'home', 'end']
 
 test('slider direct events set an exact bounded tick', () => {
   const range = quantizedRange(4);
-  const state = unwrap(createSliderState(range, 0));
+  const state = createSliderState(range, 0);
   const set = unwrap(applySliderEvent(range, state, { type: 'set-tick', tick: 3 }));
   assert.equal(set.state.tick, 3);
   assert.deepEqual(set.commands, [{ type: 'announce-tick', tick: 3 }]);
@@ -33,7 +34,7 @@ test('slider composition is deterministic, bounded, and matches its independent 
   for (let count = 0; count <= 8; count += 1) {
     const range = quantizedRange(count);
     for (let initial = 0; initial <= count; initial += 1) {
-      const start = unwrap(createSliderState(range, initial));
+      const start = createSliderState(range, initial);
       assert.deepEqual(start, createReferenceSliderState(range, initial));
       const queue = [{ state: start, depth: 0 }];
       const seen = new Set([stateKey(start, 0)]);
@@ -73,7 +74,7 @@ test('slider composition is deterministic, bounded, and matches its independent 
 
 test('slider events clamp to boundaries and announce only changed ticks', () => {
   const range = quantizedRange(5);
-  const initial = unwrap(createSliderState(range, 2));
+  const initial = createSliderState(range, 2);
 
   const incremented = unwrap(applySliderEvent(range, initial, 'increment'));
   assert.equal(incremented.state.tick, 3);
@@ -100,7 +101,7 @@ test('slider events clamp to boundaries and announce only changed ticks', () => 
   assert.deepEqual(ended.commands, []);
 
   const singleton = quantizedRange(0);
-  const only = unwrap(createSliderState(singleton));
+  const only = createSliderState(singleton);
   for (const event of EVENTS) {
     const result = unwrap(applySliderEvent(singleton, only, event));
     assert.equal(result.state, only);
@@ -111,7 +112,7 @@ test('slider events clamp to boundaries and announce only changed ticks', () => 
 test('slider rejects invalid snapshots, events, and page sizes atomically', () => {
   const range = quantizedRange(5);
   for (const tick of [-1, 6, 1.5]) {
-    const result = createSliderState(range, tick);
+    const result = tryCreateSliderState(range, tick);
     assert.equal(result.ok, false);
     assert.equal(result.error.class, 'construction');
     assert.equal(result.error.code, 'slider-tick-outside-range');
@@ -124,7 +125,7 @@ test('slider rejects invalid snapshots, events, and page sizes atomically', () =
   assert.equal(rejectedState.error.code, 'slider-tick-outside-range');
   assert.equal(invalidState.tick, 6);
 
-  const state = unwrap(createSliderState(range, 2));
+  const state = createSliderState(range, 2);
   const invalidEvent = applySliderEvent(range, state, 'unknown');
   assert.deepEqual(observeResult(invalidEvent), {
     ok: false,
@@ -150,7 +151,7 @@ test('slider rejects invalid snapshots, events, and page sizes atomically', () =
 });
 
 function quantizedRange(count) {
-  return unwrap(createRange({ origin: '-2', step: '0.5', count }));
+  return createRange({ origin: '-2', step: '0.5', count });
 }
 
 function assertTickInRange(state, range) {

@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   applyTreeGridEvent,
   createTreeGridModel,
-  createTreeGridState,
+  createTreeGridState, tryCreateTreeGridState, tryCreateTreeGridModel
 } from '../../.verification-dist/internal/composites/tree-grid.js';
 import {
   applyReferenceTreeGridEvent,
@@ -12,7 +12,7 @@ import {
 } from '../../.verification-dist/internal/reference/composites/tree-grid.js';
 import { createGrid } from '../../.verification-dist/structures/grid.js';
 import { createTree } from '../../.verification-dist/structures/tree.js';
-import { createTreeGridModelFromRows } from '../../.verification-dist/tree-grid.js';
+import { createTreeGridModelFromRows, tryCreateTreeGridModelFromRows } from '../../.verification-dist/tree-grid.js';
 import { enumerateOrderedForests, powerset, unwrap } from '../support.mjs';
 
 const EVENTS = [
@@ -29,11 +29,11 @@ const EVENTS = [
 ];
 
 test('tree-grid direct events target cells, editing, and row expansion', () => {
-  const model = unwrap(createTreeGridModelFromRows([
+  const model = createTreeGridModelFromRows([
     { id: 'root', parentID: null, cells: ['root-name'] },
     { id: 'child', parentID: 'root', cells: ['child-name'] },
-  ]));
-  const state = unwrap(createTreeGridState(model, { expanded: ['root'] }));
+  ]);
+  const state = createTreeGridState(model, { expanded: ['root'] });
   const selected = unwrap(applyTreeGridEvent(model, state, { type: 'select', id: 'child-name' }));
   assert.equal(selected.state.cursor.current, 'child-name');
   assert.deepEqual(selected.state.selection.selected, ['child-name']);
@@ -56,12 +56,11 @@ test('tree-grid row input constructs and validates its tree, grid, and mapping a
     { id: 'root', parentID: null, cells: ['root-name', 'root-status'] },
     { id: 'child', parentID: 'root', cells: ['child-name', null] },
   ]);
-  assert.equal(result.ok, true);
-  assert.deepEqual(result.value.rowIDs, ['root', 'child']);
-  assert.equal(result.value.tree.parentOf('child'), 'root');
-  assert.equal(result.value.grid.cellAt(1, 0), 'child-name');
+  assert.deepEqual(result.rowIDs, ['root', 'child']);
+  assert.equal(result.tree.parentOf('child'), 'root');
+  assert.equal(result.grid.cellAt(1, 0), 'child-name');
 
-  const invalid = createTreeGridModelFromRows([
+  const invalid = tryCreateTreeGridModelFromRows([
     { id: 'child', parentID: 'missing', cells: ['child-name'] },
   ]);
   assert.equal(invalid.ok, false);
@@ -73,21 +72,21 @@ test('tree-grid composition matches its independent reference across bounded row
   let transitions = 0;
   for (let size = 0; size <= 3; size += 1) {
     for (const raw of enumerateOrderedForests(size)) {
-      const tree = unwrap(createTree(stringTree(raw)));
+      const tree = createTree(stringTree(raw));
       const rowIDs = tree.preorder().ids;
       for (let mask = 0; mask < 2 ** (size * 2); mask += 1) {
         const rows = rowIDs.map((_, row) => [0, 1].map((column) => {
           const index = row * 2 + column;
           return (mask & 2 ** index) === 0 ? null : `c${row}-${column}`;
         }));
-        const grid = unwrap(createGrid(rows, { columnCount: 2 }));
-        const model = unwrap(createTreeGridModel(tree, grid, rowIDs));
+        const grid = createGrid(rows, { columnCount: 2 });
+        const model = createTreeGridModel(tree, grid, rowIDs);
         const branches = rowIDs.filter((id) => tree.isLeaf(id) === false);
         for (const expanded of powerset(branches)) {
           const visibleRows = new Set(tree.visible(expanded).ids);
           const visibleCells = cells(model).filter((id) => visibleRows.has(model.rowOfCell(id)));
           for (const current of [null, ...visibleCells]) {
-            const start = unwrap(createTreeGridState(model, { expanded, current }));
+            const start = createTreeGridState(model, { expanded, current });
             const referenceStart = createReferenceTreeGridState(model, { expanded, current });
             assert.deepEqual(stateObservation(start), stateObservation(referenceStart));
             models += 1;
@@ -106,11 +105,11 @@ test('tree-grid composition matches its independent reference across bounded row
               }
             }
             if (current !== null) {
-              const editing = unwrap(createTreeGridState(model, {
+              const editing = createTreeGridState(model, {
                 expanded,
                 current,
                 editMode: 'editing',
-              }));
+              });
               for (const event of EVENTS) {
                 const left = applyTreeGridEvent(model, editing, event);
                 const reference = applyReferenceTreeGridEvent(model, editing, event);
@@ -129,18 +128,18 @@ test('tree-grid composition matches its independent reference across bounded row
 });
 
 test('tree-grid keeps expansion, cell movement, selection, and editing distinct', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
     { id: 'leaf', parentID: 'child' },
-  ]));
-  const grid = unwrap(createGrid([
+  ]);
+  const grid = createGrid([
     ['root-name', 'root-value'],
     ['child-name', 'child-value'],
     ['leaf-name', 'leaf-value'],
-  ]));
-  const model = unwrap(createTreeGridModel(tree, grid, ['root', 'child', 'leaf']));
-  const start = unwrap(createTreeGridState(model, { current: 'root-name' }));
+  ]);
+  const model = createTreeGridModel(tree, grid, ['root', 'child', 'leaf']);
+  const start = createTreeGridState(model, { current: 'root-name' });
 
   const opened = unwrap(applyTreeGridEvent(model, start, 'expand'));
   assert.deepEqual(opened.state.expansion.ids, ['root']);
@@ -166,38 +165,38 @@ test('tree-grid keeps expansion, cell movement, selection, and editing distinct'
 });
 
 test('tree-grid validates mapping and rejects malformed state atomically', () => {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
-  ]));
-  const grid = unwrap(createGrid([
+  ]);
+  const grid = createGrid([
     ['a', 'b'],
     ['c', 'd'],
-  ]));
+  ]);
   assert.equal(
-    createTreeGridModel(tree, grid, ['root']).error.code,
+    tryCreateTreeGridModel(tree, grid, ['root']).error.code,
     'tree-grid-row-count-mismatch',
   );
   assert.equal(
-    createTreeGridModel(tree, grid, ['root', 'root']).error.code,
+    tryCreateTreeGridModel(tree, grid, ['root', 'root']).error.code,
     'duplicate-tree-grid-row',
   );
   assert.equal(
-    createTreeGridModel(tree, grid, ['root', 'missing']).error.code,
+    tryCreateTreeGridModel(tree, grid, ['root', 'missing']).error.code,
     'tree-grid-row-outside-tree',
   );
 
-  const reversed = unwrap(createTreeGridModel(tree, grid, ['child', 'root']));
+  const reversed = createTreeGridModel(tree, grid, ['child', 'root']);
   assert.equal(reversed.rowOfCell('a'), 'child');
   assert.equal(reversed.rowIndexOf('root'), 1);
 
-  const model = unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
-  assert.equal(createTreeGridState(model, { current: 'c' }).error.code, 'tree-grid-cursor-hidden');
+  const model = createTreeGridModel(tree, grid, ['root', 'child']);
+  assert.equal(tryCreateTreeGridState(model, { current: 'c' }).error.code, 'tree-grid-cursor-hidden');
   assert.equal(
-    createTreeGridState(model, { editMode: 'editing' }).error.code,
+    tryCreateTreeGridState(model, { editMode: 'editing' }).error.code,
     'tree-grid-edit-without-cursor',
   );
-  const start = unwrap(createTreeGridState(model));
+  const start = createTreeGridState(model);
   assert.equal(applyTreeGridEvent(model, start, 'select').error.code, 'no-cursor');
   assert.equal(applyTreeGridEvent(model, start, 'commit-edit').error.code, 'tree-grid-not-editing');
   assert.equal(applyTreeGridEvent(model, start, 'unknown').error.code, 'invalid-tree-grid-event');
@@ -206,7 +205,7 @@ test('tree-grid validates mapping and rejects malformed state atomically', () =>
     'invalid-tree-grid-boundary',
   );
 
-  const current = unwrap(createTreeGridState(model, { current: 'a' }));
+  const current = createTreeGridState(model, { current: 'a' });
   const ceiling = applyTreeGridEvent(model, current, 'down', { maxScan: 0 });
   assert.equal(ceiling.ok, false);
   assert.equal(ceiling.error.class, 'resource-rejection');

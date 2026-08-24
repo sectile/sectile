@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import {
@@ -24,6 +25,13 @@ export interface TabsPolicies<ID extends StableID = StableID>
 }
 
 export function createTabsState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: TabsStateInput<ID> = {},
+): TabsState<ID> {
+  return unwrap(tryCreateTabsState(domain, input));
+}
+
+export function tryCreateTabsState<ID extends StableID>(
   domain: Sequence<ID>,
   input: TabsStateInput<ID> = {},
 ): Result<TabsState<ID>> {

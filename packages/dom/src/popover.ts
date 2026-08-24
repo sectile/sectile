@@ -1,4 +1,4 @@
-import { applyPopoverEvent, createPopoverState, type PopoverCommand, type PopoverEvent, type PopoverState } from '@sectile/core/popover';
+import { applyPopoverEvent, tryCreatePopoverState, type PopoverCommand, type PopoverEvent, type PopoverState } from '@sectile/core/popover';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
@@ -101,10 +101,10 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
     ...(options.labelledBy === undefined ? {} : { labelledBy: options.labelledBy }),
     ...(options.describedBy === undefined ? {} : { describedBy: options.describedBy }),
     controlled: options.open !== undefined,
-    initial: createPopoverState(options.open ?? options.defaultOpen ?? false),
+    initial: tryCreatePopoverState(options.open ?? options.defaultOpen ?? false),
     open: 'open', toggle: 'toggle', close: 'close',
     reducer: applyPopoverEvent,
-    create: createPopoverState,
+    create: tryCreatePopoverState,
     read: (state) => state.open,
     interaction: options,
     ...(options.initialFocus === undefined ? {} : { initialFocus: options.initialFocus }),

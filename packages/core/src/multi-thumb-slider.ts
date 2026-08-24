@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { QuantizedRange } from './structures/range.js';
 import type { Sequence } from './structures/sequence.js';
@@ -11,7 +12,11 @@ export type MultiThumbSliderCommand<ID extends StableID = StableID> = { readonly
 export interface MultiThumbSliderPolicies { readonly minGap?: number; readonly allowCross?: boolean }
 export interface MultiThumbSliderUpdate<ID extends StableID = StableID> { readonly state: MultiThumbSliderState<ID>; readonly commands: readonly MultiThumbSliderCommand<ID>[] }
 
-export function createMultiThumbSliderState<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange, ticks: readonly number[], current: ID | null = null, policies: MultiThumbSliderPolicies = {}): Result<MultiThumbSliderState<ID>> {
+export function createMultiThumbSliderState<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange, ticks: readonly number[], current: ID | null = null, policies: MultiThumbSliderPolicies = {}): MultiThumbSliderState<ID> {
+  return unwrap(tryCreateMultiThumbSliderState(thumbs, range, ticks, current, policies));
+}
+
+export function tryCreateMultiThumbSliderState<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange, ticks: readonly number[], current: ID | null = null, policies: MultiThumbSliderPolicies = {}): Result<MultiThumbSliderState<ID>> {
   if (ticks.length !== thumbs.size) return fail('construction', 'thumb-value-count-mismatch', 'Every thumb requires one tick.');
   if (current !== null && !thumbs.contains(current)) return fail('construction', 'multi-thumb-cursor-outside-domain', 'Active thumb must exist.');
   const gap = policies.minGap ?? 0;
@@ -25,7 +30,7 @@ export function createMultiThumbSliderState<ID extends StableID>(thumbs: Sequenc
 }
 
 export function applyMultiThumbSliderEvent<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange, state: MultiThumbSliderState<ID>, event: MultiThumbSliderEvent<ID>, policies: MultiThumbSliderPolicies = {}): Result<MultiThumbSliderUpdate<ID>> {
-  const valid = createMultiThumbSliderState(thumbs, range, state.ticks, state.cursor.current, policies);
+  const valid = tryCreateMultiThumbSliderState(thumbs, range, state.ticks, state.cursor.current, policies);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (event === 'next-thumb' || event === 'previous-thumb') {
     if (thumbs.size === 0) return createMachineUpdate(state);

@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { AxisBoundaryPolicy, GridDirection, Result, StableID } from '../../shared.js';
 import type { Grid } from '../../structures/grid.js';
 import type { Sequence } from '../../structures/sequence.js';
@@ -15,7 +16,11 @@ export interface GridStateInput<ID extends StableID = StableID> { readonly curre
 export interface GridPolicies<ID extends StableID = StableID> { readonly eligible?: (id: ID) => boolean; readonly boundary?: AxisBoundaryPolicy; readonly maxScan?: number }
 export interface GridUpdate<ID extends StableID = StableID> { readonly state: GridState<ID>; readonly commands: readonly GridCommand<ID>[] }
 
-export function createGridState<ID extends StableID>(grid: Grid<ID>, input: GridStateInput<ID> = {}): Result<GridState<ID>> {
+export function createGridState<ID extends StableID>(grid: Grid<ID>, input: GridStateInput<ID> = {}): GridState<ID> {
+  return unwrap(tryCreateGridState(grid, input));
+}
+
+export function tryCreateGridState<ID extends StableID>(grid: Grid<ID>, input: GridStateInput<ID> = {}): Result<GridState<ID>> {
   const domain = gridCells(grid);
   const current = input.current ?? null;
   if (current !== null && !domain.contains(current)) return fail('construction', 'grid-cursor-outside-grid', 'Grid cursor must identify a cell.');
@@ -28,7 +33,7 @@ export function createGridState<ID extends StableID>(grid: Grid<ID>, input: Grid
 }
 
 export function applyGridEvent<ID extends StableID>(grid: Grid<ID>, state: GridState<ID>, event: GridEvent<ID>, policies: GridPolicies<ID> = {}): Result<GridUpdate<ID>> {
-  const valid = createGridState(grid, { current: state.cursor.current, selected: state.selection.selected, anchor: state.selection.anchor, editMode: state.editMode });
+  const valid = tryCreateGridState(grid, { current: state.cursor.current, selected: state.selection.selected, anchor: state.selection.anchor, editMode: state.editMode });
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   const boundary = policies.boundary ?? 'stop';
   if (boundary !== 'stop' && boundary !== 'wrap-axis') return fail('transition-rejection', 'invalid-grid-boundary', 'Grid boundary must be stop or wrap-axis.');

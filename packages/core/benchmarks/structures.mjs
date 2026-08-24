@@ -9,16 +9,16 @@ const unwrap = (result) => {
   return result.value;
 };
 
-const sequence = unwrap(createSequence(Array.from({ length: 100_000 }, (_, index) => `i${index}`)));
-const range = unwrap(createRange({ origin: '0', step: '0.01', count: 10_000_000 }));
-const grid = unwrap(createGrid(Array.from({ length: 300 }, (_, row) =>
+const sequence = createSequence(Array.from({ length: 100_000 }, (_, index) => `i${index}`));
+const range = createRange({ origin: '0', step: '0.01', count: 10_000_000 });
+const grid = createGrid(Array.from({ length: 300 }, (_, row) =>
   Array.from({ length: 300 }, (_, column) => `c${row}-${column}`),
-)));
+));
 const treeNodes = Array.from({ length: 100_000 }, (_, index) => ({
   id: `n${index}`,
   parentID: index === 0 ? null : `n${Math.floor((index - 1) / 3)}`,
 }));
-const tree = unwrap(createTree(treeNodes));
+const tree = createTree(treeNodes);
 
 measure('sequence indexOf', 100_000, () => sequence.indexOf('i99999'));
 measure('range valueAt', 100_000, () => range.valueAt(9_999_999));

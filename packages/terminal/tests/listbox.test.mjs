@@ -105,7 +105,7 @@ test('terminal commands project into terminal-specific effects', () => {
 });
 
 test('terminal controller supports mixed controlled and uncontrolled state', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
+  const domain = createSequence(['a', 'b']);
   const highlights = [];
   const controller = unwrap(createListboxController({
     domain,
@@ -132,7 +132,7 @@ test('terminal controller supports mixed controlled and uncontrolled state', () 
 });
 
 test('unsupported and stale terminal inputs are failure-atomic', () => {
-  const domain = unwrap(createSequence(['a']));
+  const domain = createSequence(['a']);
   const controller = unwrap(createListboxController({ domain }));
   const initial = controller.getSnapshot();
   const unsupported = controller.handleKeyboardInput({ key: 'tab' });

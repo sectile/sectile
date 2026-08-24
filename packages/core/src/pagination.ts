@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, SectileError } from './shared.js';
 import { fail, ok, validateSafeCeiling } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -53,7 +54,11 @@ export interface PaginationUpdate {
   readonly commands: readonly PaginationCommand[];
 }
 
-export function createPaginationModel(options: PaginationModelOptions): Result<PaginationModel> {
+export function createPaginationModel(options: PaginationModelOptions): PaginationModel {
+  return unwrap(tryCreatePaginationModel(options));
+}
+
+export function tryCreatePaginationModel(options: PaginationModelOptions): Result<PaginationModel> {
   const itemsPerPage = options.itemsPerPage ?? 10;
   const siblingCount = options.siblingCount ?? 2;
   for (const [value, name, minimum] of [
@@ -91,6 +96,14 @@ export function createPaginationState(
   model: PaginationModel,
   page = 1,
   itemsPerPage: number = model.itemsPerPage,
+): PaginationState {
+  return unwrap(tryCreatePaginationState(model, page, itemsPerPage));
+}
+
+export function tryCreatePaginationState(
+  model: PaginationModel,
+  page = 1,
+  itemsPerPage: number = model.itemsPerPage,
 ): Result<PaginationState> {
   const modelError = validatePaginationModel(model);
   if (modelError !== null) return { ok: false, error: modelError };
@@ -113,7 +126,7 @@ export function applyPaginationEvent(
   state: PaginationState,
   event: PaginationEvent,
 ): Result<PaginationUpdate> {
-  const validState = createPaginationState(model, state.page, state.itemsPerPage);
+  const validState = tryCreatePaginationState(model, state.page, state.itemsPerPage);
   if (!validState.ok) return transitionFailure(validState);
   if (!isPaginationEvent(event)) {
     return fail(
@@ -129,7 +142,7 @@ export function applyPaginationEvent(
   }
   const pageCount = derivePageCount(model.total, state.itemsPerPage);
   const nextState = typeof event === 'object' && event.type === 'set-items-per-page'
-    ? createPaginationState(
+    ? tryCreatePaginationState(
         model,
         Math.min(
           derivePageCount(model.total, event.itemsPerPage),
@@ -137,7 +150,7 @@ export function applyPaginationEvent(
         ),
         event.itemsPerPage,
       )
-    : createPaginationState(
+    : tryCreatePaginationState(
         model,
         typeof event === 'object' ? event.page
           : event === 'first-page' ? 1
@@ -159,7 +172,7 @@ export function getPaginationPageCount(
   model: PaginationModel,
   state: PaginationState,
 ): Result<number> {
-  const validState = createPaginationState(model, state.page, state.itemsPerPage);
+  const validState = tryCreatePaginationState(model, state.page, state.itemsPerPage);
   return validState.ok
     ? ok(derivePageCount(model.total, validState.value.itemsPerPage))
     : transitionFailure(validState);
@@ -169,7 +182,7 @@ export function getPaginationItems(
   model: PaginationModel,
   state: PaginationState,
 ): Result<readonly PaginationItem[]> {
-  const validState = createPaginationState(model, state.page, state.itemsPerPage);
+  const validState = tryCreatePaginationState(model, state.page, state.itemsPerPage);
   if (!validState.ok) return transitionFailure(validState);
   const pageCount = derivePageCount(model.total, state.itemsPerPage);
   const pages = getVisiblePages(state.page, pageCount, model.siblingCount, model.showEdges);
@@ -198,7 +211,7 @@ export function getPaginationItemRange(
   model: PaginationModel,
   state: PaginationState,
 ): Result<PaginationItemRange> {
-  const validState = createPaginationState(model, state.page, state.itemsPerPage);
+  const validState = tryCreatePaginationState(model, state.page, state.itemsPerPage);
   if (!validState.ok) return transitionFailure(validState);
   if (model.total === 0) return ok(Object.freeze({ start: 0, end: 0, total: 0 }));
   const start = (state.page - 1) * state.itemsPerPage + 1;

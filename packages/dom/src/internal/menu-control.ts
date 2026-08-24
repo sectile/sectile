@@ -1,7 +1,7 @@
 import type { Result, StableID } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { Tree, TreeNodeInput } from '@sectile/core/tree';
-import { applyMenuEvent, createMenuModel, createMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
+import { applyMenuEvent, tryCreateMenuModel, tryCreateMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 import { setInteractionAttributes } from './interaction.js';
 
@@ -34,7 +34,7 @@ export interface MenuControl<ID extends StableID> {
 }
 
 export function createMenuControl<ID extends StableID>(options: MenuControlOptions<ID>): Result<MenuControl<ID>> {
-  const model = createMenuModel(options.items); if (!model.ok) return model;
+  const model = tryCreateMenuModel(options.items); if (!model.ok) return model;
   const disabled = new Set(options.disabledItems ?? []);
   for (const id of disabled) if (!model.value.tree.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled menu item must exist in the menu tree.', details: { id } } };
   const suppliedDisabled = options.policies?.disabled;
@@ -43,11 +43,11 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
   const initialOpen = options.kind === 'menu-button' ? options.open ?? options.defaultOpen ?? false : true;
   const runtime = createSemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>, MenuCommand<ID>>({
     interaction: options,
-    initial: createMenuState(model.value.tree, initialOpen, initialOpen ? options.defaultHighlightedValue ?? null : null, []),
+    initial: tryCreateMenuState(model.value.tree, initialOpen, initialOpen ? options.defaultHighlightedValue ?? null : null, []),
     reducer: (state, event) => applyMenuEvent(model.value.tree, state, event, policies),
     reconcile: (previous, proposed) => {
       const open = options.kind === 'menu-button' ? openControlled ? previous.open : proposed.open : true;
-      return createMenuState(model.value.tree, open, open ? proposed.cursor.current : null, open ? proposed.openPath : []);
+      return tryCreateMenuState(model.value.tree, open, open ? proposed.cursor.current : null, open ? proposed.openPath : []);
     },
     notify: (previous, proposed) => { if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
     toEffect: (command) => command,
@@ -73,7 +73,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>> {
     if (!this.#openControlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'Only a controlled menu button can synchronize open state.' } };
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createMenuState(this.#tree, open, open ? state.cursor.current : null, open ? state.openPath : []));
+    const result = this.#runtime.replace(tryCreateMenuState(this.#tree, open, open ? state.cursor.current : null, open ? state.openPath : []));
     if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); }
     return result;
   }

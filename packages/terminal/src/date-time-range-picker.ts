@@ -7,7 +7,7 @@ import { createDatePickerMonth } from '@sectile/core/date-picker';
 import { addTimeMilliseconds } from '@sectile/core/time-field';
 import {
   applyDateTimeRangePickerEvent,
-  createDateTimeRangePickerState,
+  tryCreateDateTimeRangePickerState,
   type DateTimeRangePickerCommand,
   type DateTimeRangePickerEvent,
   type DateTimeRangePickerPolicies,
@@ -82,7 +82,7 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
     DateTimeRangePickerCommand,
     DateTimeRangePickerCommand
   >({
-    initial: createDateTimeRangePickerState({
+    initial: tryCreateDateTimeRangePickerState({
       ...(requestedValue === undefined ? {} : { value: requestedValue }),
       calendar: {
         ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
@@ -90,7 +90,7 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
       },
     }),
     reducer: (state, event) => applyDateTimeRangePickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => createDateTimeRangePickerState({
+    reconcile: (previous, proposed) => tryCreateDateTimeRangePickerState({
       value: controls.value ? previous.value : proposed.value,
       anchor: proposed.anchor,
       startTime: controls.value ? previous.startTime : proposed.startTime,
@@ -138,7 +138,7 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
-    return unwrap(createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn));
+    return createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn);
   }
 
   public syncControlledValues(
@@ -155,7 +155,7 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(createDateTimeRangePickerState({
+    const result = this.runtime.replace(tryCreateDateTimeRangePickerState({
       value: this.controls.value ? values.value as DateTimeRange | null : state.value,
       anchor: state.anchor,
       startTime: state.startTime,

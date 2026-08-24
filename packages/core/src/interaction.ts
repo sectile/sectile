@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 
 export type InteractionIntent = 'navigate' | 'mutate';
@@ -13,6 +14,12 @@ export interface InteractionState {
 }
 
 export function createInteractionState(
+  input: InteractionStateInput = {},
+): InteractionState {
+  return unwrap(tryCreateInteractionState(input));
+}
+
+export function tryCreateInteractionState(
   input: InteractionStateInput = {},
 ): Result<InteractionState> {
   if (input.disabled !== undefined && typeof input.disabled !== 'boolean') {

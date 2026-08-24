@@ -16,7 +16,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import { createDateRangeField, createDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/date-range-field';
+import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/date-range-field';
 import type { DateRange } from '@sectile/dom/date-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
@@ -69,7 +69,7 @@ export const DateRangeFieldRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: DateRangeFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = props.modelValue !== undefined;
-    const initial = createDateRangeFieldState({ value: controlled ? props.modelValue as DateRange | null : props.defaultValue });
+    const initial = tryCreateDateRangeFieldState({ value: controlled ? props.modelValue as DateRange | null : props.defaultValue });
     if (!initial.ok) throw new TypeError(initial.error.message);
     const snapshot = shallowRef<DateRangeFieldState>(initial.value);
     const startInput = ref<HTMLInputElement | null>(null);

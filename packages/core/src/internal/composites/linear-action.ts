@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
 import { fail, ok } from '../kernel/foundation.js';
@@ -38,6 +39,13 @@ export interface LinearActionUpdate<ID extends StableID = StableID> {
 }
 
 export function createLinearActionState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: LinearActionStateInput<ID> = {},
+): LinearActionState<ID> {
+  return unwrap(tryCreateLinearActionState(domain, input));
+}
+
+export function tryCreateLinearActionState<ID extends StableID>(
   domain: Sequence<ID>,
   input: LinearActionStateInput<ID> = {},
 ): Result<LinearActionState<ID>> {

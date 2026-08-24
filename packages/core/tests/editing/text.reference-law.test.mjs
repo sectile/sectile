@@ -14,6 +14,7 @@ import {
   replaceTextState,
   slicePlainText,
   startTextComposition,
+  tryCreateTextEditingState,
   updateTextComposition,
 } from '../../.verification-dist/internal/editing/text.js';
 import {
@@ -48,9 +49,7 @@ test('TXT-01..07: plain text preserves UTF-16 boundaries, replace algebra, direc
 
     for (const anchorCodeUnitOffset of boundaries) {
       for (const focusCodeUnitOffset of boundaries) {
-        const snapshot = unwrap(
-          createTextSnapshot(text, { anchorCodeUnitOffset, focusCodeUnitOffset }),
-        );
+        const snapshot = createTextSnapshot(text, { anchorCodeUnitOffset, focusCodeUnitOffset });
         assert.equal(snapshot.selection.anchorCodeUnitOffset, anchorCodeUnitOffset);
         assert.equal(snapshot.selection.focusCodeUnitOffset, focusCodeUnitOffset);
         assert.equal(
@@ -107,8 +106,8 @@ test('TXT-01..07: plain text preserves UTF-16 boundaries, replace algebra, direc
   for (const [left, right] of [['가', '가'], ['á', 'a\u0301']]) {
     assert.notEqual(left, right);
     assert.equal(left.normalize('NFC'), right.normalize('NFC'));
-    assert.equal(unwrap(createTextEditingState(left)).snapshot.text, left);
-    assert.equal(unwrap(createTextEditingState(right)).snapshot.text, right);
+    assert.equal(createTextEditingState(left).snapshot.text, left);
+    assert.equal(createTextEditingState(right).snapshot.text, right);
     normalizationCases += 1;
   }
 
@@ -126,9 +125,7 @@ test('TXT-08..11: composition keeps its baseline, replaces the active passage, c
     const boundaries = referenceTextCodeUnitBoundaries(text);
     for (const anchorCodeUnitOffset of boundaries) {
       for (const focusCodeUnitOffset of boundaries) {
-        const baseline = unwrap(
-          createTextEditingState(text, { anchorCodeUnitOffset, focusCodeUnitOffset }),
-        );
+        const baseline = createTextEditingState(text, { anchorCodeUnitOffset, focusCodeUnitOffset });
         const referenceBaseline = createReferenceTextEditingState(text, {
           anchorCodeUnitOffset,
           focusCodeUnitOffset,
@@ -201,13 +198,13 @@ test('TXT-08..11: composition keeps its baseline, replaces the active passage, c
 });
 
 test('TXT-12: malformed snapshots, surrogate splits, and invalid composition phases reject atomically', () => {
-  const baseline = unwrap(createTextEditingState('a😀b', {
+  const baseline = createTextEditingState('a😀b', {
     anchorCodeUnitOffset: 1,
     focusCodeUnitOffset: 3,
-  }));
+  });
   for (const invalid of [
-    createTextEditingState('\ud800'),
-    createTextEditingState('😀', { anchorCodeUnitOffset: 1, focusCodeUnitOffset: 2 }),
+    tryCreateTextEditingState('\ud800'),
+    tryCreateTextEditingState('😀', { anchorCodeUnitOffset: 1, focusCodeUnitOffset: 2 }),
     replacePlainText('abc', 2, 1, ''),
     replacePlainText('😀', 1, 2, ''),
     replacePlainText('abc', 0, 1, '\udc00'),
@@ -240,7 +237,7 @@ test('TXT-12: malformed snapshots, surrogate splits, and invalid composition pha
 });
 
 test('public text events reduce replacement and composition as one atomic state transition', () => {
-  const baseline = unwrap(createTextEditingState('ab', endSelection('ab')));
+  const baseline = createTextEditingState('ab', endSelection('ab'));
   const replaced = unwrap(applyTextEvent(baseline, {
     type: 'replace',
     startCodeUnitOffset: 1,
@@ -284,7 +281,7 @@ test('public text normalization rejects malformed external state without throwin
       },
     }),
     applyTextEvent(null, { type: 'composition-commit' }),
-    applyTextEvent(unwrap(createTextEditingState()), { type: 'unknown' }),
+    applyTextEvent(createTextEditingState(), { type: 'unknown' }),
   ]) {
     assert.equal(invalid.ok, false);
   }

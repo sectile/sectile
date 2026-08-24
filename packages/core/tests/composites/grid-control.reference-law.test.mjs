@@ -4,11 +4,11 @@ import { createReferenceGridState, applyReferenceGridEvent } from '../../.verifi
 import { unwrap } from '../support.mjs';
 
 test('grid interaction matches an independent coordinate reference', () => {
-  const grid = unwrap(createGrid([['a', 'b'], ['c', 'd']]));
+  const grid = createGrid([['a', 'b'], ['c', 'd']]);
   const events = ['left', 'right', 'up', 'down', 'select', 'start-edit', { type: 'focus', id: 'd' }, { type: 'select', id: 'c' }, { type: 'start-edit', id: 'b' }];
   for (const current of [null, 'a', 'b', 'c', 'd']) for (const selected of [[], ['a']]) for (const event of events) {
     const input = { current, selected, anchor: selected[0] ?? null };
-    const actual = applyGridEvent(grid, unwrap(createGridState(grid, input)), event, { boundary: 'wrap-axis' });
+    const actual = applyGridEvent(grid, createGridState(grid, input), event, { boundary: 'wrap-axis' });
     const expected = applyReferenceGridEvent(grid, createReferenceGridState(grid, input), event, { boundary: 'wrap-axis' });
     assert.deepEqual(observe(actual), observeReference(expected));
   }

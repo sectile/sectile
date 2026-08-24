@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Sequence } from './structures/sequence.js';
 import { fail } from './internal/kernel/foundation.js';
@@ -9,6 +10,7 @@ import {
   type ListboxState,
   type ListboxStateInput,
   type ListboxUpdate,
+  tryCreateListboxState,
 } from './internal/composites/listbox.js';
 
 export type ToggleGroupEvent<ID extends StableID = StableID> =
@@ -34,11 +36,19 @@ export function createToggleGroupState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ToggleGroupStateInput<ID> = {},
   multiple = false,
+): ToggleGroupState<ID> {
+  return unwrap(tryCreateToggleGroupState(domain, input, multiple));
+}
+
+export function tryCreateToggleGroupState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: ToggleGroupStateInput<ID> = {},
+  multiple = false,
 ): Result<ToggleGroupState<ID>> {
   if (typeof multiple !== 'boolean') {
     return fail('construction', 'invalid-toggle-group-multiple', 'Toggle group multiple must be boolean.');
   }
-  return createListboxState(domain, input, multiple ? 'multiple' : 'single');
+  return tryCreateListboxState(domain, input, multiple ? 'multiple' : 'single');
 }
 
 export function applyToggleGroupEvent<ID extends StableID>(

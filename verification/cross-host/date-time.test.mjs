@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { unwrap } from '@sectile/core/result';
 import { createDateValue } from '@sectile/core/date-field';
 import { createTimeValue } from '@sectile/core/time-field';
 import { createDateTimeRange, createDateTimeValue } from '@sectile/core/date-time-field';
@@ -17,12 +16,12 @@ import { createDatePicker as createTerminalDatePicker } from '@sectile/terminal/
 import { createDateTimePicker as createTerminalDateTimePicker } from '@sectile/terminal/date-time-picker';
 import { createDateTimeRangePicker as createTerminalDateTimeRangePicker } from '@sectile/terminal/date-time-range-picker';
 
-const date = (year, month, day) => unwrap(createDateValue(year, month, day));
-const time = (hour, minute) => unwrap(createTimeValue(hour, minute));
-const dateTime = (year, month, day, hour, minute) => unwrap(createDateTimeValue(
+const date = (year, month, day) => createDateValue(year, month, day);
+const time = (hour, minute) => createTimeValue(hour, minute);
+const dateTime = (year, month, day, hour, minute) => createDateTimeValue(
   date(year, month, day),
   time(hour, minute),
-));
+);
 
 test('DOM and terminal date fields preserve date drafts and segment adjustment', () => {
   const DOM = createDOMDateField({ input: new FakeInput(), defaultValue: date(2024, 1, 31) });
@@ -93,10 +92,10 @@ test('DOM and terminal date-time pickers preserve calendar and wall-clock select
 });
 
 test('DOM and terminal date-time range pickers preserve endpoint times and range anchoring', () => {
-  const value = unwrap(createDateTimeRange(
+  const value = createDateTimeRange(
     dateTime(2026, 8, 21, 9, 0),
     dateTime(2026, 8, 23, 17, 0),
-  ));
+  );
   const options = { defaultValue: value, defaultHighlightedValue: value.end.date, defaultOpen: true };
   const DOM = createDOMDateTimeRangePicker({ ...options, root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement() });
   const terminal = createTerminalDateTimeRangePicker(options);

@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, freezeArray, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -10,6 +11,7 @@ import {
   dateDayOfWeek,
   formatDateValue,
   type DateValue,
+  tryCreateDateValue,
 } from './date-field.js';
 
 export interface DatePickerView {
@@ -80,18 +82,22 @@ export interface DatePickerStateInput {
   readonly open?: boolean;
 }
 
-export function createDatePickerState(input: DatePickerStateInput = {}): Result<DatePickerState> {
+export function createDatePickerState(input: DatePickerStateInput = {}): DatePickerState {
+  return unwrap(tryCreateDatePickerState(input));
+}
+
+export function tryCreateDatePickerState(input: DatePickerStateInput = {}): Result<DatePickerState> {
   const value = input.value ?? null;
   if (value !== null) {
-    const valid = createDateValue(value.year, value.month, value.day);
+    const valid = tryCreateDateValue(value.year, value.month, value.day);
     if (!valid.ok) return valid;
   }
   const fallback = value ?? Object.freeze({ year: 1970, month: 1, day: 1 });
   const highlighted = input.highlighted ?? fallback;
-  const validHighlight = createDateValue(highlighted.year, highlighted.month, highlighted.day);
+  const validHighlight = tryCreateDateValue(highlighted.year, highlighted.month, highlighted.day);
   if (!validHighlight.ok) return validHighlight;
   const view = input.view ?? Object.freeze({ year: validHighlight.value.year, month: validHighlight.value.month });
-  const validView = createDateValue(view.year, view.month, 1);
+  const validView = tryCreateDateValue(view.year, view.month, 1);
   if (!validView.ok) return validView;
   const viewMode = input.viewMode ?? 'month';
   if (!isViewMode(viewMode)) return fail('construction', 'invalid-date-picker-view-mode', 'Date picker view mode must be week, month, or year.');
@@ -100,7 +106,7 @@ export function createDatePickerState(input: DatePickerStateInput = {}): Result<
 }
 
 export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies = {}): Result<DatePickerUpdate> {
-  const valid = createDatePickerState(state);
+  const valid = tryCreateDatePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -115,7 +121,7 @@ export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEv
     return createMachineUpdate(pickerState(state.value, state.highlighted, state.view, event.value, state.open), [{ type: 'view-mode-changed', value: event.value }]);
   }
   if (typeof event === 'object' && event.type === 'select-month') {
-    const month = createDateValue(event.value.year, event.value.month, 1);
+    const month = tryCreateDateValue(event.value.year, event.value.month, 1);
     if (!month.ok) return invalidTransition(month);
     const delta = (event.value.year - state.highlighted.year) * 12 + event.value.month - state.highlighted.month;
     const highlighted = addDateMonths(state.highlighted, delta);
@@ -152,8 +158,12 @@ export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEv
   return createMachineUpdate(pickerState(state.value, eligible.value, view, state.viewMode, state.open), [{ type: 'highlight-changed', value: eligible.value }]);
 }
 
-export function createDatePickerWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly DateValue[]> {
-  const valid = createDateValue(value.year, value.month, value.day);
+export function createDatePickerWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly DateValue[] {
+  return unwrap(tryCreateDatePickerWeek(value, weekStartsOn));
+}
+
+export function tryCreateDatePickerWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly DateValue[]> {
+  const valid = tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return valid;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
   const offset = (dateDayOfWeek(valid.value) - weekStartsOn + 7) % 7;
@@ -168,8 +178,12 @@ export function createDatePickerWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 |
   return ok(freezeArray(days));
 }
 
-export function createDatePickerMonth(view: DatePickerView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly (readonly DateValue[])[]> {
-  const first = createDateValue(view.year, view.month, 1);
+export function createDatePickerMonth(view: DatePickerView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): readonly (readonly DateValue[])[] {
+  return unwrap(tryCreateDatePickerMonth(view, weekStartsOn));
+}
+
+export function tryCreateDatePickerMonth(view: DatePickerView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly (readonly DateValue[])[]> {
+  const first = tryCreateDateValue(view.year, view.month, 1);
   if (!first.ok) return first;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
   const offset = (dateDayOfWeek(first.value) - weekStartsOn + 7) % 7;
@@ -188,8 +202,12 @@ export function createDatePickerMonth(view: DatePickerView, weekStartsOn: 1 | 2 
   return ok(freezeArray(rows.map((row) => freezeArray(row))));
 }
 
-export function createDatePickerYear(year: number): Result<readonly (readonly DatePickerMonthValue[])[]> {
-  const valid = createDateValue(year, 1, 1);
+export function createDatePickerYear(year: number): readonly (readonly DatePickerMonthValue[])[] {
+  return unwrap(tryCreateDatePickerYear(year));
+}
+
+export function tryCreateDatePickerYear(year: number): Result<readonly (readonly DatePickerMonthValue[])[]> {
+  const valid = tryCreateDateValue(year, 1, 1);
   if (!valid.ok) return valid;
   const rows: DatePickerMonthValue[][] = [];
   for (let row = 0; row < 4; row += 1) {
@@ -217,7 +235,7 @@ function commit(value: DateValue | null, state: DatePickerState, policies: DateP
       ...openChanged(state.open, open),
     ]);
   }
-  const valid = createDateValue(value.year, value.month, value.day);
+  const valid = tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return invalidTransition(valid);
   if (!isDatePickerValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-picker-value-unavailable', 'Date picker value is outside its selectable domain.');
   const open = close ? false : state.open;
@@ -267,8 +285,8 @@ function findEligibleInMonth(start: DateValue, month: DatePickerMonthValue, poli
 
 function validatePolicies(policies: DatePickerPolicies): Result<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') return fail('construction', 'invalid-date-picker-unavailable-policy', 'Date picker unavailable policy must be a function.');
-  if (policies.min !== undefined) { const min = createDateValue(policies.min.year, policies.min.month, policies.min.day); if (!min.ok) return min; }
-  if (policies.max !== undefined) { const max = createDateValue(policies.max.year, policies.max.month, policies.max.day); if (!max.ok) return max; }
+  if (policies.min !== undefined) { const min = tryCreateDateValue(policies.min.year, policies.min.month, policies.min.day); if (!min.ok) return min; }
+  if (policies.max !== undefined) { const max = tryCreateDateValue(policies.max.year, policies.max.month, policies.max.day); if (!max.ok) return max; }
   if (policies.min !== undefined && policies.max !== undefined && compareDateValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-date-picker-bounds', 'Date picker minimum must not follow its maximum.');
   return ok(true);
 }

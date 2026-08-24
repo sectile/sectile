@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { compareDecimal, parseDecimal, type DecimalRounding } from './internal/kernel/decimal.js';
 import { fail, ok } from './internal/kernel/foundation.js';
@@ -7,8 +8,9 @@ import {
   createNumberFieldState,
   type NumberFieldEvent,
   type NumericExpressionEvaluator,
+  tryCreateNumberFieldState,
 } from './number-field.js';
-import { createTextEditingState, type TextEditingState } from './text.js';
+import { type TextEditingState, tryCreateTextEditingState } from './text.js';
 import type { UnitExpression, UnitID, UnitRegistry, UnitSystemProfile } from './units.js';
 
 export interface QuantityValue {
@@ -69,6 +71,15 @@ export function createQuantityFieldState(
   quantity: QuantityValue | null = null,
   displayUnit?: UnitID,
   inputState?: TextEditingState,
+): QuantityFieldState {
+  return unwrap(tryCreateQuantityFieldState(policies, quantity, displayUnit, inputState));
+}
+
+export function tryCreateQuantityFieldState(
+  policies: QuantityFieldPolicies,
+  quantity: QuantityValue | null = null,
+  displayUnit?: UnitID,
+  inputState?: TextEditingState,
 ): Result<QuantityFieldState> {
   const validPolicies = validatePolicies(policies);
   if (!validPolicies.ok) return validPolicies;
@@ -94,14 +105,14 @@ export function createQuantityFieldState(
     const displayed = displayValue(normalizedQuantity, resolvedDisplayUnit, policies);
     if (!displayed.ok) return displayed;
     const text = displayed.value ?? '';
-    const created = createTextEditingState(text, {
+    const created = tryCreateTextEditingState(text, {
       anchorCodeUnitOffset: text.length,
       focusCodeUnitOffset: text.length,
     });
     if (!created.ok) return created;
     input = created.value;
   }
-  const number = createNumberFieldState(null, input);
+  const number = tryCreateNumberFieldState(null, input);
   if (!number.ok) return number;
   return ok(Object.freeze({
     quantity: normalizedQuantity,
@@ -115,7 +126,7 @@ export function applyQuantityFieldEvent(
   event: QuantityFieldEvent,
   policies: QuantityFieldPolicies,
 ): Result<QuantityFieldUpdate> {
-  const valid = createQuantityFieldState(policies, state.quantity, state.displayUnit, state.inputState);
+  const valid = tryCreateQuantityFieldState(policies, state.quantity, state.displayUnit, state.inputState);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   const bounds = normalizeBounds(policies);
   if (!bounds.ok) return bounds;
@@ -125,7 +136,7 @@ export function applyQuantityFieldEvent(
   if (event === 'commit') return commitQuantityField(valid.value, policies, bounds.value);
   const displayed = displayValue(valid.value.quantity, valid.value.displayUnit, policies);
   if (!displayed.ok) return displayed;
-  const numberState = createNumberFieldState(displayed.value, valid.value.inputState);
+  const numberState = tryCreateNumberFieldState(displayed.value, valid.value.inputState);
   if (!numberState.ok) return numberState;
   const reduced = applyNumberFieldEvent(numberState.value, event, {
     ...(policies.evaluator === undefined ? {} : { evaluator: policies.evaluator }),
@@ -179,7 +190,7 @@ function commitQuantityField(
   if (!parsedInput.ok) return parsedInput;
   if (parsedInput.value.value === null) {
     if (policies.required === true) return fail('transition-rejection', 'required-quantity', 'Quantity field requires a value.');
-    const input = createTextEditingState('', { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 });
+    const input = tryCreateTextEditingState('', { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 });
     if (!input.ok) return input;
     return createMachineUpdate(
       Object.freeze({ ...state, quantity: null, inputState: input.value }),
@@ -219,7 +230,7 @@ function commitQuantityField(
     : state.displayUnit;
   const display = policies.registry.convert(canonicalValue, policies.canonicalUnit, displayUnit, conversionOptions(policies));
   if (!display.ok) return display;
-  const input = createTextEditingState(display.value.value, {
+  const input = tryCreateTextEditingState(display.value.value, {
     anchorCodeUnitOffset: display.value.value.length,
     focusCodeUnitOffset: display.value.value.length,
   });
@@ -239,12 +250,12 @@ function evaluateQuantityExpression(
   expression: string,
   evaluator: NumericExpressionEvaluator | undefined,
 ): Result<string | null> {
-  const input = createTextEditingState(expression, {
+  const input = tryCreateTextEditingState(expression, {
     anchorCodeUnitOffset: expression.length,
     focusCodeUnitOffset: expression.length,
   });
   if (!input.ok) return input;
-  const state = createNumberFieldState(null, input.value);
+  const state = tryCreateNumberFieldState(null, input.value);
   if (!state.ok) return state;
   const committed = applyNumberFieldEvent(state.value, 'commit', {
     ...(evaluator === undefined ? {} : { evaluator }),
@@ -271,7 +282,7 @@ function changeDisplayUnit(
   const displayed = displayValue(state.quantity, displayUnit, policies);
   if (!displayed.ok) return displayed;
   const text = displayed.value ?? '';
-  const input = createTextEditingState(text, {
+  const input = tryCreateTextEditingState(text, {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
   });

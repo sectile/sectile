@@ -1,5 +1,12 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
-import { createTree, type Tree, type TreeNodeInput, type TreeOptions } from './structures/tree.js';
+import { createTree, type Tree, type TreeNodeInput, type TreeOptions,tryCreateTree } from './structures/tree.js';
 export interface MenuModel<ID extends StableID = StableID> { readonly tree: Tree<ID> }
-export function createMenuModel<ID extends StableID>(items: readonly TreeNodeInput<ID>[], options: TreeOptions = {}): Result<MenuModel<ID>> { const tree = createTree(items, options); return tree.ok ? { ok: true, value: Object.freeze({ tree: tree.value }) } : tree; }
+export function createMenuModel<ID extends StableID>(items: readonly TreeNodeInput<ID>[], options: TreeOptions = {}): MenuModel<ID> {
+  return unwrap(tryCreateMenuModel(items, options));
+}
+
+export function tryCreateMenuModel<ID extends StableID>(items: readonly TreeNodeInput<ID>[], options: TreeOptions = {}): Result<MenuModel<ID>> { const tree = tryCreateTree(items, options); return tree.ok ? { ok: true, value: Object.freeze({ tree: tree.value }) } : tree; }
 export { applyMenuEvent, createMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState, type MenuUpdate } from './internal/composites/menu.js';
+
+export { tryCreateMenuState } from './internal/composites/menu.js';

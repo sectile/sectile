@@ -8,7 +8,7 @@ import { createNumberField } from '../dist/number-field.js';
 test('terminal number field edits at its caret and commits calculator expressions', () => {
   const field = createNumberField({
     defaultValue: '50',
-    policies: { evaluator: unwrap(createCalculatorExpression()) },
+    policies: { evaluator: createCalculatorExpression() },
   });
   field.handleKeyboardInput({ key: 'end' });
   field.handleTextInput('-20%');
@@ -28,7 +28,7 @@ test('terminal number field proposes controlled value and text state updates', (
   const field = createNumberField({
     value: '2',
     inputState,
-    policies: { evaluator: unwrap(createCalculatorExpression()) },
+    policies: { evaluator: createCalculatorExpression() },
     onValueChange: (change) => { proposed = change; },
   });
   field.handleTextInput('^3');
@@ -42,7 +42,7 @@ test('terminal number field proposes controlled value and text state updates', (
 test('terminal number field commits exact decimal arithmetic', () => {
   const field = createNumberField({
     defaultValue: '0',
-    policies: { evaluator: unwrap(createCalculatorExpression()) },
+    policies: { evaluator: createCalculatorExpression() },
   });
   field.handleKeyboardInput({ key: 'home' });
   field.handleKeyboardInput({ key: 'delete' });
@@ -53,8 +53,8 @@ test('terminal number field commits exact decimal arithmetic', () => {
 });
 
 function editing(text) {
-  return unwrap(createTextEditingState(text, {
+  return createTextEditingState(text, {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
-  }));
+  });
 }

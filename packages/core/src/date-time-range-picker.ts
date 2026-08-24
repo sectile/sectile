@@ -1,13 +1,16 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
-import { compareDateValues, createDateValue, type DateValue } from './date-field.js';
+import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
 import {
   compareDateTimeValues,
   createDateTimeRange,
   createDateTimeValue,
   type DateTimeRange,
   type DateTimeValue,
+  tryCreateDateTimeRange,
+  tryCreateDateTimeValue,
 } from './date-time-field.js';
 import {
   applyDatePickerEvent,
@@ -16,12 +19,14 @@ import {
   type DatePickerPolicies,
   type DatePickerState,
   type DatePickerViewMode,
+  tryCreateDatePickerState,
 } from './date-picker.js';
 import {
   compareTimeValues,
   createTimeValue,
   type TimeFieldPolicies,
   type TimeValue,
+  tryCreateTimeValue,
 } from './time-field.js';
 
 export interface DateTimeRangePickerState {
@@ -93,25 +98,31 @@ const MIDNIGHT: TimeValue = Object.freeze({ hour: 0, minute: 0, second: 0, milli
 
 export function createDateTimeRangePickerState(
   input: DateTimeRangePickerStateInput = {},
+): DateTimeRangePickerState {
+  return unwrap(tryCreateDateTimeRangePickerState(input));
+}
+
+export function tryCreateDateTimeRangePickerState(
+  input: DateTimeRangePickerStateInput = {},
 ): Result<DateTimeRangePickerState> {
   const value = input.value === undefined || input.value === null
     ? ok(null)
-    : createDateTimeRange(input.value.start, input.value.end);
+    : tryCreateDateTimeRange(input.value.start, input.value.end);
   if (!value.ok) return value;
   const anchor = input.anchor === undefined || input.anchor === null
     ? ok(null)
-    : createDateValue(input.anchor.year, input.anchor.month, input.anchor.day);
+    : tryCreateDateValue(input.anchor.year, input.anchor.month, input.anchor.day);
   if (!anchor.ok) return anchor;
   const requestedStartTime = value.value?.start.time ?? input.startTime ?? MIDNIGHT;
   const requestedEndTime = value.value?.end.time ?? input.endTime ?? MIDNIGHT;
-  const startTime = createTimeValue(
+  const startTime = tryCreateTimeValue(
     requestedStartTime.hour,
     requestedStartTime.minute,
     requestedStartTime.second,
     requestedStartTime.millisecond,
   );
   if (!startTime.ok) return startTime;
-  const endTime = createTimeValue(
+  const endTime = tryCreateTimeValue(
     requestedEndTime.hour,
     requestedEndTime.minute,
     requestedEndTime.second,
@@ -119,7 +130,7 @@ export function createDateTimeRangePickerState(
   );
   if (!endTime.ok) return endTime;
   const fallback = anchor.value ?? value.value?.end.date;
-  const calendar = createDatePickerState({
+  const calendar = tryCreateDatePickerState({
     value: null,
     ...(input.calendar?.highlighted === undefined && fallback !== undefined
       ? { highlighted: fallback }
@@ -141,7 +152,7 @@ export function applyDateTimeRangePickerEvent(
   event: DateTimeRangePickerEvent,
   policies: DateTimeRangePickerPolicies = {},
 ): Result<DateTimeRangePickerUpdate> {
-  const valid = createDateTimeRangePickerState(state);
+  const valid = tryCreateDateTimeRangePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -183,13 +194,13 @@ function selectDate(
   requested: DateValue,
   policies: DateTimeRangePickerPolicies,
 ): Result<DateTimeRangePickerUpdate> {
-  const date = createDateValue(requested.year, requested.month, requested.day);
+  const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   if (!isDatePickerValueAvailable(date.value, policies.date)) {
     return fail('transition-rejection', 'date-time-range-picker-date-unavailable', 'Date-time range endpoint is outside its selectable domain.');
   }
   if (state.anchor === null) {
-    const calendar = createDatePickerState({
+    const calendar = tryCreateDatePickerState({
       value: null,
       highlighted: date.value,
       view: { year: date.value.year, month: date.value.month },
@@ -209,11 +220,11 @@ function selectDate(
   }
   const startDate = compareDateValues(state.anchor, date.value) <= 0 ? state.anchor : date.value;
   const endDate = compareDateValues(state.anchor, date.value) <= 0 ? date.value : state.anchor;
-  const start = createDateTimeValue(startDate, state.startTime);
+  const start = tryCreateDateTimeValue(startDate, state.startTime);
   if (!start.ok) return start;
-  const end = createDateTimeValue(endDate, state.endTime);
+  const end = tryCreateDateTimeValue(endDate, state.endTime);
   if (!end.ok) return end;
-  const range = createDateTimeRange(start.value, end.value);
+  const range = tryCreateDateTimeRange(start.value, end.value);
   return range.ok ? commitRange(state, range.value, policies, date.value) : range;
 }
 
@@ -235,14 +246,14 @@ function setEndpointTime(
     );
   }
   const start = endpoint === 'start'
-    ? createDateTimeValue(state.value.start.date, time.value)
+    ? tryCreateDateTimeValue(state.value.start.date, time.value)
     : ok(state.value.start);
   if (!start.ok) return start;
   const end = endpoint === 'end'
-    ? createDateTimeValue(state.value.end.date, time.value)
+    ? tryCreateDateTimeValue(state.value.end.date, time.value)
     : ok(state.value.end);
   if (!end.ok) return end;
-  const range = createDateTimeRange(start.value, end.value);
+  const range = tryCreateDateTimeRange(start.value, end.value);
   return range.ok ? commitRange(state, range.value, policies) : range;
 }
 
@@ -252,14 +263,14 @@ function setEndpointDate(
   requested: DateValue,
   policies: DateTimeRangePickerPolicies,
 ): Result<DateTimeRangePickerUpdate> {
-  const date = createDateValue(requested.year, requested.month, requested.day);
+  const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   const fallback = state.value === null ? date.value : endpoint === 'start' ? state.value.end.date : state.value.start.date;
-  const start = createDateTimeValue(endpoint === 'start' ? date.value : fallback, state.startTime);
+  const start = tryCreateDateTimeValue(endpoint === 'start' ? date.value : fallback, state.startTime);
   if (!start.ok) return start;
-  const end = createDateTimeValue(endpoint === 'end' ? date.value : fallback, state.endTime);
+  const end = tryCreateDateTimeValue(endpoint === 'end' ? date.value : fallback, state.endTime);
   if (!end.ok) return end;
-  const range = createDateTimeRange(start.value, end.value);
+  const range = tryCreateDateTimeRange(start.value, end.value);
   return range.ok ? commitRange(state, range.value, policies, date.value) : range;
 }
 
@@ -281,14 +292,14 @@ function commitRange(
       ],
     );
   }
-  const range = createDateTimeRange(requested.start, requested.end);
+  const range = tryCreateDateTimeRange(requested.start, requested.end);
   if (!range.ok) return invalidTransition(range);
   const start = validateEndpoint(range.value.start, policies, 'start');
   if (!start.ok) return start;
   const end = validateEndpoint(range.value.end, policies, 'end');
   if (!end.ok) return end;
   const selectedHighlight = highlighted ?? range.value.end.date;
-  const calendar = createDatePickerState({
+  const calendar = tryCreateDatePickerState({
     value: null,
     highlighted: selectedHighlight,
     view: { year: selectedHighlight.year, month: selectedHighlight.month },
@@ -325,7 +336,7 @@ function validateEndpoint(
   policies: DateTimeRangePickerPolicies,
   endpoint: 'start' | 'end',
 ): Result<DateTimeValue> {
-  const valid = createDateTimeValue(value.date, value.time);
+  const valid = tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return invalidTransition(valid);
   if (!isDatePickerValueAvailable(valid.value.date, policies.date)) {
     return fail('transition-rejection', 'date-time-range-picker-date-unavailable', 'Date-time range endpoint is outside its selectable domain.');
@@ -353,7 +364,7 @@ function validateTime(
   policies: TimeFieldPolicies = {},
   endpoint: 'start' | 'end',
 ): Result<TimeValue> {
-  const valid = createTimeValue(value.hour, value.minute, value.second, value.millisecond);
+  const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return invalidTransition(valid);
   if (policies.min !== undefined && compareTimeValues(valid.value, policies.min) < 0) {
     return fail('transition-rejection', `date-time-range-picker-${endpoint}-time-below-minimum`, `Date-time range ${endpoint} time is below its minimum.`);

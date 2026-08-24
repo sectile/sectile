@@ -29,8 +29,8 @@ test('SEL-01..07: selection operations preserve domain, cardinality, and algebra
   for (let size = 0; size <= 8; size += 1) {
     const ids = canonicalIDs(size);
     const outside = `outside-${size}`;
-    const domain = unwrap(createSequence(ids));
-    const previousDomain = unwrap(createSequence([...ids, outside]));
+    const domain = createSequence(ids);
+    const previousDomain = createSequence([...ids, outside]);
     const anchors = [null, ...ids, outside];
     const subsets = [...powerset(ids)];
     const multipleInputs = [
@@ -136,9 +136,9 @@ test('SEL-08: identity renaming commutes with every selection operation', () => 
   let cases = 0;
   for (let size = 0; size <= 6; size += 1) {
     const ids = canonicalIDs(size);
-    const sourceDomain = unwrap(createSequence(ids));
+    const sourceDomain = createSequence(ids);
     for (const renamedIDs of permutations(ids)) {
-      const targetDomain = unwrap(createSequence(renamedIDs));
+      const targetDomain = createSequence(renamedIDs);
       const rename = new Map(ids.map((id, index) => [id, renamedIDs[index]]));
       for (const selected of powerset(ids)) {
         const sourceAnchor = ids[0] ?? null;
@@ -195,7 +195,7 @@ test('SEL-08: identity renaming commutes with every selection operation', () => 
 });
 
 test('controlled snapshots reject invalid state and selection never owns cursor authority', () => {
-  const domain = unwrap(createSequence(['a', 'b', 'c']));
+  const domain = createSequence(['a', 'b', 'c']);
   for (const invalid of [
     createSelectionState(domain, 'single', { selected: ['a', 'b'] }),
     createSelectionState(domain, 'multiple', { selected: ['missing'] }),

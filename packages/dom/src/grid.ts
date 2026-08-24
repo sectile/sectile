@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { applyGridEvent, createGrid, createGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
+import { applyGridEvent, tryCreateGrid, tryCreateGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
@@ -48,7 +48,7 @@ export function tryCreateGridControl<ID extends StableID>(options: GridOptions<I
 }
 
 function tryCreateGridControlConnection<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
-  const grid = createGrid(options.rows, options); if (!grid.ok) return grid;
+  const grid = tryCreateGrid(options.rows, options); if (!grid.ok) return grid;
   const disabled = new Set(options.disabledItems ?? []);
   const itemDisabled = new Set<ID>();
   for (const id of disabled) if (grid.value.positionOf(id) === null) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled grid cell must exist in the grid.', details: { id } } };
@@ -57,9 +57,9 @@ function tryCreateGridControlConnection<ID extends StableID>(options: GridOption
   const valueControlled = options.value !== undefined; const highlightControlled = options.highlightedValue !== undefined; const editControlled = options.editMode !== undefined;
   const selected = options.value !== undefined ? options.value : options.defaultValue ?? null;
   const runtime = createSemanticController<GridState<ID>, GridEvent<ID>, GridCommand<ID>, GridCommand<ID>>({
-    initial: createGridState(grid.value, { current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null, selected: selected === null ? [] : [selected], anchor: selected, editMode: options.editMode ?? options.defaultEditMode ?? 'navigation' }),
+    initial: tryCreateGridState(grid.value, { current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null, selected: selected === null ? [] : [selected], anchor: selected, editMode: options.editMode ?? options.defaultEditMode ?? 'navigation' }),
     reducer: (state, event) => applyGridEvent(grid.value, state, event, policies),
-    reconcile: (previous, proposed) => createGridState(grid.value, { current: highlightControlled ? previous.cursor.current : proposed.cursor.current, selected: valueControlled ? previous.selection.selected : proposed.selection.selected, anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor, editMode: editControlled ? previous.editMode : proposed.editMode }),
+    reconcile: (previous, proposed) => tryCreateGridState(grid.value, { current: highlightControlled ? previous.cursor.current : proposed.cursor.current, selected: valueControlled ? previous.selection.selected : proposed.selection.selected, anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor, editMode: editControlled ? previous.editMode : proposed.editMode }),
     notify: (previous, proposed) => { const before = previous.selection.selected[0] ?? null; const after = proposed.selection.selected[0] ?? null; if (before !== after) options.onValueChange?.(after); if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); if (previous.editMode !== proposed.editMode) options.onEditModeChange?.(proposed.editMode); },
     toEffect: (command) => command,
     interaction: options,
@@ -87,7 +87,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
   public syncControlledValues(values: GridControlledValues<ID>): Result<RevisionSnapshot<GridState<ID>>> {
     if (this.#valueControlled !== (values.value !== undefined) || this.#highlightControlled !== (values.highlightedValue !== undefined) || this.#editControlled !== (values.editMode !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled grid values must preserve their construction-time shape.' } };
     const current = this.getSnapshot().state; const selected = values.value === undefined ? current.selection.selected : values.value === null ? [] : [values.value];
-    const result = this.#runtime.replace(createGridState(this.grid, { current: values.highlightedValue === undefined ? current.cursor.current : values.highlightedValue, selected, anchor: values.value === undefined ? current.selection.anchor : values.value, editMode: values.editMode ?? current.editMode })); if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); this.focusCurrent(); } return result;
+    const result = this.#runtime.replace(tryCreateGridState(this.grid, { current: values.highlightedValue === undefined ? current.cursor.current : values.highlightedValue, selected, anchor: values.value === undefined ? current.selection.anchor : values.value, editMode: values.editMode ?? current.editMode })); if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); this.focusCurrent(); } return result;
   }
   public setCellAttributes(element: HTMLElement, id: ID, attributes: GridCellAttributes = {}): void { if (this.grid.positionOf(id) !== null) { if (attributes.disabled === true) this.#itemDisabled.add(id); else this.#itemDisabled.delete(id); this.#elements.set(id, element); this.#refresh(); } }
   public handleEvent(event: GridEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { for (const command of result.commands) { if (command.type === 'focus') this.#elements.get(command.id)?.focus(); else if (command.type === 'begin-edit') this.#options.onEditStart?.(command.id); else if (command.type === 'commit-edit') this.#options.onEditCommit?.(command.id); else this.#options.onEditCancel?.(command.id); } this.#refresh(); this.#options.onUpdate?.(); this.focusCurrent(); } return result.ok; }

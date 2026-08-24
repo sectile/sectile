@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import {
   addDecimal,
@@ -19,6 +20,7 @@ import {
   normalizeTextEditingState,
   type TextEditingState,
   type TextEvent,
+  tryCreateTextEditingState,
 } from './text.js';
 
 export interface NumericExpressionResult {
@@ -91,6 +93,12 @@ type ExpressionNode =
 
 export function createCalculatorExpression(
   options: CalculatorExpressionOptions = {},
+): NumericExpressionEvaluator {
+  return unwrap(tryCreateCalculatorExpression(options));
+}
+
+export function tryCreateCalculatorExpression(
+  options: CalculatorExpressionOptions = {},
 ): Result<NumericExpressionEvaluator> {
   const limits = normalizeCalculatorLimits(options);
   if (!limits.ok) return limits;
@@ -102,6 +110,13 @@ export function createCalculatorExpression(
 }
 
 export function createNumberFieldState(
+  value: string | null = null,
+  inputState?: TextEditingState,
+): NumberFieldState {
+  return unwrap(tryCreateNumberFieldState(value, inputState));
+}
+
+export function tryCreateNumberFieldState(
   value: string | null = null,
   inputState?: TextEditingState,
 ): Result<NumberFieldState> {
@@ -128,7 +143,7 @@ export function applyNumberFieldEvent(
   event: NumberFieldEvent,
   policies: NumberFieldPolicies = {},
 ): Result<NumberFieldUpdate> {
-  const valid = createNumberFieldState(state.value, state.inputState);
+  const valid = tryCreateNumberFieldState(state.value, state.inputState);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   const bounds = normalizeBounds(policies);
   if (!bounds.ok) return bounds;
@@ -199,7 +214,7 @@ export function applyNumberFieldEvent(
 
 function createCommittedInput(value: string | null): Result<TextEditingState> {
   const text = value ?? '';
-  return createTextEditingState(text, {
+  return tryCreateTextEditingState(text, {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
   });

@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import {
   applyCarouselEvent,
-  createCarouselState,
+  tryCreateCarouselState,
   getCarouselPosition,
   isCarouselRotationPaused,
   type CarouselCommand,
@@ -73,7 +73,7 @@ export function tryCreateCarousel<ID extends StableID>(options: CarouselOptions<
 }
 
 function tryCreateCarouselConnection<ID extends StableID>(options: CarouselOptions<ID>): Result<CarouselConnection<ID>> {
-  const slides = createSequence(options.slides);
+  const slides = tryCreateSequence(options.slides);
   if (!slides.ok) return slides;
   const autoplay = normalizeAutoplay(options.autoplay);
   if (!autoplay.ok) return autoplay;
@@ -81,13 +81,13 @@ function tryCreateCarouselConnection<ID extends StableID>(options: CarouselOptio
   const valueControlled = options.value !== undefined;
   const pausedControlled = options.paused !== undefined;
   const runtime = createSemanticController<CarouselState<ID>, CarouselEvent<ID>, CarouselCommand<ID>, CarouselCommand<ID>>({
-    initial: createCarouselState(
+    initial: tryCreateCarouselState(
       slides.value,
       options.value !== undefined ? options.value : options.defaultValue ?? options.slides[0] ?? null,
       options.paused ?? options.defaultPaused ?? false,
     ),
     reducer: (state, event) => applyCarouselEvent(slides.value, state, event, options.policies),
-    reconcile: (previous, proposed) => createCarouselState(
+    reconcile: (previous, proposed) => tryCreateCarouselState(
       slides.value,
       valueControlled ? previous.cursor.current : proposed.cursor.current,
       pausedControlled ? previous.paused : proposed.paused,
@@ -139,7 +139,7 @@ class TerminalCarousel<ID extends StableID> implements CarouselConnection<ID> {
       return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled carousel values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createCarouselState(
+    const result = this.#runtime.replace(tryCreateCarouselState(
       this.#slides,
       this.#valueControlled ? values.value as ID | null : state.cursor.current,
       this.#pausedControlled ? values.paused as boolean : state.paused,

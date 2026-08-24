@@ -1,3 +1,4 @@
+import { unwrap } from '../result.js';
 import {
   DEFAULT_MAX_ID_CODE_UNITS,
   type AxisBoundaryPolicy,
@@ -170,6 +171,13 @@ class IndexedGrid<ID extends StableID> implements Grid<ID> {
 export function createGrid<ID extends StableID>(
   rows: readonly (readonly (ID | null)[])[],
   options: GridOptions = {},
+): Grid<ID> {
+  return unwrap(tryCreateGrid(rows, options));
+}
+
+export function tryCreateGrid<ID extends StableID>(
+  rows: readonly (readonly (ID | null)[])[],
+  options: GridOptions = {},
 ): Result<Grid<ID>> {
   const maxRows = options.maxRows ?? 10_000;
   const maxColumns = options.maxColumns ?? 10_000;
@@ -288,3 +296,5 @@ export {
   type GridStateInput,
   type GridUpdate,
 } from '../internal/composites/grid-control.js';
+
+export { tryCreateGridState } from '../internal/composites/grid-control.js';

@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -78,7 +79,11 @@ export interface ColorPickerUpdate {
   readonly commands: readonly ColorPickerCommand[];
 }
 
-export function createColorValue(red: number, green: number, blue: number, alpha = 255): Result<ColorValue> {
+export function createColorValue(red: number, green: number, blue: number, alpha = 255): ColorValue {
+  return unwrap(tryCreateColorValue(red, green, blue, alpha));
+}
+
+export function tryCreateColorValue(red: number, green: number, blue: number, alpha = 255): Result<ColorValue> {
   const entries = { red, green, blue, alpha } as const;
   for (const [channel, value] of Object.entries(entries)) {
     if (!Number.isInteger(value) || value < 0 || value > 255) {
@@ -93,7 +98,7 @@ export function parseColorValue(text: string): Result<ColorValue> {
   const hex = /^#([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.exec(source)?.[1];
   if (hex !== undefined) {
     const expanded = hex.length <= 4 ? [...hex].map((character) => character + character).join('') : hex;
-    return createColorValue(
+    return tryCreateColorValue(
       Number.parseInt(expanded.slice(0, 2), 16),
       Number.parseInt(expanded.slice(2, 4), 16),
       Number.parseInt(expanded.slice(4, 6), 16),
@@ -114,7 +119,7 @@ export function parseColorValue(text: string): Result<ColorValue> {
 }
 
 export function formatColorValue(value: ColorValue, format: ColorFormat = 'hex'): Result<string> {
-  const valid = createColorValue(value.red, value.green, value.blue, value.alpha);
+  const valid = tryCreateColorValue(value.red, value.green, value.blue, value.alpha);
   if (!valid.ok) return valid;
   if (format === 'hex') {
     const hex = [value.red, value.green, value.blue, ...(value.alpha === 255 ? [] : [value.alpha])]
@@ -135,14 +140,14 @@ export function formatColorValue(value: ColorValue, format: ColorFormat = 'hex')
 }
 
 export function getColorAreaValue(value: ColorValue): Result<ColorAreaValue> {
-  const valid = createColorValue(value.red, value.green, value.blue, value.alpha);
+  const valid = tryCreateColorValue(value.red, value.green, value.blue, value.alpha);
   if (!valid.ok) return valid;
   const hsv = colorEngine({ r: value.red, g: value.green, b: value.blue, a: value.alpha / 255 }).toHsv();
   return ok(Object.freeze({ x: hsv.s / 100, y: hsv.v / 100, hue: hsv.h, alpha: value.alpha / 255 }));
 }
 
 export function getColorCoordinates(value: ColorValue, format: ColorFormat): Result<readonly ColorCoordinateValue[]> {
-  const valid = createColorValue(value.red, value.green, value.blue, value.alpha);
+  const valid = tryCreateColorValue(value.red, value.green, value.blue, value.alpha);
   if (!valid.ok) return valid;
   if (!isFormat(format)) return fail('construction', 'color-format-invalid', 'Color format is unsupported.');
   if (format === 'hex') return ok(Object.freeze([]));
@@ -199,8 +204,8 @@ export function setColorCoordinate(value: ColorValue, format: ColorModel, name: 
   if (!coordinates.ok) return coordinates;
   const selected = coordinates.value.find((entry) => entry.coordinate === name);
   if (selected === undefined || next < selected.min || next > selected.max) return fail('construction', 'color-coordinate-out-of-range', 'Color coordinate is unavailable or outside its supported range.', { format, coordinate: name, value: next });
-  if (name === 'alpha') return createColorValue(value.red, value.green, value.blue, Math.round(next / 100 * 255));
-  if (format === 'rgb') return createColorValue(name === 'red' ? Math.round(next) : value.red, name === 'green' ? Math.round(next) : value.green, name === 'blue' ? Math.round(next) : value.blue, value.alpha);
+  if (name === 'alpha') return tryCreateColorValue(value.red, value.green, value.blue, Math.round(next / 100 * 255));
+  if (format === 'rgb') return tryCreateColorValue(name === 'red' ? Math.round(next) : value.red, name === 'green' ? Math.round(next) : value.green, name === 'blue' ? Math.round(next) : value.blue, value.alpha);
   const engine = colorEngine({ r: value.red, g: value.green, b: value.blue, a: value.alpha / 255 });
   if (format === 'hsl') {
     const current = engine.toHsl();
@@ -218,15 +223,19 @@ export function setColorCoordinate(value: ColorValue, format: ColorModel, name: 
   const rgb = oklchToRgb(name === 'lightness' ? next / 100 : current.lightness, name === 'chroma' ? next : current.chroma, name === 'hue' ? next : current.hue);
   return rgb === null
     ? fail('construction', 'color-out-of-gamut', 'OKLCH color is outside the sRGB gamut stored by ColorValue.', { coordinate: name, value: next })
-    : createColorValue(rgb.red, rgb.green, rgb.blue, value.alpha);
+    : tryCreateColorValue(rgb.red, rgb.green, rgb.blue, value.alpha);
 }
 
-export function createColorPickerState(input: ColorPickerStateInput = {}, policies: ColorPickerPolicies = {}): Result<ColorPickerState> {
+export function createColorPickerState(input: ColorPickerStateInput = {}, policies: ColorPickerPolicies = {}): ColorPickerState {
+  return unwrap(tryCreateColorPickerState(input, policies));
+}
+
+export function tryCreateColorPickerState(input: ColorPickerStateInput = {}, policies: ColorPickerPolicies = {}): Result<ColorPickerState> {
   const validPolicies = validatePolicies(policies);
   if (!validPolicies.ok) return validPolicies;
   const value = typeof input.value === 'string'
     ? parseColorValue(input.value)
-    : input.value === undefined ? createColorValue(0, 0, 0) : createColorValue(input.value.red, input.value.green, input.value.blue, input.value.alpha);
+    : input.value === undefined ? tryCreateColorValue(0, 0, 0) : tryCreateColorValue(input.value.red, input.value.green, input.value.blue, input.value.alpha);
   if (!value.ok) return value;
   if (policies.allowAlpha === false && value.value.alpha !== 255) return fail('construction', 'color-alpha-disabled', 'Alpha must be opaque when alpha editing is disabled.');
   const format = input.format ?? 'hex';
@@ -239,7 +248,7 @@ export function createColorPickerState(input: ColorPickerStateInput = {}, polici
 }
 
 export function applyColorPickerEvent(state: ColorPickerState, event: ColorPickerEvent, policies: ColorPickerPolicies = {}): Result<ColorPickerUpdate> {
-  const valid = createColorPickerState(state, policies);
+  const valid = tryCreateColorPickerState(state, policies);
   if (!valid.ok) return fail('transition-rejection', valid.error.code, valid.error.message, valid.error.details);
   if (event === 'cancel') return createMachineUpdate(colorState(state, { draft: null }));
   if (event === 'commit') {
@@ -290,7 +299,7 @@ export function applyColorPickerEvent(state: ColorPickerState, event: ColorPicke
   }
   const value = typeof event.value === 'string'
     ? parseColorValue(event.value)
-    : createColorValue(event.value.red, event.value.green, event.value.blue, event.value.alpha);
+    : tryCreateColorValue(event.value.red, event.value.green, event.value.blue, event.value.alpha);
   if (!value.ok) return fail('transition-rejection', value.error.code, value.error.message, value.error.details);
   return commit(state, value.value, policies);
 }
@@ -360,7 +369,7 @@ function parseRgbFunction(source: string): Result<ColorValue> | null {
   const channels = components.values.map(parseRgbChannel);
   const alpha = parseAlpha(components.alpha);
   if (channels.some((value) => value === null) || alpha === null) return invalidColor(source, 'RGB channels must be 0..255 or 0%..100%, and alpha must be 0..1 or 0%..100%.');
-  return createColorValue(channels[0] as number, channels[1] as number, channels[2] as number, alpha);
+  return tryCreateColorValue(channels[0] as number, channels[1] as number, channels[2] as number, alpha);
 }
 
 function parseHslFunction(source: string): Result<ColorValue> | null {
@@ -412,14 +421,14 @@ function parseOklchFunction(source: string): Result<ColorValue> | null {
   if (lightness === null || chroma === null || chroma < 0 || hue === null || alpha === null) return invalidColor(source, 'OKLCH requires lightness 0..1 or 0%..100%, non-negative chroma, a valid hue, and alpha.');
   const rgb = oklchToRgb(lightness, chroma, hue);
   if (rgb === null) return fail('construction', 'color-out-of-gamut', 'OKLCH color is outside the sRGB gamut stored by ColorValue.', { text: source });
-  return createColorValue(rgb.red, rgb.green, rgb.blue, alpha);
+  return tryCreateColorValue(rgb.red, rgb.green, rgb.blue, alpha);
 }
 
 function fromEngineColor(value: AnyColor, source: string): Result<ColorValue> {
   const parsed = colorEngine(value);
   if (!parsed.isValid()) return invalidColor(source, 'Color conversion failed.');
   const rgb = parsed.toRgb();
-  return createColorValue(rgb.r, rgb.g, rgb.b, Math.round(rgb.a * 255));
+  return tryCreateColorValue(rgb.r, rgb.g, rgb.b, Math.round(rgb.a * 255));
 }
 
 function splitFunctionalComponents(body: string): { readonly values: readonly string[]; readonly alpha?: string } | null {

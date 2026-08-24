@@ -119,7 +119,7 @@ test('DOM listbox delegates clicks by selection mode and derives disabled semant
 test('DOM listbox typeahead skips disabled items and uses a timeout buffer', () => {
   let now = 0;
   const controller = unwrap(createListboxController({
-    domain: unwrap(createSequence(['alpha', 'blocked', 'bravo', 'beta'])),
+    domain: createSequence(['alpha', 'blocked', 'bravo', 'beta']),
     disabledItems: ['blocked'],
     defaultHighlightedValue: 'alpha',
     typeahead: { textValue: (id) => id, now: () => now, timeoutMs: 250 },
@@ -131,7 +131,7 @@ test('DOM listbox typeahead skips disabled items and uses a timeout buffer', () 
   now = 400;
   assert.equal(controller.handleKeyboardInput({ key: 'b' }).snapshot.state.cursor.current, 'beta');
   assert.equal(createListboxController({
-    domain: unwrap(createSequence(['a'])), disabledItems: ['missing'],
+    domain: createSequence(['a']), disabledItems: ['missing'],
   }).error.code, 'disabled-item-outside-domain');
 });
 
@@ -147,7 +147,7 @@ test('DOM commands project into DOM-specific effects', () => {
 });
 
 test('uncontrolled DOM controller owns state and rejects stale or unsupported inputs atomically', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
+  const domain = createSequence(['a', 'b']);
   const values = [];
   const highlights = [];
   const controller = unwrap(createListboxController({
@@ -184,7 +184,7 @@ test('uncontrolled DOM controller owns state and rejects stale or unsupported in
 });
 
 test('controlled DOM values emit proposals and change only after sync', () => {
-  const domain = unwrap(createSequence(['a', 'b']));
+  const domain = createSequence(['a', 'b']);
   const values = [];
   const highlights = [];
   const controller = unwrap(createListboxController({
@@ -216,7 +216,7 @@ test('controlled DOM values emit proposals and change only after sync', () => {
 });
 
 test('controlled null highlight overrides defaults and uncontrolled controllers reject sync', () => {
-  const domain = unwrap(createSequence(['a']));
+  const domain = createSequence(['a']);
   const controlled = unwrap(createListboxController({
     domain,
     highlightedValue: null,

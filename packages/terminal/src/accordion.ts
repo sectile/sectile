@@ -1,9 +1,9 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { applyAccordionEvent, createAccordionState, type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState } from '@sectile/core/accordion';
+import { applyAccordionEvent, tryCreateAccordionState, type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState } from '@sectile/core/accordion';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { createDisabledItems } from './internal/disabled-items.js';
@@ -30,16 +30,16 @@ export function tryCreateAccordion<ID extends StableID>(options: AccordionOption
 }
 
 function tryCreateAccordionConnection<ID extends StableID>(options: AccordionOptions<ID>): Result<AccordionConnection<ID>> {
-  const domain = createSequence(options.items); if (!domain.ok) return domain;
+  const domain = tryCreateSequence(options.items); if (!domain.ok) return domain;
   const disabled = createDisabledItems(domain.value, options.disabledItems); if (!disabled.ok) return disabled;
   const suppliedEligibility = options.policies?.eligible;
   const policies: AccordionPolicies<ID> = Object.freeze({ ...options.policies, eligible: (id: ID) => !disabled.value.has(id) && (suppliedEligibility?.(id) ?? true) });
   const openControlled = options.openIDs !== undefined; const highlightControlled = options.highlightedValue !== undefined;
   const initialOpen = options.openIDs ?? options.defaultOpenIDs ?? (options.policies?.collapsible === false && options.items[0] !== undefined ? [options.items[0]] : []);
   const runtime = createSemanticController<AccordionState<ID>, AccordionEvent<ID>, AccordionCommand<ID>, AccordionCommand<ID>>({
-    initial: createAccordionState(domain.value, { openIDs: initialOpen, current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null }, policies),
+    initial: tryCreateAccordionState(domain.value, { openIDs: initialOpen, current: options.highlightedValue !== undefined ? options.highlightedValue : options.defaultHighlightedValue ?? null }, policies),
     reducer: (state, event) => applyAccordionEvent(domain.value, state, event, policies),
-    reconcile: (previous, proposed) => createAccordionState(domain.value, { openIDs: openControlled ? previous.openIDs : proposed.openIDs, current: highlightControlled ? previous.cursor.current : proposed.cursor.current }, policies),
+    reconcile: (previous, proposed) => tryCreateAccordionState(domain.value, { openIDs: openControlled ? previous.openIDs : proposed.openIDs, current: highlightControlled ? previous.cursor.current : proposed.cursor.current }, policies),
     notify: (previous, proposed) => { if (!sameIDs(previous.openIDs, proposed.openIDs)) options.onOpenChange?.(proposed.openIDs); if (previous.cursor.current !== proposed.cursor.current) options.onHighlightedValueChange?.(proposed.cursor.current); },
     toEffect: (command) => command,
     interaction: options,
@@ -56,7 +56,7 @@ class TerminalAccordionConnection<ID extends StableID> implements AccordionConne
   public getSnapshot(): RevisionSnapshot<AccordionState<ID>> { return this.#runtime.getSnapshot(); }
   public syncControlledValues(values: { readonly openIDs?: readonly ID[]; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<AccordionState<ID>>> {
     if (this.#openControlled !== (values.openIDs !== undefined) || this.#highlightControlled !== (values.highlightedValue !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled accordion values must preserve their construction-time shape.' } };
-    const state = this.#runtime.getSnapshot().state; const result = this.#runtime.replace(createAccordionState(this.#domain, { openIDs: this.#openControlled ? (values.openIDs as readonly ID[]) : state.openIDs, current: this.#highlightControlled ? (values.highlightedValue as ID | null) : state.cursor.current }, this.#policies)); if (result.ok) this.#options.onUpdate?.(); return result;
+    const state = this.#runtime.getSnapshot().state; const result = this.#runtime.replace(tryCreateAccordionState(this.#domain, { openIDs: this.#openControlled ? (values.openIDs as readonly ID[]) : state.openIDs, current: this.#highlightControlled ? (values.highlightedValue as ID | null) : state.cursor.current }, this.#policies)); if (result.ok) this.#options.onUpdate?.(); return result;
   }
   public handleEvent(event: AccordionEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event = toAccordionEvent<ID>(input); if (event === null) return false; return this.handleEvent(event); }

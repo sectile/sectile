@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, setColorCoordinate } from '../../dist/color-picker.js';
+import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, setColorCoordinate, tryCreateColorPickerState } from '../../dist/color-picker.js';
 
 test('color picker parses compact and full hexadecimal colors exactly', () => {
   assert.deepEqual(parseColorValue('#0af').value, { red: 0, green: 170, blue: 255, alpha: 255 });
@@ -35,7 +35,7 @@ test('color picker exposes model coordinates without changing canonical RGBA sto
 });
 
 test('color picker area, hue, alpha, and model coordinate events share one value', () => {
-  let state = createColorPickerState({ value: '#ff0000', format: 'oklch' }).value;
+  let state = createColorPickerState({ value: '#ff0000', format: 'oklch' });
   state = applyColorPickerEvent(state, { type: 'set-area', x: 1, y: 0.5 }).value.state;
   assert.deepEqual(state.value, { red: 128, green: 0, blue: 0, alpha: 255 });
   state = applyColorPickerEvent(state, { type: 'set-hue', value: 240 }).value.state;
@@ -47,7 +47,7 @@ test('color picker area, hue, alpha, and model coordinate events share one value
 });
 
 test('color picker rejects invalid visual and model coordinates', () => {
-  const state = createColorPickerState({ value: '#ff0000' }).value;
+  const state = createColorPickerState({ value: '#ff0000' });
   assert.equal(applyColorPickerEvent(state, { type: 'set-area', x: 2, y: 0 }).error.code, 'color-area-out-of-range');
   assert.equal(applyColorPickerEvent(state, { type: 'set-hue', value: -1 }).error.code, 'color-hue-out-of-range');
   assert.equal(setColorCoordinate(state.value, 'cmyk', 'red', 1).error.code, 'color-coordinate-out-of-range');
@@ -60,7 +60,7 @@ test('color picker rejects out-of-range components and out-of-sRGB OKLCH explici
 });
 
 test('color picker keeps invalid text as a draft and commits atomically', () => {
-  let state = createColorPickerState({ value: '#336699' }).value;
+  let state = createColorPickerState({ value: '#336699' });
   state = applyColorPickerEvent(state, { type: 'input', text: '#nope' }).value.state;
   assert.equal(state.draft, '#nope');
   assert.equal(applyColorPickerEvent(state, 'commit').ok, false);
@@ -71,7 +71,7 @@ test('color picker keeps invalid text as a draft and commits atomically', () => 
 });
 
 test('color picker adjusts one active integer channel with explicit steps', () => {
-  let state = createColorPickerState({ value: '#000000', channel: 'blue' }).value;
+  let state = createColorPickerState({ value: '#000000', channel: 'blue' });
   state = applyColorPickerEvent(state, 'increment', { channelStep: 16 }).value.state;
   assert.deepEqual(state.value, { red: 0, green: 0, blue: 16, alpha: 255 });
   state = applyColorPickerEvent(state, { type: 'set-channel', channel: 'alpha', value: 64 }).value.state;
@@ -79,14 +79,14 @@ test('color picker adjusts one active integer channel with explicit steps', () =
 });
 
 test('opaque policy rejects alpha construction and mutation', () => {
-  assert.equal(createColorPickerState({ value: '#00000080' }, { allowAlpha: false }).ok, false);
-  const state = createColorPickerState({ value: '#000000' }, { allowAlpha: false }).value;
+  assert.equal(tryCreateColorPickerState({ value: '#00000080' }, { allowAlpha: false }).ok, false);
+  const state = createColorPickerState({ value: '#000000' }, { allowAlpha: false });
   assert.equal(applyColorPickerEvent(state, { type: 'set-channel', channel: 'alpha', value: 128 }, { allowAlpha: false }).ok, false);
   assert.equal(parseColorValue('not-a-color').ok, false);
 });
 
 test('color picker changes representation without changing its RGBA value', () => {
-  const state = createColorPickerState({ value: '#33669980' }).value;
+  const state = createColorPickerState({ value: '#33669980' });
   for (const format of ['hex', 'rgb', 'hsl', 'hsv', 'cmyk', 'oklch']) {
     const update = applyColorPickerEvent(state, { type: 'set-format', format }).value;
     assert.equal(update.state.format, format);

@@ -2,22 +2,22 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
-  createInteractionState,
+  tryCreateInteractionState,
   requireInteraction,
   type InteractionState,
 } from '@sectile/core/interaction';
 import {
   applyCalendarEvent,
-  createCalendarState,
+  tryCreateCalendarState,
   type CalendarCommand,
   type CalendarEvent,
   type CalendarPolicies,
   type CalendarState,
 } from '@sectile/core/calendar';
 export type { CalendarPolicies } from '@sectile/core/calendar';
-import { createGrid, type Grid } from '@sectile/core/grid';
+import { tryCreateGrid, type Grid } from '@sectile/core/grid';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
@@ -132,15 +132,15 @@ export function createCalendarController<ID extends StableID>(
   const current = options.highlightedValue !== undefined
     ? options.highlightedValue
     : options.defaultHighlightedValue ?? null;
-  const initial = createCalendarState(options.grid, {
+  const initial = tryCreateCalendarState(options.grid, {
     selected: value === null ? [] : [value],
     anchor: value,
     current,
   });
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new DOMCalendarController(options, snapshot.value, interaction.value) };
 }
@@ -160,7 +160,7 @@ export function tryCreateCalendar<ID extends StableID>(
 function tryCreateCalendarConnection<ID extends StableID>(
   options: CalendarOptions<ID>,
 ): Result<CalendarConnection<ID>> {
-  const grid = createGrid(options.rows);
+  const grid = tryCreateGrid(options.rows);
   if (!grid.ok) return grid;
   const controller = createCalendarController({ ...options, grid: grid.value });
   if (!controller.ok) return controller;
@@ -358,7 +358,7 @@ class DOMCalendarController<ID extends StableID> implements CalendarController<I
     const selected = this.#valueControlled
       ? (values.value as ID | null)
       : selectedValue(this.#snapshot.state);
-    const state = createCalendarState(this.#grid, {
+    const state = tryCreateCalendarState(this.#grid, {
       selected: selected === null ? [] : [selected],
       anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
       current: this.#highlightControlled
@@ -440,7 +440,7 @@ function controlledState<ID extends StableID>(
   valueControlled: boolean,
   highlightControlled: boolean,
 ): Result<CalendarState<ID>> {
-  return createCalendarState(grid, {
+  return tryCreateCalendarState(grid, {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,

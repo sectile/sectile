@@ -119,9 +119,8 @@ function numberFieldPolicies(config: ReturnType<typeof numberFieldExampleConfig>
   const calculator = config.calculator
     ? createCalculatorExpression({ precision: 12, rounding: 'half-even' })
     : null;
-  if (calculator !== null && !calculator.ok) throw new Error(calculator.error.message);
   return Object.freeze({
-    ...(calculator === null ? {} : { evaluator: calculator.value }),
+    ...(calculator === null ? {} : { evaluator: calculator }),
     ...(config.min === undefined ? {} : { min: config.min }),
     ...(config.max === undefined ? {} : { max: config.max }),
   });

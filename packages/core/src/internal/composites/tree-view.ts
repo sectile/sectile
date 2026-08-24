@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { Result, SectileError, StableID } from '../../shared.js';
 import type { Tree } from '../../structures/tree.js';
 import { fail, ok } from '../kernel/foundation.js';
@@ -52,6 +53,13 @@ export interface TreeViewUpdate<ID extends StableID = StableID> {
 }
 
 export function createTreeViewState<ID extends StableID>(
+  tree: Tree<ID>,
+  input: TreeViewStateInput<ID> = {},
+): TreeViewState<ID> {
+  return unwrap(tryCreateTreeViewState(tree, input));
+}
+
+export function tryCreateTreeViewState<ID extends StableID>(
   tree: Tree<ID>,
   input: TreeViewStateInput<ID> = {},
 ): Result<TreeViewState<ID>> {

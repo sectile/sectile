@@ -1,7 +1,7 @@
 import type { Result } from '@sectile/core';
 import {
   applyRevisionedEvent,
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   mapRevisionCommands,
   rejectRevisionInput,
   type EventReducer,
@@ -49,7 +49,7 @@ export function synchronizeControllerState<State>(
       },
     };
   }
-  return createRevisionSnapshot(state.value, current.revision + 1);
+  return tryCreateRevisionSnapshot(state.value, current.revision + 1);
 }
 
 export function sameControllerState<State>(left: State, right: State): boolean {

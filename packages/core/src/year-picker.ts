@@ -1,9 +1,14 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, freezeArray, ok } from './internal/kernel/foundation.js';
 
 export interface YearPickerValue { readonly year: number }
 
-export function createYearPickerPage(year: number, pageSize = 12): Result<readonly (readonly YearPickerValue[])[]> {
+export function createYearPickerPage(year: number, pageSize = 12): readonly (readonly YearPickerValue[])[] {
+  return unwrap(tryCreateYearPickerPage(year, pageSize));
+}
+
+export function tryCreateYearPickerPage(year: number, pageSize = 12): Result<readonly (readonly YearPickerValue[])[]> {
   if (!Number.isSafeInteger(year)) return fail('construction', 'invalid-year-picker-year', 'Year picker year must be a safe integer.');
   if (!Number.isSafeInteger(pageSize) || pageSize < 1) return fail('construction', 'invalid-year-picker-page-size', 'Year picker page size must be a positive safe integer.');
   const columns = 4;
@@ -32,3 +37,5 @@ export type {
   DatePickerStateInput as YearPickerStateInput,
   DatePickerUpdate as YearPickerUpdate,
 } from './date-picker.js';
+
+export { tryCreateDatePickerState as tryCreateYearPickerState } from './date-picker.js';

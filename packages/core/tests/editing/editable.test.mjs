@@ -4,7 +4,7 @@ import { unwrap } from '../../dist/result.js';
 import { applyEditableEvent, createEditableState } from '../../dist/editable.js';
 
 test('editable separates draft, commit, and cancel state', () => {
-  let state = unwrap(createEditableState('Alpha'));
+  let state = createEditableState('Alpha');
   state = unwrap(applyEditableEvent(state, 'start-edit')).state;
   state = unwrap(applyEditableEvent(state, { type: 'input', text: 'Beta' })).state;
   assert.deepEqual(state, { value: 'Alpha', draft: 'Beta', editing: true });
@@ -22,7 +22,7 @@ test('editable separates draft, commit, and cancel state', () => {
 });
 
 test('editable rejects invalid commits without discarding the draft', () => {
-  let state = unwrap(createEditableState('Stable'));
+  let state = createEditableState('Stable');
   state = unwrap(applyEditableEvent(state, 'start-edit')).state;
   state = unwrap(applyEditableEvent(state, { type: 'input', text: '' })).state;
   const result = applyEditableEvent(state, 'commit', { allowEmpty: false });

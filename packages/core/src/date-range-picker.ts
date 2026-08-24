@@ -1,7 +1,8 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
-import { compareDateValues, createDateRange, createDateValue, type DateRange, type DateValue } from './date-field.js';
+import { compareDateValues, createDateRange, createDateValue, type DateRange, type DateValue,tryCreateDateRange,tryCreateDateValue } from './date-field.js';
 import {
   applyDatePickerEvent,
   createDatePickerState,
@@ -10,6 +11,7 @@ import {
   type DatePickerEvent,
   type DatePickerPolicies,
   type DatePickerState,
+  tryCreateDatePickerState,
 } from './date-picker.js';
 
 export interface DateRangePickerState {
@@ -36,21 +38,25 @@ export interface DateRangePickerStateInput {
   readonly calendar?: Partial<DatePickerState>;
 }
 
-export function createDateRangePickerState(input: DateRangePickerStateInput = {}): Result<DateRangePickerState> {
+export function createDateRangePickerState(input: DateRangePickerStateInput = {}): DateRangePickerState {
+  return unwrap(tryCreateDateRangePickerState(input));
+}
+
+export function tryCreateDateRangePickerState(input: DateRangePickerStateInput = {}): Result<DateRangePickerState> {
   let value: DateRange | null = null;
   if (input.value !== undefined && input.value !== null) {
-    const valid = createDateRange(input.value.start, input.value.end);
+    const valid = tryCreateDateRange(input.value.start, input.value.end);
     if (!valid.ok) return valid;
     value = valid.value;
   }
   let anchor: DateValue | null = null;
   if (input.anchor !== undefined && input.anchor !== null) {
-    const valid = createDateValue(input.anchor.year, input.anchor.month, input.anchor.day);
+    const valid = tryCreateDateValue(input.anchor.year, input.anchor.month, input.anchor.day);
     if (!valid.ok) return valid;
     anchor = valid.value;
   }
   const fallback = anchor ?? value?.end;
-  const calendar = createDatePickerState({
+  const calendar = tryCreateDatePickerState({
     value: null,
     ...(input.calendar?.highlighted === undefined && fallback !== undefined ? { highlighted: fallback } : {}),
     ...input.calendar,
@@ -64,7 +70,7 @@ export function applyDateRangePickerEvent(
   event: DateRangePickerEvent,
   policies: DatePickerPolicies = {},
 ): Result<DateRangePickerUpdate> {
-  const valid = createDateRangePickerState(state);
+  const valid = tryCreateDateRangePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   if (event === 'clear') {
     if (policies.required === true) return fail('transition-rejection', 'date-range-picker-value-required', 'Date range picker requires a range.');
@@ -86,11 +92,11 @@ export function applyDateRangePickerEvent(
 }
 
 function selectDate(state: DateRangePickerState, requested: DateValue, policies: DatePickerPolicies): Result<DateRangePickerUpdate> {
-  const valid = createDateValue(requested.year, requested.month, requested.day);
+  const valid = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!valid.ok) return invalidTransition(valid);
   if (!isDatePickerValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
   if (state.anchor === null) {
-    const calendar = createDatePickerState({ ...state.calendar, value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, open: true });
+    const calendar = tryCreateDatePickerState({ ...state.calendar, value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, open: true });
     if (!calendar.ok) return calendar;
     return createMachineUpdate(Object.freeze({ value: state.value, anchor: valid.value, calendar: calendar.value }), [
       { type: 'highlight-changed', value: valid.value },
@@ -99,9 +105,9 @@ function selectDate(state: DateRangePickerState, requested: DateValue, policies:
   }
   const start = compareDateValues(state.anchor, valid.value) <= 0 ? state.anchor : valid.value;
   const end = compareDateValues(state.anchor, valid.value) <= 0 ? valid.value : state.anchor;
-  const range = createDateRange(start, end);
+  const range = tryCreateDateRange(start, end);
   if (!range.ok) return range;
-  const calendar = createDatePickerState({ value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, viewMode: state.calendar.viewMode, open: state.calendar.open });
+  const calendar = tryCreateDatePickerState({ value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, viewMode: state.calendar.viewMode, open: state.calendar.open });
   if (!calendar.ok) return calendar;
   return createMachineUpdate(Object.freeze({ value: range.value, anchor: null, calendar: calendar.value }), [
     { type: 'range-committed', value: range.value },

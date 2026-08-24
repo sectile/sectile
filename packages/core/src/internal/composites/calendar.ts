@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type {
   AxisBoundaryPolicy,
   GridDirection,
@@ -51,6 +52,13 @@ export interface CalendarUpdate<ID extends StableID = StableID> {
 }
 
 export function createCalendarState<ID extends StableID>(
+  grid: Grid<ID>,
+  input: CalendarStateInput<ID> = {},
+): CalendarState<ID> {
+  return unwrap(tryCreateCalendarState(grid, input));
+}
+
+export function tryCreateCalendarState<ID extends StableID>(
   grid: Grid<ID>,
   input: CalendarStateInput<ID> = {},
 ): Result<CalendarState<ID>> {

@@ -8,3 +8,5 @@ export {
   type CalendarStateInput,
   type CalendarUpdate,
 } from './internal/composites/calendar.js';
+
+export { tryCreateCalendarState } from './internal/composites/calendar.js';

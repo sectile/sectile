@@ -2,20 +2,20 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
-  createInteractionState,
+  tryCreateInteractionState,
   requireInteraction,
   type InteractionState,
 } from '@sectile/core/interaction';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
 import {
   applyTreeGridEvent,
-  createTreeGridModelFromRows,
-  createTreeGridState,
+  tryCreateTreeGridModelFromRows,
+  tryCreateTreeGridState,
   type TreeGridCommand,
   type TreeGridEditMode,
   type TreeGridEvent,
@@ -194,7 +194,7 @@ export function createTreeGridController<
   options: TreeGridControllerOptions<RowID, CellID>,
 ): Result<TreeGridController<RowID, CellID>> {
   const value = options.value !== undefined ? options.value : options.defaultValue ?? null;
-  const initial = createTreeGridState(options.model, {
+  const initial = tryCreateTreeGridState(options.model, {
     selected: value === null ? [] : [value],
     anchor: value,
     expanded: options.expandedValue ?? options.defaultExpandedValue ?? [],
@@ -204,9 +204,9 @@ export function createTreeGridController<
     editMode: options.editMode ?? options.defaultEditMode ?? 'navigation',
   });
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new DOMTreeGridController(options, snapshot.value, interaction.value) };
 }
@@ -226,7 +226,7 @@ export function tryCreateTreeGrid<RowID extends StableID, CellID extends StableI
 function tryCreateTreeGridConnection<RowID extends StableID, CellID extends StableID>(
   options: TreeGridOptions<RowID, CellID>,
 ): Result<TreeGridConnection<RowID, CellID>> {
-  const model = createTreeGridModelFromRows(options.rows);
+  const model = tryCreateTreeGridModelFromRows(options.rows);
   if (!model.ok) return model;
   const controller = createTreeGridController({ ...options, model: model.value });
   if (!controller.ok) return controller;
@@ -595,7 +595,7 @@ class DOMTreeGridController<RowID extends StableID, CellID extends StableID>
     const selected = this.#valueControlled
       ? (values.value as CellID | null)
       : selectedValue(this.#snapshot.state);
-    const state = createTreeGridState(this.model, {
+    const state = tryCreateTreeGridState(this.model, {
       selected: selected === null ? [] : [selected],
       anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
       expanded: this.#expandedControlled
@@ -710,7 +710,7 @@ function controlledState<RowID extends StableID, CellID extends StableID>(
   highlightControlled: boolean,
   editModeControlled: boolean,
 ): Result<TreeGridState<RowID, CellID>> {
-  return createTreeGridState(model, {
+  return tryCreateTreeGridState(model, {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
     expanded: expandedControlled ? previous.expansion.ids : proposed.expansion.ids,

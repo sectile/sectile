@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
+import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
-  applyCascadeSelectEvent, createCascadeSelectState, getCascadeSelectColumns,
+  applyCascadeSelectEvent, tryCreateCascadeSelectState, getCascadeSelectColumns,
   getCascadeSelectValuePath, type CascadeSelectCommand, type CascadeSelectEvent,
   type CascadeSelectPolicies, type CascadeSelectState,
 } from '@sectile/core/cascade-select';
@@ -47,15 +47,15 @@ export function tryCreateCascadeSelect<ID extends StableID>(options: CascadeSele
 }
 
 function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeSelectOptions<ID>): Result<CascadeSelectConnection<ID>> {
-  const tree = createTree(options.nodes); if (!tree.ok) return tree;
+  const tree = tryCreateTree(options.nodes); if (!tree.ok) return tree;
   const disabled = new Set(options.disabledItems ?? []); for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled cascade select item must exist in the tree.' } };
   const suppliedEligibility = options.policies?.eligible; const policies: CascadeSelectPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.has(id) && (suppliedEligibility?.(id) ?? true) };
   const controlled = { value: options.value !== undefined, highlighted: options.highlightedValue !== undefined, open: options.open !== undefined };
   const runtime = createSemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectCommand<ID>, CascadeSelectCommand<ID>>({
     interaction: options, interactionIntent: (event) => event === 'select' || (typeof event === 'object' && event.type === 'select') ? 'mutate' : 'navigate',
-    initial: createCascadeSelectState(tree.value, { value: options.value ?? options.defaultValue ?? null, highlighted: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null, open: options.open ?? options.defaultOpen ?? false }),
+    initial: tryCreateCascadeSelectState(tree.value, { value: options.value ?? options.defaultValue ?? null, highlighted: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null, open: options.open ?? options.defaultOpen ?? false }),
     reducer: (state, event) => applyCascadeSelectEvent(tree.value, state, event, policies),
-    reconcile: (previous, proposed) => createCascadeSelectState(tree.value, { value: controlled.value ? previous.value : proposed.value, highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted, open: controlled.open ? previous.open : proposed.open, path: proposed.path }),
+    reconcile: (previous, proposed) => tryCreateCascadeSelectState(tree.value, { value: controlled.value ? previous.value : proposed.value, highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted, open: controlled.open ? previous.open : proposed.open, path: proposed.path }),
     notify: (previous, proposed) => { if (previous.value !== proposed.value) options.onValueChange?.(proposed.value); if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
     toEffect: (command) => command,
   });
@@ -69,7 +69,7 @@ class TerminalCascadeSelectConnection<ID extends StableID> implements CascadeSel
   public getSnapshot(): RevisionSnapshot<CascadeSelectState<ID>> { return this.#runtime.getSnapshot(); }
   public getColumns(): readonly (readonly ID[])[] { return getCascadeSelectColumns(this.tree, this.getSnapshot().state); }
   public getValuePath(): readonly ID[] { return getCascadeSelectValuePath(this.tree, this.getSnapshot().state.value); }
-  public syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<CascadeSelectState<ID>>> { if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.highlighted !== (values.highlightedValue !== undefined) || this.#controlled.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled cascade select values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const result = this.#runtime.replace(createCascadeSelectState(this.tree, { value: this.#controlled.value ? values.value ?? null : state.value, highlighted: this.#controlled.highlighted ? values.highlightedValue ?? null : state.highlighted, open: this.#controlled.open ? values.open ?? false : state.open })); if (result.ok) this.#options.onUpdate?.(); return result; }
+  public syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<CascadeSelectState<ID>>> { if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.highlighted !== (values.highlightedValue !== undefined) || this.#controlled.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled cascade select values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const result = this.#runtime.replace(tryCreateCascadeSelectState(this.tree, { value: this.#controlled.value ? values.value ?? null : state.value, highlighted: this.#controlled.highlighted ? values.highlightedValue ?? null : state.highlighted, open: this.#controlled.open ? values.open ?? false : state.open })); if (result.ok) this.#options.onUpdate?.(); return result; }
   public handleEvent(event: CascadeSelectEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) this.#options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event = toCascadeSelectEvent<ID>(input); return event === null ? false : this.handleEvent(event); }
 }

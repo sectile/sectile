@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import type { Tree } from './structures/tree.js';
 import { fail, freezeArray, ok } from './internal/kernel/foundation.js';
@@ -41,6 +42,13 @@ export interface CascadeSelectUpdate<ID extends StableID = StableID> {
 }
 
 export function createCascadeSelectState<ID extends StableID>(
+  tree: Tree<ID>,
+  input: CascadeSelectStateInput<ID> = {},
+): CascadeSelectState<ID> {
+  return unwrap(tryCreateCascadeSelectState(tree, input));
+}
+
+export function tryCreateCascadeSelectState<ID extends StableID>(
   tree: Tree<ID>,
   input: CascadeSelectStateInput<ID> = {},
 ): Result<CascadeSelectState<ID>> {
@@ -89,7 +97,7 @@ export function applyCascadeSelectEvent<ID extends StableID>(
   event: CascadeSelectEvent<ID>,
   policies: CascadeSelectPolicies<ID> = {},
 ): Result<CascadeSelectUpdate<ID>> {
-  const valid = createCascadeSelectState(tree, state);
+  const valid = tryCreateCascadeSelectState(tree, state);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (event === 'open' || event === 'close' || event === 'toggle') {
     const open = event === 'toggle' ? !state.open : event === 'open';

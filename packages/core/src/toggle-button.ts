@@ -1,11 +1,16 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
-import { applyCheckedEvent, createCheckedState } from './internal/state/checked.js';
+import { applyCheckedEvent, createCheckedState,tryCreateCheckedState } from './internal/state/checked.js';
 export interface ToggleButtonState { readonly pressed: boolean }
 export type ToggleButtonEvent = 'toggle' | { readonly type: 'set-pressed'; readonly pressed: boolean };
 export type ToggleButtonCommand = { readonly type: 'pressed-changed'; readonly pressed: boolean };
 export interface ToggleButtonUpdate { readonly state: ToggleButtonState; readonly commands: readonly ToggleButtonCommand[] }
-export function createToggleButtonState(pressed = false): Result<ToggleButtonState> {
-  const result = createCheckedState(pressed, { allowMixed: false });
+export function createToggleButtonState(pressed = false): ToggleButtonState {
+  return unwrap(tryCreateToggleButtonState(pressed));
+}
+
+export function tryCreateToggleButtonState(pressed = false): Result<ToggleButtonState> {
+  const result = tryCreateCheckedState(pressed, { allowMixed: false });
   return result.ok ? { ok: true, value: Object.freeze({ pressed: result.value.checked as boolean }) } : result;
 }
 export function applyToggleButtonEvent(state: ToggleButtonState, event: ToggleButtonEvent): Result<ToggleButtonUpdate> {

@@ -248,15 +248,15 @@ test('controlled DOM tree-grid emits proposals until every controlled field is s
 });
 
 function model() {
-  const tree = unwrap(createTree([
+  const tree = createTree([
     { id: 'root', parentID: null },
     { id: 'child', parentID: 'root' },
-  ]));
-  const grid = unwrap(createGrid([
+  ]);
+  const grid = createGrid([
     ['root-name', 'root-value'],
     ['child-name', 'child-value'],
-  ]));
-  return unwrap(createTreeGridModel(tree, grid, ['root', 'child']));
+  ]);
+  return createTreeGridModel(tree, grid, ['root', 'child']);
 }
 
 function modelRows() {

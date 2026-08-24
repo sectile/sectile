@@ -6,7 +6,7 @@ import { compareDateTimeValues, type DateTimeValue } from '@sectile/core/date-ti
 import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/core/date-picker';
 import {
   applyDateTimePickerEvent,
-  createDateTimePickerState,
+  tryCreateDateTimePickerState,
   type DateTimePickerCommand,
   type DateTimePickerEvent,
   type DateTimePickerPolicies,
@@ -87,7 +87,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
     ? options.highlightedValue
     : options.defaultHighlightedValue;
   const requestedOpen = controls.open ? options.open : options.defaultOpen;
-  const initial = createDateTimePickerState({
+  const initial = tryCreateDateTimePickerState({
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedValue == null && options.policies?.defaultTime !== undefined
       ? { time: options.policies.defaultTime }
@@ -109,7 +109,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
   >({
     initial,
     reducer: (state, event) => applyDateTimePickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => createDateTimePickerState({
+    reconcile: (previous, proposed) => tryCreateDateTimePickerState({
       value: controls.value ? previous.value : proposed.value,
       time: controls.value ? previous.time : proposed.time,
       calendar: {
@@ -233,16 +233,16 @@ class DOMDateTimePicker implements DateTimePickerConnection {
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
-    return unwrap(createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn));
+    return createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn);
   }
 
   public getWeek(): readonly DateValue[] {
     const state = this.getSnapshot().state.calendar;
-    return unwrap(createDatePickerWeek(state.highlighted, this.options.policies?.date?.weekStartsOn));
+    return createDatePickerWeek(state.highlighted, this.options.policies?.date?.weekStartsOn);
   }
 
   public getYear(): readonly (readonly DatePickerMonthValue[])[] {
-    return unwrap(createDatePickerYear(this.getSnapshot().state.calendar.view.year));
+    return createDatePickerYear(this.getSnapshot().state.calendar.view.year);
   }
 
   public syncControlledValues(
@@ -259,7 +259,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(createDateTimePickerState({
+    const result = this.runtime.replace(tryCreateDateTimePickerState({
       value: this.controls.value ? values.value as DateTimeValue | null : state.value,
       time: state.time,
       calendar: {

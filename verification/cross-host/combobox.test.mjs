@@ -72,7 +72,7 @@ test('DOM and terminal combobox controllers remain equivalent across 20,000 oper
 
 function fixture() {
   return {
-    domain: unwrap(createSequence(['a', 'b', 'c'])),
+    domain: createSequence(['a', 'b', 'c']),
     labels: new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]),
     policies: {
       matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),

@@ -109,7 +109,7 @@ test('controlled DOM calendar emits proposals until synchronized', () => {
 });
 
 function grid() {
-  return unwrap(createGrid([['a', 'b'], ['c', 'd']]));
+  return createGrid([['a', 'b'], ['c', 'd']]);
 }
 
 function keyboardEvent(key) {

@@ -394,8 +394,12 @@ function useRoot(part: string): Context { const root = inject<Context>(key); if 
 function pickerInputType(_part: PickerInputPart): 'text' {
   return 'text';
 }
-function monthFor(value: DateValue): readonly (readonly DateValue[])[] { const result = createDatePickerMonth({ year: value.year, month: value.month }); if (!result.ok) throw new TypeError(result.error.message); return result.value; }
-function yearFor(year: number): readonly (readonly DatePickerMonthValue[])[] { const result = createDatePickerYear(year); if (!result.ok) throw new TypeError(result.error.message); return result.value; }
+function monthFor(value: DateValue): readonly (readonly DateValue[])[] {
+  return createDatePickerMonth({ year: value.year, month: value.month });
+}
+function yearFor(year: number): readonly (readonly DatePickerMonthValue[])[] {
+  return createDatePickerYear(year);
+}
 function yearsFrom(start: number, pageSize: number): readonly (readonly PickerYearValue[])[] {
   const columns = 4;
   return Array.from({ length: Math.ceil(pageSize / columns) }, (_row, rowIndex) =>

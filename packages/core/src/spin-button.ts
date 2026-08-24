@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import type { QuantizedRange } from './structures/range.js';
 import { fail, ok } from './internal/kernel/foundation.js';
@@ -6,6 +7,7 @@ import {
   applySliderEvent,
   createSliderState,
   type SliderEvent,
+  tryCreateSliderState,
 } from './internal/composites/slider.js';
 
 export interface SpinButtonState {
@@ -37,6 +39,14 @@ export function createSpinButtonState(
   range: QuantizedRange,
   value: string = range.lower,
   draft: string | null = null,
+): SpinButtonState {
+  return unwrap(tryCreateSpinButtonState(range, value, draft));
+}
+
+export function tryCreateSpinButtonState(
+  range: QuantizedRange,
+  value: string = range.lower,
+  draft: string | null = null,
 ): Result<SpinButtonState> {
   if (typeof value !== 'string') {
     return fail('construction', 'invalid-spin-button-value', 'Spin button value must be decimal text.');
@@ -57,7 +67,7 @@ export function applySpinButtonEvent(
   event: SpinButtonEvent,
   policies: SpinButtonPolicies = {},
 ): Result<SpinButtonUpdate> {
-  const valid = createSpinButtonState(range, state.value, state.draft);
+  const valid = tryCreateSpinButtonState(range, state.value, state.draft);
   if (!valid.ok) return { ok: false, error: { ...valid.error, class: 'transition-rejection' } };
   if (typeof event === 'object' && event.type === 'input') {
     if (typeof event.text !== 'string') {
@@ -93,7 +103,7 @@ export function applySpinButtonEvent(
     );
   }
   const currentTick = range.tickOf(state.value) as number;
-  const sliderState = createSliderState(range, currentTick);
+  const sliderState = tryCreateSliderState(range, currentTick);
   if (!sliderState.ok) return sliderState;
   const moved = applySliderEvent(range, sliderState.value, event, policies.page);
   if (!moved.ok) return moved;

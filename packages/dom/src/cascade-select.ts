@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { createTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
+import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
-  applyCascadeSelectEvent, createCascadeSelectState, getCascadeSelectColumns,
+  applyCascadeSelectEvent, tryCreateCascadeSelectState, getCascadeSelectColumns,
   getCascadeSelectValuePath, type CascadeSelectCommand, type CascadeSelectEvent,
   type CascadeSelectPolicies, type CascadeSelectState,
 } from '@sectile/core/cascade-select';
@@ -69,7 +69,7 @@ export function tryCreateCascadeSelect<ID extends StableID>(options: CascadeSele
 }
 
 function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeSelectOptions<ID>): Result<CascadeSelectConnection<ID>> {
-  const tree = createTree(options.nodes); if (!tree.ok) return tree;
+  const tree = tryCreateTree(options.nodes); if (!tree.ok) return tree;
   const disabled = new Set(options.disabledItems ?? []);
   for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled cascade select item must exist in the tree.', details: { id } } };
   const suppliedEligibility = options.policies?.eligible;
@@ -81,13 +81,13 @@ function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeS
       || (typeof event === 'object' && event.type === 'select' && tree.value.isLeaf(event.id) === true)
       ? 'mutate'
       : 'navigate',
-    initial: createCascadeSelectState(tree.value, {
+    initial: tryCreateCascadeSelectState(tree.value, {
       value: options.value ?? options.defaultValue ?? null,
       highlighted: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null,
       open: options.open ?? options.defaultOpen ?? false,
     }),
     reducer: (state, event) => applyCascadeSelectEvent(tree.value, state, event, policies),
-    reconcile: (previous, proposed) => createCascadeSelectState(tree.value, {
+    reconcile: (previous, proposed) => tryCreateCascadeSelectState(tree.value, {
       value: controlled.value ? previous.value : proposed.value,
       highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted,
       open: controlled.open ? previous.open : proposed.open,
@@ -134,7 +134,7 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
   public syncControlledValues(values: CascadeSelectControlledValues<ID>): Result<RevisionSnapshot<CascadeSelectState<ID>>> {
     if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.highlighted !== (values.highlightedValue !== undefined) || this.#controlled.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled cascade select values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
-    const result = this.#runtime.replace(createCascadeSelectState(this.tree, { value: this.#controlled.value ? values.value ?? null : state.value, highlighted: this.#controlled.highlighted ? values.highlightedValue ?? null : state.highlighted, open: this.#controlled.open ? values.open ?? false : state.open }));
+    const result = this.#runtime.replace(tryCreateCascadeSelectState(this.tree, { value: this.#controlled.value ? values.value ?? null : state.value, highlighted: this.#controlled.highlighted ? values.highlightedValue ?? null : state.highlighted, open: this.#controlled.open ? values.open ?? false : state.open }));
     if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result;
   }
   public setColumnAttributes(element: HTMLElement, parentID: ID | null = null): void { element.setAttribute('role', 'listbox'); element.dataset['cascadeSelectParent'] = parentID ?? ''; }

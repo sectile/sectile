@@ -4,7 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
 import {
   applyDateTimeFieldEvent,
-  createDateTimeFieldState,
+  tryCreateDateTimeFieldState,
   type DateTimeFieldCommand,
   type DateTimeFieldEvent,
   type DateTimeFieldPolicies,
@@ -77,12 +77,12 @@ function construct(options: DateTimeFieldOptions): Result<DateTimeFieldConnectio
     DateTimeFieldCommand,
     DateTimeFieldCommand
   >({
-    initial: createDateTimeFieldState(
+    initial: tryCreateDateTimeFieldState(
       options.value !== undefined ? options.value : options.defaultValue ?? null,
       options.inputState !== undefined ? options.inputState : options.defaultInputState,
     ),
     reducer: (state, event) => applyDateTimeFieldEvent(state, event, policies),
-    reconcile: (previous, proposed) => createDateTimeFieldState(
+    reconcile: (previous, proposed) => tryCreateDateTimeFieldState(
       valueControlled ? previous.value : proposed.value,
       inputControlled ? previous.inputState : proposed.inputState,
     ),
@@ -179,7 +179,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
       };
     }
     const state = this.getSnapshot().state;
-    const result = this.runtime.replace(createDateTimeFieldState(
+    const result = this.runtime.replace(tryCreateDateTimeFieldState(
       this.valueControlled ? values.value as DateTimeValue | null : state.value,
       this.inputControlled ? values.inputState as TextEditingState : state.inputState,
     ));

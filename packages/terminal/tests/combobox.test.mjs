@@ -103,7 +103,7 @@ test('uncontrolled terminal combobox filters, navigates, and accepts', () => {
 
 test('controlled terminal combobox proposes and synchronizes complete input state', () => {
   const inputStates = [];
-  const initial = unwrap(createTextEditingState());
+  const initial = createTextEditingState();
   const controller = unwrap(createComboboxController({
     ...fixture(),
     inputState: initial,
@@ -136,7 +136,7 @@ test('unsupported terminal combobox input is failure-atomic', () => {
 
 function fixture() {
   return {
-    domain: unwrap(createSequence(['a', 'b', 'c'])),
+    domain: createSequence(['a', 'b', 'c']),
     labels: new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Alpine']]),
     policies: {
       matches: (label, query) => label.toLowerCase().startsWith(query.toLowerCase()),

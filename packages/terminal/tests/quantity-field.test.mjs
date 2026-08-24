@@ -9,11 +9,11 @@ import {
 } from '@sectile/core/units';
 import { createQuantityField } from '../dist/quantity-field.js';
 
-const registry = unwrap(createUnitRegistry([
+const registry = createUnitRegistry([
   { id: 'meter', symbol: 'm', dimension: { length: 1 }, scale: '1' },
   { id: 'centimeter', symbol: 'cm', dimension: { length: 1 }, scale: '0.01' },
   { id: 'inch', symbol: 'in', dimension: { length: 1 }, scale: '0.0254' },
-]));
+]);
 
 test('terminal quantity field cycles units and commits canonical decimal values', () => {
   const field = createQuantityField({
@@ -45,14 +45,14 @@ test('terminal read-only quantity field allows unit navigation and rejects value
 });
 
 test('terminal quantity field applies profiles and accepts calculator input with a compact unit', () => {
-  const standard = unwrap(createStandardUnitRegistry());
-  const imperial = unwrap(createImperialUnitSystem(standard));
+  const standard = createStandardUnitRegistry();
+  const imperial = createImperialUnitSystem(standard);
   const field = createQuantityField({
     policies: {
       registry: standard,
       canonicalUnit: 'metre',
       unitSystem: imperial,
-      evaluator: unwrap(createCalculatorExpression()),
+      evaluator: createCalculatorExpression(),
     },
     defaultQuantity: { value: '1', unit: 'metre' },
   });

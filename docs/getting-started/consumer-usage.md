@@ -4,21 +4,19 @@ Core domain construction is explicit and failure-aware.
 
 ```ts
 import { createSequence } from '@sectile/core/sequence';
-import { unwrap } from '@sectile/core/result';
 
-const sequence = unwrap(createSequence(['alpha', 'beta', 'gamma']));
+const sequence = createSequence(['alpha', 'beta', 'gamma']);
 const next = sequence.move('alpha', 1, 'stop');
 ```
 
-`unwrap` returns a successful value and throws `SectileResultError` for a failure. The thrown error preserves `class`, `code`, `message`, `details`, and the original `SectileError` as `cause`. Consumers that need recoverable failures can continue narrowing `Result` directly.
+`create*` factories return the constructed value and throw `SectileResultError` for invalid developer configuration. Consumers that need recoverable construction failures can use the matching `tryCreate*` factory and narrow its `Result`.
 
 Exact numeric domains use decimal strings and integer ticks.
 
 ```ts
 import { createRange } from '@sectile/core/range';
-import { unwrap } from '@sectile/core/result';
 
-const range = unwrap(createRange({ origin: '-0.3', step: '0.1', count: 6 }));
+const range = createRange({ origin: '-0.3', step: '0.1', count: 6 });
 range.valueAt(3); // "0"
 ```
 

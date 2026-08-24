@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type { BoundaryPolicy, Result, SectileError, StableID } from '../../shared.js';
 import type { Sequence } from '../../structures/sequence.js';
 import { createCursorState, type CursorState } from '../state/cursor.js';
@@ -57,6 +58,14 @@ export interface ListboxUpdate<ID extends StableID = StableID> {
 }
 
 export function createListboxState<ID extends StableID>(
+  domain: Sequence<ID>,
+  input: ListboxStateInput<ID> = {},
+  selectionMode: SelectionMode = 'multiple',
+): ListboxState<ID> {
+  return unwrap(tryCreateListboxState(domain, input, selectionMode));
+}
+
+export function tryCreateListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
   selectionMode: SelectionMode = 'multiple',

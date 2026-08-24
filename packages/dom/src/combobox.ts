@@ -1,10 +1,10 @@
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
-import { createInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
+import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
   applyComboboxEvent,
-  createComboboxState,
+  tryCreateComboboxState,
   type ComboboxCommand,
   type ComboboxEvent,
   type ComboboxPolicies,
@@ -12,14 +12,14 @@ import {
 } from '@sectile/core/combobox';
 export type { ComboboxPolicies } from '@sectile/core/combobox';
 import {
-  createRevisionSnapshot,
+  tryCreateRevisionSnapshot,
   rejectRevisionInput,
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
-import { createSequence, type Sequence } from '@sectile/core/sequence';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import {
-  createTextEditingState,
+  tryCreateTextEditingState,
   type TextEditingState,
 } from '@sectile/core/text';
 import {
@@ -170,10 +170,10 @@ export function createComboboxController<ID extends StableID>(
     ? options.inputState
     : options.defaultInputState;
   const inputState = requestedInput === undefined
-    ? createTextEditingState()
+    ? tryCreateTextEditingState()
     : { ok: true as const, value: requestedInput };
   if (!inputState.ok) return inputState;
-  const initial = createComboboxState(options.domain, {
+  const initial = tryCreateComboboxState(options.domain, {
     text: inputState.value,
     popupOpen: options.open !== undefined ? options.open : options.defaultOpen ?? false,
     current: options.highlightedValue !== undefined
@@ -183,9 +183,9 @@ export function createComboboxController<ID extends StableID>(
     anchor: value,
   });
   if (!initial.ok) return initial;
-  const snapshot = createRevisionSnapshot(initial.value);
+  const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
-  const interaction = createInteractionState(options);
+  const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
   return { ok: true, value: new DOMComboboxController(options, interaction.value, snapshot.value) };
 }
@@ -205,7 +205,7 @@ export function tryCreateCombobox<ID extends StableID>(
 function tryCreateComboboxConnection<ID extends StableID>(
   options: ComboboxOptions<ID>,
 ): Result<ComboboxConnection<ID>> {
-  const domain = createSequence(options.items.map((item) => item.id));
+  const domain = tryCreateSequence(options.items.map((item) => item.id));
   if (!domain.ok) return domain;
   const labels = new Map(options.items.map((item) => [item.id, item.label] as const));
   const controller = createComboboxController({ ...options, domain: domain.value, labels });
@@ -463,7 +463,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     const selected = this.#valueControlled
       ? (values.value as ID | null)
       : selectedValue(this.#snapshot.state);
-    const state = createComboboxState(this.#domain, {
+    const state = tryCreateComboboxState(this.#domain, {
       text: this.#inputStateControlled
         ? values.inputState as TextEditingState
         : this.#snapshot.state.text,
@@ -582,7 +582,7 @@ function controlledState<ID extends StableID>(
   openControlled: boolean,
   highlightControlled: boolean,
 ): Result<ComboboxState<ID>> {
-  return createComboboxState(domain, {
+  return tryCreateComboboxState(domain, {
     text: inputStateControlled ? previous.text : proposed.text,
     popupOpen: openControlled ? previous.popupOpen : proposed.popupOpen,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,

@@ -1,3 +1,4 @@
+import { unwrap } from '../../result.js';
 import type {
   AxisBoundaryPolicy,
   GridDirection,
@@ -125,6 +126,14 @@ export function createTreeGridModel<RowID extends StableID, CellID extends Stabl
   tree: Tree<RowID>,
   grid: Grid<CellID>,
   rowIDs: readonly RowID[],
+): TreeGridModel<RowID, CellID> {
+  return unwrap(tryCreateTreeGridModel(tree, grid, rowIDs));
+}
+
+export function tryCreateTreeGridModel<RowID extends StableID, CellID extends StableID>(
+  tree: Tree<RowID>,
+  grid: Grid<CellID>,
+  rowIDs: readonly RowID[],
 ): Result<TreeGridModel<RowID, CellID>> {
   if (rowIDs.length !== grid.rowCount || rowIDs.length !== tree.size) {
     return fail(
@@ -159,6 +168,13 @@ export function createTreeGridModel<RowID extends StableID, CellID extends Stabl
 }
 
 export function createTreeGridState<RowID extends StableID, CellID extends StableID>(
+  model: TreeGridModel<RowID, CellID>,
+  input: TreeGridStateInput<RowID, CellID> = {},
+): TreeGridState<RowID, CellID> {
+  return unwrap(tryCreateTreeGridState(model, input));
+}
+
+export function tryCreateTreeGridState<RowID extends StableID, CellID extends StableID>(
   model: TreeGridModel<RowID, CellID>,
   input: TreeGridStateInput<RowID, CellID> = {},
 ): Result<TreeGridState<RowID, CellID>> {

@@ -1,3 +1,4 @@
+import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { createMachineUpdate } from './internal/kernel/machine.js';
@@ -7,6 +8,7 @@ import {
   normalizeTextEditingState,
   type TextEditingState,
   type TextEvent,
+  tryCreateTextEditingState,
 } from './text.js';
 
 export interface DateValue {
@@ -53,7 +55,11 @@ export interface DateFieldUpdate {
 
 const DATE_FIELD_MAX_CODE_UNITS = 10;
 
-export function createDateValue(year: number, month: number, day: number): Result<DateValue> {
+export function createDateValue(year: number, month: number, day: number): DateValue {
+  return unwrap(tryCreateDateValue(year, month, day));
+}
+
+export function tryCreateDateValue(year: number, month: number, day: number): Result<DateValue> {
   if (!Number.isSafeInteger(year) || year < 1 || year > 9_999) {
     return fail('construction', 'invalid-date-year', 'Date year must be an integer from 1 through 9999.', { year });
   }
@@ -72,7 +78,7 @@ export function parseDateValue(text: string): Result<DateValue> {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
   return match === null
     ? fail('transition-rejection', 'invalid-date-format', 'Date text must use YYYY-MM-DD.', { text })
-    : createDateValue(Number(match[1]), Number(match[2]), Number(match[3]));
+    : tryCreateDateValue(Number(match[1]), Number(match[2]), Number(match[3]));
 }
 
 export function formatDateValue(value: DateValue): string {
@@ -109,20 +115,24 @@ export function addDateMonths(value: DateValue, amount: number): Result<DateValu
   const year = Math.floor(absolute / 12);
   const month = absolute - year * 12 + 1;
   if (year < 1 || year > 9_999) return fail('transition-rejection', 'date-outside-supported-range', 'Date arithmetic must remain between years 1 and 9999.');
-  return createDateValue(year, month, Math.min(value.day, daysInMonth(year, month)));
+  return tryCreateDateValue(year, month, Math.min(value.day, daysInMonth(year, month)));
 }
 
 export function addDateYears(value: DateValue, amount: number): Result<DateValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-date-year-delta', 'Date year delta must be a safe integer.');
   const year = value.year + amount;
   if (year < 1 || year > 9_999) return fail('transition-rejection', 'date-outside-supported-range', 'Date arithmetic must remain between years 1 and 9999.');
-  return createDateValue(year, value.month, Math.min(value.day, daysInMonth(year, value.month)));
+  return tryCreateDateValue(year, value.month, Math.min(value.day, daysInMonth(year, value.month)));
 }
 
-export function createDateRange(start: DateValue, end: DateValue): Result<DateRange> {
-  const validStart = createDateValue(start.year, start.month, start.day);
+export function createDateRange(start: DateValue, end: DateValue): DateRange {
+  return unwrap(tryCreateDateRange(start, end));
+}
+
+export function tryCreateDateRange(start: DateValue, end: DateValue): Result<DateRange> {
+  const validStart = tryCreateDateValue(start.year, start.month, start.day);
   if (!validStart.ok) return validStart;
-  const validEnd = createDateValue(end.year, end.month, end.day);
+  const validEnd = tryCreateDateValue(end.year, end.month, end.day);
   if (!validEnd.ok) return validEnd;
   if (compareDateValues(validStart.value, validEnd.value) > 0) {
     return fail('construction', 'inverted-date-range', 'Date range start must not follow its end.');
@@ -137,8 +147,15 @@ export function dateRangeContains(range: DateRange, value: DateValue): boolean {
 export function createDateFieldState(
   value: DateValue | null = null,
   inputState?: TextEditingState,
+): DateFieldState {
+  return unwrap(tryCreateDateFieldState(value, inputState));
+}
+
+export function tryCreateDateFieldState(
+  value: DateValue | null = null,
+  inputState?: TextEditingState,
 ): Result<DateFieldState> {
-  const valid = value === null ? ok(null) : createDateValue(value.year, value.month, value.day);
+  const valid = value === null ? ok(null) : tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return valid;
   const input = inputState === undefined
     ? committedInput(valid.value)
@@ -155,7 +172,7 @@ export function applyDateFieldEvent(
   event: DateFieldEvent,
   policies: DateFieldPolicies = {},
 ): Result<DateFieldUpdate> {
-  const valid = createDateFieldState(state.value, state.inputState);
+  const valid = tryCreateDateFieldState(state.value, state.inputState);
   if (!valid.ok) return transitionFailure(valid);
   const bounds = validatePolicies(policies);
   if (!bounds.ok) return bounds;
@@ -215,7 +232,7 @@ function commitValue(value: DateValue | null, policies: DateFieldPolicies, segme
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'date-field-value-required', 'Date field requires a value.');
   } else {
-    const valid = createDateValue(value.year, value.month, value.day);
+    const valid = tryCreateDateValue(value.year, value.month, value.day);
     if (!valid.ok) return transitionFailure(valid);
     value = valid.value;
     if (policies.min !== undefined && compareDateValues(value, policies.min) < 0) return fail('transition-rejection', 'date-field-value-below-minimum', 'Date field value is below its minimum.');
@@ -236,17 +253,17 @@ function committedInput(value: DateValue | null, segment?: DateSegment): Result<
     : segment === 'year' ? { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 4 }
       : segment === 'month' ? { anchorCodeUnitOffset: 5, focusCodeUnitOffset: 7 }
         : { anchorCodeUnitOffset: 8, focusCodeUnitOffset: 10 };
-  return createTextEditingState(text, selection);
+  return tryCreateTextEditingState(text, selection);
 }
 
 function validatePolicies(policies: DateFieldPolicies): Result<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') return fail('construction', 'invalid-date-unavailable-policy', 'Date unavailable policy must be a function.');
   if (policies.min !== undefined) {
-    const min = createDateValue(policies.min.year, policies.min.month, policies.min.day);
+    const min = tryCreateDateValue(policies.min.year, policies.min.month, policies.min.day);
     if (!min.ok) return min;
   }
   if (policies.max !== undefined) {
-    const max = createDateValue(policies.max.year, policies.max.month, policies.max.day);
+    const max = tryCreateDateValue(policies.max.year, policies.max.month, policies.max.day);
     if (!max.ok) return max;
   }
   if (policies.min !== undefined && policies.max !== undefined && compareDateValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-date-field-bounds', 'Date field minimum must not follow its maximum.');

@@ -1,3 +1,4 @@
+import { unwrap } from '../result.js';
 import { type Result, type TiePolicy } from '../shared.js';
 import {
   addDecimal,
@@ -164,7 +165,11 @@ class ExactQuantizedRange implements QuantizedRange {
   }
 }
 
-export function createRange(input: RangeInput): Result<QuantizedRange> {
+export function createRange(input: RangeInput): QuantizedRange {
+  return unwrap(tryCreateRange(input));
+}
+
+export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -220,7 +225,11 @@ export function createRange(input: RangeInput): Result<QuantizedRange> {
   return ok(new ExactQuantizedRange(origin, step, input.count));
 }
 
-export function createBoundedRange(input: BoundedRangeInput): Result<QuantizedRange> {
+export function createBoundedRange(input: BoundedRangeInput): QuantizedRange {
+  return unwrap(tryCreateBoundedRange(input));
+}
+
+export function tryCreateBoundedRange(input: BoundedRangeInput): Result<QuantizedRange> {
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -278,7 +287,7 @@ export function createBoundedRange(input: BoundedRangeInput): Result<QuantizedRa
       maxCount,
     });
   }
-  return createRange({
+  return tryCreateRange({
     origin: input.min,
     step: input.step,
     count: Number(count),
