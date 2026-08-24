@@ -38,6 +38,7 @@ Vue 패키지: `@sectile/vue/text`
 <strong class="component-api-label">타입</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">TextFieldProps</code></li>
+  <li><code class="component-api-token">TextFieldModelModifiers</code></li>
 </ul>
 </div>
 

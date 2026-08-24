@@ -38,6 +38,7 @@ Vue package: `@sectile/vue/text`
 <strong class="component-api-label">Types</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">TextFieldProps</code></li>
+  <li><code class="component-api-token">TextFieldModelModifiers</code></li>
 </ul>
 </div>
 

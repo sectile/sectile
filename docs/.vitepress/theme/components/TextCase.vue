@@ -37,14 +37,15 @@ const state = computed<Readonly<Record<string, unknown>>>(() => ({
 }));
 const sourceCode = computed(() => textSource(props));
 
-function handleUpdate(next: string): void {
-  value.value = next;
+function handleUpdate(next: string | number): void {
+  const text = String(next);
+  value.value = text;
   revision.value += 1;
   entries.value = [{
     revision: revision.value,
     event: 'update:modelValue',
     accepted: true,
-    effects: [`set-text length=${next.length}`],
+    effects: [`set-text length=${text.length}`],
   }, ...entries.value].slice(0, 12);
 }
 </script>
