@@ -1,5 +1,15 @@
 export type { FacadeConnection } from './internal/facade.js';
 export {
+  createForm,
+  tryCreateForm,
+  type TerminalFormConnection,
+  type TerminalFormField,
+  type TerminalFormFieldValidation,
+  type TerminalFormOptions,
+  type TerminalFormSnapshot,
+  type TerminalFormSubmitDetails,
+} from './form.js';
+export {
   connectListbox,
   createListbox, tryCreateListbox,
   createListboxController,

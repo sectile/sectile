@@ -28,6 +28,7 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
+    "./form": { "types": "./dist/form.d.ts", "import": "./dist/form.js", "default": "./dist/form.js" },
     "./checkbox-group": { "types": "./dist/checkbox-group.d.ts", "import": "./dist/checkbox-group.js", "default": "./dist/checkbox-group.js" },
     "./select": { "types": "./dist/select.d.ts", "import": "./dist/select.js", "default": "./dist/select.js" },
     "./pagination": { "types": "./dist/pagination.d.ts", "import": "./dist/pagination.js", "default": "./dist/pagination.js" },
