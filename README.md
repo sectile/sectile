@@ -21,4 +21,4 @@ Sectile separates interaction rules from presentation. `@sectile/core` defines d
 - Exact text, decimal, range, and unit operations
 - Package-local builds and tests with cross-host verification
 
-See the [documentation](docs/index.md), [accepted theory](docs/references/sectile-theory.md), and [interactive playgrounds](playgrounds/README.md). The canonical repository check is `pnpm verify`.
+See the [documentation](docs/index.md) and [accepted theory](docs/references/sectile-theory.md). The documentation contains the interactive examples for every supported host. The canonical repository check is `pnpm verify`.

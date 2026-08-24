@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { root } from './lib/repository.mjs';
 
-const workspaceRoots = ['packages', 'playgrounds'];
+const workspaceRoots = ['packages'];
 const packageDirectories = (
   await Promise.all(workspaceRoots.map(async (directory) => {
     const workspaceRoot = resolve(root, directory);
@@ -30,7 +30,6 @@ for (const { directory, manifest } of manifests.values()) {
   for (const command of Object.values(manifest.scripts ?? {})) {
     assert.equal(command.includes('../'), false, `${manifest.name} script escapes its package: ${command}`);
     assert.equal(command.includes('packages/'), false, `${manifest.name} script targets another package: ${command}`);
-    assert.equal(command.includes('playgrounds/'), false, `${manifest.name} script targets another project: ${command}`);
   }
   for (const path of await sourcePaths(directory)) {
     sourceFiles += 1;

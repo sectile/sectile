@@ -9,17 +9,64 @@ sectile/
 │   ├── .vitepress/
 │   │   ├── theme/
 │   │   │   ├── components/
-│   │   │   │   ├── CheckboxDemo.vue
-│   │   │   │   ├── CheckboxIndeterminateDemo.vue
+│   │   │   │   ├── AccordionCase.vue
+│   │   │   │   ├── AnatomyPreviewNode.vue
+│   │   │   │   ├── BashTerminal.vue
+│   │   │   │   ├── CascadeSelectCase.vue
+│   │   │   │   ├── CatalogCase.vue
+│   │   │   │   ├── CheckedControlCase.vue
+│   │   │   │   ├── ColorPickerCase.vue
+│   │   │   │   ├── ComponentAnatomy.vue
 │   │   │   │   ├── ComponentCatalog.vue
+│   │   │   │   ├── ComponentExample.vue
+│   │   │   │   ├── ComponentExamplePreview.vue
+│   │   │   │   ├── DateRangeFieldCase.vue
+│   │   │   │   ├── DateTimePickerAnatomy.vue
+│   │   │   │   ├── DemoCard.vue
+│   │   │   │   ├── DisclosureCase.vue
+│   │   │   │   ├── EditableCase.vue
 │   │   │   │   ├── ExampleFrame.vue
 │   │   │   │   ├── HostCode.vue
+│   │   │   │   ├── HostInstall.vue
 │   │   │   │   ├── HostSelector.vue
-│   │   │   │   └── PackageImport.vue
+│   │   │   │   ├── ListboxCase.vue
+│   │   │   │   ├── MultiThumbSliderAnatomy.vue
+│   │   │   │   ├── NativeFieldCase.vue
+│   │   │   │   ├── NavPreferenceMenu.vue
+│   │   │   │   ├── PackageImport.vue
+│   │   │   │   ├── PaginationCase.vue
+│   │   │   │   ├── PopoverCase.vue
+│   │   │   │   ├── RadioGroupCase.vue
+│   │   │   │   ├── SliderAnatomy.vue
+│   │   │   │   ├── SliderCase.vue
+│   │   │   │   ├── SpinButtonCase.vue
+│   │   │   │   ├── TabsCase.vue
+│   │   │   │   ├── TerminalCheckboxDemo.vue
+│   │   │   │   ├── TerminalComponentExample.vue
+│   │   │   │   ├── TextCase.vue
+│   │   │   │   ├── TheoryComposition.vue
+│   │   │   │   ├── TheoryOverview.vue
+│   │   │   │   ├── TimeRangeFieldCase.vue
+│   │   │   │   ├── TimerCase.vue
+│   │   │   │   ├── ToastCase.vue
+│   │   │   │   └── ToggleGroupCase.vue
+│   │   │   ├── anatomy-interaction.ts
+│   │   │   ├── catalog-code.ts
+│   │   │   ├── catalog-scenarios.ts
+│   │   │   ├── component-anatomy.ts
+│   │   │   ├── component-example-sources.ts
+│   │   │   ├── component-examples.css
+│   │   │   ├── dom-demo-code.ts
 │   │   │   ├── host-preference.ts
 │   │   │   ├── index.ts
 │   │   │   ├── Layout.vue
-│   │   │   └── styles.css
+│   │   │   ├── locale.ts
+│   │   │   ├── number-field-examples.ts
+│   │   │   ├── styles.css
+│   │   │   ├── terminal-demo-sessions.mjs
+│   │   │   ├── terminal-demo-ui.mjs
+│   │   │   ├── terminal-keyboard-input.mjs
+│   │   │   └── types.ts
 │   │   └── config.ts
 │   ├── architecture/
 │   │   ├── composite-proof-plan.md
@@ -81,7 +128,9 @@ sectile/
 │   │   ├── tree-view.md
 │   │   └── window-splitter.md
 │   ├── data/
-│   │   └── components.json
+│   │   ├── component-contracts.mjs
+│   │   ├── components.json
+│   │   └── scenario-descriptions.mjs
 │   ├── decisions/
 │   │   ├── index.md
 │   │   └── public-migration.md
@@ -90,11 +139,6 @@ sectile/
 │   │   ├── index.md
 │   │   ├── naming.md
 │   │   └── package-boundary.md
-│   ├── examples/
-│   │   └── checkbox/
-│   │       ├── BasicCheckbox.vue
-│   │       ├── IndeterminateCheckbox.vue
-│   │       └── sources.ts
 │   ├── getting-started/
 │   │   ├── consumer-usage.md
 │   │   └── index.md
@@ -105,6 +149,82 @@ sectile/
 │   │   ├── state-ownership.md
 │   │   └── styling.md
 │   ├── internals/
+│   │   └── index.md
+│   ├── ko/
+│   │   ├── components/
+│   │   │   ├── accordion.md
+│   │   │   ├── alert-dialog.md
+│   │   │   ├── calendar.md
+│   │   │   ├── carousel.md
+│   │   │   ├── cascade-select.md
+│   │   │   ├── checkbox-group.md
+│   │   │   ├── checkbox.md
+│   │   │   ├── color-picker.md
+│   │   │   ├── combobox.md
+│   │   │   ├── date-field.md
+│   │   │   ├── date-picker.md
+│   │   │   ├── date-range-field.md
+│   │   │   ├── date-range-picker.md
+│   │   │   ├── date-time-field.md
+│   │   │   ├── date-time-picker.md
+│   │   │   ├── date-time-range-picker.md
+│   │   │   ├── dialog.md
+│   │   │   ├── disclosure.md
+│   │   │   ├── editable.md
+│   │   │   ├── feed.md
+│   │   │   ├── grid.md
+│   │   │   ├── index.md
+│   │   │   ├── listbox.md
+│   │   │   ├── menu-button.md
+│   │   │   ├── menu.md
+│   │   │   ├── menubar.md
+│   │   │   ├── multi-thumb-slider.md
+│   │   │   ├── navigation-menu.md
+│   │   │   ├── number-field.md
+│   │   │   ├── pagination.md
+│   │   │   ├── pin-input.md
+│   │   │   ├── popover.md
+│   │   │   ├── quantity-field.md
+│   │   │   ├── radio-group.md
+│   │   │   ├── rating.md
+│   │   │   ├── select.md
+│   │   │   ├── slider.md
+│   │   │   ├── spin-button.md
+│   │   │   ├── stepper.md
+│   │   │   ├── switch.md
+│   │   │   ├── tabs.md
+│   │   │   ├── tags-input.md
+│   │   │   ├── text.md
+│   │   │   ├── time-field.md
+│   │   │   ├── time-range-field.md
+│   │   │   ├── timer.md
+│   │   │   ├── toast.md
+│   │   │   ├── toggle-button.md
+│   │   │   ├── toggle-group.md
+│   │   │   ├── toolbar.md
+│   │   │   ├── tooltip.md
+│   │   │   ├── tree-grid.md
+│   │   │   ├── tree-view.md
+│   │   │   └── window-splitter.md
+│   │   ├── guide/
+│   │   │   ├── getting-started.md
+│   │   │   ├── host-model.md
+│   │   │   ├── introduction.md
+│   │   │   ├── state-ownership.md
+│   │   │   └── styling.md
+│   │   ├── packages/
+│   │   │   ├── core.md
+│   │   │   ├── dom.md
+│   │   │   ├── index.md
+│   │   │   ├── terminal.md
+│   │   │   └── vue.md
+│   │   ├── theory/
+│   │   │   ├── composition.md
+│   │   │   ├── index.md
+│   │   │   ├── scope.md
+│   │   │   ├── state-and-text.md
+│   │   │   ├── structures.md
+│   │   │   └── transitions.md
 │   │   └── index.md
 │   ├── packages/
 │   │   ├── core.md
@@ -122,6 +242,7 @@ sectile/
 │   │   ├── sequence.md
 │   │   └── tree.md
 │   ├── public/
+│   │   ├── coi-service-worker.js
 │   │   └── mark.svg
 │   ├── references/
 │   │   ├── index.md
@@ -133,6 +254,16 @@ sectile/
 │   ├── testing/
 │   │   ├── index.md
 │   │   └── verification-pipeline.md
+│   ├── tests/
+│   │   ├── anatomy-interaction.test.mjs
+│   │   └── terminal-input.test.mjs
+│   ├── theory/
+│   │   ├── composition.md
+│   │   ├── index.md
+│   │   ├── scope.md
+│   │   ├── state-and-text.md
+│   │   ├── structures.md
+│   │   └── transitions.md
 │   ├── env.d.ts
 │   ├── implementation-checklist.md
 │   ├── index.md
@@ -476,6 +607,7 @@ sectile/
 │   │   │   │   └── text-input.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
+│   │   │   ├── appearance.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
 │   │   │   ├── cascade-select.ts
@@ -512,6 +644,7 @@ sectile/
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
+│   │   │   ├── screen.ts
 │   │   │   ├── select.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── spin-button.ts
@@ -552,6 +685,7 @@ sectile/
 │   │   │   ├── number-field.test.mjs
 │   │   │   ├── popup-controls.test.mjs
 │   │   │   ├── quantity-field.test.mjs
+│   │   │   ├── screen.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
@@ -637,6 +771,7 @@ sectile/
 │       │   ├── checked-controls.test.mjs
 │       │   ├── collection-popup.test.mjs
 │       │   ├── color-picker.test.mjs
+│       │   ├── date-pickers.dom.test.mjs
 │       │   ├── date-pickers.test.mjs
 │       │   ├── date-range-field.test.mjs
 │       │   ├── derived-selection.test.mjs
@@ -650,6 +785,7 @@ sectile/
 │       │   ├── public-parity.test.mjs
 │       │   ├── renderer.mjs
 │       │   ├── slider.test.mjs
+│       │   ├── sliders.dom.test.mjs
 │       │   ├── spin-button.test.mjs
 │       │   ├── structural-controls.test.mjs
 │       │   ├── text.test.mjs
@@ -662,102 +798,6 @@ sectile/
 │       ├── README.md
 │       ├── tsconfig.build.json
 │       └── tsconfig.json
-├── playgrounds/
-│   ├── dom/
-│   │   ├── src/
-│   │   │   ├── demos/
-│   │   │   │   ├── calendar.ts
-│   │   │   │   ├── cascade-select.ts
-│   │   │   │   ├── checked-controls.ts
-│   │   │   │   ├── collection-controls.ts
-│   │   │   │   ├── color-picker.ts
-│   │   │   │   ├── combobox.ts
-│   │   │   │   ├── date-time.ts
-│   │   │   │   ├── editable.ts
-│   │   │   │   ├── expansion-controls.ts
-│   │   │   │   ├── extended-selection.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── linear-controls.ts
-│   │   │   │   ├── listbox.ts
-│   │   │   │   ├── menu-controls.ts
-│   │   │   │   ├── number-field.ts
-│   │   │   │   ├── popup-controls.ts
-│   │   │   │   ├── quantity-field.ts
-│   │   │   │   ├── range-controls.ts
-│   │   │   │   ├── slider.ts
-│   │   │   │   ├── structured-inputs.ts
-│   │   │   │   ├── text.ts
-│   │   │   │   ├── timer.ts
-│   │   │   │   ├── toast.ts
-│   │   │   │   ├── tree-grid.ts
-│   │   │   │   └── tree-view.ts
-│   │   │   ├── demo-code.ts
-│   │   │   ├── highlight.d.ts
-│   │   │   ├── highlight.js
-│   │   │   ├── main.ts
-│   │   │   ├── playground.ts
-│   │   │   ├── styles.css
-│   │   │   └── vite-env.d.ts
-│   │   ├── tests/
-│   │   │   └── playground.test.mjs
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── README.md
-│   │   └── tsconfig.json
-│   ├── terminal/
-│   │   ├── scripts/
-│   │   │   └── build.mjs
-│   │   ├── src/
-│   │   │   ├── demos.mjs
-│   │   │   ├── main.mjs
-│   │   │   └── ui.mjs
-│   │   ├── tests/
-│   │   │   └── playground.test.mjs
-│   │   ├── package.json
-│   │   └── README.md
-│   ├── vue/
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   │   ├── AccordionCase.vue
-│   │   │   │   ├── CascadeSelectCase.vue
-│   │   │   │   ├── CatalogCase.vue
-│   │   │   │   ├── CheckboxCase.vue
-│   │   │   │   ├── CheckedControlCase.vue
-│   │   │   │   ├── ColorPickerCase.vue
-│   │   │   │   ├── DateRangeFieldCase.vue
-│   │   │   │   ├── DemoCard.vue
-│   │   │   │   ├── DisclosureCase.vue
-│   │   │   │   ├── EditableCase.vue
-│   │   │   │   ├── ListboxCase.vue
-│   │   │   │   ├── NativeFieldCase.vue
-│   │   │   │   ├── PaginationCase.vue
-│   │   │   │   ├── PopoverCase.vue
-│   │   │   │   ├── RadioGroupCase.vue
-│   │   │   │   ├── SliderCase.vue
-│   │   │   │   ├── SpinButtonCase.vue
-│   │   │   │   ├── TabsCase.vue
-│   │   │   │   ├── TextCase.vue
-│   │   │   │   ├── TimeRangeFieldCase.vue
-│   │   │   │   ├── TimerCase.vue
-│   │   │   │   ├── ToastCase.vue
-│   │   │   │   └── ToggleGroupCase.vue
-│   │   │   ├── App.vue
-│   │   │   ├── catalog-code.ts
-│   │   │   ├── catalog-scenarios.ts
-│   │   │   ├── highlight.d.ts
-│   │   │   ├── highlight.js
-│   │   │   ├── main.ts
-│   │   │   ├── styles.css
-│   │   │   ├── types.ts
-│   │   │   └── vite-env.d.ts
-│   │   ├── tests/
-│   │   │   └── playground.test.mjs
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── README.md
-│   │   ├── tsconfig.json
-│   │   └── vite.config.ts
-│   └── README.md
 ├── scripts/
 │   ├── lib/
 │   │   ├── release.mjs
