@@ -41,6 +41,7 @@ function publicValues(source) {
 
 function publicPart(component, value) {
   if (value.startsWith('create')) return null;
+  if (value.startsWith('use') || value.startsWith('provide')) return null;
   if (nativeFields.has(component)) return 'input';
   if (component === 'toggle-button' && value === 'ToggleButton') return 'root';
   if (value.endsWith('Portal')) return null;

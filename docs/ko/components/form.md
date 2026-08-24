@@ -5,11 +5,23 @@
 
 ## 예시
 
-### account
+### 프로필 설정
 
-네이티브 입력이 값을 소유한 채 계정 설정을 검증하고 제출합니다.
+폼에서 필드 메타데이터를 한 번만 지정하고 중첩된 프로필 값을 수정합니다.
 
-<ComponentExample component="form" scenario="account" title="account" description="네이티브 입력이 값을 소유한 채 계정 설정을 검증하고 제출합니다." :index="0" />
+<ComponentExample component="form" scenario="profile" title="프로필 설정" description="폼에서 필드 메타데이터를 한 번만 지정하고 중첩된 프로필 값을 수정합니다." :index="0" />
+
+### 알림 설정
+
+선택형 입력과 체크형 입력을 하나의 알림 설정 폼으로 구성합니다.
+
+<ComponentExample component="form" scenario="notifications" title="알림 설정" description="선택형 입력과 체크형 입력을 하나의 알림 설정 폼으로 구성합니다." :index="1" />
+
+### 팀원 초대
+
+일반 HTML 입력도 같은 구조화된 제출에 참여시켜 팀원을 초대합니다.
+
+<ComponentExample component="form" scenario="team-invite" title="팀원 초대" description="일반 HTML 입력도 같은 구조화된 제출에 참여시켜 팀원을 초대합니다." :index="2" />
 
 ## 공개 API
 
@@ -25,6 +37,8 @@ Vue 패키지: `@sectile/vue/form`
   <li><code class="component-api-token">FormMessage</code></li>
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
+  <li><code class="component-api-token">useFormControl</code></li>
+  <li><code class="component-api-token">provideFormControlOwner</code></li>
 </ul>
 </div>
 
@@ -38,6 +52,15 @@ Vue 패키지: `@sectile/vue/form`
   <li><code class="component-api-token">FormRootSlotProps</code></li>
   <li><code class="component-api-token">FormFieldProps</code></li>
   <li><code class="component-api-token">FormFieldSlotProps</code></li>
+  <li><code class="component-api-token">FormLabelMode</code></li>
+  <li><code class="component-api-token">FormMetadataAttribute</code></li>
+  <li><code class="component-api-token">FormControlCapabilities</code></li>
+  <li><code class="component-api-token">FormSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">FormElementSource</code></li>
+  <li><code class="component-api-token">FormSubmissionRegistration</code></li>
+  <li><code class="component-api-token">FormSubmissionSource</code></li>
+  <li><code class="component-api-token">FormControlRegistration</code></li>
+  <li><code class="component-api-token">FormControlParticipation</code></li>
   <li><code class="component-api-token">FormPartProps</code></li>
 </ul>
 </div>

@@ -247,6 +247,9 @@ function koScenarioDescription(component, scenario) {
 }
 
 function scenarioTitle(component, scenario) {
+  if (component.id === 'form' && scenario === 'profile') return 'Profile settings';
+  if (component.id === 'form' && scenario === 'notifications') return 'Notification preferences';
+  if (component.id === 'form' && scenario === 'team-invite') return 'Invite a teammate';
   if (component.id === 'menu' && scenario === 'commands') return 'Project commands';
   if (component.id === 'menu' && scenario === 'nested') return 'Export formats';
   if (component.id === 'menu-button' && scenario === 'actions') return 'Create menu';
@@ -269,6 +272,9 @@ function scenarioTitle(component, scenario) {
 }
 
 function koScenarioTitle(component, scenario) {
+  if (component.id === 'form' && scenario === 'profile') return '프로필 설정';
+  if (component.id === 'form' && scenario === 'notifications') return '알림 설정';
+  if (component.id === 'form' && scenario === 'team-invite') return '팀원 초대';
   if (component.id === 'calendar' && scenario === 'disabled-weekends') return '주말 선택 제한';
   if (component.id === 'menu' && scenario === 'commands') return '프로젝트 명령';
   if (component.id === 'menu' && scenario === 'nested') return '내보내기 형식';

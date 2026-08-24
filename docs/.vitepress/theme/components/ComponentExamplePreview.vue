@@ -72,7 +72,7 @@ function resolveExample(): ResolvedExample {
     case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled });
     case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
-    case 'form': return specialized(FormCase);
+    case 'form': return specialized(FormCase, { scenario: props.scenario });
     case 'feed': return specialized(FeedCase, { scenario: props.scenario });
     case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
     case 'tree-view': return specialized(TreeViewCase, { scenario: props.scenario });

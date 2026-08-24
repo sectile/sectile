@@ -5,11 +5,23 @@ Coordinate field metadata, validation issues, submission, and reset while native
 
 ## Examples
 
-### Account
+### Profile settings
 
-Validate and submit account settings while native inputs keep ownership of their values.
+Update nested profile values with field metadata supplied once by the form.
 
-<ComponentExample component="form" scenario="account" title="Account" description="Validate and submit account settings while native inputs keep ownership of their values." :index="0" />
+<ComponentExample component="form" scenario="profile" title="Profile settings" description="Update nested profile values with field metadata supplied once by the form." :index="0" />
+
+### Notification preferences
+
+Combine selection and checked controls in one notification preferences form.
+
+<ComponentExample component="form" scenario="notifications" title="Notification preferences" description="Combine selection and checked controls in one notification preferences form." :index="1" />
+
+### Invite a teammate
+
+Invite a teammate with native controls that participate in the same structured submission.
+
+<ComponentExample component="form" scenario="team-invite" title="Invite a teammate" description="Invite a teammate with native controls that participate in the same structured submission." :index="2" />
 
 ## API reference
 
@@ -25,6 +37,8 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormMessage</code></li>
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
+  <li><code class="component-api-token">useFormControl</code></li>
+  <li><code class="component-api-token">provideFormControlOwner</code></li>
 </ul>
 </div>
 
@@ -38,6 +52,15 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormRootSlotProps</code></li>
   <li><code class="component-api-token">FormFieldProps</code></li>
   <li><code class="component-api-token">FormFieldSlotProps</code></li>
+  <li><code class="component-api-token">FormLabelMode</code></li>
+  <li><code class="component-api-token">FormMetadataAttribute</code></li>
+  <li><code class="component-api-token">FormControlCapabilities</code></li>
+  <li><code class="component-api-token">FormSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">FormElementSource</code></li>
+  <li><code class="component-api-token">FormSubmissionRegistration</code></li>
+  <li><code class="component-api-token">FormSubmissionSource</code></li>
+  <li><code class="component-api-token">FormControlRegistration</code></li>
+  <li><code class="component-api-token">FormControlParticipation</code></li>
   <li><code class="component-api-token">FormPartProps</code></li>
 </ul>
 </div>

@@ -459,9 +459,9 @@ const form = createForm({
     { id: 'name', name: 'name', element: name, control: name },
     { id: 'email', name: 'email', element: email, control: email },
   ],
-  onSubmit: ({ event, formData }) => {
+  onSubmit: ({ event, values }) => {
     event.preventDefault()
-    console.log(Object.fromEntries(formData))
+    console.log(values.profile)
   },
 })
 

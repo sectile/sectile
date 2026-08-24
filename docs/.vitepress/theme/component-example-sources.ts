@@ -9,23 +9,54 @@ function pascal(value: string): string {
   return value.split('-').map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`).join('');
 }
 
-function terminalSource(component: string): string {
+function terminalSource(component: string, scenario: string): string {
   if (component === 'form') {
-    return `import { createForm } from '@sectile/terminal/form'
+    const formExamples: Readonly<Record<string, string>> = {
+      profile: `import { createForm } from '@sectile/terminal/form'
 
 const fields = [
-  { id: 'name', name: 'name', label: 'Display name' },
-  { id: 'email', name: 'email', label: 'Email address' },
+  { id: 'display-name', name: ['profile', 'displayName'], label: 'Display name', required: true },
+  { id: 'email', name: ['profile', 'email'], label: 'Email address', required: true },
 ] as const
 
 const form = createForm({
   fields,
-  onSubmit: ({ state }) => console.log('submit', state.valid),
+  onSubmit: ({ state }) => console.log('profile saved', state.valid),
   onAnnounceSummary: (issues) => console.log(issues.map(issue => issue.message)),
 })
 
 form.handleKeyboardInput({ key: 'tab' })
-form.handleKeyboardInput({ key: 'enter' })`;
+form.handleKeyboardInput({ key: 'enter' })`,
+      notifications: `import { createForm } from '@sectile/terminal/form'
+
+const fields = [
+  { id: 'channel', name: ['notifications', 'channel'], label: 'Activity emails', required: true },
+  { id: 'digest', name: ['notifications', 'digest'], label: 'Weekly digest' },
+] as const
+
+const form = createForm({
+  fields,
+  onSubmit: ({ state }) => console.log('preferences saved', state.valid),
+})
+
+form.handleKeyboardInput({ key: 'tab' })
+form.handleKeyboardInput({ key: 'enter' })`,
+      'team-invite': `import { createForm } from '@sectile/terminal/form'
+
+const fields = [
+  { id: 'invite-email', name: ['invitation', 'email'], label: 'Email address', required: true },
+  { id: 'invite-role', name: ['invitation', 'role'], label: 'Role', required: true },
+] as const
+
+const form = createForm({
+  fields,
+  onSubmit: ({ state }) => console.log('invitation sent', state.valid),
+})
+
+form.handleKeyboardInput({ key: 'tab' })
+form.handleKeyboardInput({ key: 'enter' })`,
+    };
+    return formExamples[scenario] ?? formExamples['profile'] ?? '';
   }
   const name = pascal(component);
   const specifier = `@sectile/terminal/${component}`;
@@ -52,7 +83,7 @@ export function componentExampleSources(component: string, scenario: string): Pa
   const sources: Partial<Record<Host, string>> = {
     core: coreExampleCodeFor(component, scenario),
     dom: domDemoCode[component] ?? '',
-    terminal: terminalSource(component),
+    terminal: terminalSource(component, scenario),
   };
   if (vue !== '') sources.vue = vue;
   return sources;

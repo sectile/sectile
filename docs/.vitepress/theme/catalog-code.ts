@@ -1133,6 +1133,138 @@ const open = ref(false)`,
 });
 
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
+  form: Object.freeze({
+    profile: `<script setup lang="ts">
+import { ref } from 'vue'
+import {
+  FormDescription,
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormRoot,
+  FormSubmit,
+  FormSummary,
+} from '@sectile/vue/form'
+import { TextField } from '@sectile/vue/text'
+
+const displayName = ref('Mina Kim')
+const savedProfile = ref<Record<string, unknown>>()
+
+function saveProfile(details: {
+  event: SubmitEvent
+  values: Readonly<Record<string, unknown>>
+}) {
+  details.event.preventDefault()
+  savedProfile.value = details.values.profile as Record<string, unknown>
+}
+<\/script>
+
+<template>
+  <FormRoot @submit="saveProfile">
+    <FormSummary />
+    <FormField
+      id="display-name"
+      :name="['profile', 'displayName']"
+      required
+    >
+      <FormLabel>Display name</FormLabel>
+      <TextField v-model.trim="displayName" autocomplete="name" />
+      <FormDescription>Shown in approvals and release activity.</FormDescription>
+      <FormMessage />
+    </FormField>
+    <FormSubmit>Save profile</FormSubmit>
+  </FormRoot>
+</template>`,
+    notifications: `<script setup lang="ts">
+import {
+  FormDescription,
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormRoot,
+  FormSubmit,
+} from '@sectile/vue/form'
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+} from '@sectile/vue/select'
+import { SwitchRoot, SwitchThumb } from '@sectile/vue/switch'
+
+const channels = ['all', 'mentions', 'none']
+
+function saveNotifications(details: {
+  event: SubmitEvent
+  values: Readonly<Record<string, unknown>>
+}) {
+  details.event.preventDefault()
+  console.log(details.values.notifications)
+}
+<\/script>
+
+<template>
+  <FormRoot @submit="saveNotifications">
+    <FormField :name="['notifications', 'channel']" required>
+      <FormLabel>Activity emails</FormLabel>
+      <SelectRoot :items="channels" default-value="mentions">
+        <SelectTrigger />
+        <SelectContent>
+          <SelectItem v-for="channel in channels" :key="channel" :value="channel">
+            {{ channel }}
+          </SelectItem>
+        </SelectContent>
+      </SelectRoot>
+      <FormDescription>Choose which activity reaches your inbox.</FormDescription>
+      <FormMessage />
+    </FormField>
+
+    <FormField :name="['notifications', 'digest']">
+      <FormLabel>Weekly digest</FormLabel>
+      <SwitchRoot value="enabled"><SwitchThumb /></SwitchRoot>
+    </FormField>
+    <FormSubmit>Save notifications</FormSubmit>
+  </FormRoot>
+</template>`,
+    'team-invite': `<script setup lang="ts">
+import {
+  FormDescription,
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormRoot,
+  FormSubmit,
+} from '@sectile/vue/form'
+
+function inviteMember(details: {
+  event: SubmitEvent
+  values: Readonly<Record<string, unknown>>
+}) {
+  details.event.preventDefault()
+  console.log(details.values.invitation)
+}
+<\/script>
+
+<template>
+  <FormRoot @submit="inviteMember">
+    <FormField id="invite-email" :name="['invitation', 'email']" required>
+      <FormLabel>Email address</FormLabel>
+      <input type="email" autocomplete="email">
+      <FormDescription>We will send one workspace invitation.</FormDescription>
+      <FormMessage />
+    </FormField>
+    <FormField id="invite-role" :name="['invitation', 'role']" required>
+      <FormLabel>Role</FormLabel>
+      <select>
+        <option value="member">Member</option>
+        <option value="admin">Admin</option>
+      </select>
+      <FormMessage />
+    </FormField>
+    <FormSubmit>Send invitation</FormSubmit>
+  </FormRoot>
+</template>`,
+  }),
   dialog: dialogScenarioCode,
   'alert-dialog': alertDialogScenarioCode,
   menu: menuScenarioCode,
