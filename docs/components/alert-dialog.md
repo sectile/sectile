@@ -17,12 +17,6 @@ Confirm before discarding changes that have not been saved.
 
 <ComponentExample component="alert-dialog" scenario="unsaved" title="Unsaved changes" description="Confirm before discarding changes that have not been saved." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="alert-dialog" />
-
 ## API reference
 
 Vue package: `@sectile/vue/alert-dialog`
@@ -53,16 +47,53 @@ Vue package: `@sectile/vue/alert-dialog`
 
 ## Parts
 
-Rendered parts use `data-scope="alert-dialog"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="alert-dialog"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">overlay</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">title</code></li>
-  <li><code class="component-part-token">description</code></li>
-  <li><code class="component-part-token">close</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">overlay</code></td>
+  <td><code>[data-part="overlay"]</code></td>
+  <td>Covers surrounding content while a modal surface is open.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">title</code></td>
+  <td><code>[data-part="title"]</code></td>
+  <td>Labels the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">description</code></td>
+  <td><code>[data-part="description"]</code></td>
+  <td>Describes the associated content or decision.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">close</code></td>
+  <td><code>[data-part="close"]</code></td>
+  <td>Closes or dismisses the current surface.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

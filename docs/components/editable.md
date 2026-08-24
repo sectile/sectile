@@ -17,12 +17,6 @@ Reject an invalid edit while preserving the last accepted value.
 
 <ComponentExample component="editable" scenario="validated" title="Validated" description="Reject an invalid edit while preserving the last accepted value." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="editable" />
-
 ## API reference
 
 Vue package: `@sectile/vue/editable`
@@ -51,17 +45,59 @@ Vue package: `@sectile/vue/editable`
 
 ## Parts
 
-Rendered parts use `data-scope="editable"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="editable"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">area</code></li>
-  <li><code class="component-part-token">preview</code></li>
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">edit-trigger</code></li>
-  <li><code class="component-part-token">submit-trigger</code></li>
-  <li><code class="component-part-token">cancel-trigger</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area</code></td>
+  <td><code>[data-part="area"]</code></td>
+  <td>Provides the two-dimensional interaction surface.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">preview</code></td>
+  <td><code>[data-part="preview"]</code></td>
+  <td>Shows the committed value outside editing mode.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Accepts the editable value or draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">edit-trigger</code></td>
+  <td><code>[data-part="edit-trigger"]</code></td>
+  <td>Enters editing mode.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">submit-trigger</code></td>
+  <td><code>[data-part="submit-trigger"]</code></td>
+  <td>Commits the current draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cancel-trigger</code></td>
+  <td><code>[data-part="cancel-trigger"]</code></td>
+  <td>Discards the current draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

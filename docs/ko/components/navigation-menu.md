@@ -17,12 +17,6 @@
 
 <ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="복합 메뉴 실행 요소와 함께 써도 링크의 기본 이동 동작을 유지합니다." :index="1" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="navigation-menu" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/navigation-menu`
@@ -54,22 +48,59 @@ Vue 패키지: `@sectile/vue/navigation-menu`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="navigation-menu"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="navigation-menu"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">list</code></li>
-  <li><code class="component-part-token">item-container</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">sub-content</code></li>
-  <li><code class="component-part-token">viewport</code></li>
-  <li><code class="component-part-token">indicator</code></li>
-</ul>
-
-**예외와 추가 속성**
-
-- `item`: 모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분 · `data-level="<depth>"` 추가
-- `sub-content`: 상위 메뉴 항목이 소유하는 팝업 콘텐츠 · `data-level="<depth>"` 추가
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">list</code></td>
+  <td><code>[data-part="list"]</code></td>
+  <td>컴포넌트 항목을 탐색 순서대로 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-container</code></td>
+  <td><code>[data-part="item-container"]</code></td>
+  <td>최상위 항목과 중첩 콘텐츠를 함께 배치합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분</td>
+  <td><code>data-level="&lt;depth&gt;"</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">sub-content</code></td>
+  <td><code>[data-part="sub-content"]</code></td>
+  <td>상위 메뉴 항목이 소유하는 팝업 콘텐츠</td>
+  <td><code>data-level="&lt;depth&gt;"</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">viewport</code></td>
+  <td><code>[data-part="viewport"]</code></td>
+  <td>현재 보이는 콘텐츠를 배치하고 경계를 정합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">indicator</code></td>
+  <td><code>[data-part="indicator"]</code></td>
+  <td>주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

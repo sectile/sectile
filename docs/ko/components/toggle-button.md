@@ -11,12 +11,6 @@
 
 <ComponentExample component="toggle-button" scenario="formatting" title="서식" description="같은 작업을 다시 누를 때까지 서식 기능의 눌림 상태를 유지합니다." :index="0" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="toggle-button" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/toggle-button`
@@ -38,11 +32,23 @@ Vue 패키지: `@sectile/vue/toggle-button`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="toggle-button"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="toggle-button"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

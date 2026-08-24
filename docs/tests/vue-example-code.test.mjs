@@ -46,6 +46,13 @@ test('Calendar month and week examples expose their actual paging projections', 
   assert.notEqual(month, week);
 });
 
+test('Calendar unavailable-date example exposes and applies its weekend policy', () => {
+  const disabled = specializedVueCodeFor('calendar', 'disabled-weekends');
+  assert.match(disabled, /const disabledDates = computed/u);
+  assert.match(disabled, /day === 0 \|\| day === 6/u);
+  assert.match(disabled, /:disabled-values="disabledDates"/u);
+});
+
 test('Temporal field examples use canonical text formats and distinct policies', () => {
   assert.doesNotMatch(specializedVueCodeFor('date-time-field', 'local-schedule'), / native \/>/);
   assert.match(specializedVueCodeFor('date-time-field', 'cross-midnight'), /hour: 23, minute: 45/);

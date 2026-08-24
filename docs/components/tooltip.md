@@ -17,12 +17,6 @@ Begin open without occupying layout space around the trigger.
 
 <ComponentExample component="tooltip" scenario="initially-open" title="Initially open" description="Begin open without occupying layout space around the trigger." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="tooltip" />
-
 ## API reference
 
 Vue package: `@sectile/vue/tooltip`
@@ -50,13 +44,35 @@ Vue package: `@sectile/vue/tooltip`
 
 ## Parts
 
-Rendered parts use `data-scope="tooltip"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="tooltip"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">arrow</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">arrow</code></td>
+  <td><code>[data-part="arrow"]</code></td>
+  <td>Visually connects floating content to its anchor.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

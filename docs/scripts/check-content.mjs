@@ -95,19 +95,17 @@ for (const localeRoot of ['', 'ko']) {
       `${localeRoot || 'English'} ${componentId} must render only its curated DOM examples in order`,
     );
     const requiredHeadings = localeRoot === 'ko'
-      ? ['## 예시', '## 구성', '## 공개 API', '## 파트', '## 키보드 동작', '## 접근성']
-      : ['## Examples', '## Anatomy', '## API reference', '## Parts', '## Keyboard interaction', '## Accessibility'];
+      ? ['## 예시', '## 공개 API', '## 파트', '## 키보드 동작', '## 접근성']
+      : ['## Examples', '## API reference', '## Parts', '## Keyboard interaction', '## Accessibility'];
     for (const heading of requiredHeadings) {
       assert.equal(component.includes(heading), true, `${localeRoot || 'English'} ${componentId} requires ${heading}`);
     }
     for (const heading of ['## Features', '## 지원 기능', '## Example cases', '## 추가 예시']) {
       assert.equal(component.includes(heading), false, `${localeRoot || 'English'} ${componentId} must expose specific behavior sections instead of ${heading}`);
     }
-    assert.equal(
-      component.split(`<ComponentAnatomy component="${componentId}" />`).length - 1,
-      1,
-      `${localeRoot || 'English'} ${componentId} must render its anatomy explorer exactly once`,
-    );
+    assert.equal(component.includes('## Anatomy'), false, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with Anatomy`);
+    assert.equal(component.includes('## 구성'), false, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with 구성`);
+    assert.equal(component.includes('<ComponentAnatomy'), false, `${localeRoot || 'English'} ${componentId} must not render ComponentAnatomy`);
     assert.equal(
       component.includes(`@sectile/vue/${componentId}`),
       true,

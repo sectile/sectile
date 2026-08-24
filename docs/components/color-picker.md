@@ -17,12 +17,6 @@ Edit the alpha channel together with the visible color channels.
 
 <ComponentExample component="color-picker" scenario="alpha" title="Alpha" description="Edit the alpha channel together with the visible color channels." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="color-picker" />
-
 ## API reference
 
 Vue package: `@sectile/vue/color-picker`
@@ -71,25 +65,107 @@ Vue package: `@sectile/vue/color-picker`
 
 ## Parts
 
-Rendered parts use `data-scope="color-picker"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="color-picker"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">label</code></li>
-  <li><code class="component-part-token">control</code></li>
-  <li><code class="component-part-token">native-input</code></li>
-  <li><code class="component-part-token">text-input</code></li>
-  <li><code class="component-part-token">channel-input</code></li>
-  <li><code class="component-part-token">coordinate-input</code></li>
-  <li><code class="component-part-token">coordinate-slider</code></li>
-  <li><code class="component-part-token">area</code></li>
-  <li><code class="component-part-token">area-thumb</code></li>
-  <li><code class="component-part-token">hue-slider</code></li>
-  <li><code class="component-part-token">alpha-slider</code></li>
-  <li><code class="component-part-token">swatch</code></li>
-  <li><code class="component-part-token">value-text</code></li>
-  <li><code class="component-part-token">format-trigger</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">label</code></td>
+  <td><code>[data-part="label"]</code></td>
+  <td>Labels the component control.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">control</code></td>
+  <td><code>[data-part="control"]</code></td>
+  <td>Groups the primary interactive controls.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">native-input</code></td>
+  <td><code>[data-part="native-input"]</code></td>
+  <td>Keeps the native form control available for submission and platform behavior.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">text-input</code></td>
+  <td><code>[data-part="text-input"]</code></td>
+  <td>Accepts a formatted text representation of the value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">channel-input</code></td>
+  <td><code>[data-part="channel-input"]</code></td>
+  <td>Edits one color channel numerically.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">coordinate-input</code></td>
+  <td><code>[data-part="coordinate-input"]</code></td>
+  <td>Edits one coordinate of the current value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">coordinate-slider</code></td>
+  <td><code>[data-part="coordinate-slider"]</code></td>
+  <td>Adjusts one coordinate over a bounded range.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area</code></td>
+  <td><code>[data-part="area"]</code></td>
+  <td>Provides the two-dimensional interaction surface.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area-thumb</code></td>
+  <td><code>[data-part="area-thumb"]</code></td>
+  <td>Marks and controls the selected point in the area.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">hue-slider</code></td>
+  <td><code>[data-part="hue-slider"]</code></td>
+  <td>Adjusts the color hue.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">alpha-slider</code></td>
+  <td><code>[data-part="alpha-slider"]</code></td>
+  <td>Adjusts color opacity.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">swatch</code></td>
+  <td><code>[data-part="swatch"]</code></td>
+  <td>Previews the selected color.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">value-text</code></td>
+  <td><code>[data-part="value-text"]</code></td>
+  <td>Displays the formatted value as text.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">format-trigger</code></td>
+  <td><code>[data-part="format-trigger"]</code></td>
+  <td>Changes the active value format.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

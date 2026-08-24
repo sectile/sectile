@@ -11,12 +11,6 @@
 
 <ComponentExample component="cascade-select" scenario="location" title="지역" description="국가에서 도시까지 위치를 단계별로 선택합니다." :index="0" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="cascade-select" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/cascade-select`
@@ -50,18 +44,65 @@ Vue 패키지: `@sectile/vue/cascade-select`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="cascade-select"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="cascade-select"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">value</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">column</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">item-indicator</code></li>
-  <li><code class="component-part-token">item-chevron</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>연결된 콘텐츠를 열고 닫거나 활성화합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">value</code></td>
+  <td><code>[data-part="value"]</code></td>
+  <td>현재 확정 값을 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>현재 상태에 맞는 컴포넌트 콘텐츠를 담습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">column</code></td>
+  <td><code>[data-part="column"]</code></td>
+  <td>계층형 선택 항목의 한 단계를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>선택하거나 실행할 수 있는 항목 하나입니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-indicator</code></td>
+  <td><code>[data-part="item-indicator"]</code></td>
+  <td>항목의 선택 상태를 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-chevron</code></td>
+  <td><code>[data-part="item-chevron"]</code></td>
+  <td>항목에 하위 단계가 있음을 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

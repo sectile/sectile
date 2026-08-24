@@ -29,12 +29,6 @@ Render direct page choices without first and last controls.
 
 <ComponentExample component="pagination" scenario="pages-only" title="Pages only" description="Render direct page choices without first and last controls." :index="3" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="pagination" />
-
 ## API reference
 
 Vue package: `@sectile/vue/pagination`
@@ -63,16 +57,53 @@ Vue package: `@sectile/vue/pagination`
 
 ## Parts
 
-Rendered parts use `data-scope="pagination"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="pagination"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">first</code></li>
-  <li><code class="component-part-token">previous</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">next</code></li>
-  <li><code class="component-part-token">last</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">first</code></td>
+  <td><code>[data-part="first"]</code></td>
+  <td>Moves to the first page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous</code></td>
+  <td><code>[data-part="previous"]</code></td>
+  <td>Moves to the previous item or page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>Represents one selectable or actionable item.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next</code></td>
+  <td><code>[data-part="next"]</code></td>
+  <td>Moves to the next item or page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">last</code></td>
+  <td><code>[data-part="last"]</code></td>
+  <td>Moves to the last page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

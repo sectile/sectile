@@ -17,12 +17,6 @@
 
 <ComponentExample component="color-picker" scenario="alpha" title="투명도" description="화면에 보이는 색상 채널과 투명도를 함께 조절합니다." :index="1" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="color-picker" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/color-picker`
@@ -71,25 +65,107 @@ Vue 패키지: `@sectile/vue/color-picker`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="color-picker"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="color-picker"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">label</code></li>
-  <li><code class="component-part-token">control</code></li>
-  <li><code class="component-part-token">native-input</code></li>
-  <li><code class="component-part-token">text-input</code></li>
-  <li><code class="component-part-token">channel-input</code></li>
-  <li><code class="component-part-token">coordinate-input</code></li>
-  <li><code class="component-part-token">coordinate-slider</code></li>
-  <li><code class="component-part-token">area</code></li>
-  <li><code class="component-part-token">area-thumb</code></li>
-  <li><code class="component-part-token">hue-slider</code></li>
-  <li><code class="component-part-token">alpha-slider</code></li>
-  <li><code class="component-part-token">swatch</code></li>
-  <li><code class="component-part-token">value-text</code></li>
-  <li><code class="component-part-token">format-trigger</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">label</code></td>
+  <td><code>[data-part="label"]</code></td>
+  <td>컴포넌트 조작부의 레이블입니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">control</code></td>
+  <td><code>[data-part="control"]</code></td>
+  <td>주요 조작부를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">native-input</code></td>
+  <td><code>[data-part="native-input"]</code></td>
+  <td>폼 제출과 플랫폼 동작을 위한 네이티브 입력을 유지합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">text-input</code></td>
+  <td><code>[data-part="text-input"]</code></td>
+  <td>서식화된 텍스트 값 입력을 받습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">channel-input</code></td>
+  <td><code>[data-part="channel-input"]</code></td>
+  <td>색상 채널 하나를 숫자로 편집합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">coordinate-input</code></td>
+  <td><code>[data-part="coordinate-input"]</code></td>
+  <td>현재 값의 좌표 하나를 편집합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">coordinate-slider</code></td>
+  <td><code>[data-part="coordinate-slider"]</code></td>
+  <td>한 좌표를 제한된 범위에서 조절합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area</code></td>
+  <td><code>[data-part="area"]</code></td>
+  <td>2차원 조작 영역을 제공합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area-thumb</code></td>
+  <td><code>[data-part="area-thumb"]</code></td>
+  <td>2차원 영역의 선택 지점을 표시하고 조절합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">hue-slider</code></td>
+  <td><code>[data-part="hue-slider"]</code></td>
+  <td>색상 색조를 조절합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">alpha-slider</code></td>
+  <td><code>[data-part="alpha-slider"]</code></td>
+  <td>색상 불투명도를 조절합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">swatch</code></td>
+  <td><code>[data-part="swatch"]</code></td>
+  <td>선택한 색상을 미리 보여줍니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">value-text</code></td>
+  <td><code>[data-part="value-text"]</code></td>
+  <td>서식화된 값을 텍스트로 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">format-trigger</code></td>
+  <td><code>[data-part="format-trigger"]</code></td>
+  <td>현재 값의 표시 형식을 바꿉니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

@@ -11,12 +11,6 @@
 
 <ComponentExample component="tags-input" scenario="skills" title="기술 태그" description="입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다." :index="0" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="tags-input" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/tags-input`
@@ -46,16 +40,53 @@ Vue 패키지: `@sectile/vue/tags-input`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="tags-input"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="tags-input"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">item-text</code></li>
-  <li><code class="component-part-token">item-delete</code></li>
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">clear</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>선택하거나 실행할 수 있는 항목 하나입니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-text</code></td>
+  <td><code>[data-part="item-text"]</code></td>
+  <td>항목 레이블을 조작부와 분리해 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-delete</code></td>
+  <td><code>[data-part="item-delete"]</code></td>
+  <td>해당 항목을 제거합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>편집 값이나 초안을 입력받습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">clear</code></td>
+  <td><code>[data-part="clear"]</code></td>
+  <td>현재 값이나 항목 모음을 비웁니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

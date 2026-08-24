@@ -11,12 +11,6 @@ Choose one graduation year from a paged year grid.
 
 <ComponentExample component="year-picker" scenario="graduation-year" title="Graduation year" description="Choose one graduation year from a paged year grid." :index="0" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="year-picker" />
-
 ## API reference
 
 Vue package: `@sectile/vue/year-picker`
@@ -48,17 +42,59 @@ Vue package: `@sectile/vue/year-picker`
 
 ## Parts
 
-Rendered parts use `data-scope="year-picker"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="year-picker"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">grid</code></li>
-  <li><code class="component-part-token">cell</code></li>
-  <li><code class="component-part-token">previous-page</code></li>
-  <li><code class="component-part-token">next-page</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Accepts the editable value or draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">grid</code></td>
+  <td><code>[data-part="grid"]</code></td>
+  <td>Groups cells into a navigable two-dimensional structure.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>Represents one navigable or selectable grid value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-page</code></td>
+  <td><code>[data-part="previous-page"]</code></td>
+  <td>Moves to the previous page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-page</code></td>
+  <td><code>[data-part="next-page"]</code></td>
+  <td>Moves to the next page.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

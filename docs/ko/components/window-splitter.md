@@ -23,12 +23,6 @@
 
 <ComponentExample component="window-splitter" scenario="nested-layout" title="혼합 레이아웃" description="크기를 조절할 수 있는 사이드바 안쪽에 편집기와 미리보기 영역을 다시 나눕니다." :index="2" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="window-splitter" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/window-splitter`
@@ -52,13 +46,35 @@ Vue 패키지: `@sectile/vue/window-splitter`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="window-splitter"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="window-splitter"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">pane</code></li>
-  <li><code class="component-part-token">handle</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">pane</code></td>
+  <td><code>[data-part="pane"]</code></td>
+  <td>크기를 조절할 수 있는 영역 하나를 담습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">handle</code></td>
+  <td><code>[data-part="handle"]</code></td>
+  <td>인접한 영역의 크기를 조절합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

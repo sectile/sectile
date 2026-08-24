@@ -11,12 +11,6 @@ Choose a location progressively from country to city.
 
 <ComponentExample component="cascade-select" scenario="location" title="Location" description="Choose a location progressively from country to city." :index="0" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="cascade-select" />
-
 ## API reference
 
 Vue package: `@sectile/vue/cascade-select`
@@ -50,18 +44,65 @@ Vue package: `@sectile/vue/cascade-select`
 
 ## Parts
 
-Rendered parts use `data-scope="cascade-select"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="cascade-select"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">value</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">column</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">item-indicator</code></li>
-  <li><code class="component-part-token">item-chevron</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">value</code></td>
+  <td><code>[data-part="value"]</code></td>
+  <td>Displays the current committed value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">column</code></td>
+  <td><code>[data-part="column"]</code></td>
+  <td>Groups one level of hierarchical choices.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>Represents one selectable or actionable item.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-indicator</code></td>
+  <td><code>[data-part="item-indicator"]</code></td>
+  <td>Shows the item selection state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-chevron</code></td>
+  <td><code>[data-part="item-chevron"]</code></td>
+  <td>Shows that an item opens a deeper level.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

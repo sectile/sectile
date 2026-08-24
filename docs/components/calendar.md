@@ -17,11 +17,11 @@ Switch to a focused seven-day view while keeping selection and paging available.
 
 <ComponentExample component="calendar" scenario="week" title="Week" description="Switch to a focused seven-day view while keeping selection and paging available." :index="1" />
 
-## Anatomy
+### Disabled weekends
 
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
+Keep weekend dates visible while preventing them from becoming the selected date.
 
-<ComponentAnatomy component="calendar" />
+<ComponentExample component="calendar" scenario="disabled-weekends" title="Disabled weekends" description="Keep weekend dates visible while preventing them from becoming the selected date." :index="2" />
 
 ## API reference
 
@@ -47,12 +47,29 @@ Vue package: `@sectile/vue/calendar`
 
 ## Parts
 
-Rendered parts use `data-scope="calendar"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="calendar"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">cell</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>Represents one navigable or selectable grid value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

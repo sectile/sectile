@@ -2,7 +2,6 @@ import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import BashTerminal from './components/BashTerminal.vue';
 import ComponentCatalog from './components/ComponentCatalog.vue';
-import ComponentAnatomy from './components/ComponentAnatomy.vue';
 import ComponentExample from './components/ComponentExample.vue';
 import HostCode from './components/HostCode.vue';
 import HostInstall from './components/HostInstall.vue';
@@ -21,7 +20,6 @@ export default {
   enhanceApp({ app }) {
     app.component('BashTerminal', BashTerminal);
     app.component('ComponentCatalog', ComponentCatalog);
-    app.component('ComponentAnatomy', ComponentAnatomy);
     app.component('ComponentExample', ComponentExample);
     app.component('HostCode', HostCode);
     app.component('HostInstall', HostInstall);

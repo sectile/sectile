@@ -5,9 +5,6 @@ import test from 'node:test';
 const feedCase = await readFile(new URL('../.vitepress/theme/components/FeedCase.vue', import.meta.url), 'utf8');
 const preview = await readFile(new URL('../.vitepress/theme/components/ComponentExamplePreview.vue', import.meta.url), 'utf8');
 const specializedCode = await readFile(new URL('../.vitepress/theme/specialized-example-code.ts', import.meta.url), 'utf8');
-const anatomy = await readFile(new URL('../.vitepress/theme/component-anatomy.ts', import.meta.url), 'utf8');
-const anatomyNode = await readFile(new URL('../.vitepress/theme/components/AnatomyPreviewNode.vue', import.meta.url), 'utf8');
-const anatomyStyles = await readFile(new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url), 'utf8');
 const exampleStyles = await readFile(new URL('../.vitepress/theme/component-examples.css', import.meta.url), 'utf8');
 
 test('feed examples model a working release activity window', () => {
@@ -32,19 +29,6 @@ test('feed code samples are Vue-specific and differ by window policy', () => {
   assert.match(specializedCode, /\/api\/releases\/2026\.08\/activity/u);
   assert.match(specializedCode, /if \(component === 'feed'\) return feedSource\(scenario\)/u);
   assert.doesNotMatch(specializedCode, /@sectile\/dom\/feed/u);
-});
-
-test('feed anatomy presents the same product surface without synthetic counters', () => {
-  assert.match(anatomy, /production · release-2026\.08/u);
-  assert.match(anatomy, /Production deployment completed/u);
-  assert.match(anatomy, /Required checks passed/u);
-  assert.match(anatomy, /feed-anatomy-load-newer/u);
-  assert.match(anatomy, /feed-anatomy-load-earlier/u);
-  assert.match(anatomyNode, /Recent activity synchronized/u);
-  assert.match(anatomyNode, /Earlier release history appended/u);
-  assert.doesNotMatch(anatomy, /DOM adapter published/u);
-  assert.doesNotMatch(anatomyNode, /\$\{text\}.*feedOffset/u);
-  assert.match(anatomyStyles, /\.anatomy-node--feed-anatomy-event/u);
 });
 
 test('feed presentation uses one cohesive, focus-visible activity surface', () => {

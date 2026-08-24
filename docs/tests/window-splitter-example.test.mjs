@@ -17,10 +17,6 @@ const styles = await readFile(
   new URL('../.vitepress/theme/component-examples.css', import.meta.url),
   'utf8',
 );
-const anatomy = await readFile(
-  new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url),
-  'utf8',
-);
 const page = await readFile(
   new URL('../components/window-splitter.md', import.meta.url),
   'utf8',
@@ -41,8 +37,6 @@ test('window splitter keeps a one-pixel visual divider with a larger invisible h
   assert.match(styles, /window-splitter-demo--vertical[^}]*grid-template-rows:[^;]*1px/s);
   assert.match(styles, /window-splitter-handle::before[^}]*width:\s*13px/s);
   assert.match(styles, /window-splitter-demo--vertical > \.window-splitter-handle::before[^}]*height:\s*13px/s);
-  assert.match(anatomy, /anatomy-node--splitter-root[^}]*grid-template-columns:[^;]*1px/s);
-  assert.match(anatomy, /anatomy-node--handle::before[^}]*width:\s*13px/s);
 });
 
 test('window splitter documentation includes distinct production-shaped source for every layout', () => {

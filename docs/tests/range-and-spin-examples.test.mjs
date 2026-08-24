@@ -6,11 +6,9 @@ const root = new URL('../.vitepress/theme/', import.meta.url);
 
 test('slider fills cannot enter a hover state that clears their color', async () => {
   const css = await readFile(new URL('component-examples.css', root), 'utf8');
-  const anatomy = await readFile(new URL('components/ComponentAnatomy.vue', root), 'utf8');
   for (const selector of ['.slider-range', '.multi-slider-range', '.catalog-slider-range']) {
     assert.match(css, new RegExp(`\\${selector} \\{[^}]*background-color: var\\(--demo-brand-hover\\);[^}]*pointer-events: none;`));
   }
-  assert.match(anatomy, /anatomy-node--range\.anatomy-part-active \{ background-color: var\(--vp-c-brand-1\) !important; \}/);
 });
 
 test('multi-thumb slider preview uses product scenarios and valid range lattices', async () => {

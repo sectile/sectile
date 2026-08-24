@@ -17,12 +17,6 @@ Start with a complete value and allow each segment to be replaced independently.
 
 <ComponentExample component="pin-input" scenario="prefilled" title="Prefilled" description="Start with a complete value and allow each segment to be replaced independently." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="pin-input" />
-
 ## API reference
 
 Vue package: `@sectile/vue/pin-input`
@@ -47,12 +41,29 @@ Vue package: `@sectile/vue/pin-input`
 
 ## Parts
 
-Rendered parts use `data-scope="pin-input"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="pin-input"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">input</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Accepts the editable value or draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

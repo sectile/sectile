@@ -11,12 +11,6 @@ Use vertical movement while preserving the same pane-size rules.
 
 <ComponentExample component="radio-group" scenario="vertical" title="Vertical" description="Use vertical movement while preserving the same pane-size rules." :index="0" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="radio-group" />
-
 ## API reference
 
 Vue package: `@sectile/vue/radio-group`
@@ -43,13 +37,35 @@ Vue package: `@sectile/vue/radio-group`
 
 ## Parts
 
-Rendered parts use `data-scope="radio-group"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="radio-group"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">indicator</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>Represents one selectable or actionable item.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">indicator</code></td>
+  <td><code>[data-part="indicator"]</code></td>
+  <td>Shows state or position without replacing the primary content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

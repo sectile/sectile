@@ -10,16 +10,16 @@ const exampleStyles = await readFile(
   new URL('../.vitepress/theme/component-examples.css', import.meta.url),
   'utf8',
 );
-const anatomy = await readFile(
-  new URL('../.vitepress/theme/component-anatomy.ts', import.meta.url),
-  'utf8',
-);
-const anatomyStyles = await readFile(
-  new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url),
-  'utf8',
-);
 const catalogCode = await readFile(
   new URL('../.vitepress/theme/catalog-code.ts', import.meta.url),
+  'utf8',
+);
+const terminalSessions = await readFile(
+  new URL('../.vitepress/theme/terminal-demo-sessions.mjs', import.meta.url),
+  'utf8',
+);
+const terminalExample = await readFile(
+  new URL('../.vitepress/theme/components/TerminalComponentExample.vue', import.meta.url),
   'utf8',
 );
 
@@ -32,14 +32,6 @@ test('tags input presents one composed, accessible tag editor', () => {
 
   assert.match(exampleStyles, /\.catalog-tags-input\s*\{[^}]*flex-wrap:\s*wrap;[^}]*border:\s*1px solid/su);
   assert.match(exampleStyles, /\.catalog-tag-delete\s*\{[^}]*place-items:\s*center;[^}]*border-radius:/su);
-});
-
-test('tags input anatomy mirrors the example without duplicated tag labels', () => {
-  assert.match(anatomy, /n\('item', 'item', undefined, \[\s*n\('text', 'item-text', 'Vue'\)/su);
-  assert.match(anatomy, /n\('text', 'item-text', 'DOM'\)/u);
-  assert.match(anatomy, /n\('text', 'item-text', 'Accessibility'\)/u);
-  assert.doesNotMatch(anatomy, /n\('item', 'item', 'TypeScript'/u);
-  assert.match(anatomyStyles, /\.anatomy-node--tags-root\s*\{[^}]*flex-wrap:\s*wrap;[^}]*border-radius:\s*12px;/su);
 });
 
 test('tags input code uses the same Vue composition and labels', () => {
@@ -56,4 +48,12 @@ test('generated tags input pages contain only the representative skills example'
     assert.equal(page.match(/<ComponentExample component="tags-input"/gu)?.length, 1, locale || 'en');
     assert.doesNotMatch(page, /scenario="limited"/u);
   }
+});
+
+test('terminal tags input presents the draft on its own row', () => {
+  assert.match(terminalSessions, /`\$\{ansi\.dim\}Draft\$\{ansi\.reset\}  \$\{state\.draft\}\$\{terminalInputCursor\}`/u);
+  assert.match(terminalSessions, /state\.draft\}\$\{terminalInputCursor\}/u);
+  assert.match(terminalExample, /line\.includes\('\\u001b\[s'\)/u);
+  assert.match(terminalExample, /terminal\.write\('\\u001b\[u'\)/u);
+  assert.doesNotMatch(terminalSessions, /draft=\$\{state\.draft[^}]*\}  tags=/u);
 });

@@ -17,12 +17,6 @@ Flip or shift the popup when its preferred side would leave the viewport.
 
 <ComponentExample component="popover" scenario="collision" title="Collision" description="Flip or shift the popup when its preferred side would leave the viewport." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="popover" />
-
 ## API reference
 
 Vue package: `@sectile/vue/popover`
@@ -54,17 +48,59 @@ Vue package: `@sectile/vue/popover`
 
 ## Parts
 
-Rendered parts use `data-scope="popover"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="popover"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">anchor</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">title</code></li>
-  <li><code class="component-part-token">description</code></li>
-  <li><code class="component-part-token">close</code></li>
-  <li><code class="component-part-token">arrow</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">anchor</code></td>
+  <td><code>[data-part="anchor"]</code></td>
+  <td>Provides the positioning reference for floating content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">title</code></td>
+  <td><code>[data-part="title"]</code></td>
+  <td>Labels the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">description</code></td>
+  <td><code>[data-part="description"]</code></td>
+  <td>Describes the associated content or decision.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">close</code></td>
+  <td><code>[data-part="close"]</code></td>
+  <td>Closes or dismisses the current surface.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">arrow</code></td>
+  <td><code>[data-part="arrow"]</code></td>
+  <td>Visually connects floating content to its anchor.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

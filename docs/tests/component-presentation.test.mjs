@@ -6,14 +6,6 @@ const styles = await readFile(
   new URL('../.vitepress/theme/component-examples.css', import.meta.url),
   'utf8',
 );
-const anatomy = await readFile(
-  new URL('../.vitepress/theme/component-anatomy.ts', import.meta.url),
-  'utf8',
-);
-const anatomyStyles = await readFile(
-  new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url),
-  'utf8',
-);
 const navigation = await readFile(
   new URL('../.vitepress/theme/components/CatalogCase.vue', import.meta.url),
   'utf8',
@@ -77,11 +69,8 @@ test('dialog code resolves the exact modal, non-modal, and controlled scenario',
   assert.match(catalogCode, /controlled: sfc\([\s\S]*?<DialogRoot v-model:open="open">/u);
 });
 
-test('pagination controls remain on one row and use an icon ellipsis', () => {
+test('pagination controls remain on one row', () => {
   assert.match(styles, /\.pagination-items\s*\{[^}]*grid-auto-flow:\s*column;[^}]*overflow-x:\s*auto;/s);
-  assert.match(anatomy, /icon:\s*'ellipsis'/);
-  assert.doesNotMatch(anatomy, /n\('muted', undefined, '…'\)/);
-  assert.match(anatomyStyles, /\.anatomy-node--pagination-root\s*\{[^}]*flex-wrap:\s*nowrap;/s);
 });
 
 test('toast notifications float above the example instead of expanding document flow', () => {
@@ -90,11 +79,4 @@ test('toast notifications float above the example instead of expanding document 
   assert.match(styles, /\.toast-copy \[data-part="title"\]\s*\{[^}]*margin:\s*0;[^}]*border:\s*0;/s);
   assert.match(toast, /Dismiss notification/);
   assert.match(toast, /CheckCircle2/);
-});
-
-test('cascade anatomy uses two balanced hierarchy columns without release-channel filler', () => {
-  assert.match(anatomy, /Engineering \/ Web platform/);
-  assert.match(anatomy, /Mobile apps/);
-  assert.doesNotMatch(anatomy, /isCascade && index === 1/);
-  assert.match(anatomyStyles, /\.anatomy-node--cascade-root > \.anatomy-node--list\s*\{[^}]*repeat\(2, minmax\(0, 1fr\)\)/s);
 });

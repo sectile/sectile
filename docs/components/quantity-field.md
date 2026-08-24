@@ -29,12 +29,6 @@ Parse a compound unit while preserving one canonical quantity.
 
 <ComponentExample component="quantity-field" scenario="compound" title="Compound" description="Parse a compound unit while preserving one canonical quantity." :index="3" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="quantity-field" />
-
 ## API reference
 
 Vue package: `@sectile/vue/quantity-field`
@@ -69,14 +63,41 @@ Vue package: `@sectile/vue/quantity-field`
 
 ## Parts
 
-Rendered parts use `data-scope="quantity-field"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="quantity-field"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">unit-select</code></li>
-  <li><code class="component-part-token">value</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Accepts the editable value or draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">unit-select</code></td>
+  <td><code>[data-part="unit-select"]</code></td>
+  <td>Chooses the unit applied to the numeric value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">value</code></td>
+  <td><code>[data-part="value"]</code></td>
+  <td>Displays the current committed value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

@@ -11,12 +11,6 @@
 
 <ComponentExample component="range-calendar" scenario="booking" title="예약" description="예약의 시작일과 종료일을 양 끝을 포함하는 범위로 선택합니다." :index="0" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="range-calendar" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/range-calendar`
@@ -49,17 +43,59 @@ Vue 패키지: `@sectile/vue/range-calendar`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="range-calendar"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="range-calendar"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">grid</code></li>
-  <li><code class="component-part-token">cell</code></li>
-  <li><code class="component-part-token">previous-month</code></li>
-  <li><code class="component-part-token">next-month</code></li>
-  <li><code class="component-part-token">previous-year</code></li>
-  <li><code class="component-part-token">next-year</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>현재 상태에 맞는 컴포넌트 콘텐츠를 담습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">grid</code></td>
+  <td><code>[data-part="grid"]</code></td>
+  <td>셀을 탐색 가능한 2차원 구조로 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>탐색하거나 선택할 수 있는 그리드 값 하나입니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-month</code></td>
+  <td><code>[data-part="previous-month"]</code></td>
+  <td>이전 월(으)로 이동합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-month</code></td>
+  <td><code>[data-part="next-month"]</code></td>
+  <td>다음 월(으)로 이동합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-year</code></td>
+  <td><code>[data-part="previous-year"]</code></td>
+  <td>이전 년(으)로 이동합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-year</code></td>
+  <td><code>[data-part="next-year"]</code></td>
+  <td>다음 년(으)로 이동합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

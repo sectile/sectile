@@ -17,12 +17,6 @@
 
 <ComponentExample component="menubar" scenario="typeahead" title="글자 입력으로 이동" description="입력한 글자로 시작하는 다음 메뉴로 이동합니다." :index="1" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="menubar" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/menubar`
@@ -51,20 +45,41 @@ Vue 패키지: `@sectile/vue/menubar`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="menubar"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="menubar"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">sub-content</code></li>
-  <li><code class="component-part-token">separator</code></li>
-</ul>
-
-**예외와 추가 속성**
-
-- `item`: 모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분 · `data-level="<depth>"` 추가
-- `sub-content`: 상위 메뉴 항목이 소유하는 팝업 콘텐츠 · `data-scope="menu"` 사용 · `data-level="<depth>"` 추가
-- `separator`: `data-scope="menu"` 사용
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>모든 계층의 메뉴 항목. data-level로 최상위 항목과 중첩 항목을 구분</td>
+  <td><code>data-level="&lt;depth&gt;"</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">sub-content</code></td>
+  <td><code>[data-part="sub-content"]</code></td>
+  <td>상위 메뉴 항목이 소유하는 팝업 콘텐츠</td>
+  <td><code>data-scope="menu"</code><br><code>data-level="&lt;depth&gt;"</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">separator</code></td>
+  <td><code>[data-part="separator"]</code></td>
+  <td>동작을 추가하지 않고 관련 그룹을 구분합니다.</td>
+  <td><code>data-scope="menu"</code></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

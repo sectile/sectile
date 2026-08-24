@@ -6,7 +6,6 @@ const source = await readFile(new URL('../.vitepress/theme/components/CatalogCas
 const feedSource = await readFile(new URL('../.vitepress/theme/components/FeedCase.vue', import.meta.url), 'utf8');
 const menubarSource = await readFile(new URL('../.vitepress/theme/components/MenubarExample.vue', import.meta.url), 'utf8');
 const pickerSource = await readFile(new URL('../.vitepress/theme/components/PickerCalendarDemo.vue', import.meta.url), 'utf8');
-const pickerAnatomySource = await readFile(new URL('../.vitepress/theme/components/DateTimePickerAnatomy.vue', import.meta.url), 'utf8');
 const treeViewSource = await readFile(new URL('../.vitepress/theme/components/TreeViewCase.vue', import.meta.url), 'utf8');
 const catalogCodeSource = await readFile(new URL('../.vitepress/theme/catalog-code.ts', import.meta.url), 'utf8');
 const styles = await readFile(new URL('../.vitepress/theme/component-examples.css', import.meta.url), 'utf8');
@@ -125,10 +124,6 @@ test('date and time pickers group endpoint values and share one spacing rhythm',
   assert.match(catalogCodeSource, /class="catalog-date-time-control"/u);
   assert.match(catalogCodeSource, /DateTimeRangePickerStartDateTimeInput/u);
   assert.doesNotMatch(catalogCodeSource, /DateTimeRangePickerStartDateInput/u);
-  assert.match(pickerAnatomySource, /const fieldGroups = computed/u);
-  assert.match(pickerAnatomySource, /DateTimeRangePickerStartDateTimeInput/u);
-  assert.match(pickerAnatomySource, /date-time-anatomy__input-group--compound/u);
-  assert.match(pickerAnatomySource, /\.date-time-anatomy__content\s*\{[^}]*margin-top:\s*8px;/su);
 });
 
 test('temporal picker triggers use accessible icon buttons in previews and code', () => {

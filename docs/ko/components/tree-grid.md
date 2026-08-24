@@ -17,12 +17,6 @@
 
 <ComponentExample component="tree-grid" scenario="editable" title="담당자 편집" description="행과 열의 키보드 이동을 유지하면서 하위 리소스 담당자를 편집합니다." :index="1" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="tree-grid" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/tree-grid`
@@ -54,15 +48,47 @@ Vue 패키지: `@sectile/vue/tree-grid`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="tree-grid"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="tree-grid"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">row</code></li>
-  <li><code class="component-part-token">cell</code></li>
-  <li><code class="component-part-token">disclosure</code></li>
-  <li><code class="component-part-token">editor</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">row</code></td>
+  <td><code>[data-part="row"]</code></td>
+  <td>같은 그리드 행에 속한 셀을 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>탐색하거나 선택할 수 있는 그리드 값 하나입니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">disclosure</code></td>
+  <td><code>[data-part="disclosure"]</code></td>
+  <td>하위 콘텐츠를 펼치거나 접습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">editor</code></td>
+  <td><code>[data-part="editor"]</code></td>
+  <td>활성 그리드 또는 트리 그리드 셀을 편집합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

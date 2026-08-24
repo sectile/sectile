@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
-import {
-  activateAnatomyInteraction,
-  initializeAnatomyInteraction,
-} from '../.vitepress/theme/anatomy-interaction.ts';
 import { specializedVueCodeFor } from '../.vitepress/theme/specialized-example-code.ts';
 
 const timerCase = await readFile(
@@ -20,24 +15,6 @@ const styles = await readFile(
   new URL('../.vitepress/theme/component-examples.css', import.meta.url),
   'utf8',
 );
-const anatomyStyles = await readFile(
-  new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url),
-  'utf8',
-);
-
-function walk(node, visit) {
-  visit(node);
-  for (const child of node.children ?? []) walk(child, visit);
-}
-
-function findTimerNode(part, value) {
-  let match;
-  walk(componentAnatomy.timer.preview, (node) => {
-    if (node.part === part && (value === undefined || node.value === value)) match ??= node;
-  });
-  assert.ok(match, `timer anatomy must expose ${part}:${value ?? '*'}`);
-  return match;
-}
 
 test('timer demos expose distinct state-aware controls instead of three inert button rows', () => {
   assert.match(timerCase, /v-slot="\{ running, completed: timerCompleted, progress, valueMs: liveValueMs \}"/);
@@ -73,24 +50,4 @@ test('timer Code examples are scenario-specific and show the corresponding produ
   assert.match(target, /Target reached/);
   assert.notEqual(stopwatch, countdown);
   assert.notEqual(countdown, target);
-});
-
-test('timer Anatomy mirrors the stopwatch card and its controls change visible state', () => {
-  const items = [];
-  walk(componentAnatomy.timer.preview, (node) => {
-    if (node.part === 'item') items.push(node);
-  });
-  assert.deepEqual(items.map(({ text }) => text), ['00', '18']);
-  assert.match(anatomyStyles, /\.anatomy-node--timer-anatomy-heading/);
-  assert.match(anatomyStyles, /\.anatomy-node--timer-anatomy-area > \.anatomy-node--item\s*\{[^}]*border:\s*0;/s);
-
-  const values = {};
-  const state = {};
-  initializeAnatomyInteraction('timer', values, state);
-  assert.equal(state.paused, 'true');
-  activateAnatomyInteraction('timer', findTimerNode('action-trigger', 'pause'), values, state);
-  assert.equal(state.paused, 'false');
-  activateAnatomyInteraction('timer', findTimerNode('action-trigger', 'reset'), values, state);
-  assert.equal(state.paused, 'true');
-  assert.equal(state.timerReset, '1');
 });

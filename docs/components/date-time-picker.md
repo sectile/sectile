@@ -17,12 +17,6 @@ Choose a morning date and time as one local schedule value.
 
 <ComponentExample component="date-time-picker" scenario="morning" title="Morning" description="Choose a morning date and time as one local schedule value." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="date-time-picker" />
-
 ## API reference
 
 Vue package: `@sectile/vue/date-time-picker`
@@ -66,27 +60,119 @@ Vue package: `@sectile/vue/date-time-picker`
 
 ## Parts
 
-Rendered parts use `data-scope="date-time-picker"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="date-time-picker"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">date-time-input</code></li>
-  <li><code class="component-part-token">date-input</code></li>
-  <li><code class="component-part-token">time-input</code></li>
-  <li><code class="component-part-token">trigger</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">week-view-trigger</code></li>
-  <li><code class="component-part-token">month-view-trigger</code></li>
-  <li><code class="component-part-token">year-view-trigger</code></li>
-  <li><code class="component-part-token">previous-week</code></li>
-  <li><code class="component-part-token">next-week</code></li>
-  <li><code class="component-part-token">previous-month</code></li>
-  <li><code class="component-part-token">next-month</code></li>
-  <li><code class="component-part-token">previous-year</code></li>
-  <li><code class="component-part-token">next-year</code></li>
-  <li><code class="component-part-token">grid</code></li>
-  <li><code class="component-part-token">cell</code></li>
-  <li><code class="component-part-token">month-cell</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">date-time-input</code></td>
+  <td><code>[data-part="date-time-input"]</code></td>
+  <td>Edits a combined date and time value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">date-input</code></td>
+  <td><code>[data-part="date-input"]</code></td>
+  <td>Edits the date portion of a date-time value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">time-input</code></td>
+  <td><code>[data-part="time-input"]</code></td>
+  <td>Edits the time portion of a date-time value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">trigger</code></td>
+  <td><code>[data-part="trigger"]</code></td>
+  <td>Opens, closes, or activates the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">week-view-trigger</code></td>
+  <td><code>[data-part="week-view-trigger"]</code></td>
+  <td>Switches the calendar to the week view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">month-view-trigger</code></td>
+  <td><code>[data-part="month-view-trigger"]</code></td>
+  <td>Switches the calendar to the month view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">year-view-trigger</code></td>
+  <td><code>[data-part="year-view-trigger"]</code></td>
+  <td>Switches the calendar to the year view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-week</code></td>
+  <td><code>[data-part="previous-week"]</code></td>
+  <td>Moves to the previous week.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-week</code></td>
+  <td><code>[data-part="next-week"]</code></td>
+  <td>Moves to the next week.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-month</code></td>
+  <td><code>[data-part="previous-month"]</code></td>
+  <td>Moves to the previous month.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-month</code></td>
+  <td><code>[data-part="next-month"]</code></td>
+  <td>Moves to the next month.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-year</code></td>
+  <td><code>[data-part="previous-year"]</code></td>
+  <td>Moves to the previous year.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-year</code></td>
+  <td><code>[data-part="next-year"]</code></td>
+  <td>Moves to the next year.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">grid</code></td>
+  <td><code>[data-part="grid"]</code></td>
+  <td>Groups cells into a navigable two-dimensional structure.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>Represents one navigable or selectable grid value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">month-cell</code></td>
+  <td><code>[data-part="month-cell"]</code></td>
+  <td>Represents one selectable month.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

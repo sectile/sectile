@@ -5,8 +5,6 @@ import test from 'node:test';
 const treeGridCase = await readFile(new URL('../.vitepress/theme/components/TreeGridCase.vue', import.meta.url), 'utf8');
 const preview = await readFile(new URL('../.vitepress/theme/components/ComponentExamplePreview.vue', import.meta.url), 'utf8');
 const specializedCode = await readFile(new URL('../.vitepress/theme/specialized-example-code.ts', import.meta.url), 'utf8');
-const anatomy = await readFile(new URL('../.vitepress/theme/component-anatomy.ts', import.meta.url), 'utf8');
-const anatomyStyles = await readFile(new URL('../.vitepress/theme/components/ComponentAnatomy.vue', import.meta.url), 'utf8');
 const exampleStyles = await readFile(new URL('../.vitepress/theme/component-examples.css', import.meta.url), 'utf8');
 const documentation = await readFile(new URL('../data/component-documentation.mjs', import.meta.url), 'utf8');
 
@@ -41,15 +39,7 @@ test('tree grid code samples use Vue hierarchy and an integrated editor', () => 
   assert.doesNotMatch(specializedCode, /@sectile\/dom\/tree-grid/u);
 });
 
-test('tree grid anatomy mirrors the product example inside one coherent frame', () => {
-  assert.match(anatomy, /Commerce platform/u);
-  assert.match(anatomy, /Checkout flow/u);
-  assert.match(anatomy, /tree-grid-level-\$\{level\}/u);
-  assert.match(anatomy, /input\('editor', 'Mina Kim', 'Storefront owner'/u);
-  assert.match(anatomy, /data-grid tree-grid-root/u);
-  assert.doesNotMatch(anatomy, /Inline editor/u);
-  assert.match(anatomyStyles, /\.anatomy-node--tree-grid-root/u);
-  assert.match(anatomyStyles, /grid-template-columns: minmax\(15rem, 1\.5fr\)/u);
+test('tree grid example keeps deep hierarchy and editor styling', () => {
   assert.match(exampleStyles, /\.tree-grid-demo__resource--level-3/u);
   assert.match(exampleStyles, /\.tree-grid-demo__owner input/u);
 });

@@ -11,12 +11,6 @@ Toggle deployment notifications with one immediate action.
 
 <ComponentExample component="switch" scenario="off" title="Notifications" description="Toggle deployment notifications with one immediate action." :index="0" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="switch" />
-
 ## API reference
 
 Vue package: `@sectile/vue/switch`
@@ -40,12 +34,29 @@ Vue package: `@sectile/vue/switch`
 
 ## Parts
 
-Rendered parts use `data-scope="switch"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="switch"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">thumb</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">thumb</code></td>
+  <td><code>[data-part="thumb"]</code></td>
+  <td>Controls one value along the track.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

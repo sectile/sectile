@@ -17,12 +17,6 @@
 
 <ComponentExample component="editable" scenario="validated" title="입력 검증" description="잘못된 편집은 거부하고 마지막으로 확정된 값을 유지합니다." :index="1" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="editable" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/editable`
@@ -51,17 +45,59 @@ Vue 패키지: `@sectile/vue/editable`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="editable"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="editable"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">area</code></li>
-  <li><code class="component-part-token">preview</code></li>
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">edit-trigger</code></li>
-  <li><code class="component-part-token">submit-trigger</code></li>
-  <li><code class="component-part-token">cancel-trigger</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">area</code></td>
+  <td><code>[data-part="area"]</code></td>
+  <td>2차원 조작 영역을 제공합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">preview</code></td>
+  <td><code>[data-part="preview"]</code></td>
+  <td>편집 모드 밖에서 확정 값을 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>편집 값이나 초안을 입력받습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">edit-trigger</code></td>
+  <td><code>[data-part="edit-trigger"]</code></td>
+  <td>편집 모드로 전환합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">submit-trigger</code></td>
+  <td><code>[data-part="submit-trigger"]</code></td>
+  <td>현재 초안을 확정합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cancel-trigger</code></td>
+  <td><code>[data-part="cancel-trigger"]</code></td>
+  <td>현재 초안을 취소합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

@@ -10,8 +10,8 @@ sectile/
 │   │   ├── theme/
 │   │   │   ├── components/
 │   │   │   │   ├── AccordionCase.vue
-│   │   │   │   ├── AnatomyPreviewNode.vue
 │   │   │   │   ├── BashTerminal.vue
+│   │   │   │   ├── CalendarExample.vue
 │   │   │   │   ├── CascadeSelectCase.vue
 │   │   │   │   ├── CatalogCase.vue
 │   │   │   │   ├── CheckedControlCase.vue
@@ -21,23 +21,24 @@ sectile/
 │   │   │   │   ├── ComponentExample.vue
 │   │   │   │   ├── ComponentExamplePreview.vue
 │   │   │   │   ├── DateRangeFieldCase.vue
-│   │   │   │   ├── DateTimePickerAnatomy.vue
 │   │   │   │   ├── DemoCard.vue
 │   │   │   │   ├── DisclosureCase.vue
 │   │   │   │   ├── EditableCase.vue
 │   │   │   │   ├── ExampleFrame.vue
+│   │   │   │   ├── FeedCase.vue
 │   │   │   │   ├── HostCode.vue
 │   │   │   │   ├── HostInstall.vue
 │   │   │   │   ├── HostSelector.vue
 │   │   │   │   ├── ListboxCase.vue
-│   │   │   │   ├── MultiThumbSliderAnatomy.vue
+│   │   │   │   ├── MenubarExample.vue
+│   │   │   │   ├── MultiThumbSliderCase.vue
 │   │   │   │   ├── NativeFieldCase.vue
 │   │   │   │   ├── NavPreferenceMenu.vue
 │   │   │   │   ├── PackageImport.vue
 │   │   │   │   ├── PaginationCase.vue
+│   │   │   │   ├── PickerCalendarDemo.vue
 │   │   │   │   ├── PopoverCase.vue
 │   │   │   │   ├── RadioGroupCase.vue
-│   │   │   │   ├── SliderAnatomy.vue
 │   │   │   │   ├── SliderCase.vue
 │   │   │   │   ├── SpinButtonCase.vue
 │   │   │   │   ├── TabsCase.vue
@@ -49,9 +50,14 @@ sectile/
 │   │   │   │   ├── TimeRangeFieldCase.vue
 │   │   │   │   ├── TimerCase.vue
 │   │   │   │   ├── ToastCase.vue
-│   │   │   │   └── ToggleGroupCase.vue
-│   │   │   ├── anatomy-interaction.ts
+│   │   │   │   ├── ToggleGroupCase.vue
+│   │   │   │   ├── TreeGridCase.vue
+│   │   │   │   ├── TreeViewCase.vue
+│   │   │   │   └── WindowSplitterCase.vue
+│   │   │   ├── bash-terminal-bridge.ts
+│   │   │   ├── calendar-demo-state.ts
 │   │   │   ├── catalog-code.ts
+│   │   │   ├── catalog-example-state.ts
 │   │   │   ├── catalog-scenarios.ts
 │   │   │   ├── component-anatomy.ts
 │   │   │   ├── component-example-sources.ts
@@ -62,7 +68,9 @@ sectile/
 │   │   │   ├── Layout.vue
 │   │   │   ├── locale.ts
 │   │   │   ├── number-field-examples.ts
+│   │   │   ├── specialized-example-code.ts
 │   │   │   ├── styles.css
+│   │   │   ├── temporal-demo-format.ts
 │   │   │   ├── terminal-demo-sessions.mjs
 │   │   │   ├── terminal-demo-ui.mjs
 │   │   │   ├── terminal-keyboard-input.mjs
@@ -99,6 +107,8 @@ sectile/
 │   │   ├── menu-button.md
 │   │   ├── menu.md
 │   │   ├── menubar.md
+│   │   ├── month-picker.md
+│   │   ├── month-range-picker.md
 │   │   ├── multi-thumb-slider.md
 │   │   ├── navigation-menu.md
 │   │   ├── number-field.md
@@ -107,6 +117,7 @@ sectile/
 │   │   ├── popover.md
 │   │   ├── quantity-field.md
 │   │   ├── radio-group.md
+│   │   ├── range-calendar.md
 │   │   ├── rating.md
 │   │   ├── select.md
 │   │   ├── slider.md
@@ -126,9 +137,13 @@ sectile/
 │   │   ├── tooltip.md
 │   │   ├── tree-grid.md
 │   │   ├── tree-view.md
-│   │   └── window-splitter.md
+│   │   ├── window-splitter.md
+│   │   ├── year-picker.md
+│   │   └── year-range-picker.md
 │   ├── data/
 │   │   ├── component-contracts.mjs
+│   │   ├── component-documentation.mjs
+│   │   ├── component-summaries.mjs
 │   │   ├── components.json
 │   │   └── scenario-descriptions.mjs
 │   ├── decisions/
@@ -178,6 +193,8 @@ sectile/
 │   │   │   ├── menu-button.md
 │   │   │   ├── menu.md
 │   │   │   ├── menubar.md
+│   │   │   ├── month-picker.md
+│   │   │   ├── month-range-picker.md
 │   │   │   ├── multi-thumb-slider.md
 │   │   │   ├── navigation-menu.md
 │   │   │   ├── number-field.md
@@ -186,6 +203,7 @@ sectile/
 │   │   │   ├── popover.md
 │   │   │   ├── quantity-field.md
 │   │   │   ├── radio-group.md
+│   │   │   ├── range-calendar.md
 │   │   │   ├── rating.md
 │   │   │   ├── select.md
 │   │   │   ├── slider.md
@@ -205,7 +223,9 @@ sectile/
 │   │   │   ├── tooltip.md
 │   │   │   ├── tree-grid.md
 │   │   │   ├── tree-view.md
-│   │   │   └── window-splitter.md
+│   │   │   ├── window-splitter.md
+│   │   │   ├── year-picker.md
+│   │   │   └── year-range-picker.md
 │   │   ├── guide/
 │   │   │   ├── getting-started.md
 │   │   │   ├── host-model.md
@@ -255,8 +275,33 @@ sectile/
 │   │   ├── index.md
 │   │   └── verification-pipeline.md
 │   ├── tests/
-│   │   ├── anatomy-interaction.test.mjs
-│   │   └── terminal-input.test.mjs
+│   │   ├── accordion-example.test.mjs
+│   │   ├── alert-dialog-example.test.mjs
+│   │   ├── anatomy-contract.test.mjs
+│   │   ├── bash-terminal.test.mjs
+│   │   ├── calendar-demo-state.test.mjs
+│   │   ├── catalog-actions.test.mjs
+│   │   ├── catalog-example-state.test.mjs
+│   │   ├── checkbox-visibility.test.mjs
+│   │   ├── component-parts-content.test.mjs
+│   │   ├── component-parts.test.mjs
+│   │   ├── component-presentation.test.mjs
+│   │   ├── documentation-scenarios.test.mjs
+│   │   ├── example-frame.test.mjs
+│   │   ├── feed-example.test.mjs
+│   │   ├── focus-rings.test.mjs
+│   │   ├── package-guides.test.mjs
+│   │   ├── range-and-spin-examples.test.mjs
+│   │   ├── sidebar-labels.test.mjs
+│   │   ├── switch-presentation.test.mjs
+│   │   ├── tags-input-example.test.mjs
+│   │   ├── temporal-demo-format.test.mjs
+│   │   ├── terminal-input.test.mjs
+│   │   ├── timer-example.test.mjs
+│   │   ├── tree-grid-example.test.mjs
+│   │   ├── tree-view-example.test.mjs
+│   │   ├── vue-example-code.test.mjs
+│   │   └── window-splitter-example.test.mjs
 │   ├── theory/
 │   │   ├── composition.md
 │   │   ├── index.md
@@ -384,6 +429,8 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── month-picker.ts
+│   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── navigation-menu.ts
 │   │   │   ├── number-field.ts
@@ -392,6 +439,7 @@ sectile/
 │   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
+│   │   │   ├── range-calendar.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── result.ts
 │   │   │   ├── revision.ts
@@ -415,7 +463,9 @@ sectile/
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
 │   │   │   ├── units.ts
-│   │   │   └── window-splitter.ts
+│   │   │   ├── window-splitter.ts
+│   │   │   ├── year-picker.ts
+│   │   │   └── year-range-picker.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
@@ -493,6 +543,7 @@ sectile/
 │   │   │   ├── internal/
 │   │   │   │   ├── checked-control.ts
 │   │   │   │   ├── controller.ts
+│   │   │   │   ├── date-picker-cell.ts
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── disabled-items.ts
 │   │   │   │   ├── facade.ts
@@ -528,6 +579,8 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── month-picker.ts
+│   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── navigation-menu.ts
 │   │   │   ├── number-field.ts
@@ -536,6 +589,7 @@ sectile/
 │   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
+│   │   │   ├── range-calendar.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── select.ts
 │   │   │   ├── slider.ts
@@ -555,7 +609,9 @@ sectile/
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
-│   │   │   └── window-splitter.ts
+│   │   │   ├── window-splitter.ts
+│   │   │   ├── year-picker.ts
+│   │   │   └── year-range-picker.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
@@ -634,6 +690,8 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── month-picker.ts
+│   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── navigation-menu.ts
 │   │   │   ├── node.ts
@@ -643,6 +701,7 @@ sectile/
 │   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
+│   │   │   ├── range-calendar.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── screen.ts
 │   │   │   ├── select.ts
@@ -663,7 +722,9 @@ sectile/
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
-│   │   │   └── window-splitter.ts
+│   │   │   ├── window-splitter.ts
+│   │   │   ├── year-picker.ts
+│   │   │   └── year-range-picker.ts
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
@@ -708,6 +769,7 @@ sectile/
 │       │   │   ├── date-picker.ts
 │       │   │   ├── native-field.ts
 │       │   │   ├── native-input.ts
+│       │   │   ├── part-contract.ts
 │       │   │   └── popup.ts
 │       │   ├── accordion.ts
 │       │   ├── alert-dialog.ts
@@ -735,6 +797,8 @@ sectile/
 │       │   ├── menu-button.ts
 │       │   ├── menu.ts
 │       │   ├── menubar.ts
+│       │   ├── month-picker.ts
+│       │   ├── month-range-picker.ts
 │       │   ├── multi-thumb-slider.ts
 │       │   ├── navigation-menu.ts
 │       │   ├── number-field.ts
@@ -744,6 +808,7 @@ sectile/
 │       │   ├── primitive.ts
 │       │   ├── quantity-field.ts
 │       │   ├── radio-group.ts
+│       │   ├── range-calendar.ts
 │       │   ├── rating.ts
 │       │   ├── select.ts
 │       │   ├── slider.ts
@@ -763,12 +828,15 @@ sectile/
 │       │   ├── tooltip.ts
 │       │   ├── tree-grid.ts
 │       │   ├── tree-view.ts
-│       │   └── window-splitter.ts
+│       │   ├── window-splitter.ts
+│       │   ├── year-picker.ts
+│       │   └── year-range-picker.ts
 │       ├── tests/
 │       │   ├── accordion.test.mjs
 │       │   ├── cascade-select.test.mjs
 │       │   ├── checkbox.test.mjs
 │       │   ├── checked-controls.test.mjs
+│       │   ├── client-part-contracts.test.mjs
 │       │   ├── collection-popup.test.mjs
 │       │   ├── color-picker.test.mjs
 │       │   ├── date-pickers.dom.test.mjs
@@ -780,7 +848,9 @@ sectile/
 │       │   ├── extended-controls.test.mjs
 │       │   ├── linear-selection.test.mjs
 │       │   ├── listbox.test.mjs
+│       │   ├── native-fields.dom.test.mjs
 │       │   ├── native-fields.test.mjs
+│       │   ├── pin-input.dom.test.mjs
 │       │   ├── popup.test.mjs
 │       │   ├── public-parity.test.mjs
 │       │   ├── renderer.mjs

@@ -17,12 +17,6 @@ Edit the owner of a nested resource without leaving keyboard-based row and colum
 
 <ComponentExample component="tree-grid" scenario="editable" title="Editable ownership" description="Edit the owner of a nested resource without leaving keyboard-based row and column navigation." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="tree-grid" />
-
 ## API reference
 
 Vue package: `@sectile/vue/tree-grid`
@@ -54,15 +48,47 @@ Vue package: `@sectile/vue/tree-grid`
 
 ## Parts
 
-Rendered parts use `data-scope="tree-grid"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="tree-grid"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">row</code></li>
-  <li><code class="component-part-token">cell</code></li>
-  <li><code class="component-part-token">disclosure</code></li>
-  <li><code class="component-part-token">editor</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">row</code></td>
+  <td><code>[data-part="row"]</code></td>
+  <td>Groups cells that belong to one grid row.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">cell</code></td>
+  <td><code>[data-part="cell"]</code></td>
+  <td>Represents one navigable or selectable grid value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">disclosure</code></td>
+  <td><code>[data-part="disclosure"]</code></td>
+  <td>Expands or collapses child content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">editor</code></td>
+  <td><code>[data-part="editor"]</code></td>
+  <td>Edits the active grid or tree-grid cell.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

@@ -17,12 +17,6 @@ Reject values outside the configured minimum and maximum.
 
 <ComponentExample component="date-range-field" scenario="bounded" title="Bounded" description="Reject values outside the configured minimum and maximum." :index="1" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="date-range-field" />
-
 ## API reference
 
 Vue package: `@sectile/vue/date-range-field`
@@ -47,13 +41,35 @@ Vue package: `@sectile/vue/date-range-field`
 
 ## Parts
 
-Rendered parts use `data-scope="date-range-field"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="date-range-field"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">start-input</code></li>
-  <li><code class="component-part-token">end-input</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">start-input</code></td>
+  <td><code>[data-part="start-input"]</code></td>
+  <td>Edits the start value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">end-input</code></td>
+  <td><code>[data-part="end-input"]</code></td>
+  <td>Edits the end value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

@@ -23,12 +23,6 @@
 
 <ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
 
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="toast" />
-
 ## 공개 API
 
 Vue 패키지: `@sectile/vue/toast`
@@ -58,15 +52,47 @@ Vue 패키지: `@sectile/vue/toast`
 
 ## 파트
 
-렌더링되는 파트는 기본적으로 `data-scope="toast"`를 사용합니다. 아래 이름이 각 파트의 `data-part` 값입니다.
+공통 범위: <code class="component-scope-token">[data-scope="toast"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">viewport</code></li>
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">title</code></li>
-  <li><code class="component-part-token">description</code></li>
-  <li><code class="component-part-token">close</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">viewport</code></td>
+  <td><code>[data-part="viewport"]</code></td>
+  <td>현재 보이는 콘텐츠를 배치하고 경계를 정합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">title</code></td>
+  <td><code>[data-part="title"]</code></td>
+  <td>연결된 콘텐츠의 제목을 표시합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">description</code></td>
+  <td><code>[data-part="description"]</code></td>
+  <td>연결된 콘텐츠나 결정 내용을 설명합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">close</code></td>
+  <td><code>[data-part="close"]</code></td>
+  <td>현재 화면을 닫거나 해제합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## 키보드 동작
 

@@ -27,16 +27,19 @@ function isSecondaryStateScenario(scenario) {
 /**
  * Visual examples teach behavior that can be seen or exercised in the DOM.
  * State ownership, readonly, and disabled behavior remain documented by the
- * public API and accessibility contract. They are not promoted to standalone
- * visual sections at the expense of representative component workflows.
+ * public API and accessibility contract unless a curated scenario demonstrates
+ * an essential state that users need to recognize, such as unavailable dates.
  */
 export function documentedScenarios(component) {
   const declared = component.scenarios?.dom;
   if (!Array.isArray(declared)) return Object.freeze([]);
 
-  const selected = curatedScenarios[component.id] ?? declared;
+  const curated = curatedScenarios[component.id];
+  const selected = curated ?? declared;
 
-  return Object.freeze(selected.filter((scenario) => !isSecondaryStateScenario(scenario)));
+  return Object.freeze(curated === undefined
+    ? selected.filter((scenario) => !isSecondaryStateScenario(scenario))
+    : [...selected]);
 }
 
 export function isStandaloneDocumentationScenario(scenario) {

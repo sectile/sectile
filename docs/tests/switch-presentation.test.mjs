@@ -10,20 +10,12 @@ const exampleStyles = await readFile(
   new URL('../.vitepress/theme/component-examples.css', import.meta.url),
   'utf8',
 );
-const anatomyNode = await readFile(
-  new URL('../.vitepress/theme/components/AnatomyPreviewNode.vue', import.meta.url),
-  'utf8',
-);
 
 test('switch communicates state through the control instead of redundant status text', () => {
   assert.doesNotMatch(example, /class="switch-value"/u);
   assert.doesNotMatch(example, /value \? 'On' : 'Off'/u);
   assert.match(exampleStyles, /\.switch-control\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;/su);
   assert.doesNotMatch(exampleStyles, /\.switch-value/u);
-});
-
-test('switch anatomy does not prepend On or Off to the control', () => {
-  assert.doesNotMatch(anatomyNode, /component === 'switch'[^\n]+\? 'On' : 'Off'/u);
 });
 
 test('generated switch pages use task labels instead of state labels', async () => {

@@ -1,31 +1,6 @@
-export type AnatomyNodeKind =
-  | 'root' | 'row' | 'stack' | 'panel' | 'button' | 'icon-button' | 'input'
-  | 'label' | 'text' | 'muted' | 'list' | 'item' | 'indicator' | 'grid'
-  | 'cell' | 'track' | 'range' | 'thumb' | 'separator' | 'badge' | 'swatch'
-  | 'textarea' | 'pane' | 'handle' | 'overlay' | 'viewport' | 'slide'
-  | 'toolbar' | 'tab-list' | 'tab' | 'calendar' | 'weekday' | 'spacer';
-
-export type AnatomyIconName =
-  | 'align-left' | 'arrow-left' | 'arrow-right' | 'bold' | 'book-open' | 'calendar'
-  | 'check' | 'chevron-down' | 'chevron-left' | 'chevron-right'
-  | 'chevrons-left' | 'chevrons-right' | 'ellipsis' | 'file-code-2' | 'folder' | 'folder-open' | 'grip-vertical' | 'italic'
-  | 'minus' | 'pause' | 'play' | 'plus' | 'rotate-ccw' | 'star' | 'x';
-
-export interface AnatomyPreviewNode {
-  readonly part?: string | undefined;
-  readonly kind: AnatomyNodeKind;
-  readonly text?: string | undefined;
-  readonly detail?: string | undefined;
-  readonly value?: string | undefined;
-  readonly icon?: AnatomyIconName | undefined;
-  readonly className?: string | undefined;
-  readonly children?: readonly AnatomyPreviewNode[] | undefined;
-}
-
 export interface ComponentAnatomyDefinition {
   readonly scope: string;
   readonly parts: readonly string[];
-  readonly preview: AnatomyPreviewNode;
   readonly partDetails: Readonly<Record<string, AnatomyPartDetail>>;
 }
 
@@ -37,10 +12,17 @@ export interface AnatomyPartDetail {
 
 export interface AnatomyPartContract {
   readonly attributes: readonly (readonly [name: string, value: string])[];
-  readonly purpose?: Readonly<{ en: string; ko: string }>;
+  readonly purpose: Readonly<{ en: string; ko: string }>;
 }
 
-export function anatomyPartContract(definition: ComponentAnatomyDefinition, part: string): AnatomyPartContract {
+export function anatomyPartContract(
+  definition: ComponentAnatomyDefinition,
+  part: string,
+): AnatomyPartContract {
+  if (!definition.parts.includes(part)) {
+    throw new Error(`Unknown anatomy part for ${definition.scope}: ${part}`);
+  }
+
   const detail = definition.partDetails[part];
   return Object.freeze({
     attributes: Object.freeze([
@@ -48,596 +30,147 @@ export function anatomyPartContract(definition: ComponentAnatomyDefinition, part
       ['data-part', part] as const,
       ...(detail?.attributes ?? []),
     ]),
-    ...(detail?.purpose === undefined ? {} : { purpose: detail.purpose }),
+    purpose: detail?.purpose ?? anatomyPartPurpose(part),
   });
 }
 
-type NodeOptions = Omit<AnatomyPreviewNode, 'part' | 'kind' | 'text' | 'children'>;
+export function anatomyPartLabel(part: string): string {
+  return part
+    .split('-')
+    .map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`)
+    .join(' ');
+}
 
-const n = (
-  kind: AnatomyNodeKind,
-  part?: string,
-  text?: string,
-  children?: readonly AnatomyPreviewNode[],
-  options: NodeOptions = {},
-): AnatomyPreviewNode => Object.freeze({ kind, part, text, children, ...options });
+export function anatomyPartPurpose(part: string): Readonly<{ en: string; ko: string }> {
+  const direct = partPurposes[part];
+  if (direct !== undefined) return direct;
 
-const row = (children: readonly AnatomyPreviewNode[], className?: string) => n('row', undefined, undefined, children, { className });
-const stack = (children: readonly AnatomyPreviewNode[], className?: string) => n('stack', undefined, undefined, children, { className });
-const root = (children: readonly AnatomyPreviewNode[], className?: string) => n('root', 'root', undefined, children, { className });
-const button = (part: string, text: string, icon?: AnatomyIconName, className?: string) => n('button', part, text, undefined, { icon, className });
-const iconButton = (part: string, icon: AnatomyIconName, detail?: string) => n('icon-button', part, undefined, undefined, { icon, detail });
-const input = (part: string, text: string, detail?: string, className?: string) => n('input', part || undefined, text, undefined, { detail, className });
-const item = (
-  part: string,
-  text: string,
-  detail?: string,
-  children?: readonly AnatomyPreviewNode[],
-  value?: string,
-) => n('item', part || undefined, text, children, { detail, value });
+  const endpoint = /^(start|end)-(date-time|date|time|input)$/u.exec(part);
+  if (endpoint !== null) {
+    const [, side, value] = endpoint;
+    const sideEn = side === 'start' ? 'start' : 'end';
+    const sideKo = side === 'start' ? '시작' : '종료';
+    const valueEn = value === 'date-time' ? 'date and time' : value === 'input' ? 'value' : value;
+    const valueKo = value === 'date-time' ? '날짜와 시간' : value === 'date' ? '날짜' : value === 'time' ? '시간' : '값';
+    return copy(`Edits the ${sideEn} ${valueEn}.`, `${sideKo} ${valueKo}을 편집합니다.`);
+  }
+
+  const navigation = /^(previous|next)-(week|month|year|page)$/u.exec(part);
+  if (navigation !== null) {
+    const direction = navigation[1] as 'previous' | 'next';
+    const unit = navigation[2] as 'week' | 'month' | 'year' | 'page';
+    const directionEn = direction === 'previous' ? 'previous' : 'next';
+    const directionKo = direction === 'previous' ? '이전' : '다음';
+    const unitKo = { week: '주', month: '월', year: '년', page: '페이지' }[unit] ?? unit;
+    return copy(`Moves to the ${directionEn} ${unit}.`, `${directionKo} ${unitKo}(으)로 이동합니다.`);
+  }
+
+  const view = /^(week|month|year)-view-trigger$/u.exec(part);
+  if (view !== null) {
+    const unit = view[1] as 'week' | 'month' | 'year';
+    const unitKo = { week: '주', month: '월', year: '년' }[unit] ?? unit;
+    return copy(`Switches the calendar to the ${unit} view.`, `달력을 ${unitKo} 보기로 전환합니다.`);
+  }
+
+  return copy(
+    `Exposes the ${anatomyPartLabel(part).toLowerCase()} styling region.`,
+    `${anatomyPartLabel(part)} 스타일 영역을 노출합니다.`,
+  );
+}
+
+function copy(en: string, ko: string): Readonly<{ en: string; ko: string }> {
+  return Object.freeze({ en, ko });
+}
+
+const partPurposes = Object.freeze<Record<string, Readonly<{ en: string; ko: string }>>>({
+  root: copy('Defines the component boundary and owns its composed parts.', '컴포넌트 경계와 내부 파트를 묶습니다.'),
+  list: copy('Groups the component items in navigation order.', '컴포넌트 항목을 탐색 순서대로 묶습니다.'),
+  group: copy('Groups related child items.', '관련 하위 항목을 묶습니다.'),
+  item: copy('Represents one selectable or actionable item.', '선택하거나 실행할 수 있는 항목 하나입니다.'),
+  'item-container': copy('Positions one top-level item and its nested content.', '최상위 항목과 중첩 콘텐츠를 함께 배치합니다.'),
+  'item-text': copy('Renders the item label independently from its controls.', '항목 레이블을 조작부와 분리해 표시합니다.'),
+  'item-delete': copy('Removes its owning item.', '해당 항목을 제거합니다.'),
+  'item-indicator': copy('Shows the item selection state.', '항목의 선택 상태를 표시합니다.'),
+  'item-chevron': copy('Shows that an item opens a deeper level.', '항목에 하위 단계가 있음을 표시합니다.'),
+  input: copy('Accepts the editable value or draft.', '편집 값이나 초안을 입력받습니다.'),
+  'native-input': copy('Keeps the native form control available for submission and platform behavior.', '폼 제출과 플랫폼 동작을 위한 네이티브 입력을 유지합니다.'),
+  'text-input': copy('Accepts a formatted text representation of the value.', '서식화된 텍스트 값 입력을 받습니다.'),
+  'channel-input': copy('Edits one color channel numerically.', '색상 채널 하나를 숫자로 편집합니다.'),
+  'coordinate-input': copy('Edits one coordinate of the current value.', '현재 값의 좌표 하나를 편집합니다.'),
+  'coordinate-slider': copy('Adjusts one coordinate over a bounded range.', '한 좌표를 제한된 범위에서 조절합니다.'),
+  'date-time-input': copy('Edits a combined date and time value.', '날짜와 시간을 하나의 값으로 편집합니다.'),
+  'date-input': copy('Edits the date portion of a date-time value.', '날짜·시간 값의 날짜 부분을 편집합니다.'),
+  'time-input': copy('Edits the time portion of a date-time value.', '날짜·시간 값의 시간 부분을 편집합니다.'),
+  trigger: copy('Opens, closes, or activates the associated content.', '연결된 콘텐츠를 열고 닫거나 활성화합니다.'),
+  'format-trigger': copy('Changes the active value format.', '현재 값의 표시 형식을 바꿉니다.'),
+  'edit-trigger': copy('Enters editing mode.', '편집 모드로 전환합니다.'),
+  'submit-trigger': copy('Commits the current draft.', '현재 초안을 확정합니다.'),
+  'cancel-trigger': copy('Discards the current draft.', '현재 초안을 취소합니다.'),
+  'action-trigger': copy('Invokes a timer action.', '타이머 동작을 실행합니다.'),
+  content: copy('Contains the component content shown for the active state.', '현재 상태에 맞는 컴포넌트 콘텐츠를 담습니다.'),
+  'sub-content': copy('Contains a nested level owned by a parent item.', '상위 항목이 소유하는 중첩 단계를 담습니다.'),
+  overlay: copy('Covers surrounding content while a modal surface is open.', '모달이 열린 동안 주변 콘텐츠를 덮습니다.'),
+  anchor: copy('Provides the positioning reference for floating content.', '떠 있는 콘텐츠의 배치 기준을 제공합니다.'),
+  arrow: copy('Visually connects floating content to its anchor.', '떠 있는 콘텐츠와 기준점을 시각적으로 연결합니다.'),
+  title: copy('Labels the associated content.', '연결된 콘텐츠의 제목을 표시합니다.'),
+  description: copy('Describes the associated content or decision.', '연결된 콘텐츠나 결정 내용을 설명합니다.'),
+  close: copy('Closes or dismisses the current surface.', '현재 화면을 닫거나 해제합니다.'),
+  clear: copy('Clears the current value or collection.', '현재 값이나 항목 모음을 비웁니다.'),
+  value: copy('Displays the current committed value.', '현재 확정 값을 표시합니다.'),
+  'value-text': copy('Displays the formatted value as text.', '서식화된 값을 텍스트로 표시합니다.'),
+  label: copy('Labels the component control.', '컴포넌트 조작부의 레이블입니다.'),
+  preview: copy('Shows the committed value outside editing mode.', '편집 모드 밖에서 확정 값을 표시합니다.'),
+  empty: copy('Shows feedback when no collection item matches.', '일치하는 항목이 없을 때 안내를 표시합니다.'),
+  control: copy('Groups the primary interactive controls.', '주요 조작부를 묶습니다.'),
+  area: copy('Provides the two-dimensional interaction surface.', '2차원 조작 영역을 제공합니다.'),
+  'area-thumb': copy('Marks and controls the selected point in the area.', '2차원 영역의 선택 지점을 표시하고 조절합니다.'),
+  'hue-slider': copy('Adjusts the color hue.', '색상 색조를 조절합니다.'),
+  'alpha-slider': copy('Adjusts color opacity.', '색상 불투명도를 조절합니다.'),
+  swatch: copy('Previews the selected color.', '선택한 색상을 미리 보여줍니다.'),
+  track: copy('Defines the measurable path used by one or more thumbs.', '하나 이상의 핸들이 이동하는 측정 경로입니다.'),
+  range: copy('Shows the active interval on the track.', '트랙 위의 활성 범위를 표시합니다.'),
+  thumb: copy('Controls one value along the track.', '트랙 위의 값 하나를 조절합니다.'),
+  viewport: copy('Clips and positions the currently visible content.', '현재 보이는 콘텐츠를 배치하고 경계를 정합니다.'),
+  slide: copy('Represents one carousel page.', '캐러셀 페이지 하나를 나타냅니다.'),
+  previous: copy('Moves to the previous item or page.', '이전 항목이나 페이지로 이동합니다.'),
+  next: copy('Moves to the next item or page.', '다음 항목이나 페이지로 이동합니다.'),
+  first: copy('Moves to the first page.', '첫 페이지로 이동합니다.'),
+  last: copy('Moves to the last page.', '마지막 페이지로 이동합니다.'),
+  pause: copy('Pauses or resumes automatic movement.', '자동 이동을 일시 정지하거나 다시 시작합니다.'),
+  'indicator-group': copy('Groups direct position controls.', '직접 위치 이동 조작부를 묶습니다.'),
+  indicator: copy('Shows state or position without replacing the primary content.', '주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.'),
+  grid: copy('Groups cells into a navigable two-dimensional structure.', '셀을 탐색 가능한 2차원 구조로 묶습니다.'),
+  row: copy('Groups cells that belong to one grid row.', '같은 그리드 행에 속한 셀을 묶습니다.'),
+  cell: copy('Represents one navigable or selectable grid value.', '탐색하거나 선택할 수 있는 그리드 값 하나입니다.'),
+  'month-cell': copy('Represents one selectable month.', '선택할 수 있는 월 하나입니다.'),
+  column: copy('Groups one level of hierarchical choices.', '계층형 선택 항목의 한 단계를 묶습니다.'),
+  header: copy('Provides the semantic heading for an expandable item.', '펼칠 수 있는 항목의 의미론적 제목입니다.'),
+  disclosure: copy('Expands or collapses child content.', '하위 콘텐츠를 펼치거나 접습니다.'),
+  separator: copy('Separates related groups without becoming an action.', '동작을 추가하지 않고 관련 그룹을 구분합니다.'),
+  editor: copy('Edits the active grid or tree-grid cell.', '활성 그리드 또는 트리 그리드 셀을 편집합니다.'),
+  pane: copy('Contains one resizable region.', '크기를 조절할 수 있는 영역 하나를 담습니다.'),
+  handle: copy('Resizes adjacent panes.', '인접한 영역의 크기를 조절합니다.'),
+  step: copy('Represents one ordered workflow step.', '순서가 있는 작업 단계 하나입니다.'),
+  'unit-select': copy('Chooses the unit applied to the numeric value.', '숫자 값에 적용할 단위를 선택합니다.'),
+  increment: copy('Increases the value by one configured step.', '설정된 한 단계만큼 값을 늘립니다.'),
+  decrement: copy('Decreases the value by one configured step.', '설정된 한 단계만큼 값을 줄입니다.'),
+  'load-earlier': copy('Requests items before the visible feed window.', '현재 피드보다 이전 항목을 요청합니다.'),
+  'load-newer': copy('Requests items after the visible feed window.', '현재 피드보다 이후 항목을 요청합니다.'),
+});
 
 const popupParts = ['trigger', 'overlay', 'content', 'title', 'description', 'close'] as const;
 const fieldParts = ['input'] as const;
 const rangePickerParts = [
   'start-input', 'end-input', 'trigger', 'content', 'week-view-trigger',
   'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week',
-  'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell',
+  'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell',
+  'month-cell',
 ] as const;
 const pickerParts = [
   'input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger',
   'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month',
   'previous-year', 'next-year', 'grid', 'cell', 'month-cell',
 ] as const;
-
-function checkboxPreview(group = false): AnatomyPreviewNode {
-  if (group) {
-    return root([
-      n('label', undefined, 'Choose channels'),
-      n('item', 'item', undefined, [
-        n('indicator', 'indicator', undefined, undefined, { icon: 'check', value: 'stable' }),
-        stack([n('text', undefined, 'Stable releases'), n('muted', undefined, 'Always receive production updates')]),
-      ], { className: 'choice', value: 'stable' }),
-      n('item', 'item', undefined, [
-        n('indicator', 'indicator', undefined, undefined, { icon: 'check', value: 'preview' }),
-        stack([n('text', undefined, 'Preview releases'), n('muted', undefined, 'Try features before release')]),
-      ], { className: 'choice', value: 'preview' }),
-    ], 'form-stack checkbox-group-root');
-  }
-
-  return root([
-    n('indicator', 'indicator', undefined, undefined, { icon: 'check' }),
-    stack([
-      n('text', undefined, 'Include analytics'),
-      n('muted', undefined, 'Share anonymous usage data'),
-    ]),
-  ], 'choice');
-}
-
-function fieldPreview(kind: string): AnatomyPreviewNode {
-  const values: Record<string, readonly [string, string]> = {
-    text: ['Project name', 'Sectile docs'],
-    'number-field': ['Opacity', '0.75'],
-    'date-field': ['Release date', '2026 / 08 / 23'],
-    'date-time-field': ['Starts at', '2026 / 08 / 23   09 : 30'],
-    'time-field': ['Start time', '09 : 30'],
-  };
-  const [label, value] = values[kind] ?? ['Value', 'Example'];
-  return stack([n('label', undefined, label), input('input', value)], 'field-preview');
-}
-
-function rangeFieldPreview(kind: string): AnatomyPreviewNode {
-  const time = kind === 'time-range-field';
-  return root([
-    n('label', undefined, time ? 'Office hours' : 'Deployment window'),
-    row([
-      input('start-input', time ? '09 : 00' : '2026 / 08 / 23'),
-      n('muted', undefined, 'to'),
-      input('end-input', time ? '17 : 30' : '2026 / 08 / 29'),
-    ], 'field-row'),
-  ], 'form-stack');
-}
-
-function datePickerPreview(kind: string): AnatomyPreviewNode {
-  const isRange = kind.includes('range');
-  const inputNodes: AnatomyPreviewNode[] = [];
-
-  if (kind === 'date-time-picker') {
-    inputNodes.push(input('date-time-input', '2026-08-23T09:30', 'Date and time'));
-    inputNodes.push(input('date-input', '2026-08-23', 'Date'));
-    inputNodes.push(input('time-input', '09:30', 'Time'));
-  } else if (kind === 'date-time-range-picker') {
-    inputNodes.push(input('start-date-time-input', '2026-08-23T09:30', 'Start'));
-    inputNodes.push(input('end-date-time-input', '2026-08-29T17:30', 'End'));
-    inputNodes.push(input('start-date-input', '2026-08-23', 'Start date'));
-    inputNodes.push(input('end-date-input', '2026-08-29', 'End date'));
-    inputNodes.push(input('start-time-input', '09:30', 'Start time'));
-    inputNodes.push(input('end-time-input', '17:30', 'End time'));
-  } else if (isRange) {
-    inputNodes.push(input('start-input', '2026-08-23', 'Start'));
-    inputNodes.push(input('end-input', '2026-08-29', 'End'));
-  } else if (kind !== 'calendar') {
-    inputNodes.push(input('input', '2026-08-23', 'Selected date'));
-  }
-
-  const days = ['27', '28', '29', '30', '31', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
-  const cells = days.map((day, index) => n('cell', 'cell', day, undefined, {
-    className: index === 26 ? 'selected' : index < 5 ? 'outside' : undefined,
-  }));
-
-  const calendarChildren: AnatomyPreviewNode[] = [];
-  if (kind !== 'calendar') {
-    calendarChildren.push(
-      row([button('week-view-trigger', 'Week'), button('month-view-trigger', 'Month'), button('year-view-trigger', 'Year')], 'view-switch'),
-      row([
-        iconButton('previous-year', 'chevrons-left', 'Previous year'), iconButton('previous-month', 'chevron-left', 'Previous month'),
-        n('text', undefined, 'August 2026', undefined, { className: 'calendar-title' }),
-        iconButton('next-month', 'chevron-right', 'Next month'), iconButton('next-year', 'chevrons-right', 'Next year'),
-      ], 'calendar-header'),
-      row([iconButton('previous-week', 'arrow-left', 'Previous week'), n('muted', undefined, 'Move one week'), iconButton('next-week', 'arrow-right', 'Next week')], 'week-controls'),
-    );
-  } else {
-    calendarChildren.push(row([
-      n('icon-button', undefined, undefined, undefined, { icon: 'chevron-left' }),
-      n('text', undefined, 'August 2026', undefined, { className: 'calendar-title' }),
-      n('icon-button', undefined, undefined, undefined, { icon: 'chevron-right' }),
-    ], 'calendar-header'));
-  }
-  calendarChildren.push(n('grid', kind === 'calendar' ? undefined : 'grid', undefined, [
-    ...['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => n('weekday', undefined, day)),
-    ...cells,
-  ], { className: 'calendar-grid' }));
-  if (kind !== 'calendar') {
-    calendarChildren.push(n('row', undefined, undefined, [
-      n('cell', 'month-cell', 'Aug', undefined, { className: 'month-cell' }),
-      n('cell', 'month-cell', 'Sep', undefined, { className: 'month-cell' }),
-      n('cell', 'month-cell', 'Oct', undefined, { className: 'month-cell' }),
-    ], { className: 'month-row' }));
-  }
-
-  const main = [
-    ...(inputNodes.length > 0 ? [row(inputNodes, 'picker-inputs')] : []),
-    ...(kind !== 'calendar' ? [iconButton('trigger', 'calendar', 'Open calendar')] : []),
-    n('calendar', kind === 'calendar' ? 'root' : 'content', undefined, calendarChildren),
-  ];
-  return kind === 'calendar' ? main[main.length - 1]! : n('root', undefined, undefined, main, { className: 'picker-root' });
-}
-
-function periodPickerPreview(kind: string): AnatomyPreviewNode {
-  const isRange = kind.includes('range');
-  const isCalendar = kind === 'range-calendar';
-  const isYear = kind.startsWith('year');
-  const cellPart = 'cell';
-  const previousPart = isYear ? 'previous-page' : isCalendar ? 'previous-month' : 'previous-year';
-  const nextPart = isYear ? 'next-page' : isCalendar ? 'next-month' : 'next-year';
-  const heading = isYear ? '2020–2031' : '2026';
-  const values = isYear
-    ? ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030', '2031']
-    : isCalendar
-      ? ['27', '28', '29', '30', '31', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
-      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const fields = isCalendar
-    ? []
-    : isRange
-      ? [input('start-input', isYear ? '2026' : '2026-03', 'From'), input('end-input', isYear ? '2030' : '2026-08', 'To')]
-      : [input('input', isYear ? '2028' : '2026-08', isYear ? 'Year' : 'Month')];
-  const cells = values.map((value, index) => n('cell', cellPart, value, undefined, {
-    className: index === (isYear ? 4 : isCalendar ? 26 : 7)
-      ? 'selected'
-      : isRange && index > (isYear ? 1 : 2) && index < (isYear ? 7 : 8)
-        ? 'in-range'
-        : isCalendar && index < 5
-          ? 'outside'
-          : undefined,
-  }));
-  const navigation = isCalendar
-    ? [
-        iconButton('previous-year', 'chevrons-left', 'Previous year'),
-        iconButton(previousPart, 'chevron-left', 'Previous month'),
-        n('text', undefined, 'August 2026', undefined, { className: 'calendar-title' }),
-        iconButton(nextPart, 'chevron-right', 'Next month'),
-        iconButton('next-year', 'chevrons-right', 'Next year'),
-      ]
-    : [
-        iconButton(previousPart, 'chevron-left', isYear ? 'Previous years' : 'Previous year'),
-        n('text', undefined, heading, undefined, { className: 'calendar-title' }),
-        iconButton(nextPart, 'chevron-right', isYear ? 'Next years' : 'Next year'),
-      ];
-  const contentChildren: AnatomyPreviewNode[] = [row(navigation, 'calendar-header')];
-  if (isCalendar) {
-    contentChildren.push(n(
-      'grid',
-      undefined,
-      undefined,
-      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => n('weekday', undefined, day)),
-      { className: 'calendar-grid calendar-weekdays' },
-    ));
-  }
-  contentChildren.push(n('grid', 'grid', undefined, cells, { className: isCalendar ? 'calendar-grid' : 'period-grid' }));
-
-  return n('root', undefined, undefined, [
-    ...(fields.length > 0 ? [row([...fields, button('trigger', isYear ? 'Choose year' : 'Choose month', 'calendar')], 'picker-inputs')] : []),
-    n('calendar', 'content', undefined, contentChildren, { className: isCalendar ? 'calendar' : 'period-picker' }),
-  ], { className: 'picker-root' });
-}
-
-function sliderPreview(multiple = false): AnatomyPreviewNode {
-  return root([
-    row([n('label', undefined, multiple ? 'Price range' : 'Deployment traffic'), n('text', undefined, multiple ? '$30 – $72' : '40%')], 'split-label'),
-    n('track', 'track', undefined, [
-      n('range', 'range'), n('thumb', 'thumb', multiple ? '$30' : '40'),
-      ...(multiple ? [n('thumb', undefined, '$72', undefined, { className: 'second-thumb' })] : []),
-    ]),
-  ], 'slider-root');
-}
-
-function popupPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'popover') {
-    return n('root', undefined, undefined, [
-      n('row', 'anchor', undefined, [button('trigger', 'Edit profile')], { className: 'popover-anchor' }),
-      n('panel', 'content', undefined, [
-        n('text', 'title', 'Profile details'), n('muted', 'description', 'Change the public display name.'), input('', 'Sectile'),
-        iconButton('close', 'x', 'Close'), n('indicator', 'arrow', undefined, undefined, { className: 'arrow' }),
-      ], { className: 'floating-panel' }),
-    ], { className: 'popover-root' });
-  }
-  if (kind === 'tooltip') {
-    return n('root', undefined, undefined, [
-      n('stack', undefined, undefined, [
-        button('trigger', 'Save changes'),
-        n('panel', 'content', 'Saves the current settings', [
-          n('indicator', 'arrow', undefined, undefined, { className: 'arrow tooltip-arrow' }),
-        ], { className: 'tooltip-panel' }),
-      ], { className: 'tooltip-anchor' }),
-    ], { className: 'tooltip-root' });
-  }
-  const alert = kind === 'alert-dialog';
-  return n('root', undefined, undefined, [
-    button('trigger', alert ? 'Delete project' : 'Open settings'),
-    n('overlay', 'overlay', undefined, [
-      n('panel', 'content', undefined, [
-        n('text', 'title', alert ? 'Delete this project?' : 'Project settings'),
-        n('muted', 'description', alert ? 'This action cannot be undone.' : 'Update the project details below.'),
-        alert ? n('spacer') : input('', 'Sectile'),
-        row([button('close', alert ? 'Cancel' : 'Done'), alert ? n('button', undefined, 'Delete', undefined, { className: 'danger' }) : n('spacer')], 'dialog-actions'),
-      ], { className: 'dialog-panel' }),
-    ]),
-  ], { className: 'dialog-root' });
-}
-
-function listChoicePreview(kind: string): AnatomyPreviewNode {
-  const isSelect = kind === 'select';
-  const isCombobox = kind === 'combobox';
-  const isCascade = kind === 'cascade-select';
-  if (isCascade) {
-    return root([
-      button('trigger', 'Choose workspace', 'chevron-down'),
-      n('text', 'value', 'Engineering / Web platform'),
-      n('list', 'content', undefined, [
-        n('panel', 'column', undefined, [
-          item('item', 'Engineering', undefined, [n('indicator', 'item-chevron', undefined, undefined, { icon: 'chevron-right' })], 'engineering'),
-          item('item', 'Design', undefined, [n('indicator', 'item-chevron', undefined, undefined, { icon: 'chevron-right' })], 'design'),
-          item('item', 'Operations', undefined, [n('indicator', 'item-chevron', undefined, undefined, { icon: 'chevron-right' })], 'operations'),
-        ]),
-        n('panel', 'column', undefined, [
-          item('item', 'Web platform', undefined, [n('indicator', 'item-indicator', undefined, undefined, { icon: 'check', value: 'web' })], 'web'),
-          item('item', 'Mobile apps', undefined, undefined, 'mobile'),
-          item('item', 'Infrastructure', undefined, undefined, 'infrastructure'),
-        ]),
-      ]),
-    ], 'cascade-root');
-  }
-  const items = ['Alpha release', 'Beta release', 'Nightly build'];
-  const itemValues = ['alpha', 'beta', 'nightly'];
-  const listItems = items.map((label, index) => item('item', label, index === 0 ? 'Stable channel' : index === 1 ? 'Preview channel' : 'Latest changes', [
-    ...(kind === 'listbox' ? [n('text', 'item-text', label)] : []),
-    ...(['listbox', 'select'].includes(kind) ? [n('indicator', 'item-indicator', undefined, undefined, { icon: 'check', value: itemValues[index] })] : []),
-  ], itemValues[index]));
-  if (isCombobox) return root([input('input', 'alp', 'Search releases'), n('list', 'content', undefined, [listItems[0]!, n('muted', 'empty', 'No results')])], 'combobox-root');
-  if (isSelect) {
-    return root([
-      button('trigger', 'Alpha release', 'chevron-down'), n('text', 'value', 'Alpha release'),
-      n('list', 'content', undefined, listItems),
-    ], 'select-root');
-  }
-  return root([n('label', undefined, 'Release channel'), n('list', undefined, undefined, listItems)], 'listbox-root');
-}
-
-function menuPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'navigation-menu') {
-    return root([
-      n('list', 'list', undefined, [
-        n('item', 'item-container', undefined, [
-          item('item', 'Products', undefined, [n('indicator', undefined, undefined, undefined, { icon: 'chevron-down' })], 'products'),
-        ]),
-        n('item', 'item-container', undefined, [
-          item('item', 'Docs', undefined, undefined, 'docs'),
-        ]),
-        n('indicator', 'indicator'),
-      ]),
-      n('viewport', 'viewport', undefined, [
-        n('panel', 'sub-content', undefined, [
-          item('item', 'New releases', 'What shipped in the latest version', undefined, 'new'),
-          item('item', 'Open source', 'Packages and contribution guides', undefined, 'open'),
-        ], { className: 'navigation-panel' }),
-      ], { className: 'navigation-viewport' }),
-    ], 'navigation-root');
-  }
-  const items = [
-    item('item', 'New file', '⌘N', undefined, 'new'),
-    item('item', 'Open…', '⌘O', undefined, 'open'),
-    n('separator', 'separator'),
-    item('item', 'Export', undefined, [n('indicator', undefined, undefined, undefined, { icon: 'chevron-right' })], 'export'),
-  ];
-  const popup = n('panel', kind === 'navigation-menu' || kind === 'menu-button' ? 'content' : undefined, undefined, [
-    ...items, n('panel', 'sub-content', undefined, [item('item', 'PDF', undefined, undefined, 'pdf'), item('item', 'Markdown', undefined, undefined, 'markdown')], { className: 'submenu' }),
-  ], { className: 'menu-panel' });
-  if (kind === 'menu') return root([popup], 'menu-root');
-  if (kind === 'menubar') return root([row([item('item', 'File', undefined, undefined, 'file'), item('item', 'Edit', undefined, undefined, 'edit'), item('item', 'View', undefined, undefined, 'view')], 'menubar'), popup], 'menu-root');
-  return n('root', undefined, undefined, [button('trigger', 'Create', 'chevron-down'), popup], { className: 'menu-button-root' });
-}
-
-function collectionPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'feed') {
-    return root([
-      row([
-        stack([n('text', undefined, 'Release activity'), n('muted', undefined, 'production · release-2026.08')]),
-        n('badge', undefined, 'Live'),
-      ], 'feed-anatomy-header'),
-      button('load-newer', '2 new updates', undefined, 'feed-anatomy-load feed-anatomy-load-newer'),
-      n('list', undefined, undefined, [
-        n('item', 'item', undefined, [
-          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
-          stack([n('text', undefined, 'Production deployment completed'), n('muted', undefined, 'Release 2026.08 is healthy in all regions.'), n('muted', undefined, 'Deploy bot · Just now')]),
-          n('badge', undefined, 'Healthy'),
-        ], { className: 'feed-anatomy-event', value: 'deployed' }),
-        n('item', 'item', undefined, [
-          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
-          stack([n('text', undefined, 'Release approved'), n('muted', undefined, 'Mina approved the production promotion.'), n('muted', undefined, 'Mina Kim · 18 min ago')]),
-        ], { className: 'feed-anatomy-event', value: 'approved' }),
-        n('item', 'item', undefined, [
-          n('indicator', undefined, undefined, undefined, { icon: 'check' }),
-          stack([n('text', undefined, 'Required checks passed'), n('muted', undefined, 'All 12 release checks completed.'), n('muted', undefined, 'CI · 24 min ago')]),
-          n('badge', undefined, '12/12'),
-        ], { className: 'feed-anatomy-event', value: 'checks' }),
-      ], { className: 'feed-anatomy-list' }),
-      button('load-earlier', 'Load earlier events', undefined, 'feed-anatomy-load feed-anatomy-load-earlier'),
-      n('muted', undefined, 'Showing the current release window', undefined, { className: 'feed-anatomy-note' }),
-    ], 'feed-root');
-  }
-  if (kind === 'tree-view') {
-    const disclosure = (value: string) => n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down', value });
-    const treeItem = (value: string, label: string, detail: string, level: 1 | 2 | 3, expandable = false) => n('item', 'item', undefined, [
-      ...(expandable ? [disclosure(value)] : [n('spacer')]),
-      n('indicator', undefined, undefined, undefined, { icon: expandable ? 'folder-open' : 'file-code-2' }),
-      n('text', undefined, label),
-      n('muted', undefined, detail),
-    ], { className: `tree-view-row tree-view-level-${level}`, value });
-    return root([
-      treeItem('atlas', 'Atlas workspace', 'Workspace', 1, true),
-      n('list', 'group', undefined, [
-        treeItem('apps', 'Applications', '2 apps', 2, true),
-        n('list', 'group', undefined, [
-          treeItem('dashboard', 'Dashboard', '2 files', 3, true),
-          n('list', 'group', undefined, [
-            treeItem('overview', 'Overview.vue', '4.2 KB', 3),
-            treeItem('settings', 'Settings.vue', '3.8 KB', 3),
-          ], { className: 'tree-view-children tree-view-children-of-dashboard' }),
-        ], { className: 'tree-view-children tree-view-children-of-apps' }),
-        treeItem('tokens', 'tokens.ts', '6.1 KB', 2),
-      ], { className: 'tree-view-children tree-view-children-of-atlas' }),
-    ], 'tree-root');
-  }
-  if (kind === 'tree-grid') {
-    const resource = (
-      label: string,
-      detail: string,
-      level: 1 | 2 | 3,
-      icon: AnatomyIconName,
-      expandable = false,
-    ): AnatomyPreviewNode => n('cell', 'cell', undefined, [
-      ...(expandable ? [n('indicator', 'disclosure', undefined, undefined, { icon: 'chevron-down' })] : [n('spacer')]),
-      n('indicator', undefined, undefined, undefined, { icon }),
-      stack([n('text', undefined, label), n('muted', undefined, detail)]),
-    ], { className: `tree-grid-resource tree-grid-level-${level}`, value: `${label.toLowerCase().replaceAll(' ', '-')}-name` });
-
-    const status = (text: string, tone: string): AnatomyPreviewNode => n('cell', 'cell', undefined, [
-      n('badge', undefined, text, undefined, { className: `tree-grid-status tree-grid-status-${tone}` }),
-    ], { value: `${text.toLowerCase().replaceAll(' ', '-')}-status` });
-
-    return root([
-      row([
-        n('cell', undefined, 'Resource'),
-        n('cell', undefined, 'Owner'),
-        n('cell', undefined, 'Status'),
-      ], 'grid-header tree-grid-header'),
-      n('grid', undefined, undefined, [
-        n('row', 'row', undefined, [
-          resource('Commerce platform', 'Workspace', 1, 'folder-open', true),
-          n('cell', 'cell', 'Platform team', undefined, { value: 'platform-owner' }),
-          status('Healthy', 'success'),
-        ], { className: 'data-row tree-grid-row tree-grid-parent', value: 'platform' }),
-        n('row', 'row', undefined, [
-          resource('Storefront', 'Application', 2, 'folder-open', true),
-          n('cell', 'cell', undefined, [input('editor', 'Mina Kim', 'Storefront owner', 'tree-grid-editor')], { value: 'storefront-owner' }),
-          status('Modified', 'neutral'),
-        ], { className: 'data-row tree-grid-row tree-grid-child tree-child', value: 'storefront' }),
-        n('row', 'row', undefined, [
-          resource('Checkout flow', 'Feature', 3, 'file-code-2'),
-          n('cell', 'cell', 'Alex Chen', undefined, { value: 'checkout-owner' }),
-          status('In review', 'review'),
-        ], { className: 'data-row tree-grid-row tree-grid-grandchild tree-child', value: 'checkout' }),
-        n('row', 'row', undefined, [
-          resource('Documentation', 'Content', 2, 'book-open'),
-          n('cell', 'cell', 'Technical writing', undefined, { value: 'docs-owner' }),
-          status('Published', 'success'),
-        ], { className: 'data-row tree-grid-row tree-grid-child tree-child', value: 'docs' }),
-      ], { className: 'grid-body tree-grid-body' }),
-    ], 'data-grid tree-grid-root');
-  }
-  return root([
-    row([n('cell', undefined, 'Name'), n('cell', undefined, 'Status')], 'grid-header'),
-    n('grid', undefined, undefined, [
-      n('row', 'row', undefined, [
-        n('cell', 'cell', 'Alpha'),
-        n('cell', 'cell', 'Stable'),
-      ]),
-      n('row', 'row', undefined, [n('cell', 'cell', 'Beta'), n('cell', 'cell', 'Preview')], { className: 'data-row' }),
-    ], { className: 'grid-body' }),
-  ], 'data-grid');
-}
-
-function feedbackPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'rating') {
-    return root([
-      n('text', undefined, '4 out of 5', undefined, { className: 'rating-value' }),
-      row(['1', '2', '3', '4', '5'].map((rating) => n('item', 'item', undefined, [
-        n('indicator', 'indicator', undefined, undefined, { value: rating }),
-      ], { icon: 'star', value: rating })), 'rating-row'),
-      button('clear', 'Clear rating', undefined, 'rating-clear'),
-    ], 'rating-root');
-  }
-  if (kind === 'radio-group') return root([
-    ['Email', 'email'], ['Push', 'push'], ['SMS', 'sms'],
-  ].map(([label, value]) => item('item', label!, undefined, [n('indicator', 'indicator', undefined, undefined, { value })], value)), 'radio-root');
-  if (kind === 'switch') return root([n('thumb', 'thumb'), stack([n('text', undefined, 'Notifications'), n('muted', undefined, 'Send deployment alerts')])], 'switch-root');
-  if (kind === 'toggle-group') return root(['B', 'I', 'U'].map((label, index) => n('item', 'item', label, undefined, { className: index === 0 ? 'pressed' : undefined, value: label })), 'toggle-group');
-  if (kind === 'toggle-button') return n('button', 'root', 'Bold', undefined, { icon: 'bold', className: 'toggle-button' });
-  return checkboxPreview();
-}
-
-function inputCollectionPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'tags-input') {
-    return root([
-      n('item', 'item', undefined, [
-        n('text', 'item-text', 'Vue'),
-        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'Vue' }),
-      ], { value: 'Vue' }),
-      n('item', 'item', undefined, [
-        n('text', 'item-text', 'DOM'),
-        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'DOM' }),
-      ], { value: 'DOM' }),
-      n('item', 'item', undefined, [
-        n('text', 'item-text', 'Accessibility'),
-        n('icon-button', 'item-delete', undefined, undefined, { icon: 'x', value: 'Accessibility' }),
-      ], { value: 'Accessibility' }),
-      input('input', 'Add a skill…'),
-      button('clear', 'Clear all', 'x', 'tags-clear'),
-    ], 'tags-root');
-  }
-  if (kind === 'pin-input') return root(['4', '2', '7', '9'].map((value, index) => input('input', value, `Digit ${index + 1}`, 'pin-cell')), 'pin-root');
-  return root([
-    n('textarea', 'area', undefined, [n('text', 'preview', 'Release title'), input('input', 'Release title')]),
-    row([button('edit-trigger', 'Edit'), button('submit-trigger', 'Save'), button('cancel-trigger', 'Cancel')], 'editor-actions'),
-  ], 'editable-root');
-}
-
-function numberControlPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'spin-button') return root([n('label', undefined, 'Quantity'), row([iconButton('decrement', 'minus', 'Decrease'), input('input', '3'), iconButton('increment', 'plus', 'Increase')], 'number-stepper')], 'form-stack');
-  return root([n('label', undefined, 'Distance'), row([input('input', '12.5'), button('unit-select', 'km')], 'field-row'), n('text', 'value', '12.5 km')], 'form-stack');
-}
-
-function colorPreview(): AnatomyPreviewNode {
-  return root([
-    n('label', 'label', 'Accent color'),
-    n('panel', 'control', undefined, [
-      n('swatch', 'swatch', undefined, [n('input', 'native-input', '#5e6ff2', undefined, { className: 'native-color-input' })], { className: 'accent-swatch' }),
-      input('text-input', '#5e6ff2'),
-    ]),
-    n('panel', 'area', undefined, [n('thumb', 'area-thumb')], { className: 'color-area' }),
-    n('track', 'hue-slider', undefined, [n('thumb', undefined)], { className: 'hue-track' }),
-    n('track', 'alpha-slider', undefined, [n('thumb', undefined)], { className: 'alpha-track' }),
-    row([input('channel-input', '238', 'Blue'), input('coordinate-input', '66%', 'Lightness'), n('track', 'coordinate-slider', undefined, [n('thumb', undefined)], { className: 'coordinate-track' })], 'color-channels'),
-    row([button('format-trigger', 'HEX'), n('text', 'value-text', '#5e6ff2')], 'split-label'),
-  ], 'color-root');
-}
-
-function carouselPreview(): AnatomyPreviewNode {
-  return root([
-    n('viewport', 'viewport', undefined, [n('track', 'track', undefined, [
-      n('slide', 'slide', 'Foundation', [n('muted', undefined, 'Primitive state and laws')], { value: '0' }),
-      n('slide', 'slide', 'Adapters', [n('muted', undefined, 'DOM and terminal ownership')], { value: '1' }),
-      n('slide', 'slide', 'Frameworks', [n('muted', undefined, 'Vue composition and styling')], { value: '2' }),
-    ])]),
-    row([iconButton('previous', 'chevron-left', 'Previous slide'), iconButton('next', 'chevron-right', 'Next slide'), button('pause', 'Pause', 'pause')], 'carousel-actions'),
-    n('row', 'indicator-group', undefined, ['1', '2', '3'].map((text, index) => n('indicator', 'indicator', text, undefined, { value: String(index) })), { className: 'carousel-dots' }),
-  ], 'carousel-root');
-}
-
-function navigationPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'pagination') return root([iconButton('first', 'chevrons-left', 'First page'), iconButton('previous', 'chevron-left', 'Previous page'), ...['1', '2', '3'].map((text) => n('item', 'item', text, undefined, { value: text })), n('indicator', undefined, undefined, undefined, { icon: 'ellipsis', className: 'pagination-ellipsis' }), n('item', 'item', '12', undefined, { value: '12' }), iconButton('next', 'chevron-right', 'Next page'), iconButton('last', 'chevrons-right', 'Last page')], 'pagination-root');
-  if (kind === 'tabs') return root([n('tab-list', 'list', undefined, [n('button', 'trigger', 'Overview', undefined, { value: 'overview' }), n('button', 'trigger', 'Activity', undefined, { value: 'activity' }), n('indicator', 'indicator')]), n('panel', 'content', 'Project overview', [n('muted', undefined, 'Usage and deployment details')])], 'tabs-root');
-  const steps = [['Account', 'account'], ['Workspace', 'workspace'], ['Review', 'review']] as const;
-  return root([
-    n('list', 'list', undefined, steps.map(([label, value], index) => n('item', 'step', label, [
-      n('indicator', 'indicator', String(index + 1), undefined, { value }),
-    ], { className: 'stepper-step', value }))),
-    n('panel', 'content', 'Account details'),
-  ], 'stepper-root');
-}
-
-function expansionPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'disclosure') return root([button('trigger', 'Deployment details', 'chevron-down'), n('panel', 'content', 'Build target, rollout window, and release protection.')], 'disclosure-root');
-  return root([
-    n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'General', undefined, { icon: 'chevron-down', value: 'general' })]), n('panel', 'content', 'Workspace name, ownership, and visibility.', undefined, { value: 'general' })], { value: 'general' }),
-    n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'Deployments', undefined, { icon: 'chevron-down', value: 'deployments' })]), n('panel', 'content', 'Build targets and release protection.', undefined, { value: 'deployments' })], { value: 'deployments' }),
-    n('item', 'item', undefined, [n('row', 'header', undefined, [n('button', 'trigger', 'Danger zone', undefined, { icon: 'chevron-down', value: 'danger' })]), n('panel', 'content', 'Delete and archive settings.', undefined, { value: 'danger' })], { value: 'danger' }),
-  ], 'accordion-root');
-}
-
-function utilityPreview(kind: string): AnatomyPreviewNode {
-  if (kind === 'toolbar') return root([n('button', 'item', 'Bold', undefined, { icon: 'bold', value: 'Bold' }), n('button', 'item', 'Italic', undefined, { icon: 'italic', value: 'Italic' }), n('separator', 'separator'), n('button', 'item', 'Align left', undefined, { icon: 'align-left', value: 'Align left' })], 'toolbar-root');
-  if (kind === 'timer') return root([
-    row([
-      stack([n('text', undefined, 'Elapsed time'), n('muted', undefined, 'Session timer')]),
-      n('badge', undefined, 'Paused', undefined, { className: 'timer-anatomy-status' }),
-    ], 'timer-anatomy-heading'),
-    n('panel', 'area', undefined, [
-      n('item', 'item', '00', undefined, { value: 'minutes' }),
-      n('separator', 'separator', ':'),
-      n('item', 'item', '18', undefined, { value: 'seconds' }),
-    ], { className: 'timer-anatomy-area' }),
-    n('toolbar', 'control', undefined, [
-      n('button', 'action-trigger', 'Pause', undefined, { icon: 'pause', value: 'pause' }),
-      n('button', 'action-trigger', 'Reset', undefined, { icon: 'rotate-ccw', value: 'reset' }),
-    ], { className: 'timer-anatomy-actions' }),
-  ], 'timer-root');
-  if (kind === 'toast') return n('viewport', 'viewport', undefined, [n('root', 'root', undefined, [n('text', 'title', 'Changes saved'), n('muted', 'description', 'Your project settings were updated.'), iconButton('close', 'x', 'Dismiss')], { className: 'toast-card' })], { className: 'toast-viewport' });
-  return root([
-    n('pane', 'pane', undefined, [
-      n('text', undefined, 'Project files'),
-      n('muted', undefined, 'src / components'),
-    ], { className: 'splitter-pane splitter-pane-navigation' }),
-    n('handle', 'handle'),
-    n('pane', 'pane', undefined, [
-      n('text', undefined, 'Editor'),
-      n('muted', undefined, 'SplitPane.vue'),
-    ], { className: 'splitter-pane splitter-pane-editor' }),
-  ], 'splitter-root');
-}
-
-function previewFor(component: string): AnatomyPreviewNode {
-  if (component === 'checkbox') return checkboxPreview();
-  if (component === 'checkbox-group') return checkboxPreview(true);
-  if (['text', 'number-field', 'date-field', 'date-time-field', 'time-field'].includes(component)) return fieldPreview(component);
-  if (['date-range-field', 'time-range-field'].includes(component)) return rangeFieldPreview(component);
-  if (['calendar', 'date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(component)) return datePickerPreview(component);
-  if (['range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker'].includes(component)) return periodPickerPreview(component);
-  if (component === 'slider') return sliderPreview();
-  if (component === 'multi-thumb-slider') return sliderPreview(true);
-  if (['dialog', 'alert-dialog', 'popover', 'tooltip'].includes(component)) return popupPreview(component);
-  if (['listbox', 'select', 'combobox', 'cascade-select'].includes(component)) return listChoicePreview(component);
-  if (['menu', 'menu-button', 'menubar', 'navigation-menu'].includes(component)) return menuPreview(component);
-  if (['grid', 'tree-grid', 'tree-view', 'feed'].includes(component)) return collectionPreview(component);
-  if (['rating', 'radio-group', 'switch', 'toggle-button', 'toggle-group'].includes(component)) return feedbackPreview(component);
-  if (['tags-input', 'pin-input', 'editable'].includes(component)) return inputCollectionPreview(component);
-  if (['spin-button', 'quantity-field'].includes(component)) return numberControlPreview(component);
-  if (component === 'color-picker') return colorPreview();
-  if (component === 'carousel') return carouselPreview();
-  if (['pagination', 'tabs', 'stepper'].includes(component)) return navigationPreview(component);
-  if (['accordion', 'disclosure'].includes(component)) return expansionPreview(component);
-  if (['toolbar', 'timer', 'toast', 'window-splitter'].includes(component)) return utilityPreview(component);
-  throw new Error(`Missing anatomy preview for ${component}`);
-}
 
 export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDefinition>>({
   accordion: anatomy('accordion', ['root', 'item', 'header', 'trigger', 'content']),
@@ -719,7 +252,9 @@ function menuPartDetails(rootScope = 'menu'): Readonly<Record<string, AnatomyPar
         ko: '상위 메뉴 항목이 소유하는 팝업 콘텐츠',
       }),
     }),
-    separator: Object.freeze({ scope: 'menu' }),
+    ...(rootScope === 'navigation-menu'
+      ? {}
+      : { separator: Object.freeze({ scope: 'menu' }) }),
   });
 }
 
@@ -728,22 +263,18 @@ function anatomy(
   parts: readonly string[],
   partDetails: Readonly<Record<string, AnatomyPartDetail>> = Object.freeze({}),
 ): ComponentAnatomyDefinition {
-  const preview = previewFor(scope);
-  const visibleParts = collectPreviewParts(preview);
-  const declaredParts = new Set(parts);
-  const missingParts = parts.filter((part) => !visibleParts.has(part));
-  if (missingParts.length > 0) {
-    throw new Error(`Missing anatomy regions for ${scope}: ${missingParts.join(', ')}`);
+  if (parts.length === 0) throw new Error(`Anatomy requires public parts: ${scope}`);
+  const duplicates = parts.filter((part, index) => parts.indexOf(part) !== index);
+  if (duplicates.length > 0) {
+    throw new Error(`Duplicate anatomy parts for ${scope}: ${[...new Set(duplicates)].join(', ')}`);
   }
-  const unexpectedParts = [...visibleParts].filter((part) => !declaredParts.has(part));
-  if (unexpectedParts.length > 0) {
-    throw new Error(`Undeclared anatomy regions for ${scope}: ${unexpectedParts.join(', ')}`);
+  const unknownDetails = Object.keys(partDetails).filter((part) => !parts.includes(part));
+  if (unknownDetails.length > 0) {
+    throw new Error(`Unknown anatomy part details for ${scope}: ${unknownDetails.join(', ')}`);
   }
-  return Object.freeze({ scope, parts: Object.freeze([...parts]), preview, partDetails });
-}
-
-function collectPreviewParts(node: AnatomyPreviewNode, parts = new Set<string>()): Set<string> {
-  if (node.part) parts.add(node.part);
-  for (const child of node.children ?? []) collectPreviewParts(child, parts);
-  return parts;
+  return Object.freeze({
+    scope,
+    parts: Object.freeze([...parts]),
+    partDetails,
+  });
 }

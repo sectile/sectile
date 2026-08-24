@@ -82,7 +82,6 @@
   padding-top: 30px;
 }
 
-.component-parts,
 .component-api-list {
   display: flex;
   flex-wrap: wrap;
@@ -92,12 +91,10 @@
   list-style: none !important;
 }
 
-.component-parts li,
 .component-api-list li {
   margin: 0 !important;
 }
 
-.component-part-token,
 .component-api-token {
   display: inline-flex;
   min-height: 30px;
@@ -130,6 +127,77 @@
 
 .component-api-group .component-api-list {
   margin-top: 10px !important;
+}
+
+.component-scope-token {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.component-parts-table {
+  margin: 16px 0 24px;
+  overflow-x: auto;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+}
+
+.component-parts-table table {
+  display: table;
+  width: 100%;
+  min-width: 720px;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+}
+
+.component-parts-table th,
+.component-parts-table td {
+  padding: 12px 14px;
+  border: 0;
+  border-right: 1px solid var(--vp-c-divider);
+  border-bottom: 1px solid var(--vp-c-divider);
+  vertical-align: top;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.component-parts-table th:last-child,
+.component-parts-table td:last-child {
+  border-right: 0;
+}
+
+.component-parts-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.component-parts-table th {
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.component-parts-table td {
+  color: var(--vp-c-text-2);
+  font-size: 0.875rem;
+}
+
+.component-parts-table td:first-child {
+  width: 18%;
+}
+
+.component-parts-table td:nth-child(2) {
+  width: 25%;
+  white-space: nowrap;
+}
+
+.component-parts-table td:nth-child(3) {
+  width: 37%;
+  color: var(--vp-c-text-1);
+}
+
+.component-parts-table code {
+  overflow-wrap: anywhere;
 }
 
 .sectile-example {

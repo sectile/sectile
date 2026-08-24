@@ -23,12 +23,6 @@ Enforce the configured item or visible-notification limit without losing existin
 
 <ComponentExample component="toast" scenario="limited" title="Limited" description="Enforce the configured item or visible-notification limit without losing existing values." :index="2" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="toast" />
-
 ## API reference
 
 Vue package: `@sectile/vue/toast`
@@ -58,15 +52,47 @@ Vue package: `@sectile/vue/toast`
 
 ## Parts
 
-Rendered parts use `data-scope="toast"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="toast"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">viewport</code></li>
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">title</code></li>
-  <li><code class="component-part-token">description</code></li>
-  <li><code class="component-part-token">close</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">viewport</code></td>
+  <td><code>[data-part="viewport"]</code></td>
+  <td>Clips and positions the currently visible content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">title</code></td>
+  <td><code>[data-part="title"]</code></td>
+  <td>Labels the associated content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">description</code></td>
+  <td><code>[data-part="description"]</code></td>
+  <td>Describes the associated content or decision.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">close</code></td>
+  <td><code>[data-part="close"]</code></td>
+  <td>Closes or dismisses the current surface.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 

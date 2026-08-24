@@ -32,12 +32,6 @@ ${description(component)}
 
 ${scenarios}
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="${component.id}" />
-
 ${apiSection(component)}
 
 ${partsSection(component)}
@@ -63,12 +57,6 @@ ${koDescription(component)}
 ## 예시
 
 ${scenarios}
-
-## 구성
-
-각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.
-
-<ComponentAnatomy component="${component.id}" />
 
 ${apiSection(component, true)}
 
@@ -106,36 +94,41 @@ function partsSection(component, korean = false) {
   const definition = componentAnatomy[component.id];
   assert.ok(definition, `Missing anatomy definition: ${component.id}`);
   const renderedParts = definition.parts.filter((part) => part !== 'provider');
-  const tokens = renderedParts
-    .map((part) => `  <li><code class="component-part-token">${part}</code></li>`)
-    .join('\n');
-  const notes = renderedParts.flatMap((part) => {
+  const rows = renderedParts.map((part) => {
     const contract = anatomyPartContract(definition, part);
     const scope = contract.attributes.find(([name]) => name === 'data-scope')?.[1] ?? definition.scope;
     const additionalAttributes = contract.attributes.filter(([name]) => !['data-scope', 'data-part'].includes(name));
-    const details = [
-      contract.purpose?.[korean ? 'ko' : 'en'],
-      scope === definition.scope
-        ? undefined
-        : korean
-          ? `\`data-scope="${scope}"\` 사용`
-          : `uses \`data-scope="${scope}"\``,
-      additionalAttributes.length === 0
-        ? undefined
-        : korean
-          ? `${additionalAttributes.map(([name, value]) => `\`${name}="${value}"\``).join(', ')} 추가`
-          : `adds ${additionalAttributes.map(([name, value]) => `\`${name}="${value}"\``).join(', ')}`,
-    ].filter(Boolean);
-    return details.length === 0 ? [] : [`- \`${part}\`: ${details.join(korean ? ' · ' : '; ')}`];
-  });
+    const exceptionalScope = scope === definition.scope
+      ? []
+      : [['data-scope', scope]];
+    const extras = [...exceptionalScope, ...additionalAttributes];
+    const extraCell = extras.length === 0
+      ? '<span aria-label="None">—</span>'
+      : extras.map(([name, value]) => `<code>${escapeHtml(name)}="${escapeHtml(value)}"</code>`).join('<br>');
+
+    return `<tr>
+  <td><code class="component-part-token">${escapeHtml(part)}</code></td>
+  <td><code>[data-part="${escapeHtml(part)}"]</code></td>
+  <td>${escapeHtml(contract.purpose[korean ? 'ko' : 'en'])}</td>
+  <td>${extraCell}</td>
+</tr>`;
+  }).join('\n');
   const heading = korean ? '## 파트' : '## Parts';
   const introduction = korean
-    ? `렌더링되는 파트는 기본적으로 \`data-scope="${definition.scope}"\`를 사용합니다. 아래 이름이 각 파트의 \`data-part\` 값입니다.`
-    : `Rendered parts use \`data-scope="${definition.scope}"\` by default. Each name below is the part's \`data-part\` value.`;
-  const exceptionNotes = notes.length === 0
-    ? ''
-    : `\n\n${korean ? '**예외와 추가 속성**' : '**Exceptions and additional attributes**'}\n\n${notes.join('\n')}`;
-  return `${heading}\n\n${introduction}\n\n<ul class="component-parts">\n${tokens}\n</ul>${exceptionNotes}`;
+    ? `공통 범위: <code class="component-scope-token">[data-scope="${escapeHtml(definition.scope)}"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.`
+    : `Shared scope: <code class="component-scope-token">[data-scope="${escapeHtml(definition.scope)}"]</code>. Combine it with a part selector to keep styles local to this component.`;
+  const headings = korean
+    ? ['파트', '선택자', '역할', '추가 속성']
+    : ['Part', 'Selector', 'Role', 'Extra attributes'];
+  return `${heading}\n\n${introduction}\n\n<div class="component-parts-table">\n<table>\n<thead>\n<tr>${headings.map((label) => `<th scope="col">${label}</th>`).join('')}</tr>\n</thead>\n<tbody>\n${rows}\n</tbody>\n</table>\n</div>`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
 function keyboardSection(component, korean = false) {
@@ -276,6 +269,7 @@ function scenarioTitle(component, scenario) {
 }
 
 function koScenarioTitle(component, scenario) {
+  if (component.id === 'calendar' && scenario === 'disabled-weekends') return '주말 선택 제한';
   if (component.id === 'menu' && scenario === 'commands') return '프로젝트 명령';
   if (component.id === 'menu' && scenario === 'nested') return '내보내기 형식';
   if (component.id === 'menu-button' && scenario === 'actions') return '만들기 메뉴';

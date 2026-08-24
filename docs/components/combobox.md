@@ -23,12 +23,6 @@ Keep composition text separate until an IME commit produces the accepted query.
 
 <ComponentExample component="combobox" scenario="ime" title="Ime" description="Keep composition text separate until an IME commit produces the accepted query." :index="2" />
 
-## Anatomy
-
-Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
-
-<ComponentAnatomy component="combobox" />
-
 ## API reference
 
 Vue package: `@sectile/vue/combobox`
@@ -57,15 +51,47 @@ Vue package: `@sectile/vue/combobox`
 
 ## Parts
 
-Rendered parts use `data-scope="combobox"` by default. Each name below is the part's `data-part` value.
+Shared scope: <code class="component-scope-token">[data-scope="combobox"]</code>. Combine it with a part selector to keep styles local to this component.
 
-<ul class="component-parts">
-  <li><code class="component-part-token">root</code></li>
-  <li><code class="component-part-token">input</code></li>
-  <li><code class="component-part-token">content</code></li>
-  <li><code class="component-part-token">item</code></li>
-  <li><code class="component-part-token">empty</code></li>
-</ul>
+<div class="component-parts-table">
+<table>
+<thead>
+<tr><th scope="col">Part</th><th scope="col">Selector</th><th scope="col">Role</th><th scope="col">Extra attributes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><code class="component-part-token">root</code></td>
+  <td><code>[data-part="root"]</code></td>
+  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Accepts the editable value or draft.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item</code></td>
+  <td><code>[data-part="item"]</code></td>
+  <td>Represents one selectable or actionable item.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">empty</code></td>
+  <td><code>[data-part="empty"]</code></td>
+  <td>Shows feedback when no collection item matches.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
 
 ## Keyboard interaction
 
