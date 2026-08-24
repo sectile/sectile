@@ -19,3 +19,9 @@ test('example display tabs support arrow, Home, and End keyboard movement', () =
   assert.match(source, /:tabindex="mode === 'view' \? 0 : -1"/);
   assert.match(source, /:tabindex="mode === 'code' \? 0 : -1"/);
 });
+
+test('missing example source is a development error, never user-facing placeholder content', () => {
+  assert.doesNotMatch(source, /No example is available for this environment yet\./);
+  assert.doesNotMatch(source, /이 환경에서 사용할 수 있는 예시가 아직 없습니다\./);
+  assert.match(source, /throw new Error\(`Missing \$\{host\.value\} example source`\)/);
+});

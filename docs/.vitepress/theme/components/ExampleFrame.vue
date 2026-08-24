@@ -20,9 +20,13 @@ const highlighted = ref('');
 const { host } = useHostPreference();
 const { isKorean } = useDocsLocale();
 const { isDark } = useData();
-const source = computed(() => (isKorean.value ? props.koSources?.[host.value] : undefined)
-  ?? props.sources[host.value]
-  ?? (isKorean.value ? '이 환경에서 사용할 수 있는 예시가 아직 없습니다.' : 'No example is available for this environment yet.'));
+const source = computed(() => {
+  const value = (isKorean.value ? props.koSources?.[host.value] : undefined) ?? props.sources[host.value];
+  if (value === undefined || value.trim() === '') {
+    throw new Error(`Missing ${host.value} example source`);
+  }
+  return value;
+});
 const language = computed(() => props.languages?.[host.value] ?? (host.value === 'vue' ? 'vue' : 'ts'));
 let request = 0;
 
