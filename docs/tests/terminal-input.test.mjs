@@ -260,8 +260,8 @@ test('terminal temporal range fields use the same segment editing boundaries', (
     },
     {
       id: 'time-range-field',
-      cleared: /Start.*··.*30.*End.*17:30/su,
-      restored: /Start.*11.*30.*End.*17:30/su,
+      cleared: /Start.*··.*30.*End.*17:45/su,
+      restored: /Start.*11.*30.*End.*17:45/su,
       segment: /active=start\s+segment=hour/u,
       replacement: '11',
     },
@@ -298,6 +298,21 @@ test('terminal temporal range fields keep identical active and inactive text geo
   assert.match(endActive, /Start\s+2026-08-22/u);
   assert.match(endActive, /End\s+2026-08-25/u);
   assert.doesNotMatch(endActive, /2026\s+-\s+08\s+-\s+25/u);
+});
+
+test('terminal temporal range scenarios match the documented examples', () => {
+  const stripTerminalStyles = (value) => value.replaceAll(/\u001b\[[0-?]*[ -/]*[@-~]/gu, '');
+  const boundedDates = stripTerminalStyles(createDocumentationSession('date-range-field', 1).lines(120).join('\n'));
+  assert.match(boundedDates, /Bounded booking dates/u);
+  assert.match(boundedDates, /Start\s+2026-09-08/u);
+  assert.match(boundedDates, /End\s+2026-09-18/u);
+  assert.match(boundedDates, /committed=yes/u);
+
+  const steppedTimes = stripTerminalStyles(createDocumentationSession('time-range-field', 1).lines(120).join('\n'));
+  assert.match(steppedTimes, /Quarter-hour schedule/u);
+  assert.match(steppedTimes, /Start\s+09:30/u);
+  assert.match(steppedTimes, /End\s+17:45/u);
+  assert.match(steppedTimes, /committed=yes/u);
 });
 
 test('tags input embeds the terminal caret at the draft insertion point for IME composition', () => {

@@ -598,25 +598,42 @@ function createRangeFieldDemo(host, kind) {
   const rangeScenarios = kind === 'date'
     ? [
       { title: 'Deployment dates', start: '2026-08-22', end: '2026-08-25' },
-      { title: 'Open date range', start: '', end: '' },
-      { title: 'Required dates', start: '2026-09-01', end: '2026-09-05', required: true },
+      {
+        title: 'Bounded booking dates',
+        start: '2026-09-08',
+        end: '2026-09-18',
+        policies: {
+          min: unwrap(createDateValue(2026, 9, 1)),
+          max: unwrap(createDateValue(2026, 9, 30)),
+        },
+      },
     ]
     : [
-      { title: 'Office hours', start: '09:30', end: '17:30' },
-      { title: 'Open time range', start: '', end: '' },
-      { title: 'Required times', start: '10:00', end: '12:00', required: true },
+      { title: 'Office hours', start: '09:30', end: '17:45' },
+      {
+        title: 'Quarter-hour schedule',
+        start: '09:30',
+        end: '17:45',
+        policies: { step: { minute: 15 } },
+      },
     ];
   return scenarioDemo(host, rangeScenarios, (scenario) => {
-    const draftTemplate = kind === 'date' ? '    -  -  ' : '  :  ';
     const makeEditing = (text) => unwrap(createTextEditingState(text, {
       anchorCodeUnitOffset: text.length,
       focusCodeUnitOffset: text.length,
     }));
+    const startValue = unwrap(kind === 'date' ? parseDateValue(scenario.start) : parseTimeValue(scenario.start));
+    const endValue = unwrap(kind === 'date' ? parseDateValue(scenario.end) : parseTimeValue(scenario.end));
+    const defaultValue = kind === 'date'
+      ? unwrap(createDateRange(startValue, endValue))
+      : Object.freeze({ start: startValue, end: endValue });
     const create = kind === 'date' ? createDateRangeField : createTimeRangeField;
     const connection = create({
       ...scenario.interaction,
-      defaultStartInputState: makeEditing(scenario.start || draftTemplate),
-      defaultEndInputState: makeEditing(scenario.end || draftTemplate),
+      defaultValue,
+      defaultStartInputState: makeEditing(scenario.start),
+      defaultEndInputState: makeEditing(scenario.end),
+      policies: scenario.policies,
       required: scenario.required,
       onUpdate: host.render,
     });
