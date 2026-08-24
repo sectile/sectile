@@ -5,23 +5,17 @@ Browse an expandable hierarchy while keeping focus and selection distinct.
 
 ## Examples
 
-### Expanded
+### Project explorer
 
-Start with descendants visible and keep expansion independent from selection.
+Browse a realistic project hierarchy while each folder keeps its own independent expansion state.
 
-<ComponentExample component="tree-view" scenario="expanded" title="Expanded" description="Start with descendants visible and keep expansion independent from selection." :index="0" />
+<ComponentExample component="tree-view" scenario="expanded" title="Project explorer" description="Browse a realistic project hierarchy while each folder keeps its own independent expansion state." :index="0" />
 
-### Multiple
+### Review selection
 
-Select several values independently without collapsing the existing selection.
+Choose several files for review without confusing selection with folder expansion.
 
-<ComponentExample component="tree-view" scenario="multiple" title="Multiple" description="Select several values independently without collapsing the existing selection." :index="1" />
-
-### Unavailable
-
-Keep an unavailable tree item visible while excluding it from activation.
-
-<ComponentExample component="tree-view" scenario="unavailable" title="Unavailable" description="Keep an unavailable tree item visible while excluding it from activation." :index="2" />
+<ComponentExample component="tree-view" scenario="multiple" title="Review selection" description="Choose several files for review without confusing selection with folder expansion." :index="1" />
 
 ## Anatomy
 

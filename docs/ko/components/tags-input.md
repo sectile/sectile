@@ -11,12 +11,6 @@
 
 <ComponentExample component="tags-input" scenario="skills" title="기술 태그" description="입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다." :index="0" />
 
-### 개수 제한
-
-기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
-
-<ComponentExample component="tags-input" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="1" />
-
 ## 구성
 
 각 영역은 스타일을 적용할 수 있는 공개 경계입니다. 영역을 선택하면 실제 화면에서 차지하는 범위와 상태 속성을 확인할 수 있습니다.

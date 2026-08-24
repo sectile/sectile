@@ -11,11 +11,11 @@
 
 <ComponentExample component="spin-button" scenario="integer" title="정수" description="정수 입력을 받고 증가·감소 제어 기능을 제공합니다." :index="0" />
 
-### 잘못된 입력 중인 값
+### 입력 복구
 
-잘못 입력한 문자열은 그대로 보여 주되 마지막으로 확정된 숫자는 바꾸지 않습니다.
+수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다.
 
-<ComponentExample component="spin-button" scenario="invalid-draft" title="잘못된 입력 중인 값" description="잘못 입력한 문자열은 그대로 보여 주되 마지막으로 확정된 숫자는 바꾸지 않습니다." :index="1" />
+<ComponentExample component="spin-button" scenario="invalid-draft" title="입력 복구" description="수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다." :index="1" />
 
 ## 구성
 

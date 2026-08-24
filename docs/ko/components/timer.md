@@ -7,21 +7,21 @@
 
 ### 스톱워치
 
-시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다.
+현재 상태에 맞는 시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다.
 
-<ComponentExample component="timer" scenario="stopwatch" title="스톱워치" description="시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다." :index="0" />
+<ComponentExample component="timer" scenario="stopwatch" title="스톱워치" description="현재 상태에 맞는 시작, 일시 정지, 계속, 초기화 동작으로 경과 시간을 잽니다." :index="0" />
 
 ### 남은 시간
 
-정해진 시간부터 거꾸로 세고 완료 시점을 한 번 알립니다.
+시간을 설정하고 남은 시간과 완료 피드백을 확인합니다.
 
-<ComponentExample component="timer" scenario="countdown" title="남은 시간" description="정해진 시간부터 거꾸로 세고 완료 시점을 한 번 알립니다." :index="1" />
+<ComponentExample component="timer" scenario="countdown" title="남은 시간" description="시간을 설정하고 남은 시간과 완료 피드백을 확인합니다." :index="1" />
 
 ### 목표 시간
 
-정해진 목표 시각까지의 진행 상태를 표시합니다.
+경과 시간 목표를 설정하고 완료될 때까지 진행 상태를 확인합니다.
 
-<ComponentExample component="timer" scenario="target" title="목표 시간" description="정해진 목표 시각까지의 진행 상태를 표시합니다." :index="2" />
+<ComponentExample component="timer" scenario="target" title="목표 시간" description="경과 시간 목표를 설정하고 완료될 때까지 진행 상태를 확인합니다." :index="2" />
 
 ## 구성
 

@@ -5,17 +5,17 @@
 
 ## 예시
 
-### 되돌릴 수 없는 작업 확인
+### 프로젝트 삭제
 
 되돌릴 수 없는 작업은 실행 전에 명시적으로 확인합니다.
 
-<ComponentExample component="alert-dialog" scenario="destructive" title="되돌릴 수 없는 작업 확인" description="되돌릴 수 없는 작업은 실행 전에 명시적으로 확인합니다." :index="0" />
+<ComponentExample component="alert-dialog" scenario="destructive" title="프로젝트 삭제" description="되돌릴 수 없는 작업은 실행 전에 명시적으로 확인합니다." :index="0" />
 
-### 저장하지 않은 변경 확인
+### 저장하지 않은 변경
 
 저장하지 않은 변경을 버리기 전에 확인합니다.
 
-<ComponentExample component="alert-dialog" scenario="unsaved" title="저장하지 않은 변경 확인" description="저장하지 않은 변경을 버리기 전에 확인합니다." :index="1" />
+<ComponentExample component="alert-dialog" scenario="unsaved" title="저장하지 않은 변경" description="저장하지 않은 변경을 버리기 전에 확인합니다." :index="1" />
 
 ## 구성
 
@@ -63,8 +63,6 @@ Vue 패키지: `@sectile/vue/alert-dialog`
   <li><code class="component-part-token">description</code></li>
   <li><code class="component-part-token">close</code></li>
 </ul>
-
-`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
 
 ## 키보드 동작
 

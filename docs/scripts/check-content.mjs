@@ -115,18 +115,15 @@ for (const localeRoot of ['', 'ko']) {
     );
     const anatomy = componentAnatomy[componentId];
     assert.ok(anatomy, `anatomy definition required for ${componentId}`);
-    for (const part of anatomy.parts) {
-      const marker = part === 'provider'
-        ? localeRoot === 'ko'
-          ? '`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.'
-          : '`provider` is a state provider that does not render a DOM element.'
-        : `<code class="component-part-token">${part}</code>`;
+    for (const part of anatomy.parts.filter((part) => part !== 'provider')) {
+      const marker = `<code class="component-part-token">${part}</code>`;
       assert.equal(
         component.split(marker).length - 1,
         1,
         `${localeRoot || 'English'} ${componentId} must document public part ${part} exactly once`,
       );
     }
+    assert.equal(component.includes('Non-visual state owner'), false, `${localeRoot || 'English'} ${componentId} must not expose implementation-only providers in visual anatomy`);
     assert.equal(component.includes('Stable attributes'), false, `${localeRoot || 'English'} ${componentId} must not repeat stable attributes per part`);
     assert.equal(component.includes('안정 속성'), false, `${localeRoot || 'English'} ${componentId} must not repeat stable attributes per part`);
     const repeatedHeadings = localeRoot === 'ko'

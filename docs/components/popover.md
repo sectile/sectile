@@ -66,8 +66,6 @@ Rendered parts use `data-scope="popover"` by default. Each name below is the par
   <li><code class="component-part-token">arrow</code></li>
 </ul>
 
-`provider` is a state provider that does not render a DOM element.
-
 ## Keyboard interaction
 
 | Key | Behavior |

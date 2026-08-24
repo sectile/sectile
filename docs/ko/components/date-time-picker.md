@@ -88,8 +88,6 @@ Vue 패키지: `@sectile/vue/date-time-picker`
   <li><code class="component-part-token">month-cell</code></li>
 </ul>
 
-`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
-
 ## 키보드 동작
 
 | 키 | 동작 |

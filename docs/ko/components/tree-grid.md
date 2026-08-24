@@ -1,21 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 계층 격자
 
-계층형 행과 편집 가능한 열을 하나의 구조화된 격자로 탐색합니다.
+계층형 리소스를 정리하고 편집하면서 2차원 격자 이동을 유지합니다.
 
 ## 예시
 
-### 펼친 상태
+### 프로젝트 구조
 
-하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다.
+하위 응용 프로그램과 기능이 부모 리소스에 어떻게 연결되는지 프로젝트 목록에서 확인합니다.
 
-<ComponentExample component="tree-grid" scenario="expanded" title="펼친 상태" description="하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다." :index="0" />
+<ComponentExample component="tree-grid" scenario="expanded" title="프로젝트 구조" description="하위 응용 프로그램과 기능이 부모 리소스에 어떻게 연결되는지 프로젝트 목록에서 확인합니다." :index="0" />
 
-### 선택할 수 없는 칸
+### 담당자 편집
 
-행 구조를 유지하면서 포커스하거나 편집할 수 없는 칸을 건너뜁니다.
+행과 열의 키보드 이동을 유지하면서 하위 리소스 담당자를 편집합니다.
 
-<ComponentExample component="tree-grid" scenario="unavailable-cells" title="선택할 수 없는 칸" description="행 구조를 유지하면서 포커스하거나 편집할 수 없는 칸을 건너뜁니다." :index="1" />
+<ComponentExample component="tree-grid" scenario="editable" title="담당자 편집" description="행과 열의 키보드 이동을 유지하면서 하위 리소스 담당자를 편집합니다." :index="1" />
 
 ## 구성
 

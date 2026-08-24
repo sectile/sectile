@@ -1,5 +1,6 @@
 const specializedComponents = new Set([
   'accordion',
+  'calendar',
   'cascade-select',
   'checkbox',
   'color-picker',
@@ -8,7 +9,9 @@ const specializedComponents = new Set([
   'date-time-field',
   'disclosure',
   'editable',
+  'feed',
   'listbox',
+  'multi-thumb-slider',
   'radio-group',
   'slider',
   'spin-button',
@@ -21,7 +24,377 @@ const specializedComponents = new Set([
   'toast',
   'toggle-button',
   'toggle-group',
+  'tree-grid',
+  'tree-view',
+  'window-splitter',
 ]);
+
+function treeViewSource(scenario: string): string {
+  const multiple = scenario === 'multiple';
+  return `<script setup lang="ts">
+import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '@sectile/vue/tree-view'
+
+const nodes = [
+  { id: 'atlas', parentID: null },
+  { id: 'apps', parentID: 'atlas' },
+  { id: 'dashboard', parentID: 'apps' },
+  { id: 'overview', parentID: 'dashboard' },
+  { id: 'settings', parentID: 'dashboard' },
+  { id: 'packages', parentID: 'atlas' },
+  { id: 'tokens', parentID: 'packages' },
+]
+<\/script>
+
+<template>
+  <TreeViewRoot
+    :nodes="nodes"
+    :default-expanded-value="['atlas', 'apps', 'dashboard', 'packages']"
+    :default-value="${multiple ? "['overview', 'settings', 'tokens']" : "['settings']"}"
+    label="${multiple ? 'Files selected for review' : 'Atlas project files'}"
+    v-slot="{ expandedValue${multiple ? ', value' : ''} }"
+  >
+${multiple ? `    <output>{{ value.length }} files selected</output>
+` : ''}    <TreeViewItem value="atlas" :level="1"><TreeViewDisclosure for="atlas" as="button">Toggle</TreeViewDisclosure>Atlas workspace</TreeViewItem>
+    <TreeViewGroup v-if="expandedValue.includes('atlas')">
+      <TreeViewItem value="apps" :level="2"><TreeViewDisclosure for="apps" as="button">Toggle</TreeViewDisclosure>Applications</TreeViewItem>
+      <TreeViewGroup v-if="expandedValue.includes('apps')">
+        <TreeViewItem value="dashboard" :level="3"><TreeViewDisclosure for="dashboard" as="button">Toggle</TreeViewDisclosure>Dashboard</TreeViewItem>
+        <TreeViewGroup v-if="expandedValue.includes('dashboard')">
+          <TreeViewItem value="overview" :level="4">Overview.vue</TreeViewItem>
+          <TreeViewItem value="settings" :level="4">Settings.vue</TreeViewItem>
+        </TreeViewGroup>
+      </TreeViewGroup>
+      <TreeViewItem value="packages" :level="2"><TreeViewDisclosure for="packages" as="button">Toggle</TreeViewDisclosure>Packages</TreeViewItem>
+      <TreeViewGroup v-if="expandedValue.includes('packages')"><TreeViewItem value="tokens" :level="3">tokens.ts</TreeViewItem></TreeViewGroup>
+    </TreeViewGroup>
+  </TreeViewRoot>
+</template>`;
+}
+
+function treeGridSource(scenario: string): string {
+  const editable = scenario === 'editable';
+  return `<script setup lang="ts">
+import { reactive } from 'vue'
+import { TreeGridCell, TreeGridDisclosure, TreeGridEditor, TreeGridRoot, TreeGridRow } from '@sectile/vue/tree-grid'
+
+const rows = [
+  { id: 'platform', parentID: null, cells: ['platform-name', 'platform-owner', 'platform-status'] },
+  { id: 'storefront', parentID: 'platform', cells: ['storefront-name', 'storefront-owner', 'storefront-status'] },
+  { id: 'checkout', parentID: 'storefront', cells: ['checkout-name', 'checkout-owner', 'checkout-status'] },
+]
+const values = reactive(new Map([
+  ['platform-name', 'Commerce platform'], ['platform-owner', 'Platform team'], ['platform-status', 'Healthy'],
+  ['storefront-name', 'Storefront'], ['storefront-owner', 'Mina Kim'], ['storefront-status', 'Modified'],
+  ['checkout-name', 'Checkout flow'], ['checkout-owner', 'Alex Chen'], ['checkout-status', 'In review'],
+]))
+const valueFor = (id: string) => values.get(id) ?? ''
+const updateValue = (id: string, value: string) => values.set(id, value)
+</script>
+
+<template>
+  <TreeGridRoot
+    :rows="rows"
+    :get-cell-value="valueFor"
+    :set-cell-value="updateValue"
+    :default-expanded-value="['platform', 'storefront']"
+${editable ? `    default-highlighted-value="storefront-owner"
+    default-edit-mode="editing"
+` : ''}    aria-label="Project inventory"
+    v-slot="{ expandedValue }"
+  >
+    <div role="row"><span role="columnheader">Resource</span><span role="columnheader">Owner</span><span role="columnheader">Status</span></div>
+    <TreeGridRow value="platform" :row-index="1" :expandable="true">
+      <TreeGridCell value="platform-name" :column-index="1">
+        <TreeGridDisclosure for="platform">Toggle</TreeGridDisclosure>
+        {{ valueFor('platform-name') }}
+      </TreeGridCell>
+      <TreeGridCell value="platform-owner" :column-index="2" v-slot="{ editing }">
+        <span v-if="!editing">{{ valueFor('platform-owner') }}</span>
+        <TreeGridEditor for="platform-owner" label="Commerce platform owner" />
+      </TreeGridCell>
+      <TreeGridCell value="platform-status" :column-index="3">{{ valueFor('platform-status') }}</TreeGridCell>
+    </TreeGridRow>
+    <TreeGridRow v-if="expandedValue.includes('platform')" value="storefront" :row-index="2" :level="2" :expandable="true">
+      <TreeGridCell value="storefront-name" :column-index="1">
+        <TreeGridDisclosure for="storefront">Toggle</TreeGridDisclosure>
+        {{ valueFor('storefront-name') }}
+      </TreeGridCell>
+      <TreeGridCell value="storefront-owner" :column-index="2" v-slot="{ editing }">
+        <span v-if="!editing">{{ valueFor('storefront-owner') }}</span>
+        <TreeGridEditor for="storefront-owner" label="Storefront owner" />
+      </TreeGridCell>
+      <TreeGridCell value="storefront-status" :column-index="3">{{ valueFor('storefront-status') }}</TreeGridCell>
+    </TreeGridRow>
+    <TreeGridRow v-if="expandedValue.includes('storefront')" value="checkout" :row-index="3" :level="3">
+      <TreeGridCell value="checkout-name" :column-index="1">{{ valueFor('checkout-name') }}</TreeGridCell>
+      <TreeGridCell value="checkout-owner" :column-index="2" v-slot="{ editing }">
+        <span v-if="!editing">{{ valueFor('checkout-owner') }}</span>
+        <TreeGridEditor for="checkout-owner" label="Checkout owner" />
+      </TreeGridCell>
+      <TreeGridCell value="checkout-status" :column-index="3">{{ valueFor('checkout-status') }}</TreeGridCell>
+    </TreeGridRow>
+  </TreeGridRoot>
+</template>`;
+}
+
+function feedSource(scenario: string): string {
+  if (scenario === 'load-before') {
+    return `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { FeedItem, FeedLoadEarlier, FeedRoot } from '@sectile/vue/feed'
+
+interface Activity { id: string; title: string; summary: string; actor: string; occurredAt: string }
+interface ActivityWindow { items: Activity[]; revision: number; hasEarlier: boolean; total: number }
+
+const initialActivity: Activity[] = [
+  { id: 'deployed', title: 'Production deployment completed', summary: 'Release 2026.08 is healthy in all regions.', actor: 'Deploy bot', occurredAt: 'Just now' },
+  { id: 'approved', title: 'Release approved', summary: 'Mina approved the production promotion.', actor: 'Mina Kim', occurredAt: '18 min ago' },
+]
+const activities = ref<Activity[]>(initialActivity)
+const revision = ref(12)
+const hasEarlier = ref(true)
+const total = ref(48)
+const itemIDs = computed(() => activities.value.map(({ id }) => id))
+
+async function loadEarlier(direction: 'before' | 'after', anchor: string | null, currentRevision: number) {
+  if (direction !== 'before' || !hasEarlier.value) return
+  const query = new URLSearchParams({ before: anchor ?? '', revision: String(currentRevision) })
+  const response = await fetch(\`/api/releases/2026.08/activity?\${query}\`)
+  if (!response.ok) throw new Error('Could not load release history')
+  const window = await response.json() as ActivityWindow
+  activities.value = [...activities.value, ...window.items]
+  revision.value = window.revision
+  hasEarlier.value = window.hasEarlier
+  total.value = window.total
+}
+<\/script>
+
+<template>
+  <FeedRoot :items="itemIDs" :revision="revision" :set-size="total" label="Release activity" @request-window="loadEarlier">
+    <FeedItem v-for="event in activities" :key="event.id" :value="event.id" as="article">
+      <strong>{{ event.title }}</strong><p>{{ event.summary }}</p>
+      <small>{{ event.actor }} · {{ event.occurredAt }}</small>
+    </FeedItem>
+    <FeedLoadEarlier v-if="hasEarlier" v-slot="{ pending }">
+      {{ pending === 'before' ? 'Loading history…' : 'Load earlier events' }}
+    </FeedLoadEarlier>
+  </FeedRoot>
+</template>`;
+  }
+
+  if (scenario === 'load-after') {
+    return `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { FeedItem, FeedLoadNewer, FeedRoot } from '@sectile/vue/feed'
+
+interface Activity { id: string; title: string; summary: string; actor: string; occurredAt: string }
+interface ActivityWindow { items: Activity[]; revision: number }
+
+const initialActivity: Activity[] = [
+  { id: 'approved', title: 'Release approved', summary: 'Mina approved the production promotion.', actor: 'Mina Kim', occurredAt: '18 min ago' },
+  { id: 'checks', title: 'Required checks passed', summary: 'All 12 release checks completed.', actor: 'CI', occurredAt: '24 min ago' },
+]
+const activities = ref<Activity[]>(initialActivity)
+const revision = ref(20)
+const availableUpdates = ref(2)
+const itemIDs = computed(() => activities.value.map(({ id }) => id))
+
+async function loadNewer(direction: 'before' | 'after', anchor: string | null, currentRevision: number) {
+  if (direction !== 'after') return
+  const query = new URLSearchParams({ after: anchor ?? '', revision: String(currentRevision) })
+  const response = await fetch(\`/api/releases/2026.08/activity?\${query}\`)
+  if (!response.ok) throw new Error('Could not load recent activity')
+  const window = await response.json() as ActivityWindow
+  activities.value = [...window.items, ...activities.value]
+  revision.value = window.revision
+  availableUpdates.value = 0
+}
+<\/script>
+
+<template>
+  <FeedRoot :items="itemIDs" :revision="revision" label="Live release activity" @request-window="loadNewer">
+    <FeedLoadNewer v-if="availableUpdates > 0" v-slot="{ pending }">
+      {{ pending === 'after' ? 'Checking for updates…' : \`${'${availableUpdates}'} new updates\` }}
+    </FeedLoadNewer>
+    <FeedItem v-for="event in activities" :key="event.id" :value="event.id" as="article">
+      <strong>{{ event.title }}</strong><p>{{ event.summary }}</p>
+      <small>{{ event.actor }} · {{ event.occurredAt }}</small>
+    </FeedItem>
+  </FeedRoot>
+</template>`;
+  }
+
+  return `<script setup lang="ts">
+import { FeedItem, FeedRoot } from '@sectile/vue/feed'
+
+const activities = [
+  { id: 'deployed', title: 'Production deployment completed', summary: 'Release 2026.08 is healthy in all regions.', actor: 'Deploy bot', occurredAt: 'Just now' },
+  { id: 'approved', title: 'Release approved', summary: 'Mina approved the production promotion.', actor: 'Mina Kim', occurredAt: '18 min ago' },
+  { id: 'checks', title: 'Required checks passed', summary: 'All 12 release checks completed.', actor: 'CI', occurredAt: '24 min ago' },
+] as const
+const itemIDs = activities.map(({ id }) => id)
+const getPosition = (id: string) => itemIDs.indexOf(id) + 1
+<\/script>
+
+<template>
+  <FeedRoot :items="itemIDs" :set-size="activities.length" :get-position="getPosition" label="Release activity">
+    <FeedItem v-for="event in activities" :key="event.id" :value="event.id" as="article">
+      <strong>{{ event.title }}</strong><p>{{ event.summary }}</p>
+      <small>{{ event.actor }} · {{ event.occurredAt }}</small>
+    </FeedItem>
+  </FeedRoot>
+</template>`;
+}
+
+function windowSplitterSource(scenario: string): string {
+  const styles = `<style scoped>
+.split { display: grid; min-width: 0; min-height: 18rem; overflow: hidden; border: 1px solid #d9dbe4; border-radius: 0.75rem; }
+.horizontal { grid-template-columns: minmax(0, var(--sectile-slider-percentage)) 1px minmax(0, 1fr); }
+.vertical { grid-template-rows: minmax(0, var(--sectile-slider-percentage)) 1px minmax(0, 1fr); }
+[data-part="pane"] { min-width: 0; min-height: 0; overflow: auto; padding: 1rem; }
+[data-part="handle"] { position: relative; z-index: 1; border: 0; padding: 0; background: #d9dbe4; touch-action: none; }
+.horizontal > [data-part="handle"] { width: 1px; cursor: col-resize; }
+.vertical > [data-part="handle"] { width: 100%; height: 1px; cursor: row-resize; }
+</style>`;
+  if (scenario === 'nested-layout') {
+    return `<script setup lang="ts">
+import { ref } from 'vue'
+import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter'
+
+const sidebarSize = ref('28')
+const editorSize = ref('68')
+<\/script>
+
+<template>
+  <WindowSplitterRoot v-model="sidebarSize" orientation="horizontal" min="20" max="45" class="split horizontal">
+    <WindowSplitterPane side="before">Project files</WindowSplitterPane>
+    <WindowSplitterHandle aria-label="Resize project files" />
+    <WindowSplitterPane side="after">
+      <WindowSplitterRoot v-model="editorSize" orientation="vertical" min="40" max="80" class="split vertical">
+        <WindowSplitterPane side="before">Editor</WindowSplitterPane>
+        <WindowSplitterHandle aria-label="Resize editor and preview" />
+        <WindowSplitterPane side="after">Preview</WindowSplitterPane>
+      </WindowSplitterRoot>
+    </WindowSplitterPane>
+  </WindowSplitterRoot>
+</template>
+
+${styles}`;
+  }
+
+  const vertical = scenario === 'vertical';
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter'
+
+const size = ref('${vertical ? '56' : '34'}')
+<\/script>
+
+<template>
+  <WindowSplitterRoot v-model="size" orientation="${vertical ? 'vertical' : 'horizontal'}" min="20" max="80" class="split ${vertical ? 'vertical' : 'horizontal'}">
+    <WindowSplitterPane side="before">${vertical ? 'Editor' : 'Project files'}</WindowSplitterPane>
+    <WindowSplitterHandle aria-label="Resize panes" />
+    <WindowSplitterPane side="after">${vertical ? 'Terminal' : 'Editor'}</WindowSplitterPane>
+  </WindowSplitterRoot>
+</template>
+
+${styles}`;
+}
+
+function calendarSource(scenario: string): string {
+  const week = scenario === 'week';
+  const disabled = scenario === 'disabled-weekends';
+  const unit = week ? 'week' : 'month';
+  const rowsExpression = week ? '[weekDates(anchor.value)]' : 'monthRows(anchor.value)';
+  return `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { CalendarCell, CalendarRoot } from '@sectile/vue/calendar'
+import { monthRows, shiftDate, weekDates } from './calendar-model'
+
+const anchor = ref('2026-08-24')
+const selected = ref<string | null>(null)
+const rows = computed(() => ${rowsExpression})${disabled ? `
+const disabledDates = computed(() => rows.value.flat().filter((value) => {
+  const day = new Date(\`${'${value}'}T00:00:00Z\`).getUTCDay()
+  return day === 0 || day === 6
+}))` : ''}
+
+function page(direction: -1 | 1) {
+  anchor.value = shiftDate(anchor.value, '${unit}', direction)
+}
+<\/script>
+
+<template>
+  <section aria-label="Release calendar">
+    <header>
+      <button type="button" @click="page(-1)">Previous ${unit}</button>
+      <strong>{{ anchor }}</strong>
+      <button type="button" @click="page(1)">Next ${unit}</button>
+    </header>
+    <CalendarRoot
+      v-model="selected"
+      :rows="rows"${disabled ? '\n      :disabled-values="disabledDates"' : ''}
+      @page="page($event.direction)"
+    >
+      <CalendarCell v-for="day in rows.flat()" :key="day" :value="day">
+        {{ Number(day.slice(-2)) }}
+      </CalendarCell>
+    </CalendarRoot>
+  </section>
+</template>`;
+}
+
+function multiThumbSliderSource(scenario: string): string {
+  const thresholds = scenario === 'three-thumb-thresholds';
+  const constrained = scenario === 'crossing-thumbs';
+  const thumbs = thresholds ? "['warning', 'review', 'block']" : "['minimum', 'maximum']";
+  const values = thresholds ? "['20', '55', '85']" : constrained ? "['35', '70']" : "['120', '340']";
+  const min = thresholds || constrained ? '0' : '50';
+  const max = thresholds || constrained ? '100' : '500';
+  const step = thresholds || constrained ? '5' : '10';
+  const policies = constrained ? ' :policies="{ minGap: 2 }"' : '';
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '@sectile/vue/multi-thumb-slider'
+
+const thumbs = ${thumbs}
+const values = ref(${values})
+<\/script>
+
+<template>
+  <MultiThumbSliderRoot v-model="values" :thumbs="thumbs" min="${min}" max="${max}" step="${step}"${policies}>
+    <MultiThumbSliderTrack>
+      <MultiThumbSliderRange />
+      <MultiThumbSliderThumb v-for="thumb in thumbs" :key="thumb" :value="thumb" />
+    </MultiThumbSliderTrack>
+    <output>{{ values.join(' – ') }}</output>
+  </MultiThumbSliderRoot>
+</template>`;
+}
+
+function spinButtonSource(scenario: string): string {
+  const invalidRecovery = scenario === 'invalid-draft';
+  const initial = invalidRecovery ? '10' : scenario === 'controlled' ? '1.5' : '4';
+  const min = scenario === 'controlled' ? '-10' : '0';
+  const max = scenario === 'controlled' ? '10' : '20';
+  const step = scenario === 'controlled' ? '0.5' : '1';
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { SpinButtonDecrement, SpinButtonIncrement, SpinButtonInput, SpinButtonRoot } from '@sectile/vue/spin-button'
+
+const value = ref('${initial}')${invalidRecovery ? `
+const draft = ref<string | null>(null)` : ''}
+<\/script>
+
+<template>
+  <SpinButtonRoot v-model="value" min="${min}" max="${max}" step="${step}"${invalidRecovery ? ' @update:draft="draft = $event"' : ''}>
+    <SpinButtonDecrement aria-label="Decrease">−</SpinButtonDecrement>
+    <SpinButtonInput />
+    <SpinButtonIncrement aria-label="Increase">+</SpinButtonIncrement>
+  </SpinButtonRoot>${invalidRecovery ? `
+  <p v-if="draft !== null">Leaving an invalid edit restores {{ value }}.</p>` : ''}
+</template>`;
+}
 
 function checkedControlSource(component: 'checkbox' | 'switch' | 'toggle-button', scenario: string): string {
   if (component === 'switch') {
@@ -73,12 +446,17 @@ function nativeFieldSource(component: 'date-field' | 'time-field' | 'date-time-f
     'time-field': ['TimeField', "{ hour: 9, minute: 30, second: 0, millisecond: 0 }"],
     'date-time-field': ['DateTimeField', "{ date: { year: 2026, month: 8, day: 22 }, time: { hour: 9, minute: 30, second: 0, millisecond: 0 } }"],
   } as const;
-  const [name, initial] = names[component];
+  const [name, fallbackInitial] = names[component];
+  const initial = component === 'date-time-field' && scenario === 'cross-midnight'
+    ? "{ date: { year: 2026, month: 8, day: 22 }, time: { hour: 23, minute: 45, second: 0, millisecond: 0 } }"
+    : fallbackInitial;
   const policies = component === 'date-field' && scenario === 'bounded'
     ? `\nconst policies = {\n  min: { year: 2026, month: 8, day: 1 },\n  max: { year: 2026, month: 8, day: 31 },\n}`
     : component === 'time-field' && scenario === 'stepped'
       ? `\nconst policies = { step: { minute: 15 } }`
-      : '';
+      : component === 'date-time-field' && scenario === 'cross-midnight'
+        ? `\nconst policies = { step: { minute: 15 } }`
+        : '';
   const policyBinding = policies === '' ? '' : ' :policies="policies"';
   return `<script setup lang="ts">
 import { ref } from 'vue'
@@ -88,7 +466,52 @@ const value = ref(${initial})${policies}
 <\/script>
 
 <template>
-  <${name} v-model="value"${policyBinding} />
+  <label>
+    <span>${component === 'date-field' ? 'Release date' : component === 'time-field' ? 'Start time' : 'Starts at'}</span>
+    <${name} v-model="value"${policyBinding} native />
+  </label>
+</template>`;
+}
+
+function dateRangeFieldSource(scenario: string): string {
+  const bounded = scenario === 'bounded';
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/date-range-field'
+
+const range = ref({
+  start: { year: 2026, month: ${bounded ? 9 : 8}, day: ${bounded ? 8 : 22} },
+  end: { year: 2026, month: ${bounded ? 9 : 8}, day: ${bounded ? 18 : 25} },
+})${bounded ? `
+const policies = {
+  min: { year: 2026, month: 9, day: 1 },
+  max: { year: 2026, month: 9, day: 30 },
+}` : ''}
+<\/script>
+
+<template>
+  <DateRangeFieldRoot v-model="range"${bounded ? ' :policies="policies"' : ''}>
+    <label>Start date <DateRangeFieldStartInput name="start" /></label>
+    <label>End date <DateRangeFieldEndInput name="end" /></label>
+  </DateRangeFieldRoot>
+</template>`;
+}
+
+function timeRangeFieldSource(scenario: string): string {
+  const stepped = scenario === 'stepped';
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/time-range-field'
+
+const hours = ref({ start: { hour: 9, minute: 30 }, end: { hour: 17, minute: 45 } })${stepped ? `
+const policies = { step: { minute: 15 } }` : ''}
+<\/script>
+
+<template>
+  <TimeRangeFieldRoot v-model="hours"${stepped ? ' :policies="policies"' : ''}>
+    <label>Opens <TimeRangeFieldStartInput name="opens" /></label>
+    <label>Closes <TimeRangeFieldEndInput name="closes" /></label>
+  </TimeRangeFieldRoot>
 </template>`;
 }
 
@@ -156,20 +579,67 @@ const value = ref('${initial}')
 }
 
 function timerSource(scenario: string): string {
-  const countdown = scenario === 'countdown';
-  const target = scenario === 'target';
+  if (scenario === 'countdown') return `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '@sectile/vue/timer'
+
+const seconds = ref(10)
+const durationMs = computed(() => Math.max(1, seconds.value) * 1_000)
+const timerKey = ref(0)
+const autoStart = ref(false)
+function applyDuration() { autoStart.value = true; timerKey.value += 1 }
+<\/script>
+
+<template>
+  <label>Seconds <input v-model.number="seconds" type="number" min="1" /></label>
+  <button @click="applyDuration">Apply & start</button>
+  <TimerRoot :key="timerKey" countdown :start-ms="durationMs" :auto-start="autoStart"
+    v-slot="{ running, completed, progress, valueMs }">
+    <TimerArea><TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" /></TimerArea>
+    <progress :value="progress ?? 0" max="100" />
+    <p v-if="completed" role="status">Focus session finished.</p>
+    <TimerActionTrigger v-if="running" action="pause">Pause</TimerActionTrigger>
+    <TimerActionTrigger v-else-if="valueMs < durationMs" action="resume">Resume</TimerActionTrigger>
+    <TimerActionTrigger v-else action="start">Start</TimerActionTrigger>
+    <TimerActionTrigger action="reset">Reset</TimerActionTrigger>
+  </TimerRoot>
+</template>`;
+
+  if (scenario === 'target') return `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '@sectile/vue/timer'
+
+const targetSeconds = ref(15)
+const targetMs = computed(() => Math.max(1, targetSeconds.value) * 1_000)
+const timerKey = ref(0)
+function applyTarget() { timerKey.value += 1 }
+<\/script>
+
+<template>
+  <label>Target seconds <input v-model.number="targetSeconds" type="number" min="1" /></label>
+  <button @click="applyTarget">Apply target</button>
+  <TimerRoot :key="timerKey" :target-ms="targetMs" v-slot="{ running, completed, progress, valueMs }">
+    <TimerArea><TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" /></TimerArea>
+    <progress :value="progress ?? 0" max="100" />
+    <p v-if="completed" role="status">Target reached.</p>
+    <TimerActionTrigger v-if="running" action="pause">Pause</TimerActionTrigger>
+    <TimerActionTrigger v-else-if="valueMs > 0" action="resume">Resume</TimerActionTrigger>
+    <TimerActionTrigger v-else action="start">Start</TimerActionTrigger>
+    <TimerActionTrigger action="reset">Reset</TimerActionTrigger>
+  </TimerRoot>
+</template>`;
+
   return `<script setup lang="ts">
 import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '@sectile/vue/timer'
 <\/script>
 
 <template>
-  <TimerRoot${countdown ? ' countdown :start-ms="10_000" auto-start' : ''}${target ? ' :target-ms="15_000"' : ''}>
-    <TimerArea>
-      <TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" />
-    </TimerArea>
-    <TimerActionTrigger action="start">Start</TimerActionTrigger>
-    <TimerActionTrigger action="pause">Pause</TimerActionTrigger>
-    <TimerActionTrigger action="reset">Reset</TimerActionTrigger>
+  <TimerRoot v-slot="{ running, valueMs }">
+    <TimerArea><TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" /></TimerArea>
+    <TimerActionTrigger v-if="running" action="pause">Pause</TimerActionTrigger>
+    <TimerActionTrigger v-else-if="valueMs > 0" action="resume">Resume</TimerActionTrigger>
+    <TimerActionTrigger v-else action="start">Start timer</TimerActionTrigger>
+    <TimerActionTrigger v-if="valueMs > 0" action="reset">Reset</TimerActionTrigger>
   </TimerRoot>
 </template>`;
 }
@@ -299,14 +769,23 @@ const hours = { start: { hour: 9, minute: 30 }, end: { hour: 17, minute: 45 } }
 
 export function specializedVueCodeFor(component: string, scenario: string): string {
   if (!specializedComponents.has(component)) return '';
+  if (component === 'calendar') return calendarSource(scenario);
+  if (component === 'multi-thumb-slider') return multiThumbSliderSource(scenario);
+  if (component === 'spin-button') return spinButtonSource(scenario);
   if (component === 'checkbox' || component === 'switch' || component === 'toggle-button') return checkedControlSource(component, scenario);
   if (component === 'date-field' || component === 'time-field' || component === 'date-time-field') return nativeFieldSource(component, scenario);
+  if (component === 'date-range-field') return dateRangeFieldSource(scenario);
+  if (component === 'time-range-field') return timeRangeFieldSource(scenario);
   if (component === 'accordion') return accordionSource(scenario);
   if (component === 'listbox') return listboxSource(scenario);
   if (component === 'text') return textSource(scenario);
   if (component === 'timer') return timerSource(scenario);
   if (component === 'toast') return toastSource(scenario);
   if (component === 'toggle-group') return toggleGroupSource(scenario);
+  if (component === 'feed') return feedSource(scenario);
+  if (component === 'tree-grid') return treeGridSource(scenario);
+  if (component === 'tree-view') return treeViewSource(scenario);
+  if (component === 'window-splitter') return windowSplitterSource(scenario);
   return staticSources[component] ?? '';
 }
 

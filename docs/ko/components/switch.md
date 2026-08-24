@@ -1,15 +1,15 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 스위치
 
-즉시 반영되는 설정 하나를 켜거나 끕니다.
+설정 하나를 즉시 전환합니다.
 
 ## 예시
 
-### 꺼짐
+### 알림
 
-꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다.
+배포 알림 설정을 한 번의 조작으로 즉시 전환합니다.
 
-<ComponentExample component="switch" scenario="off" title="꺼짐" description="꺼진 상태에서 시작해 값을 켜고 끄는 동작을 바로 확인할 수 있습니다." :index="0" />
+<ComponentExample component="switch" scenario="off" title="알림" description="배포 알림 설정을 한 번의 조작으로 즉시 전환합니다." :index="0" />
 
 ## 구성
 

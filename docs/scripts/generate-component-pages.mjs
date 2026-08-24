@@ -132,19 +132,22 @@ function partsSection(component, korean = false) {
   const introduction = korean
     ? `렌더링되는 파트는 기본적으로 \`data-scope="${definition.scope}"\`를 사용합니다. 아래 이름이 각 파트의 \`data-part\` 값입니다.`
     : `Rendered parts use \`data-scope="${definition.scope}"\` by default. Each name below is the part's \`data-part\` value.`;
-  const providerNote = definition.parts.includes('provider')
-    ? korean
-      ? '\n\n`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.'
-      : '\n\n`provider` is a state provider that does not render a DOM element.'
-    : '';
   const exceptionNotes = notes.length === 0
     ? ''
     : `\n\n${korean ? '**예외와 추가 속성**' : '**Exceptions and additional attributes**'}\n\n${notes.join('\n')}`;
-  return `${heading}\n\n${introduction}\n\n<ul class="component-parts">\n${tokens}\n</ul>${providerNote}${exceptionNotes}`;
+  return `${heading}\n\n${introduction}\n\n<ul class="component-parts">\n${tokens}\n</ul>${exceptionNotes}`;
 }
 
 function keyboardSection(component, korean = false) {
-  const rows = keyboardContract(component.id)
+  const contract = component.id === 'window-splitter'
+    ? [
+        { keys: 'Arrow Left / Arrow Right', behavior: 'Make the leading pane one step smaller or larger in a horizontal layout.', behaviorKo: '좌우 배치에서 앞쪽 영역을 한 단계 줄이거나 늘립니다.' },
+        { keys: 'Arrow Up / Arrow Down', behavior: 'Make the leading pane one step smaller or larger in a vertical layout.', behaviorKo: '상하 배치에서 앞쪽 영역을 한 단계 줄이거나 늘립니다.' },
+        { keys: 'Home / End', behavior: 'Move the separator to its minimum or maximum boundary.', behaviorKo: '구분선을 허용된 최소 또는 최대 경계로 이동합니다.' },
+        { keys: 'Page Up / Page Down', behavior: 'Resize by the configured page step.', behaviorKo: '설정된 큰 단계만큼 영역 크기를 바꿉니다.' },
+      ]
+    : keyboardContract(component.id);
+  const rows = contract
     .map((entry) => `| <kbd>${entry.keys.replaceAll(' / ', '</kbd> / <kbd>')}</kbd> | ${korean ? entry.behaviorKo : entry.behavior} |`)
     .join('\n');
   const heading = korean ? '## 키보드 동작' : '## Keyboard interaction';
@@ -201,8 +204,24 @@ function description(component) {
 }
 
 function scenarioDescription(component, scenario) {
+  if (component.id === 'menu' && scenario === 'commands') return 'Run common project commands from one flat command list.';
+  if (component.id === 'menu' && scenario === 'nested') return 'Choose an export format from a submenu owned by the Export command.';
+  if (component.id === 'menu-button' && scenario === 'actions') return 'Create or import workspace resources from one compact trigger.';
+  if (component.id === 'menu-button' && scenario === 'nested') return 'Keep secondary export formats inside the Export as command.';
+  if (component.id === 'toolbar' && scenario === 'formatting') return 'Group inline text formatting actions in their natural horizontal order.';
+  if (component.id === 'toolbar' && scenario === 'vertical') return 'Stack canvas tools vertically beside an editing surface.';
+  if (component.id === 'tree-view' && scenario === 'expanded') return 'Browse a realistic project hierarchy while each folder keeps its own independent expansion state.';
+  if (component.id === 'tree-view' && scenario === 'multiple') return 'Choose several files for review without confusing selection with folder expansion.';
+  if (component.id === 'tree-grid' && scenario === 'expanded') return 'Inspect a project inventory whose nested applications and features remain visibly connected to their parents.';
+  if (component.id === 'tree-grid' && scenario === 'editable') return 'Edit the owner of a nested resource without leaving keyboard-based row and column navigation.';
+  if (component.id === 'feed' && scenario === 'finite') return 'Review the complete activity history for one release.';
+  if (component.id === 'feed' && scenario === 'load-after') return 'Surface new deployment updates without interrupting the activity currently being read.';
+  if (component.id === 'feed' && scenario === 'load-before') return 'Append older release events while preserving the current activity order.';
   if (component.id === 'toast' && scenario === 'automatic') {
     return 'Dismiss transient feedback automatically after a short delay while keeping a visible close action.';
+  }
+  if (component.id === 'switch' && scenario === 'off') {
+    return 'Toggle deployment notifications with one immediate action.';
   }
   const description = scenarioDescriptions[scenario];
   assert.equal(typeof description, 'string', `Missing English scenario description: ${component.id}/${scenario}`);
@@ -210,8 +229,24 @@ function scenarioDescription(component, scenario) {
 }
 
 function koScenarioDescription(component, scenario) {
+  if (component.id === 'menu' && scenario === 'commands') return '자주 쓰는 프로젝트 명령을 하나의 단일 메뉴에서 실행합니다.';
+  if (component.id === 'menu' && scenario === 'nested') return '내보내기 명령이 소유한 하위 메뉴에서 파일 형식을 선택합니다.';
+  if (component.id === 'menu-button' && scenario === 'actions') return '하나의 간결한 버튼에서 작업 공간 리소스를 만들거나 가져옵니다.';
+  if (component.id === 'menu-button' && scenario === 'nested') return '부가 내보내기 형식은 내보내기 하위 메뉴 안에 정리합니다.';
+  if (component.id === 'toolbar' && scenario === 'formatting') return '인라인 텍스트 서식 작업을 자연스러운 가로 순서로 묶습니다.';
+  if (component.id === 'toolbar' && scenario === 'vertical') return '편집 화면 옆에 캔버스 도구를 세로로 배치합니다.';
+  if (component.id === 'tree-view' && scenario === 'expanded') return '각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다.';
+  if (component.id === 'tree-view' && scenario === 'multiple') return '폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다.';
+  if (component.id === 'tree-grid' && scenario === 'expanded') return '하위 응용 프로그램과 기능이 부모 리소스에 어떻게 연결되는지 프로젝트 목록에서 확인합니다.';
+  if (component.id === 'tree-grid' && scenario === 'editable') return '행과 열의 키보드 이동을 유지하면서 하위 리소스 담당자를 편집합니다.';
+  if (component.id === 'feed' && scenario === 'finite') return '하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다.';
+  if (component.id === 'feed' && scenario === 'load-after') return '읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다.';
+  if (component.id === 'feed' && scenario === 'load-before') return '현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다.';
   if (component.id === 'toast' && scenario === 'automatic') {
     return '잠시 표시한 알림을 자동으로 닫되 사용자가 바로 닫을 수 있는 버튼도 함께 제공합니다.';
+  }
+  if (component.id === 'switch' && scenario === 'off') {
+    return '배포 알림 설정을 한 번의 조작으로 즉시 전환합니다.';
   }
   const description = koScenarioDescriptions[scenario];
   assert.equal(typeof description, 'string', `Missing Korean scenario description: ${component.id}/${scenario}`);
@@ -219,10 +254,46 @@ function koScenarioDescription(component, scenario) {
 }
 
 function scenarioTitle(component, scenario) {
+  if (component.id === 'menu' && scenario === 'commands') return 'Project commands';
+  if (component.id === 'menu' && scenario === 'nested') return 'Export formats';
+  if (component.id === 'menu-button' && scenario === 'actions') return 'Create menu';
+  if (component.id === 'menu-button' && scenario === 'nested') return 'Export menu';
+  if (component.id === 'toolbar' && scenario === 'formatting') return 'Text formatting';
+  if (component.id === 'toolbar' && scenario === 'vertical') return 'Canvas tools';
+  if (component.id === 'alert-dialog' && scenario === 'destructive') return 'Delete project';
+  if (component.id === 'alert-dialog' && scenario === 'unsaved') return 'Unsaved changes';
+  if (component.id === 'tree-view' && scenario === 'expanded') return 'Project explorer';
+  if (component.id === 'tree-view' && scenario === 'multiple') return 'Review selection';
+  if (component.id === 'tree-grid' && scenario === 'expanded') return 'Project structure';
+  if (component.id === 'tree-grid' && scenario === 'editable') return 'Editable ownership';
+  if (component.id === 'feed' && scenario === 'finite') return 'Complete release history';
+  if (component.id === 'feed' && scenario === 'load-after') return 'Live updates';
+  if (component.id === 'feed' && scenario === 'load-before') return 'Earlier activity';
+  if (component.id === 'switch' && scenario === 'off') return 'Notifications';
+  if (component.id === 'spin-button' && scenario === 'invalid-draft') return 'Input recovery';
+  if (component.id === 'window-splitter' && scenario === 'nested-layout') return 'Mixed workspace';
   return component.id === 'toast' && scenario === 'automatic' ? 'Auto dismiss' : sentence(scenario);
 }
 
 function koScenarioTitle(component, scenario) {
+  if (component.id === 'menu' && scenario === 'commands') return '프로젝트 명령';
+  if (component.id === 'menu' && scenario === 'nested') return '내보내기 형식';
+  if (component.id === 'menu-button' && scenario === 'actions') return '만들기 메뉴';
+  if (component.id === 'menu-button' && scenario === 'nested') return '내보내기 메뉴';
+  if (component.id === 'toolbar' && scenario === 'formatting') return '텍스트 서식';
+  if (component.id === 'toolbar' && scenario === 'vertical') return '캔버스 도구';
+  if (component.id === 'alert-dialog' && scenario === 'destructive') return '프로젝트 삭제';
+  if (component.id === 'alert-dialog' && scenario === 'unsaved') return '저장하지 않은 변경';
+  if (component.id === 'tree-view' && scenario === 'expanded') return '프로젝트 탐색';
+  if (component.id === 'tree-view' && scenario === 'multiple') return '검토 파일 선택';
+  if (component.id === 'tree-grid' && scenario === 'expanded') return '프로젝트 구조';
+  if (component.id === 'tree-grid' && scenario === 'editable') return '담당자 편집';
+  if (component.id === 'feed' && scenario === 'finite') return '전체 릴리스 기록';
+  if (component.id === 'feed' && scenario === 'load-after') return '새 활동';
+  if (component.id === 'feed' && scenario === 'load-before') return '이전 활동';
+  if (component.id === 'switch' && scenario === 'off') return '알림';
+  if (component.id === 'spin-button' && scenario === 'invalid-draft') return '입력 복구';
+  if (component.id === 'window-splitter' && scenario === 'nested-layout') return '혼합 레이아웃';
   return component.id === 'toast' && scenario === 'automatic' ? '자동 닫힘' : translateTerms(scenario);
 }
 

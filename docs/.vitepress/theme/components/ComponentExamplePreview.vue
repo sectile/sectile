@@ -10,7 +10,9 @@ import ColorPickerCase from './ColorPickerCase.vue';
 import DateRangeFieldCase from './DateRangeFieldCase.vue';
 import DisclosureCase from './DisclosureCase.vue';
 import EditableCase from './EditableCase.vue';
+import FeedCase from './FeedCase.vue';
 import ListboxCase from './ListboxCase.vue';
+import MultiThumbSliderCase from './MultiThumbSliderCase.vue';
 import NativeFieldCase from './NativeFieldCase.vue';
 import PaginationCase from './PaginationCase.vue';
 import PopoverCase from './PopoverCase.vue';
@@ -23,6 +25,9 @@ import TimeRangeFieldCase from './TimeRangeFieldCase.vue';
 import TimerCase from './TimerCase.vue';
 import ToastCase from './ToastCase.vue';
 import ToggleGroupCase from './ToggleGroupCase.vue';
+import TreeGridCase from './TreeGridCase.vue';
+import TreeViewCase from './TreeViewCase.vue';
+import WindowSplitterCase from './WindowSplitterCase.vue';
 
 const props = withDefaults(defineProps<{
   readonly component: string;
@@ -46,6 +51,10 @@ const dateRange = Object.freeze({ start: date, end: Object.freeze({ year: 2026, 
 const time = Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 });
 const timeRange = Object.freeze({ start: time, end: Object.freeze({ hour: 17, minute: 45, second: 0, millisecond: 0 }) });
 const dateTime = Object.freeze({ date, time });
+const lateDateTime = Object.freeze({
+  date,
+  time: Object.freeze({ hour: 23, minute: 45, second: 0, millisecond: 0 }),
+});
 
 function specialized(component: Component, options: Readonly<Record<string, unknown>> = {}): ResolvedExample {
   return { component: markRaw(component), props: { title: props.title, description: props.description, ...options } };
@@ -62,17 +71,21 @@ function resolveExample(): ResolvedExample {
     case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled });
     case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
+    case 'feed': return specialized(FeedCase, { scenario: props.scenario });
+    case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
+    case 'tree-view': return specialized(TreeViewCase, { scenario: props.scenario });
     case 'listbox': return specialized(ListboxCase, { multiple: props.scenario === 'multiple', controlled });
     case 'cascade-select': return specialized(CascadeSelectCase, { initialValue: props.scenario === 'controlled' ? 'paris' : 'seoul', disabledItems: props.scenario === 'disabled' ? ['jp', 'tokyo'] : [], controlled });
     case 'radio-group': return specialized(RadioGroupCase, { controlled });
     case 'toggle-group': return specialized(ToggleGroupCase, { multiple: props.scenario === 'multiple', controlled });
     case 'popover': return specialized(PopoverCase, { side: props.scenario === 'collision' ? 'right' : 'bottom', controlled });
     case 'toast': return specialized(ToastCase, { persistent: props.scenario === 'persistent', maxVisible: props.scenario === 'limited' ? 2 : 3 });
-    case 'timer': return specialized(TimerCase, { countdown: props.scenario === 'countdown', startMs: props.scenario === 'countdown' ? 10_000 : 0, targetMs: props.scenario === 'target' ? 15_000 : undefined, autoStart: props.scenario === 'countdown' });
+    case 'timer': return specialized(TimerCase, { countdown: props.scenario === 'countdown', startMs: props.scenario === 'countdown' ? 10_000 : 0, targetMs: props.scenario === 'target' ? 15_000 : undefined });
     case 'color-picker': return specialized(ColorPickerCase, { initialValue: props.scenario === 'alpha' ? '#26c6a080' : '#5b6df6', alpha: props.scenario === 'alpha', controlled, readonly: props.scenario === 'readonly' });
     case 'tabs': return specialized(TabsCase, { manual: props.scenario === 'manual', controlled });
     case 'slider': return specialized(SliderCase);
-    case 'spin-button': return specialized(SpinButtonCase);
+    case 'multi-thumb-slider': return specialized(MultiThumbSliderCase, { scenario: props.scenario });
+    case 'spin-button': return specialized(SpinButtonCase, { scenario: props.scenario });
     case 'number-field': {
       const config = numberFieldExampleConfig(props.scenario);
       return specialized(NativeFieldCase, {
@@ -82,11 +95,21 @@ function resolveExample(): ResolvedExample {
         controlled: config.controlled,
       });
     }
-    case 'date-field': return specialized(NativeFieldCase, { kind: 'date-field', initialValue: date, controlled });
-    case 'time-field': return specialized(NativeFieldCase, { kind: 'time-field', initialValue: time, controlled });
-    case 'date-time-field': return specialized(NativeFieldCase, { kind: 'date-time-field', initialValue: dateTime, controlled });
+    case 'date-field': return specialized(NativeFieldCase, {
+      kind: 'date-field', initialValue: date, controlled,
+      policies: props.scenario === 'bounded' ? { min: { year: 2026, month: 8, day: 1 }, max: { year: 2026, month: 8, day: 31 } } : undefined,
+    });
+    case 'time-field': return specialized(NativeFieldCase, {
+      kind: 'time-field', initialValue: time, controlled,
+      policies: props.scenario === 'stepped' ? { step: { minute: 15 } } : undefined,
+    });
+    case 'date-time-field': return specialized(NativeFieldCase, {
+      kind: 'date-time-field', initialValue: props.scenario === 'cross-midnight' ? lateDateTime : dateTime, controlled,
+      policies: props.scenario === 'cross-midnight' ? { step: { minute: 15 } } : undefined,
+    });
     case 'date-range-field': return specialized(DateRangeFieldCase, { initialValue: props.scenario === 'bounded' ? septemberRange : dateRange, bounded: props.scenario === 'bounded', controlled });
     case 'time-range-field': return specialized(TimeRangeFieldCase, { initialValue: timeRange, stepped: props.scenario === 'stepped', controlled });
+    case 'window-splitter': return specialized(WindowSplitterCase, { scenario: props.scenario });
     case 'pagination': return specialized(PaginationCase, paginationProps(controlled));
     default: return specialized(CatalogCase, { component: props.component, scenario: props.scenario });
   }

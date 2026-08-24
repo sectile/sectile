@@ -17,6 +17,12 @@ Use vertical movement while preserving the same pane-size rules.
 
 <ComponentExample component="window-splitter" scenario="vertical" title="Vertical" description="Use vertical movement while preserving the same pane-size rules." :index="1" />
 
+### Mixed workspace
+
+Combine a resizable sidebar with an independently adjustable editor and preview stack.
+
+<ComponentExample component="window-splitter" scenario="nested-layout" title="Mixed workspace" description="Combine a resizable sidebar with an independently adjustable editor and preview stack." :index="2" />
+
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.
@@ -58,10 +64,10 @@ Rendered parts use `data-scope="window-splitter"` by default. Each name below is
 
 | Key | Behavior |
 | --- | --- |
-| <kbd>Arrow Right</kbd> / <kbd>Arrow Up</kbd> | Increase the value by one step. |
-| <kbd>Arrow Left</kbd> / <kbd>Arrow Down</kbd> | Decrease the value by one step. |
-| <kbd>Home</kbd> / <kbd>End</kbd> | Move to the minimum or maximum value. |
-| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Change the value by the configured page step when supported. |
+| <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | Make the leading pane one step smaller or larger in a horizontal layout. |
+| <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | Make the leading pane one step smaller or larger in a vertical layout. |
+| <kbd>Home</kbd> / <kbd>End</kbd> | Move the separator to its minimum or maximum boundary. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Resize by the configured page step. |
 
 ## Accessibility
 

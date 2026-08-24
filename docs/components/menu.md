@@ -5,17 +5,17 @@ Navigate hierarchical commands, open submenus, and invoke an action.
 
 ## Examples
 
-### Commands
+### Project commands
 
-Move through commands, skip unavailable items, and invoke the current command.
+Run common project commands from one flat command list.
 
-<ComponentExample component="menu" scenario="commands" title="Commands" description="Move through commands, skip unavailable items, and invoke the current command." :index="0" />
+<ComponentExample component="menu" scenario="commands" title="Project commands" description="Run common project commands from one flat command list." :index="0" />
 
-### Nested
+### Export formats
 
-Open a child command list only from its owning parent item.
+Choose an export format from a submenu owned by the Export command.
 
-<ComponentExample component="menu" scenario="nested" title="Nested" description="Open a child command list only from its owning parent item." :index="1" />
+<ComponentExample component="menu" scenario="nested" title="Export formats" description="Choose an export format from a submenu owned by the Export command." :index="1" />
 
 ## Anatomy
 

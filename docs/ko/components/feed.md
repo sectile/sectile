@@ -1,27 +1,27 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # 피드
 
-버전이 있는 활동 목록을 이동하고 이전·다음 항목을 요청합니다.
+읽던 위치를 잃지 않고 새 활동이나 이전 기록을 불러오는 제품 활동 목록을 제공합니다.
 
 ## 예시
 
-### 유한 목록
+### 전체 릴리스 기록
 
-이전·다음 경계가 분명한 활동 목록을 이동합니다.
+하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다.
 
-<ComponentExample component="feed" scenario="finite" title="유한 목록" description="이전·다음 경계가 분명한 활동 목록을 이동합니다." :index="0" />
+<ComponentExample component="feed" scenario="finite" title="전체 릴리스 기록" description="하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다." :index="0" />
 
-### 불러오기 다음 항목 불러오기
+### 새 활동
 
-현재 표시 구간이 최신 경계에 닿으면 새 활동을 요청합니다.
+읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다.
 
-<ComponentExample component="feed" scenario="load-after" title="불러오기 다음 항목 불러오기" description="현재 표시 구간이 최신 경계에 닿으면 새 활동을 요청합니다." :index="1" />
+<ComponentExample component="feed" scenario="load-after" title="새 활동" description="읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다." :index="1" />
 
-### 불러오기 이전 항목 불러오기
+### 이전 활동
 
-현재 활동 순서를 바꾸지 않고 더 오래된 항목을 요청합니다.
+현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다.
 
-<ComponentExample component="feed" scenario="load-before" title="불러오기 이전 항목 불러오기" description="현재 활동 순서를 바꾸지 않고 더 오래된 항목을 요청합니다." :index="2" />
+<ComponentExample component="feed" scenario="load-before" title="이전 활동" description="현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다." :index="2" />
 
 ## 구성
 

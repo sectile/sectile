@@ -5,17 +5,17 @@ Open a command menu from one trigger and restore focus on dismissal.
 
 ## Examples
 
-### Actions
+### Create menu
 
-Open a short list of contextual actions from a single trigger.
+Create or import workspace resources from one compact trigger.
 
-<ComponentExample component="menu-button" scenario="actions" title="Actions" description="Open a short list of contextual actions from a single trigger." :index="0" />
+<ComponentExample component="menu-button" scenario="actions" title="Create menu" description="Create or import workspace resources from one compact trigger." :index="0" />
 
-### Nested
+### Export menu
 
-Open a child command list only from its owning parent item.
+Keep secondary export formats inside the Export as command.
 
-<ComponentExample component="menu-button" scenario="nested" title="Nested" description="Open a child command list only from its owning parent item." :index="1" />
+<ComponentExample component="menu-button" scenario="nested" title="Export menu" description="Keep secondary export formats inside the Export as command." :index="1" />
 
 ## Anatomy
 
@@ -62,8 +62,6 @@ Rendered parts use `data-scope="menu-button"` by default. Each name below is the
   <li><code class="component-part-token">sub-content</code></li>
   <li><code class="component-part-token">separator</code></li>
 </ul>
-
-`provider` is a state provider that does not render a DOM element.
 
 **Exceptions and additional attributes**
 

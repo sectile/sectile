@@ -17,7 +17,8 @@ const code = await readFile(
 
 test('alert dialog renders as a dimmed modal overlay', () => {
   assert.match(catalog, /<AlertDialogOverlay class="catalog-dialog-overlay" \/>/u);
-  assert.match(catalog, /\['catalog-dialog', 'catalog-alert-dialog'/u);
+  assert.match(catalog, /class="catalog-dialog catalog-alert-dialog"/u);
+  assert.doesNotMatch(catalog, /catalog-alert-dialog--/u);
   assert.match(catalog, /class="catalog-dialog-actions"/u);
   assert.doesNotMatch(catalog, /<AlertDialogRoot[^>]+default-open/u);
   assert.match(styles, /\.catalog-dialog-overlay\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;/su);

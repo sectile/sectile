@@ -35,3 +35,48 @@ test('Switch Code shows the public Vue switch API', () => {
   assert.match(source, /@sectile\/vue\/switch/);
   assert.doesNotMatch(source, /No example is available/);
 });
+
+test('Calendar month and week examples expose their actual paging projections', () => {
+  const month = specializedVueCodeFor('calendar', 'month');
+  const week = specializedVueCodeFor('calendar', 'week');
+  assert.match(month, /monthRows\(anchor\.value\)/);
+  assert.match(month, /shiftDate\(anchor\.value, 'month'/);
+  assert.match(week, /weekDates\(anchor\.value\)/);
+  assert.match(week, /shiftDate\(anchor\.value, 'week'/);
+  assert.notEqual(month, week);
+});
+
+test('Temporal field examples use product-facing native inputs and distinct policies', () => {
+  assert.match(specializedVueCodeFor('date-time-field', 'local-schedule'), / native \/>/);
+  assert.match(specializedVueCodeFor('date-time-field', 'cross-midnight'), /hour: 23, minute: 45/);
+  assert.match(specializedVueCodeFor('date-range-field', 'bounded'), /min: \{ year: 2026, month: 9, day: 1 \}/);
+  assert.match(specializedVueCodeFor('time-range-field', 'stepped'), /step: \{ minute: 15 \}/);
+});
+
+test('Multi-thumb slider examples use scenario-specific values and policies', () => {
+  const range = specializedVueCodeFor('multi-thumb-slider', 'two-thumb-range');
+  const thresholds = specializedVueCodeFor('multi-thumb-slider', 'three-thumb-thresholds');
+  const constrained = specializedVueCodeFor('multi-thumb-slider', 'crossing-thumbs');
+  assert.match(range, /\['120', '340'\]/);
+  assert.match(thresholds, /\['warning', 'review', 'block'\]/);
+  assert.match(constrained, /minGap: 2/);
+  assert.notEqual(range, thresholds);
+});
+
+test('Spin button recovery example documents blur restoration separately', () => {
+  const integer = specializedVueCodeFor('spin-button', 'integer');
+  const recovery = specializedVueCodeFor('spin-button', 'invalid-draft');
+  assert.match(recovery, /update:draft/);
+  assert.match(recovery, /restores/);
+  assert.notEqual(integer, recovery);
+});
+
+test('Tree view code teaches distinct exploration and review workflows', () => {
+  const explorer = specializedVueCodeFor('tree-view', 'expanded');
+  const review = specializedVueCodeFor('tree-view', 'multiple');
+  assert.match(explorer, /:default-value="\['settings'\]"/);
+  assert.match(explorer, /expandedValue\.includes\('dashboard'\)/);
+  assert.match(review, /\['overview', 'settings', 'tokens'\]/);
+  assert.match(review, /value\.length.*files selected/);
+  assert.notEqual(explorer, review);
+});

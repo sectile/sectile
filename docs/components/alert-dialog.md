@@ -5,17 +5,17 @@ Interrupt a destructive action with an explicit confirmation decision.
 
 ## Examples
 
-### Destructive
+### Delete project
 
 Require explicit confirmation before running an action that cannot be undone.
 
-<ComponentExample component="alert-dialog" scenario="destructive" title="Destructive" description="Require explicit confirmation before running an action that cannot be undone." :index="0" />
+<ComponentExample component="alert-dialog" scenario="destructive" title="Delete project" description="Require explicit confirmation before running an action that cannot be undone." :index="0" />
 
-### Unsaved
+### Unsaved changes
 
 Confirm before discarding changes that have not been saved.
 
-<ComponentExample component="alert-dialog" scenario="unsaved" title="Unsaved" description="Confirm before discarding changes that have not been saved." :index="1" />
+<ComponentExample component="alert-dialog" scenario="unsaved" title="Unsaved changes" description="Confirm before discarding changes that have not been saved." :index="1" />
 
 ## Anatomy
 
@@ -63,8 +63,6 @@ Rendered parts use `data-scope="alert-dialog"` by default. Each name below is th
   <li><code class="component-part-token">description</code></li>
   <li><code class="component-part-token">close</code></li>
 </ul>
-
-`provider` is a state provider that does not render a DOM element.
 
 ## Keyboard interaction
 

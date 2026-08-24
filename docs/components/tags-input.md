@@ -11,12 +11,6 @@ Create and remove free-form skill tags without losing input focus.
 
 <ComponentExample component="tags-input" scenario="skills" title="Skills" description="Create and remove free-form skill tags without losing input focus." :index="0" />
 
-### Limited
-
-Enforce the configured item or visible-notification limit without losing existing values.
-
-<ComponentExample component="tags-input" scenario="limited" title="Limited" description="Enforce the configured item or visible-notification limit without losing existing values." :index="1" />
-
 ## Anatomy
 
 Each labeled area is a public styling boundary. Select an area to inspect the DOM region and its stable data attributes.

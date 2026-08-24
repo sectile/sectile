@@ -88,7 +88,6 @@ function handleBooleanUpdate(next: boolean): void {
         <span class="switch-track" aria-hidden="true">
           <SwitchThumb class="switch-thumb" />
         </span>
-        <span class="switch-value">{{ value ? 'On' : 'Off' }}</span>
       </SwitchRoot>
 
       <CheckboxRoot

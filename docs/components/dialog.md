@@ -64,8 +64,6 @@ Rendered parts use `data-scope="dialog"` by default. Each name below is the part
   <li><code class="component-part-token">close</code></li>
 </ul>
 
-`provider` is a state provider that does not render a DOM element.
-
 ## Keyboard interaction
 
 | Key | Behavior |

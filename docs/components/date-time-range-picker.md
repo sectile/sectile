@@ -94,8 +94,6 @@ Rendered parts use `data-scope="date-time-range-picker"` by default. Each name b
   <li><code class="component-part-token">month-cell</code></li>
 </ul>
 
-`provider` is a state provider that does not render a DOM element.
-
 ## Keyboard interaction
 
 | Key | Behavior |

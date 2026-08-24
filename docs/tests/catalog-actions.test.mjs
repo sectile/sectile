@@ -3,13 +3,17 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const source = await readFile(new URL('../.vitepress/theme/components/CatalogCase.vue', import.meta.url), 'utf8');
+const feedSource = await readFile(new URL('../.vitepress/theme/components/FeedCase.vue', import.meta.url), 'utf8');
 const menubarSource = await readFile(new URL('../.vitepress/theme/components/MenubarExample.vue', import.meta.url), 'utf8');
 const pickerSource = await readFile(new URL('../.vitepress/theme/components/PickerCalendarDemo.vue', import.meta.url), 'utf8');
+const pickerAnatomySource = await readFile(new URL('../.vitepress/theme/components/DateTimePickerAnatomy.vue', import.meta.url), 'utf8');
+const treeViewSource = await readFile(new URL('../.vitepress/theme/components/TreeViewCase.vue', import.meta.url), 'utf8');
+const catalogCodeSource = await readFile(new URL('../.vitepress/theme/catalog-code.ts', import.meta.url), 'utf8');
 const styles = await readFile(new URL('../.vitepress/theme/component-examples.css', import.meta.url), 'utf8');
 
 test('host-owned demo actions always update visible example state', () => {
-  assert.match(source, /@request-window="loadFeedWindow"/);
-  assert.match(source, /:revision="feedRevision"/);
+  assert.match(feedSource, /@request-window="loadWindow"/);
+  assert.match(feedSource, /:revision="revision"/);
   assert.match(source, /@click="advanceCheckout\(step\.id\)"/);
   assert.match(source, /<ToolbarRoot[^>]+@invoke="recordAction"/);
   assert.match(source, /<MenuRoot[^>]+@invoke="recordAction"/);
@@ -47,8 +51,24 @@ test('navigation menu keeps equal insets, aligned items, and an anchored popup g
   assert.match(styles, /\.catalog-navigation-menu \.catalog-navigation-list\s*\{[^}]*padding:\s*0\.35rem;/s);
   assert.match(styles, /\.catalog-navigation-menu \.catalog-navigation-item\s*\{[^}]*position:\s*static;[^}]*margin:\s*0;/s);
   assert.match(styles, /\.catalog-navigation-trigger, \.catalog-navigation-link\s*\{[^}]*height:\s*2\.5rem;[^}]*line-height:\s*1;/s);
-  assert.match(styles, /\.catalog-navigation-viewport\s*\{[^}]*top:\s*calc\(100% \+ 0\.5rem\);[^}]*overflow:\s*visible;/s);
+  assert.match(styles, /\.catalog-navigation-viewport\s*\{[^}]*top:\s*calc\(100% \+ 0\.5rem\)[^}]*width:\s*min\(29rem, 100%\)[^}]*overflow:\s*hidden;/s);
   assert.match(source, /<NavigationMenuViewport v-show="openPath\.includes\('file'\)"/);
+});
+
+test('menu and toolbar scenarios render materially different structures', () => {
+  assert.match(source, /const commandMenuItems = \[/u);
+  assert.match(source, /const nestedMenuItems = \[/u);
+  assert.match(source, /isScenario\('nested'\) \? nestedMenuItems : commandMenuItems/u);
+  assert.match(source, /isScenario\('vertical'\) \? \['select', 'comment', 'upload'\]/u);
+  assert.match(catalogCodeSource, /const menuScenarioCode/u);
+  assert.match(catalogCodeSource, /const toolbarScenarioCode/u);
+});
+
+test('navigation menu scenarios document different information architectures', () => {
+  assert.match(catalogCodeSource, /const navigationMenuScenarioCode/u);
+  assert.match(catalogCodeSource, /product: sfc\([\s\S]*?New releases[\s\S]*?Open source/u);
+  assert.match(catalogCodeSource, /links: sfc\([\s\S]*?Guides[\s\S]*?API reference/u);
+  assert.match(catalogCodeSource, /'navigation-menu': navigationMenuScenarioCode/u);
 });
 
 test('disabled grid examples only reference cells present in their row model', () => {
@@ -58,12 +78,11 @@ test('disabled grid examples only reference cells present in their row model', (
 });
 
 test('tree view examples distinguish expansion, selection, and leaf alignment', () => {
-  assert.match(source, /const treeSelection = computed/);
-  assert.match(source, /:default-value="treeSelection"/);
-  assert.match(source, /class="catalog-tree-spacer"/);
-  assert.match(source, /class="catalog-tree-selected-icon"/);
-  assert.doesNotMatch(source, /<Circle/);
-  assert.doesNotMatch(source, /:selection-mode=/);
+  assert.match(treeViewSource, /props\.scenario === 'multiple'/);
+  assert.match(treeViewSource, /\['overview', 'settings', 'tokens'\]/);
+  assert.match(treeViewSource, /v-if="expandedValue\.includes\('dashboard'\)"/);
+  assert.match(treeViewSource, /3 files selected|value\.length/u);
+  assert.doesNotMatch(treeViewSource, /disabledItems|unavailable/u);
 });
 
 test('calendar families use functional reusable calendar controls', () => {
@@ -74,6 +93,19 @@ test('calendar families use functional reusable calendar controls', () => {
   assert.match(source, /<PickerCalendarDemo[^>]+component="date-time-range-picker"/);
   assert.doesNotMatch(source, />Aug 22</);
   assert.doesNotMatch(pickerSource, />[‹›]</u);
+});
+
+test('date and time pickers group endpoint values and share one spacing rhythm', () => {
+  assert.match(source, /class="catalog-date-time-control"/u);
+  assert.match(source, /class="catalog-range-fields catalog-range-fields--single"/u);
+  assert.match(styles, /\.catalog-temporal-picker\s*\{[^}]*gap:\s*0\.4rem;/su);
+  assert.match(styles, /\.catalog-temporal-picker > \.catalog-inline\s*\{[^}]*gap:\s*0\.4rem;/su);
+  assert.match(styles, /\.catalog-range-fields\s*\{[^}]*gap:\s*0\.4rem;/su);
+  assert.match(styles, /\.catalog-date-time-control\s*\{[^}]*overflow:\s*hidden;/su);
+  assert.match(catalogCodeSource, /class="catalog-date-time-control"/u);
+  assert.match(pickerAnatomySource, /const fieldGroups = computed/u);
+  assert.match(pickerAnatomySource, /date-time-anatomy__input-group--compound/u);
+  assert.match(pickerAnatomySource, /\.date-time-anatomy__content\s*\{[^}]*margin-top:\s*8px;/su);
 });
 
 test('paused carousel example owns real autoplay state and visible feedback', () => {

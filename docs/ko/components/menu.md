@@ -5,17 +5,17 @@
 
 ## 예시
 
-### 명령 실행
+### 프로젝트 명령
 
-사용할 수 없는 항목은 건너뛰면서 명령 사이를 이동하고 현재 명령을 실행합니다.
+자주 쓰는 프로젝트 명령을 하나의 단일 메뉴에서 실행합니다.
 
-<ComponentExample component="menu" scenario="commands" title="명령 실행" description="사용할 수 없는 항목은 건너뛰면서 명령 사이를 이동하고 현재 명령을 실행합니다." :index="0" />
+<ComponentExample component="menu" scenario="commands" title="프로젝트 명령" description="자주 쓰는 프로젝트 명령을 하나의 단일 메뉴에서 실행합니다." :index="0" />
 
-### 하위 메뉴
+### 내보내기 형식
 
-하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다.
+내보내기 명령이 소유한 하위 메뉴에서 파일 형식을 선택합니다.
 
-<ComponentExample component="menu" scenario="nested" title="하위 메뉴" description="하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다." :index="1" />
+<ComponentExample component="menu" scenario="nested" title="내보내기 형식" description="내보내기 명령이 소유한 하위 메뉴에서 파일 형식을 선택합니다." :index="1" />
 
 ## 구성
 

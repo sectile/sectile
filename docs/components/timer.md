@@ -7,21 +7,21 @@ Measure elapsed or remaining time with start, pause, and reset actions.
 
 ### Stopwatch
 
-Measure elapsed time with pause, resume, and reset controls.
+Start, pause, resume, and reset elapsed time with controls that reflect the current state.
 
-<ComponentExample component="timer" scenario="stopwatch" title="Stopwatch" description="Measure elapsed time with pause, resume, and reset controls." :index="0" />
+<ComponentExample component="timer" scenario="stopwatch" title="Stopwatch" description="Start, pause, resume, and reset elapsed time with controls that reflect the current state." :index="0" />
 
 ### Countdown
 
-Count down from a fixed duration and announce completion once.
+Set a duration, track remaining time, and receive completion feedback.
 
-<ComponentExample component="timer" scenario="countdown" title="Countdown" description="Count down from a fixed duration and announce completion once." :index="1" />
+<ComponentExample component="timer" scenario="countdown" title="Countdown" description="Set a duration, track remaining time, and receive completion feedback." :index="1" />
 
 ### Target
 
-Measure progress toward an explicit target time.
+Set an elapsed-time goal and track progress until completion.
 
-<ComponentExample component="timer" scenario="target" title="Target" description="Measure progress toward an explicit target time." :index="2" />
+<ComponentExample component="timer" scenario="target" title="Target" description="Set an elapsed-time goal and track progress until completion." :index="2" />
 
 ## Anatomy
 

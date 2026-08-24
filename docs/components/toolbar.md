@@ -5,11 +5,17 @@ Move through a compact set of related actions and invoke the active tool.
 
 ## Examples
 
-### Horizontal
+### Text formatting
 
-Use horizontal movement while preserving the same value and boundary rules.
+Group inline text formatting actions in their natural horizontal order.
 
-<ComponentExample component="toolbar" scenario="horizontal" title="Horizontal" description="Use horizontal movement while preserving the same value and boundary rules." :index="0" />
+<ComponentExample component="toolbar" scenario="formatting" title="Text formatting" description="Group inline text formatting actions in their natural horizontal order." :index="0" />
+
+### Canvas tools
+
+Stack canvas tools vertically beside an editing surface.
+
+<ComponentExample component="toolbar" scenario="vertical" title="Canvas tools" description="Stack canvas tools vertically beside an editing surface." :index="1" />
 
 ## Anatomy
 

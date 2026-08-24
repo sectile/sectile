@@ -8,9 +8,11 @@ const curatedScenarios = Object.freeze({
   calendar: ['month', 'week', 'disabled-weekends'],
   disclosure: ['closed'],
   switch: ['off'],
+  'tags-input': ['skills'],
+  toolbar: ['formatting', 'vertical'],
   'toggle-button': ['formatting'],
-  'tree-grid': ['expanded', 'unavailable-cells'],
-  'tree-view': ['expanded', 'multiple', 'unavailable'],
+  'tree-grid': ['expanded', 'editable'],
+  'tree-view': ['expanded', 'multiple'],
 });
 
 function isSecondaryStateScenario(scenario) {

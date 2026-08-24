@@ -11,11 +11,11 @@ Accept whole-number drafts and expose increment and decrement controls.
 
 <ComponentExample component="spin-button" scenario="integer" title="Integer" description="Accept whole-number drafts and expose increment and decrement controls." :index="0" />
 
-### Invalid draft
+### Input recovery
 
-Keep an invalid draft visible without replacing the last accepted numeric value.
+Type a quantity directly; leaving an invalid edit restores the last accepted value.
 
-<ComponentExample component="spin-button" scenario="invalid-draft" title="Invalid draft" description="Keep an invalid draft visible without replacing the last accepted numeric value." :index="1" />
+<ComponentExample component="spin-button" scenario="invalid-draft" title="Input recovery" description="Type a quantity directly; leaving an invalid edit restores the last accepted value." :index="1" />
 
 ## Anatomy
 

@@ -5,23 +5,17 @@
 
 ## 예시
 
-### 펼친 상태
+### 프로젝트 탐색
 
-하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다.
+각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다.
 
-<ComponentExample component="tree-view" scenario="expanded" title="펼친 상태" description="하위 항목을 펼친 상태에서 시작하며 펼침 상태와 선택 상태를 따로 관리합니다." :index="0" />
+<ComponentExample component="tree-view" scenario="expanded" title="프로젝트 탐색" description="각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다." :index="0" />
 
-### 여러 항목 선택
+### 검토 파일 선택
 
-기존 선택을 유지하면서 여러 값을 각각 선택하거나 해제합니다.
+폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다.
 
-<ComponentExample component="tree-view" scenario="multiple" title="여러 항목 선택" description="기존 선택을 유지하면서 여러 값을 각각 선택하거나 해제합니다." :index="1" />
-
-### 선택할 수 없는
-
-사용할 수 없는 계층 항목은 보여 주되 실행 대상에서는 제외합니다.
-
-<ComponentExample component="tree-view" scenario="unavailable" title="선택할 수 없는" description="사용할 수 없는 계층 항목은 보여 주되 실행 대상에서는 제외합니다." :index="2" />
+<ComponentExample component="tree-view" scenario="multiple" title="검토 파일 선택" description="폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다." :index="1" />
 
 ## 구성
 

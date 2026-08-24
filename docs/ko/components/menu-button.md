@@ -5,17 +5,17 @@
 
 ## 예시
 
-### 작업
+### 만들기 메뉴
 
-하나의 버튼에서 현재 상황에 맞는 작업 목록을 엽니다.
+하나의 간결한 버튼에서 작업 공간 리소스를 만들거나 가져옵니다.
 
-<ComponentExample component="menu-button" scenario="actions" title="작업" description="하나의 버튼에서 현재 상황에 맞는 작업 목록을 엽니다." :index="0" />
+<ComponentExample component="menu-button" scenario="actions" title="만들기 메뉴" description="하나의 간결한 버튼에서 작업 공간 리소스를 만들거나 가져옵니다." :index="0" />
 
-### 하위 메뉴
+### 내보내기 메뉴
 
-하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다.
+부가 내보내기 형식은 내보내기 하위 메뉴 안에 정리합니다.
 
-<ComponentExample component="menu-button" scenario="nested" title="하위 메뉴" description="하위 명령 목록은 그 목록을 소유한 부모 항목에서만 엽니다." :index="1" />
+<ComponentExample component="menu-button" scenario="nested" title="내보내기 메뉴" description="부가 내보내기 형식은 내보내기 하위 메뉴 안에 정리합니다." :index="1" />
 
 ## 구성
 
@@ -62,8 +62,6 @@ Vue 패키지: `@sectile/vue/menu-button`
   <li><code class="component-part-token">sub-content</code></li>
   <li><code class="component-part-token">separator</code></li>
 </ul>
-
-`provider`는 DOM 요소를 만들지 않는 상태 제공자입니다.
 
 **예외와 추가 속성**
 

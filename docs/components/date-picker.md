@@ -83,8 +83,6 @@ Rendered parts use `data-scope="date-picker"` by default. Each name below is the
   <li><code class="component-part-token">month-cell</code></li>
 </ul>
 
-`provider` is a state provider that does not render a DOM element.
-
 ## Keyboard interaction
 
 | Key | Behavior |

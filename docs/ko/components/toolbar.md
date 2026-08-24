@@ -5,11 +5,17 @@
 
 ## 예시
 
-### 가로 방향
+### 텍스트 서식
 
-같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다.
+인라인 텍스트 서식 작업을 자연스러운 가로 순서로 묶습니다.
 
-<ComponentExample component="toolbar" scenario="horizontal" title="가로 방향" description="같은 값과 경계 규칙을 유지하면서 가로 방향으로 조작합니다." :index="0" />
+<ComponentExample component="toolbar" scenario="formatting" title="텍스트 서식" description="인라인 텍스트 서식 작업을 자연스러운 가로 순서로 묶습니다." :index="0" />
+
+### 캔버스 도구
+
+편집 화면 옆에 캔버스 도구를 세로로 배치합니다.
+
+<ComponentExample component="toolbar" scenario="vertical" title="캔버스 도구" description="편집 화면 옆에 캔버스 도구를 세로로 배치합니다." :index="1" />
 
 ## 구성
 

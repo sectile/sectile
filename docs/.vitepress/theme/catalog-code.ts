@@ -113,14 +113,17 @@ const advance = (id: string) => {
   ),
   'tags-input': sfc(
     'TagsInputRoot, TagsInputItem, TagsInputItemText, TagsInputItemDelete, TagsInputInput, TagsInputClear',
-    `  <TagsInputRoot :default-value="['Vue', 'DOM']" v-slot="{ value }">
+    `  <TagsInputRoot :default-value="['Vue', 'DOM', 'Accessibility']" label="Project skills" v-slot="{ value }">
     <TagsInputItem v-for="(_, index) in value" :key="index" :index="index">
       <TagsInputItemText />
-      <TagsInputItemDelete aria-label="Remove tag">×</TagsInputItemDelete>
+      <TagsInputItemDelete :aria-label="\`Remove \${value[index]}\`">
+        <X aria-hidden="true" />
+      </TagsInputItemDelete>
     </TagsInputItem>
-    <TagsInputInput placeholder="Add tag" />
-    <TagsInputClear>Clear all</TagsInputClear>
+    <TagsInputInput placeholder="Add a skill…" />
+    <TagsInputClear><Trash2 aria-hidden="true" /> Clear all</TagsInputClear>
   </TagsInputRoot>`,
+    `import { Trash2, X } from '@lucide/vue'`,
   ),
   grid: sfc(
     'GridRoot, GridRow, GridCell',
@@ -154,7 +157,7 @@ const lastAction = ref('')`,
   ),
   'date-picker': sfc(
     'DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPreviousWeek, DatePickerPreviousMonth, DatePickerPreviousYear, DatePickerNextWeek, DatePickerNextMonth, DatePickerNextYear, DatePickerWeekViewTrigger, DatePickerMonthViewTrigger, DatePickerYearViewTrigger, DatePickerGrid, DatePickerCell, DatePickerMonthCell',
-    `  <DatePickerRoot :default-value="initialDate" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    `  <DatePickerRoot :default-value="initialDate" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
     <div class="catalog-inline">
       <DatePickerInput class="catalog-input" />
       <DatePickerTrigger>Calendar</DatePickerTrigger>
@@ -203,7 +206,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'date-range-picker': sfc(
     'DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerPreviousWeek, DateRangePickerPreviousMonth, DateRangePickerPreviousYear, DateRangePickerNextWeek, DateRangePickerNextMonth, DateRangePickerNextYear, DateRangePickerWeekViewTrigger, DateRangePickerMonthViewTrigger, DateRangePickerYearViewTrigger, DateRangePickerGrid, DateRangePickerCell, DateRangePickerMonthCell',
-    `  <DateRangePickerRoot :default-value="initialRange" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    `  <DateRangePickerRoot :default-value="initialRange" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
     <div class="catalog-inline">
       <DateRangePickerStartInput class="catalog-input" />
       <DateRangePickerEndInput class="catalog-input" />
@@ -256,15 +259,14 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'date-time-picker': sfc(
     'DateTimePickerRoot, DateTimePickerDateInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPreviousWeek, DateTimePickerPreviousMonth, DateTimePickerPreviousYear, DateTimePickerNextWeek, DateTimePickerNextMonth, DateTimePickerNextYear, DateTimePickerWeekViewTrigger, DateTimePickerMonthViewTrigger, DateTimePickerYearViewTrigger, DateTimePickerGrid, DateTimePickerCell, DateTimePickerMonthCell',
-    `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
-    <div class="catalog-range-fields">
-      <label class="catalog-field">
-        <span>Date</span>
-        <DateTimePickerDateInput class="catalog-input" />
-      </label>
-      <label class="catalog-field">
-        <span>Time</span>
-        <DateTimePickerTimeInput class="catalog-input" />
+    `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+    <div class="catalog-range-fields catalog-range-fields--single">
+      <label class="catalog-endpoint">
+        <span>Date and time</span>
+        <span class="catalog-date-time-control">
+          <DateTimePickerDateInput class="catalog-input" aria-label="Date" />
+          <DateTimePickerTimeInput class="catalog-input catalog-time-input" aria-label="Time" />
+        </span>
       </label>
       <DateTimePickerTrigger>Calendar</DateTimePickerTrigger>
     </div>
@@ -315,17 +317,21 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'date-time-range-picker': sfc(
     'DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousMonth, DateTimeRangePickerPreviousYear, DateTimeRangePickerNextWeek, DateTimeRangePickerNextMonth, DateTimeRangePickerNextYear, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerMonthViewTrigger, DateTimeRangePickerYearViewTrigger, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerMonthCell',
-    `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+    `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
     <div class="catalog-range-fields">
       <label class="catalog-endpoint">
         <span>Start</span>
-        <DateTimeRangePickerStartDateInput class="catalog-input" />
-        <DateTimeRangePickerStartTimeInput class="catalog-input catalog-time-input" />
+        <span class="catalog-date-time-control">
+          <DateTimeRangePickerStartDateInput class="catalog-input" aria-label="Start date" />
+          <DateTimeRangePickerStartTimeInput class="catalog-input catalog-time-input" aria-label="Start time" />
+        </span>
       </label>
       <label class="catalog-endpoint">
         <span>End</span>
-        <DateTimeRangePickerEndDateInput class="catalog-input" />
-        <DateTimeRangePickerEndTimeInput class="catalog-input catalog-time-input" />
+        <span class="catalog-date-time-control">
+          <DateTimeRangePickerEndDateInput class="catalog-input" aria-label="End date" />
+          <DateTimeRangePickerEndTimeInput class="catalog-input catalog-time-input" aria-label="End time" />
+        </span>
       </label>
       <DateTimeRangePickerTrigger>Calendar</DateTimeRangePickerTrigger>
     </div>
@@ -653,24 +659,6 @@ const loadWindow = (direction: 'before' | 'after') => {
 const environmentIDs = environments.map(({ id }) => id)
 const environmentLabel = (id: string) => environments.find(item => item.id === id)?.label ?? id`,
   ),
-  'tree-view': sfc(
-    'TreeViewRoot, TreeViewItem, TreeViewDisclosure, TreeViewGroup',
-    `  <TreeViewRoot :nodes="nodes" :default-expanded-value="['workspace']" v-slot="{ expandedValue }">
-    <TreeViewItem value="workspace">
-      <TreeViewDisclosure for="workspace">Toggle</TreeViewDisclosure>
-      Workspace
-    </TreeViewItem>
-    <TreeViewGroup v-if="expandedValue.includes('workspace')">
-      <TreeViewItem value="src">Source</TreeViewItem>
-      <TreeViewItem value="tests">Tests</TreeViewItem>
-    </TreeViewGroup>
-  </TreeViewRoot>`,
-    `const nodes = [
-  { id: 'workspace', parentID: null },
-  { id: 'src', parentID: 'workspace' },
-  { id: 'tests', parentID: 'workspace' },
-]`,
-  ),
   'tree-grid': sfc(
     'TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridDisclosure, TreeGridEditor',
     `  <TreeGridRoot
@@ -823,6 +811,135 @@ const items = [
   ),
 });
 
+const menuScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  commands: sfc(
+    'MenuRoot, MenuItem, MenuSeparator',
+    `  <MenuRoot :items="items" @invoke="lastAction = $event">
+    <MenuItem value="new-project">New project <kbd>⌘N</kbd></MenuItem>
+    <MenuItem value="open-project">Open project <kbd>⌘O</kbd></MenuItem>
+    <MenuSeparator />
+    <MenuItem value="save-project">Save project <kbd>⌘S</kbd></MenuItem>
+  </MenuRoot>
+  <p v-if="lastAction" role="status">{{ lastAction }} invoked</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
+  { id: 'new-project', parentID: null },
+  { id: 'open-project', parentID: null },
+  { id: 'save-project', parentID: null },
+]`,
+  ),
+  nested: sfc(
+    'MenuRoot, MenuItem, MenuSubContent, MenuSeparator',
+    `  <MenuRoot :items="items" @invoke="lastAction = $event">
+    <MenuItem value="export">Export as ›</MenuItem>
+    <MenuSubContent for="export">
+      <MenuItem value="pdf">PDF document</MenuItem>
+      <MenuItem value="markdown">Markdown</MenuItem>
+      <MenuItem value="csv">CSV data</MenuItem>
+    </MenuSubContent>
+    <MenuSeparator />
+    <MenuItem value="share">Share link <kbd>⌘L</kbd></MenuItem>
+  </MenuRoot>
+  <p v-if="lastAction" role="status">{{ lastAction }} invoked</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
+  { id: 'export', parentID: null },
+  { id: 'pdf', parentID: 'export' },
+  { id: 'markdown', parentID: 'export' },
+  { id: 'csv', parentID: 'export' },
+  { id: 'share', parentID: null },
+]`,
+  ),
+});
+
+const toolbarScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  formatting: sfc(
+    'ToolbarRoot, ToolbarItem, ToolbarSeparator',
+    `  <ToolbarRoot :items="items" label="Text formatting" @invoke="lastAction = $event">
+    <ToolbarItem value="bold"><strong>B</strong><span class="sr-only">Bold</span></ToolbarItem>
+    <ToolbarItem value="italic"><em>I</em><span class="sr-only">Italic</span></ToolbarItem>
+    <ToolbarSeparator />
+    <ToolbarItem value="link">Link</ToolbarItem>
+    </ToolbarRoot>
+  <p v-if="lastAction" role="status">{{ lastAction }} applied</p>`,
+    `import { ref } from 'vue'
+
+const items = ['bold', 'italic', 'link']
+const lastAction = ref('')`,
+  ),
+  vertical: sfc(
+    'ToolbarRoot, ToolbarItem, ToolbarSeparator',
+    `  <ToolbarRoot :items="items" orientation="vertical" label="Canvas tools" @invoke="activeTool = $event">
+    <ToolbarItem value="select">Select</ToolbarItem>
+    <ToolbarItem value="comment">Comment</ToolbarItem>
+    <ToolbarSeparator />
+    <ToolbarItem value="upload">Upload</ToolbarItem>
+    </ToolbarRoot>
+  <p role="status">Active tool: {{ activeTool }}</p>`,
+    `import { ref } from 'vue'
+
+const items = ['select', 'comment', 'upload']
+const activeTool = ref('select')`,
+  ),
+});
+
+const navigationMenuScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  product: sfc(
+    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuViewport, NavigationMenuLink',
+    `  <NavigationMenuRoot :items="items" label="Product navigation" v-slot="{ openPath }">
+    <NavigationMenuList>
+      <NavigationMenuItem>
+        <NavigationMenuTrigger value="products" as="button">Products</NavigationMenuTrigger>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink value="docs" as="a" href="/docs">Documentation</NavigationMenuLink>
+      </NavigationMenuItem>
+    </NavigationMenuList>
+    <NavigationMenuViewport v-show="openPath.includes('products')">
+      <NavigationMenuContent for="products">
+        <NavigationMenuLink value="releases" as="a" href="/releases">New releases</NavigationMenuLink>
+        <NavigationMenuLink value="open-source" as="a" href="/open-source">Open source</NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuViewport>
+  </NavigationMenuRoot>`,
+    `const items = [
+  { id: 'products', parentID: null },
+  { id: 'releases', parentID: 'products' },
+  { id: 'open-source', parentID: 'products' },
+  { id: 'docs', parentID: null },
+]`,
+  ),
+  links: sfc(
+    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent, NavigationMenuViewport, NavigationMenuLink',
+    `  <NavigationMenuRoot :items="items" label="Developer resources" v-slot="{ openPath }">
+    <NavigationMenuList>
+      <NavigationMenuItem>
+        <NavigationMenuTrigger value="resources" as="button">Resources</NavigationMenuTrigger>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink value="github" as="a" href="https://github.com/sectile">GitHub</NavigationMenuLink>
+      </NavigationMenuItem>
+    </NavigationMenuList>
+    <NavigationMenuViewport v-show="openPath.includes('resources')">
+      <NavigationMenuContent for="resources">
+        <NavigationMenuLink value="guides" as="a" href="/guide">Guides</NavigationMenuLink>
+        <NavigationMenuLink value="api" as="a" href="/api">API reference</NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuViewport>
+  </NavigationMenuRoot>`,
+    `const items = [
+  { id: 'resources', parentID: null },
+  { id: 'guides', parentID: 'resources' },
+  { id: 'api', parentID: 'resources' },
+  { id: 'github', parentID: null },
+]`,
+  ),
+});
+
 const popoverScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   anchored: catalogCode['popover'] ?? '',
   collision: sfc(
@@ -864,8 +981,11 @@ const open = ref(false)`,
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
   dialog: dialogScenarioCode,
   'alert-dialog': alertDialogScenarioCode,
+  menu: menuScenarioCode,
   'menu-button': menuButtonScenarioCode,
+  'navigation-menu': navigationMenuScenarioCode,
   popover: popoverScenarioCode,
+  toolbar: toolbarScenarioCode,
 });
 
 /**
