@@ -2,7 +2,9 @@
 import { Play, RotateCcw, SquareTerminal } from '@lucide/vue';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
+import { withBase } from 'vitepress';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { writeShellVirtualTerminal } from '../bash-terminal-bridge.ts';
 import { useDocsLocale } from '../locale.js';
 
 type Status = 'idle' | 'isolating' | 'booting' | 'running' | 'stopped' | 'error';
@@ -17,8 +19,13 @@ const busy = computed(() => status.value === 'isolating' || status.value === 'bo
 const buttonLabel = computed(() => {
   if (status.value === 'isolating') return isKorean.value ? '격리 환경 준비 중' : 'Preparing isolation';
   if (status.value === 'booting') return isKorean.value ? 'Debian 시작 중' : 'Starting Debian';
-  if (status.value === 'running') return isKorean.value ? 'Bash 실행 중' : 'Bash is running';
   return isKorean.value ? 'Bash 시작' : 'Start Bash';
+});
+const statusLabel = computed(() => {
+  if (status.value === 'running') return isKorean.value ? '실행 중' : 'Running';
+  if (status.value === 'stopped') return isKorean.value ? '종료됨' : 'Stopped';
+  if (status.value === 'error') return isKorean.value ? '시작 실패' : 'Start failed';
+  return '';
 });
 
 let terminal: Terminal | undefined;
@@ -27,6 +34,7 @@ let resizeObserver: ResizeObserver | undefined;
 let terminalInput: { dispose(): void } | undefined;
 let linux: CheerpXLinux | undefined;
 let sendInput: ((keyCode: number) => void) | undefined;
+let sessionGeneration = 0;
 
 function writeLine(message = ''): void {
   terminal?.writeln(message.replaceAll('\n', '\r\n'));
@@ -34,14 +42,14 @@ function writeLine(message = ''): void {
 
 function renderIdleMessage(): void {
   terminal?.reset();
-  writeLine('\x1b[38;2;98;222;201mSectile Bash lab\x1b[0m');
+  writeLine('\x1b[38;2;98;222;201mBrowser Bash\x1b[0m');
   writeLine('');
   writeLine(isKorean.value
-    ? '버튼을 누르면 브라우저 안에서 Debian /bin/bash를 시작합니다.'
-    : 'Start an actual Debian /bin/bash session inside this browser.');
+    ? 'Bash 시작을 누르면 격리된 Debian 셸이 열립니다.'
+    : 'Start Bash to open an isolated Debian shell.');
   writeLine(isKorean.value
-    ? '처음 실행할 때 가상 머신 런타임과 디스크 블록을 내려받습니다.'
-    : 'The first run downloads the VM runtime and streamed disk blocks.');
+    ? '프롬프트가 나타나면 일반 Bash 명령을 직접 입력할 수 있습니다.'
+    : 'Type regular Bash commands when the prompt appears.');
 }
 
 async function ensureCrossOriginIsolation(): Promise<boolean> {
@@ -54,8 +62,8 @@ async function ensureCrossOriginIsolation(): Promise<boolean> {
 
   status.value = 'isolating';
   sessionStorage.setItem('sectile-bash-autostart', 'true');
-  const workerUrl = new URL('coi-service-worker.js', window.location.href).href;
-  await navigator.serviceWorker.register(workerUrl, { scope: './' });
+  const workerUrl = new URL(withBase('/coi-service-worker.js'), window.location.origin).href;
+  await navigator.serviceWorker.register(workerUrl, { scope: withBase('/') });
   await navigator.serviceWorker.ready;
   window.location.reload();
   return false;
@@ -63,6 +71,7 @@ async function ensureCrossOriginIsolation(): Promise<boolean> {
 
 async function startBash(): Promise<void> {
   if (busy.value || status.value === 'running') return;
+  const generation = ++sessionGeneration;
   errorMessage.value = '';
 
   try {
@@ -77,13 +86,18 @@ async function startBash(): Promise<void> {
     const idbDevice = await CheerpX.IDBDevice.create('sectile-docs-bash-overlay');
     const overlayDevice = await CheerpX.OverlayDevice.create(cloudDevice, idbDevice);
     const examplesDevice = await CheerpX.DataDevice.create();
-    await examplesDevice.writeFile('/check-environment.sh', [
-      '# This file is mounted by the Sectile documentation.',
-      'printf "Bash %s\\n" "$BASH_VERSION"',
-      'printf "Node "',
-      'node --version',
-      'printf "\\nThis is a real browser-side Debian shell.\\n"',
-      'printf "Sectile component examples use @sectile/terminal directly in the documentation page.\\n"',
+    await examplesDevice.writeFile('/about.sh', [
+      '#!/bin/bash',
+      'printf "\\nBrowser VM ready\\n"',
+      'printf "  Shell      /bin/bash %s\\n" "$BASH_VERSION"',
+      'printf "  Working    %s\\n" "$PWD"',
+      'printf "  Terminal   %s\\n" "$TERM"',
+      'printf "  Isolation  no host files or host shell access\\n"',
+    ].join('\n'));
+    await examplesDevice.writeFile('/bashrc', [
+      "PS1='\\[\\033[1;32m\\]user@debian\\[\\033[0m\\]:\\[\\033[1;34m\\]\\w\\[\\033[0m\\]\\$ '",
+      '/bin/bash /sectile/about.sh',
+      'printf "\\nTry: pwd, ls /sectile, or bash /sectile/about.sh\\n\\n"',
     ].join('\n'));
 
     linux = await CheerpX.Linux.create({
@@ -92,21 +106,20 @@ async function startBash(): Promise<void> {
         { type: 'dir', path: '/sectile', dev: examplesDevice },
       ],
     });
-    sendInput = linux.setCustomConsole((buffer) => terminal?.write(buffer), terminal?.cols ?? 80, terminal?.rows ?? 22);
+    sendInput = linux.setCustomConsole(
+      (buffer, virtualTerminal) => writeShellVirtualTerminal(terminal, buffer, virtualTerminal),
+      terminal?.cols ?? 80,
+      terminal?.rows ?? 22,
+    );
     terminalInput = terminal?.onData((data) => {
       if (!sendInput) return;
       for (let index = 0; index < data.length; index += 1) sendInput(data.charCodeAt(index));
     });
     terminal?.reset();
-    writeLine('\x1b[38;2;98;222;201mActual Debian /bin/bash\x1b[0m');
-    writeLine(isKorean.value
-      ? '환경 확인: bash /sectile/check-environment.sh'
-      : 'Environment check: bash /sectile/check-environment.sh');
-    writeLine('');
     status.value = 'running';
     terminal?.focus();
 
-    const result = await linux.run('/bin/bash', ['--login'], {
+    const result = await linux.run('/bin/bash', ['--noprofile', '--rcfile', '/sectile/bashrc', '-i'], {
       env: [
         'HOME=/home/user',
         'USER=user',
@@ -120,10 +133,12 @@ async function startBash(): Promise<void> {
       uid: 1000,
       gid: 1000,
     });
+    if (generation !== sessionGeneration) return;
     status.value = 'stopped';
     writeLine('');
     writeLine(`${isKorean.value ? 'Bash 종료 코드' : 'Bash exited with status'}: ${result.status}`);
   } catch (error) {
+    if (generation !== sessionGeneration) return;
     status.value = 'error';
     errorMessage.value = error instanceof Error ? error.message : String(error);
     writeLine('');
@@ -132,6 +147,7 @@ async function startBash(): Promise<void> {
 }
 
 function resetEnvironment(): void {
+  sessionGeneration += 1;
   sessionStorage.removeItem('sectile-bash-autostart');
   terminalInput?.dispose();
   terminalInput = undefined;
@@ -149,6 +165,7 @@ onMounted(async () => {
   terminal = new Terminal({
     cols: 90,
     rows: 22,
+    convertEol: true,
     cursorBlink: true,
     fontFamily: 'SFMono-Regular, Consolas, Liberation Mono, monospace',
     fontSize: 13,
@@ -184,21 +201,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="bash-playground" :aria-label="isKorean ? '실제 Bash 실습' : 'Actual Bash playground'">
+  <section class="bash-playground" :aria-label="isKorean ? '브라우저 Bash 환경' : 'Browser Bash environment'">
     <header class="bash-playground__header">
       <div>
         <SquareTerminal :size="20" aria-hidden="true" />
         <div>
-          <strong>{{ isKorean ? '브라우저 속 Debian' : 'Debian in your browser' }}</strong>
-          <span>{{ isKorean ? 'CheerpX로 실행하는 실제 /bin/bash' : 'Actual /bin/bash powered by CheerpX' }}</span>
+          <strong>{{ isKorean ? '브라우저 Bash' : 'Browser Bash' }}</strong>
+          <span>{{ isKorean ? '격리된 Debian · 대화형 /bin/bash' : 'Isolated Debian · interactive /bin/bash' }}</span>
         </div>
       </div>
       <div class="bash-playground__actions">
         <button v-if="status === 'running' || status === 'stopped' || status === 'error'" type="button" @click="resetEnvironment">
           <RotateCcw :size="15" aria-hidden="true" />
-          {{ isKorean ? '화면 초기화' : 'Reset view' }}
+          {{ isKorean ? '세션 초기화' : 'Reset session' }}
         </button>
-        <button class="bash-playground__start" type="button" :disabled="busy || status === 'running'" @click="startBash">
+        <div v-if="statusLabel" class="bash-playground__status" :data-state="status" role="status">
+          <span aria-hidden="true" />
+          {{ statusLabel }}
+        </div>
+        <button v-else class="bash-playground__start" type="button" :disabled="busy" @click="startBash">
           <Play :size="15" aria-hidden="true" />
           {{ buttonLabel }}
         </button>

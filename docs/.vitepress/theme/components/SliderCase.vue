@@ -33,14 +33,14 @@ function update(next: string): void {
 <template>
   <DemoCard title="Deployment traffic" :revision="revision" :state="state" :entries="entries" :code="code" interaction="enabled">
     <div class="slider-demo">
-      <div class="slider-value">{{ value }}%</div>
+      <div class="slider-heading"><span><strong>Deployment traffic</strong><small>Percentage of users receiving the new release</small></span><output class="slider-value">{{ value }}%</output></div>
       <SliderRoot :model-value="value" min="0" max="100" step="1" name="traffic" label="Deployment traffic" class="slider-control" @update:model-value="update">
         <SliderTrack class="slider-track">
           <SliderRange class="slider-range" />
           <SliderThumb class="slider-thumb" />
         </SliderTrack>
       </SliderRoot>
-      <div class="slider-scale"><span>0%</span><span>50%</span><span>100%</span></div>
+      <div class="slider-scale"><span>0% · Current</span><span>50% · Gradual</span><span>100% · Everyone</span></div>
     </div>
   </DemoCard>
 </template>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { ChevronRight } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import {
+  Check, ChevronDown, ChevronLeft, ChevronRight, FileCode2, Folder, FolderOpen,
+  GitBranch, PackageCheck, Pause, Play, Star,
+} from '@lucide/vue';
 import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '@sectile/vue/checkbox-group';
 import { SelectContent, SelectItem, SelectItemIndicator, SelectRoot, SelectTrigger, SelectValue } from '@sectile/vue/select';
 import { PaginationFirst, PaginationItem, PaginationLast, PaginationNext, PaginationPrevious, PaginationRoot } from '@sectile/vue/pagination';
@@ -11,54 +14,97 @@ import { TagsInputClear, TagsInputInput, TagsInputItem, TagsInputItemDelete, Tag
 import { GridCell, GridRoot, GridRow } from '@sectile/vue/grid';
 import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '@sectile/vue/toolbar';
 import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter';
-import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerMonthViewTrigger, DatePickerNextMonth, DatePickerNextWeek, DatePickerNextYear, DatePickerPreviousMonth, DatePickerPreviousWeek, DatePickerPreviousYear, DatePickerRoot, DatePickerTrigger, DatePickerWeekViewTrigger, DatePickerYearViewTrigger } from '@sectile/vue/date-picker';
-import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerMonthCell, DateRangePickerMonthViewTrigger, DateRangePickerNextMonth, DateRangePickerNextWeek, DateRangePickerNextYear, DateRangePickerPreviousMonth, DateRangePickerPreviousWeek, DateRangePickerPreviousYear, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger, DateRangePickerWeekViewTrigger, DateRangePickerYearViewTrigger } from '@sectile/vue/date-range-picker';
-import { DateTimePickerCell, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerGrid, DateTimePickerMonthCell, DateTimePickerMonthViewTrigger, DateTimePickerNextMonth, DateTimePickerNextWeek, DateTimePickerNextYear, DateTimePickerPreviousMonth, DateTimePickerPreviousWeek, DateTimePickerPreviousYear, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerWeekViewTrigger, DateTimePickerYearViewTrigger } from '@sectile/vue/date-time-picker';
-import { DateTimeRangePickerCell, DateTimeRangePickerContent, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerGrid, DateTimeRangePickerMonthCell, DateTimeRangePickerMonthViewTrigger, DateTimeRangePickerNextMonth, DateTimeRangePickerNextWeek, DateTimeRangePickerNextYear, DateTimeRangePickerPreviousMonth, DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousYear, DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerYearViewTrigger } from '@sectile/vue/date-time-range-picker';
+import { DatePickerContent, DatePickerInput, DatePickerRoot, DatePickerTrigger } from '@sectile/vue/date-picker';
+import { DateRangePickerContent, DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '@sectile/vue/date-range-picker';
+import { DateTimePickerContent, DateTimePickerDateInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger, type DateTimeValue } from '@sectile/vue/date-time-picker';
+import { DateTimeRangePickerContent, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartDateInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
 import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
-import { DialogClose, DialogContent, DialogDescription, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
-import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
+import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
+import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogOverlay, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
 import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '@sectile/vue/multi-thumb-slider';
 import { MenuItem, MenuRoot, MenuSeparator, MenuSubContent } from '@sectile/vue/menu';
-import { MenubarContent, MenubarItem, MenubarRoot, MenubarSeparator } from '@sectile/vue/menubar';
 import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuButtonItem } from '@sectile/vue/menu-button';
 import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '@sectile/vue/navigation-menu';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPause, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '@sectile/vue/carousel';
 import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '@sectile/vue/feed';
-import { CalendarCell, CalendarRoot } from '@sectile/vue/calendar';
 import { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxRoot } from '@sectile/vue/combobox';
 import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '@sectile/vue/tree-view';
 import { TreeGridCell, TreeGridDisclosure, TreeGridEditor, TreeGridRoot, TreeGridRow } from '@sectile/vue/tree-grid';
-import { catalogCode } from '../catalog-code.js';
+import { catalogCodeFor } from '../catalog-code.js';
+import { multiThumbSliderExampleState } from '../catalog-example-state.js';
+import CalendarExample from './CalendarExample.vue';
 import DemoCard from './DemoCard.vue';
+import MenubarExample from './MenubarExample.vue';
+import PickerCalendarDemo from './PickerCalendarDemo.vue';
 
 const props = defineProps<{
   readonly component: string;
+  readonly scenario: string;
   readonly title: string;
   readonly description: string;
-  readonly variant: 'default' | 'alternate' | 'constrained';
 }>();
-const items = ['alpha', 'beta', 'stable'];
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const releaseChannels = Object.freeze([
+  { id: 'stable', label: 'Stable', detail: 'Production-ready updates' },
+  { id: 'preview', label: 'Preview', detail: 'Test features before release' },
+  { id: 'nightly', label: 'Nightly', detail: 'Latest changes every day' },
+]);
+const releaseChannelIDs = releaseChannels.map(({ id }) => id);
+const environments = Object.freeze([
+  { id: 'production', label: 'Production', detail: 'customer.app' },
+  { id: 'staging', label: 'Staging', detail: 'staging.customer.app' },
+  { id: 'development', label: 'Development', detail: 'Local workspace' },
+]);
+const environmentIDs = environments.map(({ id }) => id);
+const environmentLabel = (id: string): string => environments.find((item) => item.id === id)?.label ?? id;
+const checkoutSteps = Object.freeze([
+  { id: 'account', label: 'Account', detail: 'Contact and sign-in details' },
+  { id: 'delivery', label: 'Delivery', detail: 'Address and shipping method' },
+  { id: 'payment', label: 'Payment', detail: 'Secure payment information' },
+  { id: 'review', label: 'Review', detail: 'Confirm and place the order' },
+]);
+const checkoutStepIDs = checkoutSteps.map(({ id }) => id);
+const carouselSlides = Object.freeze([
+  { id: 'tokens', label: 'Design tokens', detail: 'One source of truth for color, type, and spacing.', meta: 'Foundation' },
+  { id: 'components', label: 'Accessible components', detail: 'Keyboard-ready building blocks for product teams.', meta: 'Interface' },
+  { id: 'adapters', label: 'Every runtime', detail: 'Keep behavior aligned across DOM and terminal hosts.', meta: 'Platform' },
+]);
+const carouselSlideIDs = carouselSlides.map(({ id }) => id);
+const carouselAutoplayDelay = 3000;
+const feedEvents = Object.freeze([
+  { id: 'deploy', title: 'Production deployment started', detail: 'Release workflow · Just now', status: 'Running' },
+  { id: 'build', title: 'Production build completed', detail: 'Web app · 2 minutes ago', status: 'Passed' },
+  { id: 'review', title: 'Pull request approved', detail: 'Mina Kim · 18 minutes ago', status: 'Ready' },
+  { id: 'release', title: 'Version 0.2.0 published', detail: 'Package registry · 1 hour ago', status: 'Live' },
+  { id: 'audit', title: 'Accessibility audit completed', detail: 'Documentation · 3 hours ago', status: 'Passed' },
+]);
+const feedEventIDs = feedEvents.map(({ id }) => id);
+const toolbarItems = ['bold', 'italic', 'link'];
 const menuItems = [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }, { id: 'open', parentID: 'file' }, { id: 'help', parentID: null }];
-const fullCalendarRows = [
-  ['2026-07-27', '2026-07-28', '2026-07-29', '2026-07-30', '2026-07-31', '2026-08-01', '2026-08-02'],
-  ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09'],
-  ['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14', '2026-08-15', '2026-08-16'],
-  ['2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21', '2026-08-22', '2026-08-23'],
-  ['2026-08-24', '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-28', '2026-08-29', '2026-08-30'],
-  ['2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05', '2026-09-06'],
-];
-const compactCalendarRows = [fullCalendarRows[3]!];
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
 const dateRange = Object.freeze({ start: date, end: Object.freeze({ year: 2026, month: 8, day: 25 }) });
 const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 }) });
+const morningDateTime = Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 7, minute: 45, second: 0, millisecond: 0 }) });
+const controlledDateTime = ref<DateTimeValue | null>(Object.freeze({ date: Object.freeze({ year: 2026, month: 9, day: 3 }), time: Object.freeze({ hour: 14, minute: 15, second: 0, millisecond: 0 }) }));
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
-const treeNodes = [{ id: 'workspace', parentID: null }, { id: 'src', parentID: 'workspace' }, { id: 'tests', parentID: 'workspace' }];
-const treeGridRows = [{ id: 'workspace', parentID: null, cells: ['workspace-name', 'workspace-status'] }, { id: 'src', parentID: 'workspace', cells: ['src-name', 'src-status'] }];
-const cellValues = new Map([['workspace-name', 'Workspace'], ['workspace-status', 'Ready'], ['src-name', 'Source'], ['src-status', 'Active']]);
+const treeNodes = [
+  { id: 'sectile', parentID: null },
+  { id: 'src', parentID: 'sectile' },
+  { id: 'components', parentID: 'src' },
+  { id: 'tokens', parentID: 'src' },
+  { id: 'tests', parentID: 'sectile' },
+];
+const treeGridRows = [
+  { id: 'sectile', parentID: null, cells: ['sectile-name', 'sectile-branch', 'sectile-status'] },
+  { id: 'src', parentID: 'sectile', cells: ['src-name', 'src-branch', 'src-status'] },
+  { id: 'tests', parentID: 'sectile', cells: ['tests-name', 'tests-branch', 'tests-status'] },
+];
+const cellValues = new Map([
+  ['sectile-name', 'sectile'], ['sectile-branch', 'main'], ['sectile-status', 'Healthy'],
+  ['src-name', 'src'], ['src-branch', '12 files'], ['src-status', 'Modified'],
+  ['tests-name', 'tests'], ['tests-branch', '38 checks'], ['tests-status', 'Passing'],
+]);
 const quantityPolicies = createStandardQuantityPolicies('metre', 'metric');
 const parts: Record<string, readonly string[]> = {
   'checkbox-group': ['CheckboxGroupRoot', 'CheckboxGroupItem', 'CheckboxGroupIndicator'], select: ['SelectRoot', 'SelectTrigger', 'SelectValue', 'SelectContent', 'SelectItem'],
@@ -71,19 +117,70 @@ const parts: Record<string, readonly string[]> = {
   'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartDateInput', 'DateTimeRangePickerStartTimeInput', 'DateTimeRangePickerEndDateInput', 'DateTimeRangePickerEndTimeInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerPreviousWeek', 'DateTimeRangePickerPreviousMonth', 'DateTimeRangePickerPreviousYear', 'DateTimeRangePickerNextWeek', 'DateTimeRangePickerNextMonth', 'DateTimeRangePickerNextYear', 'DateTimeRangePickerWeekViewTrigger', 'DateTimeRangePickerMonthViewTrigger', 'DateTimeRangePickerYearViewTrigger', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell', 'DateTimeRangePickerMonthCell'],
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
-  menubar: ['MenubarRoot', 'MenubarItem', 'MenubarSubContent'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
+  menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
   'tree-view': ['TreeViewRoot', 'TreeViewItem', 'TreeViewDisclosure', 'TreeViewGroup'], 'tree-grid': ['TreeGridRoot', 'TreeGridRow', 'TreeGridCell', 'TreeGridEditor'],
 };
-const code = computed(() => catalogCode[props.component] ?? '');
-const state = computed(() => ({ component: props.component, variant: props.variant, parts: parts[props.component] ?? [] }));
-const isAlternate = computed(() => props.variant === 'alternate');
-const isConstrained = computed(() => props.variant === 'constrained');
-const selectedItems = computed(() => isAlternate.value ? ['alpha', 'stable'] : ['alpha']);
-const visibleCalendarRows = computed(() => isAlternate.value ? compactCalendarRows : fullCalendarRows);
-const sliderThumbs = computed(() => isAlternate.value ? ['minimum', 'middle', 'maximum'] : ['minimum', 'maximum']);
-const sliderValues = computed(() => isAlternate.value ? [20, 50, 80] : [25, 75]);
+const code = computed(() => catalogCodeFor(props.component, props.scenario));
+const state = computed(() => ({ component: props.component, scenario: props.scenario, parts: parts[props.component] ?? [] }));
+const isScenario = (...values: readonly string[]) => values.includes(props.scenario);
+const selectedItems = computed(() => isScenario('release-channels') ? ['stable', 'preview'] : ['stable']);
+const sliderExample = computed(() => multiThumbSliderExampleState(props.scenario));
+const gridRows = computed(() => isScenario('editable', 'controlled', 'disabled-wrap')
+  ? [['Production', 'Ready', 'v0.2'], ['Preview', 'Pending', 'next']]
+  : [['Core', 'Ready'], ['Vue', 'Active']]);
+const checkoutValue = ref('delivery');
+const actionStatus = ref('Choose an action');
+const feedWindow = ref<readonly string[]>(Object.freeze(feedEventIDs.slice(1, 4)));
+const feedRevision = ref(0);
+const feedStatus = ref('');
+const feedItems = computed(() => feedWindow.value);
+const visibleFeedEvents = computed(() => feedEvents.filter(({ id }) => feedWindow.value.includes(id)));
+const canLoadEarlier = computed(() => !feedWindow.value.includes('audit'));
+const canLoadNewer = computed(() => !feedWindow.value.includes('deploy'));
+const treeExpanded = computed(() => isScenario('collapsed') ? [] : ['sectile', 'src']);
+const treeSelection = computed(() => isScenario('multiple')
+  ? ['components', 'tests']
+  : isScenario('collapsed') ? ['sectile'] : ['components']);
+const pickerDateTime = computed(() => isScenario('morning') ? morningDateTime : dateTime);
+const dateTimePickerProps = computed(() => isScenario('controlled')
+  ? { modelValue: controlledDateTime.value }
+  : { defaultValue: pickerDateTime.value });
+const updateControlledDateTime = (value: unknown): void => {
+  if (isScenario('controlled')) controlledDateTime.value = value as DateTimeValue | null;
+};
+const nextCheckoutStep = (current: string): string | undefined => {
+  const next = checkoutStepIDs[checkoutStepIDs.indexOf(current) + 1];
+  if (next === undefined || (isScenario('gated-step') && ['payment', 'review'].includes(next))) return undefined;
+  return next;
+};
+const checkoutActionLabel = (current: string): string => {
+  const next = nextCheckoutStep(current);
+  if (next !== undefined) return `Continue to ${checkoutSteps.find(({ id }) => id === next)?.label ?? next}`;
+  return isScenario('gated-step') && current === 'delivery' ? 'Complete delivery to unlock Payment' : 'Checkout steps complete';
+};
+const advanceCheckout = (current: string): void => {
+  const next = nextCheckoutStep(current);
+  if (next !== undefined) checkoutValue.value = next;
+};
+const recordAction = (value: string): void => {
+  const labels: Readonly<Record<string, string>> = Object.freeze({ bold: 'Bold', italic: 'Italic', link: 'Link', file: 'File', new: 'New', open: 'Open', help: 'Help' });
+  actionStatus.value = `${labels[value] ?? value} action invoked`;
+};
+const loadFeedWindow = (direction: 'before' | 'after'): void => {
+  if (direction === 'after' && canLoadNewer.value) {
+    feedWindow.value = Object.freeze(['deploy', ...feedWindow.value]);
+    feedStatus.value = '1 newer activity loaded';
+  } else if (direction === 'before' && canLoadEarlier.value) {
+    feedWindow.value = Object.freeze([...feedWindow.value, 'audit']);
+    feedStatus.value = '1 earlier activity loaded';
+  } else {
+    feedStatus.value = direction === 'after' ? 'No newer activity available' : 'No earlier activity available';
+    return;
+  }
+  feedRevision.value += 1;
+};
 </script>
 
 <template>
@@ -98,132 +195,197 @@ const sliderValues = computed(() => isAlternate.value ? [20, 50, 80] : [25, 75])
   >
     <div class="catalog-demo">
       <p class="catalog-description">{{ description }}</p>
-      <CheckboxGroupRoot v-if="component === 'checkbox-group'" :default-value="selectedItems" name="channels" class="catalog-stack">
-        <CheckboxGroupItem v-for="item in items" :key="item" :value="item" class="catalog-option">{{ item }} <CheckboxGroupIndicator>✓</CheckboxGroupIndicator></CheckboxGroupItem>
+      <CheckboxGroupRoot v-if="component === 'checkbox-group'" :default-value="selectedItems" name="channels" class="catalog-stack catalog-choice-group">
+        <CheckboxGroupItem v-for="item in releaseChannels" :key="item.id" :value="item.id" class="catalog-option catalog-choice-option">
+          <span class="catalog-choice-marker"><CheckboxGroupIndicator><Check :size="15" :stroke-width="2.5" /></CheckboxGroupIndicator></span>
+          <span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span>
+        </CheckboxGroupItem>
       </CheckboxGroupRoot>
 
-      <SelectRoot v-else-if="component === 'select'" :items="items" :default-value="isAlternate ? 'stable' : 'alpha'" :default-open="isConstrained" class="catalog-popup-root">
-        <SelectTrigger class="catalog-trigger"><SelectValue /></SelectTrigger>
-        <SelectContent class="catalog-popup"><SelectItem v-for="item in items" :key="item" :value="item" class="catalog-option">{{ item }} <SelectItemIndicator>✓</SelectItemIndicator></SelectItem></SelectContent>
-      </SelectRoot>
+      <div v-else-if="component === 'select'" class="catalog-field-shell">
+        <span class="catalog-field-label">Deployment environment</span>
+        <SelectRoot :items="environmentIDs" :text-value="environmentLabel" :disabled-items="isScenario('disabled-option') ? ['development'] : []" default-value="production" :default-open="isScenario('disabled-option')" label="Deployment environment" class="catalog-popup-root">
+          <SelectTrigger class="catalog-trigger catalog-select-trigger"><SelectValue /><ChevronDown :size="17" aria-hidden="true" /></SelectTrigger>
+          <SelectContent class="catalog-popup catalog-select-popup"><SelectItem v-for="item in environments" :key="item.id" :value="item.id" class="catalog-option catalog-select-option"><span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span><SelectItemIndicator><Check :size="16" aria-hidden="true" /></SelectItemIndicator></SelectItem></SelectContent>
+        </SelectRoot>
+        <small class="catalog-field-help">Deployments inherit variables from the selected environment.</small>
+      </div>
 
-      <PaginationRoot v-else-if="component === 'pagination'" :total="240" :default-items-per-page="isAlternate ? 10 : 20" v-slot="{ items: pages }" class="catalog-pagination">
-        <PaginationFirst v-if="!isConstrained" class="catalog-pagination-control" aria-label="First page">«</PaginationFirst><PaginationPrevious class="catalog-pagination-control" aria-label="Previous page">‹</PaginationPrevious>
+      <PaginationRoot v-else-if="component === 'pagination'" :total="isScenario('long-range') ? 2500 : 240" :default-items-per-page="isScenario('compact') ? 10 : 20" v-slot="{ items: pages }" class="catalog-pagination">
+        <PaginationFirst v-if="!isScenario('compact', 'pages-only')" class="catalog-pagination-control" aria-label="First page">«</PaginationFirst><PaginationPrevious class="catalog-pagination-control" aria-label="Previous page">‹</PaginationPrevious>
         <template v-for="item in pages.filter(item => item.type !== 'control')" :key="JSON.stringify(item)">
           <span v-if="item.type === 'ellipsis'" class="catalog-pagination-ellipsis" aria-hidden="true">…</span>
           <PaginationItem v-else :item="item" class="catalog-pagination-page">{{ item.page }}</PaginationItem>
         </template>
-        <PaginationNext class="catalog-pagination-control" aria-label="Next page">›</PaginationNext><PaginationLast v-if="!isConstrained" class="catalog-pagination-control" aria-label="Last page">»</PaginationLast>
+        <PaginationNext class="catalog-pagination-control" aria-label="Next page">›</PaginationNext><PaginationLast v-if="!isScenario('compact', 'pages-only')" class="catalog-pagination-control" aria-label="Last page">»</PaginationLast>
       </PaginationRoot>
 
-      <StepperRoot v-else-if="component === 'stepper'" :items="items" :default-value="isAlternate ? 'stable' : 'alpha'" class="catalog-stack">
-        <StepperList class="catalog-inline"><StepperStep v-for="item in items" :key="item" :value="item">{{ item }}</StepperStep></StepperList>
-        <StepperContent v-for="item in items" :key="item" :value="item" class="catalog-panel">Step: {{ item }}</StepperContent>
+      <StepperRoot v-else-if="component === 'stepper'" v-model="checkoutValue" :items="checkoutStepIDs" :disabled-items="isScenario('gated-step') ? ['payment', 'review'] : []" class="catalog-stepper" v-slot="{ value }">
+        <StepperList class="catalog-stepper-list"><StepperStep v-for="(step, index) in checkoutSteps" :key="step.id" :value="step.id" class="catalog-stepper-step" :class="{ 'is-complete': checkoutStepIDs.indexOf(value) > index }"><span class="catalog-stepper-index"><Check v-if="checkoutStepIDs.indexOf(value) > index" :size="15" :stroke-width="2.6" /><span v-else>{{ index + 1 }}</span></span><strong>{{ step.label }}</strong></StepperStep></StepperList>
+        <StepperContent v-for="(step, index) in checkoutSteps" :key="step.id" :value="step.id" class="catalog-stepper-panel"><span class="catalog-stepper-kicker">Step {{ index + 1 }} of {{ checkoutSteps.length }}</span><strong>{{ step.label }}</strong><p>{{ step.detail }}</p><button type="button" :disabled="nextCheckoutStep(step.id) === undefined" @click="advanceCheckout(step.id)">{{ checkoutActionLabel(step.id) }}</button></StepperContent>
       </StepperRoot>
 
-      <RatingRoot v-else-if="component === 'rating'" :items="['1', '2', '3', '4', '5']" :default-value="isAlternate ? '4' : '3'" :clearable="!isConstrained" :readonly="isConstrained" class="catalog-inline">
-        <RatingItem v-for="value in ['1', '2', '3', '4', '5']" :key="value" :value="value" class="catalog-icon-button">★<RatingIndicator /></RatingItem><RatingClear>Clear</RatingClear>
+      <RatingRoot v-else-if="component === 'rating'" :items="['1', '2', '3', '4', '5']" :default-value="isScenario('required', 'controlled') ? '4' : '3'" :clearable="!isScenario('required')" class="catalog-rating" v-slot="{ value: ratingValue }">
+        <RatingItem
+          v-for="value in ['1', '2', '3', '4', '5']"
+          :key="value"
+          :value="value"
+          class="catalog-rating-item"
+          :class="{ 'catalog-rating-item--filled': Number(value) <= Number(ratingValue) }"
+        >
+          <Star class="catalog-rating-star" aria-hidden="true" :size="25" :stroke-width="2" />
+          <RatingIndicator class="catalog-rating-indicator" />
+        </RatingItem>
+        <RatingClear class="catalog-rating-clear">Clear rating</RatingClear>
       </RatingRoot>
 
-      <PinInputRoot v-else-if="component === 'pin-input'" :length="isAlternate ? 8 : 6" :default-value="isAlternate ? '8472' : '12'" class="catalog-inline">
-        <PinInputInput v-for="index in (isAlternate ? 8 : 6)" :key="index" :index="index - 1" class="catalog-pin" />
+      <PinInputRoot v-else-if="component === 'pin-input'" :length="isScenario('prefilled') ? 8 : 6" :default-value="isScenario('prefilled') ? '8472' : '12'" class="catalog-inline">
+        <PinInputInput v-for="index in (isScenario('prefilled') ? 8 : 6)" :key="index" :index="index - 1" class="catalog-pin" />
       </PinInputRoot>
 
-      <TagsInputRoot v-else-if="component === 'tags-input'" :default-value="isAlternate ? ['Vue', 'DOM', 'Accessibility'] : ['Vue', 'DOM']" :max-tags="isConstrained ? 3 : undefined" class="catalog-inline" v-slot="{ value }">
+      <TagsInputRoot v-else-if="component === 'tags-input'" :default-value="isScenario('limited', 'controlled') ? ['Vue', 'DOM', 'Accessibility'] : ['Vue', 'DOM']" :max-tags="isScenario('limited') ? 3 : undefined" class="catalog-inline" v-slot="{ value }">
         <TagsInputItem v-for="(_, index) in value" :key="index" :index="index" class="catalog-chip"><TagsInputItemText /><TagsInputItemDelete>×</TagsInputItemDelete></TagsInputItem>
         <TagsInputInput class="catalog-input" placeholder="Add tag" /><TagsInputClear>Clear</TagsInputClear>
       </TagsInputRoot>
 
-      <GridRoot v-else-if="component === 'grid'" :rows="isAlternate ? [['Production', 'Ready', 'v0.2'], ['Preview', 'Pending', 'next']] : [['Core', 'Ready'], ['Vue', 'Active']]" class="catalog-grid">
-        <GridRow v-for="row in (isAlternate ? [['Production', 'Ready', 'v0.2'], ['Preview', 'Pending', 'next']] : [['Core', 'Ready'], ['Vue', 'Active']])" :key="row[0]" class="catalog-grid-row"><GridCell v-for="cell in row" :key="cell" :value="cell" class="catalog-grid-cell">{{ cell }}</GridCell></GridRow>
+      <GridRoot v-else-if="component === 'grid'" :rows="gridRows" :disabled-items="isScenario('disabled-wrap') ? ['Pending'] : []" :readonly="!isScenario('editable')" class="catalog-grid">
+        <GridRow v-for="row in gridRows" :key="row.join(':')" class="catalog-grid-row"><GridCell v-for="cell in row" :key="cell" :value="cell" class="catalog-grid-cell">{{ cell }}</GridCell></GridRow>
       </GridRoot>
 
-      <ToolbarRoot v-else-if="component === 'toolbar'" :items="items" label="Formatting" class="catalog-inline">
-        <ToolbarItem value="alpha">Bold</ToolbarItem><ToolbarSeparator /><ToolbarItem value="beta">Italic</ToolbarItem><ToolbarItem value="stable">Link</ToolbarItem>
-      </ToolbarRoot>
+      <div v-else-if="component === 'toolbar'" class="catalog-action-demo"><ToolbarRoot :items="toolbarItems" :orientation="isScenario('vertical-disabled') ? 'vertical' : 'horizontal'" :disabled-items="isScenario('vertical-disabled') ? ['italic'] : []" label="Formatting" class="catalog-inline catalog-toolbar" @invoke="recordAction"><ToolbarItem value="bold"><strong>B</strong><span class="sr-only">Bold</span></ToolbarItem><ToolbarSeparator /><ToolbarItem value="italic"><em>I</em><span class="sr-only">Italic</span></ToolbarItem><ToolbarItem value="link">Link</ToolbarItem></ToolbarRoot><p class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p></div>
 
-      <WindowSplitterRoot v-else-if="component === 'window-splitter'" :default-value="isAlternate ? 68 : 42" class="catalog-splitter">
+      <WindowSplitterRoot v-else-if="component === 'window-splitter'" :default-value="isScenario('vertical') ? 68 : 42" :orientation="isScenario('vertical') ? 'vertical' : 'horizontal'" class="catalog-splitter">
         <WindowSplitterPane side="before" class="catalog-pane">Navigator</WindowSplitterPane><WindowSplitterHandle class="catalog-handle" /><WindowSplitterPane side="after" class="catalog-pane">Editor</WindowSplitterPane>
       </WindowSplitterRoot>
 
-      <DatePickerRoot v-else-if="component === 'date-picker'" :default-value="isAlternate ? dateRange.end : date" :default-open="!isConstrained" :default-view="isAlternate ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+      <DatePickerRoot v-else-if="component === 'date-picker'" :default-value="isScenario('weekdays') ? dateRange.end : date" :default-open="true" :default-view="isScenario('weekdays') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
         <div class="catalog-inline"><DatePickerInput class="catalog-input" /><DatePickerTrigger>Calendar</DatePickerTrigger></div>
         <DatePickerContent class="catalog-popup catalog-picker-popup">
-          <div class="catalog-picker-toolbar"><div class="catalog-inline"><DatePickerPreviousWeek v-if="viewMode === 'week'">‹</DatePickerPreviousWeek><DatePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DatePickerPreviousMonth><DatePickerPreviousYear v-else>‹</DatePickerPreviousYear><strong>{{ viewMode === 'year' ? view.year : `${monthNames[view.month - 1]} ${view.year}` }}</strong><DatePickerNextWeek v-if="viewMode === 'week'">›</DatePickerNextWeek><DatePickerNextMonth v-else-if="viewMode === 'month'">›</DatePickerNextMonth><DatePickerNextYear v-else>›</DatePickerNextYear></div><div class="catalog-view-switch"><DatePickerWeekViewTrigger>Week</DatePickerWeekViewTrigger><DatePickerMonthViewTrigger>Month</DatePickerMonthViewTrigger><DatePickerYearViewTrigger>Year</DatePickerYearViewTrigger></div></div>
-          <DatePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode"><DatePickerCell v-for="day in dates.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DatePickerCell></DatePickerGrid>
-          <DatePickerGrid v-else class="catalog-month-grid"><DatePickerMonthCell v-for="month in months.flat()" :key="month.month" :value="month">{{ monthNames[month.month - 1] }}</DatePickerMonthCell></DatePickerGrid>
+          <PickerCalendarDemo component="date-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" />
         </DatePickerContent>
       </DatePickerRoot>
 
       <DateRangePickerRoot v-else-if="component === 'date-range-picker'" :default-value="dateRange" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
         <div class="catalog-inline"><DateRangePickerStartInput class="catalog-input" /><DateRangePickerEndInput class="catalog-input" /><DateRangePickerTrigger>Calendar</DateRangePickerTrigger></div>
-        <DateRangePickerContent class="catalog-popup catalog-picker-popup"><div class="catalog-picker-toolbar"><div class="catalog-inline"><DateRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateRangePickerPreviousWeek><DateRangePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateRangePickerPreviousMonth><DateRangePickerPreviousYear v-else>‹</DateRangePickerPreviousYear><strong>{{ viewMode === 'year' ? view.year : `${monthNames[view.month - 1]} ${view.year}` }}</strong><DateRangePickerNextWeek v-if="viewMode === 'week'">›</DateRangePickerNextWeek><DateRangePickerNextMonth v-else-if="viewMode === 'month'">›</DateRangePickerNextMonth><DateRangePickerNextYear v-else>›</DateRangePickerNextYear></div><div class="catalog-view-switch"><DateRangePickerWeekViewTrigger>Week</DateRangePickerWeekViewTrigger><DateRangePickerMonthViewTrigger>Month</DateRangePickerMonthViewTrigger><DateRangePickerYearViewTrigger>Year</DateRangePickerYearViewTrigger></div></div><DateRangePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode"><DateRangePickerCell v-for="day in dates.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateRangePickerCell></DateRangePickerGrid><DateRangePickerGrid v-else class="catalog-month-grid"><DateRangePickerMonthCell v-for="month in months.flat()" :key="month.month" :value="month">{{ monthNames[month.month - 1] }}</DateRangePickerMonthCell></DateRangePickerGrid></DateRangePickerContent>
+        <DateRangePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateRangePickerContent>
       </DateRangePickerRoot>
 
-      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" :default-value="dateTime" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" v-bind="dateTimePickerProps" :default-open="isScenario('morning')" :default-view="isScenario('morning') ? 'week' : 'month'" @update:model-value="updateControlledDateTime" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
         <div class="catalog-range-fields"><label class="catalog-field"><span>Date</span><DateTimePickerDateInput class="catalog-input" /></label><label class="catalog-field"><span>Time</span><DateTimePickerTimeInput class="catalog-input" /></label><DateTimePickerTrigger>Calendar</DateTimePickerTrigger></div>
-        <DateTimePickerContent class="catalog-popup catalog-picker-popup"><div class="catalog-picker-toolbar"><div class="catalog-inline"><DateTimePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimePickerPreviousWeek><DateTimePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateTimePickerPreviousMonth><DateTimePickerPreviousYear v-else>‹</DateTimePickerPreviousYear><strong>{{ viewMode === 'year' ? view.year : `${monthNames[view.month - 1]} ${view.year}` }}</strong><DateTimePickerNextWeek v-if="viewMode === 'week'">›</DateTimePickerNextWeek><DateTimePickerNextMonth v-else-if="viewMode === 'month'">›</DateTimePickerNextMonth><DateTimePickerNextYear v-else>›</DateTimePickerNextYear></div><div class="catalog-view-switch"><DateTimePickerWeekViewTrigger>Week</DateTimePickerWeekViewTrigger><DateTimePickerMonthViewTrigger>Month</DateTimePickerMonthViewTrigger><DateTimePickerYearViewTrigger>Year</DateTimePickerYearViewTrigger></div></div><DateTimePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode"><DateTimePickerCell v-for="day in dates.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateTimePickerCell></DateTimePickerGrid><DateTimePickerGrid v-else class="catalog-month-grid"><DateTimePickerMonthCell v-for="month in months.flat()" :key="month.month" :value="month">{{ monthNames[month.month - 1] }}</DateTimePickerMonthCell></DateTimePickerGrid></DateTimePickerContent>
+        <DateTimePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-time-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimePickerContent>
       </DateTimePickerRoot>
-      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isAlternate ? sameDayDateTimeRange : dateTimeRange" :default-view="isConstrained ? 'year' : isAlternate ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
+      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isScenario('office-hours') ? sameDayDateTimeRange : dateTimeRange" :default-view="isScenario('office-hours') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack">
         <div class="catalog-range-fields"><label class="catalog-endpoint"><span>Start</span><DateTimeRangePickerStartDateInput class="catalog-input" /><DateTimeRangePickerStartTimeInput class="catalog-input catalog-time-input" /></label><label class="catalog-endpoint"><span>End</span><DateTimeRangePickerEndDateInput class="catalog-input" /><DateTimeRangePickerEndTimeInput class="catalog-input catalog-time-input" /></label><DateTimeRangePickerTrigger>Calendar</DateTimeRangePickerTrigger></div>
-        <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup"><div class="catalog-picker-toolbar"><div class="catalog-inline"><DateTimeRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimeRangePickerPreviousWeek><DateTimeRangePickerPreviousMonth v-else-if="viewMode === 'month'">‹</DateTimeRangePickerPreviousMonth><DateTimeRangePickerPreviousYear v-else>‹</DateTimeRangePickerPreviousYear><strong>{{ viewMode === 'year' ? view.year : `${monthNames[view.month - 1]} ${view.year}` }}</strong><DateTimeRangePickerNextWeek v-if="viewMode === 'week'">›</DateTimeRangePickerNextWeek><DateTimeRangePickerNextMonth v-else-if="viewMode === 'month'">›</DateTimeRangePickerNextMonth><DateTimeRangePickerNextYear v-else>›</DateTimeRangePickerNextYear></div><div class="catalog-view-switch"><DateTimeRangePickerWeekViewTrigger>Week</DateTimeRangePickerWeekViewTrigger><DateTimeRangePickerMonthViewTrigger>Month</DateTimeRangePickerMonthViewTrigger><DateTimeRangePickerYearViewTrigger>Year</DateTimeRangePickerYearViewTrigger></div></div><DateTimeRangePickerGrid v-if="viewMode !== 'year'" class="catalog-calendar" :data-view="viewMode"><DateTimeRangePickerCell v-for="day in dates.flat()" :key="`${day.year}-${day.month}-${day.day}`" :value="day">{{ day.day }}</DateTimeRangePickerCell></DateTimeRangePickerGrid><DateTimeRangePickerGrid v-else class="catalog-month-grid"><DateTimeRangePickerMonthCell v-for="month in months.flat()" :key="month.month" :value="month">{{ monthNames[month.month - 1] }}</DateTimeRangePickerMonthCell></DateTimeRangePickerGrid></DateTimeRangePickerContent>
+        <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-time-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimeRangePickerContent>
       </DateTimeRangePickerRoot>
 
-      <QuantityFieldRoot v-else-if="component === 'quantity-field'" :policies="quantityPolicies" :default-value="{ value: isAlternate ? '2.5' : '1.25', unit: 'metre' }" :default-display-unit="isAlternate ? 'metre' : 'centimetre'" class="catalog-inline"><QuantityFieldInput class="catalog-input" /><QuantityFieldUnitSelect class="catalog-select" /><QuantityFieldValue /></QuantityFieldRoot>
+      <QuantityFieldRoot v-else-if="component === 'quantity-field'" :policies="quantityPolicies" :default-value="{ value: isScenario('calculator', 'controlled') ? '2.5' : '1.25', unit: 'metre' }" :default-display-unit="isScenario('length') ? 'centimetre' : 'metre'" class="catalog-inline"><QuantityFieldInput class="catalog-input" /><QuantityFieldUnitSelect class="catalog-select" /><QuantityFieldValue /></QuantityFieldRoot>
 
-      <DialogRoot v-else-if="component === 'dialog'" :default-open="isAlternate"><DialogTrigger>Open details</DialogTrigger><DialogContent class="catalog-dialog"><DialogTitle>Deployment</DialogTitle><DialogDescription>Review the release before continuing.</DialogDescription><DialogClose>Close</DialogClose></DialogContent></DialogRoot>
-      <AlertDialogRoot v-else-if="component === 'alert-dialog'" :default-open="isAlternate"><AlertDialogTrigger>Delete project</AlertDialogTrigger><AlertDialogContent class="catalog-dialog"><AlertDialogTitle>Delete project?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription><AlertDialogClose>Cancel</AlertDialogClose></AlertDialogContent></AlertDialogRoot>
-      <TooltipRoot v-else-if="component === 'tooltip'" :default-open="isAlternate" :side="isConstrained ? 'right' : 'top'"><TooltipTrigger>Keyboard shortcut</TooltipTrigger><TooltipContent class="catalog-tooltip"><TooltipArrow class="catalog-tooltip-arrow" />Open commands with ⌘K</TooltipContent></TooltipRoot>
+      <DialogRoot v-else-if="component === 'dialog'" :default-open="true" :modal="!isScenario('non-modal')">
+        <DialogTrigger>Open details</DialogTrigger>
+        <DialogOverlay v-if="!isScenario('non-modal')" class="catalog-dialog-overlay" />
+        <DialogContent :class="['catalog-dialog', isScenario('non-modal') ? 'catalog-nonmodal-dialog' : 'catalog-modal-dialog']">
+          <DialogTitle class="catalog-dialog-title">Deployment details</DialogTitle>
+          <DialogDescription class="catalog-dialog-description">Review the release before continuing.</DialogDescription>
+          <div class="catalog-dialog-actions"><DialogClose class="secondary">Close</DialogClose></div>
+        </DialogContent>
+      </DialogRoot>
+      <AlertDialogRoot v-else-if="component === 'alert-dialog'">
+        <AlertDialogTrigger>{{ isScenario('unsaved') ? 'Leave editor' : 'Delete project' }}</AlertDialogTrigger>
+        <AlertDialogOverlay class="catalog-dialog-overlay" />
+        <AlertDialogContent class="catalog-dialog catalog-alert-dialog">
+          <AlertDialogTitle class="catalog-dialog-title">{{ isScenario('unsaved') ? 'Discard unsaved changes?' : 'Delete project?' }}</AlertDialogTitle>
+          <AlertDialogDescription class="catalog-dialog-description">
+            {{ isScenario('unsaved') ? 'Your unsaved edits will be lost.' : 'This action cannot be undone.' }}
+          </AlertDialogDescription>
+          <div class="catalog-dialog-actions">
+            <AlertDialogClose class="secondary">Cancel</AlertDialogClose>
+            <AlertDialogClose class="catalog-danger-button">{{ isScenario('unsaved') ? 'Discard changes' : 'Delete project' }}</AlertDialogClose>
+          </div>
+        </AlertDialogContent>
+      </AlertDialogRoot>
+      <TooltipRoot v-else-if="component === 'tooltip'" :default-open="isScenario('initially-open', 'controlled')" :side="isScenario('controlled') ? 'right' : 'top'"><TooltipTrigger>Keyboard shortcut</TooltipTrigger><TooltipContent class="catalog-tooltip"><TooltipArrow class="catalog-tooltip-arrow" />Open commands with ⌘K</TooltipContent></TooltipRoot>
 
-      <MultiThumbSliderRoot v-else-if="component === 'multi-thumb-slider'" :thumbs="sliderThumbs" :default-value="sliderValues" class="catalog-slider"><MultiThumbSliderTrack class="catalog-slider-track"><MultiThumbSliderRange class="catalog-slider-range" /><MultiThumbSliderThumb v-for="thumb in sliderThumbs" :key="thumb" :value="thumb" :aria-label="thumb" class="catalog-slider-thumb" /></MultiThumbSliderTrack></MultiThumbSliderRoot>
+      <MultiThumbSliderRoot v-else-if="component === 'multi-thumb-slider'" :thumbs="sliderExample.thumbs" :default-value="sliderExample.values" v-bind="sliderExample.policies === undefined ? {} : { policies: sliderExample.policies }" class="catalog-slider"><MultiThumbSliderTrack class="catalog-slider-track"><MultiThumbSliderRange class="catalog-slider-range" /><MultiThumbSliderThumb v-for="thumb in sliderExample.thumbs" :key="thumb" :value="thumb" :aria-label="thumb" class="catalog-slider-thumb" /></MultiThumbSliderTrack></MultiThumbSliderRoot>
 
-      <MenuRoot v-else-if="component === 'menu'" :items="menuItems" class="catalog-menu"><MenuItem value="file">File ›</MenuItem><MenuSubContent for="file" class="catalog-submenu"><MenuItem value="new">New</MenuItem><MenuItem value="open">Open</MenuItem></MenuSubContent><MenuSeparator /><MenuItem value="help">Help</MenuItem></MenuRoot>
-      <MenubarRoot v-else-if="component === 'menubar'" :items="menuItems" class="catalog-menubar"><MenubarItem value="file">File</MenubarItem><MenubarContent for="file" class="catalog-submenu"><MenubarItem value="new">New</MenubarItem><MenubarSeparator /><MenubarItem value="open">Open</MenubarItem></MenubarContent><MenubarItem value="help">Help</MenubarItem></MenubarRoot>
-      <MenuButtonRoot v-else-if="component === 'menu-button'" :items="menuItems" :default-open="isAlternate"><MenuButtonTrigger>Actions</MenuButtonTrigger><MenuButtonContent class="catalog-popup"><MenuButtonItem value="file">File</MenuButtonItem><MenuButtonItem value="help">Help</MenuButtonItem></MenuButtonContent></MenuButtonRoot>
-      <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="menuItems" label="Primary" class="catalog-navigation-menu">
+      <div v-else-if="component === 'menu'" class="catalog-action-demo"><MenuRoot :items="menuItems" class="catalog-menu" @invoke="recordAction"><MenuItem value="file">File ›</MenuItem><MenuSubContent for="file" class="catalog-submenu"><MenuItem value="new">New</MenuItem><MenuItem value="open">Open</MenuItem></MenuSubContent><MenuSeparator /><MenuItem value="help">Help</MenuItem></MenuRoot><p class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p></div>
+      <MenubarExample v-else-if="component === 'menubar'" :scenario="scenario" />
+      <div v-else-if="component === 'menu-button'" class="catalog-action-demo"><MenuButtonRoot :items="menuItems" :default-open="isScenario('nested', 'controlled')" @invoke="recordAction"><MenuButtonTrigger>Actions</MenuButtonTrigger><MenuButtonContent class="catalog-popup"><MenuButtonItem value="file">File</MenuButtonItem><MenuButtonItem value="help">Help</MenuButtonItem></MenuButtonContent></MenuButtonRoot><p class="catalog-action-status" role="status" aria-live="polite">{{ actionStatus }}</p></div>
+      <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="menuItems" :disabled="isScenario('disabled')" label="Primary" class="catalog-navigation-menu">
         <NavigationMenuList class="catalog-navigation-list">
-          <NavigationMenuItem><NavigationMenuTrigger value="file" as="button">Products</NavigationMenuTrigger><NavigationMenuContent for="file" class="catalog-submenu"><NavigationMenuLink value="new" as="a" href="#new">New releases</NavigationMenuLink><NavigationMenuLink value="open" as="a" href="#open">Open source</NavigationMenuLink></NavigationMenuContent></NavigationMenuItem>
-          <NavigationMenuItem><NavigationMenuLink value="help" as="a" href="#docs">Documentation</NavigationMenuLink></NavigationMenuItem>
+          <NavigationMenuItem class="catalog-navigation-item">
+            <NavigationMenuTrigger value="file" as="button" class="catalog-navigation-trigger">
+              {{ isScenario('links') ? 'Resources' : 'Products' }} <ChevronDown :size="15" aria-hidden="true" />
+            </NavigationMenuTrigger>
+            <NavigationMenuContent for="file" class="catalog-navigation-panel">
+              <NavigationMenuLink value="new" as="a" href="#new" class="catalog-navigation-card">
+                <PackageCheck :size="18" aria-hidden="true" />
+                <span><strong>{{ isScenario('links') ? 'Guides' : 'New releases' }}</strong><small>{{ isScenario('links') ? 'Patterns for integrating Sectile' : 'What shipped in the latest version' }}</small></span>
+              </NavigationMenuLink>
+              <NavigationMenuLink value="open" as="a" href="#open" class="catalog-navigation-card">
+                <GitBranch :size="18" aria-hidden="true" />
+                <span><strong>{{ isScenario('links') ? 'API reference' : 'Open source' }}</strong><small>{{ isScenario('links') ? 'Props, events, parts, and types' : 'Browse packages and contribution guides' }}</small></span>
+              </NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem class="catalog-navigation-item">
+            <NavigationMenuLink value="help" as="a" href="#docs" class="catalog-navigation-link">
+              <FileCode2 :size="15" aria-hidden="true" /> {{ isScenario('links') ? 'GitHub' : 'Documentation' }}
+            </NavigationMenuLink>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenuRoot>
 
-      <CarouselRoot v-else-if="component === 'carousel'" :slides="items" :default-value="isAlternate ? 'beta' : 'alpha'" :wrap="!isConstrained" class="catalog-carousel"><CarouselTrack><CarouselSlide v-for="item in items" :key="item" :value="item" class="catalog-slide">Release {{ item }}</CarouselSlide></CarouselTrack><div class="catalog-inline"><CarouselPrevious>‹</CarouselPrevious><CarouselNext>›</CarouselNext><CarouselPause v-if="isConstrained">Pause</CarouselPause></div><CarouselIndicatorGroup v-if="isAlternate" class="catalog-inline"><CarouselIndicator v-for="item in items" :key="item" :value="item" :aria-label="`Go to ${item}`">{{ items.indexOf(item) + 1 }}</CarouselIndicator></CarouselIndicatorGroup></CarouselRoot>
+      <CarouselRoot
+        v-else-if="component === 'carousel'"
+        :slides="carouselSlideIDs"
+        default-value="tokens"
+        :policies="isScenario('bounded') ? { wrap: false } : { wrap: true }"
+        :autoplay="isScenario('paused') ? { delayMs: carouselAutoplayDelay, pauseOnHover: false, pauseOnFocus: false, stopOnInteraction: false } : false"
+        :default-paused="isScenario('paused')"
+        :style="{ '--catalog-carousel-duration': `${carouselAutoplayDelay}ms` }"
+        class="catalog-carousel"
+        v-slot="{ paused }"
+      >
+        <CarouselTrack class="catalog-carousel-track"><CarouselSlide v-for="slide in carouselSlides" :key="slide.id" :value="slide.id" class="catalog-slide"><span>{{ slide.meta }}</span><strong>{{ slide.label }}</strong><p>{{ slide.detail }}</p></CarouselSlide></CarouselTrack>
+        <div class="catalog-carousel-controls"><div class="catalog-inline"><CarouselPrevious class="catalog-square-button" aria-label="Previous slide"><ChevronLeft :size="18" aria-hidden="true" /></CarouselPrevious><CarouselNext class="catalog-square-button" aria-label="Next slide"><ChevronRight :size="18" aria-hidden="true" /></CarouselNext><CarouselPause v-if="isScenario('paused')" class="catalog-square-button catalog-carousel-pause"><Play v-if="paused" :size="18" aria-hidden="true" /><Pause v-else :size="18" aria-hidden="true" /><span class="sr-only">{{ paused ? 'Resume autoplay' : 'Pause autoplay' }}</span></CarouselPause></div><CarouselIndicatorGroup class="catalog-carousel-indicators" :data-autoplay="isScenario('paused') ? (paused ? 'paused' : 'running') : undefined"><CarouselIndicator v-for="slide in carouselSlides" :key="slide.id" :value="slide.id" :aria-label="`Go to ${slide.label}`"><span v-if="isScenario('paused')" class="catalog-carousel-progress" aria-hidden="true" /><span class="sr-only">{{ slide.label }}</span></CarouselIndicator></CarouselIndicatorGroup></div>
+      </CarouselRoot>
 
-      <FeedRoot v-else-if="component === 'feed'" :items="isAlternate ? items.slice(0, 2) : items" class="catalog-feed"><FeedLoadEarlier>Load earlier</FeedLoadEarlier><div class="catalog-feed-list"><FeedItem v-for="item in (isAlternate ? items.slice(0, 2) : items)" :key="item" :value="item" class="catalog-feed-item"><strong>{{ item === 'alpha' ? 'Core published' : item === 'beta' ? 'Vue adapter verified' : 'Release tagged' }}</strong><small>{{ item === 'alpha' ? 'Package registry' : item === 'beta' ? 'Cross-host tests' : 'GitHub release' }}</small></FeedItem></div><FeedLoadNewer>Load newer</FeedLoadNewer></FeedRoot>
-      <CalendarRoot v-else-if="component === 'calendar'" :rows="visibleCalendarRows" default-value="2026-08-22" class="catalog-calendar"><CalendarCell v-for="day in visibleCalendarRows.flat()" :key="day" :value="day">{{ day.slice(-2) }}</CalendarCell></CalendarRoot>
+      <FeedRoot v-else-if="component === 'feed'" :items="feedItems" :revision="feedRevision" class="catalog-feed" label="Deployment activity" @request-window="loadFeedWindow"><FeedLoadEarlier v-if="isScenario('load-before') && canLoadEarlier" class="catalog-feed-control">Load earlier activity</FeedLoadEarlier><div class="catalog-feed-list"><FeedItem v-for="event in visibleFeedEvents" :key="event.id" :value="event.id" class="catalog-feed-item"><span class="catalog-feed-icon"><PackageCheck v-if="event.id === 'build'" :size="18" /><Check v-else-if="event.id === 'review'" :size="18" /><GitBranch v-else :size="18" /></span><span class="catalog-option-copy"><strong>{{ event.title }}</strong><small>{{ event.detail }}</small></span><span class="catalog-status">{{ event.status }}</span></FeedItem></div><FeedLoadNewer v-if="isScenario('load-after') && canLoadNewer" class="catalog-feed-control">Load newer activity</FeedLoadNewer><p v-if="feedStatus" class="catalog-feed-message" role="status" aria-live="polite">{{ feedStatus }}</p></FeedRoot>
+      <CalendarExample v-else-if="component === 'calendar'" :scenario="scenario" />
 
-      <ComboboxRoot v-else-if="component === 'combobox'" :items="items.map(id => ({ id, label: id }))" :default-input-value="isAlternate ? 'st' : 'a'" :default-open="!isConstrained" class="catalog-stack"><ComboboxInput class="catalog-input" aria-label="Search release channels" /><ComboboxContent class="catalog-popup"><ComboboxItem v-for="item in items" :key="item" :value="item" class="catalog-option">{{ item }}</ComboboxItem><ComboboxEmpty>No matching channel</ComboboxEmpty></ComboboxContent></ComboboxRoot>
+      <div v-else-if="component === 'combobox'" class="catalog-field-shell"><span class="catalog-field-label">Add an environment</span><ComboboxRoot :items="environments" :default-input-value="isScenario('contains') ? 'age' : 'pro'" :default-open="!isScenario('ime')" class="catalog-stack"><ComboboxInput class="catalog-input catalog-search-input" aria-label="Search environments" placeholder="Search environments…" /><ComboboxContent class="catalog-popup catalog-combobox-popup"><ComboboxItem v-for="item in environments" :key="item.id" :value="item.id" class="catalog-option"><span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span></ComboboxItem><ComboboxEmpty class="catalog-empty">No environments match this search.</ComboboxEmpty></ComboboxContent></ComboboxRoot></div>
 
-      <TreeViewRoot v-else-if="component === 'tree-view'" :nodes="treeNodes" :default-expanded-value="isAlternate ? [] : ['workspace']" class="catalog-tree" v-slot="{ expandedValue }">
-        <TreeViewItem value="workspace" class="catalog-tree-item">
-          <TreeViewDisclosure v-slot="{ expanded }" for="workspace" class="catalog-tree-disclosure" aria-label="Toggle Workspace">
+      <TreeViewRoot v-else-if="component === 'tree-view'" :nodes="treeNodes" :default-value="treeSelection" :default-expanded-value="treeExpanded" :disabled-items="isScenario('unavailable') ? ['tests'] : []" class="catalog-tree" v-slot="{ expandedValue }">
+        <TreeViewItem value="sectile" class="catalog-tree-item catalog-tree-folder" v-slot="{ selected }">
+          <TreeViewDisclosure v-slot="{ expanded }" for="sectile" class="catalog-tree-disclosure" aria-label="Toggle sectile project">
             <ChevronRight :size="16" :class="{ 'is-expanded': expanded }" aria-hidden="true" />
           </TreeViewDisclosure>
-          <span>Workspace</span>
+          <FolderOpen v-if="expandedValue.includes('sectile')" :size="18" aria-hidden="true" /><Folder v-else :size="18" aria-hidden="true" /><span>sectile</span><small>Design system</small><Check v-if="selected" class="catalog-tree-selected-icon" :size="16" aria-hidden="true" />
         </TreeViewItem>
-        <TreeViewGroup v-if="expandedValue.includes('workspace')">
-          <TreeViewItem value="src" class="catalog-tree-item">Source</TreeViewItem>
-          <TreeViewItem value="tests" class="catalog-tree-item">Tests</TreeViewItem>
+        <TreeViewGroup v-if="expandedValue.includes('sectile')">
+          <TreeViewItem value="src" class="catalog-tree-item catalog-tree-folder" v-slot="{ selected }"><TreeViewDisclosure v-slot="{ expanded }" for="src" class="catalog-tree-disclosure" aria-label="Toggle source folder"><ChevronRight :size="16" :class="{ 'is-expanded': expanded }" /></TreeViewDisclosure><FolderOpen v-if="expandedValue.includes('src')" :size="18" /><Folder v-else :size="18" /><span>src</span><small>12 files</small><Check v-if="selected" class="catalog-tree-selected-icon" :size="16" aria-hidden="true" /></TreeViewItem>
+          <TreeViewGroup v-if="expandedValue.includes('src')"><TreeViewItem value="components" class="catalog-tree-item catalog-tree-file" v-slot="{ selected }"><span class="catalog-tree-spacer" aria-hidden="true" /><FileCode2 :size="17" /><span>components.ts</span><small>8.4 KB</small><Check v-if="selected" class="catalog-tree-selected-icon" :size="16" aria-hidden="true" /></TreeViewItem><TreeViewItem value="tokens" class="catalog-tree-item catalog-tree-file" v-slot="{ selected }"><span class="catalog-tree-spacer" aria-hidden="true" /><FileCode2 :size="17" /><span>tokens.ts</span><small>3.1 KB</small><Check v-if="selected" class="catalog-tree-selected-icon" :size="16" aria-hidden="true" /></TreeViewItem></TreeViewGroup>
+          <TreeViewItem value="tests" class="catalog-tree-item catalog-tree-folder" v-slot="{ selected }"><span class="catalog-tree-spacer" aria-hidden="true" /><Folder :size="18" /><span>tests</span><small>38 checks</small><Check v-if="selected" class="catalog-tree-selected-icon" :size="16" aria-hidden="true" /></TreeViewItem>
         </TreeViewGroup>
       </TreeViewRoot>
 
-      <TreeGridRoot v-else-if="component === 'tree-grid'" :rows="treeGridRows" :get-cell-value="id => cellValues.get(id) ?? ''" :set-cell-value="(id, value) => cellValues.set(id, value)" :default-expanded-value="isAlternate ? [] : ['workspace']" class="catalog-tree-grid" v-slot="{ expandedValue }">
-        <TreeGridRow value="workspace" :row-index="1" :expandable="true" class="catalog-grid-row">
-          <TreeGridCell value="workspace-name" :column-index="1" class="catalog-grid-cell catalog-tree-grid-name">
-            <TreeGridDisclosure v-slot="{ expanded }" for="workspace" class="catalog-tree-disclosure" aria-label="Toggle Workspace">
-              <ChevronRight :size="16" :class="{ 'is-expanded': expanded }" aria-hidden="true" />
-            </TreeGridDisclosure>
-            <span>Workspace</span>
-            <TreeGridEditor for="workspace-name" label="Workspace name" />
-          </TreeGridCell>
-          <TreeGridCell value="workspace-status" :column-index="2" class="catalog-grid-cell">Ready</TreeGridCell>
+      <TreeGridRoot v-else-if="component === 'tree-grid'" :rows="treeGridRows" :get-cell-value="id => cellValues.get(id) ?? ''" :set-cell-value="(id, value) => cellValues.set(id, value)" :default-expanded-value="treeExpanded" :disabled-items="isScenario('unavailable-cells') ? ['src-status'] : []" class="catalog-tree-grid" v-slot="{ expandedValue }">
+        <div class="catalog-grid-header" aria-hidden="true"><span>Name</span><span>Details</span><span>Status</span></div>
+        <TreeGridRow value="sectile" :row-index="1" :expandable="true" class="catalog-grid-row">
+          <TreeGridCell value="sectile-name" :column-index="1" class="catalog-grid-cell catalog-tree-grid-name"><TreeGridDisclosure v-slot="{ expanded }" for="sectile" class="catalog-tree-disclosure" aria-label="Toggle sectile project"><ChevronRight :size="16" :class="{ 'is-expanded': expanded }" aria-hidden="true" /></TreeGridDisclosure><FolderOpen v-if="expandedValue.includes('sectile')" :size="18" /><Folder v-else :size="18" /><span>sectile</span><TreeGridEditor for="sectile-name" label="Project name" /></TreeGridCell>
+          <TreeGridCell value="sectile-branch" :column-index="2" class="catalog-grid-cell"><GitBranch :size="16" /> main</TreeGridCell>
+          <TreeGridCell value="sectile-status" :column-index="3" class="catalog-grid-cell"><span class="catalog-status catalog-status--success">Healthy</span></TreeGridCell>
         </TreeGridRow>
-        <TreeGridRow v-if="expandedValue.includes('workspace')" value="src" :row-index="2" :level="2" class="catalog-grid-row">
-          <TreeGridCell value="src-name" :column-index="1" class="catalog-grid-cell catalog-tree-grid-name catalog-tree-grid-child">
-            <span>Source</span>
-            <TreeGridEditor for="src-name" label="Source name" />
-          </TreeGridCell>
-          <TreeGridCell value="src-status" :column-index="2" class="catalog-grid-cell">Active</TreeGridCell>
+        <TreeGridRow v-if="expandedValue.includes('sectile')" value="src" :row-index="2" :level="2" class="catalog-grid-row">
+          <TreeGridCell value="src-name" :column-index="1" class="catalog-grid-cell catalog-tree-grid-name catalog-tree-grid-child"><Folder :size="18" /><span>src</span><TreeGridEditor for="src-name" label="Folder name" /></TreeGridCell>
+          <TreeGridCell value="src-branch" :column-index="2" class="catalog-grid-cell">12 files</TreeGridCell>
+          <TreeGridCell value="src-status" :column-index="3" class="catalog-grid-cell"><span class="catalog-status">Modified</span></TreeGridCell>
+        </TreeGridRow>
+        <TreeGridRow v-if="expandedValue.includes('sectile')" value="tests" :row-index="3" :level="2" class="catalog-grid-row">
+          <TreeGridCell value="tests-name" :column-index="1" class="catalog-grid-cell catalog-tree-grid-name catalog-tree-grid-child"><Folder :size="18" /><span>tests</span><TreeGridEditor for="tests-name" label="Folder name" /></TreeGridCell>
+          <TreeGridCell value="tests-branch" :column-index="2" class="catalog-grid-cell">38 checks</TreeGridCell>
+          <TreeGridCell value="tests-status" :column-index="3" class="catalog-grid-cell"><span class="catalog-status catalog-status--success">Passing</span></TreeGridCell>
         </TreeGridRow>
       </TreeGridRoot>
     </div>

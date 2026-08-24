@@ -34,15 +34,23 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   ),
   select: sfc(
     'SelectRoot, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectItemIndicator',
-    `  <SelectRoot :items="items" default-value="stable">
-    <SelectTrigger><SelectValue placeholder="Choose a channel" /></SelectTrigger>
+    `  <SelectRoot :items="environmentIDs" :text-value="environmentLabel" default-value="production">
+    <SelectTrigger><SelectValue placeholder="Choose an environment" /></SelectTrigger>
     <SelectContent>
-      <SelectItem v-for="item in items" :key="item" :value="item">
-        {{ item }} <SelectItemIndicator>✓</SelectItemIndicator>
+      <SelectItem v-for="item in environments" :key="item.id" :value="item.id">
+        <strong>{{ item.label }}</strong>
+        <small>{{ item.detail }}</small>
+        <SelectItemIndicator>✓</SelectItemIndicator>
       </SelectItem>
     </SelectContent>
   </SelectRoot>`,
-    `const items = ['alpha', 'beta', 'stable']`,
+    `const environments = [
+  { id: 'production', label: 'Production', detail: 'customer.app' },
+  { id: 'staging', label: 'Staging', detail: 'staging.customer.app' },
+  { id: 'development', label: 'Development', detail: 'Local workspace' },
+]
+const environmentIDs = environments.map(({ id }) => id)
+const environmentLabel = (id: string) => environments.find(item => item.id === id)?.label ?? id`,
   ),
   pagination: sfc(
     'PaginationRoot, PaginationFirst, PaginationPrevious, PaginationItem, PaginationNext, PaginationLast',
@@ -59,15 +67,33 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   ),
   stepper: sfc(
     'StepperRoot, StepperList, StepperStep, StepperContent',
-    `  <StepperRoot :items="steps" default-value="account">
+    `  <StepperRoot v-model="current" :items="stepIDs">
     <StepperList>
-      <StepperStep v-for="step in steps" :key="step" :value="step">{{ step }}</StepperStep>
+      <StepperStep v-for="(step, index) in steps" :key="step.id" :value="step.id">
+        {{ index + 1 }}. {{ step.label }}
+      </StepperStep>
     </StepperList>
-    <StepperContent v-for="step in steps" :key="step" :value="step">
-      Configure {{ step }}
+    <StepperContent v-for="step in steps" :key="step.id" :value="step.id">
+      <strong>{{ step.label }}</strong>
+      <p>{{ step.detail }}</p>
+      <button type="button" :disabled="step.id === 'review'" @click="advance(step.id)">
+        {{ step.id === 'review' ? 'Checkout steps complete' : 'Continue' }}
+      </button>
     </StepperContent>
   </StepperRoot>`,
-    `const steps = ['account', 'profile', 'review']`,
+    `import { ref } from 'vue'
+
+const steps = [
+  { id: 'account', label: 'Account', detail: 'Contact and sign-in details' },
+  { id: 'delivery', label: 'Delivery', detail: 'Address and shipping method' },
+  { id: 'payment', label: 'Payment', detail: 'Secure payment information' },
+  { id: 'review', label: 'Review', detail: 'Confirm and place the order' },
+]
+const stepIDs = steps.map(({ id }) => id)
+const current = ref('delivery')
+const advance = (id: string) => {
+  current.value = stepIDs[stepIDs.indexOf(id) + 1] ?? id
+}`,
   ),
   rating: sfc(
     'RatingRoot, RatingItem, RatingIndicator, RatingClear',
@@ -107,12 +133,16 @@ export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   ),
   toolbar: sfc(
     'ToolbarRoot, ToolbarItem, ToolbarSeparator',
-    `  <ToolbarRoot :items="['bold', 'italic', 'link']" label="Formatting">
+    `  <ToolbarRoot :items="['bold', 'italic', 'link']" label="Formatting" @invoke="lastAction = $event">
     <ToolbarItem value="bold">Bold</ToolbarItem>
     <ToolbarItem value="italic">Italic</ToolbarItem>
     <ToolbarSeparator />
     <ToolbarItem value="link">Link</ToolbarItem>
-  </ToolbarRoot>`,
+  </ToolbarRoot>
+  <p role="status">{{ lastAction ? lastAction + ' invoked' : 'Choose an action' }}</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')`,
   ),
   'window-splitter': sfc(
     'WindowSplitterRoot, WindowSplitterPane, WindowSplitterHandle',
@@ -364,9 +394,10 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     `const policies = createStandardQuantityPolicies('metre', 'metric')`,
   ),
   dialog: sfc(
-    'DialogRoot, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose',
-    `  <DialogRoot>
+    'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
+    `  <DialogRoot default-open>
     <DialogTrigger>Open deployment</DialogTrigger>
+    <DialogOverlay class="dialog-overlay" />
     <DialogContent>
       <DialogTitle>Deployment</DialogTitle>
       <DialogDescription>Review the release before continuing.</DialogDescription>
@@ -375,15 +406,32 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   </DialogRoot>`,
   ),
   'alert-dialog': sfc(
-    'AlertDialogRoot, AlertDialogTrigger, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
+    'AlertDialogRoot, AlertDialogTrigger, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
     `  <AlertDialogRoot>
     <AlertDialogTrigger>Delete project</AlertDialogTrigger>
+    <AlertDialogOverlay />
     <AlertDialogContent>
       <AlertDialogTitle>Delete project?</AlertDialogTitle>
       <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-      <AlertDialogClose>Cancel</AlertDialogClose>
+      <div class="actions">
+        <AlertDialogClose>Cancel</AlertDialogClose>
+        <AlertDialogClose>Delete project</AlertDialogClose>
+      </div>
     </AlertDialogContent>
   </AlertDialogRoot>`,
+  ),
+  popover: sfc(
+    'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
+    `  <PopoverRoot default-open side="bottom" align="center" :close-on-interact-outside="false">
+    <PopoverTrigger>Edit profile</PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverTitle>Profile details</PopoverTitle>
+      <PopoverDescription>Change the public display name.</PopoverDescription>
+      <label>Display name <input value="Sectile" /></label>
+      <PopoverClose>Save changes</PopoverClose>
+    </PopoverContent>
+  </PopoverRoot>`,
   ),
   tooltip: sfc(
     'TooltipRoot, TooltipTrigger, TooltipContent, TooltipArrow',
@@ -397,7 +445,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'multi-thumb-slider': sfc(
     'MultiThumbSliderRoot, MultiThumbSliderTrack, MultiThumbSliderRange, MultiThumbSliderThumb',
-    `  <MultiThumbSliderRoot :thumbs="['minimum', 'maximum']" :default-value="[25, 75]">
+    `  <MultiThumbSliderRoot :thumbs="['minimum', 'maximum']" :default-value="[30, 70]" :policies="{ minGap: 5 }">
     <MultiThumbSliderTrack>
       <MultiThumbSliderRange />
       <MultiThumbSliderThumb value="minimum" aria-label="Minimum" />
@@ -407,7 +455,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   menu: sfc(
     'MenuRoot, MenuItem, MenuSubContent, MenuSeparator',
-    `  <MenuRoot :items="items">
+    `  <MenuRoot :items="items" @invoke="lastAction = $event">
     <MenuItem value="file">File</MenuItem>
     <MenuSubContent for="file">
       <MenuItem value="new">New</MenuItem>
@@ -415,8 +463,12 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     </MenuSubContent>
     <MenuSeparator />
     <MenuItem value="help">Help</MenuItem>
-  </MenuRoot>`,
-    `const items = [
+  </MenuRoot>
+  <p role="status">{{ lastAction ? lastAction + ' invoked' : 'Choose an action' }}</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
   { id: 'file', parentID: null },
   { id: 'new', parentID: 'file' },
   { id: 'open', parentID: 'file' },
@@ -425,30 +477,70 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   menubar: sfc(
     'MenubarRoot, MenubarItem, MenubarContent, MenubarSeparator',
-    `  <MenubarRoot :items="items">
-    <MenubarItem value="file">File</MenubarItem>
+    `  <MenubarRoot
+    :items="items"
+    :text-value="textValue"
+    default-highlighted-value="file"
+    label="Application commands"
+    @invoke="lastAction = $event"
+  >
+    <MenubarItem value="file" as="button">File</MenubarItem>
     <MenubarContent for="file">
-      <MenubarItem value="new">New</MenubarItem>
+      <MenubarItem value="new-project" as="button">New project</MenubarItem>
       <MenubarSeparator />
-      <MenubarItem value="open">Open</MenubarItem>
+      <MenubarItem value="open-project" as="button">Open project</MenubarItem>
     </MenubarContent>
-  </MenubarRoot>`,
-    `const items = [
+    <MenubarItem value="edit" as="button">Edit</MenubarItem>
+    <MenubarContent for="edit">
+      <MenubarItem value="undo" as="button">Undo</MenubarItem>
+      <MenubarItem value="redo" as="button">Redo</MenubarItem>
+    </MenubarContent>
+    <MenubarItem value="help" as="button">Help</MenubarItem>
+    <MenubarContent for="help">
+      <MenubarItem value="shortcuts" as="button">Keyboard shortcuts</MenubarItem>
+    </MenubarContent>
+  </MenubarRoot>
+  <p role="status">{{ lastAction ? lastAction + ' invoked' : 'Choose an action' }}</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
   { id: 'file', parentID: null },
-  { id: 'new', parentID: 'file' },
-  { id: 'open', parentID: 'file' },
-]`,
+  { id: 'new-project', parentID: 'file' },
+  { id: 'open-project', parentID: 'file' },
+  { id: 'edit', parentID: null },
+  { id: 'undo', parentID: 'edit' },
+  { id: 'redo', parentID: 'edit' },
+  { id: 'help', parentID: null },
+  { id: 'shortcuts', parentID: 'help' },
+]
+
+const labels = {
+  file: 'File',
+  'new-project': 'New project',
+  'open-project': 'Open project',
+  edit: 'Edit',
+  undo: 'Undo',
+  redo: 'Redo',
+  help: 'Help',
+  shortcuts: 'Keyboard shortcuts',
+}
+const textValue = id => labels[id] ?? id`,
   ),
   'menu-button': sfc(
     'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem',
-    `  <MenuButtonRoot :items="items">
+    `  <MenuButtonRoot :items="items" @invoke="lastAction = $event">
     <MenuButtonTrigger>Actions</MenuButtonTrigger>
     <MenuButtonContent>
       <MenuItem value="edit">Edit</MenuItem>
       <MenuItem value="duplicate">Duplicate</MenuItem>
     </MenuButtonContent>
-  </MenuButtonRoot>`,
-    `const items = [
+  </MenuButtonRoot>
+  <p role="status">{{ lastAction ? lastAction + ' invoked' : 'Choose an action' }}</p>`,
+    `import { ref } from 'vue'
+
+const lastAction = ref('')
+const items = [
   { id: 'edit', parentID: null },
   { id: 'duplicate', parentID: null },
 ]`,
@@ -497,14 +589,30 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   feed: sfc(
     'FeedRoot, FeedItem, FeedLoadEarlier, FeedLoadNewer',
-    `  <FeedRoot :items="activities">
-    <FeedLoadEarlier>Load earlier</FeedLoadEarlier>
+    `  <FeedRoot :items="activities" :revision="revision" @request-window="loadWindow">
+    <FeedLoadEarlier v-if="!activities.includes('audit')">Load earlier</FeedLoadEarlier>
     <FeedItem v-for="activity in activities" :key="activity" :value="activity">
-      {{ activity }}
+      {{ activityLabels[activity] }}
     </FeedItem>
-    <FeedLoadNewer>Load newer</FeedLoadNewer>
+    <FeedLoadNewer v-if="!activities.includes('deploy')">Load newer</FeedLoadNewer>
   </FeedRoot>`,
-    `const activities = ['Core published', 'DOM verified', 'Vue playground added']`,
+    `import { ref } from 'vue'
+
+const activities = ref(['build', 'review', 'release'])
+const revision = ref(0)
+const activityLabels: Record<string, string> = {
+  deploy: 'Production deployment started',
+  build: 'Production build completed',
+  review: 'Pull request approved',
+  release: 'Version 0.2.0 published',
+  audit: 'Accessibility audit completed',
+}
+const loadWindow = (direction: 'before' | 'after') => {
+  activities.value = direction === 'before'
+    ? [...activities.value, 'audit']
+    : ['deploy', ...activities.value]
+  revision.value += 1
+}`,
   ),
   calendar: sfc(
     'CalendarRoot, CalendarCell',
@@ -520,20 +628,23 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   combobox: sfc(
     'ComboboxRoot, ComboboxInput, ComboboxContent, ComboboxItem, ComboboxEmpty',
-    `  <ComboboxRoot :items="items" default-input-value="a">
-    <ComboboxInput placeholder="Search channel" />
+    `  <ComboboxRoot :items="environmentIDs" :text-value="environmentLabel" default-input-value="pro">
+    <ComboboxInput placeholder="Search environments" />
     <ComboboxContent>
-      <ComboboxItem v-for="item in items" :key="item.id" :value="item.id">
-        {{ item.label }}
+      <ComboboxItem v-for="item in environments" :key="item.id" :value="item.id">
+        <strong>{{ item.label }}</strong>
+        <small>{{ item.detail }}</small>
       </ComboboxItem>
-      <ComboboxEmpty>No results</ComboboxEmpty>
+      <ComboboxEmpty>No matching environment</ComboboxEmpty>
     </ComboboxContent>
   </ComboboxRoot>`,
-    `const items = [
-  { id: 'alpha', label: 'Alpha' },
-  { id: 'beta', label: 'Beta' },
-  { id: 'stable', label: 'Stable' },
-]`,
+    `const environments = [
+  { id: 'production', label: 'Production', detail: 'customer.app' },
+  { id: 'staging', label: 'Staging', detail: 'staging.customer.app' },
+  { id: 'development', label: 'Development', detail: 'Local workspace' },
+]
+const environmentIDs = environments.map(({ id }) => id)
+const environmentLabel = (id: string) => environments.find(item => item.id === id)?.label ?? id`,
   ),
   'tree-view': sfc(
     'TreeViewRoot, TreeViewItem, TreeViewDisclosure, TreeViewGroup',
@@ -592,3 +703,97 @@ const values = new Map([
 ])`,
   ),
 });
+
+const dialogScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  modal: sfc(
+    'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
+    `  <DialogRoot default-open>
+    <DialogTrigger>Open deployment</DialogTrigger>
+    <DialogOverlay class="dialog-overlay" />
+    <DialogContent>
+      <DialogTitle>Deployment</DialogTitle>
+      <DialogDescription>Review the release before continuing.</DialogDescription>
+      <DialogClose>Close</DialogClose>
+    </DialogContent>
+  </DialogRoot>`,
+  ),
+  'non-modal': sfc(
+    'DialogRoot, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose',
+    `  <DialogRoot default-open :modal="false">
+    <DialogTrigger>Open deployment details</DialogTrigger>
+    <DialogContent>
+      <DialogTitle>Deployment details</DialogTitle>
+      <DialogDescription>
+        Keep the page interactive while these details remain open.
+      </DialogDescription>
+      <DialogClose>Close</DialogClose>
+    </DialogContent>
+  </DialogRoot>`,
+  ),
+  controlled: sfc(
+    'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
+    `  <DialogRoot v-model:open="open">
+    <DialogTrigger>Open deployment</DialogTrigger>
+    <DialogOverlay class="dialog-overlay" />
+    <DialogContent>
+      <DialogTitle>Deployment</DialogTitle>
+      <DialogDescription>Review the release before continuing.</DialogDescription>
+      <DialogClose>Close</DialogClose>
+    </DialogContent>
+  </DialogRoot>`,
+    `import { ref } from 'vue'
+
+const open = ref(false)`,
+  ),
+});
+
+const popoverScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  anchored: catalogCode['popover'] ?? '',
+  collision: sfc(
+    'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
+    `  <PopoverRoot
+    default-open
+    side="right"
+    align="center"
+    :collision-padding="16"
+    :avoid-collisions="true"
+    :close-on-interact-outside="false"
+  >
+    <PopoverTrigger>Edit profile</PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverTitle>Profile details</PopoverTitle>
+      <PopoverDescription>Flip or shift when space runs out.</PopoverDescription>
+      <PopoverClose>Done</PopoverClose>
+    </PopoverContent>
+  </PopoverRoot>`,
+  ),
+  controlled: sfc(
+    'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
+    `  <PopoverRoot v-model:open="open" side="bottom" align="center">
+    <PopoverTrigger>Edit profile</PopoverTrigger>
+    <PopoverContent>
+      <PopoverArrow />
+      <PopoverTitle>Profile details</PopoverTitle>
+      <PopoverDescription>Change the public display name.</PopoverDescription>
+      <PopoverClose>Save changes</PopoverClose>
+    </PopoverContent>
+  </PopoverRoot>`,
+    `import { ref } from 'vue'
+
+const open = ref(false)`,
+  ),
+});
+
+const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
+  dialog: dialogScenarioCode,
+  popover: popoverScenarioCode,
+});
+
+/**
+ * Returns the runnable Vue example for the exact documented scenario.
+ * Scenario overrides must express real API or structure differences, not presentation-only labels.
+ */
+export function catalogCodeFor(component: string, scenario: string): string {
+  return scenarioCode[component]?.[scenario] ?? catalogCode[component] ?? '';
+}

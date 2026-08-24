@@ -2,7 +2,9 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import catalog from '../../../data/components.json';
 import { demos } from '../terminal-demo-sessions.mjs';
+import { toKeyboardInputs } from '../terminal-keyboard-input.mjs';
 import { useDocsLocale } from '../locale.ts';
 
 const props = defineProps({
@@ -16,6 +18,11 @@ const props = defineProps({
 const { isKorean } = useDocsLocale();
 const terminalHost = ref(null);
 const definition = computed(() => demos.find((candidate) => candidate.id === props.component));
+const initialCase = computed(() => {
+  const component = catalog.components.find((candidate) => candidate.id === props.component);
+  const index = component?.scenarios.terminal.indexOf(props.scenario) ?? -1;
+  return index < 0 ? 0 : index;
+});
 const accessibleLabel = computed(() => isKorean.value
   ? `${props.title} 터미널 예시`
   : `${props.title} terminal example`);
@@ -42,7 +49,7 @@ function createSession() {
     record: () => {},
     recordText: () => {},
     documentation: true,
-    initialCase: props.index,
+    initialCase: initialCase.value,
     readOnly: current.readOnly === true,
     readOnlyCase: current.readOnlyCase ?? 0,
   };
@@ -81,39 +88,6 @@ function renderTerminal() {
     terminal.write(`\u001b[2K${line}${index === visible.length - 1 ? '' : '\r\n'}`);
   });
   terminal.write('\u001b[J');
-}
-
-function toKeyboardInputs(data) {
-  const sequences = new Map([
-    ['\u001b[A', { key: 'up' }],
-    ['\u001b[B', { key: 'down' }],
-    ['\u001b[C', { key: 'right' }],
-    ['\u001b[D', { key: 'left' }],
-    ['\u001b[1;3A', { key: 'up', altKey: true }],
-    ['\u001b[1;3B', { key: 'down', altKey: true }],
-    ['\u001b[1;3C', { key: 'right', altKey: true }],
-    ['\u001b[1;3D', { key: 'left', altKey: true }],
-    ['\u001b[H', { key: 'home' }],
-    ['\u001b[F', { key: 'end' }],
-    ['\u001b[5~', { key: 'page-up' }],
-    ['\u001b[6~', { key: 'page-down' }],
-    ['\u001b[3~', { key: 'delete' }],
-    ['\u001b', { key: 'escape' }],
-    ['\r', { key: 'enter' }],
-    ['\n', { key: 'enter' }],
-    ['\t', { key: 'tab' }],
-    ['\u007f', { key: 'backspace' }],
-    [' ', { key: 'space', text: ' ' }],
-  ]);
-  const direct = sequences.get(data);
-  if (direct) return [direct];
-  if (data.length === 1 && data.charCodeAt(0) > 0 && data.charCodeAt(0) < 27) {
-    return [{ key: String.fromCharCode(data.charCodeAt(0) + 96), ctrlKey: true }];
-  }
-  return Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(data), ({ segment }) => ({
-    key: segment,
-    text: segment,
-  }));
 }
 
 function handleTerminalInput(data) {

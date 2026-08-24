@@ -26,15 +26,15 @@ const props = withDefaults(defineProps<{
 });
 
 const channels = [
-  { value: 'alpha', label: 'Alpha', copy: 'Stable channel' },
-  { value: 'beta', label: 'Beta', copy: 'Preview channel' },
-  { value: 'nightly', label: 'Nightly', copy: 'Latest changes' },
-  { value: 'legacy', label: 'Legacy', copy: 'Unavailable', disabled: true },
+  { value: 'production', label: 'Production', copy: 'Customer-facing environment' },
+  { value: 'staging', label: 'Staging', copy: 'Pre-release verification' },
+  { value: 'development', label: 'Development', copy: 'Local team workspace' },
+  { value: 'archive', label: 'Archived preview', copy: 'No longer available', disabled: true },
 ] as const;
 const items = channels.map((channel) => channel.value);
-const initialValue: ListboxValue = props.multiple ? ['alpha', 'nightly'] : 'alpha';
+const initialValue: ListboxValue = props.multiple ? ['production', 'development'] : 'production';
 const value = ref<ListboxValue>(initialValue);
-const highlighted = ref<string | null>('alpha');
+const highlighted = ref<string | null>('production');
 const revision = ref(0);
 const entries = ref<EventEntry[]>([]);
 const ownershipProps = computed(() => props.controlled
@@ -49,11 +49,11 @@ const state = computed<Readonly<Record<string, unknown>>>(() => ({
 const sourceCode = computed(() => `<script setup lang="ts">
 import { ListboxItem, ListboxItemIndicator, ListboxItemText, ListboxRoot } from '@sectile/vue/listbox';
 
-const items = ['alpha', 'beta', 'nightly'];
+const items = ['production', 'staging', 'development'];
 <\/script>
 
 <template>
-  <ListboxRoot :items="items" ${props.multiple ? 'selection-mode="multiple"' : ''} default-value="alpha">
+  <ListboxRoot :items="items" ${props.multiple ? 'selection-mode="multiple"' : ''} default-value="production">
     <ListboxItem v-for="item in items" :key="item" :value="item">
       <ListboxItemText>{{ item }}</ListboxItemText>
       <ListboxItemIndicator><Check /></ListboxItemIndicator>
@@ -92,7 +92,7 @@ function updateHighlight(next: string | null): void {
         v-bind="ownershipProps"
         :items="items"
         :selection-mode="multiple ? 'multiple' : 'single'"
-        :disabled-items="['legacy']"
+        :disabled-items="['archive']"
         :disabled="disabled"
         :readonly="readonly"
         class="listbox-control"

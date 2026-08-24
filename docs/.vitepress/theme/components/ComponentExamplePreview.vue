@@ -47,11 +47,6 @@ const time = Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 });
 const timeRange = Object.freeze({ start: time, end: Object.freeze({ hour: 17, minute: 45, second: 0, millisecond: 0 }) });
 const dateTime = Object.freeze({ date, time });
 
-function variant(): 'default' | 'alternate' | 'constrained' {
-  const index = props.index ?? 0;
-  return index === 0 ? 'default' : index === 1 ? 'alternate' : 'constrained';
-}
-
 function specialized(component: Component, options: Readonly<Record<string, unknown>> = {}): ResolvedExample {
   return { component: markRaw(component), props: { title: props.title, description: props.description, ...options } };
 }
@@ -60,6 +55,7 @@ function resolveExample(): ResolvedExample {
   const controlled = props.scenario.includes('controlled');
   const initialOn = ['on', 'open', 'initially-open'].includes(props.scenario) || controlled;
   switch (props.component) {
+    case 'checkbox': return specialized(CheckedControlCase, { kind: 'checkbox', label: 'Include analytics', initialValue: props.scenario === 'mixed' ? 'indeterminate' : controlled, controlled });
     case 'switch': return specialized(CheckedControlCase, { kind: 'switch', label: 'Deployment notifications', initialValue: initialOn, controlled });
     case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled });
     case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
@@ -92,7 +88,7 @@ function resolveExample(): ResolvedExample {
     case 'date-range-field': return specialized(DateRangeFieldCase, { initialValue: props.scenario === 'bounded' ? septemberRange : dateRange, bounded: props.scenario === 'bounded', controlled });
     case 'time-range-field': return specialized(TimeRangeFieldCase, { initialValue: timeRange, stepped: props.scenario === 'stepped', controlled });
     case 'pagination': return specialized(PaginationCase, paginationProps(controlled));
-    default: return specialized(CatalogCase, { component: props.component, variant: variant() });
+    default: return specialized(CatalogCase, { component: props.component, scenario: props.scenario });
   }
 }
 
@@ -120,7 +116,7 @@ const example = computed(resolveExample);
 </script>
 
 <template>
-  <div class="component-example-stage">
+  <div class="component-example-stage" :data-component="component">
     <component :is="example.component" v-bind="example.props" />
   </div>
 </template>

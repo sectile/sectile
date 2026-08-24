@@ -111,8 +111,8 @@ function stateDemo(host, title, result) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines() {
-      const { revision, state } = connection.getSnapshot();
-      return [`${ansi.bold}${title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '', ...JSON.stringify(state, null, 2).split('\n')];
+      const { state } = connection.getSnapshot();
+      return [`${ansi.bold}${title}${ansi.reset}`, '', ...JSON.stringify(state, null, 2).split('\n')];
     },
   };
 }
@@ -141,9 +141,9 @@ function createGridDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot(); const cellWidth = Math.max(10, Math.floor((width - 2) / 3));
+        const { state } = connection.getSnapshot(); const cellWidth = Math.max(10, Math.floor((width - 2) / 3));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}${notice}${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}${notice}${ansi.reset}`, '',
           ...rows.map((row) => row.map((id) => scenario.disabled.includes(id)
             ? `${ansi.dim}${plain(`× ${id}`, cellWidth)}${ansi.reset}`
             : terminalCell(id, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' })).join(' ')),
@@ -180,9 +180,9 @@ function createCarouselDemo(host) {
         ? connection.handleEvent({ type: 'focus', id: slides[Number(input.key) - 1][0] })
         : connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot(); const slide = slides.find(([id]) => id === state.cursor.current) ?? slides[0]; const position = connection.getPosition();
+        const { state } = connection.getSnapshot(); const slide = slides.find(([id]) => id === state.cursor.current) ?? slides[0]; const position = connection.getPosition();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.orientation === 'vertical' ? 'up/down' : 'left/right'} · 1/2/3 select · space pause${ansi.reset}`, '',
           `${ansi.cyan}${ansi.bold}${slide[1]}${ansi.reset}`, plain(slide[2], width), '',
           `${slides.map(([id], index) => id === state.cursor.current ? `●${index + 1}` : `○${index + 1}`).join(' ')}  ${position.index === null ? 0 : position.index + 1}/${position.count}`,
@@ -212,7 +212,7 @@ function createFeedDemo(host) {
       lines(width) {
         const snapshot = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${snapshot.revision}${ansi.reset}`, `${ansi.dim}up/down · load-before/load-after${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}up/down · load-before/load-after${ansi.reset}`, '',
           ...windowIDs.map((id) => terminalCell(items.find(([candidate]) => candidate === id)?.[1] ?? id, Math.min(58, width), { current: snapshot.state.cursor.current === id, selected: false })),
           '', `window=${windowIDs.join(',')}  current=${snapshot.state.cursor.current ?? '−'}`, `revision=${snapshot.state.revision}  pending=${snapshot.state.pending ?? '−'}  request=${request ?? '−'}`,
         ];
@@ -278,9 +278,9 @@ function createListboxScenario(host, items, scenario) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot();
+      const { state } = connection.getSnapshot();
       return [
-        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
         `${ansi.dim}${scenario.description}${ansi.reset}`,
         '',
         ...items.map(([id, label, detail]) => scenario.options.disabledItems?.includes(id)
@@ -308,7 +308,7 @@ function createCheckboxGroupDemo(host) {
       ...(scenario.controlled ? { value, highlightedValue, onValueChange: (change) => { value = [...change.value]; queueMicrotask(sync); }, onHighlightedValueChange: (change) => { highlightedValue = change.value; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render,
     });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}up/down · space toggles independent choices${ansi.reset}`, '', ...items.map(([id, label, detail]) => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`× ${label} — ${detail}`, Math.min(58, width))}${ansi.reset}` : terminalCell(`${state.selection.has(id) ? '☑' : '☐'} ${label} — ${detail}`, Math.min(58, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `selected=${state.selection.selected.join(',') || '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}up/down · space toggles independent choices${ansi.reset}`, '', ...items.map(([id, label, detail]) => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`× ${label} — ${detail}`, Math.min(58, width))}${ansi.reset}` : terminalCell(`${state.selection.has(id) ? '☑' : '☐'} ${label} — ${detail}`, Math.min(58, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `selected=${state.selection.selected.join(',') || '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -324,7 +324,7 @@ function createSelectDemo(host) {
       ...(scenario.controlled ? { value, highlightedValue, open, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); }, onOpenChange: (next) => { open = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render,
     });
     function sync() { connection.syncControlledValues({ value, highlightedValue, open }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); const selected = state.choice.selection.selected[0] ?? null; return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}up/down opens · enter selects · escape closes${ansi.reset}`, '', `${state.open ? '▾' : '▸'} ${items.find(([id]) => id === selected)?.[1] ?? 'Choose environment'}`, ...(state.open ? items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}  × ${label}${ansi.reset}` : terminalCell(`  ${label}`, Math.min(44, width), { current: state.choice.cursor.current === id, selected: state.choice.selection.has(id) })) : []), '', `open=${state.open}  value=${selected ?? '−'}  current=${state.choice.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { state } = connection.getSnapshot(); const selected = state.choice.selection.selected[0] ?? null; return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}up/down opens · enter selects · escape closes${ansi.reset}`, '', `${state.open ? '▾' : '▸'} ${items.find(([id]) => id === selected)?.[1] ?? 'Choose environment'}`, ...(state.open ? items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}  × ${label}${ansi.reset}` : terminalCell(`  ${label}`, Math.min(44, width), { current: state.choice.cursor.current === id, selected: state.choice.selection.has(id) })) : []), '', `open=${state.open}  value=${selected ?? '−'}  current=${state.choice.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -373,11 +373,11 @@ function createPaginationDemo(host) {
         return connection.handleKeyboardInput(input);
       },
       lines() {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const range = connection.getItemRange();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
-          `${ansi.dim}left/right · home/end${scenario.pageSizes === undefined ? '' : ' · p page size'}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
+          `${ansi.dim}←/→ page · Home/End or Ctrl+A/E edges${scenario.pageSizes === undefined ? '' : ' · P page size'}${ansi.reset}`,
           '',
           connection.getItems().map(renderItem).join(' '),
           '',
@@ -400,7 +400,7 @@ function createStepperDemo(host) {
     let value = scenario.value; let highlightedValue = scenario.value; let connection;
     connection = createStepper({ ...scenario.interaction, items: items.map(([id]) => id), disabledItems: scenario.disabled, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right moves focus · enter activates${ansi.reset}`, '', ...items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}× ${label}${ansi.reset}` : terminalCell(label, Math.min(40, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `step=${state.selection.selected[0] ?? '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines(width) { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}left/right moves focus · enter activates${ansi.reset}`, '', ...items.map(([id, label]) => scenario.disabled.includes(id) ? `${ansi.dim}× ${label}${ansi.reset}` : terminalCell(label, Math.min(40, width), { current: state.cursor.current === id, selected: state.selection.has(id) })), '', `step=${state.selection.selected[0] ?? '−'}  current=${state.cursor.current ?? '−'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -413,7 +413,7 @@ function createRatingDemo(host) {
     const items = Array.from({ length: scenario.count }, (_, index) => String(index + 1)); let value = scenario.value; let highlightedValue = scenario.value; let connection;
     connection = createRating({ ...scenario.interaction, items, clearable: scenario.clearable, ...(scenario.controlled ? { value, highlightedValue, onValueChange: (next) => { value = next; queueMicrotask(sync); }, onHighlightedValueChange: (next) => { highlightedValue = next; queueMicrotask(sync); } } : { defaultValue: value, defaultHighlightedValue: highlightedValue }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, highlightedValue }); }
-    return { handle: (input) => input.key === 'c' ? connection.handleEvent('clear') : connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); const selected = Number(state.selection.selected[0] ?? 0); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}left/right changes score${scenario.clearable ? ' · c clears' : ''}${ansi.reset}`, '', items.map((id) => Number(id) <= selected ? `${ansi.yellow}★${ansi.reset}` : `${ansi.dim}☆${ansi.reset}`).join(' '), '', `rating=${selected || '−'} of ${scenario.count}  current=${state.cursor.current ?? '−'}`, `clearable=${scenario.clearable}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => input.key === 'c' ? connection.handleEvent('clear') : connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); const selected = Number(state.selection.selected[0] ?? 0); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}left/right changes score${scenario.clearable ? ' · c clears' : ''}${ansi.reset}`, '', items.map((id) => Number(id) <= selected ? `${ansi.yellow}★${ansi.reset}` : `${ansi.dim}☆${ansi.reset}`).join(' '), '', `rating=${selected || '−'} of ${scenario.count}  current=${state.cursor.current ?? '−'}`, `clearable=${scenario.clearable}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -425,7 +425,7 @@ function createPinInputDemo(host) {
   ], (scenario) => {
     let value = scenario.value; let completed = null; let connection;
     connection = createPinInput({ ...scenario.interaction, length: scenario.length, policies: { accept: (part) => scenario.mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(scenario.controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: value }), onComplete: (next) => { completed = next; host.render(); }, onUpdate: host.render });
-    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}type characters · left/right · backspace/delete${ansi.reset}`, '', state.values.map((part, index) => state.current === index ? `${ansi.inverse} ${part || '·'} ${ansi.reset}` : `[${part || '·'}]`).join(' '), '', `value=${state.values.join('')}  current=${state.current + 1}/${scenario.length}`, `complete=${completed ?? 'no'}  mode=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}type characters · left/right · backspace/delete${ansi.reset}`, '', state.values.map((part, index) => state.current === index ? `${ansi.inverse} ${part || '·'} ${ansi.reset}` : `[${part || '·'}]`).join(' '), '', `value=${state.values.join('')}  current=${state.current + 1}/${scenario.length}`, `complete=${completed ?? 'no'}  mode=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -438,7 +438,7 @@ function createTagsInputDemo(host) {
     let value = [...scenario.tags]; let inputValue = ''; let connection;
     connection = createTagsInput({ ...scenario.interaction, policies: { maxTags: scenario.maxTags, normalize: (tag) => tag.trim().replace(/\s+/g, ' ') }, ...(scenario.controlled ? { value, inputValue, onValueChange: (next) => { value = [...next]; queueMicrotask(sync); }, onInputValueChange: (next) => { inputValue = next; queueMicrotask(sync); } } : { defaultValue: value }), onUpdate: host.render });
     function sync() { connection.syncControlledValues({ value, inputValue }); }
-    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { revision, state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, `${ansi.dim}type · enter/comma adds · backspace removes${ansi.reset}`, '', state.tags.map((tag, index) => state.current === index ? `${ansi.inverse} ${tag} × ${ansi.reset}` : `[${tag} ×]`).join(' ') || `${ansi.dim}No tags${ansi.reset}`, '', `draft=${state.draft || '−'}  tags=${state.tags.length}/${scenario.maxTags}  current=${state.current ?? 'input'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
+    return { handle: (input) => connection.handleKeyboardInput(input), lines() { const { state } = connection.getSnapshot(); return [`${ansi.bold}${scenario.title}${ansi.reset}`, `${ansi.dim}type · enter/comma adds · backspace removes${ansi.reset}`, '', state.tags.map((tag, index) => state.current === index ? `${ansi.inverse} ${tag} × ${ansi.reset}` : `[${tag} ×]`).join(' ') || `${ansi.dim}No tags${ansi.reset}`, '', `draft=${state.draft || '−'}  tags=${state.tags.length}/${scenario.maxTags}  current=${state.current ?? 'input'}`, `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`]; } };
   });
 }
 
@@ -469,7 +469,7 @@ function createCascadeSelectDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const columns = connection.getColumns();
         const columnWidth = Math.max(14, Math.min(24, Math.floor((width - columns.length + 1) / columns.length)));
         const height = Math.max(...columns.map((column) => column.length));
@@ -480,7 +480,7 @@ function createCascadeSelectDemo(host) {
           return terminalCell(labels.get(id) ?? id, columnWidth, { current: state.highlighted === id, selected: state.value === id });
         }).join(' '));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ columns · ↑/↓ options · Enter select${ansi.reset}`, '',
           ...rows, '',
           `value=${(connection.getValuePath().map((id) => labels.get(id))).join(' / ') || '−'}  open=${state.open}`,
@@ -513,14 +513,14 @@ function createColorPickerDemo(host) {
         return connection.handleKeyboardInput(input);
       },
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const barWidth = Math.max(18, Math.min(48, width - 10));
         const value = state.value[state.channel];
         const max = state.channel === 'alpha' ? 255 : 255;
         const position = Math.round(value / max * (barWidth - 1));
         const bar = Array.from({ length: barWidth }, (_, index) => index === position ? '●' : '─').join('');
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ channel · ↑/↓ value · F format${ansi.reset}`, '',
           `${state.channel.padEnd(7)} [${bar}] ${value}`,
           '', `format=${state.format}  value=${plain(connection.getText(), Math.max(1, width - 22))}`,
@@ -559,14 +559,14 @@ function createRangeFieldDemo(host, kind) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const line = (endpoint) => terminalCell(
           `${endpoint === 'start' ? 'Start' : 'End  '}  ${connection.getText(endpoint) || '—'}`,
           Math.min(56, width),
           { current: state.active === endpoint },
         );
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Tab endpoint · type · arrows adjust · Enter commit${ansi.reset}`, '',
           line('start'), line('end'), '',
           `active=${state.active}  committed=${state.value === null ? '−' : 'yes'}  required=${scenario.required === true}`,
@@ -591,9 +591,9 @@ function createEditableDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Enter edit/commit · Escape cancel · type while editing${ansi.reset}`, '',
           state.editing
             ? `${ansi.editing}${plain(` ${state.draft || 'type a value…'} `, Math.min(56, width))}${ansi.reset}`
@@ -629,14 +629,14 @@ function createNavigationMenuDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const roots = items.filter((item) => item.parentID === null);
         const rootLine = roots.map((item) => scenario.disabled.includes(item.id)
           ? `${ansi.dim}[${labels.get(item.id)}]${ansi.reset}`
           : state.cursor.current === item.id ? `${ansi.current} ${labels.get(item.id)} ${ansi.reset}` : ` ${labels.get(item.id)} `).join('  ');
         const children = items.filter((item) => state.openPath.includes(item.parentID));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ move · ↓ open · Enter invoke${ansi.reset}`, '', rootLine,
           ...(children.length ? ['', ...children.map((item) => terminalCell(labels.get(item.id), Math.min(40, width), { current: state.cursor.current === item.id }))] : []),
           '', `current=${state.cursor.current ?? '−'}  path=${state.openPath.join('/') || '−'}  invoked=${invoked ?? '−'}`,
@@ -660,14 +660,14 @@ function createTimerDemo(host) {
         return connection.handleKeyboardInput(input);
       },
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const parts = connection.getParts();
         const time = `${String(parts.hours).padStart(2, '0')}:${String(parts.minutes).padStart(2, '0')}:${String(parts.seconds).padStart(2, '0')}.${String(parts.milliseconds).padStart(3, '0')}`;
         const progress = connection.getProgress();
         const barWidth = Math.max(12, Math.min(44, width - 12));
         const filled = progress === null ? 0 : Math.round(progress / 100 * barWidth);
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Space start/pause · arrows tick · R restart · Esc reset${ansi.reset}`, '',
           `${ansi.bold}${time}${ansi.reset}`,
           `[${'█'.repeat(filled)}${'·'.repeat(barWidth - filled)}]`, '',
@@ -680,31 +680,76 @@ function createTimerDemo(host) {
 
 function createToastDemo(host) {
   return scenarioDemo(host, [
-    { title: 'Notifications', maxVisible: 3, initial: [{ id: 'ready', title: 'Deployment ready', kind: 'success' }] },
-    { title: 'Stacked notifications', maxVisible: 3, initial: [{ id: 'saved', title: 'Draft saved' }, { id: 'review', title: 'Review requested', kind: 'info' }] },
-    { title: 'Single visible toast', maxVisible: 1, initial: [{ id: 'warning', title: 'Connection unstable', kind: 'warning' }] },
+    {
+      title: 'Release notifications',
+      durationMs: 5_000,
+      maxVisible: 3,
+      initial: [{ id: 'ready', title: 'Deployment complete', description: 'Version 0.2.0 is live.', kind: 'success' }],
+    },
+    {
+      title: 'Persistent alert',
+      durationMs: null,
+      maxVisible: 3,
+      initial: [{ id: 'outage', title: 'Service unavailable', description: 'The alert remains until it is dismissed.', kind: 'error' }],
+    },
+    {
+      title: 'Visible notification limit',
+      durationMs: 8_000,
+      maxVisible: 2,
+      initial: [
+        { id: 'saved', title: 'Draft saved', description: 'Your changes are available to reviewers.', kind: 'success' },
+        { id: 'review', title: 'Review requested', description: 'A teammate asked for your approval.', kind: 'info' },
+      ],
+    },
   ], (scenario) => {
     let nextID = 1;
-    const connection = createToast({ ...scenario.interaction, initialToasts: scenario.initial, maxVisible: scenario.maxVisible, onUpdate: host.render });
+    const messages = [
+      { title: 'Release saved', description: 'The draft was saved successfully.', kind: 'success' },
+      { title: 'Review requested', description: 'A teammate asked for your approval.', kind: 'info' },
+      { title: 'Build needs attention', description: 'Open the build log to review the failure.', kind: 'warning' },
+    ];
+    const connection = createToast({
+      ...scenario.interaction,
+      initialToasts: scenario.initial,
+      defaultDurationMs: scenario.durationMs,
+      maxVisible: scenario.maxVisible,
+      onUpdate: host.render,
+    });
     return {
       handle(input) {
-        if (input.key === 'enter' || input.key === 'space') return connection.push({ id: `new-${nextID++}`, title: `New notification ${nextID - 1}`, kind: 'info' });
+        if (input.key === 'enter' || input.key === 'space') {
+          const message = messages[(nextID - 1) % messages.length];
+          return connection.push({ id: `new-${nextID++}`, ...message });
+        }
         if (input.key === 'delete') return connection.dismissAll();
         if (input.key === 'right') return connection.tick(1_000);
+        if (input.key === 'p') return connection.handleEvent(connection.getSnapshot().state.paused ? 'resume' : 'pause');
         return connection.handleKeyboardInput(input);
       },
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
+        const notificationCount = state.items.length;
+        const countLabel = `${notificationCount} notification${notificationCount === 1 ? '' : 's'}`;
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
-          `${ansi.dim}Enter push · Escape dismiss latest · Delete dismiss all · → tick${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
+          `${ansi.dim}Enter add · Esc dismiss newest · Delete clear · → advance 1s · P pause${ansi.reset}`, '',
           ...(state.items.length
-            ? state.items.flatMap((item) => [
-                `┌ ${item.kind.toUpperCase()} · ${plain(item.title, Math.max(1, width - 18))}`,
-                `└ ${item.remainingMs === null ? 'persistent' : `${item.remainingMs}ms`}`,
-              ])
-            : [`${ansi.dim}No notifications${ansi.reset}`]),
-          '', `visible=${state.items.length}/${scenario.maxVisible}  paused=${state.paused}`,
+            ? state.items.flatMap((item, index) => {
+                const symbol = item.kind === 'success' ? '✓' : item.kind === 'warning' ? '!' : item.kind === 'error' ? '×' : 'i';
+                const style = item.kind === 'warning' ? ansi.yellow : ansi.cyan;
+                const lifetime = item.remainingMs === null
+                  ? 'stays until dismissed'
+                  : `${state.paused ? 'paused at' : 'closes in'} ${(item.remainingMs / 1_000).toFixed(1)}s`;
+                return [
+                  `${style}${ansi.bold}${symbol} ${item.kind.toUpperCase()}${ansi.reset}`,
+                  `  ${ansi.bold}${plain(item.title, Math.max(1, width - 2))}${ansi.reset}`,
+                  ...(item.description === null ? [] : [`  ${ansi.dim}${plain(item.description, Math.max(1, width - 2))}${ansi.reset}`]),
+                  `  ${ansi.dim}${lifetime}${ansi.reset}`,
+                  ...(index === state.items.length - 1 ? [] : ['']),
+                ];
+              })
+            : [`${ansi.dim}No notifications. Press Enter to add one.${ansi.reset}`]),
+          '', `${countLabel} · ${scenario.maxVisible} visible max · ${scenario.durationMs === null ? 'manual dismissal' : state.paused ? 'timers paused' : 'timers running'}`,
         ];
       },
     };
@@ -731,9 +776,9 @@ function createToggleGroupDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ move · Space/Enter toggle${ansi.reset}`, '',
           ...items.map((id) => scenario.disabled.includes(id)
             ? `${ansi.dim}${plain(`× ${labels.get(id)}`, Math.min(44, width))}${ansi.reset}`
@@ -767,7 +812,7 @@ function scenarioDemo(host, scenarios, create, options = {}) {
   let session = create(scenarios[index]);
   return {
     handle(input) {
-      if (input.key === previousCaseKey || input.key === nextCaseKey) {
+      if (!host.documentation && (input.key === previousCaseKey || input.key === nextCaseKey)) {
         session.disconnect?.();
         index = (index + (input.key === nextCaseKey ? 1 : -1) + scenarios.length) % scenarios.length;
         session = create(scenarios[index]);
@@ -836,7 +881,12 @@ function createAccordionDemo(host) {
     { title: 'Controlled expansion', expansion: 'multiple', collapsible: true, disabledItems: [], controlled: true },
   ];
   return scenarioDemo(host, scenarios, (scenario) => {
-    const items = ['general', 'deployments', 'danger'];
+    const sections = [
+      { id: 'general', label: 'General', content: 'Workspace defaults and account settings.' },
+      { id: 'deployments', label: 'Deployments', content: 'Build targets and release protection.' },
+      { id: 'danger', label: 'Danger zone', content: 'Destructive actions and recovery controls.' },
+    ];
+    const items = sections.map(({ id }) => id);
     let external = ['general'];
     let connection;
     connection = createAccordion({
@@ -857,17 +907,22 @@ function createAccordionDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.expansion} · collapsible=${scenario.collapsible}${ansi.reset}`,
           '',
-          ...items.map((id) => scenario.disabledItems.includes(id)
-            ? `${ansi.dim}${plain(` × ${id}`, Math.min(48, width))}${ansi.reset}`
-            : terminalCell(`${state.has(id) ? '▾' : '▸'} ${id}`, Math.min(48, width), {
-              current: state.cursor.current === id,
-              selected: state.has(id),
-            })),
+          ...sections.flatMap(({ id, label, content }) => scenario.disabledItems.includes(id)
+            ? [`${ansi.dim}${plain(` × ${label}`, Math.min(48, width))}${ansi.reset}`]
+            : [
+              terminalCell(`${state.has(id) ? '▾' : '▸'} ${label}`, Math.min(48, width), {
+                current: state.cursor.current === id,
+                selected: state.has(id),
+              }),
+              ...(state.has(id)
+                ? [`${ansi.dim}${plain(`    ${content}`, Math.min(48, width))}${ansi.reset}`]
+                : []),
+            ]),
           '',
           `current=${state.cursor.current ?? '−'}  open=${state.openIDs.join(',') || '−'}`,
           `ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
@@ -900,9 +955,9 @@ function createDisclosureDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           '',
           `${state.open ? '▾' : '▸'} Advanced deployment options`,
           ...(state.open ? [plain('  Retry limits, rollout windows, health checks.', width)] : []),
@@ -976,9 +1031,9 @@ function linearSession(connection, scenario, items, selected, footer = () => '')
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot();
+      const { state } = connection.getSnapshot();
       return [
-        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
         `${ansi.dim}${scenario.orientation} · disabled=${scenario.disabledItems.join(',') || '−'}${ansi.reset}`,
         '',
         ...items.map((id) => scenario.disabledItems.includes(id)
@@ -1039,11 +1094,11 @@ function createCheckedScenario(host, kind, scenario) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot();
+      const { state } = connection.getSnapshot();
       const value = kind === 'toggle-button' ? state.pressed : state.checked;
       const valueName = kind === 'toggle-button' ? 'pressed' : kind === 'switch' ? 'checked' : 'value';
       return [
-        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
         '',
         ...checkedControlLines(kind, value, width),
         '',
@@ -1106,11 +1161,11 @@ function createSliderScenario(host, scenario) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot();
+      const { state } = connection.getSnapshot();
       const barWidth = Math.max(10, Math.min(48, width - 4));
       const fill = connection.range.count === 0 ? 0 : Math.round(barWidth * state.tick / connection.range.count);
       return [
-        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
         `${ansi.dim}${scenario.orientation} · ${scenario.controlled ? 'controlled' : 'uncontrolled'}${ansi.reset}`,
         '', styled(ansi.cyan, `${connection.getValue()}${scenario.suffix}`, Math.min(width, 16)),
         `[${'█'.repeat(fill)}${'·'.repeat(barWidth - fill)}]`,
@@ -1144,11 +1199,11 @@ function createWindowSplitterDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const barWidth = Math.max(12, Math.min(48, width - 4));
         const first = Math.round(barWidth * state.tick / 100);
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.orientation} · ${scenario.controlled ? 'controlled' : 'uncontrolled'}${ansi.reset}`,
           '', `[${'A'.repeat(first)}│${'B'.repeat(barWidth - first)}]`, '', `first=${connection.getValue()}%  second=${100 - Number(connection.getValue())}%`,
         ];
@@ -1183,9 +1238,9 @@ function createSpinButtonDemo(host) {
         return connection.handleKeyboardInput(input);
       },
       lines() {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}type draft · Enter commit · Escape cancel${ansi.reset}`,
           '', `[-]  ${styled(ansi.cyan, connection.getText(), 12)}  [+]`, '',
           `value=${state.value}  draft=${state.draft ?? '−'}`,
@@ -1226,12 +1281,12 @@ function createNumberFieldDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const text = connection.getText();
         const caret = connection.getCaret();
         const editing = `${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.detail} · Enter commit · Escape cancel${ansi.reset}`,
           '', plain(editing, Math.max(1, width - 2)), '',
           `value=${state.value ?? '−'}  input=${state.inputState.snapshot.text || '−'}  caret=${caret}`,
@@ -1308,7 +1363,7 @@ function createQuantityFieldDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const text = connection.getText();
         const caret = connection.getCaret();
         const editing = `${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`;
@@ -1324,7 +1379,7 @@ function createQuantityFieldDemo(host) {
           ];
         }
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.detail} · [ / ] unit · Enter commit${ansi.reset}`,
           '', `${plain(editing, Math.max(1, width - 10))}  ${styled(ansi.cyan, displaySymbol, 4)}`, '',
           `canonical=${state.quantity?.value ?? '−'} ${canonicalSymbol}  display=${state.displayUnit}`,
@@ -1380,9 +1435,9 @@ function createTerminalTemporalField(host, scenario, kind) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot(); const text = connection.getText(); const caret = connection.getCaret();
+      const { state } = connection.getSnapshot(); const text = connection.getText(); const caret = connection.getCaret();
       return [
-        `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title}${ansi.reset}`,
         `${ansi.dim}${scenario.detail} · ↑/↓ segment · Enter commit · Escape cancel${ansi.reset}`,
         '', plain(`${text.slice(0, caret)}${ansi.cyan}│${ansi.reset}${text.slice(caret)}`, Math.max(1, width - 2)), '',
         `value=${state.value === null ? '−' : format(state.value)}  caret=${caret}`,
@@ -1452,9 +1507,9 @@ function createTerminalDateTimePicker(host, scenario, range) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot(); const calendar = state.calendar; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7))); const selectedStart = range ? state.value?.start.date : state.value?.date; const selectedEnd = range ? state.value?.end.date : selectedStart;
+      const { state } = connection.getSnapshot(); const calendar = state.calendar; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7))); const selectedStart = range ? state.value?.start.date : state.value?.date; const selectedEnd = range ? state.value?.end.date : selectedStart;
       return [
-        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}`,
         `${ansi.dim}arrows move · Enter select · Alt+↑/↓ time${range ? ' · Shift+Alt+↑/↓ end' : ''}${ansi.reset}`, '',
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
         ...month.map((week) => week.map((value) => terminalCell(String(value.day), cellWidth, { current: sameTerminalDate(value, calendar.highlighted), selected: selectedStart !== undefined && selectedEnd !== undefined && compareTerminalDate(selectedStart, value) <= 0 && compareTerminalDate(value, selectedEnd) <= 0 })).join(' ')),
@@ -1494,11 +1549,11 @@ function createTerminalPicker(host, scenario, range) {
   return {
     handle: (input) => connection.handleKeyboardInput(input),
     lines(width) {
-      const { revision, state } = connection.getSnapshot(); const calendar = range ? state.calendar : state; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
+      const { state } = connection.getSnapshot(); const calendar = range ? state.calendar : state; const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
       const selected = range ? state.value : state.value;
       return [
-        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
-        `${ansi.dim}arrows move · Page Up/Down month · Enter select · Escape close${ansi.reset}`, '',
+        `${ansi.bold}${scenario.title} · ${terminalMonthLabel(calendar.view)}${ansi.reset}`,
+        `${ansi.dim}arrows move · PgUp/PgDn or Fn+↑/↓ month · Enter select · Esc close${ansi.reset}`, '',
         ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
         ...month.map((week) => week.map((value) => terminalCell(String(value.day), cellWidth, { current: sameTerminalDate(value, calendar.highlighted), selected: range ? selected !== null && compareTerminalDate(selected.start, value) <= 0 && compareTerminalDate(value, selected.end) <= 0 : selected !== null && sameTerminalDate(selected, value) })).join(' ')),
         '', range ? `range=${selected === null ? '−' : `${formatDateValue(selected.start)} → ${formatDateValue(selected.end)}`}  anchor=${state.anchor === null ? '−' : formatDateValue(state.anchor)}` : `value=${selected === null ? '−' : formatDateValue(selected)}`,
@@ -1545,12 +1600,12 @@ function createMultiThumbSliderDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const barWidth = Math.max(12, Math.min(48, width - 4));
         const markers = Array.from({ length: barWidth + 1 }, () => '·');
         state.ticks.forEach((tick, index) => { markers[Math.round(tick / 100 * barWidth)] = state.cursor.current === scenario.ids[index] ? '●' : '○'; });
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Tab changes thumb · crossing=${scenario.allowCross}${ansi.reset}`,
           '', `[${markers.join('')}]`, '',
           `values=${connection.getValues().join(' / ')}  active=${state.cursor.current ?? '−'}`,
@@ -1590,6 +1645,14 @@ function createPopupDemo(host, kind) {
     let announcements = 0;
     let focusRequests = 0;
     let restoreRequests = 0;
+    let dialogFocus = 0;
+    const dialogChoices = new Set(['completed', 'failed']);
+    const dialogTargets = [
+      { id: 'completed', label: 'Deployment completed', kind: 'choice' },
+      { id: 'failed', label: 'Build failed', kind: 'choice' },
+      { id: 'cancel', label: 'Cancel', kind: 'action' },
+      { id: 'save', label: 'Save changes', kind: 'action' },
+    ];
     let connection;
     const shared = {
       ...scenario.interaction,
@@ -1611,21 +1674,73 @@ function createPopupDemo(host, kind) {
           : createTooltip(shared);
     return {
       handle(input) {
-        if (input.key === 'enter' || input.key === 'space') return connection.handleEvent(connection.getSnapshot().state.open ? 'close' : 'open');
+        const { open } = connection.getSnapshot().state;
+        if (kind === 'dialog' && open) {
+          if (input.key === 'tab' || input.key === 'down' || input.key === 'right') {
+            dialogFocus = (dialogFocus + 1) % dialogTargets.length;
+            host.render();
+            return true;
+          }
+          if (input.key === 'up' || input.key === 'left') {
+            dialogFocus = (dialogFocus - 1 + dialogTargets.length) % dialogTargets.length;
+            host.render();
+            return true;
+          }
+          const target = dialogTargets[dialogFocus];
+          if (input.key === 'space' && target.kind === 'choice') {
+            if (dialogChoices.has(target.id)) dialogChoices.delete(target.id);
+            else dialogChoices.add(target.id);
+            host.render();
+            return true;
+          }
+          if (input.key === 'enter' && target.kind === 'action') {
+            return connection.handleEvent('close');
+          }
+        }
+        if (!open && (input.key === 'enter' || input.key === 'space')) {
+          dialogFocus = 0;
+          return connection.handleEvent('open');
+        }
+        if (kind !== 'dialog' && (input.key === 'enter' || input.key === 'space')) {
+          return connection.handleEvent(open ? 'close' : 'open');
+        }
         return connection.handleKeyboardInput(input);
       },
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
-        const frame = Math.max(20, Math.min(48, width - 4));
+        const { state } = connection.getSnapshot();
+        const frame = Math.max(30, Math.min(58, width - 4));
+        const panel = kind === 'dialog' && state.open
+          ? [
+              `┌─ ${plain('Notification settings ', frame - 4)}┐`,
+              `│ ${plain('Choose which deployment events should notify you.', frame - 4)} │`,
+              `│ ${' '.repeat(frame - 4)} │`,
+              ...dialogTargets.slice(0, 2).map((target, index) => {
+                const marker = dialogFocus === index ? '>' : ' ';
+                const checked = dialogChoices.has(target.id) ? 'x' : ' ';
+                return `│ ${plain(`${marker} [${checked}] ${target.label}`, frame - 4)} │`;
+              }),
+              `│ ${' '.repeat(frame - 4)} │`,
+              `│ ${plain(`${dialogFocus === 2 ? '>' : ' '} [ Cancel ]  ${dialogFocus === 3 ? '>' : ' '} [ Save changes ]`, frame - 4)} │`,
+              `└${'─'.repeat(frame - 2)}┘`,
+            ]
+          : state.open
+            ? [
+                `┌${'─'.repeat(frame - 2)}┐`,
+                `│ ${plain(kind === 'tooltip' ? 'Helpful description' : scenario.title, frame - 4)} │`,
+                `└${'─'.repeat(frame - 2)}┘`,
+              ]
+            : [`${ansi.dim}[ Enter to open ]${ansi.reset}`];
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}${scenario.detail}${ansi.reset}`,
           '',
-          state.open ? `┌${'─'.repeat(frame - 2)}┐` : `${ansi.dim}[ Enter to open ]${ansi.reset}`,
-          ...(state.open ? [`│ ${plain(kind === 'tooltip' ? 'Helpful description' : scenario.title, frame - 4)} │`, `└${'─'.repeat(frame - 2)}┘`] : []),
+          ...panel,
           '',
+          ...(kind === 'dialog' && state.open
+            ? [`${ansi.dim}Tab/Arrows move · Space toggles · Enter activates · Esc closes${ansi.reset}`]
+            : []),
           `open=${state.open}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
-          `focus=${focusRequests}  restore=${restoreRequests}  announce=${announcements}`,
+          `focus=${state.open && kind === 'dialog' ? dialogTargets[dialogFocus].id : '−'}  entered=${focusRequests}  restored=${restoreRequests}  announced=${announcements}`,
         ];
       },
     };
@@ -1697,11 +1812,11 @@ function createMenuDemo(host, kind) {
         return connection.handleKeyboardInput(input);
       },
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const visible = scenario.items.filter((item) => item.parentID === null || state.openPath.includes(item.parentID));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
-          `${ansi.dim}↑/↓ move · → open · ←/Esc back · Enter run · Home/End edges · type to find${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
+          `${ansi.dim}↑/↓ move · → open · ←/Esc back · Enter run · Home/End or Ctrl+A/E edges · type find${ansi.reset}`,
           '',
           ...(state.open ? visible.map((item) => {
             const depth = item.parentID === null ? 0 : 1;
@@ -1743,9 +1858,9 @@ function createCalendarDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
+        const { state } = connection.getSnapshot(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
         return [
-          `${ansi.bold}${scenario.title} · ${page.label}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title} · ${page.label}${ansi.reset}`, '',
           ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(day, cellWidth)).join(' '),
           ...page.rows.map((week) => week.map((id) => isTerminalWeekend(id) && scenario.disabledWeekends
             ? `${ansi.dim}${plain(calendarCellLabel(id, page), cellWidth)}${ansi.reset}`
@@ -1845,13 +1960,13 @@ function createTreeViewDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const visibleItems = connection.tree.visible(state.expansion).ids.map((id) => {
           const leaf = connection.tree.isLeaf(id); const disclosure = leaf ? '·' : state.expansion.has(id) ? '▾' : '▸'; const depth = connection.tree.depthOf(id) ?? 0;
           return scenario.disabled.includes(id) ? `${ansi.dim}${plain(`${'  '.repeat(depth)}× ${labels.get(id) ?? id}`, Math.min(58, width))}${ansi.reset}` : terminalCell(`${'  '.repeat(depth)}${disclosure} ${labels.get(id) ?? id}`, Math.min(58, width), { current: state.cursor.current === id, selected: state.selection.has(id) });
         });
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '', ...visibleItems, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, '', ...visibleItems, '',
           `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}`, `expanded=${state.expansion.ids.join(',') || '−'}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },
@@ -1887,11 +2002,11 @@ function createTextDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot();
+        const { state } = connection.getSnapshot();
         const value = connection.getValue();
         const caret = Math.min(width - 1, state.snapshot.selection.focusCodeUnitOffset);
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`,
+          `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}Unicode-safe replace · ${scenario.controlled ? 'controlled' : 'uncontrolled'}${ansi.reset}`,
           '',
           ...value.split('\n').map((line) => plain(line || ' ', width)),
@@ -1936,9 +2051,9 @@ function createComboboxDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { revision, state } = connection.getSnapshot(); const query = connection.getInputValue(); const candidates = items.filter((item) => matches(item.label, query));
+        const { state } = connection.getSnapshot(); const query = connection.getInputValue(); const candidates = items.filter((item) => matches(item.label, query));
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '', `query  ${plain(query || 'type to filter…', Math.max(1, width - 7))}`, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, '', `query  ${plain(query || 'type to filter…', Math.max(1, width - 7))}`, '',
           ...(state.popupOpen ? candidates.map((item) => terminalCell(item.label, Math.min(48, width), { current: state.cursor.current === item.id, selected: state.selection.has(item.id) })) : [`${ansi.dim}popup closed${ansi.reset}`]),
           '', `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}  accepted=${accepted ?? '−'}`, `matching=${scenario.mode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
@@ -1982,14 +2097,14 @@ function createTreeGridDemo(host) {
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { model } = connection; const { tree, grid } = model; const { revision, state } = connection.getSnapshot(); const visibleRows = new Set(tree.visible(state.expansion).ids); const statusWidth = Math.max(10, Math.min(20, Math.floor(width * 0.28))); const nameWidth = Math.max(18, width - statusWidth - 1); const table = [`${ansi.dim}${plain('  Name', nameWidth)} ${plain('Status', statusWidth)}${ansi.reset}`];
+        const { model } = connection; const { tree, grid } = model; const { state } = connection.getSnapshot(); const visibleRows = new Set(tree.visible(state.expansion).ids); const statusWidth = Math.max(10, Math.min(20, Math.floor(width * 0.28))); const nameWidth = Math.max(18, width - statusWidth - 1); const table = [`${ansi.dim}${plain('  Name', nameWidth)} ${plain('Status', statusWidth)}${ansi.reset}`];
         for (let rowIndex = 0; rowIndex < grid.rowCount; rowIndex += 1) {
           const rowID = model.rowIDs[rowIndex]; if (rowID === undefined || !visibleRows.has(rowID)) continue; const nameID = grid.cellAt(rowIndex, 0); const statusID = grid.cellAt(rowIndex, 1); if (nameID === null || statusID === null) continue; const depth = tree.depthOf(rowID) ?? 0; const disclosure = tree.isLeaf(rowID) === false ? state.expansion.has(rowID) ? '▾' : '▸' : '·';
           const cell = (id, label, cellWidth, prefix = '') => scenario.disabled.includes(id) ? `${ansi.dim}${plain(`${prefix}× ${label}`, cellWidth)}${ansi.reset}` : terminalCell(`${prefix}${label}`, cellWidth, { current: state.cursor.current === id, selected: state.selection.has(id), editing: state.cursor.current === id && state.editMode === 'editing' });
           table.push(`${cell(nameID, values.get(nameID) ?? '', nameWidth, `${'  '.repeat(depth)}${disclosure} `)} ${cell(statusID, values.get(statusID) ?? '', statusWidth)}`);
         }
         return [
-          `${ansi.bold}${scenario.title}${ansi.reset}  ${ansi.dim}r${revision}${ansi.reset}`, '', ...table, '',
+          `${ansi.bold}${scenario.title}${ansi.reset}`, '', ...table, '',
           `current=${state.cursor.current ?? '−'}  selected=${state.selection.selected.join(',') || '−'}`, `expanded=${state.expansion.ids.join(',') || '−'}  mode=${state.editMode}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },

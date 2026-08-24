@@ -82,6 +82,56 @@
   padding-top: 30px;
 }
 
+.component-parts,
+.component-api-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 24px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.component-parts li,
+.component-api-list li {
+  margin: 0 !important;
+}
+
+.component-part-token,
+.component-api-token {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.component-api-list li,
+.component-api-token {
+  max-width: 100%;
+}
+
+.component-api-token {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.component-api-group + .component-api-group {
+  margin-top: 20px;
+}
+
+.component-api-label {
+  display: block;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.component-api-group .component-api-list {
+  margin-top: 10px !important;
+}
+
 .sectile-example {
   overflow: hidden;
   margin: 18px 0 34px;
@@ -129,9 +179,9 @@
 
 .sectile-example__preview {
   display: grid;
-  min-height: 180px;
-  place-items: center;
-  padding: 32px 24px;
+  min-height: 0;
+  place-items: stretch;
+  padding: 0;
 }
 
 .sectile-example__code {
@@ -139,6 +189,11 @@
   min-height: 180px;
   max-height: 620px;
   background: var(--vp-code-block-bg);
+}
+
+.sectile-example__preview[hidden],
+.sectile-example__code[hidden] {
+  display: none;
 }
 
 .sectile-example__code pre {
@@ -298,6 +353,42 @@
 
 .bash-playground__actions {
   gap: 8px;
+}
+
+.bash-playground__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #29584b;
+  border-radius: 9px;
+  background: #10271f;
+  color: #a9ead4;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.bash-playground__status > span {
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  border-radius: 50%;
+  background: #62dec9;
+  box-shadow: 0 0 0 3px rgba(98, 222, 201, 0.14);
+}
+
+.bash-playground__status[data-state='stopped'],
+.bash-playground__status[data-state='error'] {
+  border-color: #5a3b46;
+  background: #291820;
+  color: #ffb8c6;
+}
+
+.bash-playground__status[data-state='stopped'] > span,
+.bash-playground__status[data-state='error'] > span {
+  background: #ff8aa2;
+  box-shadow: 0 0 0 3px rgba(255, 138, 162, 0.14);
 }
 
 .bash-playground__header button {
@@ -614,6 +705,10 @@
     flex: 1;
   }
 
+  .bash-playground__status {
+    margin-inline-start: auto;
+  }
+
   .bash-playground__terminal {
     height: 330px;
     padding: 12px;
@@ -668,8 +763,8 @@
   }
 
   .sectile-example__preview {
-    min-height: 160px;
-    padding: 24px 16px;
+    min-height: 0;
+    padding: 0;
   }
 }
 

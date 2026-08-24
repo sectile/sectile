@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef } from 'vue';
+import { computed, ref } from 'vue';
 import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover';
 import type { ComputePositionReturn } from '@sectile/dom/popover';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 
 const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly side?: 'top' | 'right' | 'bottom' | 'left'; readonly controlled?: boolean }>(), { side: 'bottom', controlled: false });
-const open = ref(false);
-const host = ref<HTMLElement>();
-const collisionBoundary = shallowRef<HTMLElement>();
+const open = ref(true);
 const resolvedSide = ref(props.side);
 const revision = ref(0);
 const entries = ref<EventEntry[]>([]);
 const source = computed(() => `<script setup lang="ts">
 import { ref } from 'vue'
-import { PopoverArrow, PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from '@sectile/vue/popover'
+import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover'
 
-const open = ref(false)
+const open = ref(true)
 <\/script>
 
 <template>
-  <PopoverRoot v-model:open="open" side="${props.side}" align="center">
+  <PopoverRoot v-model:open="open" side="${props.side}" align="center" :close-on-interact-outside="false">
     <PopoverTrigger>Edit profile</PopoverTrigger>
     <PopoverContent>
       <PopoverArrow />
-      <input aria-label="Display name" value="Sectile" />
-      <PopoverClose>Done</PopoverClose>
+      <PopoverTitle>Profile details</PopoverTitle>
+      <PopoverDescription>Change the public display name.</PopoverDescription>
+      <label>Display name <input value="Sectile" /></label>
+      <PopoverClose>Save changes</PopoverClose>
     </PopoverContent>
   </PopoverRoot>
 </template>`);
@@ -36,23 +36,20 @@ function update(next: boolean): void {
 function updatePosition(position: ComputePositionReturn): void {
   resolvedSide.value = position.placement.split('-')[0] as typeof resolvedSide.value;
 }
-onMounted(() => {
-  collisionBoundary.value = host.value?.closest<HTMLElement>('.demo-surface') ?? undefined;
-});
 </script>
 
 <template>
   <DemoCard :title="title" :revision="revision" :state="{ open, side: resolvedSide, ownership: controlled ? 'controlled' : 'uncontrolled' }" :entries="entries" interaction="enabled" :code="source">
-    <div ref="host" class="popover-example" :class="{ 'popover-example--right': side === 'right' }">
+    <div class="popover-example" :class="{ 'popover-example--right': side === 'right' }">
       <p class="demo-copy">{{ description }}</p>
-      <PopoverRoot v-if="collisionBoundary" :open="controlled ? open : undefined" :default-open="controlled ? undefined : false" :side="side" align="center" :collision-boundary="collisionBoundary" @update:open="update" @position-change="updatePosition">
+      <PopoverRoot :open="controlled ? open : undefined" :default-open="controlled ? undefined : true" :side="side" align="center" :close-on-interact-outside="false" @update:open="update" @position-change="updatePosition">
         <PopoverTrigger class="secondary popover-trigger">Edit profile</PopoverTrigger>
         <PopoverContent class="popover-content">
           <PopoverArrow class="popover-arrow" />
-          <PopoverTitle>Profile details</PopoverTitle>
-          <PopoverDescription class="demo-copy">Change the public display name.</PopoverDescription>
-          <input aria-label="Display name" value="Sectile" />
-          <PopoverClose class="secondary">Done</PopoverClose>
+          <PopoverTitle class="popover-title">Profile details</PopoverTitle>
+          <PopoverDescription class="popover-description">Change the public display name.</PopoverDescription>
+          <label class="popover-field"><span>Display name</span><input class="catalog-input" aria-label="Display name" value="Sectile" /></label>
+          <div class="popover-actions"><PopoverClose>Save changes</PopoverClose></div>
         </PopoverContent>
       </PopoverRoot>
     </div>

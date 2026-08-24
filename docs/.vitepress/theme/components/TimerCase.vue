@@ -22,8 +22,9 @@ function note(action: string): void { completed.value = false; entries.value = [
   <DemoCard :title="title" :revision="revision" :state="state" :entries="entries" interaction="enabled" :code="code">
     <TimerRoot class="timer-demo" :countdown="countdown" :start-ms="startMs" :auto-start="autoStart" :interval-ms="100" v-bind="targetMs === undefined ? {} : { targetMs }" @tick="tick" @complete="complete">
       <p class="demo-copy">{{ description }}</p>
+      <div class="timer-heading"><strong>{{ countdown ? 'Focus session' : targetMs === undefined ? 'Elapsed time' : 'Target progress' }}</strong><span>{{ countdown ? 'Time remaining' : 'Session timer' }}</span></div>
       <TimerArea class="timer-area"><TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" /></TimerArea>
-      <TimerControl class="timer-controls"><TimerActionTrigger action="start" class="secondary" @click="note('start')">Start</TimerActionTrigger><TimerActionTrigger action="pause" class="secondary" @click="note('pause')">Pause</TimerActionTrigger><TimerActionTrigger action="reset" class="secondary" @click="note('reset')">Reset</TimerActionTrigger><TimerActionTrigger action="restart" class="secondary" @click="note('restart')">Restart</TimerActionTrigger></TimerControl>
+      <TimerControl class="timer-controls"><TimerActionTrigger action="start" class="timer-primary" @click="note('start')">Start timer</TimerActionTrigger><TimerActionTrigger action="pause" class="secondary" @click="note('pause')">Pause</TimerActionTrigger><TimerActionTrigger action="reset" class="timer-quiet" @click="note('reset')">Reset</TimerActionTrigger></TimerControl>
     </TimerRoot>
   </DemoCard>
 </template>

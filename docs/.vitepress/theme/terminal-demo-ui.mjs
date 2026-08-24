@@ -1,14 +1,19 @@
 import { fitTerminalText } from '@sectile/terminal/layout';
+import { createTerminalAppearance } from '@sectile/terminal/appearance';
+
+export const appearance = createTerminalAppearance({
+  capabilities: { colorLevel: 1, unicode: true },
+});
 
 export const ansi = Object.freeze({
-  reset: '\u001b[0m',
-  bold: '\u001b[1m',
-  dim: '\u001b[2m',
-  cyan: '\u001b[36m',
-  yellow: '\u001b[33m',
-  inverse: '\u001b[7m',
-  current: '\u001b[30;46m',
-  editing: '\u001b[30;43m',
+  reset: appearance.reset,
+  bold: appearance.open({ bold: true }),
+  dim: appearance.open('muted'),
+  cyan: appearance.open('accent'),
+  yellow: appearance.open('warning'),
+  inverse: appearance.open({ inverse: true }),
+  current: appearance.open('current'),
+  editing: appearance.open('editing'),
 });
 
 export function styled(style, value, width) {
@@ -33,11 +38,5 @@ export function effectLabels(effects) {
 }
 
 export function terminalCell(value, width, { current = false, selected = false, editing = false } = {}) {
-  const marker = current ? '>' : ' ';
-  const selection = selected ? '●' : ' ';
-  const content = `${marker}${selection}${plain(value, Math.max(1, width - 2))}`;
-  if (editing) return styled(ansi.editing, content, width);
-  if (current) return styled(ansi.current, content, width);
-  if (selected) return styled(ansi.cyan, content, width);
-  return plain(content, width);
+  return appearance.cell(value, width, { current, selected, editing });
 }

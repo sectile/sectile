@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Bell, Bold } from '@lucide/vue';
+import { Bell, Bold, Check, Minus } from '@lucide/vue';
+import { CheckboxIndicator, CheckboxRoot, type CheckboxValue } from '@sectile/vue/checkbox';
 import { SwitchRoot, SwitchThumb } from '@sectile/vue/switch';
 import { ToggleButton } from '@sectile/vue/toggle-button';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 
 const props = withDefaults(defineProps<{
-  readonly kind: 'switch' | 'toggle-button';
+  readonly kind: 'checkbox' | 'switch' | 'toggle-button';
   readonly title: string;
   readonly label: string;
   readonly description: string;
-  readonly initialValue: boolean;
+  readonly initialValue: CheckboxValue;
   readonly controlled?: boolean;
   readonly disabled?: boolean;
   readonly?: boolean;
@@ -21,17 +22,20 @@ const props = withDefaults(defineProps<{
   readonly: false,
 });
 
-const value = ref(props.initialValue);
+const value = ref<CheckboxValue>(props.initialValue);
 const revision = ref(0);
 const entries = ref<EventEntry[]>([]);
 const interaction = computed<'enabled' | 'readonly' | 'disabled'>(() => (
   props.disabled ? 'disabled' : props.readonly ? 'readonly' : 'enabled'
 ));
-const ownershipProps = computed(() => props.controlled
+const checkboxOwnershipProps = computed(() => props.controlled
   ? { modelValue: value.value }
   : { defaultValue: props.initialValue });
+const booleanOwnershipProps = computed(() => props.controlled
+  ? { modelValue: value.value === true }
+  : { defaultValue: props.initialValue === true });
 const state = computed<Readonly<Record<string, unknown>>>(() => ({
-  [props.kind === 'switch' ? 'checked' : 'pressed']: value.value,
+  [props.kind === 'toggle-button' ? 'pressed' : 'checked']: value.value,
   ownership: props.controlled ? 'controlled' : 'uncontrolled',
 }));
 const sourceCode = computed(() => checkedControlSource({
@@ -42,7 +46,7 @@ const sourceCode = computed(() => checkedControlSource({
   readonly: props.readonly,
 }));
 
-function handleUpdate(next: boolean): void {
+function handleUpdate(next: CheckboxValue): void {
   value.value = next;
   revision.value += 1;
   entries.value = [{
@@ -51,6 +55,10 @@ function handleUpdate(next: boolean): void {
     accepted: true,
     effects: [`set-${props.kind}-value value=${String(next)}`],
   }, ...entries.value].slice(0, 12);
+}
+
+function handleBooleanUpdate(next: boolean): void {
+  handleUpdate(next);
 }
 </script>
 
@@ -67,11 +75,11 @@ function handleUpdate(next: boolean): void {
       <p class="demo-copy">{{ description }}</p>
       <SwitchRoot
         v-if="kind === 'switch'"
-        v-bind="ownershipProps"
+        v-bind="booleanOwnershipProps"
         :disabled="disabled"
         :readonly="readonly"
         class="switch-control"
-        @update:model-value="handleUpdate"
+        @update:model-value="handleBooleanUpdate"
       >
         <span class="checked-control-label">
           <Bell :size="17" aria-hidden="true" />
@@ -83,13 +91,32 @@ function handleUpdate(next: boolean): void {
         <span class="switch-value">{{ value ? 'On' : 'Off' }}</span>
       </SwitchRoot>
 
+      <CheckboxRoot
+        v-else-if="kind === 'checkbox'"
+        v-slot="{ isIndeterminate }"
+        v-bind="checkboxOwnershipProps"
+        :disabled="disabled"
+        :readonly="readonly"
+        class="checkbox-control"
+        @update:model-value="handleUpdate"
+      >
+        <span class="checkbox-marker" aria-hidden="true">
+          <CheckboxIndicator class="checkbox-indicator">
+            <Minus v-if="isIndeterminate" :size="15" :stroke-width="2.5" />
+            <Check v-else :size="15" :stroke-width="2.5" />
+          </CheckboxIndicator>
+        </span>
+        <strong>{{ label }}</strong>
+        <span class="toggle-value">{{ value === 'indeterminate' ? 'Mixed' : value ? 'Checked' : 'Unchecked' }}</span>
+      </CheckboxRoot>
+
       <ToggleButton
         v-else
-        v-bind="ownershipProps"
+        v-bind="booleanOwnershipProps"
         :disabled="disabled"
         :readonly="readonly"
         class="toggle-control"
-        @update:model-value="handleUpdate"
+        @update:model-value="handleBooleanUpdate"
       >
         <Bold :size="18" aria-hidden="true" />
         <span>{{ label }}</span>
@@ -101,16 +128,17 @@ function handleUpdate(next: boolean): void {
 
 <script lang="ts">
 interface CheckedControlSourceOptions {
-  readonly kind: 'switch' | 'toggle-button';
-  readonly initialValue: boolean;
+  readonly kind: 'checkbox' | 'switch' | 'toggle-button';
+  readonly initialValue: CheckboxValue;
   readonly controlled: boolean;
   readonly disabled: boolean;
   readonly: boolean;
 }
 
 function checkedControlSource(options: CheckedControlSourceOptions): string {
+  const initialValue = typeof options.initialValue === 'string' ? `'${options.initialValue}'` : String(options.initialValue);
   const controlledSetup = options.controlled
-    ? `import { ref } from 'vue';\n\nconst value = ref(${String(options.initialValue)});`
+    ? `import { ref } from 'vue';\n\nconst value = ref(${initialValue});`
     : '';
   const binding = options.controlled
     ? 'v-model="value"'
@@ -121,6 +149,10 @@ function checkedControlSource(options: CheckedControlSourceOptions): string {
     .join('');
   if (options.kind === 'switch') {
     return `<script setup lang="ts">\nimport { SwitchRoot, SwitchThumb } from '@sectile/vue/switch';${controlledSetup === '' ? '' : `\n${controlledSetup}`}\n<\/script>\n\n<template>\n  <SwitchRoot\n    ${binding}${flags}\n  >\n    <span>Notifications</span>\n    <SwitchThumb />\n  </SwitchRoot>\n</template>`;
+  }
+  if (options.kind === 'checkbox') {
+    const checkboxBinding = options.controlled ? 'v-model="value"' : `:default-value="${initialValue}"`;
+    return `<script setup lang="ts">\nimport { Check, Minus } from '@lucide/vue';\nimport { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox';${controlledSetup === '' ? '' : `\n${controlledSetup}`}\n<\/script>\n\n<template>\n  <CheckboxRoot\n    v-slot="{ isIndeterminate }"\n    ${checkboxBinding}${flags}\n  >\n    <span class="checkbox-marker" aria-hidden="true">\n      <CheckboxIndicator>\n        <Minus v-if="isIndeterminate" />\n        <Check v-else />\n      </CheckboxIndicator>\n    </span>\n    <span>Include analytics</span>\n  </CheckboxRoot>\n</template>`;
   }
   return `<script setup lang="ts">\nimport { ToggleButton } from '@sectile/vue/toggle-button';${controlledSetup === '' ? '' : `\n${controlledSetup}`}\n<\/script>\n\n<template>\n  <ToggleButton\n    ${binding}${flags}\n  >\n    Bold\n  </ToggleButton>\n</template>`;
 }

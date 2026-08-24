@@ -1,45 +1,108 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useDocsLocale } from '../locale.js';
-import { componentAnatomy } from '../component-anatomy.js';
+import {
+  anatomyPartContract,
+  componentAnatomy,
+  type AnatomyPreviewNode as AnatomyPreviewNodeDefinition,
+} from '../component-anatomy.js';
+import {
+  activateAnatomyInteraction,
+  initializeAnatomyInteraction,
+  type AnatomyActivation,
+} from '../anatomy-interaction.js';
 import AnatomyPreviewNode from './AnatomyPreviewNode.vue';
+import CalendarAnatomy from './CalendarAnatomy.vue';
+import DateTimePickerAnatomy from './DateTimePickerAnatomy.vue';
+import MenubarAnatomy from './MenubarAnatomy.vue';
+import MultiThumbSliderAnatomy from './MultiThumbSliderAnatomy.vue';
+import SliderAnatomy from './SliderAnatomy.vue';
 
 const props = defineProps<{ component: string }>();
 const { isKorean } = useDocsLocale();
 const definition = computed(() => componentAnatomy[props.component]);
 const selectedPart = ref('root');
 const hoveredPart = ref<string | null>(null);
+const selectedPath = ref('0');
+const hoveredPath = ref<string | null>(null);
+type AnatomyAttributes = readonly (readonly [name: string, value: string])[];
+const selectedAttributes = ref<AnatomyAttributes | null>(null);
+const hoveredAttributes = ref<AnatomyAttributes | null>(null);
 const previewValues = reactive<Record<string, string>>({});
+const previewState = reactive<Record<string, string>>({});
 const activePart = computed(() => hoveredPart.value ?? selectedPart.value);
+const activePath = computed(() => hoveredPath.value ?? selectedPath.value);
+const pickerComponents = new Set(['date-picker', 'date-range-picker', 'date-time-picker', 'date-time-range-picker']);
+const usesCalendarAnatomy = computed(() => props.component === 'calendar');
+const usesPickerAnatomy = computed(() => pickerComponents.has(props.component));
+const usesMenubarAnatomy = computed(() => props.component === 'menubar');
+const usesMultiThumbSliderAnatomy = computed(() => props.component === 'multi-thumb-slider');
+const usesSliderAnatomy = computed(() => props.component === 'slider');
 
 watch(() => props.component, () => {
-  selectedPart.value = definition.value?.parts.includes('root') === true
+  const initialPart = definition.value?.parts.includes('root') === true
     ? 'root'
     : definition.value?.parts[0] ?? 'root';
-  for (const part of Object.keys(previewValues)) delete previewValues[part];
-  if (props.component === 'quantity-field') {
-    previewValues['input'] = '12.5';
-    previewValues['unit-select'] = 'km';
-  }
+  selectedPart.value = initialPart;
+  selectedPath.value = definition.value === undefined
+    ? '0'
+    : findPartPath(definition.value.preview, initialPart) ?? '0';
+  hoveredPart.value = null;
+  hoveredPath.value = null;
+  selectedAttributes.value = null;
+  hoveredAttributes.value = null;
+  initializeAnatomyInteraction(props.component, previewValues, previewState);
 }, { immediate: true });
+
+function findPartPath(node: AnatomyPreviewNodeDefinition, part: string, path = '0'): string | undefined {
+  if (node.part === part) return path;
+  for (const [index, child] of (node.children ?? []).entries()) {
+    const match = findPartPath(child, part, `${path}.${index}`);
+    if (match !== undefined) return match;
+  }
+  return undefined;
+}
 
 const hasProvider = computed(() => definition.value?.parts.includes('provider') === true);
 const selectedLabel = computed(() => partTitle(activePart.value));
-const selectedDescription = computed(() => description(activePart.value, isKorean.value));
-const attributes = computed(() => activePart.value === 'provider'
-  ? []
-  : [
-      ['data-scope', definition.value?.scope ?? props.component],
-      ['data-part', activePart.value],
-    ] as const);
+const attributes = computed<AnatomyAttributes>(() => {
+  if (activePart.value === 'provider') return [];
+  const override = hoveredPart.value === null ? selectedAttributes.value : hoveredAttributes.value;
+  if (override !== null) return override;
+  return definition.value === undefined
+    ? [['data-scope', props.component], ['data-part', activePart.value]]
+    : anatomyPartContract(definition.value, activePart.value).attributes;
+});
+const selectedDescription = computed(() => description(activePart.value, isKorean.value, attributes.value));
+
+function selectPart(part: string, nextAttributes?: AnatomyAttributes): void {
+  selectedPart.value = part;
+  selectedAttributes.value = nextAttributes ?? null;
+}
+
+function hoverPart(part: string | null, nextAttributes?: AnatomyAttributes): void {
+  hoveredPart.value = part;
+  hoveredAttributes.value = part === null ? null : nextAttributes ?? null;
+}
 
 function partTitle(part: string): string {
   return part.split('-').map((word) => `${word[0]?.toUpperCase() ?? ''}${word.slice(1)}`).join(' ');
 }
 
-function description(part: string, korean: boolean): string {
+function description(part: string, korean: boolean, currentAttributes: AnatomyAttributes): string {
   if (part === 'root') return korean ? '컴포넌트 전체가 차지하는 경계와 상호작용 범위입니다.' : 'The boundary and interaction area of the entire component.';
   if (part === 'provider') return korean ? 'DOM 요소 없이 상태와 동작을 하위 요소에 제공합니다.' : 'Provides state and behavior without rendering a DOM element.';
+  if (props.component === 'menubar' && part === 'item') {
+    const level = currentAttributes.find(([name]) => name === 'data-level')?.[1] ?? '<depth>';
+    return korean
+      ? `최상위 메뉴와 팝업 명령은 같은 item 파트를 공유하며 data-level="${level}"로 계층을 구분합니다.`
+      : `Top-level menus and popup commands share the item part; data-level="${level}" distinguishes their hierarchy.`;
+  }
+  if (props.component === 'menubar' && part === 'sub-content') {
+    return korean
+      ? '열린 명령 목록의 경계입니다. 공유 Menu 프리미티브이므로 data-scope="menu"를 사용합니다.'
+      : 'The opened command-list boundary. It uses data-scope="menu" because Menubar reuses the shared Menu primitive.';
+  }
   return korean
     ? '강조된 화면 영역이 이 공개 파트에 해당합니다. 아래 속성을 선택자로 사용해 스타일을 적용할 수 있습니다.'
     : 'The highlighted region belongs to this public part. Use the attributes below as stable styling selectors.';
@@ -47,6 +110,10 @@ function description(part: string, korean: boolean): string {
 
 function updatePreviewValue(part: string, value: string): void {
   previewValues[part] = value;
+}
+
+function activatePreview(node: AnatomyActivation): void {
+  activateAnatomyInteraction(props.component, node, previewValues, previewState);
 }
 </script>
 
@@ -63,22 +130,70 @@ function updatePreviewValue(part: string, value: string): void {
         type="button"
         class="component-anatomy__provider"
         :aria-pressed="selectedPart === 'provider'"
-        @click="selectedPart = 'provider'"
+        @click="selectPart('provider')"
       >
         <strong>Provider</strong>
         <span>{{ isKorean ? '화면에 표시되지 않는 상태 소유자' : 'Non-visual state owner' }}</span>
       </button>
     </header>
 
-    <div class="component-anatomy__stage">
+    <div
+      class="component-anatomy__stage"
+      :class="{ 'component-anatomy__stage--picker': usesPickerAnatomy }"
+    >
+      <CalendarAnatomy
+        v-if="usesCalendarAnatomy"
+        :active-part="activePart"
+        :korean="isKorean"
+        @select="selectPart"
+        @hover="hoverPart"
+      />
+      <DateTimePickerAnatomy
+        v-else-if="usesPickerAnatomy"
+        :component="component as 'date-picker' | 'date-range-picker' | 'date-time-picker' | 'date-time-range-picker'"
+        :active-part="activePart"
+        :korean="isKorean"
+        @select="selectPart"
+        @hover="hoverPart"
+      />
+      <MenubarAnatomy
+        v-else-if="usesMenubarAnatomy"
+        :active-part="activePart"
+        :korean="isKorean"
+        @select="selectPart"
+        @hover="hoverPart"
+      />
+      <MultiThumbSliderAnatomy
+        v-else-if="usesMultiThumbSliderAnatomy"
+        :active-part="activePart"
+        :korean="isKorean"
+        @select="selectPart"
+        @hover="hoverPart"
+      />
+      <SliderAnatomy
+        v-else-if="usesSliderAnatomy"
+        :active-part="activePart"
+        :korean="isKorean"
+        @select="selectPart"
+        @hover="hoverPart"
+      />
       <AnatomyPreviewNode
+        v-else
         :node="definition.preview"
+        node-path="0"
         :selected-part="selectedPart"
         :active-part="activePart"
+        :selected-path="selectedPath"
+        :active-path="activePath"
         :preview-values="previewValues"
-        @select="selectedPart = $event"
-        @hover="hoveredPart = $event"
+        :preview-state="previewState"
+        :component="component"
+        @select="selectPart"
+        @hover="hoverPart"
+        @select-path="selectedPath = $event"
+        @hover-path="hoveredPath = $event"
         @update-value="updatePreviewValue"
+        @activate="activatePreview"
       />
     </div>
 
@@ -103,11 +218,22 @@ function updatePreviewValue(part: string, value: string): void {
 
 <style>
 .component-anatomy {
-  margin: 24px 0 32px;
+  --vp-c-bg: #fff;
+  --vp-c-bg-soft: #f6f6f7;
+  --vp-c-bg-alt: #f0f0f2;
+  --vp-c-divider: #e3e3e7;
+  --vp-c-border: #d8d8de;
+  --vp-c-text-1: #3c3c43;
+  --vp-c-text-2: #5b5b64;
+  --vp-c-text-3: #85858d;
+  --vp-c-brand-1: #5368eb;
+  --vp-c-brand-soft: #e8eaff;
+
+  margin: 18px 0 34px;
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 16px;
-  background: var(--vp-c-bg);
+  border-radius: 14px;
+  background: var(--vp-c-bg-alt);
 }
 
 .component-anatomy__intro {
@@ -140,18 +266,21 @@ function updatePreviewValue(part: string, value: string): void {
 }
 
 .component-anatomy__provider span { font-size: 12px; }
-.component-anatomy__provider[aria-pressed='true'] { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); box-shadow: 0 0 0 3px var(--vp-c-brand-soft); }
+.component-anatomy__provider[aria-pressed='true'] { border-color: var(--vp-c-brand-1); color: var(--vp-c-brand-1); background: var(--vp-c-brand-soft); box-shadow: inset 0 0 0 1px var(--vp-c-brand-1); }
 
 .component-anatomy__stage {
   --anatomy-control-height: 44px;
 
   display: grid;
-  min-height: 420px;
-  padding: 56px 48px;
+  min-height: 0;
+  padding: clamp(36px, 6vw, 56px) clamp(22px, 5vw, 48px);
   place-items: center;
-  background:
-    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--vp-c-brand-soft) 35%, transparent), transparent 38%),
-    var(--vp-c-bg-soft);
+  background: var(--vp-c-bg-soft);
+}
+
+.component-anatomy__stage--picker {
+  min-height: 620px;
+  padding: 36px 32px;
 }
 
 .component-anatomy__stage .anatomy-node {
@@ -162,23 +291,64 @@ function updatePreviewValue(part: string, value: string): void {
 }
 
 .component-anatomy__stage .anatomy-node--selectable { cursor: default; }
-.component-anatomy__stage .anatomy-node--selected-part { z-index: 4; outline: 3px solid var(--vp-c-brand-1); outline-offset: 4px; box-shadow: 0 0 0 8px var(--vp-c-brand-soft); }
-
-.component-anatomy__stage .anatomy-node__part-label {
-  position: absolute;
-  z-index: 12;
-  top: -13px;
-  left: 12px;
-  padding: 2px 7px;
-  border-radius: 999px;
+.component-anatomy__stage .anatomy-node--interactive { cursor: pointer; }
+.component-anatomy__stage .anatomy-part-active {
+  position: relative;
+  z-index: 4;
+  outline: 0 !important;
+  box-shadow: inset 0 0 0 2px var(--vp-c-brand-1) !important;
+}
+.component-anatomy__stage .anatomy-node:has(.anatomy-part-active) { overflow: visible; }
+.component-anatomy__stage .anatomy-node--preview-hidden { display: none; }
+.component-anatomy__stage .anatomy-node--item.anatomy-node--preview-active,
+.component-anatomy__stage .anatomy-node--tab.anatomy-node--preview-active,
+.component-anatomy__stage .anatomy-node--button.anatomy-node--preview-active {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+.component-anatomy__stage .anatomy-node--indicator.anatomy-node--preview-active {
+  border-color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-1);
   color: white;
-  font: 600 10px/1.45 var(--vp-font-family-mono);
+}
+.component-anatomy__stage .anatomy-node--switch-root .anatomy-node--thumb {
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+.component-anatomy__stage .anatomy-node--switch-root.anatomy-node--preview-active {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+.component-anatomy__stage .anatomy-node--switch-root.anatomy-node--preview-active .anatomy-node--thumb {
+  background: var(--vp-c-brand-1);
+  transform: none;
+}
+.component-anatomy__stage .anatomy-node--switch-root.anatomy-node--preview-active > .anatomy-node--thumb::after { transform: translateX(20px); }
+
+.component-anatomy__stage .anatomy-part-label {
+  position: absolute;
+  z-index: 12;
+  top: -11px;
+  left: 12px;
+  padding: 2px 7px 3px;
+  border: 1px solid color-mix(in srgb, var(--vp-c-brand-1) 30%, transparent);
+  border-radius: 999px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  font: 700 10px/1.4 var(--vp-font-family-mono);
   white-space: nowrap;
+  pointer-events: none;
 }
 
-.component-anatomy__stage .anatomy-node__icon { display: inline-grid; flex: none; place-items: center; }
-.component-anatomy__stage .anatomy-node__detail { color: var(--vp-c-text-3); font-size: 11px; }
+.component-anatomy__stage .anatomy-node__icon {
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+.component-anatomy__stage .anatomy-node__text { min-width: 0; line-height: 1.4; }
+.component-anatomy__stage .anatomy-node__detail { color: var(--vp-c-text-3); font-size: 11px; line-height: 1.4; }
 .component-anatomy__stage .anatomy-node__button,
 .component-anatomy__stage .anatomy-node__input,
 .component-anatomy__stage .anatomy-node__select {
@@ -206,6 +376,12 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node__range-input:focus-visible,
 .component-anatomy__stage .anatomy-node__select:focus-visible,
 .component-anatomy__stage .anatomy-node__button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 4px; }
+.component-anatomy__stage .anatomy-part-active > :is(
+  .anatomy-node__input,
+  .anatomy-node__range-input,
+  .anatomy-node__select,
+  .anatomy-node__button
+):focus-visible { outline: 0; }
 
 .component-anatomy__stage .anatomy-node__range-input {
   position: absolute;
@@ -238,16 +414,17 @@ function updatePreviewValue(part: string, value: string): void {
 
 .component-anatomy__stage .anatomy-node--root {
   width: min(100%, 680px);
-  padding: 22px;
+  padding: 20px;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--vp-c-bg);
-  box-shadow: 0 18px 48px color-mix(in srgb, var(--vp-c-text-1) 9%, transparent);
 }
 
 .component-anatomy__stage .anatomy-node--row { display: flex; align-items: center; gap: 10px; }
 .component-anatomy__stage .anatomy-node--stack { display: grid; gap: 3px; }
 .component-anatomy__stage .anatomy-node--form-stack { display: grid; gap: 12px; width: min(100%, 520px); }
+.component-anatomy__stage .anatomy-node--editable-root { display: grid; gap: 16px; }
+.component-anatomy__stage .anatomy-node--editor-actions { flex-wrap: wrap; gap: 12px; }
 .component-anatomy__stage .anatomy-node--field-preview { width: min(100%, 520px); }
 .component-anatomy__stage .anatomy-node--field-row,
 .component-anatomy__stage .anatomy-node--picker-inputs { align-items: end; }
@@ -317,13 +494,33 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node--textarea { display: grid; min-height: 92px; gap: 10px; padding: 14px; border: 1px solid var(--vp-c-divider); border-radius: 10px; }
 
 .component-anatomy__stage .anatomy-node--choice { display: flex; width: min(100%, 520px); align-items: center; gap: 14px; box-shadow: none; }
-.component-anatomy__stage .anatomy-node--choice > .anatomy-node--indicator { width: 28px; height: 28px; border-radius: 7px; background: var(--vp-c-brand-1); color: white; }
+.component-anatomy__stage .anatomy-node--choice > .anatomy-node--indicator {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--vp-c-border);
+  border-radius: 7px;
+  background: var(--vp-c-bg);
+  color: transparent;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+.component-anatomy__stage .anatomy-node--choice > .anatomy-node--indicator.anatomy-node--preview-active {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-1);
+  color: white;
+}
+.component-anatomy__stage .anatomy-node--item.anatomy-node--choice > .anatomy-node--indicator { margin-left: 0; }
 
 .component-anatomy__stage .anatomy-node--panel,
 .component-anatomy__stage .anatomy-node--list,
 .component-anatomy__stage .anatomy-node--viewport { border: 1px solid var(--vp-c-divider); border-radius: 11px; background: var(--vp-c-bg); }
 .component-anatomy__stage .anatomy-node--panel { padding: 14px; }
 .component-anatomy__stage .anatomy-node--list { display: grid; overflow: hidden; }
+.component-anatomy__stage .anatomy-node--indicator {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  line-height: 0;
+}
 .component-anatomy__stage .anatomy-node--item { display: flex; min-height: 46px; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--vp-c-divider); }
 .component-anatomy__stage .anatomy-node--item:last-child { border-bottom: 0; }
 .component-anatomy__stage .anatomy-node--item > .anatomy-node--indicator { margin-left: auto; }
@@ -355,8 +552,8 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node--second-thumb { left: 72%; }
 
 .component-anatomy__stage .anatomy-node--dialog-root,
-.component-anatomy__stage .anatomy-node--popover-root,
-.component-anatomy__stage .anatomy-node--tooltip-root { min-height: 300px; }
+.component-anatomy__stage .anatomy-node--popover-root { min-height: 300px; }
+.component-anatomy__stage .anatomy-node--tooltip-root { display: grid; min-height: 260px; place-items: center; }
 .component-anatomy__stage .anatomy-node--overlay { position: absolute; inset: 72px 22px 22px; display: grid; padding: 24px; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--vp-c-text-1) 18%, transparent); }
 .component-anatomy__stage .anatomy-node--dialog-panel { display: grid; width: min(100%, 360px); gap: 13px; box-shadow: 0 20px 50px color-mix(in srgb, var(--vp-c-text-1) 18%, transparent); }
 .component-anatomy__stage .anatomy-node--dialog-actions { justify-content: flex-end; }
@@ -370,14 +567,35 @@ function updatePreviewValue(part: string, value: string): void {
   border-radius: 999px;
   background: var(--vp-c-brand-soft);
 }
-.component-anatomy__stage .anatomy-node--tooltip-panel { width: auto; padding: 9px 12px; font-size: 12px; }
+.component-anatomy__stage .anatomy-node--tooltip-anchor { position: relative; display: inline-grid; width: max-content; max-width: 100%; margin-top: 36px; }
+.component-anatomy__stage .anatomy-node--tooltip-panel { top: auto; bottom: calc(100% + 12px); width: max-content; max-width: min(330px, calc(100vw - 80px)); padding: 9px 12px; font-size: 12px; white-space: nowrap; }
 .component-anatomy__stage .anatomy-node--arrow { position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; border: 1px solid var(--vp-c-divider); border-right: 0; border-bottom: 0; background: var(--vp-c-bg); transform: rotate(45deg); }
+.component-anatomy__stage .anatomy-node--tooltip-arrow { top: auto; bottom: -7px; border: 1px solid var(--vp-c-divider); border-top: 0; border-left: 0; }
 
 .component-anatomy__stage .anatomy-node--listbox-root,
 .component-anatomy__stage .anatomy-node--select-root,
 .component-anatomy__stage .anatomy-node--combobox-root,
 .component-anatomy__stage .anatomy-node--cascade-root { display: grid; width: min(100%, 520px); gap: 10px; }
-.component-anatomy__stage .anatomy-node--cascade-root > .anatomy-node--list { display: grid; grid-template-columns: repeat(2, 1fr); }
+.component-anatomy__stage .anatomy-node--cascade-root { width: min(100%, 680px); }
+.component-anatomy__stage .anatomy-node--cascade-root > [data-part-name='value'] { padding-inline: 2px; color: var(--vp-c-text-2); font-size: 12px; }
+.component-anatomy__stage .anatomy-node--cascade-root > .anatomy-node--list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.component-anatomy__stage .anatomy-node--cascade-root > .anatomy-node--list > .anatomy-node--panel { min-width: 0; padding: 8px; border-width: 0 1px 0 0; border-radius: 0; }
+.component-anatomy__stage .anatomy-node--cascade-root > .anatomy-node--list > .anatomy-node--panel:last-child { border-right: 0; }
+.component-anatomy__stage .anatomy-node--cascade-root .anatomy-node--item { min-width: 0; border-bottom: 0; border-radius: 8px; }
+.component-anatomy__stage .anatomy-node--cascade-root .anatomy-node--item:hover { background: var(--vp-c-bg-soft); }
+.component-anatomy__stage .anatomy-node--cascade-root .anatomy-node__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.component-anatomy__stage :is(
+  .anatomy-node--select-root,
+  .anatomy-node--cascade-root,
+  .anatomy-node--menu-button-root,
+  .anatomy-node--navigation-root,
+  .anatomy-node--accordion-root,
+  .anatomy-node--disclosure-root
+) [data-part-name='trigger'] > .anatomy-node__button {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  text-align: left;
+}
 
 .component-anatomy__stage .anatomy-node--menu-root,
 .component-anatomy__stage .anatomy-node--menu-button-root,
@@ -388,28 +606,65 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--list { display: flex; overflow: visible; }
 .component-anatomy__stage .anatomy-node--navigation-root > .anatomy-node--viewport { margin-top: 14px; padding: 18px; }
 
-.component-anatomy__stage .anatomy-node--data-grid { overflow: hidden; padding: 0; }
+.component-anatomy__stage .anatomy-node--data-grid { overflow: visible; padding: 0; }
 .component-anatomy__stage .anatomy-node--grid-header,
 .component-anatomy__stage .anatomy-node--data-grid .anatomy-node--row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
-.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell { min-height: 48px; justify-items: start; padding: 0 14px; border-right: 1px solid var(--vp-c-divider); border-bottom: 1px solid var(--vp-c-divider); border-radius: 0; }
-.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell > .anatomy-node--indicator { position: absolute; left: 4px; }
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell { min-height: 48px; align-items: center; justify-items: start; padding: 0 14px; border-right: 1px solid var(--vp-c-divider); border-bottom: 1px solid var(--vp-c-divider); border-radius: 0; }
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell > .anatomy-node--indicator {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  transform: translateY(-50%);
+}
+.component-anatomy__stage .anatomy-node--data-grid .anatomy-node--cell:has(> [data-part-name='disclosure']) { padding-left: 36px; }
 .component-anatomy__stage .anatomy-node--tree-root { display: grid; width: min(100%, 470px); }
+.component-anatomy__stage .anatomy-node--tree-root [data-part-name='disclosure'] { order: -1; width: 16px; height: 16px; margin-left: 0; }
+.component-anatomy__stage .anatomy-node--tree-root .anatomy-node--tree-child { padding-left: 36px; }
+.component-anatomy__stage .anatomy-node--tree-root .anatomy-node--tree-grandchild { padding-left: 64px; }
 .component-anatomy__stage .anatomy-node--feed-root { display: grid; width: min(100%, 560px); gap: 12px; }
 
-.component-anatomy__stage .anatomy-node--rating-root,
+.component-anatomy__stage .anatomy-node--rating-root { display: grid; width: min(100%, 440px); gap: 16px; padding: 24px; }
 .component-anatomy__stage .anatomy-node--radio-root { display: grid; width: min(100%, 520px); gap: 14px; }
-.component-anatomy__stage .anatomy-node--rating-row { justify-content: center; }
-.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--item { min-height: auto; padding: 5px; border: 0; font-size: 29px; }
-.component-anatomy__stage .anatomy-node--active-star { color: #b58a2d; }
-.component-anatomy__stage .anatomy-node--inactive-star { color: var(--vp-c-divider); }
-.component-anatomy__stage .anatomy-node--radio-root .anatomy-node--indicator { order: -1; width: 18px; height: 18px; border: 2px solid var(--vp-c-divider); border-radius: 50%; }
+.component-anatomy__stage .anatomy-node--rating-value { color: var(--vp-c-text-2); font-size: 14px; font-weight: 600; }
+.component-anatomy__stage .anatomy-node--rating-row { justify-content: flex-start; gap: 4px; }
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--item {
+  display: grid;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  color: var(--vp-c-text-3);
+}
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--item.anatomy-node--preview-active { background: transparent; color: var(--vp-c-brand-1); }
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--item:hover { background: var(--vp-c-bg-soft); }
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node__icon--star { width: 28px; height: 28px; }
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--indicator {
+  position: absolute;
+  inset: 2px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+}
+.component-anatomy__stage .anatomy-node--rating-row .anatomy-node--indicator.anatomy-node--preview-active { border-color: var(--vp-c-brand-1); background: transparent; }
+.component-anatomy__stage .anatomy-node--rating-clear { width: fit-content; min-height: 38px; padding: 0 14px; border-radius: 9px; color: var(--vp-c-text-2); }
+.component-anatomy__stage .anatomy-node--radio-root .anatomy-node--indicator { order: -1; width: 18px; height: 18px; margin-left: 0; border: 2px solid var(--vp-c-divider); border-radius: 50%; }
 .component-anatomy__stage .anatomy-node--radio-root .anatomy-node--selected { border: 5px solid var(--vp-c-brand-1); background: var(--vp-c-bg); }
 .component-anatomy__stage .anatomy-node--switch-root { display: flex; width: min(100%, 500px); align-items: center; gap: 16px; }
-.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb { position: relative; top: auto; left: auto; width: 48px; height: 28px; border: 0; border-radius: 999px; background: var(--vp-c-brand-1); transform: none; }
-.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb::after { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: white; content: ''; }
+.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb { position: relative; top: auto; left: auto; width: 48px; height: 28px; border: 0; border-radius: 999px; background: var(--vp-c-bg-alt); transform: none; }
+.component-anatomy__stage .anatomy-node--switch-root > .anatomy-node--thumb::after { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: white; box-shadow: 0 1px 3px color-mix(in srgb, var(--vp-c-text-1) 25%, transparent); content: ''; transition: transform 160ms ease; }
 .component-anatomy__stage .anatomy-node--toggle-group,
 .component-anatomy__stage .anatomy-node--pagination-root,
 .component-anatomy__stage .anatomy-node--toolbar-root { display: flex; width: auto; gap: 6px; }
+.component-anatomy__stage .anatomy-node--pagination-root { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; }
+.component-anatomy__stage .anatomy-node--pagination-ellipsis { display: grid; width: 32px; flex: 0 0 32px; place-items: center; color: var(--vp-c-text-3); }
 .component-anatomy__stage .anatomy-node--toggle-group .anatomy-node--item,
 .component-anatomy__stage .anatomy-node--pagination-root .anatomy-node--item { min-width: 40px; justify-content: center; border: 1px solid var(--vp-c-divider); border-radius: 9px; }
 .component-anatomy__stage .anatomy-node--pressed,
@@ -470,7 +725,67 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node--tab-list { display: flex; border-bottom: 1px solid var(--vp-c-divider); }
 .component-anatomy__stage .anatomy-node--tab-list .anatomy-node--button { border: 0; border-radius: 0; }
 .component-anatomy__stage .anatomy-node--tab-list > .anatomy-node--indicator { position: absolute; bottom: -1px; left: 12px; width: 88px; height: 3px; background: var(--vp-c-brand-1); }
-.component-anatomy__stage .anatomy-node--stepper-root > .anatomy-node--list { display: flex; }
+.component-anatomy__stage .anatomy-node--stepper-root { width: min(100%, 620px); gap: 22px; padding: 24px; }
+.component-anatomy__stage .anatomy-node--stepper-root > .anatomy-node--list {
+  position: relative;
+  display: grid;
+  width: 100%;
+  overflow: visible;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+}
+.component-anatomy__stage .anatomy-node--stepper-root > .anatomy-node--list::before {
+  position: absolute;
+  top: 17px;
+  right: 16.666%;
+  left: 16.666%;
+  height: 2px;
+  background: var(--vp-c-divider);
+  content: '';
+}
+.component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--stepper-step {
+  display: grid;
+  min-height: 70px;
+  justify-items: center;
+  align-content: start;
+  gap: 9px;
+  padding: 0 8px;
+  border: 0;
+  color: var(--vp-c-text-2);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+.component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--stepper-step.anatomy-node--preview-active { border: 0; color: var(--vp-c-brand-1); background: transparent; }
+.component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--stepper-step > .anatomy-node--indicator {
+  z-index: 1;
+  order: -1;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  place-items: center;
+  border: 2px solid var(--vp-c-divider);
+  border-radius: 50%;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg);
+  font-size: 13px;
+  font-weight: 700;
+}
+.component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--stepper-step > .anatomy-node--indicator.anatomy-node--preview-active {
+  border-color: var(--vp-c-brand-1);
+  color: white;
+  background: var(--vp-c-brand-1);
+}
+.component-anatomy__stage .anatomy-node--stepper-root > .anatomy-node--panel { min-height: 76px; align-content: center; padding: 18px 20px; }
+.component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--indicator.anatomy-node--selected-part { outline: 0; box-shadow: inset 0 0 0 2px var(--vp-c-brand-1); }
+
+@media (max-width: 560px) {
+  .component-anatomy__stage .anatomy-node--stepper-root { padding: 20px 14px; }
+  .component-anatomy__stage .anatomy-node--stepper-root .anatomy-node--stepper-step { padding-inline: 3px; font-size: 12px; }
+}
 
 .component-anatomy__stage .anatomy-node--accordion-root,
 .component-anatomy__stage .anatomy-node--disclosure-root { display: grid; width: min(100%, 580px); padding: 0; }
@@ -487,9 +802,9 @@ function updatePreviewValue(part: string, value: string): void {
 .component-anatomy__stage .anatomy-node--toast-viewport { display: grid; width: min(100%, 560px); min-height: 260px; align-items: end; justify-items: end; padding: 20px; }
 .component-anatomy__stage .anatomy-node--toast-card { display: grid; width: 330px; gap: 5px; }
 .component-anatomy__stage .anatomy-node--toast-card > .anatomy-node--icon-button { position: absolute; top: 10px; right: 10px; }
-.component-anatomy__stage .anatomy-node--splitter-root { display: grid; grid-template-columns: minmax(0, 35%) 12px 1fr; min-height: 240px; padding: 0; overflow: hidden; }
+.component-anatomy__stage .anatomy-node--splitter-root { display: grid; grid-template-columns: minmax(0, var(--anatomy-split, 35%)) 12px minmax(0, 1fr); min-height: 240px; padding: 0; overflow: hidden; }
 .component-anatomy__stage .anatomy-node--pane { display: grid; place-items: center; }
-.component-anatomy__stage .anatomy-node--handle { display: grid; place-items: center; background: var(--vp-c-brand-1); color: white; }
+.component-anatomy__stage .anatomy-node--handle { display: grid; place-items: center; background: var(--vp-c-brand-1); color: white; cursor: col-resize; touch-action: none; }
 
 .component-anatomy__inspector {
   display: grid;
@@ -498,6 +813,7 @@ function updatePreviewValue(part: string, value: string): void {
   align-items: start;
   padding: 18px;
   border-top: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
 }
 
 .component-anatomy__inspector > div { display: grid; gap: 5px; }
@@ -513,7 +829,7 @@ function updatePreviewValue(part: string, value: string): void {
 
 @media (max-width: 720px) {
   .component-anatomy__intro { align-items: flex-start; flex-direction: column; }
-  .component-anatomy__stage { min-height: 360px; padding: 44px 20px; }
+  .component-anatomy__stage { min-height: 0; padding: 44px 20px; }
   .component-anatomy__stage .anatomy-node--picker-inputs { grid-template-columns: 1fr; }
   .component-anatomy__stage .anatomy-node--calendar { padding: 10px; }
   .component-anatomy__stage .anatomy-node--week-controls,
