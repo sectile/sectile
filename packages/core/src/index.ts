@@ -22,6 +22,37 @@ export type {
   InteractionStateInput,
 } from './interaction.js';
 export type {
+  CollectionWindowCommand,
+  CollectionWindowDirection,
+  CollectionWindowEvent,
+  CollectionWindowReplacement,
+  CollectionWindowRequest,
+  CollectionWindowState,
+  CollectionWindowStateInput,
+  CollectionWindowUpdate,
+} from './collection-window.js';
+export type {
+  Layer,
+  LayerCloseReason,
+  LayerDismissReason,
+  LayerInput,
+  LayerMode,
+  LayerStackCommand,
+  LayerStackEvent,
+  LayerStackState,
+  LayerStackUpdate,
+} from './layer-stack.js';
+export type {
+  SequenceReorderCommand,
+  SequenceReorderEvent,
+  SequenceReorderState,
+  SequenceReorderUpdate,
+  TreeReorderCommand,
+  TreeReorderEvent,
+  TreeReorderState,
+  TreeReorderUpdate,
+} from './reorder.js';
+export type {
   FormCommand,
   FormEvent,
   FormFieldInput,

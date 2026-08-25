@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "a462275859210ab3195f79df075fa5de3d5c1f4241c738fc66f76abf4fa311fd",
+  "fingerprint": "cc8b19b33012bcd65c7493bf84161a4d34523016c3edf988f045bb0fe8422238",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -29,6 +29,10 @@
     {
       "path": "dist/checkbox.d.ts",
       "sha256": "6197421ceaf1be2c61dc93f3e0181e1db8fe8ccab502ee7f140df792eb17d515"
+    },
+    {
+      "path": "dist/collection-window.d.ts",
+      "sha256": "b5b79e49786074322585e68c9fecf80add4d10e6fe3646cf9e006932ef56ad20"
     },
     {
       "path": "dist/color-picker.d.ts",
@@ -80,15 +84,15 @@
     },
     {
       "path": "dist/feed.d.ts",
-      "sha256": "481b601aadbd74a0c6a23ddce50fb4a66ea9f86db49b6e989925953548cc933f"
+      "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "fbe79765026e9193c39deabf03e06fea4cba417ec1e3c1c818c8063a0e57f64a"
+      "sha256": "07cecfb5e5c28f4c0dd774fd5e711e0a10d63fc94c2ef551149b177b4aea6a6a"
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "7560175a392822ca391bbf3554172a26018b931a78727d2e96851329ec5085a4"
+      "sha256": "fe957b279220cbad8f077e5177edd3a3fb977a8ada17727a08dca766ff0a8ea3"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -175,6 +179,10 @@
       "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
     },
     {
+      "path": "dist/layer-stack.d.ts",
+      "sha256": "cb9f8d90d911da535f0e9c6f86df02b49e66ddfc877c34c58bfd05e791c7e336"
+    },
+    {
       "path": "dist/listbox.d.ts",
       "sha256": "2d21ff587ca60bda130e40220b99de94ff0fe17383ee949a56dfa19f03c98152"
     },
@@ -237,6 +245,10 @@
     {
       "path": "dist/rating.d.ts",
       "sha256": "588bc2a3f29a5d5db62e89efccf44579aa77d95515d05bed2f16c96fae390c76"
+    },
+    {
+      "path": "dist/reorder.d.ts",
+      "sha256": "70cabbc961b750d0b489bd6a1429a32cbf3ceef2c27861c9324d150e532cd60d"
     },
     {
       "path": "dist/result.d.ts",

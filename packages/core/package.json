@@ -53,6 +53,21 @@
       "import": "./dist/interaction.js",
       "default": "./dist/interaction.js"
     },
+    "./collection-window": {
+      "types": "./dist/collection-window.d.ts",
+      "import": "./dist/collection-window.js",
+      "default": "./dist/collection-window.js"
+    },
+    "./layer-stack": {
+      "types": "./dist/layer-stack.d.ts",
+      "import": "./dist/layer-stack.js",
+      "default": "./dist/layer-stack.js"
+    },
+    "./reorder": {
+      "types": "./dist/reorder.d.ts",
+      "import": "./dist/reorder.js",
+      "default": "./dist/reorder.js"
+    },
     "./form": {
       "types": "./dist/form.d.ts",
       "import": "./dist/form.js",

@@ -253,9 +253,11 @@ const formContextKey = Symbol('SectileForm');
 const formFieldContextKey = Symbol('SectileFormField');
 const formControlOwnerKey = Symbol('SectileFormControlOwner');
 const emptyState: FormState = Object.freeze({
+  validationGeneration: 0,
   validationStatus: 'idle',
   validationTrigger: null,
   validationIntent: null,
+  submissionGeneration: 0,
   submissionStatus: 'idle',
   submitCount: 0,
   submitted: false,

@@ -37,6 +37,21 @@
     { "id": "TRE-07", "theory": "tree", "statement": "visible uniqueness" },
     { "id": "TRE-08", "theory": "tree", "statement": "visible preorder subsequence" },
     { "id": "TRE-09", "theory": "tree", "statement": "ancestor-based visibility" },
-    { "id": "TRE-10", "theory": "tree", "statement": "expansion reconciliation" }
+    { "id": "TRE-10", "theory": "tree", "statement": "expansion reconciliation" },
+    { "id": "FRM-01", "theory": "form", "statement": "validation generations increase and reject stale completion" },
+    { "id": "FRM-02", "theory": "form", "statement": "submission results identify the active submission generation" },
+    { "id": "LAY-01", "theory": "layer-stack", "statement": "open layer identities are unique" },
+    { "id": "LAY-02", "theory": "layer-stack", "statement": "nested layers form a contiguous topmost chain" },
+    { "id": "LAY-03", "theory": "layer-stack", "statement": "only the topmost dismissible layer handles dismissal" },
+    { "id": "LAY-04", "theory": "layer-stack", "statement": "ancestor close emits descendant closes in reverse stack order" },
+    { "id": "LAY-05", "theory": "layer-stack", "statement": "the topmost modal defines the interactive stack suffix" },
+    { "id": "WIN-01", "theory": "collection-window", "statement": "at most one generation-bound request is pending" },
+    { "id": "WIN-02", "theory": "collection-window", "statement": "replacement revisions increase strictly" },
+    { "id": "WIN-03", "theory": "collection-window", "statement": "replacement generation matches the pending request" },
+    { "id": "WIN-04", "theory": "collection-window", "statement": "loaded ranges remain inside known totals" },
+    { "id": "ORD-01", "theory": "reorder", "statement": "sequence reorder preserves the identity permutation" },
+    { "id": "ORD-02", "theory": "reorder", "statement": "sequence destinations identify an existing item" },
+    { "id": "ORD-03", "theory": "reorder", "statement": "tree reparenting preserves acyclicity" },
+    { "id": "ORD-04", "theory": "reorder", "statement": "tree placement targets a sibling under the new parent" }
   ]
 }

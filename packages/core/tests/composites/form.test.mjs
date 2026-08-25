@@ -134,7 +134,7 @@ test('invalid submit focuses the first invalid field and announces its issues', 
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   const submitted = applyFormEvent(started, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: started.validationGeneration,
   }).value;
   assert.equal(submitted.state.validationStatus, 'invalid');
   assert.equal(submitted.state.submissionStatus, 'idle');
@@ -154,17 +154,18 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   const requested = applyFormEvent(state, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validationGeneration,
   }).value;
   assert.equal(requested.state.validationStatus, 'valid');
   assert.equal(requested.state.submissionStatus, 'idle');
-  assert.deepEqual(requested.commands, [{ type: 'submit-requested' }]);
+  assert.deepEqual(requested.commands, [{ type: 'submit-requested', generation: 1 }]);
 
-  state = applyFormEvent(requested.state, 'submit-started').value.state;
+  state = applyFormEvent(requested.state, { type: 'submit-started', generation: 1 }).value.state;
   assert.equal(state.submissionStatus, 'submitting');
 
   const failed = applyFormEvent(state, {
     type: 'submit-failed',
+    generation: 1,
     issues: [{ id: 'server-down', message: 'Try again.', source: 'server' }],
   }).value.state;
   assert.equal(failed.submissionStatus, 'failed');
@@ -179,10 +180,10 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
     type: 'validation-started', trigger: 'submit', intent: 'submission',
   }).value.state;
   state = applyFormEvent(state, {
-    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+    type: 'validation-completed', trigger: 'submit', intent: 'submission', generation: state.validationGeneration,
   }).value.state;
-  state = applyFormEvent(state, 'submit-started').value.state;
-  state = applyFormEvent(state, 'submit-succeeded').value.state;
+  state = applyFormEvent(state, { type: 'submit-started', generation: state.submissionGeneration }).value.state;
+  state = applyFormEvent(state, { type: 'submit-succeeded', generation: state.submissionGeneration }).value.state;
   assert.equal(state.submissionStatus, 'succeeded');
   assert.equal(state.issues.length, 0);
 });
@@ -255,4 +256,61 @@ test('constructors reject duplicate fields and malformed issue ownership', () =>
       issues: [{ ...requiredIssue, fieldId: 'other' }],
     }],
   }).ok, false);
+});
+
+test('FRM-01, FRM-02: form generations reject stale validation and submission results atomically', () => {
+  let state = createFormState({ fields: [{ id: 'email' }] });
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  }).value.state;
+  const firstGeneration = state.validationGeneration;
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'input', intent: 'interaction',
+  }).value.state;
+  const staleValidation = applyFormEvent(state, {
+    type: 'validation-completed',
+    trigger: 'input',
+    intent: 'interaction',
+    generation: firstGeneration,
+  });
+  assert.equal(staleValidation.ok, false);
+  assert.equal(staleValidation.error.code, 'form-validation-generation-stale');
+
+  state = applyFormEvent(state, {
+    type: 'validation-completed',
+    trigger: 'input',
+    intent: 'interaction',
+    generation: state.validationGeneration,
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-completed',
+    trigger: 'submit',
+    intent: 'submission',
+    generation: state.validationGeneration,
+  }).value.state;
+  const firstSubmissionGeneration = state.submissionGeneration;
+  state = applyFormEvent(state, {
+    type: 'submit-started', generation: firstSubmissionGeneration,
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'submit-failed', generation: firstSubmissionGeneration,
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-completed',
+    trigger: 'submit',
+    intent: 'submission',
+    generation: state.validationGeneration,
+  }).value.state;
+  const staleSubmission = applyFormEvent(state, {
+    type: 'submit-started',
+    generation: firstSubmissionGeneration,
+  });
+  assert.equal(staleSubmission.ok, false);
+  assert.equal(staleSubmission.error.code, 'form-submission-generation-stale');
 });

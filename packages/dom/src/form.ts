@@ -289,6 +289,7 @@ export function tryCreateForm<
   }));
   const finishValidation = (
     sequence: number,
+    generation: number,
     trigger: FormValidationTrigger,
     intent: FormValidationIntent,
     formData: FormData,
@@ -305,12 +306,14 @@ export function tryCreateForm<
         type: 'replace-issues',
         source: 'native',
         issues: includeNative ? collectNativeIssues() : [],
+        generation,
       });
     }
     transition({
       type: 'replace-issues',
       source: 'validate',
       issues: mapValidationIssues('validate', custom.issues ?? []),
+      generation,
     });
     if (intent === 'submission') {
       const schemaIssues = schema?.issues === undefined
@@ -323,9 +326,10 @@ export function tryCreateForm<
         type: 'replace-issues',
         source: 'schema',
         issues: mapValidationIssues('schema', schemaIssues),
+        generation,
       });
     }
-    const commands = transition({ type: 'validation-completed', trigger, intent });
+    const commands = transition({ type: 'validation-completed', trigger, intent, generation });
     if (commands === null) return;
     execute(commands);
     if (intent !== 'submission') return;
@@ -360,6 +364,7 @@ export function tryCreateForm<
     const commands = transition({ type: 'validation-started', trigger, intent });
     if (commands === null) return;
     execute(commands);
+    const generation = state.validationGeneration;
 
     const formData = createNativeFormData(options.form, submitter);
     const input = createFormValues(
@@ -399,6 +404,7 @@ export function tryCreateForm<
         if (controller.signal.aborted) return;
         finishValidation(
           sequence,
+          generation,
           trigger,
           intent,
           formData,
@@ -414,6 +420,7 @@ export function tryCreateForm<
     }
     finishValidation(
       sequence,
+      generation,
       trigger,
       intent,
       formData,
@@ -521,10 +528,10 @@ export function tryCreateForm<
       return true;
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
-    submitStarted: () => transition('submit-started') !== null,
-    submitSucceeded: () => transition('submit-succeeded') !== null,
+    submitStarted: () => transition({ type: 'submit-started', generation: state.submissionGeneration }) !== null,
+    submitSucceeded: () => transition({ type: 'submit-succeeded', generation: state.submissionGeneration }) !== null,
     submitFailed: (issues = []) => {
-      const commands = transition({ type: 'submit-failed', issues });
+      const commands = transition({ type: 'submit-failed', generation: state.submissionGeneration, issues });
       if (commands === null) return false;
       execute(commands);
       return true;

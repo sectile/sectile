@@ -3,6 +3,11 @@ import type { InteractionStateInput } from '@sectile/core/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 import { setInteractionAttributes } from './interaction.js';
+import {
+  createDOMLayerID,
+  getDOMLayerManager,
+  type DOMLayerManager,
+} from './layer-manager.js';
 
 export interface DOMPopupConnection<State, Event> {
   getSnapshot(): RevisionSnapshot<State>;
@@ -64,17 +69,20 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   readonly #pointerEnter: () => void;
   readonly #pointerLeave: () => void;
   readonly #pointerDown: (event: PointerEvent) => void;
+  readonly #layerID: string;
+  readonly #layers: DOMLayerManager;
   #focused = false;
   #hovered = false;
 
   public constructor(options: DOMPopupOptions<State, Event, Command>, runtime: SemanticController<State, Event, Command>) {
     this.#options = options;
     this.#runtime = runtime;
+    this.#layerID = createDOMLayerID();
+    this.#layers = getDOMLayerManager(options.root);
     this.#click = (): void => { this.handleEvent(options.toggle); };
     this.#keydown = (event): void => {
       if (event.key === 'Escape') {
-        event.preventDefault();
-        this.handleEvent(options.close);
+        if (this.#layers.dismiss(this.#layerID, 'escape')) event.preventDefault();
       } else if (event.key === 'Tab' && options.trapFocus === true && this.#isOpen()) {
         this.#trapTab(event);
       }
@@ -87,7 +95,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
       if (!this.#isOpen() || options.closeOnInteractOutside !== true) return;
       const target = event.target;
       if (target instanceof Node && (options.root.contains(target) || options.trigger?.contains(target) === true)) return;
-      this.handleEvent(options.close);
+      this.#layers.dismiss(this.#layerID, 'interact-outside');
     };
     options.root.setAttribute('role', options.role);
     if (options.modal !== undefined) options.root.setAttribute('aria-modal', String(options.modal));
@@ -134,6 +142,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   }
   public refresh(): void { this.#refresh(undefined); }
   public disconnect(): void {
+    if (this.#isOpen()) this.#layers.close(this.#layerID);
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.trigger?.removeEventListener('keydown', this.#keydown);
     this.#options.trigger?.removeEventListener('click', this.#click);
@@ -148,6 +157,31 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   #isOpen(): boolean { return this.#options.read(this.#runtime.getSnapshot().state); }
   #refresh(previous: boolean | undefined): void {
     const open = this.#isOpen();
+    if (open && previous !== true) {
+      this.#layers.register({
+        id: this.#layerID,
+        surface: this.#options.root,
+        owner: this.#options.trigger ?? this.#options.root,
+        layer: {
+          id: this.#layerID,
+          mode: this.#options.role === 'tooltip'
+            ? 'tooltip'
+            : this.#options.modal === true ? 'modal' : 'non-modal',
+          dismissOnEscape: true,
+          dismissOnInteractOutside: this.#options.closeOnInteractOutside === true,
+        },
+        close: () => {
+          const result = this.#runtime.handle(this.#options.close);
+          if (result.ok) {
+            for (const command of result.commands) this.#options.command?.(command);
+            this.#options.onUpdate?.();
+          }
+          this.#refresh(this.#isOpen() ? false : true);
+        },
+      });
+    } else if (!open && previous === true) {
+      this.#layers.close(this.#layerID);
+    }
     this.#options.root.hidden = !open;
     if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
     if (previous === open || previous === undefined) return;

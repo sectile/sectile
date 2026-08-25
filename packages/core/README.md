@@ -5,8 +5,9 @@ Pure, renderer-neutral interaction semantics with explicit laws, failures, and r
 ## Scope
 
 - Ordered structures: sequence, range, grid, and tree
-- Reusable state: cursor, selection, expansion, revision, and interaction gates
-- Composite behavior for selection, navigation, disclosure, editing, and overlays
+- Reusable state: cursor, selection, expansion, revision, interaction gates, and finite collection windows
+- Coordination primitives for generation-bound async work, nested layer stacks, and identity-based reordering
+- Composite behavior for selection, navigation, disclosure, editing, forms, and overlays
 - UTF-16-safe text editing, exact decimal expressions, and dimension-checked units
 
 ## Contract

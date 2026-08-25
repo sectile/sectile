@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import {
   documentedScenarios,
   isStandaloneDocumentationScenario,
@@ -12,6 +12,7 @@ const packagePaths = [
 ];
 const supportSubpaths = new Set([
   'package.json', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
+  'collection-window', 'layer-stack', 'reorder',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
 ]);
 const migrationBaselineIDs = new Set([
@@ -23,6 +24,7 @@ const migrationBaselineIDs = new Set([
 ]);
 
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
+const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
 assert.equal(manifest.schemaVersion, 1, 'Unsupported component completeness schema.');
 assert.ok(Array.isArray(manifest.requirements) && manifest.requirements.length > 0,
   'Completeness requirements must be declared.');
@@ -54,6 +56,25 @@ const ids = entries.map((entry) => entry.id);
 assert.equal(new Set(ids).size, ids.length, 'Component completeness IDs must be unique.');
 assert.deepEqual([...ids].sort(), canonical,
   'Every public component subpath must have exactly one completeness entry.');
+
+assert.equal(evidence.schemaVersion, 1, 'Unsupported component evidence schema.');
+const declaredFamilies = [...new Set(entries.map((entry) => entry.family))].sort();
+assert.deepEqual(Object.keys(evidence.families).sort(), declaredFamilies,
+  'Every semantic component family must have exactly one evidence entry.');
+for (const family of declaredFamilies) {
+  const familyEvidence = evidence.families[family];
+  for (const witness of ['core', 'dom', 'terminal']) {
+    const paths = familyEvidence[witness];
+    assert.ok(Array.isArray(paths) && paths.length > 0,
+      `${family}: ${witness} evidence must name at least one test file.`);
+    assert.equal(new Set(paths).size, paths.length,
+      `${family}: ${witness} evidence paths must be unique.`);
+    for (const path of paths) {
+      assert.equal((await stat(path)).isFile(), true,
+        `${family}: missing ${witness} evidence ${path}.`);
+    }
+  }
+}
 
 for (const entry of entries) {
   assert.match(entry.id, /^[a-z]+(?:-[a-z]+)*$/, `${entry.id}: invalid component ID.`);
@@ -114,4 +135,4 @@ for (const id of canonical) {
   assert.ok(ids.includes(id), `${id}: unaudited public component.`);
 }
 
-console.log(`component completeness contract: ${canonical.length} public components, ${Object.keys(gaps).length} migration entries`);
+console.log(`component completeness contract: ${canonical.length} public components, ${declaredFamilies.length} evidence families, ${Object.keys(gaps).length} migration entries`);

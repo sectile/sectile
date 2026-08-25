@@ -6,7 +6,8 @@ Foundational structure research and the internal state/data theories are closed 
 2. `listbox`, `slider`, `calendar`, `tree-view`, `tree-grid`, and full editable combobox behavior are public pure facades;
 3. every public composite has independent revisioned DOM and terminal controller witnesses;
 4. text editing is public with independent DOM and terminal input-normalization witnesses;
-5. `cursor`, `selection`, and `expansion` remain internal until their own direct usage-evidence gates are met.
+5. generation-bound Form work, finite collection windows, nested layer ownership, and identity-based reorder are public coordination theories;
+6. `cursor`, `selection`, and `expansion` remain internal until their own direct usage-evidence gates are met.
 
 The original implementation slice is complete. Direct usage now identifies pointer input for the existing DOM facades and a broader APG composite set as the next targets. Pointer input extends the existing semantic events with direct identities or ticks; adapters do not synthesize keyboard events.
 

@@ -37,7 +37,22 @@
     "TRE-07": "tests/structures/tree.reference-law.test.mjs",
     "TRE-08": "tests/structures/tree.reference-law.test.mjs",
     "TRE-09": "tests/structures/tree.reference-law.test.mjs",
-    "TRE-10": "tests/structures/tree.reference-law.test.mjs"
+    "TRE-10": "tests/structures/tree.reference-law.test.mjs",
+    "FRM-01": "tests/composites/form.test.mjs",
+    "FRM-02": "tests/composites/form.test.mjs",
+    "LAY-01": "tests/runtime/layer-stack.test.mjs",
+    "LAY-02": "tests/runtime/layer-stack.test.mjs",
+    "LAY-03": "tests/runtime/layer-stack.test.mjs",
+    "LAY-04": "tests/runtime/layer-stack.test.mjs",
+    "LAY-05": "tests/runtime/layer-stack.test.mjs",
+    "WIN-01": "tests/runtime/collection-window.test.mjs",
+    "WIN-02": "tests/runtime/collection-window.test.mjs",
+    "WIN-03": "tests/runtime/collection-window.test.mjs",
+    "WIN-04": "tests/runtime/collection-window.test.mjs",
+    "ORD-01": "tests/runtime/reorder.test.mjs",
+    "ORD-02": "tests/runtime/reorder.test.mjs",
+    "ORD-03": "tests/runtime/reorder.test.mjs",
+    "ORD-04": "tests/runtime/reorder.test.mjs"
   },
   "differentialEvidence": "tests/differential/optimized-differential.test.mjs"
 }

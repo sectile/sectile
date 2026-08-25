@@ -45,9 +45,11 @@ export interface FormFieldState<ID extends StableID = StableID> {
 }
 
 export interface FormState<ID extends StableID = StableID> {
+  readonly validationGeneration: number;
   readonly validationStatus: FormValidationStatus;
   readonly validationTrigger: FormValidationTrigger | null;
   readonly validationIntent: FormValidationIntent | null;
+  readonly submissionGeneration: number;
   readonly submissionStatus: FormSubmissionStatus;
   readonly submitCount: number;
   readonly submitted: boolean;
@@ -74,6 +76,7 @@ export type FormEvent<ID extends StableID = StableID> =
       readonly type: 'replace-issues';
       readonly source: FormIssueSource;
       readonly issues: readonly FormIssue<ID>[];
+      readonly generation?: number;
     }
   | { readonly type: 'validation-invalidated' }
   | {
@@ -85,16 +88,17 @@ export type FormEvent<ID extends StableID = StableID> =
       readonly type: 'validation-completed';
       readonly trigger: FormValidationTrigger;
       readonly intent: FormValidationIntent;
+      readonly generation: number;
     }
-  | 'submit-started'
-  | 'submit-succeeded'
-  | { readonly type: 'submit-failed'; readonly issues?: readonly FormIssue<ID>[] }
+  | { readonly type: 'submit-started'; readonly generation: number }
+  | { readonly type: 'submit-succeeded'; readonly generation: number }
+  | { readonly type: 'submit-failed'; readonly generation: number; readonly issues?: readonly FormIssue<ID>[] }
   | 'reset';
 
 export type FormCommand<ID extends StableID = StableID> =
   | { readonly type: 'focus-field'; readonly id: ID }
   | { readonly type: 'announce-summary'; readonly issueIds: readonly StableID[] }
-  | { readonly type: 'submit-requested' }
+  | { readonly type: 'submit-requested'; readonly generation: number }
   | { readonly type: 'reset-field'; readonly id: ID };
 
 export interface FormUpdate<ID extends StableID = StableID> {
@@ -103,9 +107,11 @@ export interface FormUpdate<ID extends StableID = StableID> {
 }
 
 export interface FormStateInput<ID extends StableID = StableID> {
+  readonly validationGeneration?: number;
   readonly validationStatus?: FormValidationStatus;
   readonly validationTrigger?: FormValidationTrigger | null;
   readonly validationIntent?: FormValidationIntent | null;
+  readonly submissionGeneration?: number;
   readonly submissionStatus?: FormSubmissionStatus;
   readonly submitCount?: number;
   readonly submitted?: boolean;
@@ -271,11 +277,27 @@ export function createFormState<ID extends StableID = StableID>(
 export function tryCreateFormState<ID extends StableID = StableID>(
   input: FormStateInput<ID> = {},
 ): Result<FormState<ID>> {
+  const validationGeneration = input.validationGeneration ?? 0;
   const validationStatus = input.validationStatus ?? 'idle';
   const validationTrigger = input.validationTrigger ?? null;
   const validationIntent = input.validationIntent ?? null;
+  const submissionGeneration = input.submissionGeneration ?? 0;
   const submissionStatus = input.submissionStatus ?? 'idle';
   const submitCount = input.submitCount ?? 0;
+  if (!Number.isSafeInteger(validationGeneration) || validationGeneration < 0) {
+    return fail(
+      'construction',
+      'form-validation-generation-invalid',
+      'Form validation generation must be a non-negative safe integer.',
+    );
+  }
+  if (!Number.isSafeInteger(submissionGeneration) || submissionGeneration < 0) {
+    return fail(
+      'construction',
+      'form-submission-generation-invalid',
+      'Form submission generation must be a non-negative safe integer.',
+    );
+  }
   if (!isValidationStatus(validationStatus)) {
     return fail(
       'construction',
@@ -351,9 +373,11 @@ export function tryCreateFormState<ID extends StableID = StableID>(
   }
 
   return ok(buildState({
+    validationGeneration,
     validationStatus,
     validationTrigger,
     validationIntent,
+    submissionGeneration,
     submissionStatus,
     submitCount,
     submitted: input.submitted ?? submitCount > 0,
@@ -377,6 +401,10 @@ export function applyFormEvent<ID extends StableID>(
     if (event.type === 'update-field') return updateField(state, event);
     if (event.type === 'reorder-fields') return reorderFields(state, event.ids);
     if (event.type === 'replace-issues') {
+      if (event.generation !== undefined) {
+        const currentGeneration = requireValidationGeneration(state, event.generation);
+        if (!currentGeneration.ok) return currentGeneration;
+      }
       return replaceIssues(state, event.source, event.issues);
     }
     if (event.type === 'validation-invalidated') return invalidateValidation(state);
@@ -384,37 +412,42 @@ export function applyFormEvent<ID extends StableID>(
       return startValidation(state, event.trigger, event.intent);
     }
     if (event.type === 'validation-completed') {
-      return completeValidation(state, event.trigger, event.intent);
+      return completeValidation(state, event.trigger, event.intent, event.generation);
     }
-    if (event.type === 'submit-failed') return submitFailed(state, event.issues ?? []);
-  }
-
-  if (event === 'submit-started') {
-    if (
-      state.submissionStatus !== 'idle'
-      || state.validationStatus !== 'valid'
-      || state.validationIntent !== 'submission'
-    ) {
-      return fail(
-        'transition-rejection',
-        'form-submit-not-requested',
-        'Form submission can start only after a valid submit request.',
-      );
+    if (event.type === 'submit-failed') {
+      return submitFailed(state, event.generation, event.issues ?? []);
     }
-    return update(buildState({ ...state, submissionStatus: 'submitting' }));
-  }
-  if (event === 'submit-succeeded') {
-    if (state.submissionStatus !== 'submitting') {
-      return fail(
-        'transition-rejection',
-        'form-submit-not-pending',
-        'Form submission can succeed only while pending.',
-      );
+    if (event.type === 'submit-started') {
+      const currentGeneration = requireSubmissionGeneration(state, event.generation);
+      if (!currentGeneration.ok) return currentGeneration;
+      if (
+        state.submissionStatus !== 'idle'
+        || state.validationStatus !== 'valid'
+        || state.validationIntent !== 'submission'
+      ) {
+        return fail(
+          'transition-rejection',
+          'form-submit-not-requested',
+          'Form submission can start only after a valid submit request.',
+        );
+      }
+      return update(buildState({ ...state, submissionStatus: 'submitting' }));
     }
-    return update(buildState({
-      ...withoutIssueSource(state, 'server'),
-      submissionStatus: 'succeeded',
-    }));
+    if (event.type === 'submit-succeeded') {
+      const currentGeneration = requireSubmissionGeneration(state, event.generation);
+      if (!currentGeneration.ok) return currentGeneration;
+      if (state.submissionStatus !== 'submitting') {
+        return fail(
+          'transition-rejection',
+          'form-submit-not-pending',
+          'Form submission can succeed only while pending.',
+        );
+      }
+      return update(buildState({
+        ...withoutIssueSource(state, 'server'),
+        submissionStatus: 'succeeded',
+      }));
+    }
   }
   return reset(state);
 }
@@ -560,10 +593,18 @@ function startValidation<ID extends StableID>(
       'Form validation cannot start while submission is pending.',
     );
   }
+  if (state.validationGeneration === Number.MAX_SAFE_INTEGER) {
+    return fail(
+      'resource-rejection',
+      'form-validation-generation-exhausted',
+      'Form validation generation cannot advance beyond the safe-integer ceiling.',
+    );
+  }
   const submission = intent === 'submission';
   const current = submission ? withoutIssueSource(state, 'server') : state;
   return update(buildState({
     ...current,
+    validationGeneration: current.validationGeneration + 1,
     validationStatus: 'validating',
     validationTrigger: trigger,
     validationIntent: intent,
@@ -577,7 +618,10 @@ function completeValidation<ID extends StableID>(
   state: FormState<ID>,
   trigger: FormValidationTrigger,
   intent: FormValidationIntent,
+  generation: number,
 ): Result<FormUpdate<ID>> {
+  const currentGeneration = requireValidationGeneration(state, generation);
+  if (!currentGeneration.ok) return currentGeneration;
   if (
     state.validationStatus !== 'validating'
     || state.validationTrigger !== trigger
@@ -596,7 +640,18 @@ function completeValidation<ID extends StableID>(
   if (intent !== 'submission') return update(completed);
 
   if (completed.valid) {
-    return update(completed, [{ type: 'submit-requested' }]);
+    if (completed.submissionGeneration === Number.MAX_SAFE_INTEGER) {
+      return fail(
+        'resource-rejection',
+        'form-submission-generation-exhausted',
+        'Form submission generation cannot advance beyond the safe-integer ceiling.',
+      );
+    }
+    const submissionGeneration = completed.submissionGeneration + 1;
+    return update(
+      buildState({ ...completed, submissionGeneration }),
+      [{ type: 'submit-requested', generation: submissionGeneration }],
+    );
   }
   const allIssues = orderedIssues(completed);
   const firstInvalid = completed.fields.find(
@@ -615,8 +670,11 @@ function completeValidation<ID extends StableID>(
 
 function submitFailed<ID extends StableID>(
   state: FormState<ID>,
+  generation: number,
   issues: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
+  const currentGeneration = requireSubmissionGeneration(state, generation);
+  if (!currentGeneration.ok) return currentGeneration;
   if (state.submissionStatus !== 'submitting') {
     return fail(
       'transition-rejection',
@@ -659,9 +717,11 @@ function reset<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>
   }));
   return update(
     buildState({
+      validationGeneration: state.validationGeneration,
       validationStatus: 'idle',
       validationTrigger: null,
       validationIntent: null,
+      submissionGeneration: state.submissionGeneration,
       submissionStatus: 'idle',
       submitCount: 0,
       submitted: false,
@@ -735,9 +795,11 @@ function normalizeIssues<ID extends StableID>(
 }
 
 function buildState<ID extends StableID>(input: {
+  readonly validationGeneration: number;
   readonly validationStatus: FormValidationStatus;
   readonly validationTrigger: FormValidationTrigger | null;
   readonly validationIntent: FormValidationIntent | null;
+  readonly submissionGeneration: number;
   readonly submissionStatus: FormSubmissionStatus;
   readonly submitCount: number;
   readonly submitted: boolean;
@@ -756,6 +818,50 @@ function buildState<ID extends StableID>(input: {
     fields,
     issues,
   });
+}
+
+function requireValidationGeneration<ID extends StableID>(
+  state: FormState<ID>,
+  generation: number,
+): Result<true> {
+  if (!Number.isSafeInteger(generation) || generation < 1) {
+    return fail(
+      'transition-rejection',
+      'form-validation-generation-invalid',
+      'Validation generation must be a positive safe integer.',
+    );
+  }
+  if (state.validationStatus !== 'validating' || generation !== state.validationGeneration) {
+    return fail(
+      'transition-rejection',
+      'form-validation-generation-stale',
+      'Validation result does not belong to the active generation.',
+      { generation, currentGeneration: state.validationGeneration },
+    );
+  }
+  return ok(true);
+}
+
+function requireSubmissionGeneration<ID extends StableID>(
+  state: FormState<ID>,
+  generation: number,
+): Result<true> {
+  if (!Number.isSafeInteger(generation) || generation < 1) {
+    return fail(
+      'transition-rejection',
+      'form-submission-generation-invalid',
+      'Submission generation must be a positive safe integer.',
+    );
+  }
+  if (generation !== state.submissionGeneration) {
+    return fail(
+      'transition-rejection',
+      'form-submission-generation-stale',
+      'Submission result does not belong to the active generation.',
+      { generation, currentGeneration: state.submissionGeneration },
+    );
+  }
+  return ok(true);
 }
 
 function rebuild<ID extends StableID>(

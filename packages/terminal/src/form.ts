@@ -167,6 +167,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       trigger: 'input',
       intent: 'interaction',
     })) return false;
+    const generation = state.validationGeneration;
     if (!transition({
       type: 'update-field',
       id,
@@ -179,6 +180,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       type: 'validation-completed',
       trigger: 'input',
       intent: 'interaction',
+      generation,
     });
   };
   const validateAllForSubmission = (): boolean => {
@@ -187,6 +189,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       trigger: 'submit',
       intent: 'submission',
     })) return false;
+    const generation = state.validationGeneration;
     for (const [id, field] of fields) {
       const current = state.fields.find((candidate) => candidate.id === id);
       if (current === undefined) continue;
@@ -204,6 +207,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       type: 'validation-completed',
       trigger: 'submit',
       intent: 'submission',
+      generation,
     });
   };
   const move = (offset: -1 | 1): boolean => {
@@ -262,9 +266,9 @@ export function tryCreateForm<ID extends StableID = StableID>(
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }),
     submit: validateAllForSubmission,
-    submitStarted: () => transition('submit-started'),
-    submitSucceeded: () => transition('submit-succeeded'),
-    submitFailed: (issues = []) => transition({ type: 'submit-failed', issues }),
+    submitStarted: () => transition({ type: 'submit-started', generation: state.submissionGeneration }),
+    submitSucceeded: () => transition({ type: 'submit-succeeded', generation: state.submissionGeneration }),
+    submitFailed: (issues = []) => transition({ type: 'submit-failed', generation: state.submissionGeneration, issues }),
     reset: () => {
       summaryIssues = Object.freeze([]);
       const reset = transition('reset');

@@ -169,8 +169,29 @@ slide focus, position projection, and pause algebra; both hosts witness projecti
 
 ## Verified composite: feed
 
-Feed is deliberately finite and windowed. Its state is `cursor × window revision × pending
-request direction`; request events emit capabilities without fabricating loaded items, and
-hosts replace the window only through a strictly newer revision. This keeps network and
-stream ownership outside primitives while making duplicate requests and stale windows
-observable. A genuinely unbounded feed remains out of scope until stream theory is added.
+Feed is deliberately finite and windowed. Its state is `cursor × loaded range × window
+revision × request generation`; request events emit capabilities without fabricating loaded
+items, and hosts replace the window only through a strictly newer revision and the active
+request generation. This keeps network and stream ownership outside primitives while making
+duplicate requests, stale responses, and impossible requests at known bounds observable. A
+genuinely unbounded feed remains out of scope until stream theory is added.
+
+## Verified coordination theories
+
+`collection-window` generalizes Feed's loaded-range ownership without owning transport or
+item storage. It maintains one pending generation-bound request, strict replacement
+revisions, and known total bounds.
+
+`layer-stack` gives dialogs, popovers, and tooltips one deterministic ownership order.
+Nested layers form a contiguous parent chain, only the top layer handles dismissal, and an
+ancestor close propagates through descendants in reverse stack order. DOM popup controls
+share one manager per document; terminal applications can own an explicit stack per scope.
+
+`reorder` separates host hit-testing from semantic placement. Sequence moves use stable
+identities and preserve the exact identity permutation. Tree moves additionally validate
+the new parent, prevent cycles, and require any placement target to be a sibling under that
+parent.
+
+Form validation and submission use monotonically increasing generations. Completion events
+must identify the active generation, so reset or newer work makes prior asynchronous results
+unusable instead of merely unlikely to win a race.

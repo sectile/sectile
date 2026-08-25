@@ -25,11 +25,13 @@ The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
     host (`v-model`, HTML form props, native focus and keyboard behavior) and keep
     core policies and host wiring behind the component boundary.
 
-`verification/component-completeness.json` is the machine-readable inventory. Existing
-gaps are an explicit migration baseline. The checker rejects an unlisted public subpath,
-package export drift, an invalid capability entry, or a newly introduced component with
-an unaudited gap. Migration entries are deleted as implementation and evidence land;
-the target is an empty `migrationGaps` object.
+`verification/component-completeness.json` is the machine-readable inventory, and
+`verification/component-evidence.json` binds every semantic family to concrete Core, DOM,
+and Terminal test files. Existing gaps are an explicit migration baseline. The checker
+rejects an unlisted public subpath, package export drift, an invalid capability entry,
+missing host evidence, or a newly introduced component with an unaudited gap. Migration
+entries are deleted as implementation and evidence land; the target is an empty
+`migrationGaps` object.
 
 Example breadth follows semantic variation, not visual prop count. A listbox needs cases
 such as single/multiple selection, disabled options, typeahead, grouping, large/dynamic
