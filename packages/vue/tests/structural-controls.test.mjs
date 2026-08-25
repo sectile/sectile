@@ -31,12 +31,16 @@ test('Vue feed exposes native articles and explicit window requests', async () =
 test('Vue grid and tree view expose their semantic compound parts', async () => {
   const grid = await render(() => h(GridRoot, { rows: [['a', 'b']] }, { default: () => h(GridRow, null, { default: () => [h(GridCell, { value: 'a' }), h(GridCell, { value: 'b' })] }) }));
   const nodes = [{ id: 'root', parentID: null }, { id: 'leaf', parentID: 'root' }];
-  const tree = await render(() => h(TreeViewRoot, { nodes, defaultExpandedValue: ['root'] }, { default: () => [h(TreeViewItem, { value: 'root' }, { default: () => h(TreeViewDisclosure, { for: 'root' }) }), h(TreeViewGroup, null, { default: () => h(TreeViewItem, { value: 'leaf' }) })] }));
+  const tree = await render(() => h(TreeViewRoot, { nodes, defaultExpandedValues: ['root'] }, { default: () => [h(TreeViewItem, { value: 'root' }, { default: () => h(TreeViewDisclosure, { for: 'root' }) }), h(TreeViewGroup, { for: 'root' }, { default: () => h(TreeViewItem, { value: 'leaf' }) })] }));
+  const collapsedTree = await render(() => h(TreeViewRoot, { nodes }, { default: () => [h(TreeViewItem, { value: 'root' }), h(TreeViewGroup, { for: 'root' }, { default: () => h(TreeViewItem, { value: 'leaf' }) })] }));
   assert.match(grid, /role="row"/);
   assert.equal((grid.match(/data-part="cell"/g) ?? []).length, 2);
   assert.match(tree, /data-part="disclosure"/);
   assert.match(tree, /<span[^>]+data-part="disclosure"/);
   assert.match(tree, /role="group"/);
+  assert.match(tree, /data-part="group" data-state="open"/);
+  assert.doesNotMatch(tree, /data-part="group"[^>]*hidden/);
+  assert.match(collapsedTree, /role="group" hidden[^>]+data-state="closed"/);
 });
 
 test('Vue tree grid keeps editor mounted while navigation mode owns visibility', async () => {

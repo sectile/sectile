@@ -19,12 +19,14 @@ import {
   type TreeViewCommand,
   type TreeViewEvent,
   type TreeViewPolicies,
+  type TreeViewSelectionMode,
   type TreeViewState,
 } from '@sectile/core/tree-view';
 import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export type KeyboardInput = TerminalKeyboardInput;
+export type { TreeViewSelectionMode } from '@sectile/core/tree-view';
 
 export interface TreeViewEffect<ID extends StableID = StableID> {
   readonly type: 'move-highlight';
@@ -36,7 +38,7 @@ export interface TreeViewValueChangeDetails<ID extends StableID = StableID> {
   readonly previousValue: readonly ID[];
 }
 
-export interface TreeViewExpandedChangeDetails<ID extends StableID = StableID> {
+export interface TreeViewExpandedValuesChangeDetails<ID extends StableID = StableID> {
   readonly value: readonly ID[];
   readonly previousValue: readonly ID[];
 }
@@ -48,27 +50,29 @@ export interface TreeViewHighlightChangeDetails<ID extends StableID = StableID> 
 
 export interface TreeViewControllerOptions<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;
+  readonly selectionMode?: TreeViewSelectionMode;
   readonly disabled?: boolean;
   readonly value?: readonly ID[];
   readonly defaultValue?: readonly ID[];
-  readonly expandedValue?: readonly ID[];
-  readonly defaultExpandedValue?: readonly ID[];
+  readonly expandedValues?: readonly ID[];
+  readonly defaultExpandedValues?: readonly ID[];
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly policies?: TreeViewPolicies<ID>;
   readonly onValueChange?: (change: TreeViewValueChangeDetails<ID>) => void;
-  readonly onExpandedValueChange?: (change: TreeViewExpandedChangeDetails<ID>) => void;
+  readonly onExpandedValuesChange?: (change: TreeViewExpandedValuesChangeDetails<ID>) => void;
   readonly onHighlightedValueChange?: (change: TreeViewHighlightChangeDetails<ID>) => void;
 }
 
 export interface TreeViewControlledValues<ID extends StableID = StableID> {
   readonly value?: readonly ID[];
-  readonly expandedValue?: readonly ID[];
+  readonly expandedValues?: readonly ID[];
   readonly highlightedValue?: ID | null;
 }
 
 export interface TreeViewController<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;
+  readonly selectionMode: TreeViewSelectionMode;
   getSnapshot(): RevisionSnapshot<TreeViewState<ID>>;
   syncControlledValues(
     values: TreeViewControlledValues<ID>,
@@ -108,19 +112,20 @@ export type TreeViewOptions<ID extends StableID = StableID> =
 export function createTreeViewController<ID extends StableID>(
   options: TreeViewControllerOptions<ID>,
 ): Result<TreeViewController<ID>> {
+  const selectionMode = options.selectionMode ?? options.policies?.selectionMode ?? 'single';
   const initial = tryCreateTreeViewState(options.tree, {
     selected: options.value ?? options.defaultValue ?? [],
-    expanded: options.expandedValue ?? options.defaultExpandedValue ?? [],
+    expanded: options.expandedValues ?? options.defaultExpandedValues ?? [],
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
       : options.defaultHighlightedValue ?? null,
-  });
+  }, selectionMode);
   if (!initial.ok) return initial;
   const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
   const interaction = tryCreateInteractionState(options);
   if (!interaction.ok) return interaction;
-  return { ok: true, value: new TerminalTreeViewController(options, snapshot.value, interaction.value) };
+  return { ok: true, value: new TerminalTreeViewController({ ...options, selectionMode }, snapshot.value, interaction.value) };
 }
 
 export function createTreeView<ID extends StableID>(
@@ -209,14 +214,15 @@ class TerminalTreeViewConnection<ID extends StableID> implements TreeViewConnect
 
 class TerminalTreeViewController<ID extends StableID> implements TreeViewController<ID> {
   public readonly tree: Tree<ID>;
+  public readonly selectionMode: TreeViewSelectionMode;
   readonly #tree: Tree<ID>;
   readonly #policies: TreeViewPolicies<ID>;
   readonly #valueControlled: boolean;
   readonly #expandedControlled: boolean;
   readonly #highlightControlled: boolean;
   readonly #onValueChange: ((change: TreeViewValueChangeDetails<ID>) => void) | undefined;
-  readonly #onExpandedValueChange:
-    | ((change: TreeViewExpandedChangeDetails<ID>) => void)
+  readonly #onExpandedValuesChange:
+    | ((change: TreeViewExpandedValuesChangeDetails<ID>) => void)
     | undefined;
   readonly #onHighlightedValueChange:
     | ((change: TreeViewHighlightChangeDetails<ID>) => void)
@@ -230,13 +236,14 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
     interaction: InteractionState,
   ) {
     this.tree = options.tree;
+    this.selectionMode = options.selectionMode ?? options.policies?.selectionMode ?? 'single';
     this.#tree = options.tree;
-    this.#policies = options.policies ?? {};
+    this.#policies = { ...options.policies, selectionMode: this.selectionMode };
     this.#valueControlled = options.value !== undefined;
-    this.#expandedControlled = options.expandedValue !== undefined;
+    this.#expandedControlled = options.expandedValues !== undefined;
     this.#highlightControlled = options.highlightedValue !== undefined;
     this.#onValueChange = options.onValueChange;
-    this.#onExpandedValueChange = options.onExpandedValueChange;
+    this.#onExpandedValuesChange = options.onExpandedValuesChange;
     this.#onHighlightedValueChange = options.onHighlightedValueChange;
     this.#interaction = interaction;
     this.#snapshot = snapshot;
@@ -262,12 +269,12 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
         : this.#snapshot.state.selection.selected,
       anchor: this.#snapshot.state.selection.anchor,
       expanded: this.#expandedControlled
-        ? (values.expandedValue as readonly ID[])
+        ? (values.expandedValues as readonly ID[])
         : this.#snapshot.state.expansion.ids,
       current: this.#highlightControlled
         ? (values.highlightedValue as ID | null)
         : this.#snapshot.state.cursor.current,
-    });
+    }, this.selectionMode);
     const snapshot = synchronizeControllerState(this.#snapshot, state);
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
@@ -301,6 +308,7 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
         this.#valueControlled,
         this.#expandedControlled,
         this.#highlightControlled,
+        this.selectionMode,
       ),
       (previous, proposed) => this.#notify(previous, proposed),
       toTreeViewEffect,
@@ -317,7 +325,7 @@ class TerminalTreeViewController<ID extends StableID> implements TreeViewControl
       }));
     }
     if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-      this.#onExpandedValueChange?.(Object.freeze({
+      this.#onExpandedValuesChange?.(Object.freeze({
         value: proposed.expansion.ids,
         previousValue: previous.expansion.ids,
       }));
@@ -338,13 +346,14 @@ function controlledState<ID extends StableID>(
   valueControlled: boolean,
   expandedControlled: boolean,
   highlightControlled: boolean,
+  selectionMode: TreeViewSelectionMode,
 ): Result<TreeViewState<ID>> {
   return tryCreateTreeViewState(tree, {
     selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
     anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
     expanded: expandedControlled ? previous.expansion.ids : proposed.expansion.ids,
     current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
-  });
+  }, selectionMode);
 }
 
 function controlledInputError<ID extends StableID>(
@@ -356,8 +365,8 @@ function controlledInputError<ID extends StableID>(
   return fieldError(valueControlled, values.value !== undefined, 'value', 'tree-view selection')
     ?? fieldError(
       expandedControlled,
-      values.expandedValue !== undefined,
-      'expanded-value',
+      values.expandedValues !== undefined,
+      'expanded-values',
       'tree-view expansion',
     )
     ?? fieldError(

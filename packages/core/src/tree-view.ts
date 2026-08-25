@@ -4,6 +4,7 @@ export {
   type TreeViewCommand,
   type TreeViewEvent,
   type TreeViewPolicies,
+  type TreeViewSelectionMode,
   type TreeViewState,
   type TreeViewStateInput,
   type TreeViewUpdate,

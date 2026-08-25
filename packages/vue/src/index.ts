@@ -588,10 +588,12 @@ export {
   TreeViewGroup,
   TreeViewItem,
   TreeViewRoot,
+  type TreeViewGroupProps,
   type TreeViewItemSlotProps,
   type TreeViewPartProps,
   type TreeViewRootProps,
   type TreeViewRootSlotProps,
+  type TreeViewSelectionMode,
 } from './tree-view.js';
 export {
   TreeGridCell,

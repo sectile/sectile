@@ -44,7 +44,7 @@ test('terminal tree-view commands project into highlight effects', () => {
 });
 
 test('terminal tree-view skips disabled items without host policy glue', () => {
-  const connection = createTreeView({ nodes: nodes(), defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
+  const connection = createTreeView({ nodes: nodes(), defaultExpandedValues: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
   connection.handleKeyboardInput({ key: 'down' });
   assert.equal(connection.getSnapshot().state.cursor.current, 'grandchild');
   connection.handleKeyboardInput({ key: 'down' });
@@ -56,7 +56,7 @@ test('terminal tree-view supports mixed controlled state', () => {
   const controller = unwrap(createTreeViewController({
     tree: tree(),
     value: [],
-    defaultExpandedValue: ['root'],
+    defaultExpandedValues: ['root'],
     defaultHighlightedValue: 'child-a',
     onValueChange(change) {
       selections.push(change);
@@ -70,6 +70,19 @@ test('terminal tree-view supports mixed controlled state', () => {
     unwrap(controller.syncControlledValues({ value: ['child-a'] })).state.selection.selected,
     ['child-a'],
   );
+});
+
+test('terminal tree-view accumulates values only in multiple selection mode', () => {
+  const connection = createTreeView({
+    nodes: nodes(),
+    selectionMode: 'multiple',
+    defaultExpandedValues: ['root', 'child-a'],
+    defaultHighlightedValue: 'child-a',
+  });
+  connection.handleKeyboardInput({ key: 'space' });
+  connection.handleKeyboardInput({ key: 'down' });
+  connection.handleKeyboardInput({ key: 'space' });
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-a', 'grandchild']);
 });
 
 test('unsupported terminal tree-view input is failure-atomic', () => {

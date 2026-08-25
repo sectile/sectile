@@ -173,9 +173,10 @@ export {
   type TreeViewController,
   type TreeViewControllerOptions,
   type TreeViewEffect,
-  type TreeViewExpandedChangeDetails,
+  type TreeViewExpandedValuesChangeDetails,
   type TreeViewHighlightChangeDetails,
   type TreeViewOptions,
+  type TreeViewSelectionMode,
   type TreeViewTransitionDetails,
   type TreeViewValueChangeDetails,
 } from './tree-view.js';

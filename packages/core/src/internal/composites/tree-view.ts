@@ -11,6 +11,7 @@ import {
 } from '../state/expansion.js';
 import {
   createSelectionState,
+  selectOne,
   toggleMultipleSelection,
   type SelectionSnapshotInput,
   type SelectionState,
@@ -43,8 +44,11 @@ export interface TreeViewStateInput<ID extends StableID = StableID>
   readonly current?: ID | null;
 }
 
+export type TreeViewSelectionMode = 'single' | 'multiple';
+
 export interface TreeViewPolicies<ID extends StableID = StableID> {
   readonly eligible?: (id: ID) => boolean;
+  readonly selectionMode?: TreeViewSelectionMode;
 }
 
 export interface TreeViewUpdate<ID extends StableID = StableID> {
@@ -55,13 +59,15 @@ export interface TreeViewUpdate<ID extends StableID = StableID> {
 export function createTreeViewState<ID extends StableID>(
   tree: Tree<ID>,
   input: TreeViewStateInput<ID> = {},
+  selectionMode: TreeViewSelectionMode = 'multiple',
 ): TreeViewState<ID> {
-  return unwrap(tryCreateTreeViewState(tree, input));
+  return unwrap(tryCreateTreeViewState(tree, input, selectionMode));
 }
 
 export function tryCreateTreeViewState<ID extends StableID>(
   tree: Tree<ID>,
   input: TreeViewStateInput<ID> = {},
+  selectionMode: TreeViewSelectionMode = 'multiple',
 ): Result<TreeViewState<ID>> {
   const expansion = createExpansionState(tree, input.expanded ?? []);
   const visible = tree.visible(expansion);
@@ -74,7 +80,7 @@ export function tryCreateTreeViewState<ID extends StableID>(
       { current },
     );
   }
-  const selection = createSelectionState(tree.preorder(), 'multiple', input);
+  const selection = createSelectionState(tree.preorder(), selectionMode, input);
   if (!selection.ok) return selection;
   return ok(treeViewState(expansion, createCursorState(current), selection.value));
 }
@@ -98,8 +104,12 @@ export function applyTreeViewEvent<ID extends StableID>(
     return fail('transition-rejection', 'invalid-eligibility-policy', 'Tree-view eligibility policy must be a function.');
   }
   const eligible = policies.eligible ?? (() => true);
+  const selectionMode = policies.selectionMode ?? 'multiple';
+  if (selectionMode !== 'single' && selectionMode !== 'multiple') {
+    return fail('transition-rejection', 'invalid-selection-mode', 'Tree-view selection mode must be single or multiple.', { selectionMode });
+  }
   const visible = tree.visible(expansion);
-  const stateError = validateTreeViewState(tree, visible, state);
+  const stateError = validateTreeViewState(tree, visible, state, selectionMode);
   if (stateError !== null) return { ok: false, error: stateError };
   const normalized = sameExpansion(expansion, state.expansion)
     ? state
@@ -143,7 +153,7 @@ export function applyTreeViewEvent<ID extends StableID>(
     return createMachineUpdate(treeViewState(
       expansion,
       createCursorState(event.id),
-      toggleMultipleSelection(state.selection, event.id, tree.preorder()),
+      selectForMode(state.selection, event.id, tree.preorder(), selectionMode),
     ), [{ type: 'focus', id: event.id }]);
   }
 
@@ -201,7 +211,7 @@ export function applyTreeViewEvent<ID extends StableID>(
   return createMachineUpdate(treeViewState(
     expansion,
     state.cursor,
-    toggleMultipleSelection(state.selection, current, tree.preorder()),
+    selectForMode(state.selection, current, tree.preorder(), selectionMode),
   ));
 }
 
@@ -237,6 +247,7 @@ function validateTreeViewState<ID extends StableID>(
   tree: Tree<ID>,
   visible: ReturnType<Tree<ID>['visible']>,
   state: TreeViewState<ID>,
+  selectionMode: TreeViewSelectionMode,
 ): SectileError | null {
   if (state.cursor.current !== null && !visible.contains(state.cursor.current)) {
     return {
@@ -248,6 +259,14 @@ function validateTreeViewState<ID extends StableID>(
   }
   const preorder = tree.preorder();
   const unique = new Set(state.selection.selected);
+  if (selectionMode === 'single' && unique.size > 1) {
+    return {
+      class: 'transition-rejection',
+      code: 'invalid-selection-cardinality',
+      message: 'Single-selection tree-view state must contain at most one identity.',
+      details: { selectedCount: unique.size },
+    };
+  }
   if (unique.size !== state.selection.selected.length || unique.size !== state.selection.size) {
     return {
       class: 'transition-rejection',
@@ -274,6 +293,17 @@ function validateTreeViewState<ID extends StableID>(
     };
   }
   return null;
+}
+
+function selectForMode<ID extends StableID>(
+  state: SelectionState<ID>,
+  id: ID,
+  domain: ReturnType<Tree<ID>['preorder']>,
+  selectionMode: TreeViewSelectionMode,
+): SelectionState<ID> {
+  return selectionMode === 'single'
+    ? selectOne(state, id, domain)
+    : toggleMultipleSelection(state, id, domain);
 }
 
 function sameExpansion<ID extends StableID>(

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "a7fb500eea748009d1b0476b3f42003d64ee0299bbbe04cc190e8d96fb70c0b2",
+  "fingerprint": "763f2de9450af39ff95895f5280ecdfd313ba60f779b4b01d64281bb858417ed",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -136,7 +136,7 @@
     },
     {
       "path": "dist/internal/composites/tree-view.d.ts",
-      "sha256": "4cdc68029894cf51bd1683dd6b16570fe268226c3f7811443d94bb17f5488c9e"
+      "sha256": "1b5146fcbc1317e512ff0038f75c2562cef7e5ae072d332ea8d1a9134cd097de"
     },
     {
       "path": "dist/internal/editing/text.d.ts",
@@ -336,7 +336,7 @@
     },
     {
       "path": "dist/tree-view.d.ts",
-      "sha256": "3e73c246a786892f11440e19bfc8dcf79c88d3d7d4e3f487d91efa917950a129"
+      "sha256": "4c48857dad91222562124cd93430fe4767e48806c97f601f40fec5b77d895859"
     },
     {
       "path": "dist/units.d.ts",

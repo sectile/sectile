@@ -32,6 +32,22 @@ test('tree-view direct events target visible nodes and expansion', () => {
   assert.equal(collapsed.state.cursor.current, 'root');
 });
 
+test('tree-view selection mode separates replacement from accumulation', () => {
+  const tree = createTree([
+    { id: 'first', parentID: null },
+    { id: 'second', parentID: null },
+  ]);
+  const single = createTreeViewState(tree, { selected: ['first'], current: 'first' }, 'single');
+  const replaced = unwrap(applyTreeViewEvent(tree, single, { type: 'toggle-select', id: 'second' }, { selectionMode: 'single' }));
+  assert.deepEqual(replaced.state.selection.selected, ['second']);
+  const retained = unwrap(applyTreeViewEvent(tree, replaced.state, 'toggle-select', { selectionMode: 'single' }));
+  assert.deepEqual(retained.state.selection.selected, ['second']);
+
+  const multiple = createTreeViewState(tree, { selected: ['first'], current: 'second' });
+  const accumulated = unwrap(applyTreeViewEvent(tree, multiple, 'toggle-select'));
+  assert.deepEqual(accumulated.state.selection.selected, ['first', 'second']);
+});
+
 test('tree-view composition matches accepted exhaustive transition counts', () => {
   let states = 0;
   let transitions = 0;

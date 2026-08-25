@@ -22,6 +22,7 @@ test('DOM tree-view facade constructs the tree and owns ARIA and keyboard focus'
   connection.setTreeAttributes('Files');
   assert.equal(connection.tree.size, 4);
   assert.equal(root.attributes.get('role'), 'tree');
+  assert.equal(root.attributes.has('aria-multiselectable'), false);
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'root' });
   assert.equal(item.attributes.get('role'), 'treeitem');
@@ -63,9 +64,26 @@ test('DOM tree-view delegates disclosure and item clicks', () => {
   assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'child-a' });
+  assert.equal(item.attributes.get('aria-level'), '2');
   root.emit('click', { target: item });
   assert.equal(connection.getSnapshot().state.cursor.current, 'child-a');
   assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-a']);
+  const nextItem = new FakeElement();
+  connection.setItemAttributes(nextItem, { id: 'child-b' });
+  root.emit('click', { target: nextItem });
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-b']);
+});
+
+test('DOM tree-view exposes and preserves explicit multiple selection', () => {
+  const root = new FakeElement();
+  const connection = createTreeView({ nodes: nodes(), root, selectionMode: 'multiple', defaultExpandedValues: ['root'] });
+  connection.setTreeAttributes('Files');
+  assert.equal(root.attributes.get('aria-multiselectable'), 'true');
+  const first = new FakeElement(); connection.setItemAttributes(first, { id: 'child-a' });
+  const second = new FakeElement(); connection.setItemAttributes(second, { id: 'child-b' });
+  root.emit('click', { target: first });
+  root.emit('click', { target: second });
+  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['child-a', 'child-b']);
 });
 
 test('DOM tree-view commands project into focus effects', () => {
@@ -77,7 +95,7 @@ test('DOM tree-view commands project into focus effects', () => {
 
 test('DOM tree-view derives disabled semantics and skips unavailable items', () => {
   const root = new FakeElement();
-  const connection = createTreeView({ nodes: nodes(), root, defaultExpandedValue: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
+  const connection = createTreeView({ nodes: nodes(), root, defaultExpandedValues: ['root', 'child-a'], defaultHighlightedValue: 'child-a', disabledItems: ['child-b'] });
   const disabled = new FakeElement(); connection.setItemAttributes(disabled, { id: 'child-b' });
   assert.equal(disabled.attributes.get('aria-disabled'), 'true');
   connection.handleEvent('next');
@@ -131,9 +149,9 @@ test('controlled DOM tree-view emits expansion proposals until synchronized', ()
   const expansions = [];
   const controller = unwrap(createTreeViewController({
     tree: tree(),
-    expandedValue: [],
+    expandedValues: [],
     defaultHighlightedValue: 'root',
-    onExpandedValueChange(change) {
+    onExpandedValuesChange(change) {
       expansions.push(change);
     },
   }));
@@ -141,18 +159,18 @@ test('controlled DOM tree-view emits expansion proposals until synchronized', ()
   assert.equal(opened.ok, true);
   assert.deepEqual(opened.snapshot.state.expansion.ids, []);
   assert.deepEqual(expansions, [{ value: ['root'], previousValue: [] }]);
-  const synchronized = unwrap(controller.syncControlledValues({ expandedValue: ['root'] }));
+  const synchronized = unwrap(controller.syncControlledValues({ expandedValues: ['root'] }));
   assert.deepEqual(synchronized.state.expansion.ids, ['root']);
 });
 
 test('invalid controlled tree-view synchronization is failure-atomic', () => {
   const controller = unwrap(createTreeViewController({
     tree: tree(),
-    expandedValue: ['root'],
+    expandedValues: ['root'],
     defaultHighlightedValue: 'child-a',
   }));
   const initial = controller.getSnapshot();
-  const result = controller.syncControlledValues({ expandedValue: [] });
+  const result = controller.syncControlledValues({ expandedValues: [] });
   assert.equal(result.ok, false);
   assert.equal(result.error.code, 'tree-view-cursor-hidden');
   assert.equal(controller.getSnapshot(), initial);
