@@ -31,8 +31,6 @@ export interface AccordionHighlightChangeDetails<ID extends StableID = StableID>
 
 export interface AccordionControllerOptions<ID extends StableID = StableID> {
   readonly items: readonly ID[];
-  /** @deprecated Prefer the top-level expansion and collapsible options. */
-  readonly policies?: AccordionPolicies<ID>;
   readonly expansion?: 'single' | 'multiple';
   readonly collapsible?: boolean;
   readonly disabledItems?: readonly ID[];
@@ -418,12 +416,10 @@ function accordionPolicies<ID extends StableID>(
   options: AccordionControllerOptions<ID>,
   disabledItems: ReadonlySet<ID>,
 ): AccordionPolicies<ID> {
-  const suppliedEligibility = options.policies?.eligible;
   return Object.freeze({
-    ...options.policies,
-    expansion: options.expansion ?? options.policies?.expansion ?? 'single',
-    collapsible: options.collapsible ?? options.policies?.collapsible ?? true,
-    eligible: (id: ID) => !disabledItems.has(id) && (suppliedEligibility?.(id) ?? true),
+    expansion: options.expansion ?? 'single',
+    collapsible: options.collapsible ?? true,
+    eligible: (id: ID) => !disabledItems.has(id),
   });
 }
 
