@@ -110,7 +110,8 @@ Form은 다양한 입력 UI에 네이티브 \`<form>\` 제출·초기화·제약
 | \`FormField\` | 하나의 필드 이름 또는 중첩 경로와 \`id\`, \`required\`, \`disabled\`, \`readonly\` 메타데이터를 선언합니다. |
 | \`FormLabel\` | 일반 입력에는 \`for\`를, 복합 입력에는 \`aria-labelledby\`를 연결합니다. |
 | \`FormDescription\` / \`FormMessage\` | 설명과 현재 오류를 \`aria-describedby\`, \`aria-errormessage\`에 연결합니다. |
-| \`FormSummary\` / \`FormSubmit\` | 폼 전체 오류와 제출 동작을 노출합니다. |
+| \`FormSummary\` | 폼 전체 오류를 노출합니다. |
+| \`FormReset\` / \`FormSubmit\` | 네이티브 초기화와 제출 동작을 노출합니다. |
 
 Sectile 입력 컴포넌트는 공통 참여 규약을 통해 필드 메타데이터를 받습니다. 일반 \`input\`, \`select\`, \`textarea\`도 \`FormField\` 안에서 같은 제출에 참여합니다.`;
 
@@ -124,7 +125,8 @@ Form coordinates native \`<form>\` submission, reset, constraint validation, fie
 | \`FormField\` | Declares one field name or nested path plus \`id\`, \`required\`, \`disabled\`, and \`readonly\` metadata. |
 | \`FormLabel\` | Connects \`for\` to atomic controls or \`aria-labelledby\` to composite controls. |
 | \`FormDescription\` / \`FormMessage\` | Connect description and current issue IDs through \`aria-describedby\` and \`aria-errormessage\`. |
-| \`FormSummary\` / \`FormSubmit\` | Expose form-wide issues and the submission action. |
+| \`FormSummary\` | Exposes form-wide issues. |
+| \`FormReset\` / \`FormSubmit\` | Expose native reset and submission actions. |
 
 Sectile input components receive field metadata through the shared participation contract. Native \`input\`, \`select\`, and \`textarea\` elements also participate when placed inside a \`FormField\`.`;
 }
@@ -326,7 +328,7 @@ const propPriority = Object.freeze([
 ]);
 
 const slotPriority = Object.freeze([
-  'index', 'item', 'value', 'values', 'selectedValues', 'modelValue', 'inputValue', 'draft', 'character',
+  'index', 'item', 'value', 'targetValue', 'values', 'selectedValues', 'modelValue', 'inputValue', 'draft', 'character',
   'selectedValue', 'highlightedValue', 'expandedValue', 'expandedValues', 'current', 'selection',
   'open', 'view', 'viewMode', 'dates', 'months', 'items',
   'complete', 'checked', 'pressed', 'selected', 'highlighted', 'expanded',
@@ -756,6 +758,7 @@ function scenarioTitle(component, scenario) {
 }
 
 function koScenarioTitle(component, scenario) {
+  if (component.id === 'stepper' && scenario === 'gated-step') return '진행 조건';
   if (component.id === 'pin-input' && scenario === 'verification-code') return '인증 번호';
   if (component.id === 'pin-input' && scenario === 'custom-length') return '입력 칸 수 설정';
   if (component.id === 'pin-input' && scenario === 'masked') return '입력값 가리기';

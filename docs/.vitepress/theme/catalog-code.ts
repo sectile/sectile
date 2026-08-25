@@ -130,7 +130,7 @@ const environmentLabel = (id: string) => environments.find(item => item.id === i
   </PaginationRoot>`,
   ),
   stepper: sfc(
-    'StepperRoot, StepperList, StepperStep, StepperContent',
+    'StepperRoot, StepperList, StepperStep, StepperContent, StepperPrevious, StepperNext',
     `  <StepperRoot v-model="current" :items="stepIDs">
     <StepperList>
       <StepperStep v-for="(step, index) in steps" :key="step.id" :value="step.id">
@@ -140,9 +140,10 @@ const environmentLabel = (id: string) => environments.find(item => item.id === i
     <StepperContent v-for="step in steps" :key="step.id" :value="step.id">
       <strong>{{ step.label }}</strong>
       <p>{{ step.detail }}</p>
-      <button type="button" :disabled="step.id === 'review'" @click="advance(step.id)">
-        {{ step.id === 'review' ? 'Checkout steps complete' : 'Continue' }}
-      </button>
+      <StepperPrevious>Back</StepperPrevious>
+      <StepperNext v-slot="{ targetValue }">
+        {{ targetValue === null ? 'Checkout steps complete' : 'Continue to ' + stepLabel(targetValue) }}
+      </StepperNext>
     </StepperContent>
   </StepperRoot>`,
     `import { ref } from 'vue'
@@ -155,9 +156,7 @@ const steps = [
 ]
 const stepIDs = steps.map(({ id }) => id)
 const current = ref('delivery')
-const advance = (id: string) => {
-  current.value = stepIDs[stepIDs.indexOf(id) + 1] ?? id
-}`,
+const stepLabel = (id: string) => steps.find(step => step.id === id)?.label ?? id`,
   ),
   rating: sfc(
     'RatingRoot, RatingItem, RatingIndicator, RatingClear',
@@ -803,15 +802,15 @@ const loadWindow = (direction: 'before' | 'after') => {
 }`,
   ),
   form: sfc(
-    'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormSubmit',
-    `  <FormRoot @submit="saveAccount">
+    'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormReset, FormSubmit',
+    `  <FormRoot @submit.prevent="saveAccount">
     <FormSummary v-slot="{ state }">
       {{ state.issues.map(issue => issue.message).join(' ') }}
     </FormSummary>
 
     <FormField id="account-name" :name="['account', 'name']" required>
       <FormLabel>Display name</FormLabel>
-      <TextField v-model.trim="displayName" minlength="2" />
+      <TextField default-value="Mina Kim" minlength="2" />
       <FormDescription>Shown to teammates in release activity.</FormDescription>
       <FormMessage />
     </FormField>
@@ -823,19 +822,20 @@ const loadWindow = (direction: 'before' | 'after') => {
       <FormMessage />
     </FormField>
 
-    <button type="reset">Reset</button>
+    <FormReset>Reset</FormReset>
     <FormSubmit>Save settings</FormSubmit>
   </FormRoot>`,
-    `import { ref } from 'vue'
+    `import type { FormSubmitHandler } from '@sectile/vue/form'
 import { TextField } from '@sectile/vue/text'
 
-const displayName = ref('Mina Kim')
+interface AccountFormValues {
+  account: {
+    name: string
+    email: string
+  }
+}
 
-function saveAccount({ event, values }: {
-  event: SubmitEvent
-  values: Readonly<Record<string, unknown>>
-}) {
-  event.preventDefault()
+const saveAccount: FormSubmitHandler<AccountFormValues> = ({ values }) => {
   console.log(values.account)
 }`,
   ),
@@ -1354,26 +1354,28 @@ import {
   FormField,
   FormLabel,
   FormMessage,
+  FormReset,
   FormRoot,
   FormSubmit,
   FormSummary,
+  type FormSubmitHandler,
 } from '@sectile/vue/form'
 import { TextField } from '@sectile/vue/text'
 
-const displayName = ref('Mina Kim')
-const savedProfile = ref<Record<string, unknown>>()
+interface ProfileFormValues {
+  profile: {
+    displayName: string
+  }
+}
+const savedProfile = ref<ProfileFormValues['profile']>()
 
-function saveProfile(details: {
-  event: SubmitEvent
-  values: Readonly<Record<string, unknown>>
-}) {
-  details.event.preventDefault()
-  savedProfile.value = details.values.profile as Record<string, unknown>
+const saveProfile: FormSubmitHandler<ProfileFormValues> = ({ values }) => {
+  savedProfile.value = values.profile
 }
 <\/script>
 
 <template>
-  <FormRoot @submit="saveProfile">
+  <FormRoot @submit.prevent="saveProfile">
     <FormSummary />
     <FormField
       id="display-name"
@@ -1381,10 +1383,11 @@ function saveProfile(details: {
       required
     >
       <FormLabel>Display name</FormLabel>
-      <TextField v-model.trim="displayName" autocomplete="name" />
+      <TextField default-value="Mina Kim" autocomplete="name" />
       <FormDescription>Shown in approvals and release activity.</FormDescription>
       <FormMessage />
     </FormField>
+    <FormReset>Reset</FormReset>
     <FormSubmit>Save profile</FormSubmit>
   </FormRoot>
 </template>`,
@@ -1396,6 +1399,7 @@ import {
   FormMessage,
   FormRoot,
   FormSubmit,
+  type FormSubmitHandler,
 } from '@sectile/vue/form'
 import {
   SelectContent,
@@ -1409,17 +1413,20 @@ import { ref } from 'vue'
 const channels = ['all', 'mentions', 'none']
 const weeklyDigest = ref(true)
 
-function saveNotifications(details: {
-  event: SubmitEvent
-  values: Readonly<Record<string, unknown>>
-}) {
-  details.event.preventDefault()
-  console.log(details.values.notifications)
+interface NotificationsFormValues {
+  notifications: {
+    channel: string
+    digest?: string
+  }
+}
+
+const saveNotifications: FormSubmitHandler<NotificationsFormValues> = ({ values }) => {
+  console.log(values.notifications)
 }
 <\/script>
 
 <template>
-  <FormRoot @submit="saveNotifications">
+  <FormRoot @submit.prevent="saveNotifications">
     <FormField :name="['notifications', 'channel']" required>
       <FormLabel>Activity emails</FormLabel>
       <SelectRoot :items="channels" default-value="mentions">
@@ -1452,6 +1459,7 @@ import {
   FormMessage,
   FormRoot,
   FormSubmit,
+  type FormSubmitHandler,
 } from '@sectile/vue/form'
 import {
   SelectContent,
@@ -1464,17 +1472,20 @@ import { TextField } from '@sectile/vue/text'
 
 const roles = ['member', 'admin']
 
-function inviteMember(details: {
-  event: SubmitEvent
-  values: Readonly<Record<string, unknown>>
-}) {
-  details.event.preventDefault()
-  console.log(details.values.invitation)
+interface InvitationFormValues {
+  invitation: {
+    email: string
+    role: string
+  }
+}
+
+const inviteMember: FormSubmitHandler<InvitationFormValues> = ({ values }) => {
+  console.log(values.invitation)
 }
 <\/script>
 
 <template>
-  <FormRoot @submit="inviteMember">
+  <FormRoot @submit.prevent="inviteMember">
     <FormField id="invite-email" :name="['invitation', 'email']" required>
       <FormLabel>Email address</FormLabel>
       <TextField type="email" autocomplete="email" />
