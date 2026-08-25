@@ -4,6 +4,7 @@ import type { Tree, TreeNodeInput } from '@sectile/core/tree';
 import { applyMenuEvent, tryCreateMenuModel, tryCreateMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 import { setInteractionAttributes } from './interaction.js';
+import { horizontalArrow, type ReadingDirection } from './direction.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -13,6 +14,8 @@ export interface MenuControlOptions<ID extends StableID> {
   readonly trigger?: HTMLElement;
   readonly items: readonly TreeNodeInput<ID>[];
   readonly kind: MenuKind;
+  readonly direction?: ReadingDirection;
+  readonly baseID?: string;
   readonly policies?: MenuPolicies<ID>;
   readonly disabledItems?: readonly ID[];
   readonly open?: boolean;
@@ -57,13 +60,13 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>; readonly #policies: MenuPolicies<ID>; readonly #openControlled: boolean; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #reposition: () => void; readonly #view: Window | null; readonly #instanceID: number;
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #reposition: () => void; readonly #view: Window | null; readonly #instanceID: string;
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>, policies: MenuPolicies<ID>, openControlled: boolean) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies; this.#openControlled = openControlled;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
-    this.#view = options.root.ownerDocument?.defaultView ?? null; this.#instanceID = nextMenuControlID += 1;
-    this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
+    this.#view = options.root.ownerDocument?.defaultView ?? null; this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
+    this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind, options.direction); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { for (const [id, element] of this.#elements) if (event.target === element || (typeof Node !== 'undefined' && event.target instanceof Node && element.contains(event.target))) { const wasOpen = this.getSnapshot().state.openPath.includes(id); this.handleEvent({ type: 'focus', id }); if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu'); return; } };
     this.#triggerClick = () => { this.handleEvent(this.getSnapshot().state.open ? 'close-popup' : 'open-popup'); };
     this.#reposition = () => { this.#positionPopup(); this.#positionSubmenus(); };
@@ -89,6 +92,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   #refresh(): void {
     const state = this.getSnapshot().state;
     this.#options.root.setAttribute('role', this.#options.kind === 'navigation-menu' ? 'navigation' : this.#options.kind === 'menubar' ? 'menubar' : 'menu');
+    this.#options.root.setAttribute('dir', this.#options.direction ?? 'ltr');
     if (this.#options.label !== undefined) this.#options.root.setAttribute('aria-label', this.#options.label);
     this.#options.root.hidden = !state.open;
     this.#options.trigger?.setAttribute('aria-haspopup', 'menu'); this.#options.trigger?.setAttribute('aria-expanded', String(state.open));
@@ -138,11 +142,12 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       if (opensFromMenubar) {
         const spaceBelow = viewport.innerHeight - anchorRect.bottom - gutter; const spaceAbove = anchorRect.top - gutter;
         const placeAbove = submenuRect.height > spaceBelow && spaceAbove > spaceBelow;
-        rawLeft = anchorRect.left; rawTop = placeAbove ? anchorRect.top - submenuRect.height - gap : anchorRect.bottom + gap;
+        rawLeft = this.#options.direction === 'rtl' ? anchorRect.right - submenuRect.width : anchorRect.left; rawTop = placeAbove ? anchorRect.top - submenuRect.height - gap : anchorRect.bottom + gap;
         placement = placeAbove ? 'top-start' : 'bottom-start';
       } else {
         const spaceRight = viewport.innerWidth - anchorRect.right - gutter; const spaceLeft = anchorRect.left - gutter;
-        const placeLeft = submenuRect.width > spaceRight && spaceLeft > spaceRight;
+        const preferLeft = this.#options.direction === 'rtl';
+        const placeLeft = preferLeft ? !(submenuRect.width > spaceLeft && spaceRight > spaceLeft) : submenuRect.width > spaceRight && spaceLeft > spaceRight;
         rawLeft = placeLeft ? anchorRect.left - submenuRect.width - gap : anchorRect.right + gap; rawTop = anchorRect.top;
         placement = placeLeft ? 'left-start' : 'right-start';
       }
@@ -170,4 +175,16 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
 
 let nextMenuControlID = 0;
 
-function toMenuEvent(event: KeyboardEvent, kind: MenuKind): Extract<MenuEvent, string> | null { if (event.altKey || event.ctrlKey || event.metaKey) return null; if (event.key === 'Escape') return 'escape'; if (event.key === 'Home') return 'first'; if (event.key === 'End') return 'last'; if (event.key === 'Enter' || event.key === ' ') return 'invoke'; if (event.key === 'ArrowDown') return kind === 'menubar' || kind === 'navigation-menu' ? 'open-submenu' : 'next'; if (event.key === 'ArrowUp') return 'previous'; if (event.key === 'ArrowRight') return kind === 'menubar' || kind === 'navigation-menu' ? 'next' : 'open-submenu'; if (event.key === 'ArrowLeft') return kind === 'menubar' || kind === 'navigation-menu' ? 'previous' : 'close-submenu'; return null; }
+function toMenuEvent(event: KeyboardEvent, kind: MenuKind, direction: ReadingDirection = 'ltr'): Extract<MenuEvent, string> | null {
+  if (event.altKey || event.ctrlKey || event.metaKey) return null;
+  if (event.key === 'Escape') return 'escape';
+  if (event.key === 'Home') return 'first';
+  if (event.key === 'End') return 'last';
+  if (event.key === 'Enter' || event.key === ' ') return 'invoke';
+  if (event.key === 'ArrowDown') return kind === 'menubar' || kind === 'navigation-menu' ? 'open-submenu' : 'next';
+  if (event.key === 'ArrowUp') return 'previous';
+  const horizontal = horizontalArrow(event.key, direction);
+  if (horizontal === null) return null;
+  if (kind === 'menubar' || kind === 'navigation-menu') return horizontal;
+  return horizontal === 'next' ? 'open-submenu' : 'close-submenu';
+}

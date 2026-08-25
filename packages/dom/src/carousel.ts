@@ -16,6 +16,7 @@ import {
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 
 export type { CarouselPolicies, CarouselPosition } from '@sectile/core/carousel';
 
@@ -44,6 +45,7 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly disabled?: boolean;
   readonly policies?: CarouselPolicies;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly autoplay?: boolean | CarouselAutoplayOptions;
   readonly label?: string;
   readonly previousButton?: HTMLElement;
@@ -169,8 +171,11 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
     this.#keydown = (event) => {
       if (event.key === ' ' && event.target !== options.root) return;
       const vertical = options.orientation === 'vertical';
-      const semantic = event.key === (vertical ? 'ArrowDown' : 'ArrowRight') ? 'next'
-        : event.key === (vertical ? 'ArrowUp' : 'ArrowLeft') ? 'previous'
+      const horizontal = vertical ? null : horizontalArrow(event.key, options.direction);
+      const verticalNext = vertical && event.key === 'ArrowDown';
+      const verticalPrevious = vertical && event.key === 'ArrowUp';
+      const semantic = verticalNext || horizontal === 'next' ? 'next'
+        : verticalPrevious || horizontal === 'previous' ? 'previous'
           : event.key === 'Home' ? 'first'
             : event.key === 'End' ? 'last'
               : event.key === ' ' ? 'toggle-pause'
@@ -215,6 +220,7 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
 
     options.root.setAttribute('role', 'region');
     options.root.setAttribute('aria-roledescription', 'carousel');
+    options.root.setAttribute('dir', options.direction ?? 'ltr');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     if (options.indicatorGroup !== undefined) {
       options.indicatorGroup.setAttribute('role', 'tablist');

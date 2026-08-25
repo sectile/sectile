@@ -17,6 +17,7 @@ import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import type { KeyboardInput } from './tabs.js';
+import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 
 export type ToolbarEffect<ID extends StableID = StableID> =
   | { readonly type: 'focus-control'; readonly id: ID }
@@ -31,6 +32,7 @@ export interface ToolbarOptions<ID extends StableID = StableID> {
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly onHighlightedValueChange?: (value: ID | null) => void;
   readonly onInvoke?: (id: ID) => void;
@@ -103,13 +105,16 @@ function tryCreateToolbarConnection<ID extends StableID>(
 export function toToolbarEvent<ID extends StableID = StableID>(
   input: KeyboardInput,
   orientation: 'horizontal' | 'vertical' = 'horizontal',
+  direction: ReadingDirection = 'ltr',
 ): ToolbarEvent<ID> | null {
   if (input.altKey || input.ctrlKey || input.metaKey) return null;
   if (input.key === 'Home') return 'first';
   if (input.key === 'End') return 'last';
   if (input.key === 'Enter' || input.key === ' ') return 'invoke';
-  if (orientation === 'horizontal' && input.key === 'ArrowRight') return 'next';
-  if (orientation === 'horizontal' && input.key === 'ArrowLeft') return 'previous';
+  if (orientation === 'horizontal') {
+    const horizontal = horizontalArrow(input.key, direction);
+    if (horizontal !== null) return horizontal;
+  }
   if (orientation === 'vertical' && input.key === 'ArrowDown') return 'next';
   if (orientation === 'vertical' && input.key === 'ArrowUp') return 'previous';
   return null;
@@ -138,9 +143,10 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
     options.root.setAttribute('role', 'toolbar');
     setInteractionAttributes(options.root, options);
     options.root.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
+    options.root.setAttribute('dir', options.direction ?? 'ltr');
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     this.#keydown = (event): void => {
-      const semantic = toToolbarEvent<ID>(event, options.orientation);
+      const semantic = toToolbarEvent<ID>(event, options.orientation, options.direction);
       if (semantic === null) return;
       event.preventDefault();
       this.handleEvent(semantic);

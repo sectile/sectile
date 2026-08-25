@@ -24,6 +24,7 @@ import { applyControllerEvent, synchronizeControllerState } from './internal/con
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -51,6 +52,7 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly policies?: ListboxPolicies<ID>;
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly activationMode?: 'activate' | 'toggle';
   readonly clearOnEscape?: boolean;
   readonly disabledItems?: readonly ID[];
@@ -112,6 +114,7 @@ export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly activationMode?: 'activate' | 'toggle';
   readonly disabledItems?: readonly ID[];
   readonly disabled?: boolean;
@@ -135,6 +138,7 @@ export interface ListboxItemAttributes<ID extends StableID = StableID> {
 export interface ListboxRootAttributesOptions {
   readonly selectionMode?: ListboxSelectionMode;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -199,6 +203,7 @@ export function getListboxRootAttributes(
   return Object.freeze({
     role: 'listbox',
     'aria-orientation': options.orientation ?? 'vertical',
+    dir: options.direction,
     'aria-multiselectable': options.selectionMode === 'multiple' ? 'true' : undefined,
     'aria-label': options.label,
     'data-scope': 'listbox',
@@ -264,14 +269,17 @@ export function connectListbox<ID extends StableID>(
 export function toListboxEvent<ID extends StableID = StableID>(
   input: KeyboardInput,
   orientation: 'horizontal' | 'vertical' = 'vertical',
+  direction: ReadingDirection = 'ltr',
 ): ListboxEvent<ID> | null {
   if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
   if (input.key === 'Home') return 'first';
   if (input.key === 'End') return 'last';
   if (orientation === 'vertical' && input.key === 'ArrowDown') return 'next';
   if (orientation === 'vertical' && input.key === 'ArrowUp') return 'previous';
-  if (orientation === 'horizontal' && input.key === 'ArrowRight') return 'next';
-  if (orientation === 'horizontal' && input.key === 'ArrowLeft') return 'previous';
+  if (orientation === 'horizontal') {
+    const horizontal = horizontalArrow(input.key, direction);
+    if (horizontal !== null) return horizontal;
+  }
   if (input.key === ' ') return 'toggle';
   if (input.key === 'Enter') return 'activate';
   if (input.key === 'Escape') return 'clear';
@@ -294,6 +302,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #onUpdate: (() => void) | undefined;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #direction: ReadingDirection;
   readonly #activationMode: 'activate' | 'toggle';
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #typeaheadEnabled: boolean;
@@ -308,6 +317,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#onUpdate = options.onUpdate;
     this.#selectionMode = options.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
+    this.#direction = options.direction ?? 'ltr';
     this.#activationMode = options.activationMode ?? 'activate';
     this.#disabledItems = new Set(options.disabledItems ?? []);
     this.#typeaheadEnabled = options.typeahead !== undefined;
@@ -346,6 +356,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     applyAttributes(this.#root, getListboxRootAttributes({
       selectionMode: this.#selectionMode,
       orientation: this.#orientation,
+      direction: this.#direction,
       ...(label === undefined ? {} : { label }),
     }));
   }
@@ -367,7 +378,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
-    const semanticEvent = toListboxEvent<ID>(input, this.#orientation);
+    const semanticEvent = toListboxEvent<ID>(input, this.#orientation, this.#direction);
     const query = printableKey(input);
     if (semanticEvent === null && (query === null || !this.#typeaheadEnabled)) return false;
     const result = this.#controller.handleKeyboardInput(input);
@@ -443,6 +454,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
   readonly #interaction: InteractionState;
   readonly #selectionMode: ListboxSelectionMode;
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #direction: ReadingDirection;
   readonly #activationMode: 'activate' | 'toggle';
   readonly #clearOnEscape: boolean;
   readonly #typeahead: ListboxTypeaheadOptions<ID> | undefined;
@@ -467,6 +479,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
     this.#interaction = interaction;
     this.#selectionMode = policies.selectionMode ?? 'multiple';
     this.#orientation = options.orientation ?? 'vertical';
+    this.#direction = options.direction ?? 'ltr';
     this.#activationMode = options.activationMode ?? 'activate';
     this.#clearOnEscape = options.clearOnEscape ?? true;
     this.#typeahead = options.typeahead;
@@ -521,7 +534,7 @@ class DOMListboxController<ID extends StableID> implements ListboxController<ID>
   ): RevisionResult<ListboxState<ID>, ListboxEffect<ID>> {
     const permitted = requireInteraction(this.#interaction, 'navigate');
     if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const mapped = toListboxEvent<ID>(input, this.#orientation);
+    const mapped = toListboxEvent<ID>(input, this.#orientation, this.#direction);
     const event = mapped === 'activate' && this.#activationMode === 'toggle'
       ? 'toggle'
       : mapped === 'clear' && !this.#clearOnEscape ? null : mapped;

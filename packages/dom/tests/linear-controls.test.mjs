@@ -50,6 +50,33 @@ test('DOM linear controls expose orientation-aware semantic key maps', () => {
   assert.equal(toRadioGroupEvent({ key: ' ' }), 'check');
   assert.equal(toToolbarEvent({ key: 'Enter' }), 'invoke');
   assert.equal(toToolbarEvent({ key: 'ArrowDown' }), null);
+  assert.equal(toTabsEvent({ key: 'ArrowRight' }, 'horizontal', 'rtl'), 'previous');
+  assert.equal(toRadioGroupEvent({ key: 'ArrowLeft' }, 'horizontal', 'rtl'), 'next');
+  assert.equal(toToolbarEvent({ key: 'ArrowRight' }, 'horizontal', 'rtl'), 'previous');
+});
+
+test('DOM horizontal controls expose and follow RTL direction', () => {
+  const tabsRoot = new FakeElement();
+  const tabs = createTabs({
+    root: tabsRoot,
+    items: ['one', 'two'],
+    defaultHighlightedValue: 'two',
+    direction: 'rtl',
+  });
+  tabsRoot.emit('keydown', keyboardEvent('ArrowRight'));
+  assert.equal(tabs.getSnapshot().state.cursor.current, 'one');
+  assert.equal(tabsRoot.attributes.get('dir'), 'rtl');
+
+  const toolbarRoot = new FakeElement();
+  const toolbar = createToolbar({
+    root: toolbarRoot,
+    items: ['one', 'two'],
+    defaultHighlightedValue: 'two',
+    direction: 'rtl',
+  });
+  toolbarRoot.emit('keydown', keyboardEvent('ArrowRight'));
+  assert.equal(toolbar.getSnapshot().state.cursor.current, 'one');
+  assert.equal(toolbarRoot.attributes.get('dir'), 'rtl');
 });
 
 test('DOM linear controls derive eligibility and ARIA from disabledItems', () => {

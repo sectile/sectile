@@ -138,6 +138,29 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   assert.equal(submenu.style.top, '104px');
 });
 
+test('DOM menus reverse horizontal navigation and submenu placement in RTL', () => {
+  const view = new FakeView(800, 300);
+  const root = new FakeElement(undefined, view);
+  const file = new FakeElement({ left: 400, right: 480, top: 60, bottom: 100, width: 80, height: 40 });
+  const child = new FakeElement();
+  const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
+  const menu = createMenubar({
+    root,
+    direction: 'rtl',
+    items: [{ id: 'file', parentID: null }, { id: 'edit', parentID: null }, { id: 'new', parentID: 'file' }],
+    defaultHighlightedValue: 'edit',
+  });
+
+  menu.setItemAttributes(file, 'file');
+  menu.setItemAttributes(child, 'new');
+  menu.setSubmenuAttributes(submenu, 'file');
+  root.emit('keydown', { key: 'ArrowRight', altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} });
+  assert.equal(menu.getSnapshot().state.cursor.current, 'file');
+  menu.handleEvent('open-submenu');
+  assert.equal(submenu.style.left, '340px');
+  assert.equal(root.attributes.get('dir'), 'rtl');
+});
+
 test('DOM navigation menu preserves native navigation roles and toggles panels', () => {
   const root = new FakeElement();
   const products = new FakeElement();

@@ -1,4 +1,5 @@
 export type { FacadeConnection } from './internal/facade.js';
+export type { ReadingDirection } from './internal/direction.js';
 export {
   connectListbox,
   createListbox, tryCreateListbox,

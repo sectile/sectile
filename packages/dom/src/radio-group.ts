@@ -15,6 +15,7 @@ import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import type { KeyboardInput } from './tabs.js';
+import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 
 export type RadioGroupEffect<ID extends StableID = StableID> =
   { readonly type: 'focus-radio'; readonly id: ID };
@@ -31,6 +32,7 @@ export interface RadioGroupOptions<ID extends StableID = StableID> {
   readonly highlightedValue?: ID | null;
   readonly defaultHighlightedValue?: ID | null;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly onValueChange?: (value: ID | null) => void;
   readonly onHighlightedValueChange?: (value: ID | null) => void;
@@ -54,6 +56,7 @@ export interface RadioGroupConnection<ID extends StableID = StableID> {
 
 export interface RadioGroupRootAttributesOptions {
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -81,6 +84,7 @@ export function getRadioGroupRootAttributes(
   return Object.freeze({
     role: 'radiogroup',
     'aria-orientation': options.orientation ?? 'vertical',
+    dir: options.direction,
     'aria-label': options.label,
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,
@@ -187,13 +191,16 @@ function tryCreateRadioGroupConnection<ID extends StableID>(
 export function toRadioGroupEvent<ID extends StableID = StableID>(
   input: KeyboardInput,
   orientation: 'horizontal' | 'vertical' = 'vertical',
+  direction: ReadingDirection = 'ltr',
 ): RadioGroupEvent<ID> | null {
   if (input.altKey || input.ctrlKey || input.metaKey) return null;
   if (input.key === 'Home') return 'first';
   if (input.key === 'End') return 'last';
   if (input.key === ' ' || input.key === 'Enter') return 'check';
-  if (orientation === 'horizontal' && input.key === 'ArrowRight') return 'next';
-  if (orientation === 'horizontal' && input.key === 'ArrowLeft') return 'previous';
+  if (orientation === 'horizontal') {
+    const horizontal = horizontalArrow(input.key, direction);
+    if (horizontal !== null) return horizontal;
+  }
   if (orientation === 'vertical' && input.key === 'ArrowDown') return 'next';
   if (orientation === 'vertical' && input.key === 'ArrowUp') return 'previous';
   return null;
@@ -222,7 +229,7 @@ class DOMRadioGroupConnection<ID extends StableID> implements RadioGroupConnecti
     this.#disabledItems = disabledItems;
     applyAttributes(options.root, getRadioGroupRootAttributes(options));
     this.#keydown = (event): void => {
-      const semantic = toRadioGroupEvent<ID>(event, options.orientation);
+      const semantic = toRadioGroupEvent<ID>(event, options.orientation, options.direction);
       if (semantic === null) return;
       event.preventDefault();
       this.handleEvent(semantic);

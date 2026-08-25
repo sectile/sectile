@@ -4,6 +4,7 @@ import type { Result, StableID } from '@sectile/core';
 import type { ToggleGroupEvent, ToggleGroupState } from '@sectile/core/toggle-group';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateListbox, type ListboxConnection, type ListboxOptions } from './listbox.js';
+import type { ReadingDirection } from './internal/direction.js';
 
 export type ToggleGroupOptions<ID extends StableID = StableID> =
   Omit<ListboxOptions<ID>, 'selectionMode' | 'activationMode' | 'clearOnEscape'>
@@ -20,6 +21,7 @@ export interface ToggleGroupConnection<ID extends StableID = StableID> {
 
 export interface ToggleGroupRootAttributesOptions {
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
@@ -36,6 +38,7 @@ export function getToggleGroupRootAttributes(options: ToggleGroupRootAttributesO
   return Object.freeze({
     role: 'group',
     'aria-orientation': options.orientation ?? 'horizontal',
+    dir: options.direction,
     'aria-label': options.label,
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,

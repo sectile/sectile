@@ -249,6 +249,23 @@ test('DOM tags input leaves live native IME text under browser ownership', () =>
   assert.equal(input.listeners.get('compositionend')?.size ?? 0, 0);
 });
 
+test('DOM tags input follows RTL reading order for tag navigation', () => {
+  const root = new FakeElement();
+  const input = new FakeElement();
+  const tags = createTagsInput({ root, input, direction: 'rtl', defaultValue: ['one', 'two'] });
+  tags.handleEvent({ type: 'focus-tag', index: 0 });
+
+  root.emit('keydown', {
+    key: 'ArrowLeft',
+    target: root,
+    isComposing: false,
+    preventDefault() {},
+  });
+
+  assert.equal(tags.getSnapshot().state.current, 1);
+  assert.equal(root.attributes.get('dir'), 'rtl');
+});
+
 test('DOM tags input adds a completed IME draft with one Enter press', async () => {
   const root = new FakeElement();
   const input = new FakeElement();

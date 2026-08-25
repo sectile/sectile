@@ -119,6 +119,20 @@ test('DOM carousel leaves Space activation on nested controls to the browser', (
   assert.equal(carousel.getSnapshot().state.paused, true);
 });
 
+test('DOM carousel follows RTL reading order for horizontal arrow keys', () => {
+  const root = new FakeElement();
+  const carousel = createCarousel({
+    root,
+    slides: ['a', 'b'],
+    direction: 'rtl',
+  });
+
+  root.emit('keydown', { key: 'ArrowLeft', target: root });
+
+  assert.equal(carousel.getSnapshot().state.cursor.current, 'b');
+  assert.equal(root.attributes.get('dir'), 'rtl');
+});
+
 class FakeScheduler {
   callbacks = new Map();
   nextToken = 1;
