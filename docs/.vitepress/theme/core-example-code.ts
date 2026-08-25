@@ -660,14 +660,40 @@ console.log(getPaginationItems(model, update.state).value)`;
     case 'popover':
       return openExample(component, 'createPopoverState', 'applyPopoverEvent', scenario);
     case 'pin-input': {
+      const length = scenario === 'custom-length' ? 4 : 6;
+      const disabled = scenario === 'disabled';
+      const readOnly = scenario === 'readonly';
+      const mask = scenario === 'masked';
+      const placeholder = scenario === 'placeholders' ? '○' : '·';
+      const controlled = scenario === 'controlled';
+      const initialValue = readOnly ? '246810' : disabled ? '593174' : '';
       return `import { applyPinInputEvent, createPinInputState } from '@sectile/core/pin-input'
 
-const state = createPinInputState(6, '${scenario === 'prefilled' ? '482' : ''}')
-const update = applyPinInputEvent(6, state, { type: 'input', value: '7' }, {
-  accept: (value) => /^[0-9]$/.test(value),
-}).value
+const length = ${length}
+const presentation = {
+  mask: ${mask},
+  placeholder: '${placeholder}',
+  autocomplete: '${scenario === 'otp' ? 'one-time-code' : 'off'}',
+}
+const interaction = { disabled: ${disabled}, readOnly: ${readOnly} }
+const state = createPinInputState(length, '${initialValue}')
+const accepted = interaction.disabled || interaction.readOnly
+  ? state
+  : applyPinInputEvent(length, state, { type: 'input', value: '7' }, {
+      accept: (value) => /^[0-9]$/.test(value),
+    }).value.state
+${controlled ? `
+// A controlled host accepts the requested value, then recreates Core state.
+let value = state.values.join('')
+value = accepted.values.join('')
+const renderedState = createPinInputState(length, value)
+` : '\nconst renderedState = accepted\n'}
+const cells = renderedState.values.map((character) => {
+  if (character === '') return presentation.placeholder
+  return presentation.mask ? '•' : character
+})
 
-console.log(update.state.values.join(''), update.commands)`;
+console.log(cells.join(' '), presentation.autocomplete)`;
     }
     case 'quantity-field': {
       const unit = scenario === 'temperature' ? 'kelvin' : 'metre';
@@ -888,8 +914,10 @@ const files = createTree([
 const state = createTreeViewState(files, {
   expanded: ${scenario === 'collapsed' ? '[]' : "['workspace', 'src']"},
   current: '${unavailable ? 'tests' : 'workspace'}', selected: ${multiple ? "['components', 'tests']" : "['workspace']"},
-})
-const update = applyTreeViewEvent(files, state, '${scenario === 'collapsed' ? 'right' : multiple ? 'toggle-select' : 'next'}'${unavailable ? ", { eligible: (id) => id !== 'tests' }" : ''}).value
+}, '${multiple ? 'multiple' : 'single'}')
+const update = applyTreeViewEvent(files, state, '${scenario === 'collapsed' ? 'right' : multiple ? 'toggle-select' : 'next'}', {
+  selectionMode: '${multiple ? 'multiple' : 'single'}',${unavailable ? "\n  eligible: (id) => id !== 'tests'," : ''}
+}).value
 
 console.log(update.state.expansion.ids, update.state.selection.selected)`;
     }

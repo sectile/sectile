@@ -42,11 +42,13 @@ test('tags input code uses the same Vue composition and labels', () => {
   assert.equal(source.includes('Remove \\${value[index]}'), true);
 });
 
-test('generated tags input pages contain only the representative skills example', async () => {
+test('generated tags input pages include basic, limited, and controlled examples', async () => {
   for (const locale of ['', 'ko/']) {
     const page = await readFile(new URL(`../${locale}components/tags-input.md`, import.meta.url), 'utf8');
-    assert.equal(page.match(/<ComponentExample component="tags-input"/gu)?.length, 1, locale || 'en');
-    assert.doesNotMatch(page, /scenario="limited"/u);
+    assert.equal(page.match(/<ComponentExample component="tags-input"/gu)?.length, 3, locale || 'en');
+    for (const scenario of ['skills', 'limited', 'controlled']) {
+      assert.match(page, new RegExp(`scenario="${scenario}"`, 'u'));
+    }
   }
 });
 

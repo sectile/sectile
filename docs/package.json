@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @sectile/core --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue build",
     "dev": "vitepress dev --host 127.0.0.1",
     "build": "vitepress build",
     "preview": "vitepress preview --host 127.0.0.1",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "26.2.0",
+    "prettier": "^3.9.6",
     "shiki": "^4.4.3",
     "typescript": "^5.9.3",
     "vite": "^5.4.21",

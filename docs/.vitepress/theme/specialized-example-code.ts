@@ -32,6 +32,7 @@ const specializedComponents = new Set([
 function treeViewSource(scenario: string): string {
   const multiple = scenario === 'multiple';
   return `<script setup lang="ts">
+import { ref } from 'vue'
 import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '@sectile/vue/tree-view'
 
 const nodes = [
@@ -43,29 +44,31 @@ const nodes = [
   { id: 'packages', parentID: 'atlas' },
   { id: 'tokens', parentID: 'packages' },
 ]
+const expandedValues = ref(['atlas', 'apps', 'dashboard', 'packages'])
 <\/script>
 
 <template>
   <TreeViewRoot
     :nodes="nodes"
-    :default-expanded-value="['atlas', 'apps', 'dashboard', 'packages']"
+${multiple ? '    selection-mode="multiple"\n' : ''}
+    v-model:expanded-values="expandedValues"
     :default-value="${multiple ? "['overview', 'settings', 'tokens']" : "['settings']"}"
     label="${multiple ? 'Files selected for review' : 'Atlas project files'}"
-    v-slot="{ expandedValue${multiple ? ', value' : ''} }"
+${multiple ? '    v-slot="{ value }"\n' : ''}
   >
 ${multiple ? `    <output>{{ value.length }} files selected</output>
-` : ''}    <TreeViewItem value="atlas" :level="1"><TreeViewDisclosure for="atlas" as="button">Toggle</TreeViewDisclosure>Atlas workspace</TreeViewItem>
-    <TreeViewGroup v-if="expandedValue.includes('atlas')">
-      <TreeViewItem value="apps" :level="2"><TreeViewDisclosure for="apps" as="button">Toggle</TreeViewDisclosure>Applications</TreeViewItem>
-      <TreeViewGroup v-if="expandedValue.includes('apps')">
-        <TreeViewItem value="dashboard" :level="3"><TreeViewDisclosure for="dashboard" as="button">Toggle</TreeViewDisclosure>Dashboard</TreeViewItem>
-        <TreeViewGroup v-if="expandedValue.includes('dashboard')">
-          <TreeViewItem value="overview" :level="4">Overview.vue</TreeViewItem>
-          <TreeViewItem value="settings" :level="4">Settings.vue</TreeViewItem>
+` : ''}    <TreeViewItem value="atlas"><TreeViewDisclosure for="atlas" as="button">Toggle</TreeViewDisclosure>Atlas workspace</TreeViewItem>
+    <TreeViewGroup for="atlas">
+      <TreeViewItem value="apps"><TreeViewDisclosure for="apps" as="button">Toggle</TreeViewDisclosure>Applications</TreeViewItem>
+      <TreeViewGroup for="apps">
+        <TreeViewItem value="dashboard"><TreeViewDisclosure for="dashboard" as="button">Toggle</TreeViewDisclosure>Dashboard</TreeViewItem>
+        <TreeViewGroup for="dashboard">
+          <TreeViewItem value="overview">Overview.vue</TreeViewItem>
+          <TreeViewItem value="settings">Settings.vue</TreeViewItem>
         </TreeViewGroup>
       </TreeViewGroup>
-      <TreeViewItem value="packages" :level="2"><TreeViewDisclosure for="packages" as="button">Toggle</TreeViewDisclosure>Packages</TreeViewItem>
-      <TreeViewGroup v-if="expandedValue.includes('packages')"><TreeViewItem value="tokens" :level="3">tokens.ts</TreeViewItem></TreeViewGroup>
+      <TreeViewItem value="packages"><TreeViewDisclosure for="packages" as="button">Toggle</TreeViewDisclosure>Packages</TreeViewItem>
+      <TreeViewGroup for="packages"><TreeViewItem value="tokens">tokens.ts</TreeViewItem></TreeViewGroup>
     </TreeViewGroup>
   </TreeViewRoot>
 </template>`;
@@ -247,58 +250,106 @@ const getPosition = (id: string) => itemIDs.indexOf(id) + 1
 }
 
 function windowSplitterSource(scenario: string): string {
-  const styles = `<style scoped>
-.split { display: grid; min-width: 0; min-height: 18rem; overflow: hidden; border: 1px solid #d9dbe4; border-radius: 0.75rem; }
-.horizontal { grid-template-columns: minmax(0, var(--sectile-slider-percentage)) 1px minmax(0, 1fr); }
-.vertical { grid-template-rows: minmax(0, var(--sectile-slider-percentage)) 1px minmax(0, 1fr); }
-[data-part="pane"] { min-width: 0; min-height: 0; overflow: auto; padding: 1rem; }
-[data-part="handle"] { position: relative; z-index: 1; border: 0; padding: 0; background: #d9dbe4; touch-action: none; }
-.horizontal > [data-part="handle"] { width: 1px; cursor: col-resize; }
-.vertical > [data-part="handle"] { width: 100%; height: 1px; cursor: row-resize; }
-</style>`;
-  if (scenario === 'nested-layout') {
+  if (scenario === 'nested-layout' || scenario === 'controlled') {
     return `<script setup lang="ts">
 import { ref } from 'vue'
+import { CheckCircle2, FileCode2, Folder, Search } from '@lucide/vue'
 import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter'
 
 const sidebarSize = ref('28')
 const editorSize = ref('68')
-<\/script>
+${scenario === 'controlled' ? '// Parent state remains the source of truth for both separators.\n' : ''}<\/script>
 
 <template>
-  <WindowSplitterRoot v-model="sidebarSize" orientation="horizontal" min="20" max="45" class="split horizontal">
-    <WindowSplitterPane side="before">Project files</WindowSplitterPane>
-    <WindowSplitterHandle aria-label="Resize project files" />
+  <WindowSplitterRoot v-model="sidebarSize" orientation="horizontal" :min="22" :max="46" :step="1">
+    <WindowSplitterPane side="before">
+      <header><strong>Workspace</strong><Search :size="16" aria-hidden="true" /></header>
+      <nav aria-label="Workspace files">
+        <span><Folder :size="16" aria-hidden="true" /> components</span>
+        <span><FileCode2 :size="16" aria-hidden="true" /> SplitPane.vue</span>
+        <span><Folder :size="16" aria-hidden="true" /> tests</span>
+      </nav>
+    </WindowSplitterPane>
+    <WindowSplitterHandle aria-label="Resize workspace and main panes" />
     <WindowSplitterPane side="after">
-      <WindowSplitterRoot v-model="editorSize" orientation="vertical" min="40" max="80" class="split vertical">
-        <WindowSplitterPane side="before">Editor</WindowSplitterPane>
-        <WindowSplitterHandle aria-label="Resize editor and preview" />
-        <WindowSplitterPane side="after">Preview</WindowSplitterPane>
+      <WindowSplitterRoot v-model="editorSize" orientation="vertical" :min="42" :max="78" :step="1">
+        <WindowSplitterPane side="before">
+          <header><strong>SplitPane.vue</strong><span>TypeScript</span></header>
+          <pre><code>const layout = {
+  sidebar: {{ sidebarSize }}%,
+  editor: {{ editorSize }}%
+}</code></pre>
+        </WindowSplitterPane>
+        <WindowSplitterHandle aria-label="Resize editor and preview panes" />
+        <WindowSplitterPane side="after">
+          <span><CheckCircle2 :size="17" aria-hidden="true" /> Preview ready</span>
+          <small>Both separators remain independently adjustable.</small>
+        </WindowSplitterPane>
       </WindowSplitterRoot>
     </WindowSplitterPane>
   </WindowSplitterRoot>
-</template>
-
-${styles}`;
+</template>`;
   }
 
-  const vertical = scenario === 'vertical';
-  return `<script setup lang="ts">
+  if (scenario === 'vertical') {
+    return `<script setup lang="ts">
 import { ref } from 'vue'
+import { SquareTerminal } from '@lucide/vue'
 import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter'
 
-const size = ref('${vertical ? '56' : '34'}')
+const size = ref('56')
 <\/script>
 
 <template>
-  <WindowSplitterRoot v-model="size" orientation="${vertical ? 'vertical' : 'horizontal'}" min="20" max="80" class="split ${vertical ? 'vertical' : 'horizontal'}">
-    <WindowSplitterPane side="before">${vertical ? 'Editor' : 'Project files'}</WindowSplitterPane>
-    <WindowSplitterHandle aria-label="Resize panes" />
-    <WindowSplitterPane side="after">${vertical ? 'Terminal' : 'Editor'}</WindowSplitterPane>
-  </WindowSplitterRoot>
-</template>
+  <WindowSplitterRoot v-model="size" orientation="vertical" :min="32" :max="76" :step="1">
+    <WindowSplitterPane side="before">
+      <header><strong>Editor</strong><span>main.ts</span></header>
+      <pre><code>import { createApp } from 'vue'
+import App from './App.vue'
 
-${styles}`;
+createApp(App).mount('#app')</code></pre>
+    </WindowSplitterPane>
+    <WindowSplitterHandle aria-label="Resize editor and terminal panes" />
+    <WindowSplitterPane side="after">
+      <header><span><SquareTerminal :size="15" aria-hidden="true" /> Terminal</span><span>zsh</span></header>
+      <p><span>$</span> pnpm test <span>18 passed</span></p>
+    </WindowSplitterPane>
+  </WindowSplitterRoot>
+</template>`;
+  }
+
+  return `<script setup lang="ts">
+import { ref } from 'vue'
+import { FileCode2, Folder, Search } from '@lucide/vue'
+import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter'
+
+const size = ref('34')
+const editorSource = \`<script setup lang="ts">
+const release = 'stable'
+<\\/script>
+
+<template>
+  <ReleaseCard :channel="release" />
+</template>\`
+<\/script>
+
+<template>
+  <WindowSplitterRoot v-model="size" orientation="horizontal" :min="22" :max="72" :step="1">
+    <WindowSplitterPane side="before">
+      <header><strong>Project</strong><Search :size="16" aria-hidden="true" /></header>
+      <nav aria-label="Project files">
+        <span><Folder :size="16" aria-hidden="true" /> src</span>
+        <span><FileCode2 :size="16" aria-hidden="true" /> App.vue</span>
+        <span><FileCode2 :size="16" aria-hidden="true" /> tokens.ts</span>
+      </nav>
+    </WindowSplitterPane>
+    <WindowSplitterHandle aria-label="Resize project and editor panes" />
+    <WindowSplitterPane side="after">
+      <header><strong>App.vue</strong><span>Saved</span></header>
+      <pre><code>{{ editorSource }}</code></pre>
+    </WindowSplitterPane>
+  </WindowSplitterRoot>
+</template>`;
 }
 
 function calendarSource(scenario: string): string {
@@ -581,17 +632,18 @@ const value = ref('${initial}')
 function timerSource(scenario: string): string {
   if (scenario === 'countdown') return `<script setup lang="ts">
 import { computed, ref } from 'vue'
+import { NumberField } from '@sectile/vue/number-field'
 import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '@sectile/vue/timer'
 
-const seconds = ref(10)
-const durationMs = computed(() => Math.max(1, seconds.value) * 1_000)
+const seconds = ref('10')
+const durationMs = computed(() => Math.max(1, Number(seconds.value)) * 1_000)
 const timerKey = ref(0)
 const autoStart = ref(false)
 function applyDuration() { autoStart.value = true; timerKey.value += 1 }
 <\/script>
 
 <template>
-  <label>Seconds <input v-model.number="seconds" type="number" min="1" /></label>
+  <label>Seconds <NumberField v-model="seconds" :policies="{ min: '1' }" /></label>
   <button @click="applyDuration">Apply & start</button>
   <TimerRoot :key="timerKey" countdown :start-ms="durationMs" :auto-start="autoStart"
     v-slot="{ running, completed, progress, valueMs }">
@@ -607,16 +659,17 @@ function applyDuration() { autoStart.value = true; timerKey.value += 1 }
 
   if (scenario === 'target') return `<script setup lang="ts">
 import { computed, ref } from 'vue'
+import { NumberField } from '@sectile/vue/number-field'
 import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '@sectile/vue/timer'
 
-const targetSeconds = ref(15)
-const targetMs = computed(() => Math.max(1, targetSeconds.value) * 1_000)
+const targetSeconds = ref('15')
+const targetMs = computed(() => Math.max(1, Number(targetSeconds.value)) * 1_000)
 const timerKey = ref(0)
 function applyTarget() { timerKey.value += 1 }
 <\/script>
 
 <template>
-  <label>Target seconds <input v-model.number="targetSeconds" type="number" min="1" /></label>
+  <label>Target seconds <NumberField v-model="targetSeconds" :policies="{ min: '1' }" /></label>
   <button @click="applyTarget">Apply target</button>
   <TimerRoot :key="timerKey" :target-ms="targetMs" v-slot="{ running, completed, progress, valueMs }">
     <TimerArea><TimerItem type="minutes" /><TimerSeparator>:</TimerSeparator><TimerItem type="seconds" /></TimerArea>
@@ -786,7 +839,9 @@ export function specializedVueCodeFor(component: string, scenario: string): stri
   if (component === 'tree-grid') return treeGridSource(scenario);
   if (component === 'tree-view') return treeViewSource(scenario);
   if (component === 'window-splitter') return windowSplitterSource(scenario);
-  return staticSources[component] ?? '';
+  const source = staticSources[component];
+  if (source === undefined) throw new Error(`Missing exact Vue example: ${component}/${scenario}`);
+  return source;
 }
 
 export function hasSpecializedVueCode(component: string): boolean {

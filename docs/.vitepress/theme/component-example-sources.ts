@@ -1,13 +1,69 @@
 import { catalogCodeFor } from './catalog-code.js';
 import { coreExampleCodeFor } from './core-example-code.js';
-import { domDemoCode } from './dom-demo-code.js';
+import { domExampleCodeFor } from './dom-demo-code.js';
+import { prepareExampleSource } from './example-source-format.js';
 import type { Host } from './host-preference.js';
 import { numberFieldExampleSources } from './number-field-examples.js';
-import { specializedVueCodeFor } from './specialized-example-code.js';
+import { hasSpecializedVueCode, specializedVueCodeFor } from './specialized-example-code.js';
 
-function pascal(value: string): string {
-  return value.split('-').map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`).join('');
-}
+const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze({
+  accordion: 'Accordion',
+  'alert-dialog': 'AlertDialog',
+  calendar: 'Calendar',
+  carousel: 'Carousel',
+  'cascade-select': 'CascadeSelect',
+  checkbox: 'Checkbox',
+  'checkbox-group': 'CheckboxGroup',
+  'color-picker': 'ColorPicker',
+  combobox: 'Combobox',
+  'date-field': 'DateField',
+  'date-picker': 'DatePicker',
+  'date-range-field': 'DateRangeField',
+  'date-range-picker': 'DateRangePicker',
+  'date-time-field': 'DateTimeField',
+  'date-time-picker': 'DateTimePicker',
+  'date-time-range-picker': 'DateTimeRangePicker',
+  dialog: 'Dialog',
+  disclosure: 'Disclosure',
+  editable: 'Editable',
+  feed: 'Feed',
+  grid: 'Grid',
+  listbox: 'Listbox',
+  menu: 'Menu',
+  'menu-button': 'MenuButton',
+  menubar: 'Menubar',
+  'month-picker': 'MonthPicker',
+  'month-range-picker': 'MonthRangePicker',
+  'multi-thumb-slider': 'MultiThumbSlider',
+  'navigation-menu': 'NavigationMenu',
+  pagination: 'Pagination',
+  popover: 'Popover',
+  'quantity-field': 'QuantityField',
+  'radio-group': 'RadioGroup',
+  'range-calendar': 'RangeCalendar',
+  rating: 'Rating',
+  select: 'Select',
+  slider: 'Slider',
+  'spin-button': 'SpinButton',
+  stepper: 'Stepper',
+  switch: 'Switch',
+  tabs: 'Tabs',
+  'tags-input': 'TagsInput',
+  text: 'Text',
+  'time-field': 'TimeField',
+  'time-range-field': 'TimeRangeField',
+  timer: 'Timer',
+  toast: 'Toast',
+  'toggle-button': 'ToggleButton',
+  'toggle-group': 'ToggleGroup',
+  toolbar: 'Toolbar',
+  tooltip: 'Tooltip',
+  'tree-grid': 'TreeGrid',
+  'tree-view': 'TreeView',
+  'window-splitter': 'WindowSplitter',
+  'year-picker': 'YearPicker',
+  'year-range-picker': 'YearRangePicker',
+});
 
 function terminalSource(component: string, scenario: string): string {
   if (component === 'form') {
@@ -58,33 +114,80 @@ form.handleKeyboardInput({ key: 'enter' })`,
     };
     return formExamples[scenario] ?? formExamples['profile'] ?? '';
   }
-  const name = pascal(component);
+  if (component === 'pin-input') return pinInputTerminalSource(scenario);
+  const name = terminalIntegrationNames[component];
+  if (name === undefined) throw new Error(`Missing exact Terminal example: ${component}/${scenario}`);
   const specifier = `@sectile/terminal/${component}`;
   return `import { create${name} } from '${specifier}'
 
-// The terminal adapter owns normalized keyboard input and state updates.
-const control = create${name}({
-  onUpdate: () => render(control.getSnapshot()),
+type Control = ReturnType<typeof create${name}>
+type State = ReturnType<Control['getSnapshot']>['state']
+
+// Sectile owns state and input semantics; the application owns the terminal UI.
+export function draw${name}(control: Control, render: (state: State) => string) {
+  const frame = render(control.getSnapshot().state)
+  process.stdout.write('\\u001B[2J\\u001B[H' + frame)
+}`;
+}
+
+function pinInputTerminalSource(scenario: string): string {
+  const length = scenario === 'custom-length' ? 4 : 6;
+  const masked = scenario === 'masked';
+  const placeholder = scenario === 'placeholders' ? '○' : '·';
+  const controlled = scenario === 'controlled';
+  return `import { createPinInput } from '@sectile/terminal/pin-input'
+
+const length = ${length}
+let value = ''
+const pinInput = createPinInput({
+  length,
+${scenario === 'readonly' ? "  defaultValue: '246810',\n" : ''}${scenario === 'disabled' ? "  defaultValue: '593174',\n" : ''}  disabled: ${scenario === 'disabled'},
+  readOnly: ${scenario === 'readonly'},
+${controlled ? `  value,
+  onValueChange: (nextValue) => {
+    value = nextValue
+    pinInput.syncControlledValue(value)
+  },
+` : ''}  onUpdate: draw,
 })
 
-function render(snapshot: unknown) {
-  process.stdout.write(JSON.stringify(snapshot))
-}`;
+function draw() {
+  const { values, current } = pinInput.getSnapshot().state
+  const cells = values.map((character, index) => {
+    const visible = character === '' ? '${placeholder}' : ${masked ? "'•'" : 'character'}
+    return index === current ? '[' + visible + ']' : ' ' + visible + ' '
+  })
+  process.stdout.write('\\u001B[2J\\u001B[HVerification code\\n\\n' + cells.join(' '))
+}
+
+${scenario === 'otp' ? "// Terminal hosts do not expose browser OTP autocomplete.\nprocess.stdout.write('OTP autocomplete is available only in browser hosts.\\n')\n" : ''}
+draw()`;
+}
+
+function exactVueSource(component: string, scenario: string): string {
+  const source = hasSpecializedVueCode(component)
+    ? specializedVueCodeFor(component, scenario)
+    : catalogCodeFor(component, scenario);
+  if (source === '') throw new Error(`Missing exact Vue example: ${component}/${scenario}`);
+  return source;
 }
 
 export function componentExampleSources(component: string, scenario: string): Partial<Record<Host, string>> {
   if (component === 'number-field') {
-    return {
-      ...numberFieldExampleSources(scenario),
+    const numberField = numberFieldExampleSources(scenario);
+    return Object.fromEntries(Object.entries({
+      ...numberField,
       core: coreExampleCodeFor(component, scenario),
-    };
+    }).map(([host, source]) => [host, prepareExampleSource(source, host as Host, component, scenario)]));
   }
-  const vue = specializedVueCodeFor(component, scenario) || catalogCodeFor(component, scenario);
-  const sources: Partial<Record<Host, string>> = {
+  const sources: Record<Host, string> = {
+    vue: exactVueSource(component, scenario),
     core: coreExampleCodeFor(component, scenario),
-    dom: domDemoCode[component] ?? '',
+    dom: domExampleCodeFor(component, scenario),
     terminal: terminalSource(component, scenario),
   };
-  if (vue !== '') sources.vue = vue;
-  return sources;
+  return Object.fromEntries(Object.entries(sources).map(([host, source]) => [
+    host,
+    prepareExampleSource(source, host as Host, component, scenario),
+  ]));
 }

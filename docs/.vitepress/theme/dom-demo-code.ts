@@ -509,7 +509,7 @@ const root = document.querySelector<HTMLElement>('[data-tree]')!
 const tree = createTreeView({
   root,
   nodes,
-  defaultExpandedValue: ['workspace'],
+  defaultExpandedValues: ['workspace'],
   defaultValue: ['src'],
   label: 'Workspace files',
 })
@@ -652,7 +652,6 @@ const inputs = [...root.querySelectorAll<HTMLInputElement>('input')]
 const pinInput = createPinInput({
   root,
   inputs,
-  defaultValue: '24',
   label: 'Verification code',
   onComplete: (value) => console.log('complete', value),
 })
@@ -819,4 +818,144 @@ for (const week of picker.getMonth()) for (const value of week) {
   grid.append(cell)
 }
 window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
+
+  'range-calendar': example('range-calendar', 'createRangeCalendar', `const root = document.querySelector<HTMLElement>('[data-range-calendar]')!
+const grid = root.querySelector<HTMLElement>('[data-date-grid]')!
+const calendar = createRangeCalendar({
+  root,
+  grid,
+  trigger: root.querySelector<HTMLButtonElement>('[data-date-trigger]')!,
+  defaultOpen: true,
+})
+
+for (const week of calendar.getMonth()) for (const value of week) {
+  const cell = document.createElement('button')
+  cell.textContent = String(value.day)
+  calendar.setCellAttributes(cell, value)
+  grid.append(cell)
+}
+window.addEventListener('pagehide', () => calendar.disconnect(), { once: true })`),
+
+  'month-picker': example('month-picker', 'createMonthPicker', `const root = document.querySelector<HTMLElement>('[data-month-picker]')!
+const grid = root.querySelector<HTMLElement>('[data-month-grid]')!
+const picker = createMonthPicker({
+  root,
+  grid,
+  trigger: root.querySelector<HTMLButtonElement>('[data-month-trigger]')!,
+  input: root.querySelector<HTMLInputElement>('[data-month-input]')!,
+})
+
+for (const month of picker.getYear().flat()) {
+  const cell = document.createElement('button')
+  cell.textContent = String(month.month)
+  cell.addEventListener('click', () => picker.handleEvent({
+    type: 'select', value: { year: month.year, month: month.month, day: 1 },
+  }))
+  grid.append(cell)
+}
+window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
+
+  'month-range-picker': example('month-range-picker', 'createMonthRangePicker', `const root = document.querySelector<HTMLElement>('[data-month-range-picker]')!
+const grid = root.querySelector<HTMLElement>('[data-month-grid]')!
+const picker = createMonthRangePicker({
+  root,
+  grid,
+  trigger: root.querySelector<HTMLButtonElement>('[data-month-trigger]')!,
+  startInput: root.querySelector<HTMLInputElement>('[data-start-month]')!,
+  endInput: root.querySelector<HTMLInputElement>('[data-end-month]')!,
+})
+
+for (const month of picker.getYear().flat()) {
+  const cell = document.createElement('button')
+  cell.textContent = String(month.month)
+  cell.addEventListener('click', () => picker.handleEvent({
+    type: 'select', value: { year: month.year, month: month.month, day: 1 },
+  }))
+  grid.append(cell)
+}
+window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
+
+  'year-picker': example('year-picker', 'createYearPicker', `const root = document.querySelector<HTMLElement>('[data-year-picker]')!
+const grid = root.querySelector<HTMLElement>('[data-year-grid]')!
+const picker = createYearPicker({
+  root,
+  grid,
+  trigger: root.querySelector<HTMLButtonElement>('[data-year-trigger]')!,
+  input: root.querySelector<HTMLInputElement>('[data-year-input]')!,
+})
+
+const activeYear = picker.getSnapshot().state.view.year
+for (const year of Array.from({ length: 12 }, (_, index) => activeYear - 5 + index)) {
+  const cell = document.createElement('button')
+  cell.textContent = String(year)
+  cell.addEventListener('click', () => picker.handleEvent({
+    type: 'select', value: { year, month: 1, day: 1 },
+  }))
+  grid.append(cell)
+}
+window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
+
+  'year-range-picker': example('year-range-picker', 'createYearRangePicker', `const root = document.querySelector<HTMLElement>('[data-year-range-picker]')!
+const grid = root.querySelector<HTMLElement>('[data-year-grid]')!
+const picker = createYearRangePicker({
+  root,
+  grid,
+  trigger: root.querySelector<HTMLButtonElement>('[data-year-trigger]')!,
+  startInput: root.querySelector<HTMLInputElement>('[data-start-year]')!,
+  endInput: root.querySelector<HTMLInputElement>('[data-end-year]')!,
+})
+
+const activeYear = picker.getSnapshot().state.calendar.view.year
+for (const year of Array.from({ length: 12 }, (_, index) => activeYear - 5 + index)) {
+  const cell = document.createElement('button')
+  cell.textContent = String(year)
+  cell.addEventListener('click', () => picker.handleEvent({
+    type: 'select', value: { year, month: 1, day: 1 },
+  }))
+  grid.append(cell)
+}
+window.addEventListener('pagehide', () => picker.disconnect(), { once: true })`),
 });
+
+function pinInputDomSource(scenario: string): string {
+  const length = scenario === 'custom-length' ? 4 : 6;
+  const masked = scenario === 'masked';
+  const placeholder = scenario === 'placeholders' ? "'○'" : "''";
+  const autocomplete = scenario === 'otp' ? 'one-time-code' : 'off';
+  const controlled = scenario === 'controlled';
+  const options = [
+    scenario === 'readonly' ? "  defaultValue: '246810'," : '',
+    scenario === 'disabled' ? "  defaultValue: '593174'," : '',
+    scenario === 'disabled' ? '  disabled: true,' : '',
+    scenario === 'readonly' ? '  readOnly: true,' : '',
+    controlled ? '  value,' : '',
+  ].filter(Boolean).join('\n');
+  const controlledSetup = controlled ? `let value = ''\nlet pinInput: ReturnType<typeof createPinInput>\n` : '';
+  const controlledChange = controlled
+    ? `  onValueChange: (nextValue) => {\n    value = nextValue\n    pinInput.syncControlledValue(value)\n  },\n`
+    : '';
+  return example('pin-input', 'createPinInput', `${controlledSetup}const root = document.querySelector<HTMLElement>('[data-pin-input]')!
+const inputs = [...root.querySelectorAll<HTMLInputElement>('input')].slice(0, ${length})
+
+for (const [index, input] of inputs.entries()) {
+  input.type = '${masked ? 'password' : 'text'}'
+  input.placeholder = ${placeholder}
+  input.autocomplete = index === 0 ? '${autocomplete}' : 'off'
+}
+
+${controlled ? 'pinInput' : 'const pinInput'} = createPinInput({
+  root,
+  inputs,
+  label: 'Verification code',
+${options === '' ? '' : `${options}\n`}${controlledChange}  onComplete: (value) => console.log('complete', value),
+})
+
+window.addEventListener('pagehide', () => pinInput.disconnect(), { once: true })`);
+}
+
+export function domExampleCodeFor(component: string, scenario: string): string {
+  if (component === 'pin-input') return pinInputDomSource(scenario);
+  const source = domDemoCode[component];
+  if (source === undefined) throw new Error(`Missing exact DOM example: ${component}/${scenario}`);
+  return source;
+}

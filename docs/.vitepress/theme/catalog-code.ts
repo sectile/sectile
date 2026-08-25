@@ -4,12 +4,22 @@ function sfc(imports: string, template: string, setup = ''): string {
     ? `\nimport { CalendarDays } from '@lucide/vue'`
     : '';
   const specifier = '@sectile/vue/' + moduleName(imports);
+  const templateLines = template.replaceAll('\r\n', '\n').split('\n');
+  while (templateLines[0]?.trim() === '') templateLines.shift();
+  while (templateLines.at(-1)?.trim() === '') templateLines.pop();
+  const indentation = templateLines
+    .filter((line) => line.trim() !== '')
+    .map((line) => line.match(/^\s*/u)?.[0].length ?? 0);
+  const width = indentation.length === 0 ? 0 : Math.min(...indentation);
+  const templateSource = templateLines
+    .map((line) => line === '' ? '' : `  ${line.slice(width).trimEnd()}`)
+    .join('\n');
   return `<script setup lang="ts">
 import { ${imports} } from '${specifier}'${iconSource}${setupSource}
 </script>
 
 <template>
-${template.trim()}
+${templateSource}
 </template>`;
 }
 
@@ -110,7 +120,7 @@ const advance = (id: string) => {
   ),
   'pin-input': sfc(
     'PinInputRoot, PinInputInput',
-    `  <PinInputRoot :length="6" default-value="12">
+    `  <PinInputRoot :length="6">
     <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
   </PinInputRoot>`,
   ),
@@ -561,10 +571,11 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <PopoverArrow />
       <PopoverTitle>Profile details</PopoverTitle>
       <PopoverDescription>Change the public display name.</PopoverDescription>
-      <label>Display name <input value="Sectile" /></label>
+      <label>Display name <TextField default-value="Sectile" /></label>
       <PopoverClose>Save changes</PopoverClose>
     </PopoverContent>
   </PopoverRoot>`,
+    `import { TextField } from '@sectile/vue/text'`,
   ),
   tooltip: sfc(
     'TooltipRoot, TooltipTrigger, TooltipContent, TooltipArrow',
@@ -759,16 +770,16 @@ const loadWindow = (direction: 'before' | 'after') => {
       {{ state.issues.map(issue => issue.message).join(' ') }}
     </FormSummary>
 
-    <FormField id="account-name" name="name">
+    <FormField id="account-name" :name="['account', 'name']" required>
       <FormLabel>Display name</FormLabel>
-      <input name="name" value="Mina Kim" minlength="2" required>
+      <TextField v-model.trim="displayName" minlength="2" />
       <FormDescription>Shown to teammates in release activity.</FormDescription>
       <FormMessage />
     </FormField>
 
-    <FormField id="account-email" name="email">
+    <FormField id="account-email" :name="['account', 'email']" required>
       <FormLabel>Email address</FormLabel>
-      <input name="email" value="mina@sectile.dev" type="email" required>
+      <TextField default-value="mina@sectile.dev" type="email" />
       <FormDescription>Receives deployment notifications.</FormDescription>
       <FormMessage />
     </FormField>
@@ -776,9 +787,17 @@ const loadWindow = (direction: 'before' | 'after') => {
     <button type="reset">Reset</button>
     <FormSubmit>Save settings</FormSubmit>
   </FormRoot>`,
-    `function saveAccount({ event, formData }: { event: SubmitEvent; formData: FormData }) {
+    `import { ref } from 'vue'
+import { TextField } from '@sectile/vue/text'
+
+const displayName = ref('Mina Kim')
+
+function saveAccount({ event, values }: {
+  event: SubmitEvent
+  values: Readonly<Record<string, unknown>>
+}) {
   event.preventDefault()
-  console.log(Object.fromEntries(formData))
+  console.log(values.account)
 }`,
   ),
   calendar: sfc(
@@ -933,7 +952,7 @@ const open = ref(false)`,
 });
 
 const menuButtonScenarioCode: Readonly<Record<string, string>> = Object.freeze({
-  actions: catalogCode['menu-button'] ?? '',
+  actions: requiredCatalogSource('menu-button'),
   nested: sfc(
     'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem, MenuSeparator, MenuSubContent',
     `  <MenuButtonRoot :items="items" default-open @invoke="lastAction = $event">
@@ -962,6 +981,21 @@ const items = [
   { id: 'markdown', parentID: 'export' },
   { id: 'csv', parentID: 'export' },
 ]`,
+  ),
+  controlled: sfc(
+    'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem',
+    `  <MenuButtonRoot v-model:open="open" :items="items">
+    <MenuButtonTrigger>{{ open ? 'Close actions' : 'Open actions' }}</MenuButtonTrigger>
+    <MenuButtonContent>
+      <MenuItem v-for="item in items" :key="item.id" :value="item.id">
+        {{ item.id }}
+      </MenuItem>
+    </MenuButtonContent>
+  </MenuButtonRoot>`,
+    `import { ref } from 'vue'
+
+const open = ref(false)
+const items = [{ id: 'duplicate', parentID: null }, { id: 'archive', parentID: null }]`,
   ),
 });
 
@@ -1008,6 +1042,19 @@ const items = [
   { id: 'share', parentID: null },
 ]`,
   ),
+  disabled: sfc(
+    'MenuRoot, MenuItem',
+    `  <MenuRoot :items="items" :disabled-items="['deploy']">
+    <MenuItem value="preview">Preview release</MenuItem>
+    <MenuItem value="deploy">Deploy (unavailable)</MenuItem>
+    <MenuItem value="cancel">Cancel release</MenuItem>
+  </MenuRoot>`,
+    `const items = [
+  { id: 'preview', parentID: null },
+  { id: 'deploy', parentID: null },
+  { id: 'cancel', parentID: null },
+]`,
+  ),
 });
 
 const toolbarScenarioCode: Readonly<Record<string, string>> = Object.freeze({
@@ -1034,6 +1081,19 @@ const lastAction = ref('')`,
     <ToolbarItem value="upload">Upload</ToolbarItem>
     </ToolbarRoot>
   <p role="status">Active tool: {{ activeTool }}</p>`,
+    `import { ref } from 'vue'
+
+const items = ['select', 'comment', 'upload']
+const activeTool = ref('select')`,
+  ),
+  'controlled-focus': sfc(
+    'ToolbarRoot, ToolbarItem',
+    `  <ToolbarRoot v-model="activeTool" :items="items" label="Canvas tools">
+    <ToolbarItem v-for="item in items" :key="item" :value="item">
+      {{ item }}
+    </ToolbarItem>
+  </ToolbarRoot>
+  <button type="button" @click="activeTool = 'comment'">Focus comment</button>`,
     `import { ref } from 'vue'
 
 const items = ['select', 'comment', 'upload']
@@ -1092,10 +1152,27 @@ const navigationMenuScenarioCode: Readonly<Record<string, string>> = Object.free
   { id: 'github', parentID: null },
 ]`,
   ),
+  disabled: sfc(
+    'NavigationMenuRoot, NavigationMenuList, NavigationMenuItem, NavigationMenuLink',
+    `  <NavigationMenuRoot :items="items" :disabled-items="['billing']" label="Account navigation">
+    <NavigationMenuList>
+      <NavigationMenuItem>
+        <NavigationMenuLink value="profile" as="a" href="/profile">Profile</NavigationMenuLink>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink value="billing" as="span">Billing unavailable</NavigationMenuLink>
+      </NavigationMenuItem>
+    </NavigationMenuList>
+  </NavigationMenuRoot>`,
+    `const items = [
+  { id: 'profile', parentID: null },
+  { id: 'billing', parentID: null },
+]`,
+  ),
 });
 
 const popoverScenarioCode: Readonly<Record<string, string>> = Object.freeze({
-  anchored: catalogCode['popover'] ?? '',
+  anchored: catalogCode['popover']!,
   collision: sfc(
     'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
     `  <PopoverRoot
@@ -1132,7 +1209,98 @@ const open = ref(false)`,
   ),
 });
 
+const pinInputScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  'verification-code': sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" label="Verification code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  'custom-length': sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="4" label="Four-digit PIN">
+    <PinInputInput v-for="index in 4" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  masked: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" mask label="Security code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  placeholders: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" label="Access code">
+    <PinInputInput
+      v-for="index in 6"
+      :key="index"
+      :index="index - 1"
+      placeholder="○"
+    />
+  </PinInputRoot>`,
+  ),
+  otp: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" :otp="true" label="One-time code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  readonly: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" default-value="246810" readonly label="Assigned code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  disabled: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot :length="6" default-value="593174" disabled label="Unavailable code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>`,
+  ),
+  controlled: sfc(
+    'PinInputRoot, PinInputInput',
+    `  <PinInputRoot v-model="value" :length="6" label="Controlled code">
+    <PinInputInput v-for="index in 6" :key="index" :index="index - 1" />
+  </PinInputRoot>
+  <p>Current value: {{ value || 'Empty' }}</p>`,
+    `import { ref } from 'vue'
+
+const value = ref('')`,
+  ),
+});
+
+function exactScenarios(source: string, names: readonly string[]): Readonly<Record<string, string>> {
+  return Object.freeze(Object.fromEntries(names.map((name) => [name, source])));
+}
+
+function requiredCatalogSource(component: string): string {
+  const source = catalogCode[component];
+  if (source === undefined) throw new Error(`Missing catalog Vue source: ${component}`);
+  return source;
+}
+
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
+  carousel: exactScenarios(requiredCatalogSource('carousel'), ['wrapping', 'bounded', 'paused', 'controlled']),
+  'checkbox-group': exactScenarios(requiredCatalogSource('checkbox-group'), ['release-channels', 'disabled-choice', 'controlled']),
+  combobox: exactScenarios(requiredCatalogSource('combobox'), ['prefix', 'contains', 'ime', 'controlled']),
+  'date-time-picker': exactScenarios(requiredCatalogSource('date-time-picker'), ['schedule', 'morning', 'controlled']),
+  'date-time-range-picker': exactScenarios(requiredCatalogSource('date-time-range-picker'), ['maintenance', 'office-hours', 'controlled']),
+  'date-picker': exactScenarios(requiredCatalogSource('date-picker'), ['single', 'weekdays', 'controlled']),
+  'date-range-picker': exactScenarios(requiredCatalogSource('date-range-picker'), ['booking', 'bounded', 'controlled']),
+  'range-calendar': exactScenarios(requiredCatalogSource('range-calendar'), ['booking', 'bounded', 'controlled']),
+  'month-picker': exactScenarios(requiredCatalogSource('month-picker'), ['billing-month', 'fiscal-year', 'controlled']),
+  'month-range-picker': exactScenarios(requiredCatalogSource('month-range-picker'), ['reporting-period', 'bounded', 'controlled']),
+  'year-picker': exactScenarios(requiredCatalogSource('year-picker'), ['graduation-year', 'planning-window', 'controlled']),
+  'year-range-picker': exactScenarios(requiredCatalogSource('year-range-picker'), ['roadmap-horizon', 'bounded', 'controlled']),
+  grid: exactScenarios(requiredCatalogSource('grid'), ['selectable', 'disabled-wrap', 'editable', 'controlled']),
+  menubar: exactScenarios(requiredCatalogSource('menubar'), ['application', 'disabled-root', 'typeahead']),
+  pagination: exactScenarios(requiredCatalogSource('pagination'), ['compact', 'long-range', 'page-size', 'pages-only', 'controlled']),
+  'quantity-field': exactScenarios(requiredCatalogSource('quantity-field'), ['length', 'temperature', 'calculator', 'compound', 'controlled']),
+  rating: exactScenarios(requiredCatalogSource('rating'), ['five-star', 'required', 'controlled']),
+  select: exactScenarios(requiredCatalogSource('select'), ['environment', 'disabled-option', 'controlled']),
+  stepper: exactScenarios(requiredCatalogSource('stepper'), ['checkout', 'gated-step', 'controlled']),
+  'tags-input': exactScenarios(requiredCatalogSource('tags-input'), ['skills', 'limited', 'controlled']),
+  tooltip: exactScenarios(requiredCatalogSource('tooltip'), ['focus-hover', 'initially-open', 'controlled']),
   form: Object.freeze({
     profile: `<script setup lang="ts">
 import { ref } from 'vue'
@@ -1191,8 +1359,10 @@ import {
   SelectTrigger,
 } from '@sectile/vue/select'
 import { SwitchRoot, SwitchThumb } from '@sectile/vue/switch'
+import { ref } from 'vue'
 
 const channels = ['all', 'mentions', 'none']
+const weeklyDigest = ref(true)
 
 function saveNotifications(details: {
   event: SubmitEvent
@@ -1221,7 +1391,10 @@ function saveNotifications(details: {
 
     <FormField :name="['notifications', 'digest']">
       <FormLabel>Weekly digest</FormLabel>
-      <SwitchRoot value="enabled"><SwitchThumb /></SwitchRoot>
+      <SwitchRoot v-model="weeklyDigest" value="enabled">
+        <SwitchThumb />
+      </SwitchRoot>
+      <FormDescription>A Monday summary of deployments and approvals.</FormDescription>
     </FormField>
     <FormSubmit>Save notifications</FormSubmit>
   </FormRoot>
@@ -1235,6 +1408,16 @@ import {
   FormRoot,
   FormSubmit,
 } from '@sectile/vue/form'
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from '@sectile/vue/select'
+import { TextField } from '@sectile/vue/text'
+
+const roles = ['member', 'admin']
 
 function inviteMember(details: {
   event: SubmitEvent
@@ -1249,16 +1432,20 @@ function inviteMember(details: {
   <FormRoot @submit="inviteMember">
     <FormField id="invite-email" :name="['invitation', 'email']" required>
       <FormLabel>Email address</FormLabel>
-      <input type="email" autocomplete="email">
+      <TextField type="email" autocomplete="email" />
       <FormDescription>We will send one workspace invitation.</FormDescription>
       <FormMessage />
     </FormField>
     <FormField id="invite-role" :name="['invitation', 'role']" required>
       <FormLabel>Role</FormLabel>
-      <select>
-        <option value="member">Member</option>
-        <option value="admin">Admin</option>
-      </select>
+      <SelectRoot :items="roles" default-value="member" label="Role">
+        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="role in roles" :key="role" :value="role">
+            {{ role }}
+          </SelectItem>
+        </SelectContent>
+      </SelectRoot>
       <FormMessage />
     </FormField>
     <FormSubmit>Send invitation</FormSubmit>
@@ -1271,6 +1458,7 @@ function inviteMember(details: {
   'menu-button': menuButtonScenarioCode,
   'navigation-menu': navigationMenuScenarioCode,
   popover: popoverScenarioCode,
+  'pin-input': pinInputScenarioCode,
   toolbar: toolbarScenarioCode,
 });
 
@@ -1279,5 +1467,9 @@ function inviteMember(details: {
  * Scenario overrides must express real API or structure differences, not presentation-only labels.
  */
 export function catalogCodeFor(component: string, scenario: string): string {
-  return scenarioCode[component]?.[scenario] ?? catalogCode[component] ?? '';
+  const source = scenarioCode[component]?.[scenario];
+  if (source === undefined || source === '') {
+    throw new Error(`Missing exact Vue example: ${component}/${scenario}`);
+  }
+  return source;
 }

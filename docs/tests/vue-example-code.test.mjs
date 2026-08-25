@@ -82,7 +82,9 @@ test('Tree view code teaches distinct exploration and review workflows', () => {
   const explorer = specializedVueCodeFor('tree-view', 'expanded');
   const review = specializedVueCodeFor('tree-view', 'multiple');
   assert.match(explorer, /:default-value="\['settings'\]"/);
-  assert.match(explorer, /expandedValue\.includes\('dashboard'\)/);
+  assert.match(explorer, /v-model:expanded-values="expandedValues"/);
+  assert.match(explorer, /TreeViewGroup for="dashboard"/);
+  assert.doesNotMatch(explorer, /TreeViewGroup v-if|expandedValues?\.includes/u);
   assert.match(review, /\['overview', 'settings', 'tokens'\]/);
   assert.match(review, /value\.length.*files selected/);
   assert.notEqual(explorer, review);

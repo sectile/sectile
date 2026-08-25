@@ -543,8 +543,8 @@ function createRatingDemo(host) {
 function createPinInputDemo(host) {
   return scenarioDemo(host, [
     { title: 'Verification code', length: 6, value: '', mode: 'numeric', controlled: false },
-    { title: 'Prefilled access code', length: 4, value: '24', mode: 'numeric', controlled: false },
-    { title: 'Controlled security key', length: 5, value: 'A7', mode: 'alphanumeric', controlled: true },
+    { title: 'Four-digit PIN', length: 4, value: '', mode: 'numeric', controlled: false },
+    { title: 'Controlled security key', length: 5, value: '', mode: 'alphanumeric', controlled: true },
   ], (scenario) => {
     let value = scenario.value; let completed = null; let connection;
     connection = createPinInput({ ...scenario.interaction, length: scenario.length, policies: { accept: (part) => scenario.mode === 'numeric' ? /^\d$/.test(part) : /^[a-z0-9]$/i.test(part) }, ...(scenario.controlled ? { value, onValueChange: (next) => { value = next; queueMicrotask(() => connection.syncControlledValue(value)); } } : { defaultValue: value }), onComplete: (next) => { completed = next; host.render(); }, onUpdate: host.render });
@@ -2583,26 +2583,27 @@ function createTreeViewDemo(host) {
     ['utils', 'utils'], ['format', 'format.ts'], ['readme', 'README.md'],
   ]);
   return scenarioDemo(host, [
-    { title: 'Expanded source explorer', expanded: ['src', 'components'], selected: [], disabled: [], controlled: false },
-    { title: 'Collapsed workspace roots', expanded: [], selected: ['readme'], disabled: [], controlled: false },
-    { title: 'Multiple file selection', expanded: ['src', 'components', 'utils'], selected: ['button', 'format'], disabled: [], controlled: false },
-    { title: 'Unavailable subtree', expanded: ['src'], selected: [], disabled: ['utils'], controlled: false },
-    { title: 'Controlled source explorer', expanded: ['src'], selected: ['readme'], disabled: [], controlled: true },
+    { title: 'Expanded source explorer', selectionMode: 'single', expanded: ['src', 'components'], selected: [], disabled: [], controlled: false },
+    { title: 'Collapsed workspace roots', selectionMode: 'single', expanded: [], selected: ['readme'], disabled: [], controlled: false },
+    { title: 'Multiple file selection', selectionMode: 'multiple', expanded: ['src', 'components', 'utils'], selected: ['button', 'format'], disabled: [], controlled: false },
+    { title: 'Unavailable subtree', selectionMode: 'single', expanded: ['src'], selected: [], disabled: ['utils'], controlled: false },
+    { title: 'Controlled source explorer', selectionMode: 'single', expanded: ['src'], selected: ['readme'], disabled: [], controlled: true },
   ], (scenario) => {
-    let expandedValue = [...scenario.expanded]; let value = [...scenario.selected]; let highlightedValue = 'src'; let connection;
+    let expandedValues = [...scenario.expanded]; let value = [...scenario.selected]; let highlightedValue = 'src'; let connection;
     connection = createTreeView({
       ...scenario.interaction,
       nodes,
+      selectionMode: scenario.selectionMode,
       disabledItems: scenario.disabled,
       ...(scenario.controlled ? {
-        expandedValue, value, highlightedValue,
-        onExpandedValueChange: ({ value: next }) => { expandedValue = [...next]; queueMicrotask(sync); },
+        expandedValues, value, highlightedValue,
+        onExpandedValuesChange: ({ value: next }) => { expandedValues = [...next]; queueMicrotask(sync); },
         onValueChange: ({ value: next }) => { value = [...next]; queueMicrotask(sync); },
         onHighlightedValueChange: ({ value: next }) => { highlightedValue = next; queueMicrotask(sync); },
-      } : { defaultExpandedValue: expandedValue, defaultValue: value, defaultHighlightedValue: highlightedValue }),
+      } : { defaultExpandedValues: expandedValues, defaultValue: value, defaultHighlightedValue: highlightedValue }),
       onTransition: host.record, onUpdate: host.render,
     });
-    function sync() { connection.syncControlledValues({ expandedValue, value, highlightedValue }); }
+    function sync() { connection.syncControlledValues({ expandedValues, value, highlightedValue }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
