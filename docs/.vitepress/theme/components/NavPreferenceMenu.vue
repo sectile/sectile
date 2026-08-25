@@ -4,6 +4,7 @@ import {
   SelectContent,
   SelectItem,
   SelectItemIndicator,
+  SelectPortal,
   SelectRoot,
   SelectTrigger,
 } from '@sectile/vue/select';
@@ -34,6 +35,7 @@ const values = computed(() => props.options.map((option) => option.value));
     :items="values"
     :model-value="props.modelValue"
     :label="props.accessibleLabel"
+    :position="!props.mobile"
     :text-value="(value) => props.options.find((option) => option.value === value)?.label ?? value"
     class="nav-preference-menu"
     :class="{ 'nav-preference-menu--mobile': props.mobile }"
@@ -46,17 +48,19 @@ const values = computed(() => props.options.map((option) => option.value));
       <ChevronDown class="nav-preference-menu__chevron" :size="14" aria-hidden="true" />
     </SelectTrigger>
 
-    <SelectContent class="nav-preference-menu__items">
-      <SelectItem
-        v-for="option in props.options"
-        :key="option.value"
-        :value="option.value"
-        class="nav-preference-menu__item"
-      >
-        {{ option.label }}
-        <SelectItemIndicator><Check :size="15" aria-hidden="true" /></SelectItemIndicator>
-      </SelectItem>
-    </SelectContent>
+    <SelectPortal :disabled="props.mobile">
+      <SelectContent class="nav-preference-menu__items">
+        <SelectItem
+          v-for="option in props.options"
+          :key="option.value"
+          :value="option.value"
+          class="nav-preference-menu__item"
+        >
+          {{ option.label }}
+          <SelectItemIndicator><Check :size="15" aria-hidden="true" /></SelectItemIndicator>
+        </SelectItem>
+      </SelectContent>
+    </SelectPortal>
   </SelectRoot>
 </template>
 
@@ -113,11 +117,11 @@ const values = computed(() => props.options.map((option) => option.value));
 }
 
 .nav-preference-menu__items {
-  position: absolute;
   z-index: 20;
-  top: calc(var(--vp-nav-height) / 2 + 20px);
-  right: 0;
-  min-width: 144px;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: max(144px, var(--sectile-floating-anchor-width, 0px));
+  max-width: calc(100vw - 16px);
   max-height: calc(100vh - var(--vp-nav-height));
   overflow-y: auto;
   border: 1px solid var(--vp-c-divider);
