@@ -239,8 +239,12 @@ export {
   StepperContent,
   StepperIndicator,
   StepperList,
+  StepperNext,
+  StepperPrevious,
   StepperRoot,
   StepperStep,
+  type StepperActionProps,
+  type StepperActionSlotProps,
   type StepperRootProps,
 } from './stepper.js';
 export {
