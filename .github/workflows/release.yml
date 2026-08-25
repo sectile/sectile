@@ -89,15 +89,13 @@ jobs:
       - run: pnpm release:check "$RELEASE_TAG"
       - name: Publish npm packages with OIDC
         run: pnpm publish:packages
-      - name: Check for an existing GitHub release
-        id: github-release
-        continue-on-error: true
-        run: gh release view "$RELEASE_TAG"
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Create GitHub release
-        if: steps.github-release.outcome == 'failure'
-        run: gh release create "$RELEASE_TAG" --verify-tag --notes-from-tag --title "$RELEASE_TAG"
+      - name: Ensure GitHub release
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "GitHub release ${RELEASE_TAG} already exists"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --notes-from-tag --title "$RELEASE_TAG"
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
 
