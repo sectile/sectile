@@ -1,6 +1,6 @@
 {
   "name": "@sectile/dom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DOM host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",
@@ -28,14 +28,46 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
-    "./checkbox-group": { "types": "./dist/checkbox-group.d.ts", "import": "./dist/checkbox-group.js", "default": "./dist/checkbox-group.js" },
-    "./select": { "types": "./dist/select.d.ts", "import": "./dist/select.js", "default": "./dist/select.js" },
-    "./pagination": { "types": "./dist/pagination.d.ts", "import": "./dist/pagination.js", "default": "./dist/pagination.js" },
-    "./stepper": { "types": "./dist/stepper.d.ts", "import": "./dist/stepper.js", "default": "./dist/stepper.js" },
-    "./rating": { "types": "./dist/rating.d.ts", "import": "./dist/rating.js", "default": "./dist/rating.js" },
-    "./pin-input": { "types": "./dist/pin-input.d.ts", "import": "./dist/pin-input.js", "default": "./dist/pin-input.js" },
-    "./tags-input": { "types": "./dist/tags-input.d.ts", "import": "./dist/tags-input.js", "default": "./dist/tags-input.js" },
-    "./grid": { "types": "./dist/grid.d.ts", "import": "./dist/grid.js", "default": "./dist/grid.js" },
+    "./checkbox-group": {
+      "types": "./dist/checkbox-group.d.ts",
+      "import": "./dist/checkbox-group.js",
+      "default": "./dist/checkbox-group.js"
+    },
+    "./select": {
+      "types": "./dist/select.d.ts",
+      "import": "./dist/select.js",
+      "default": "./dist/select.js"
+    },
+    "./pagination": {
+      "types": "./dist/pagination.d.ts",
+      "import": "./dist/pagination.js",
+      "default": "./dist/pagination.js"
+    },
+    "./stepper": {
+      "types": "./dist/stepper.d.ts",
+      "import": "./dist/stepper.js",
+      "default": "./dist/stepper.js"
+    },
+    "./rating": {
+      "types": "./dist/rating.d.ts",
+      "import": "./dist/rating.js",
+      "default": "./dist/rating.js"
+    },
+    "./pin-input": {
+      "types": "./dist/pin-input.d.ts",
+      "import": "./dist/pin-input.js",
+      "default": "./dist/pin-input.js"
+    },
+    "./tags-input": {
+      "types": "./dist/tags-input.d.ts",
+      "import": "./dist/tags-input.js",
+      "default": "./dist/tags-input.js"
+    },
+    "./grid": {
+      "types": "./dist/grid.d.ts",
+      "import": "./dist/grid.js",
+      "default": "./dist/grid.js"
+    },
     "./tabs": {
       "types": "./dist/tabs.d.ts",
       "import": "./dist/tabs.js",
@@ -61,44 +93,196 @@
       "import": "./dist/accordion.js",
       "default": "./dist/accordion.js"
     },
-    "./checkbox": { "types": "./dist/checkbox.d.ts", "import": "./dist/checkbox.js", "default": "./dist/checkbox.js" },
-    "./switch": { "types": "./dist/switch.d.ts", "import": "./dist/switch.js", "default": "./dist/switch.js" },
-    "./toggle-button": { "types": "./dist/toggle-button.d.ts", "import": "./dist/toggle-button.js", "default": "./dist/toggle-button.js" },
-    "./toggle-group": { "types": "./dist/toggle-group.d.ts", "import": "./dist/toggle-group.js", "default": "./dist/toggle-group.js" },
-    "./window-splitter": { "types": "./dist/window-splitter.d.ts", "import": "./dist/window-splitter.js", "default": "./dist/window-splitter.js" },
-    "./spin-button": { "types": "./dist/spin-button.d.ts", "import": "./dist/spin-button.js", "default": "./dist/spin-button.js" },
-    "./number-field": { "types": "./dist/number-field.d.ts", "import": "./dist/number-field.js", "default": "./dist/number-field.js" },
-    "./date-field": { "types": "./dist/date-field.d.ts", "import": "./dist/date-field.js", "default": "./dist/date-field.js" },
-    "./date-time-field": { "types": "./dist/date-time-field.d.ts", "import": "./dist/date-time-field.js", "default": "./dist/date-time-field.js" },
-    "./time-field": { "types": "./dist/time-field.d.ts", "import": "./dist/time-field.js", "default": "./dist/time-field.js" },
-    "./time-range-field": { "types": "./dist/time-range-field.d.ts", "import": "./dist/time-range-field.js", "default": "./dist/time-range-field.js" },
-    "./date-picker": { "types": "./dist/date-picker.d.ts", "import": "./dist/date-picker.js", "default": "./dist/date-picker.js" },
-    "./date-range-picker": { "types": "./dist/date-range-picker.d.ts", "import": "./dist/date-range-picker.js", "default": "./dist/date-range-picker.js" },
-    "./range-calendar": { "types": "./dist/range-calendar.d.ts", "import": "./dist/range-calendar.js", "default": "./dist/range-calendar.js" },
-    "./month-picker": { "types": "./dist/month-picker.d.ts", "import": "./dist/month-picker.js", "default": "./dist/month-picker.js" },
-    "./month-range-picker": { "types": "./dist/month-range-picker.d.ts", "import": "./dist/month-range-picker.js", "default": "./dist/month-range-picker.js" },
-    "./year-picker": { "types": "./dist/year-picker.d.ts", "import": "./dist/year-picker.js", "default": "./dist/year-picker.js" },
-    "./year-range-picker": { "types": "./dist/year-range-picker.d.ts", "import": "./dist/year-range-picker.js", "default": "./dist/year-range-picker.js" },
-    "./date-time-picker": { "types": "./dist/date-time-picker.d.ts", "import": "./dist/date-time-picker.js", "default": "./dist/date-time-picker.js" },
-    "./date-time-range-picker": { "types": "./dist/date-time-range-picker.d.ts", "import": "./dist/date-time-range-picker.js", "default": "./dist/date-time-range-picker.js" },
-    "./quantity-field": { "types": "./dist/quantity-field.d.ts", "import": "./dist/quantity-field.js", "default": "./dist/quantity-field.js" },
-    "./dialog": { "types": "./dist/dialog.d.ts", "import": "./dist/dialog.js", "default": "./dist/dialog.js" },
-    "./popover": { "types": "./dist/popover.d.ts", "import": "./dist/popover.js", "default": "./dist/popover.js" },
-    "./toast": { "types": "./dist/toast.d.ts", "import": "./dist/toast.js", "default": "./dist/toast.js" },
-    "./timer": { "types": "./dist/timer.d.ts", "import": "./dist/timer.js", "default": "./dist/timer.js" },
-    "./cascade-select": { "types": "./dist/cascade-select.d.ts", "import": "./dist/cascade-select.js", "default": "./dist/cascade-select.js" },
-    "./color-picker": { "types": "./dist/color-picker.d.ts", "import": "./dist/color-picker.js", "default": "./dist/color-picker.js" },
-    "./alert-dialog": { "types": "./dist/alert-dialog.d.ts", "import": "./dist/alert-dialog.js", "default": "./dist/alert-dialog.js" },
-    "./tooltip": { "types": "./dist/tooltip.d.ts", "import": "./dist/tooltip.js", "default": "./dist/tooltip.js" },
-    "./multi-thumb-slider": { "types": "./dist/multi-thumb-slider.d.ts", "import": "./dist/multi-thumb-slider.js", "default": "./dist/multi-thumb-slider.js" },
-    "./menu": { "types": "./dist/menu.d.ts", "import": "./dist/menu.js", "default": "./dist/menu.js" },
-    "./menubar": { "types": "./dist/menubar.d.ts", "import": "./dist/menubar.js", "default": "./dist/menubar.js" },
-    "./navigation-menu": { "types": "./dist/navigation-menu.d.ts", "import": "./dist/navigation-menu.js", "default": "./dist/navigation-menu.js" },
-    "./menu-button": { "types": "./dist/menu-button.d.ts", "import": "./dist/menu-button.js", "default": "./dist/menu-button.js" },
-    "./carousel": { "types": "./dist/carousel.d.ts", "import": "./dist/carousel.js", "default": "./dist/carousel.js" },
-    "./feed": { "types": "./dist/feed.d.ts", "import": "./dist/feed.js", "default": "./dist/feed.js" },
-    "./form": { "types": "./dist/form.d.ts", "import": "./dist/form.js", "default": "./dist/form.js" },
-    "./reorder": { "types": "./dist/reorder.d.ts", "import": "./dist/reorder.js", "default": "./dist/reorder.js" },
+    "./checkbox": {
+      "types": "./dist/checkbox.d.ts",
+      "import": "./dist/checkbox.js",
+      "default": "./dist/checkbox.js"
+    },
+    "./switch": {
+      "types": "./dist/switch.d.ts",
+      "import": "./dist/switch.js",
+      "default": "./dist/switch.js"
+    },
+    "./toggle-button": {
+      "types": "./dist/toggle-button.d.ts",
+      "import": "./dist/toggle-button.js",
+      "default": "./dist/toggle-button.js"
+    },
+    "./toggle-group": {
+      "types": "./dist/toggle-group.d.ts",
+      "import": "./dist/toggle-group.js",
+      "default": "./dist/toggle-group.js"
+    },
+    "./window-splitter": {
+      "types": "./dist/window-splitter.d.ts",
+      "import": "./dist/window-splitter.js",
+      "default": "./dist/window-splitter.js"
+    },
+    "./spin-button": {
+      "types": "./dist/spin-button.d.ts",
+      "import": "./dist/spin-button.js",
+      "default": "./dist/spin-button.js"
+    },
+    "./number-field": {
+      "types": "./dist/number-field.d.ts",
+      "import": "./dist/number-field.js",
+      "default": "./dist/number-field.js"
+    },
+    "./date-field": {
+      "types": "./dist/date-field.d.ts",
+      "import": "./dist/date-field.js",
+      "default": "./dist/date-field.js"
+    },
+    "./date-time-field": {
+      "types": "./dist/date-time-field.d.ts",
+      "import": "./dist/date-time-field.js",
+      "default": "./dist/date-time-field.js"
+    },
+    "./time-field": {
+      "types": "./dist/time-field.d.ts",
+      "import": "./dist/time-field.js",
+      "default": "./dist/time-field.js"
+    },
+    "./time-range-field": {
+      "types": "./dist/time-range-field.d.ts",
+      "import": "./dist/time-range-field.js",
+      "default": "./dist/time-range-field.js"
+    },
+    "./date-picker": {
+      "types": "./dist/date-picker.d.ts",
+      "import": "./dist/date-picker.js",
+      "default": "./dist/date-picker.js"
+    },
+    "./date-range-picker": {
+      "types": "./dist/date-range-picker.d.ts",
+      "import": "./dist/date-range-picker.js",
+      "default": "./dist/date-range-picker.js"
+    },
+    "./range-calendar": {
+      "types": "./dist/range-calendar.d.ts",
+      "import": "./dist/range-calendar.js",
+      "default": "./dist/range-calendar.js"
+    },
+    "./month-picker": {
+      "types": "./dist/month-picker.d.ts",
+      "import": "./dist/month-picker.js",
+      "default": "./dist/month-picker.js"
+    },
+    "./month-range-picker": {
+      "types": "./dist/month-range-picker.d.ts",
+      "import": "./dist/month-range-picker.js",
+      "default": "./dist/month-range-picker.js"
+    },
+    "./year-picker": {
+      "types": "./dist/year-picker.d.ts",
+      "import": "./dist/year-picker.js",
+      "default": "./dist/year-picker.js"
+    },
+    "./year-range-picker": {
+      "types": "./dist/year-range-picker.d.ts",
+      "import": "./dist/year-range-picker.js",
+      "default": "./dist/year-range-picker.js"
+    },
+    "./date-time-picker": {
+      "types": "./dist/date-time-picker.d.ts",
+      "import": "./dist/date-time-picker.js",
+      "default": "./dist/date-time-picker.js"
+    },
+    "./date-time-range-picker": {
+      "types": "./dist/date-time-range-picker.d.ts",
+      "import": "./dist/date-time-range-picker.js",
+      "default": "./dist/date-time-range-picker.js"
+    },
+    "./quantity-field": {
+      "types": "./dist/quantity-field.d.ts",
+      "import": "./dist/quantity-field.js",
+      "default": "./dist/quantity-field.js"
+    },
+    "./dialog": {
+      "types": "./dist/dialog.d.ts",
+      "import": "./dist/dialog.js",
+      "default": "./dist/dialog.js"
+    },
+    "./popover": {
+      "types": "./dist/popover.d.ts",
+      "import": "./dist/popover.js",
+      "default": "./dist/popover.js"
+    },
+    "./toast": {
+      "types": "./dist/toast.d.ts",
+      "import": "./dist/toast.js",
+      "default": "./dist/toast.js"
+    },
+    "./timer": {
+      "types": "./dist/timer.d.ts",
+      "import": "./dist/timer.js",
+      "default": "./dist/timer.js"
+    },
+    "./cascade-select": {
+      "types": "./dist/cascade-select.d.ts",
+      "import": "./dist/cascade-select.js",
+      "default": "./dist/cascade-select.js"
+    },
+    "./color-picker": {
+      "types": "./dist/color-picker.d.ts",
+      "import": "./dist/color-picker.js",
+      "default": "./dist/color-picker.js"
+    },
+    "./alert-dialog": {
+      "types": "./dist/alert-dialog.d.ts",
+      "import": "./dist/alert-dialog.js",
+      "default": "./dist/alert-dialog.js"
+    },
+    "./tooltip": {
+      "types": "./dist/tooltip.d.ts",
+      "import": "./dist/tooltip.js",
+      "default": "./dist/tooltip.js"
+    },
+    "./multi-thumb-slider": {
+      "types": "./dist/multi-thumb-slider.d.ts",
+      "import": "./dist/multi-thumb-slider.js",
+      "default": "./dist/multi-thumb-slider.js"
+    },
+    "./menu": {
+      "types": "./dist/menu.d.ts",
+      "import": "./dist/menu.js",
+      "default": "./dist/menu.js"
+    },
+    "./menubar": {
+      "types": "./dist/menubar.d.ts",
+      "import": "./dist/menubar.js",
+      "default": "./dist/menubar.js"
+    },
+    "./navigation-menu": {
+      "types": "./dist/navigation-menu.d.ts",
+      "import": "./dist/navigation-menu.js",
+      "default": "./dist/navigation-menu.js"
+    },
+    "./menu-button": {
+      "types": "./dist/menu-button.d.ts",
+      "import": "./dist/menu-button.js",
+      "default": "./dist/menu-button.js"
+    },
+    "./carousel": {
+      "types": "./dist/carousel.d.ts",
+      "import": "./dist/carousel.js",
+      "default": "./dist/carousel.js"
+    },
+    "./feed": {
+      "types": "./dist/feed.d.ts",
+      "import": "./dist/feed.js",
+      "default": "./dist/feed.js"
+    },
+    "./form": {
+      "types": "./dist/form.d.ts",
+      "import": "./dist/form.js",
+      "default": "./dist/form.js"
+    },
+    "./reorder": {
+      "types": "./dist/reorder.d.ts",
+      "import": "./dist/reorder.js",
+      "default": "./dist/reorder.js"
+    },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",
@@ -129,7 +313,11 @@
       "import": "./dist/text.js",
       "default": "./dist/text.js"
     },
-    "./date-range-field": { "types": "./dist/date-range-field.d.ts", "import": "./dist/date-range-field.js", "default": "./dist/date-range-field.js" },
+    "./date-range-field": {
+      "types": "./dist/date-range-field.d.ts",
+      "import": "./dist/date-range-field.js",
+      "default": "./dist/date-range-field.js"
+    },
     "./editable": {
       "types": "./dist/editable.d.ts",
       "import": "./dist/editable.js",
