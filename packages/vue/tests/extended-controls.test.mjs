@@ -63,8 +63,10 @@ test('Vue multi-thumb slider and window splitter project structural sizing hooks
   assert.match(slider, /--sectile-thumb-0-percentage:20%/);
   assert.match(slider, /data-sectile-multi-thumb="max"/);
   assert.match(splitter, /--sectile-slider-percentage:40%/);
+  assert.match(splitter, /--sectile-window-splitter-percentage:40%/);
+  assert.match(splitter, /data-constraint-track(?:="")?/);
   assert.match(splitter, /data-side="after"/);
-  assert.equal((splitter.match(/data-scope="window-splitter"/g) ?? []).length, 4);
+  assert.equal((splitter.match(/data-scope="window-splitter"/g) ?? []).length, 5);
   assert.match(splitter, /data-part="handle"/);
   assert.doesNotMatch(splitter, /data-scope="slider"|data-part="thumb"/);
 });

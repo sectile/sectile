@@ -166,10 +166,12 @@ test('Vue window splitter drags against the complete pane surface', async () => 
   app.mount(host);
   await settle();
   const root = host.querySelector('[data-part="root"]');
+  const track = host.querySelector('[data-constraint-track]');
   const handle = host.querySelector('[data-part="handle"]');
   assert.ok(root instanceof HTMLElement);
+  assert.ok(track instanceof HTMLElement);
   assert.ok(handle instanceof HTMLElement);
-  horizontalTrack(root);
+  horizontalTrack(track);
 
   root.dispatchEvent(new PointerEvent('pointerdown', {
     bubbles: true,
@@ -189,6 +191,55 @@ test('Vue window splitter drags against the complete pane surface', async () => 
   await settle();
   assert.equal(handle.getAttribute('aria-valuenow'), '72');
   assert.deepEqual(updates, ['72']);
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue window splitter keeps the visual separator inside min and max pane percentages', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(WindowSplitterRoot, {
+      defaultValue: 34,
+      min: 22,
+      max: 72,
+      step: 1,
+    }, {
+      default: () => [
+        h(WindowSplitterPane, { side: 'before' }),
+        h(WindowSplitterHandle),
+        h(WindowSplitterPane, { side: 'after' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  const root = host.querySelector('[data-part="root"]');
+  const track = host.querySelector('[data-constraint-track]');
+  const handle = host.querySelector('[data-part="handle"]');
+  assert.ok(root instanceof HTMLElement);
+  assert.ok(track instanceof HTMLElement);
+  assert.ok(handle instanceof HTMLElement);
+  track.getBoundingClientRect = () => ({
+    x: 22, y: 0, left: 22, top: 0, right: 72, bottom: 10,
+    width: 50, height: 10, toJSON: () => ({}),
+  });
+
+  handle.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true, clientX: 0, clientY: 5, pointerId: 5,
+  }));
+  await settle();
+  assert.equal(handle.getAttribute('aria-valuenow'), '22');
+  assert.match(root.getAttribute('style') ?? '', /--sectile-window-splitter-percentage:\s*22%/);
+
+  handle.dispatchEvent(new PointerEvent('pointerdown', {
+    bubbles: true, clientX: 100, clientY: 5, pointerId: 6,
+  }));
+  await settle();
+  assert.equal(handle.getAttribute('aria-valuenow'), '72');
+  assert.match(root.getAttribute('style') ?? '', /--sectile-window-splitter-percentage:\s*72%/);
 
   app.unmount();
   host.remove();
