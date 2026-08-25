@@ -116,6 +116,38 @@ Vue package: `@sectile/vue/combobox`
 | `accept` | `string` | Emitted when the current draft becomes an accepted value. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `ComboboxValueChangeHandler`
+
+```ts
+type ComboboxValueChangeHandler = (value: string | null) => void
+```
+
+#### `ComboboxInputValueChangeHandler`
+
+```ts
+type ComboboxInputValueChangeHandler = (value: string) => void
+```
+
+#### `ComboboxOpenChangeHandler`
+
+```ts
+type ComboboxOpenChangeHandler = (value: boolean) => void
+```
+
+#### `ComboboxHighlightHandler`
+
+```ts
+type ComboboxHighlightHandler = (value: string | null) => void
+```
+
+#### `ComboboxAcceptHandler`
+
+```ts
+type ComboboxAcceptHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="combobox"]</code>. Combine it with a part selector to keep styles local to this component.

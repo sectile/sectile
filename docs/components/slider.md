@@ -87,6 +87,20 @@ Vue package: `@sectile/vue/slider`
 | --- | --- | --- |
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `SliderValueFormatter`
+
+```ts
+type SliderValueFormatter = NonNullable<SliderRootProps['formatValue']>
+```
+
+#### `SliderValueChangeHandler`
+
+```ts
+type SliderValueChangeHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="slider"]</code>. Combine it with a part selector to keep styles local to this component.

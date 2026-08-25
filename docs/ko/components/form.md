@@ -42,21 +42,19 @@ Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다
 
 문자열 이름은 최상위 키가 되고, 문자열·숫자 배열은 객체와 배열 경로가 됩니다.
 
-| 필드 이름 | `event.values` 결과 |
+| 필드 이름 | `details.values` 결과 |
 | --- | --- |
 | `name="email"` | `values.email` |
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-제출 콜백은 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받습니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
+제출 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받습니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
 
 ### 상태와 검증
 
 - 브라우저 제약 조건과 각 참여 입력의 검증 결과를 하나의 이슈 목록으로 합칩니다.
 - `FormSummary`는 폼 전체 이슈를, `FormMessage`는 현재 필드 이슈를 표시합니다.
-- Form이 제출 생명주기를 소유합니다. 핸들러 실행 전 `submitting`으로 바뀌고, 핸들러가 완료되면 `succeeded`, `{ ok: false }`를 반환하거나 예외·거부가 발생하면 `failed`로 바뀝니다.
-- `{ ok: false, issues }`로 반환한 이슈에는 `server` 출처가 자동으로 지정됩니다. `FormMessage`와 `FormSummary`가 이를 표시하고 첫 번째 오류 필드로 포커스를 옮깁니다. 다시 제출하면 이전 서버 이슈를 먼저 지운 뒤 검증합니다.
-- 루트 슬롯의 `submitStarted`, `submitSucceeded`, `submitFailed`, `replaceIssues`는 관리형 제출 핸들러를 쓰지 않는 저수준 연동용으로 유지됩니다.
+- 루트 슬롯의 `submitStarted`, `submitSucceeded`, `submitFailed`, `replaceIssues`로 비동기 및 서버 검증 상태를 반영할 수 있습니다.
 - `TextField`는 `v-model.trim`, `v-model.number`, `v-model.lazy`를 지원합니다. 다른 입력은 각 컴포넌트의 값 타입과 모델 계약을 유지합니다.
 
 ## 예시
@@ -111,12 +109,12 @@ function provideFormControlOwner(): void
 
 | 속성 | 타입 | 기본값 | 설명 |
 | --- | --- | --- | --- |
-| `issues` | `readonly FormIssue[]` | `[]` | 애플리케이션이 제공하는 검증 이슈입니다. |
-| `schema` | `FormSchema` | `undefined` | 제출 시 최종 검증과 출력값 변환에 사용하는 Standard Schema입니다. |
-| `validate` | `FormValidateHandler` | `undefined` | 입력 과정과 제출 검증을 구분할 수 있는 폼 단위 validator입니다. |
-| `validateOn` | `readonly ('input' \| 'blur')[]` | `[]` | 첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다. |
-| `revalidateOn` | `readonly ('input' \| 'blur')[]` | `['input']` | 검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다. |
-| `onSubmit` | `FormSubmitHandler` | `undefined` | 검증을 통과한 제출을 처리하고 관리형 성공·실패 결과를 반환하는 함수입니다. 템플릿에서는 `@submit.prevent`를 권장합니다. |
+| `validate` | `FormValidateHandler<Schema>` | `undefined` | 현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다. |
+| `issues` | `readonly FormIssue[]` | `undefined` | 애플리케이션이 제공하는 검증 이슈입니다. |
+| `revalidateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | 검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다. |
+| `schema` | `Schema` | `undefined` | 최종 제출 검증과 출력 변환에 사용할 Standard Schema입니다. |
+| `onSubmit` | `FormSubmitHandler<Schema>` | `undefined` | 검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다. |
+| `validateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | 첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다. |
 
 #### `FormFieldProps`
 
@@ -145,18 +143,18 @@ function provideFormControlOwner(): void
 | 값 | 타입 | 설명 |
 | --- | --- | --- |
 | `state` | `FormState` | 현재 전체 폼 상태입니다. |
-| `reset` | `() => void` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
-| `submitStarted` | `() => boolean` | 제출 시도를 시작 상태로 기록하는 함수입니다. |
-| `submitSucceeded` | `() => boolean` | 현재 제출을 성공으로 기록하는 함수입니다. |
-| `submitFailed` | `(issues?: readonly FormIssue[]) => boolean` | 현재 제출을 실패로 기록하는 함수입니다. |
-| `replaceIssues` | `(source: FormIssueSource, issues: readonly FormIssue[]) => boolean` | 한 출처의 검증 이슈를 바꾸는 함수입니다. |
+| `reset` | `FormResetAction` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
+| `submitStarted` | `FormSubmitStartedAction` | 제출 시도를 시작 상태로 기록하는 함수입니다. |
+| `submitSucceeded` | `FormSubmitSucceededAction` | 현재 제출을 성공으로 기록하는 함수입니다. |
+| `submitFailed` | `FormSubmitFailedAction` | 현재 제출을 실패로 기록하는 함수입니다. |
+| `replaceIssues` | `FormReplaceIssuesAction` | 한 출처의 검증 이슈를 바꾸는 함수입니다. |
 | `dirty` | `boolean` | 현재 값이 초깃값과 다른지 여부입니다. |
-| `validationStatus` | `FormState['validationStatus']` | 현재 검증 생명주기입니다. |
-| `validationTrigger` | `FormState['validationTrigger']` | 현재 또는 최근 검증을 시작한 이벤트입니다. |
-| `validationIntent` | `FormState['validationIntent']` | 현재 또는 최근 검증이 입력 과정용인지 최종 제출용인지 나타냅니다. |
 | `submissionStatus` | `FormState['submissionStatus']` | 현재 제출 생명주기입니다. |
 | `touched` | `boolean` | 사용자가 필드를 조작했는지 여부입니다. |
 | `valid` | `boolean` | 현재 검증 이슈가 없는지 여부입니다. |
+| `validationIntent` | `FormState['validationIntent']` | 현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다. |
+| `validationStatus` | `FormState['validationStatus']` | 현재 검증 생명주기입니다. |
+| `validationTrigger` | `FormState['validationTrigger']` | 현재 또는 최근 검증을 시작한 이벤트입니다. |
 | `submitCount` | `number` | 제출을 시도한 횟수입니다. |
 | `submitted` | `boolean` | 제출을 시도했는지 여부입니다. |
 
@@ -177,80 +175,23 @@ function provideFormControlOwner(): void
 
 ### 이벤트
 
-#### `FormRoot`
-
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `submit` | `FormSubmitEvent` | 네이티브 폼 제출이 검증을 통과할 때 발생합니다. `@submit.prevent` 같은 Vue 이벤트 수식어를 지원하며, 함수에는 `FormSubmitHandler<Schema>`를 지정할 수 있습니다. |
-| `reset` | — | 컴포넌트 상태를 초기화한 뒤 발생합니다. |
-| `state-change` | `FormState<string>` | 공개 상태 스냅샷이 바뀔 때마다 발생합니다. |
-
-### 기타 타입
-
 #### `FormSubmitEvent`
 
 ```ts
-interface FormSubmitEvent<Schema extends FormSchema = FormSchema> {
-  readonly nativeEvent: SubmitEvent
-  readonly defaultPrevented: boolean
-  readonly formData: FormData
-  readonly values: FormSchemaOutput<Schema>
-  readonly submitter: HTMLElement | null
-  readonly state: FormState
-  preventDefault(): void
-  stopPropagation(): void
-  stopImmediatePropagation(): void
+type FormSubmitEvent<Schema extends FormSchema = FormSchema> =
+Omit<
+  DOMFormSubmitPayload<string, FormSchemaOutput<Schema>>,
+  'event'
+> & {
+  readonly nativeEvent: SubmitEvent;
+  readonly defaultPrevented: boolean;
+  preventDefault(): void;
+  stopPropagation(): void;
+  stopImmediatePropagation(): void;
 }
 ```
 
-#### `FormSubmitHandler`
-
-```ts
-type FormSubmitIssue = Omit<FormIssue, 'source'>
-
-type FormSubmitResult =
-  | void
-  | { readonly ok: true }
-  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
-
-type FormSubmitHandler<Schema extends FormSchema = FormSchema> =
-  (event: FormSubmitEvent<Schema>) =>
-    FormSubmitResult | PromiseLike<FormSubmitResult>
-```
-
-`FormSubmitHandler<typeof schema>`를 사용하면 `event.values`가 Standard Schema 출력 타입으로 추론됩니다. `void` 또는 `{ ok: true }`를 반환하면 제출에 성공합니다. `{ ok: false, issues }`를 반환하거나 예외·Promise 거부가 발생하면 실패합니다. 필드 이슈는 `fieldId`로 `FormMessage`에 연결하고, `fieldId`가 없는 이슈는 폼 전체 이슈로 처리합니다.
-
-#### 이벤트 핸들러
-
-```ts
-type FormResetHandler = () => void
-type FormStateChangeHandler = (state: FormState) => void
-type FormValidateHandler<Shape extends object = Record<string, unknown>> = (
-  values: FormValues<Shape>,
-  context: FormValidateContext,
-) => FormValidationResult | PromiseLike<FormValidationResult>
-```
-
-`context.trigger`는 `input`, `blur`, `submit` 중 검증을 시작한 이벤트를 나타내고, `context.intent`는 입력 과정 검증인지 최종 제출 검증인지 나타냅니다. Standard Schema는 제출 의도에서만 실행합니다. 제출 검증에 실패한 뒤에는 `revalidateOn` 이벤트에서도 제출 의도를 유지하므로 최종 제약을 통과할 때까지 오류가 갱신됩니다.
-
-#### 상태 동작
-
-```ts
-type FormSubmitStartedAction = () => boolean
-type FormSubmitSucceededAction = () => boolean
-type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
-type FormReplaceIssuesAction = (
-  source: FormIssueSource,
-  issues: readonly FormIssue[],
-) => boolean
-type FormResetAction = () => void
-```
-
-#### `FormValues`
-
-```ts
-type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>
-```
+### 기타 타입
 
 #### `FormState`
 
@@ -269,6 +210,123 @@ type FormIssue = NonNullable<FormOptions<string>['issues']>[number]
 ```ts
 type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0]
 ```
+
+#### `FormValues`
+
+```ts
+type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>
+```
+
+#### `FormSchema`
+
+```ts
+type FormSchema<Input extends object = Record<string, unknown>, Output extends object = Input> = DOMFormSchema<FormValues<Input>, FormValues<Output>>
+```
+
+#### `FormSchemaInput`
+
+```ts
+type FormSchemaInput<Schema extends FormSchema> = Schema extends DOMFormSchema<infer Input extends object, object> ? Input : never
+```
+
+#### `FormSchemaOutput`
+
+```ts
+type FormSchemaOutput<Schema extends FormSchema> = Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never
+```
+
+#### `FormSubmitIssue`
+
+```ts
+type FormSubmitIssue = Omit<FormIssue, 'source'>
+```
+
+#### `FormSubmitResult`
+
+```ts
+type FormSubmitResult =
+| void
+  | { readonly ok: true }
+  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
+```
+
+#### `FormSubmitHandler`
+
+```ts
+type FormSubmitHandler<Schema extends FormSchema = FormSchema> = (event: FormSubmitEvent<Schema>) => FormSubmitResult | PromiseLike<FormSubmitResult>
+```
+
+#### `FormResetHandler`
+
+```ts
+type FormResetHandler = () => void
+```
+
+#### `FormStateChangeHandler`
+
+```ts
+type FormStateChangeHandler = (state: FormState) => void
+```
+
+#### `FormValidateContext`
+
+```ts
+type FormValidateContext = DOMFormValidateContext<string>
+```
+
+#### `FormValidationIssue`
+
+```ts
+type FormValidationIssue = DOMFormValidationIssue
+```
+
+#### `FormValidationResult`
+
+```ts
+type FormValidationResult = DOMFormValidationResult
+```
+
+#### `FormValidateHandler`
+
+```ts
+type FormValidateHandler<Schema extends FormSchema = FormSchema> = DOMFormValidateHandler<string, FormSchemaInput<Schema>>
+```
+
+#### `FormSubmitStartedAction`
+
+```ts
+type FormSubmitStartedAction = () => boolean
+```
+
+#### `FormSubmitSucceededAction`
+
+```ts
+type FormSubmitSucceededAction = () => boolean
+```
+
+#### `FormSubmitFailedAction`
+
+```ts
+type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
+```
+
+#### `FormReplaceIssuesAction`
+
+```ts
+type FormReplaceIssuesAction =
+(
+  source: FormIssueSource,
+  issues: readonly FormIssue[],
+) => boolean
+```
+
+#### `FormResetAction`
+
+```ts
+type FormResetAction = () => void
+```
+
+#### `FormRootComponent`
 
 #### `FormLabelMode`
 

@@ -103,6 +103,20 @@ Vue package: `@sectile/vue/tags-input`
 | `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 | `update:inputValue` | `string` | Emitted when editable input text changes. |
 
+### Other types
+
+#### `TagsInputValueChangeHandler`
+
+```ts
+type TagsInputValueChangeHandler = (value: readonly string[]) => void
+```
+
+#### `TagsInputInputValueChangeHandler`
+
+```ts
+type TagsInputInputValueChangeHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="tags-input"]</code>. Combine it with a part selector to keep styles local to this component.

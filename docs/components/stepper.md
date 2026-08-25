@@ -86,6 +86,26 @@ Vue package: `@sectile/vue/stepper`
 | `activate` | `string` | Emitted when an item becomes active. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `StepperValueChangeHandler`
+
+```ts
+type StepperValueChangeHandler = (value: string) => void
+```
+
+#### `StepperHighlightHandler`
+
+```ts
+type StepperHighlightHandler = (value: string | null) => void
+```
+
+#### `StepperActivateHandler`
+
+```ts
+type StepperActivateHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="stepper"]</code>. Combine it with a part selector to keep styles local to this component.

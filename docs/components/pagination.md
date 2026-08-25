@@ -110,6 +110,20 @@ Vue package: `@sectile/vue/pagination`
 | `update:modelValue` | `number` | Emitted when the component requests a new controlled value. |
 | `update:itemsPerPage` | `number` | Emitted when the requested page size changes. |
 
+### Other types
+
+#### `PaginationValueChangeHandler`
+
+```ts
+type PaginationValueChangeHandler = (value: number) => void
+```
+
+#### `PaginationItemsPerPageChangeHandler`
+
+```ts
+type PaginationItemsPerPageChangeHandler = (value: number) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="pagination"]</code>. Combine it with a part selector to keep styles local to this component.

@@ -103,6 +103,26 @@ Vue 패키지: `@sectile/vue/calendar`
 | `update:highlightedValue` | `string \| null` | 새 강조 값을 요청할 때 발생합니다. |
 | `page` | `{ direction: -1 \| 1; from: string \| null; }` | 요청한 페이지가 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `CalendarValueChangeHandler`
+
+```ts
+type CalendarValueChangeHandler = (value: string | null) => void
+```
+
+#### `CalendarHighlightedValueChangeHandler`
+
+```ts
+type CalendarHighlightedValueChangeHandler = (value: string | null) => void
+```
+
+#### `CalendarPageHandler`
+
+```ts
+type CalendarPageHandler = (details: { direction: -1 | 1; from: string | null }) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="calendar"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

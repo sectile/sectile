@@ -120,6 +120,42 @@ Vue 패키지: `@sectile/vue/tree-grid`
 
 ### 기타 타입
 
+#### `TreeGridCellValueResolver`
+
+```ts
+type TreeGridCellValueResolver = NonNullable<TreeGridRootProps['getCellValue']>
+```
+
+#### `TreeGridCellValueSetter`
+
+```ts
+type TreeGridCellValueSetter = NonNullable<TreeGridRootProps['setCellValue']>
+```
+
+#### `TreeGridValueChangeHandler`
+
+```ts
+type TreeGridValueChangeHandler = (value: string | null) => void
+```
+
+#### `TreeGridExpandedValueChangeHandler`
+
+```ts
+type TreeGridExpandedValueChangeHandler = (value: readonly string[]) => void
+```
+
+#### `TreeGridHighlightedValueChangeHandler`
+
+```ts
+type TreeGridHighlightedValueChangeHandler = (value: string | null) => void
+```
+
+#### `TreeGridEditModeChangeHandler`
+
+```ts
+type TreeGridEditModeChangeHandler = (value: TreeGridEditMode) => void
+```
+
 #### `TreeGridEditMode`
 
 ```ts

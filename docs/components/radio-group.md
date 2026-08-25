@@ -100,6 +100,20 @@ Vue package: `@sectile/vue/radio-group`
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `RadioGroupValueChangeHandler`
+
+```ts
+type RadioGroupValueChangeHandler = (value: string) => void
+```
+
+#### `RadioGroupHighlightHandler`
+
+```ts
+type RadioGroupHighlightHandler = (value: string | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="radio-group"]</code>. Combine it with a part selector to keep styles local to this component.

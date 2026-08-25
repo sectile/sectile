@@ -209,10 +209,15 @@ function apiSection(component, korean = false) {
   } = publicVueApi(component.id);
   const functionSet = new Set(functions);
   const components = values.filter((value) => !functionSet.has(value));
-  const propTypes = types.filter((value) => value.endsWith('Props') && !value.endsWith('SlotProps'));
+  const hiddenTypes = types.filter((value) => value.endsWith('PublicProps'));
+  const propTypes = types.filter((value) => (
+    value.endsWith('Props')
+    && !value.endsWith('SlotProps')
+    && !value.endsWith('PublicProps')
+  ));
   const slotTypes = types.filter((value) => value.endsWith('SlotProps'));
   const eventTypes = types.filter((value) => /(?:Event|Emits)$/u.test(value));
-  const classified = new Set([...propTypes, ...slotTypes, ...eventTypes]);
+  const classified = new Set([...hiddenTypes, ...propTypes, ...slotTypes, ...eventTypes]);
   const otherTypes = types.filter((value) => !classified.has(value));
   const tokenList = (values, kind) => `<div class="component-api-group">
 <strong class="component-api-label">${kind}</strong>

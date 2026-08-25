@@ -103,6 +103,26 @@ Vue package: `@sectile/vue/calendar`
 | `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
 | `page` | `{ direction: -1 \| 1; from: string \| null; }` | Emitted when the requested page changes. |
 
+### Other types
+
+#### `CalendarValueChangeHandler`
+
+```ts
+type CalendarValueChangeHandler = (value: string | null) => void
+```
+
+#### `CalendarHighlightedValueChangeHandler`
+
+```ts
+type CalendarHighlightedValueChangeHandler = (value: string | null) => void
+```
+
+#### `CalendarPageHandler`
+
+```ts
+type CalendarPageHandler = (details: { direction: -1 | 1; from: string | null }) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="calendar"]</code>. Combine it with a part selector to keep styles local to this component.

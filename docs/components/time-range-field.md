@@ -76,6 +76,12 @@ Vue package: `@sectile/vue/time-range-field`
 
 ### Other types
 
+#### `TimeRangeFieldValueChangeHandler`
+
+```ts
+type TimeRangeFieldValueChangeHandler = (value: TimeRange | null) => void
+```
+
 #### `TimeRange`
 
 | Name | Type | Required |

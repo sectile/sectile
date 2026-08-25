@@ -109,6 +109,32 @@ Vue package: `@sectile/vue/select`
 | `update:open` | `boolean` | Emitted when the component requests a new open state. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `SelectTextValueResolver`
+
+```ts
+type SelectTextValueResolver = NonNullable<SelectRootProps['textValue']>
+```
+
+#### `SelectValueChangeHandler`
+
+```ts
+type SelectValueChangeHandler = (value: string | null) => void
+```
+
+#### `SelectOpenChangeHandler`
+
+```ts
+type SelectOpenChangeHandler = (value: boolean) => void
+```
+
+#### `SelectHighlightHandler`
+
+```ts
+type SelectHighlightHandler = (value: string | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="select"]</code>. Combine it with a part selector to keep styles local to this component.

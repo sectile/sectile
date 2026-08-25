@@ -142,6 +142,24 @@ Vue 패키지: `@sectile/vue/color-picker`
 
 ### 기타 타입
 
+#### `ColorPickerValueChangeHandler`
+
+```ts
+type ColorPickerValueChangeHandler = (value: string) => void
+```
+
+#### `ColorPickerDraftChangeHandler`
+
+```ts
+type ColorPickerDraftChangeHandler = (value: string | null) => void
+```
+
+#### `ColorPickerFormatChangeHandler`
+
+```ts
+type ColorPickerFormatChangeHandler = (value: ColorFormat) => void
+```
+
 #### `ColorAreaValue`
 
 | 이름 | 타입 | 필수 |

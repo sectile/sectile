@@ -148,6 +148,62 @@ Vue 패키지: `@sectile/vue/menu`
 | `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
 | `invoke` | `string` | 현재 작업을 실행할 때 발생합니다. |
 
+### 기타 타입
+
+#### `MenuTextValueResolver`
+
+```ts
+type MenuTextValueResolver = NonNullable<MenuRootProps['textValue']>
+```
+
+#### `MenuOpenChangeHandler`
+
+```ts
+type MenuOpenChangeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenuInvokeHandler`
+
+```ts
+type MenuInvokeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onInvoke']>
+```
+
+#### `MenubarOpenChangeHandler`
+
+```ts
+type MenubarOpenChangeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenubarInvokeHandler`
+
+```ts
+type MenubarInvokeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onInvoke']>
+```
+
+#### `NavigationMenuOpenChangeHandler`
+
+```ts
+type NavigationMenuOpenChangeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onUpdate:open']>
+```
+
+#### `NavigationMenuInvokeHandler`
+
+```ts
+type NavigationMenuInvokeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onInvoke']>
+```
+
+#### `MenuButtonOpenChangeHandler`
+
+```ts
+type MenuButtonOpenChangeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenuButtonInvokeHandler`
+
+```ts
+type MenuButtonInvokeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onInvoke']>
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="menu"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

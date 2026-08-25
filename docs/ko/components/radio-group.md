@@ -100,6 +100,20 @@ Vue 패키지: `@sectile/vue/radio-group`
 | `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `RadioGroupValueChangeHandler`
+
+```ts
+type RadioGroupValueChangeHandler = (value: string) => void
+```
+
+#### `RadioGroupHighlightHandler`
+
+```ts
+type RadioGroupHighlightHandler = (value: string | null) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="radio-group"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

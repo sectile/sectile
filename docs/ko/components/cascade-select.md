@@ -133,6 +133,32 @@ Vue 패키지: `@sectile/vue/cascade-select`
 | `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `CascadeSelectTextValueResolver`
+
+```ts
+type CascadeSelectTextValueResolver = NonNullable<CascadeSelectRootProps['textValue']>
+```
+
+#### `CascadeSelectValueChangeHandler`
+
+```ts
+type CascadeSelectValueChangeHandler = (value: string | null) => void
+```
+
+#### `CascadeSelectOpenChangeHandler`
+
+```ts
+type CascadeSelectOpenChangeHandler = (value: boolean) => void
+```
+
+#### `CascadeSelectHighlightHandler`
+
+```ts
+type CascadeSelectHighlightHandler = (value: string | null) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="cascade-select"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

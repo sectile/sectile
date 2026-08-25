@@ -90,6 +90,20 @@ Vue package: `@sectile/vue/alert-dialog`
 | `open` | `boolean` | Whether the associated popup or disclosure is open. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 
+### Other types
+
+#### `AlertDialogOpenChangeHandler`
+
+```ts
+type AlertDialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
+```
+
+#### `AlertDialogPositionChangeHandler`
+
+```ts
+type AlertDialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="alert-dialog"]</code>. Combine it with a part selector to keep styles local to this component.

@@ -105,6 +105,24 @@ Vue 패키지: `@sectile/vue/range-calendar`
 
 ### 기타 타입
 
+#### `RangeCalendarValueChangeHandler`
+
+```ts
+type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `RangeCalendarOpenChangeHandler`
+
+```ts
+type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>
+```
+
+#### `RangeCalendarHighlightedValueChangeHandler`
+
+```ts
+type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateRange`
 
 | 이름 | 타입 | 필수 |

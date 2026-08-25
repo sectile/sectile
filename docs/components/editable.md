@@ -85,6 +85,20 @@ Vue package: `@sectile/vue/editable`
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 | `update:editing` | `boolean` | Emitted when editing starts or stops. |
 
+### Other types
+
+#### `EditableValueChangeHandler`
+
+```ts
+type EditableValueChangeHandler = (value: string) => void
+```
+
+#### `EditableEditingChangeHandler`
+
+```ts
+type EditableEditingChangeHandler = (editing: boolean) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="editable"]</code>. Combine it with a part selector to keep styles local to this component.

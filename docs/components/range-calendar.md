@@ -105,6 +105,24 @@ Vue package: `@sectile/vue/range-calendar`
 
 ### Other types
 
+#### `RangeCalendarValueChangeHandler`
+
+```ts
+type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `RangeCalendarOpenChangeHandler`
+
+```ts
+type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>
+```
+
+#### `RangeCalendarHighlightedValueChangeHandler`
+
+```ts
+type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateRange`
 
 | Name | Type | Required |

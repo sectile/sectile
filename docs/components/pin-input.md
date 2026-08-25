@@ -125,6 +125,20 @@ Vue package: `@sectile/vue/pin-input`
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 | `complete` | `string` | Emitted when every required segment is filled. |
 
+### Other types
+
+#### `PinInputValueChangeHandler`
+
+```ts
+type PinInputValueChangeHandler = (value: string) => void
+```
+
+#### `PinInputCompleteHandler`
+
+```ts
+type PinInputCompleteHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="pin-input"]</code>. Combine it with a part selector to keep styles local to this component.

@@ -96,6 +96,20 @@ Vue 패키지: `@sectile/vue/toolbar`
 | `update:modelValue` | `string \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 | `invoke` | `string` | 현재 작업을 실행할 때 발생합니다. |
 
+### 기타 타입
+
+#### `ToolbarValueChangeHandler`
+
+```ts
+type ToolbarValueChangeHandler = (value: string | null) => void
+```
+
+#### `ToolbarInvokeHandler`
+
+```ts
+type ToolbarInvokeHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="toolbar"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

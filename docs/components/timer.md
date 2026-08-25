@@ -86,6 +86,20 @@ Vue package: `@sectile/vue/timer`
 | `complete` | `number` | Emitted when every required segment is filled. |
 | `tick` | `number` | Emitted when a timer interval produces a new value. |
 
+### Other types
+
+#### `TimerTickHandler`
+
+```ts
+type TimerTickHandler = (valueMs: number) => void
+```
+
+#### `TimerCompleteHandler`
+
+```ts
+type TimerCompleteHandler = (valueMs: number) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="timer"]</code>. Combine it with a part selector to keep styles local to this component.

@@ -107,6 +107,26 @@ Vue package: `@sectile/vue/carousel`
 | `update:paused` | `boolean` | Emitted when the component requests a new pause state. |
 | `announce` | `string` | Emitted when assistive feedback should be announced. |
 
+### Other types
+
+#### `CarouselValueChangeHandler`
+
+```ts
+type CarouselValueChangeHandler = (value: string | null) => void
+```
+
+#### `CarouselPausedChangeHandler`
+
+```ts
+type CarouselPausedChangeHandler = (value: boolean) => void
+```
+
+#### `CarouselAnnounceHandler`
+
+```ts
+type CarouselAnnounceHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="carousel"]</code>. Combine it with a part selector to keep styles local to this component.

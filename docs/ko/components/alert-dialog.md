@@ -90,6 +90,20 @@ Vue 패키지: `@sectile/vue/alert-dialog`
 | `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
 | `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
 
+### 기타 타입
+
+#### `AlertDialogOpenChangeHandler`
+
+```ts
+type AlertDialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
+```
+
+#### `AlertDialogPositionChangeHandler`
+
+```ts
+type AlertDialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="alert-dialog"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

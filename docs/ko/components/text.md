@@ -79,6 +79,12 @@ Vue 패키지: `@sectile/vue/text`
 | `number` | `boolean` | — |
 | `trim` | `boolean` | — |
 
+#### `TextFieldValueChangeHandler`
+
+```ts
+type TextFieldValueChangeHandler = (value: string | number) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="text"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

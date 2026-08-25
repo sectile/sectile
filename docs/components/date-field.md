@@ -57,6 +57,12 @@ Vue package: `@sectile/vue/date-field`
 type DateValue = NonNullable<DateFieldOptions['value']>
 ```
 
+#### `DateFieldValueChangeHandler`
+
+```ts
+type DateFieldValueChangeHandler = (value: DateValue | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="date-field"]</code>. Combine it with a part selector to keep styles local to this component.

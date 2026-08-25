@@ -86,6 +86,26 @@ Vue 패키지: `@sectile/vue/stepper`
 | `activate` | `string` | 항목이 활성화될 때 발생합니다. |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `StepperValueChangeHandler`
+
+```ts
+type StepperValueChangeHandler = (value: string) => void
+```
+
+#### `StepperHighlightHandler`
+
+```ts
+type StepperHighlightHandler = (value: string | null) => void
+```
+
+#### `StepperActivateHandler`
+
+```ts
+type StepperActivateHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="stepper"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

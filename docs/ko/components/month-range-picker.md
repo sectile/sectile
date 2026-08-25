@@ -106,6 +106,24 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 
 ### 기타 타입
 
+#### `MonthRangePickerValueChangeHandler`
+
+```ts
+type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `MonthRangePickerOpenChangeHandler`
+
+```ts
+type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `MonthRangePickerHighlightedValueChangeHandler`
+
+```ts
+type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `MonthRangePickerValue`
 
 | 이름 | 타입 | 필수 |

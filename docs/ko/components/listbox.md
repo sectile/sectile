@@ -124,6 +124,30 @@ type ListboxSelectionMode = 'single' | 'multiple'
 type ListboxValue = string | readonly string[]
 ```
 
+#### `ListboxTextValueResolver`
+
+```ts
+type ListboxTextValueResolver = NonNullable<ListboxRootProps['textValue']>
+```
+
+#### `ListboxValueChangeHandler`
+
+```ts
+type ListboxValueChangeHandler = (value: ListboxValue) => void
+```
+
+#### `ListboxHighlightHandler`
+
+```ts
+type ListboxHighlightHandler = (value: string | null) => void
+```
+
+#### `ListboxActivateHandler`
+
+```ts
+type ListboxActivateHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="listbox"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

@@ -109,6 +109,42 @@ Vue 패키지: `@sectile/vue/grid`
 
 ### 기타 타입
 
+#### `GridValueChangeHandler`
+
+```ts
+type GridValueChangeHandler = (value: string | null) => void
+```
+
+#### `GridHighlightedValueChangeHandler`
+
+```ts
+type GridHighlightedValueChangeHandler = (value: string | null) => void
+```
+
+#### `GridEditModeChangeHandler`
+
+```ts
+type GridEditModeChangeHandler = (value: GridEditMode) => void
+```
+
+#### `GridEditStartHandler`
+
+```ts
+type GridEditStartHandler = (value: string) => void
+```
+
+#### `GridEditCommitHandler`
+
+```ts
+type GridEditCommitHandler = (value: string) => void
+```
+
+#### `GridEditCancelHandler`
+
+```ts
+type GridEditCancelHandler = (value: string) => void
+```
+
 #### `GridEditMode`
 
 ```ts

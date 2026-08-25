@@ -59,6 +59,12 @@ Vue 패키지: `@sectile/vue/date-time-field`
 type DateTimeValue = NonNullable<DateTimeFieldOptions['value']>
 ```
 
+#### `DateTimeFieldValueChangeHandler`
+
+```ts
+type DateTimeFieldValueChangeHandler = (value: DateTimeValue | null) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="date-time-field"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

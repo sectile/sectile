@@ -132,6 +132,24 @@ Vue 패키지: `@sectile/vue/tabs`
 type TabsActivationMode = 'automatic' | 'manual'
 ```
 
+#### `TabsValueChangeHandler`
+
+```ts
+type TabsValueChangeHandler = (value: string) => void
+```
+
+#### `TabsHighlightHandler`
+
+```ts
+type TabsHighlightHandler = (value: string | null) => void
+```
+
+#### `TabsActivateHandler`
+
+```ts
+type TabsActivateHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="tabs"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

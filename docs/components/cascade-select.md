@@ -133,6 +133,32 @@ Vue package: `@sectile/vue/cascade-select`
 | `update:open` | `boolean` | Emitted when the component requests a new open state. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `CascadeSelectTextValueResolver`
+
+```ts
+type CascadeSelectTextValueResolver = NonNullable<CascadeSelectRootProps['textValue']>
+```
+
+#### `CascadeSelectValueChangeHandler`
+
+```ts
+type CascadeSelectValueChangeHandler = (value: string | null) => void
+```
+
+#### `CascadeSelectOpenChangeHandler`
+
+```ts
+type CascadeSelectOpenChangeHandler = (value: boolean) => void
+```
+
+#### `CascadeSelectHighlightHandler`
+
+```ts
+type CascadeSelectHighlightHandler = (value: string | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="cascade-select"]</code>. Combine it with a part selector to keep styles local to this component.

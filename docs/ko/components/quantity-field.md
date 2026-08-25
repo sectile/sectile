@@ -124,6 +124,24 @@ function createStandardQuantityPolicies(canonicalUnit: string, unitSystem?: Stan
 type StandardQuantityUnitSystem = 'metric' | 'imperial' | 'all'
 ```
 
+#### `QuantityFieldValueChangeHandler`
+
+```ts
+type QuantityFieldValueChangeHandler = (value: QuantityValue | null) => void
+```
+
+#### `QuantityFieldDisplayUnitChangeHandler`
+
+```ts
+type QuantityFieldDisplayUnitChangeHandler = (value: string) => void
+```
+
+#### `QuantityFieldCommitHandler`
+
+```ts
+type QuantityFieldCommitHandler = (details: { value: QuantityValue | null; expression: string; displayUnit: string }) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="quantity-field"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

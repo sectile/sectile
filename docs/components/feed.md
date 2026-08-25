@@ -91,14 +91,32 @@ Vue package: `@sectile/vue/feed`
 | Event | Payload | Description |
 | --- | --- | --- |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
-| `request-window` | `FeedDirection, string \| null, number` | Emitted when the feed needs items outside the current window. |
+| `request-window` | `CollectionWindowDirection, string \| null, number` | Emitted when the feed needs items outside the current window. |
 
 ### Other types
+
+#### `FeedPositionResolver`
+
+```ts
+type FeedPositionResolver = NonNullable<FeedRootProps['getPosition']>
+```
+
+#### `FeedHighlightHandler`
+
+```ts
+type FeedHighlightHandler = (value: string | null) => void
+```
+
+#### `FeedRequestWindowHandler`
+
+```ts
+type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number) => void
+```
 
 #### `FeedDirection`
 
 ```ts
-type FeedDirection = 'before' | 'after'
+type FeedDirection = CollectionWindowDirection
 ```
 
 ## Parts

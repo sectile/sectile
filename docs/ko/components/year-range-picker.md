@@ -107,6 +107,24 @@ Vue 패키지: `@sectile/vue/year-range-picker`
 
 ### 기타 타입
 
+#### `YearRangePickerValueChangeHandler`
+
+```ts
+type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `YearRangePickerOpenChangeHandler`
+
+```ts
+type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `YearRangePickerHighlightedValueChangeHandler`
+
+```ts
+type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `YearRangePickerValue`
 
 | 이름 | 타입 | 필수 |

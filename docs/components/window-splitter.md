@@ -82,6 +82,20 @@ Vue package: `@sectile/vue/window-splitter`
 | --- | --- | --- |
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `WindowSplitterValueFormatter`
+
+```ts
+type WindowSplitterValueFormatter = NonNullable<WindowSplitterRootProps['formatValue']>
+```
+
+#### `WindowSplitterValueChangeHandler`
+
+```ts
+type WindowSplitterValueChangeHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="window-splitter"]</code>. Combine it with a part selector to keep styles local to this component.

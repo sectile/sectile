@@ -126,6 +126,24 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 
 ### 기타 타입
 
+#### `DateRangePickerValueChangeHandler`
+
+```ts
+type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `DateRangePickerOpenChangeHandler`
+
+```ts
+type DateRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `DateRangePickerHighlightedValueChangeHandler`
+
+```ts
+type DateRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateRange`
 
 | 이름 | 타입 | 필수 |

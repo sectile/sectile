@@ -81,6 +81,14 @@ Vue package: `@sectile/vue/checkbox-group`
 | --- | --- | --- |
 | `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `CheckboxGroupValueChangeHandler`
+
+```ts
+type CheckboxGroupValueChangeHandler = (value: readonly string[]) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="checkbox-group"]</code>. Combine it with a part selector to keep styles local to this component.

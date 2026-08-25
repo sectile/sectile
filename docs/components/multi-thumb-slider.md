@@ -116,6 +116,26 @@ Vue package: `@sectile/vue/multi-thumb-slider`
 | --- | --- | --- |
 | `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `MultiThumbSliderThumbLabelResolver`
+
+```ts
+type MultiThumbSliderThumbLabelResolver = NonNullable<MultiThumbSliderRootProps['getThumbLabel']>
+```
+
+#### `MultiThumbSliderValueFormatter`
+
+```ts
+type MultiThumbSliderValueFormatter = NonNullable<MultiThumbSliderRootProps['formatValue']>
+```
+
+#### `MultiThumbSliderValueChangeHandler`
+
+```ts
+type MultiThumbSliderValueChangeHandler = (values: readonly string[]) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="multi-thumb-slider"]</code>. Combine it with a part selector to keep styles local to this component.

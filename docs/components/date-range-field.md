@@ -76,6 +76,12 @@ Vue package: `@sectile/vue/date-range-field`
 
 ### Other types
 
+#### `DateRangeFieldValueChangeHandler`
+
+```ts
+type DateRangeFieldValueChangeHandler = (value: DateRange | null) => void
+```
+
 #### `DateRange`
 
 | Name | Type | Required |

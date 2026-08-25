@@ -124,6 +124,30 @@ type ListboxSelectionMode = 'single' | 'multiple'
 type ListboxValue = string | readonly string[]
 ```
 
+#### `ListboxTextValueResolver`
+
+```ts
+type ListboxTextValueResolver = NonNullable<ListboxRootProps['textValue']>
+```
+
+#### `ListboxValueChangeHandler`
+
+```ts
+type ListboxValueChangeHandler = (value: ListboxValue) => void
+```
+
+#### `ListboxHighlightHandler`
+
+```ts
+type ListboxHighlightHandler = (value: string | null) => void
+```
+
+#### `ListboxActivateHandler`
+
+```ts
+type ListboxActivateHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="listbox"]</code>. Combine it with a part selector to keep styles local to this component.

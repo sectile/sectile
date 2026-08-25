@@ -91,6 +91,20 @@ Vue package: `@sectile/vue/dialog`
 | `open` | `boolean` | Whether the associated popup or disclosure is open. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 
+### Other types
+
+#### `DialogOpenChangeHandler`
+
+```ts
+type DialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
+```
+
+#### `DialogPositionChangeHandler`
+
+```ts
+type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="dialog"]</code>. Combine it with a part selector to keep styles local to this component.

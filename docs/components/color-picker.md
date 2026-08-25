@@ -142,6 +142,24 @@ Vue package: `@sectile/vue/color-picker`
 
 ### Other types
 
+#### `ColorPickerValueChangeHandler`
+
+```ts
+type ColorPickerValueChangeHandler = (value: string) => void
+```
+
+#### `ColorPickerDraftChangeHandler`
+
+```ts
+type ColorPickerDraftChangeHandler = (value: string | null) => void
+```
+
+#### `ColorPickerFormatChangeHandler`
+
+```ts
+type ColorPickerFormatChangeHandler = (value: ColorFormat) => void
+```
+
 #### `ColorAreaValue`
 
 | Name | Type | Required |

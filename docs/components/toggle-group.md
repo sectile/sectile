@@ -96,6 +96,20 @@ Vue package: `@sectile/vue/toggle-group`
 | `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
+### Other types
+
+#### `ToggleGroupValueChangeHandler`
+
+```ts
+type ToggleGroupValueChangeHandler = (value: readonly string[]) => void
+```
+
+#### `ToggleGroupHighlightHandler`
+
+```ts
+type ToggleGroupHighlightHandler = (value: string | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="toggle-group"]</code>. Combine it with a part selector to keep styles local to this component.

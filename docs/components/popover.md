@@ -94,6 +94,20 @@ Vue package: `@sectile/vue/popover`
 | `open` | `boolean` | Whether the associated popup or disclosure is open. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 
+### Other types
+
+#### `PopoverOpenChangeHandler`
+
+```ts
+type PopoverOpenChangeHandler = PopupFactoryOptions['onOpenChange']
+```
+
+#### `PopoverPositionChangeHandler`
+
+```ts
+type PopoverPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="popover"]</code>. Combine it with a part selector to keep styles local to this component.

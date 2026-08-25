@@ -106,6 +106,24 @@ Vue package: `@sectile/vue/year-picker`
 
 ### Other types
 
+#### `YearPickerValueChangeHandler`
+
+```ts
+type YearPickerValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `YearPickerOpenChangeHandler`
+
+```ts
+type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `YearPickerHighlightedValueChangeHandler`
+
+```ts
+type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `YearPickerValue`
 
 | Name | Type | Required |

@@ -105,6 +105,7 @@ const enProps = Object.freeze({
   native: 'Whether to use the browser native date or time input UI.',
   nodes: 'Flat hierarchy used to build the tree.',
   orientation: 'Axis used for layout and keyboard movement.',
+  onSubmit: 'Handles a validated native submission and may report asynchronous success or server issues.',
   otp: 'Whether to opt the first input into one-time-code autocomplete.',
   pageStep: 'Larger increment used by Page Up and Page Down.',
   paused: 'Controlled pause state.',
@@ -113,6 +114,7 @@ const enProps = Object.freeze({
   restoreFocus: 'Whether focus returns to the trigger when open content closes.',
   role: 'ARIA role applied to the rendered control.',
   rows: 'Two-dimensional item structure managed by the component.',
+  schema: 'Standard Schema used for authoritative submission validation and output transformation.',
   selectionMode: 'Whether selection contains one value or multiple values.',
   setCellValue: 'Commits a new editable value for a grid cell.',
   setSize: 'Total number of items represented by the current feed window.',
@@ -135,6 +137,8 @@ const enProps = Object.freeze({
   trapFocus: 'Whether keyboard focus stays inside open content.',
   type: 'Selection or behavior mode used by the component.',
   validate: 'Validates the current field and returns application issues.',
+  validateOn: 'Interaction events that run validation before the first submission attempt.',
+  revalidateOn: 'Interaction events that rerun the active validation intent after validation fails.',
 });
 
 const koProps = Object.freeze({
@@ -214,6 +218,7 @@ const koProps = Object.freeze({
   native: '브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다.',
   nodes: '계층을 구성할 평면 노드 목록입니다.',
   orientation: '배치와 키보드 이동에 사용할 축입니다.',
+  onSubmit: '검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다.',
   otp: '첫 입력에서 일회용 코드 자동 완성을 명시적으로 사용할지 여부입니다.',
   pageStep: 'Page Up과 Page Down이 사용할 큰 증감 간격입니다.',
   paused: '외부에서 제어하는 일시 정지 상태입니다.',
@@ -222,6 +227,7 @@ const koProps = Object.freeze({
   restoreFocus: '열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다.',
   role: '렌더링된 컨트롤에 적용할 ARIA 역할입니다.',
   rows: '컴포넌트가 관리할 2차원 항목 구조입니다.',
+  schema: '최종 제출 검증과 출력 변환에 사용할 Standard Schema입니다.',
   selectionMode: '하나 또는 여러 값을 선택할지 정합니다.',
   setCellValue: '격자 셀의 새 편집값을 확정하는 함수입니다.',
   setSize: '현재 피드 구간이 나타내는 전체 항목 수입니다.',
@@ -244,6 +250,8 @@ const koProps = Object.freeze({
   trapFocus: '열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다.',
   type: '컴포넌트가 사용할 선택 또는 동작 방식입니다.',
   validate: '현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다.',
+  validateOn: '첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다.',
+  revalidateOn: '검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다.',
 });
 
 const enSlots = Object.freeze({
@@ -274,6 +282,9 @@ const enSlots = Object.freeze({
   revision: 'Revision of the current state snapshot.', rowIndex: 'Zero-based row position.', rows: 'Rows projected by the active view.', running: 'Whether the timer is currently running.',
   selected: 'Whether this item is selected.', selectedValues: 'Current selected values.', start: 'Starts timer updates.', startText: 'Formatted text for the range start value.',
   state: 'Complete current form state.', status: 'Current submission status.', submitCount: 'Number of submission attempts.',
+  submissionStatus: 'Current submission lifecycle.', validationStatus: 'Current validation lifecycle.',
+  validationTrigger: 'Event that started the current or latest validation run.',
+  validationIntent: 'Whether current validation uses interaction or submission rules.',
   targetValue: 'Value the action will activate, or null when no enabled step remains in that direction.',
   submitFailed: 'Marks the active submission as failed.', submitStarted: 'Marks a submission attempt as started.', submitSucceeded: 'Marks the active submission as successful.',
   submitted: 'Whether submission has been attempted.', text: 'Formatted text for the current value.', toast: 'Notification represented by this item.', toasts: 'Current notification collection.',
@@ -306,6 +317,9 @@ const koSlots = Object.freeze({
   revision: '현재 상태 스냅샷의 변경 차수입니다.', rowIndex: '0부터 시작하는 행 위치입니다.', rows: '현재 보기에 표시할 행입니다.', running: '타이머가 작동 중인지 여부입니다.',
   selected: '현재 선택된 항목인지 여부입니다.', selectedValues: '현재 선택된 값입니다.', start: '타이머 갱신을 시작하는 함수입니다.', startText: '범위 시작값을 표시한 문자열입니다.',
   state: '현재 전체 폼 상태입니다.', status: '현재 제출 상태입니다.', submitCount: '제출을 시도한 횟수입니다.', submitFailed: '현재 제출을 실패로 기록하는 함수입니다.',
+  submissionStatus: '현재 제출 생명주기입니다.', validationStatus: '현재 검증 생명주기입니다.',
+  validationTrigger: '현재 또는 최근 검증을 시작한 이벤트입니다.',
+  validationIntent: '현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다.',
   targetValue: '이 동작이 활성화할 값입니다. 해당 방향에 활성화할 단계가 없으면 null입니다.',
   submitStarted: '제출 시도를 시작 상태로 기록하는 함수입니다.', submitSucceeded: '현재 제출을 성공으로 기록하는 함수입니다.', submitted: '제출을 시도했는지 여부입니다.',
   text: '현재 값을 표시한 문자열입니다.', toast: '이 항목이 나타내는 알림입니다.', toasts: '현재 알림 컬렉션입니다.', touched: '사용자가 필드를 조작했는지 여부입니다.',

@@ -96,6 +96,20 @@ Vue package: `@sectile/vue/toolbar`
 | `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
 | `invoke` | `string` | Emitted when the current action is invoked. |
 
+### Other types
+
+#### `ToolbarValueChangeHandler`
+
+```ts
+type ToolbarValueChangeHandler = (value: string | null) => void
+```
+
+#### `ToolbarInvokeHandler`
+
+```ts
+type ToolbarInvokeHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="toolbar"]</code>. Combine it with a part selector to keep styles local to this component.

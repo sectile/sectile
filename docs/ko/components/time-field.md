@@ -57,6 +57,12 @@ Vue 패키지: `@sectile/vue/time-field`
 type TimeValue = NonNullable<TimeFieldOptions['value']>
 ```
 
+#### `TimeFieldValueChangeHandler`
+
+```ts
+type TimeFieldValueChangeHandler = (value: TimeValue | null) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="time-field"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

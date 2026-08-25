@@ -132,6 +132,24 @@ Vue package: `@sectile/vue/tabs`
 type TabsActivationMode = 'automatic' | 'manual'
 ```
 
+#### `TabsValueChangeHandler`
+
+```ts
+type TabsValueChangeHandler = (value: string) => void
+```
+
+#### `TabsHighlightHandler`
+
+```ts
+type TabsHighlightHandler = (value: string | null) => void
+```
+
+#### `TabsActivateHandler`
+
+```ts
+type TabsActivateHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="tabs"]</code>. Combine it with a part selector to keep styles local to this component.

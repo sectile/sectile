@@ -57,6 +57,12 @@ Vue package: `@sectile/vue/time-field`
 type TimeValue = NonNullable<TimeFieldOptions['value']>
 ```
 
+#### `TimeFieldValueChangeHandler`
+
+```ts
+type TimeFieldValueChangeHandler = (value: TimeValue | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="time-field"]</code>. Combine it with a part selector to keep styles local to this component.

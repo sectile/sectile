@@ -106,6 +106,24 @@ Vue package: `@sectile/vue/month-range-picker`
 
 ### Other types
 
+#### `MonthRangePickerValueChangeHandler`
+
+```ts
+type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `MonthRangePickerOpenChangeHandler`
+
+```ts
+type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `MonthRangePickerHighlightedValueChangeHandler`
+
+```ts
+type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `MonthRangePickerValue`
 
 | Name | Type | Required |

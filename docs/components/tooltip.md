@@ -82,6 +82,20 @@ Vue package: `@sectile/vue/tooltip`
 | `open` | `boolean` | Whether the associated popup or disclosure is open. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 
+### Other types
+
+#### `TooltipOpenChangeHandler`
+
+```ts
+type TooltipOpenChangeHandler = PopupFactoryOptions['onOpenChange']
+```
+
+#### `TooltipPositionChangeHandler`
+
+```ts
+type TooltipPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="tooltip"]</code>. Combine it with a part selector to keep styles local to this component.

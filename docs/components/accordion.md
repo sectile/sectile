@@ -117,6 +117,12 @@ type AccordionType = 'single' | 'multiple'
 type AccordionValue = string | readonly string[]
 ```
 
+#### `AccordionValueChangeHandler`
+
+```ts
+type AccordionValueChangeHandler = (value: AccordionValue) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="accordion"]</code>. Combine it with a part selector to keep styles local to this component.

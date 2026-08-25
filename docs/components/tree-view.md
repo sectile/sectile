@@ -130,6 +130,30 @@ Vue package: `@sectile/vue/tree-view`
 | --- | --- | --- |
 | `eligible` | `(id: ID) => boolean` | — |
 
+#### `TreeViewEligiblePredicate`
+
+```ts
+type TreeViewEligiblePredicate<ID extends string = string> = NonNullable<TreeViewPolicies<ID>['eligible']>
+```
+
+#### `TreeViewValueChangeHandler`
+
+```ts
+type TreeViewValueChangeHandler = (value: readonly string[]) => void
+```
+
+#### `TreeViewExpandedValuesChangeHandler`
+
+```ts
+type TreeViewExpandedValuesChangeHandler = (value: readonly string[]) => void
+```
+
+#### `TreeViewHighlightedValueChangeHandler`
+
+```ts
+type TreeViewHighlightedValueChangeHandler = (value: string | null) => void
+```
+
 #### `TreeNodeInput`
 
 | Name | Type | Required |

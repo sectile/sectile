@@ -76,6 +76,12 @@ Vue 패키지: `@sectile/vue/date-range-field`
 
 ### 기타 타입
 
+#### `DateRangeFieldValueChangeHandler`
+
+```ts
+type DateRangeFieldValueChangeHandler = (value: DateRange | null) => void
+```
+
 #### `DateRange`
 
 | 이름 | 타입 | 필수 |

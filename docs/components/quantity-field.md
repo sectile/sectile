@@ -124,6 +124,24 @@ function createStandardQuantityPolicies(canonicalUnit: string, unitSystem?: Stan
 type StandardQuantityUnitSystem = 'metric' | 'imperial' | 'all'
 ```
 
+#### `QuantityFieldValueChangeHandler`
+
+```ts
+type QuantityFieldValueChangeHandler = (value: QuantityValue | null) => void
+```
+
+#### `QuantityFieldDisplayUnitChangeHandler`
+
+```ts
+type QuantityFieldDisplayUnitChangeHandler = (value: string) => void
+```
+
+#### `QuantityFieldCommitHandler`
+
+```ts
+type QuantityFieldCommitHandler = (details: { value: QuantityValue | null; expression: string; displayUnit: string }) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="quantity-field"]</code>. Combine it with a part selector to keep styles local to this component.

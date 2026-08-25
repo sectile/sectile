@@ -87,6 +87,12 @@ Vue package: `@sectile/vue/checkbox`
 type CheckboxValue = boolean | 'indeterminate'
 ```
 
+#### `CheckboxValueChangeHandler`
+
+```ts
+type CheckboxValueChangeHandler = (value: CheckboxValue) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="checkbox"]</code>. Combine it with a part selector to keep styles local to this component.

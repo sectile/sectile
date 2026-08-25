@@ -125,6 +125,24 @@ Vue package: `@sectile/vue/date-picker`
 
 ### Other types
 
+#### `DatePickerValueChangeHandler`
+
+```ts
+type DatePickerValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `DatePickerOpenChangeHandler`
+
+```ts
+type DatePickerOpenChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `DatePickerHighlightedValueChangeHandler`
+
+```ts
+type DatePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateValue`
 
 | Name | Type | Required |

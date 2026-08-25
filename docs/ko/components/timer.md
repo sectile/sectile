@@ -86,6 +86,20 @@ Vue 패키지: `@sectile/vue/timer`
 | `complete` | `number` | 필요한 모든 입력 칸이 채워질 때 발생합니다. |
 | `tick` | `number` | 타이머 간격마다 새 값이 만들어질 때 발생합니다. |
 
+### 기타 타입
+
+#### `TimerTickHandler`
+
+```ts
+type TimerTickHandler = (valueMs: number) => void
+```
+
+#### `TimerCompleteHandler`
+
+```ts
+type TimerCompleteHandler = (valueMs: number) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="timer"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

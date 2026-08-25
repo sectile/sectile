@@ -110,6 +110,20 @@ Vue 패키지: `@sectile/vue/pagination`
 | `update:modelValue` | `number` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 | `update:itemsPerPage` | `number` | 새 페이지당 항목 수를 요청할 때 발생합니다. |
 
+### 기타 타입
+
+#### `PaginationValueChangeHandler`
+
+```ts
+type PaginationValueChangeHandler = (value: number) => void
+```
+
+#### `PaginationItemsPerPageChangeHandler`
+
+```ts
+type PaginationItemsPerPageChangeHandler = (value: number) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="pagination"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

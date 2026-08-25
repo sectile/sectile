@@ -125,6 +125,20 @@ Vue 패키지: `@sectile/vue/pin-input`
 | `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 | `complete` | `string` | 필요한 모든 입력 칸이 채워질 때 발생합니다. |
 
+### 기타 타입
+
+#### `PinInputValueChangeHandler`
+
+```ts
+type PinInputValueChangeHandler = (value: string) => void
+```
+
+#### `PinInputCompleteHandler`
+
+```ts
+type PinInputCompleteHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="pin-input"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

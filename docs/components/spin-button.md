@@ -95,6 +95,20 @@ Vue package: `@sectile/vue/spin-button`
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 | `update:draft` | `string \| null` | Emitted when the editable draft changes. |
 
+### Other types
+
+#### `SpinButtonValueChangeHandler`
+
+```ts
+type SpinButtonValueChangeHandler = (value: string) => void
+```
+
+#### `SpinButtonDraftChangeHandler`
+
+```ts
+type SpinButtonDraftChangeHandler = (value: string | null) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="spin-button"]</code>. Combine it with a part selector to keep styles local to this component.

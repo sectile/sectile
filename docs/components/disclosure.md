@@ -82,6 +82,14 @@ Vue package: `@sectile/vue/disclosure`
 | --- | --- | --- |
 | `update:modelValue` | `boolean` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `DisclosureValueChangeHandler`
+
+```ts
+type DisclosureValueChangeHandler = (value: boolean) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="disclosure"]</code>. Combine it with a part selector to keep styles local to this component.

@@ -83,6 +83,14 @@ Vue package: `@sectile/vue/rating`
 | --- | --- | --- |
 | `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `RatingValueChangeHandler`
+
+```ts
+type RatingValueChangeHandler = (value: string) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="rating"]</code>. Combine it with a part selector to keep styles local to this component.

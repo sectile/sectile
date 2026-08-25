@@ -79,6 +79,12 @@ Vue package: `@sectile/vue/text`
 | `number` | `boolean` | — |
 | `trim` | `boolean` | — |
 
+#### `TextFieldValueChangeHandler`
+
+```ts
+type TextFieldValueChangeHandler = (value: string | number) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="text"]</code>. Combine it with a part selector to keep styles local to this component.

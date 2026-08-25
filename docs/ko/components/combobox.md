@@ -116,6 +116,38 @@ Vue 패키지: `@sectile/vue/combobox`
 | `accept` | `string` | 현재 입력이 허용된 값으로 확정될 때 발생합니다. |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `ComboboxValueChangeHandler`
+
+```ts
+type ComboboxValueChangeHandler = (value: string | null) => void
+```
+
+#### `ComboboxInputValueChangeHandler`
+
+```ts
+type ComboboxInputValueChangeHandler = (value: string) => void
+```
+
+#### `ComboboxOpenChangeHandler`
+
+```ts
+type ComboboxOpenChangeHandler = (value: boolean) => void
+```
+
+#### `ComboboxHighlightHandler`
+
+```ts
+type ComboboxHighlightHandler = (value: string | null) => void
+```
+
+#### `ComboboxAcceptHandler`
+
+```ts
+type ComboboxAcceptHandler = (value: string) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="combobox"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.

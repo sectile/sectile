@@ -65,6 +65,14 @@ Vue package: `@sectile/vue/toggle-button`
 | --- | --- | --- |
 | `update:modelValue` | `boolean` | Emitted when the component requests a new controlled value. |
 
+### Other types
+
+#### `ToggleButtonValueChangeHandler`
+
+```ts
+type ToggleButtonValueChangeHandler = (value: boolean) => void
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="toggle-button"]</code>. Combine it with a part selector to keep styles local to this component.

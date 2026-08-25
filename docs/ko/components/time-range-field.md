@@ -76,6 +76,12 @@ Vue 패키지: `@sectile/vue/time-range-field`
 
 ### 기타 타입
 
+#### `TimeRangeFieldValueChangeHandler`
+
+```ts
+type TimeRangeFieldValueChangeHandler = (value: TimeRange | null) => void
+```
+
 #### `TimeRange`
 
 | 이름 | 타입 | 필수 |

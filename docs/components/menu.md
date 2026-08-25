@@ -148,6 +148,62 @@ Vue package: `@sectile/vue/menu`
 | `update:open` | `boolean` | Emitted when the component requests a new open state. |
 | `invoke` | `string` | Emitted when the current action is invoked. |
 
+### Other types
+
+#### `MenuTextValueResolver`
+
+```ts
+type MenuTextValueResolver = NonNullable<MenuRootProps['textValue']>
+```
+
+#### `MenuOpenChangeHandler`
+
+```ts
+type MenuOpenChangeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenuInvokeHandler`
+
+```ts
+type MenuInvokeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onInvoke']>
+```
+
+#### `MenubarOpenChangeHandler`
+
+```ts
+type MenubarOpenChangeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenubarInvokeHandler`
+
+```ts
+type MenubarInvokeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onInvoke']>
+```
+
+#### `NavigationMenuOpenChangeHandler`
+
+```ts
+type NavigationMenuOpenChangeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onUpdate:open']>
+```
+
+#### `NavigationMenuInvokeHandler`
+
+```ts
+type NavigationMenuInvokeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onInvoke']>
+```
+
+#### `MenuButtonOpenChangeHandler`
+
+```ts
+type MenuButtonOpenChangeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onUpdate:open']>
+```
+
+#### `MenuButtonInvokeHandler`
+
+```ts
+type MenuButtonInvokeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onInvoke']>
+```
+
 ## Parts
 
 Shared scope: <code class="component-scope-token">[data-scope="menu"]</code>. Combine it with a part selector to keep styles local to this component.

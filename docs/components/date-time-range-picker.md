@@ -130,6 +130,24 @@ Vue package: `@sectile/vue/date-time-range-picker`
 
 ### Other types
 
+#### `DateTimeRangePickerValueChangeHandler`
+
+```ts
+type DateTimeRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `DateTimeRangePickerOpenChangeHandler`
+
+```ts
+type DateTimeRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `DateTimeRangePickerHighlightedValueChangeHandler`
+
+```ts
+type DateTimeRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateTimeRange`
 
 | Name | Type | Required |

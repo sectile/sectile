@@ -105,6 +105,24 @@ Vue package: `@sectile/vue/month-picker`
 
 ### Other types
 
+#### `MonthPickerValueChangeHandler`
+
+```ts
+type MonthPickerValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `MonthPickerOpenChangeHandler`
+
+```ts
+type MonthPickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `MonthPickerHighlightedValueChangeHandler`
+
+```ts
+type MonthPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `MonthPickerValue`
 
 | Name | Type | Required |

@@ -91,14 +91,32 @@ Vue 패키지: `@sectile/vue/feed`
 | 이벤트 | 페이로드 | 설명 |
 | --- | --- | --- |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
-| `request-window` | `FeedDirection, string \| null, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
+| `request-window` | `CollectionWindowDirection, string \| null, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
 
 ### 기타 타입
+
+#### `FeedPositionResolver`
+
+```ts
+type FeedPositionResolver = NonNullable<FeedRootProps['getPosition']>
+```
+
+#### `FeedHighlightHandler`
+
+```ts
+type FeedHighlightHandler = (value: string | null) => void
+```
+
+#### `FeedRequestWindowHandler`
+
+```ts
+type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number) => void
+```
 
 #### `FeedDirection`
 
 ```ts
-type FeedDirection = 'before' | 'after'
+type FeedDirection = CollectionWindowDirection
 ```
 
 ## 파트

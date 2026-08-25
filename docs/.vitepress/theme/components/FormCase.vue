@@ -67,12 +67,13 @@ const panelCopy = computed(() => ({
   },
 })[props.scenario]);
 
-const submit: FormSubmitHandler<FormDemoValues> = ({ values }) => {
+const submit: FormSubmitHandler = ({ values }) => {
+  const formValues = values as FormDemoValues;
   savedMessage.value = props.scenario === 'profile'
-    ? `Saved ${values.profile?.displayName ?? 'profile'}`
+    ? `Saved ${formValues.profile?.displayName ?? 'profile'}`
     : props.scenario === 'notifications'
       ? 'Notification preferences saved'
-      : `Invitation sent to ${values.invitation?.email ?? 'teammate'}`;
+      : `Invitation sent to ${formValues.invitation?.email ?? 'teammate'}`;
   revision.value += 1;
 };
 </script>

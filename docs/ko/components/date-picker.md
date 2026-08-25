@@ -125,6 +125,24 @@ Vue 패키지: `@sectile/vue/date-picker`
 
 ### 기타 타입
 
+#### `DatePickerValueChangeHandler`
+
+```ts
+type DatePickerValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:modelValue']>
+```
+
+#### `DatePickerOpenChangeHandler`
+
+```ts
+type DatePickerOpenChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:open']>
+```
+
+#### `DatePickerHighlightedValueChangeHandler`
+
+```ts
+type DatePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
 #### `DateValue`
 
 | 이름 | 타입 | 필수 |

@@ -109,6 +109,32 @@ Vue 패키지: `@sectile/vue/select`
 | `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
+### 기타 타입
+
+#### `SelectTextValueResolver`
+
+```ts
+type SelectTextValueResolver = NonNullable<SelectRootProps['textValue']>
+```
+
+#### `SelectValueChangeHandler`
+
+```ts
+type SelectValueChangeHandler = (value: string | null) => void
+```
+
+#### `SelectOpenChangeHandler`
+
+```ts
+type SelectOpenChangeHandler = (value: boolean) => void
+```
+
+#### `SelectHighlightHandler`
+
+```ts
+type SelectHighlightHandler = (value: string | null) => void
+```
+
 ## 파트
 
 공통 범위: <code class="component-scope-token">[data-scope="select"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
