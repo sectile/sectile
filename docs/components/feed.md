@@ -43,58 +43,214 @@ Vue package: `@sectile/vue/feed`
 
 #### `FeedRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
-| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `getPosition` | `(id: string) => number` | `undefined` | Returns the numeric position represented by an item. |
-| `requestGeneration` | `number` | `undefined` | Generation token returned by the window request being resolved. |
-| `revision` | `number` | `0` | Application revision used to refresh derived content. |
-| `setSize` | `number` | `undefined` | Total number of items represented by the current feed window. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultHighlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initially highlighted value for uncontrolled state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getPosition</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(id: string) =&gt; number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns the numeric position represented by an item.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Ordered item values managed by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Generation token returned by the window request being resolved.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>0</code></span></div>
+<p>Application revision used to refresh derived content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>setSize</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Total number of items represented by the current feed window.</p>
+</dd>
+</div>
+</dl>
 
 #### `FeedPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `FeedRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
-| `requestGeneration` | `number` | Generation of the current or most recently issued window request. |
-| `revision` | `number` | Revision of the current state snapshot. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pending</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FeedDirection | null</code></span></div>
+<p>Whether a request is currently pending.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Generation of the current or most recently issued window request.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Revision of the current state snapshot.</p>
+</dd>
+</div>
+</dl>
 
 #### `FeedItemSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
-| `requestGeneration` | `number` | Generation of the current or most recently issued window request. |
-| `revision` | `number` | Revision of the current state snapshot. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pending</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FeedDirection | null</code></span></div>
+<p>Whether a request is currently pending.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Generation of the current or most recently issued window request.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Revision of the current state snapshot.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `FeedRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
-| `request-window` | `CollectionWindowDirection, string \| null, number, number` | Emitted when the feed needs items outside the current window. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>highlight</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the highlighted item changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>request-window</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>CollectionWindowDirection, string | null, number, number</code></span></div>
+<p>Emitted when the feed needs items outside the current window.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

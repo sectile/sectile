@@ -40,16 +40,64 @@ Vue 패키지: `@sectile/vue/date-time-field`
 
 #### `DateTimeFieldProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `modelValue` | `DateTimeValue \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
-| `defaultValue` | `DateTimeValue \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
-| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | `undefined` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
-| `required` | `boolean` | `undefined` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `policies` | `DateTimeFieldOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
-| `native` | `boolean` | `undefined` | 브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateTimeValue | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컴포넌트가 값을 관리할 때 사용할 초깃값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateTimeValue | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>부모가 상태를 관리할 때 사용할 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>native</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateTimeFieldOptions['policies']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증, 이동, 선택 동작을 조정하는 정책입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

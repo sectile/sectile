@@ -50,71 +50,275 @@ Vue package: `@sectile/vue/combobox`
 
 #### `ComboboxRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `items` | `readonly ComboboxItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
-| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
-| `inputValue` | `string` | `undefined` | Controlled text currently shown by the editable input. |
-| `defaultInputValue` | `string` | `''` | Initial uncontrolled text shown by the editable input. |
-| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
-| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `policies` | `ComboboxPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultInputValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>''</code></span></div>
+<p>Initial uncontrolled text shown by the editable input.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Initial uncontrolled open state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>inputValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Controlled text currently shown by the editable input.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly ComboboxItemDefinition&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Ordered item values managed by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ComboboxPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Behavior policies that customize validation, movement, or selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+</dl>
 
 #### `ComboboxItemProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | Required | Current value exposed by this contract. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `ComboboxPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `ComboboxRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string \| null` | Current value exposed by this contract. |
-| `inputValue` | `string` | Current editable input text. |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `open` | `boolean` | Whether the associated popup or disclosure is open. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>inputValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current editable input text.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `ComboboxItemSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `selected` | `boolean` | Whether this item is selected. |
-| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `ComboboxRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
-| `update:inputValue` | `string` | Emitted when editable input text changes. |
-| `update:open` | `boolean` | Emitted when the component requests a new open state. |
-| `accept` | `string` | Emitted when the current draft becomes an accepted value. |
-| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>accept</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
+<p>Emitted when the current draft becomes an accepted value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlight</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the highlighted item changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:inputValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
+<p>Emitted when editable input text changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>boolean</code></span></div>
+<p>Emitted when the component requests a new open state.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

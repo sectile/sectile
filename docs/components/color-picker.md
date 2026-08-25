@@ -52,93 +52,369 @@ Vue package: `@sectile/vue/color-picker`
 
 #### `ColorPickerRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `string` | `'#5b6df6'` | Initial value used when the component owns its state. |
-| `draft` | `string \| null` | `undefined` | Controlled editable draft before commit. |
-| `defaultDraft` | `string \| null` | `null` | Editable draft used for uncontrolled initial state. |
-| `format` | `ColorFormat` | `undefined` | Controlled color format. |
-| `defaultFormat` | `ColorFormat` | `'hex'` | Initial uncontrolled color format. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
-| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
-| `name` | `string` | `undefined` | Name used for native form submission. |
-| `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `allowAlpha` | `boolean` | `true` | Whether the color value may include transparency. |
-| `alphaStep` | `number` | `17` | Increment applied when the alpha channel changes. |
-| `channelStep` | `number` | `1` | Increment applied when a color channel changes. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>allowAlpha</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether the color value may include transparency.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>alphaStep</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>17</code></span></div>
+<p>Increment applied when the alpha channel changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>channelStep</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>1</code></span></div>
+<p>Increment applied when a color channel changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultDraft</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Editable draft used for uncontrolled initial state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultFormat</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorFormat</code></span><span><span class="component-api-definition__label">Default</span><code>'hex'</code></span></div>
+<p>Initial uncontrolled color format.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>'#5b6df6'</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>draft</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Controlled editable draft before commit.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>ID of the native form associated with the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorFormat</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Controlled color format.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Name used for native form submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the control must contain a valid value before submission.</p>
+</dd>
+</div>
+</dl>
 
 #### `ColorPickerPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 #### `ColorPickerChannelInputProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `channel` | `ColorChannel` | Required | Color channel edited by this input. |
-| `as` | `PrimitiveAs` | `'input'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'input'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>channel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorChannel</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Color channel edited by this input.</p>
+</dd>
+</div>
+</dl>
 
 #### `ColorPickerFormatTriggerProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `format` | `ColorFormat` | Required | Controlled color format. |
-| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'button'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorFormat</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Controlled color format.</p>
+</dd>
+</div>
+</dl>
 
 #### `ColorPickerCoordinateInputProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `coordinate` | `ColorCoordinate` | Required | Coordinate edited within the selected color model. |
-| `format` | `ColorModel` | Required | Controlled color format. |
-| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>coordinate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorCoordinate</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Coordinate edited within the selected color model.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorModel</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Controlled color format.</p>
+</dd>
+</div>
+</dl>
 
 #### `ColorPickerCoordinateSliderProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `coordinate` | `ColorCoordinate` | Required | Coordinate edited within the selected color model. |
-| `format` | `ColorModel` | Required | Controlled color format. |
-| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>coordinate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorCoordinate</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Coordinate edited within the selected color model.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorModel</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Controlled color format.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `ColorPickerRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `ColorValue` | Current value exposed by this contract. |
-| `draft` | `string \| null` | Current uncommitted input text. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
-| `area` | `ColorAreaValue` | Current two-dimensional color area state. |
-| `channel` | `ColorChannel` | Current color channel. |
-| `coordinates` | `readonly ColorCoordinateValue[]` | Current coordinates in the active color model. |
-| `cssColor` | `string` | Current color serialized for CSS. |
-| `format` | `ColorFormat` | Current color format. |
-| `text` | `string` | Formatted text for the current value. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>area</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorAreaValue</code></span></div>
+<p>Current two-dimensional color area state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>channel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorChannel</code></span></div>
+<p>Current color channel.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>coordinates</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly ColorCoordinateValue[]</code></span></div>
+<p>Current coordinates in the active color model.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>cssColor</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current color serialized for CSS.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>draft</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Current uncommitted input text.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorFormat</code></span></div>
+<p>Current color format.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>text</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Formatted text for the current value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ColorValue</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `ColorPickerRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
-| `update:draft` | `string \| null` | Emitted when the editable draft changes. |
-| `update:format` | `ColorFormat` | Emitted when the requested color format changes. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:draft</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the editable draft changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:format</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>ColorFormat</code></span></div>
+<p>Emitted when the requested color format changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

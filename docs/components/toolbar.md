@@ -40,61 +40,205 @@ Vue package: `@sectile/vue/toolbar`
 
 #### `ToolbarRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
-| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
-| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `policies` | `ToolbarPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabledItems</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
+<p>Item values excluded from focus and selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Ordered item values managed by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>orientation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'horizontal' | 'vertical'</code></span><span><span class="component-api-definition__label">Default</span><code>'horizontal'</code></span></div>
+<p>Axis used for layout and keyboard movement.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ToolbarPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Behavior policies that customize validation, movement, or selection.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToolbarItemProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | Required | Current value exposed by this contract. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'button'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToolbarPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `ToolbarRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `orientation` | `'horizontal' \| 'vertical'` | Current layout and movement axis. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>orientation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'horizontal' | 'vertical'</code></span></div>
+<p>Current layout and movement axis.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToolbarItemSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `ToolbarRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
-| `invoke` | `string` | Emitted when the current action is invoked. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>invoke</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
+<p>Emitted when the current action is invoked.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

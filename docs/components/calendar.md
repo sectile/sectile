@@ -45,63 +45,249 @@ Vue package: `@sectile/vue/calendar`
 
 #### `CalendarRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `rows` | `readonly (readonly string[])[]` | Required | Two-dimensional item structure managed by the component. |
-| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
-| `highlightedValue` | `string \| null` | `undefined` | Value currently highlighted for keyboard interaction. |
-| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
-| `disabledValues` | `readonly string[]` | `[]` | Values displayed but unavailable for selection. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
-| `name` | `string` | `undefined` | Name used for native form submission. |
-| `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `policies` | `CalendarPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultHighlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initially highlighted value for uncontrolled state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabledValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
+<p>Values displayed but unavailable for selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>ID of the native form associated with the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Value currently highlighted for keyboard interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Name used for native form submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Behavior policies that customize validation, movement, or selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the control must contain a valid value before submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>rows</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly string[])[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Two-dimensional item structure managed by the component.</p>
+</dd>
+</div>
+</dl>
 
 #### `CalendarCellProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | Required | Current value exposed by this contract. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'button'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `CalendarRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string \| null` | Current value exposed by this contract. |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `rows` | `readonly (readonly string[])[]` | Rows projected by the active view. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>rows</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly string[])[]</code></span></div>
+<p>Rows projected by the active view.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `CalendarCellSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `selected` | `boolean` | Whether this item is selected. |
-| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `columnIndex` | `number` | Zero-based column position. |
-| `rowIndex` | `number` | Zero-based row position. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>columnIndex</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Zero-based column position.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>rowIndex</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Zero-based row position.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `CalendarRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
-| `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
-| `page` | `{ direction: -1 \| 1; from: string \| null; }` | Emitted when the requested page changes. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>page</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>{ direction: -1 | 1; from: string | null; }</code></span></div>
+<p>Emitted when the requested page changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the requested highlighted value changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

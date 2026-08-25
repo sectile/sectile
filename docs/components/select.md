@@ -46,91 +46,385 @@ Vue package: `@sectile/vue/select`
 
 #### `SelectRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
-| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | Preferred side of the anchor for positioned content. |
-| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
-| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
-| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
-| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
-| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
-| `name` | `string` | `undefined` | Name used for native form submission. |
-| `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `policies` | `SelectPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
-| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `align` | `'start' \| 'center' \| 'end'` | `'start'` | Alignment of positioned content relative to its anchor. |
-| `sideOffset` | `number` | `4` | Distance between positioned content and its anchor. |
-| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
-| `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
-| `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
-| `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
-| `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
-| `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
-| `position` | `boolean` | `true` | Whether the popup is positioned relative to its trigger. |
-| `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
-| `typeaheadTimeoutMs` | `number` | `700` | Idle time in milliseconds before the printable-text search buffer resets. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'start' | 'center' | 'end'</code></span><span><span class="component-api-definition__label">Default</span><code>'start'</code></span></div>
+<p>Alignment of positioned content relative to its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoUpdate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean | AutoUpdateOptions</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether and how positioned content tracks layout changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content may flip or shift to remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Boundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Boundary used to keep positioned content visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Padding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Space kept between positioned content and its collision boundary.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Initial uncontrolled open state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabledItems</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
+<p>Item values excluded from focus and selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>ID of the native form associated with the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content hides when its anchor leaves the layout.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Ordered item values managed by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>middleware</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Middleware[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Positioning middleware applied after the built-in placement rules.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Name used for native form submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>SelectPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Behavior policies that customize validation, movement, or selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the control must contain a valid value before submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'top' | 'right' | 'bottom' | 'left'</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<p>Preferred side of the anchor for positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>4</code></span></div>
+<p>Distance between positioned content and its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'fixed'</code></span></div>
+<p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>textValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(id: string) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns searchable or presentational text for an item value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>typeaheadTimeoutMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>700</code></span></div>
+<p>Idle time in milliseconds before the printable-text search buffer resets.</p>
+</dd>
+</div>
+</dl>
 
 #### `SelectItemProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | Required | Current value exposed by this contract. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `SelectPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 #### `SelectPortalProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>'body'</code></span></div>
+<p>Teleport target for portalled content.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `SelectRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string \| null` | Current value exposed by this contract. |
-| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
-| `open` | `boolean` | Whether the associated popup or disclosure is open. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 #### `SelectItemSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `selected` | `boolean` | Whether this item is selected. |
-| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `SelectRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
-| `update:open` | `boolean` | Emitted when the component requests a new open state. |
-| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
-| `position-change` | `ComputePositionReturn` | Emitted after positioned content receives a new calculated placement. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>highlight</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the highlighted item changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>position-change</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>ComputePositionReturn</code></span></div>
+<p>Emitted after positioned content receives a new calculated placement.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>boolean</code></span></div>
+<p>Emitted when the component requests a new open state.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

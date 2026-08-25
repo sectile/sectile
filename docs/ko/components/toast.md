@@ -44,67 +44,217 @@ Vue 패키지: `@sectile/vue/toast`
 
 #### `ToastProviderProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `defaultDurationMs` | `number \| null` | `5_000` | 밀리초 단위의 초기 타이머 길이입니다. |
-| `maxVisible` | `number` | `3` | 한 번에 표시할 수 있는 최대 알림 수입니다. |
-| `closeLabel` | `string` | `'Dismiss notification'` | 각 알림 닫기 작업에 제공할 접근 가능한 이름입니다. |
-| `dismissOnEscape` | `boolean` | `true` | Escape 키로 포커스된 알림을 닫을지 여부입니다. |
-| `hotkey` | `readonly string[] \| false` | `['F8']` | 알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false면 사용하지 않습니다. |
-| `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Provider가 처음 마운트될 때 존재할 알림입니다. |
-| `pauseOnWindowBlur` | `boolean` | `true` | 브라우저 창이 비활성 상태일 때 자동 닫기 시간을 멈출지 여부입니다. |
-| `swipeDirection` | `'up' \| 'right' \| 'down' \| 'left'` | `'right'` | 포인터로 알림을 밀어 닫을 방향입니다. |
-| `swipeThreshold` | `number` | `50` | 밀어서 닫을 때 필요한 포인터 이동 거리(픽셀)입니다. |
-| `toasts` | `readonly ToastInput<string>[]` | `undefined` | 부모가 Provider를 제어할 때 사용할 현재 알림 목록입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>closeLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>'Dismiss notification'</code></span></div>
+<p>각 알림 닫기 작업에 제공할 접근 가능한 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultDurationMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number | null</code></span><span><span class="component-api-definition__label">기본값</span><code>5_000</code></span></div>
+<p>밀리초 단위의 초기 타이머 길이입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dismissOnEscape</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>Escape 키로 포커스된 알림을 닫을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hotkey</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[] | false</code></span><span><span class="component-api-definition__label">기본값</span><code>['F8']</code></span></div>
+<p>알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false면 사용하지 않습니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>initialToasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly ToastInput&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
+<p>Provider가 처음 마운트될 때 존재할 알림입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>maxVisible</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>3</code></span></div>
+<p>한 번에 표시할 수 있는 최대 알림 수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pauseOnWindowBlur</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>브라우저 창이 비활성 상태일 때 자동 닫기 시간을 멈출지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeDirection</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'up' | 'right' | 'down' | 'left'</code></span><span><span class="component-api-definition__label">기본값</span><code>'right'</code></span></div>
+<p>포인터로 알림을 밀어 닫을 방향입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>50</code></span></div>
+<p>밀어서 닫을 때 필요한 포인터 이동 거리(픽셀)입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly ToastInput&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>부모가 Provider를 제어할 때 사용할 현재 알림 목록입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastPortalProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `to` | `string \| HTMLElement` | `'body'` | 포털 콘텐츠를 옮길 대상입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">기본값</span><code>'body'</code></span></div>
+<p>포털 콘텐츠를 옮길 대상입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `value` | `string` | 필수 | 이 계약이 노출하는 현재 값입니다. |
-| `as` | `PrimitiveAs` | `'li'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'li'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `ToastProviderSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `dismiss` | `void` | 알림 하나를 닫는 함수입니다. |
-| `toast` | `void` | 이 항목이 나타내는 알림입니다. |
-| `toasts` | `readonly ToastItem<string>[]` | 현재 알림 컬렉션입니다. |
-| `dismissAll` | `void` | 모든 알림을 닫는 함수입니다. |
-| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dismiss</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>알림 하나를 닫는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dismissAll</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>모든 알림을 닫는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>자동 갱신이 멈춘 상태인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toast</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>이 항목이 나타내는 알림입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly ToastItem&lt;string&gt;[]</code></span></div>
+<p>현재 알림 컬렉션입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `toast` | `ToastItem<string> \| null` | 이 항목이 나타내는 알림입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toast</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>ToastItem&lt;string&gt; | null</code></span></div>
+<p>이 항목이 나타내는 알림입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `ToastProvider`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `update:toasts` | `readonly ToastInput<string>[]` | Provider가 새 외부 제어 알림 목록을 요청할 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>readonly ToastInput&lt;string&gt;[]</code></span></div>
+<p>Provider가 새 외부 제어 알림 목록을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ## 파트
 

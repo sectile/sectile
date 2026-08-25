@@ -43,48 +43,174 @@ Vue 패키지: `@sectile/vue/timer`
 
 #### `TimerRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
-| `autoStart` | `boolean` | `false` | 마운트 직후 타이머를 시작할지 여부입니다. |
-| `countdown` | `boolean` | `false` | 경과 시간을 재지 않고 남은 시간을 셀지 여부입니다. |
-| `intervalMs` | `number` | `100` | 자동 갱신 사이의 밀리초 단위 간격입니다. |
-| `startMs` | `number` | `0` | 밀리초 단위의 초기 경과 시간입니다. |
-| `targetMs` | `number \| null` | `undefined` | 밀리초 단위의 경과 시간 목표입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'div'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoStart</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>마운트 직후 타이머를 시작할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>countdown</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>경과 시간을 재지 않고 남은 시간을 셀지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>intervalMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>100</code></span></div>
+<p>자동 갱신 사이의 밀리초 단위 간격입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>startMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>0</code></span></div>
+<p>밀리초 단위의 초기 경과 시간입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>targetMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>밀리초 단위의 경과 시간 목표입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `TimerPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `TimerSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `progress` | `number \| null` | 0부터 1까지의 완료 진행률입니다. |
-| `start` | `void` | 타이머 갱신을 시작하는 함수입니다. |
-| `pause` | `void` | 타이머 갱신을 멈추는 함수입니다. |
-| `resume` | `void` | 멈춘 타이머를 다시 시작하는 함수입니다. |
-| `reset` | `void` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
-| `completed` | `boolean` | 타이머가 목표에 도달했는지 여부입니다. |
-| `parts` | `Readonly<Record<TimerItemType, number>>` | 현재 값을 나눈 표시 단위입니다. |
-| `restart` | `void` | 설정한 초깃값에서 타이머를 다시 시작하는 함수입니다. |
-| `running` | `boolean` | 타이머가 작동 중인지 여부입니다. |
-| `valueMs` | `number` | 밀리초 단위의 현재 타이머 값입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>completed</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>타이머가 목표에 도달했는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>parts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Readonly&lt;Record&lt;TimerItemType, number&gt;&gt;</code></span></div>
+<p>현재 값을 나눈 표시 단위입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pause</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>타이머 갱신을 멈추는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>progress</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number | null</code></span></div>
+<p>0부터 1까지의 완료 진행률입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>reset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>초깃값과 조작 상태로 되돌리는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>restart</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>설정한 초깃값에서 타이머를 다시 시작하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>resume</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>멈춘 타이머를 다시 시작하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>running</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>타이머가 작동 중인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>start</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>타이머 갱신을 시작하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valueMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>밀리초 단위의 현재 타이머 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `TimerRoot`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `complete` | `number` | 필요한 모든 입력 칸이 채워질 때 발생합니다. |
-| `tick` | `number` | 타이머 간격마다 새 값이 만들어질 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>complete</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>number</code></span></div>
+<p>필요한 모든 입력 칸이 채워질 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tick</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>number</code></span></div>
+<p>타이머 간격마다 새 값이 만들어질 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

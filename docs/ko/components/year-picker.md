@@ -45,64 +45,256 @@ Vue 패키지: `@sectile/vue/year-picker`
 
 #### `YearPickerRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `modelValue` | `DateValue \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
-| `defaultValue` | `DateValue \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
-| `highlightedValue` | `DateValue` | `undefined` | 키보드 조작 대상으로 강조된 현재 값입니다. |
-| `defaultHighlightedValue` | `DateValue` | `undefined` | 컴포넌트가 관리하는 처음 강조 값입니다. |
-| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
-| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `policies` | `DatePickerOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>defaultHighlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컴포넌트가 관리하는 처음 강조 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>컴포넌트가 관리하는 초기 열림 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue | null</code></span><span><span class="component-api-definition__label">기본값</span><code>null</code></span></div>
+<p>컴포넌트가 값을 관리할 때 사용할 초깃값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>키보드 조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>부모가 상태를 관리할 때 사용할 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DatePickerOptions['policies']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증, 이동, 선택 동작을 조정하는 정책입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `YearPickerPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `YearPickerRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `value` | `PickerValue` | 이 계약이 노출하는 현재 값입니다. |
-| `highlightedValue` | `DateValue` | 조작 대상으로 강조된 현재 값입니다. |
-| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `view` | `{ readonly year: number; readonly month: number }` | 현재 달력 기준점입니다. |
-| `viewMode` | `DatePickerViewMode` | 현재 달력 보기 방식입니다. |
-| `dates` | `readonly (readonly DateValue[])[]` | 현재 보기에 표시할 날짜입니다. |
-| `months` | `readonly (readonly DatePickerMonthValue[])[]` | 현재 보기에 표시할 달입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
-| `years` | `readonly (readonly PickerYearValue[])[]` | 현재 보기에 표시할 연도입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dates</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly DateValue[])[]</code></span></div>
+<p>현재 보기에 표시할 날짜입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>months</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly DatePickerMonthValue[])[]</code></span></div>
+<p>현재 보기에 표시할 달입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerValue</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>view</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>{ readonly year: number; readonly month: number }</code></span></div>
+<p>현재 달력 기준점입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>viewMode</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DatePickerViewMode</code></span></div>
+<p>현재 달력 보기 방식입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>years</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly PickerYearValue[])[]</code></span></div>
+<p>현재 보기에 표시할 연도입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `YearPickerCellSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `value` | `PickerYearValue` | 이 계약이 노출하는 현재 값입니다. |
-| `current` | `boolean` | 현재 위치를 나타내는 항목인지 여부입니다. |
-| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
-| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `inRange` | `boolean` | 선택한 범위 안에 있는 값인지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>current</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 위치를 나타내는 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>조작 대상으로 강조된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>inRange</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>선택한 범위 안에 있는 값인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 선택된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerYearValue</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `YearPickerRoot`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `update:modelValue` | `PickerValue` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
-| `update:highlightedValue` | `DateValue` | 새 강조 값을 요청할 때 발생합니다. |
-| `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>DateValue</code></span></div>
+<p>새 강조 값을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>PickerValue</code></span></div>
+<p>컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>boolean</code></span></div>
+<p>컴포넌트가 새 열림 상태를 요청할 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

@@ -41,51 +41,195 @@ Vue package: `@sectile/vue/slider`
 
 #### `SliderRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `modelValue` | `number \| string` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `number \| string` | `0` | Initial value used when the component owns its state. |
-| `min` | `number \| string` | `0` | Smallest value accepted by the component. |
-| `max` | `number \| string` | `100` | Largest value accepted by the component. |
-| `step` | `number \| string` | `1` | Smallest value increment accepted by the component. |
-| `pageStep` | `number` | `10` | Larger increment used by Page Up and Page Down. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
-| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
-| `name` | `string` | `undefined` | Name used for native form submission. |
-| `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `role` | `'slider' \| 'separator'` | `'slider'` | ARIA role applied to the rendered control. |
-| `formatValue` | `(value: string) => string` | `undefined` | Formats a value for visible text. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | string</code></span><span><span class="component-api-definition__label">Default</span><code>0</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>ID of the native form associated with the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>formatValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(value: string) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Formats a value for visible text.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>max</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | string</code></span><span><span class="component-api-definition__label">Default</span><code>100</code></span></div>
+<p>Largest value accepted by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>min</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | string</code></span><span><span class="component-api-definition__label">Default</span><code>0</code></span></div>
+<p>Smallest value accepted by the component.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Name used for native form submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>orientation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'horizontal' | 'vertical'</code></span><span><span class="component-api-definition__label">Default</span><code>'horizontal'</code></span></div>
+<p>Axis used for layout and keyboard movement.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pageStep</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>10</code></span></div>
+<p>Larger increment used by Page Up and Page Down.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the control must contain a valid value before submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>role</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'slider' | 'separator'</code></span><span><span class="component-api-definition__label">Default</span><code>'slider'</code></span></div>
+<p>ARIA role applied to the rendered control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>step</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | string</code></span><span><span class="component-api-definition__label">Default</span><code>1</code></span></div>
+<p>Smallest value increment accepted by the component.</p>
+</dd>
+</div>
+</dl>
 
 #### `SliderPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `SliderSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `value` | `string` | Current value exposed by this contract. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
-| `percentage` | `number` | Current value expressed as a percentage of its range. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>percentage</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Current value expressed as a percentage of its range.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `SliderRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

@@ -42,45 +42,165 @@ Vue package: `@sectile/vue/tooltip`
 
 #### `TooltipRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | Preferred side of the anchor for positioned content. |
-| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
-| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `align` | `'start' \| 'center' \| 'end'` | `'center'` | Alignment of positioned content relative to its anchor. |
-| `sideOffset` | `number` | `8` | Distance between positioned content and its anchor. |
-| `arrowPadding` | `Padding` | `8` | Minimum space kept between an arrow and the edge of positioned content. |
-| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
-| `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
-| `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
-| `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
-| `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
-| `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
-| `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'start' | 'center' | 'end'</code></span><span><span class="component-api-definition__label">Default</span><code>'center'</code></span></div>
+<p>Alignment of positioned content relative to its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>arrowPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Padding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Minimum space kept between an arrow and the edge of positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoUpdate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean | AutoUpdateOptions</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether and how positioned content tracks layout changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content may flip or shift to remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Boundary</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Boundary used to keep positioned content visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Padding</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Space kept between positioned content and its collision boundary.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Initial uncontrolled open state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content hides when its anchor leaves the layout.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>middleware</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Middleware[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Positioning middleware applied after the built-in placement rules.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'top' | 'right' | 'bottom' | 'left'</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<p>Preferred side of the anchor for positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Distance between positioned content and its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'fixed'</code></span></div>
+<p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
+</dl>
 
 #### `TooltipPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 #### `TooltipPortalProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>'body'</code></span></div>
+<p>Teleport target for portalled content.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `TooltipRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `open` | `boolean` | Whether the associated popup or disclosure is open. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

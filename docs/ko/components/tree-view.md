@@ -53,74 +53,296 @@ Vue 패키지: `@sectile/vue/tree-view`
 
 #### `TreeViewRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `nodes` | `readonly TreeNodeInput<string>[]` | 필수 | 계층을 구성할 평면 노드 목록입니다. |
-| `modelValue` | `readonly string[]` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
-| `defaultValue` | `readonly string[]` | `[]` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
-| `highlightedValue` | `string \| null` | `undefined` | 키보드 조작 대상으로 강조된 현재 값입니다. |
-| `defaultHighlightedValue` | `string \| null` | `null` | 컴포넌트가 관리하는 처음 강조 값입니다. |
-| `expandedValues` | `readonly string[]` | `undefined` | 하위 항목을 표시할 외부 제어 값 목록입니다. |
-| `defaultExpandedValues` | `readonly string[]` | `[]` | 컴포넌트가 관리하는 처음 펼친 값 목록입니다. |
-| `selectionMode` | `TreeViewSelectionMode` | `'single'` | 하나 또는 여러 값을 선택할지 정합니다. |
-| `disabledItems` | `readonly string[]` | `[]` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `policies` | `TreeViewPolicies<string>` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
-| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'div'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultExpandedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
+<p>컴포넌트가 관리하는 처음 펼친 값 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultHighlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span><span><span class="component-api-definition__label">기본값</span><code>null</code></span></div>
+<p>컴포넌트가 관리하는 처음 강조 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
+<p>컴포넌트가 값을 관리할 때 사용할 초깃값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabledItems</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
+<p>포커스와 선택 대상에서 제외할 항목 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>expandedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>하위 항목을 표시할 외부 제어 값 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>키보드 조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>부모가 상태를 관리할 때 사용할 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>nodes</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly TreeNodeInput&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>계층을 구성할 평면 노드 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>TreeViewPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증, 이동, 선택 동작을 조정하는 정책입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selectionMode</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>TreeViewSelectionMode</code></span><span><span class="component-api-definition__label">기본값</span><code>'single'</code></span></div>
+<p>하나 또는 여러 값을 선택할지 정합니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `TreeViewPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `TreeViewGroupProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `for` | `string` | 필수 | 이 컴포넌트가 연결할 관련 파트의 값 또는 ID입니다. |
-| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'div'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>for</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>이 컴포넌트가 연결할 관련 파트의 값 또는 ID입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `TreeViewRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `value` | `readonly string[]` | 이 계약이 노출하는 현재 값입니다. |
-| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
-| `expandedValues` | `readonly string[]` | 하위 항목을 표시 중인 값 목록입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>expandedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span></div>
+<p>하위 항목을 표시 중인 값 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `TreeViewItemSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
-| `selectedValues` | `readonly string[]` | 현재 선택된 값입니다. |
-| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
-| `expandedValues` | `readonly string[]` | 하위 항목을 표시 중인 값 목록입니다. |
-| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
-| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
-| `expanded` | `boolean` | 하위 항목이 보이는지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>expanded</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>하위 항목이 보이는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>expandedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span></div>
+<p>하위 항목을 표시 중인 값 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>조작 대상으로 강조된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 선택된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selectedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span></div>
+<p>현재 선택된 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `TreeViewRoot`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `update:modelValue` | `readonly string[]` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
-| `update:highlightedValue` | `string \| null` | 새 강조 값을 요청할 때 발생합니다. |
-| `update:expandedValues` | `readonly string[]` | 새 펼침 값 목록을 요청할 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:expandedValues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>readonly string[]</code></span></div>
+<p>새 펼침 값 목록을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string | null</code></span></div>
+<p>새 강조 값을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>readonly string[]</code></span></div>
+<p>컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

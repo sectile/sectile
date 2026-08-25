@@ -58,51 +58,207 @@ Vue 패키지: `@sectile/vue/alert-dialog`
 
 #### `AlertDialogRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | 기준 요소를 중심으로 팝업을 우선 배치할 방향입니다. |
-| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `align` | `'start' \| 'center' \| 'end'` | `'center'` | 기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다. |
-| `sideOffset` | `number` | `8` | 팝업과 기준 요소 사이 거리입니다. |
-| `arrowPadding` | `Padding` | `8` | 화살표와 팝업 가장자리 사이에 둘 최소 간격입니다. |
-| `autoFocus` | `boolean` | `true` | 열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다. |
-| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | 레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다. |
-| `avoidCollisions` | `boolean` | `true` | 팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다. |
-| `closeOnInteractOutside` | `boolean` | `false` | 콘텐츠 밖을 조작하면 닫을지 여부입니다. |
-| `collisionBoundary` | `Boundary` | `undefined` | 팝업을 화면 안에 유지할 때 사용할 경계입니다. |
-| `collisionPadding` | `Padding` | `8` | 팝업과 충돌 경계 사이에 둘 간격입니다. |
-| `hideWhenDetached` | `boolean` | `true` | 기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다. |
-| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | 계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다. |
-| `middleware` | `Middleware[]` | `undefined` | 기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다. |
-| `restoreFocus` | `boolean` | `true` | 열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다. |
-| `strategy` | `Strategy` | `'fixed'` | 기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다. |
-| `trapFocus` | `boolean` | `true` | 열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'start' | 'center' | 'end'</code></span><span><span class="component-api-definition__label">기본값</span><code>'center'</code></span></div>
+<p>기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>arrowPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Padding</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<p>화살표와 팝업 가장자리 사이에 둘 최소 간격입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoUpdate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean | AutoUpdateOptions</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>closeOnInteractOutside</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>콘텐츠 밖을 조작하면 닫을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Boundary</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업을 화면 안에 유지할 때 사용할 경계입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Padding</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<p>팝업과 충돌 경계 사이에 둘 간격입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>컴포넌트가 관리하는 초기 열림 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>interactOutsideExclusions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>middleware</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Middleware[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>restoreFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'top' | 'right' | 'bottom' | 'left'</code></span><span><span class="component-api-definition__label">기본값</span><code>'bottom'</code></span></div>
+<p>기준 요소를 중심으로 팝업을 우선 배치할 방향입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<p>팝업과 기준 요소 사이 거리입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'fixed'</code></span></div>
+<p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>trapFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `AlertDialogPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `AlertDialogPortalProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `to` | `string \| HTMLElement` | `'body'` | 포털 콘텐츠를 옮길 대상입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">기본값</span><code>'body'</code></span></div>
+<p>포털 콘텐츠를 옮길 대상입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `AlertDialogRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

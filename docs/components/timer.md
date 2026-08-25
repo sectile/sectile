@@ -43,48 +43,174 @@ Vue package: `@sectile/vue/timer`
 
 #### `TimerRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `autoStart` | `boolean` | `false` | Whether the timer starts immediately after mounting. |
-| `countdown` | `boolean` | `false` | Whether the timer counts down instead of measuring elapsed time. |
-| `intervalMs` | `number` | `100` | Delay in milliseconds between automatic updates. |
-| `startMs` | `number` | `0` | Initial elapsed time in milliseconds. |
-| `targetMs` | `number \| null` | `undefined` | Elapsed-time target in milliseconds. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoStart</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the timer starts immediately after mounting.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>countdown</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the timer counts down instead of measuring elapsed time.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>intervalMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>100</code></span></div>
+<p>Delay in milliseconds between automatic updates.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>startMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>0</code></span></div>
+<p>Initial elapsed time in milliseconds.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>targetMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Elapsed-time target in milliseconds.</p>
+</dd>
+</div>
+</dl>
 
 #### `TimerPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `TimerSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `progress` | `number \| null` | Completion progress from 0 to 1. |
-| `start` | `void` | Starts timer updates. |
-| `pause` | `void` | Pauses timer updates. |
-| `resume` | `void` | Resumes a paused timer. |
-| `reset` | `void` | Restores the initial value and interaction state. |
-| `completed` | `boolean` | Whether the timer reached its target. |
-| `parts` | `Readonly<Record<TimerItemType, number>>` | Formatted segments of the current value. |
-| `restart` | `void` | Restarts timing from the configured initial value. |
-| `running` | `boolean` | Whether the timer is currently running. |
-| `valueMs` | `number` | Current timer value in milliseconds. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>completed</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the timer reached its target.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>parts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Readonly&lt;Record&lt;TimerItemType, number&gt;&gt;</code></span></div>
+<p>Formatted segments of the current value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pause</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Pauses timer updates.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>progress</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | null</code></span></div>
+<p>Completion progress from 0 to 1.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>reset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Restores the initial value and interaction state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>restart</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Restarts timing from the configured initial value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>resume</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Resumes a paused timer.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>running</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the timer is currently running.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>start</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Starts timer updates.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valueMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Current timer value in milliseconds.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `TimerRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `complete` | `number` | Emitted when every required segment is filled. |
-| `tick` | `number` | Emitted when a timer interval produces a new value. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>complete</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>number</code></span></div>
+<p>Emitted when every required segment is filled.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>tick</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>number</code></span></div>
+<p>Emitted when a timer interval produces a new value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

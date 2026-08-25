@@ -52,60 +52,228 @@ Vue 패키지: `@sectile/vue/carousel`
 
 #### `CarouselRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `slides` | `readonly string[]` | 필수 | 캐러셀이 관리할 순서 있는 슬라이드 값입니다. |
-| `modelValue` | `string \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
-| `defaultValue` | `string \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
-| `paused` | `boolean` | `undefined` | 외부에서 제어하는 일시 정지 상태입니다. |
-| `defaultPaused` | `boolean` | `false` | 컴포넌트가 관리하는 초기 일시 정지 상태입니다. |
-| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | 배치와 키보드 이동에 사용할 축입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `policies` | `CarouselPolicies` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
-| `as` | `PrimitiveAs` | `'section'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
-| `autoplay` | `boolean \| CarouselAutoplayOptions` | `false` | 직접 조작하지 않아도 캐러셀이 자동으로 넘어갈지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'section'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoplay</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean | CarouselAutoplayOptions</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>직접 조작하지 않아도 캐러셀이 자동으로 넘어갈지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultPaused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>컴포넌트가 관리하는 초기 일시 정지 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컴포넌트가 값을 관리할 때 사용할 초깃값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>부모가 상태를 관리할 때 사용할 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>orientation</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>'horizontal' | 'vertical'</code></span><span><span class="component-api-definition__label">기본값</span><code>'horizontal'</code></span></div>
+<p>배치와 키보드 이동에 사용할 축입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>외부에서 제어하는 일시 정지 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>policies</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CarouselPolicies</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증, 이동, 선택 동작을 조정하는 정책입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>slides</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>캐러셀이 관리할 순서 있는 슬라이드 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `CarouselPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `CarouselRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `index` | `number \| null` | 부모 컬렉션 안의 0부터 시작하는 위치입니다. |
-| `value` | `string \| null` | 이 계약이 노출하는 현재 값입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `count` | `number` | 컬렉션의 값 개수입니다. |
-| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>count</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>컬렉션의 값 개수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>index</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number | null</code></span></div>
+<p>부모 컬렉션 안의 0부터 시작하는 위치입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>자동 갱신이 멈춘 상태인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `CarouselSlideSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `index` | `number \| null` | 부모 컬렉션 안의 0부터 시작하는 위치입니다. |
-| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
-| `active` | `boolean` | 현재 활성 항목인지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `count` | `number` | 컬렉션의 값 개수입니다. |
-| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>active</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 활성 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>count</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>컬렉션의 값 개수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>index</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number | null</code></span></div>
+<p>부모 컬렉션 안의 0부터 시작하는 위치입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>자동 갱신이 멈춘 상태인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `CarouselRoot`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `update:modelValue` | `string \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
-| `update:paused` | `boolean` | 컴포넌트가 새 일시 정지 상태를 요청할 때 발생합니다. |
-| `announce` | `string` | 보조 기술에 피드백을 알려야 할 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>announce</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string</code></span></div>
+<p>보조 기술에 피드백을 알려야 할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string | null</code></span></div>
+<p>컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>boolean</code></span></div>
+<p>컴포넌트가 새 일시 정지 상태를 요청할 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

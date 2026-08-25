@@ -107,71 +107,317 @@ function provideFormControlOwner(): void
 
 #### `FormRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `validate` | `FormValidateHandler<Schema>` | `undefined` | 현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다. |
-| `issues` | `readonly FormIssue[]` | `undefined` | 애플리케이션이 제공하는 검증 이슈입니다. |
-| `revalidateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | 검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다. |
-| `schema` | `Schema` | `undefined` | 최종 제출 검증과 출력 변환에 사용할 Standard Schema입니다. |
-| `onSubmit` | `FormSubmitHandler<Schema>` | `undefined` | 검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다. |
-| `validateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | 첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>애플리케이션이 제공하는 검증 이슈입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>onSubmit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revalidateOn</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>schema</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Schema</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>최종 제출 검증과 출력 변환에 사용할 Standard Schema입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormValidateHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validateOn</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormFieldProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
-| `readonly` | `boolean` | `undefined` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
-| `required` | `boolean` | `undefined` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
-| `id` | `string` | `undefined` | 관련 파트를 연결하는 안정적인 ID입니다. |
-| `name` | `FormFieldPath` | `undefined` | 네이티브 폼 제출에 사용할 이름입니다. |
-| `form` | `string` | `undefined` | 컨트롤을 연결할 네이티브 form 요소의 ID입니다. |
-| `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컨트롤을 연결할 네이티브 form 요소의 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>관련 파트를 연결하는 안정적인 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormFieldPath</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>네이티브 폼 제출에 사용할 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `FormRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `state` | `FormState` | 현재 전체 폼 상태입니다. |
-| `reset` | `FormResetAction` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
-| `submitStarted` | `FormSubmitStartedAction` | 제출을 시작하고 generation 토큰을 반환하는 함수입니다. |
-| `submitSucceeded` | `FormSubmitSucceededAction` | 식별한 제출을 성공으로 기록하는 함수입니다. |
-| `submitFailed` | `FormSubmitFailedAction` | 식별한 제출을 실패로 기록하는 함수입니다. |
-| `replaceIssues` | `FormReplaceIssuesAction` | 한 출처의 검증 이슈를 바꾸는 함수입니다. |
-| `dirty` | `boolean` | 현재 값이 초깃값과 다른지 여부입니다. |
-| `submissionStatus` | `FormState['submissionStatus']` | 현재 제출 생명주기입니다. |
-| `touched` | `boolean` | 사용자가 필드를 조작했는지 여부입니다. |
-| `valid` | `boolean` | 현재 검증 이슈가 없는지 여부입니다. |
-| `validationIntent` | `FormState['validationIntent']` | 현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다. |
-| `validationStatus` | `FormState['validationStatus']` | 현재 검증 생명주기입니다. |
-| `validationTrigger` | `FormState['validationTrigger']` | 현재 또는 최근 검증을 시작한 이벤트입니다. |
-| `submitCount` | `number` | 제출을 시도한 횟수입니다. |
-| `submitted` | `boolean` | 제출을 시도했는지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dirty</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 값이 초깃값과 다른지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>replaceIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormReplaceIssuesAction</code></span></div>
+<p>한 출처의 검증 이슈를 바꾸는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>reset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormResetAction</code></span></div>
+<p>초깃값과 조작 상태로 되돌리는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>state</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState</code></span></div>
+<p>현재 전체 폼 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submissionStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['submissionStatus']</code></span></div>
+<p>현재 제출 생명주기입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitCount</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>제출을 시도한 횟수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitFailed</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitFailedAction</code></span></div>
+<p>식별한 제출을 실패로 기록하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitStarted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitStartedAction</code></span></div>
+<p>제출을 시작하고 generation 토큰을 반환하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitSucceeded</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitSucceededAction</code></span></div>
+<p>식별한 제출을 성공으로 기록하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>제출을 시도했는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>touched</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자가 필드를 조작했는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 검증 이슈가 없는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationIntent</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationIntent']</code></span></div>
+<p>현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationStatus']</code></span></div>
+<p>현재 검증 생명주기입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationTrigger</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormState['validationTrigger']</code></span></div>
+<p>현재 또는 최근 검증을 시작한 이벤트입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormFieldSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `issues` | `readonly FormIssue[]` | 현재 검증 이슈입니다. |
-| `controlId` | `string` | 시맨틱 컨트롤에 지정한 ID입니다. |
-| `describedBy` | `string` | 컨트롤을 설명하는 공백 구분 ID입니다. |
-| `descriptionId` | `string` | 필드 도움말에 지정한 ID입니다. |
-| `dirty` | `boolean` | 현재 값이 초깃값과 다른지 여부입니다. |
-| `id` | `string` | 현재 필드 또는 항목의 안정적인 ID입니다. |
-| `labelId` | `string` | 필드 레이블에 지정한 ID입니다. |
-| `messageId` | `string` | 필드 오류 메시지에 지정한 ID입니다. |
-| `touched` | `boolean` | 사용자가 필드를 조작했는지 여부입니다. |
-| `valid` | `boolean` | 현재 검증 이슈가 없는지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>controlId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>시맨틱 컨트롤에 지정한 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>describedBy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>컨트롤을 설명하는 공백 구분 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>descriptionId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>필드 도움말에 지정한 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dirty</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 값이 초깃값과 다른지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>현재 필드 또는 항목의 안정적인 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span></div>
+<p>현재 검증 이슈입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>labelId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>필드 레이블에 지정한 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>messageId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>필드 오류 메시지에 지정한 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>touched</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자가 필드를 조작했는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 검증 이슈가 없는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 

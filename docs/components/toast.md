@@ -44,67 +44,217 @@ Vue package: `@sectile/vue/toast`
 
 #### `ToastProviderProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `defaultDurationMs` | `number \| null` | `5_000` | Initial timer duration in milliseconds. |
-| `maxVisible` | `number` | `3` | Maximum number of notifications shown at once. |
-| `closeLabel` | `string` | `'Dismiss notification'` | Accessible label announced for each notification close action. |
-| `dismissOnEscape` | `boolean` | `true` | Whether Escape dismisses the focused notification. |
-| `hotkey` | `readonly string[] \| false` | `['F8']` | Document hotkey that moves focus to the notification viewport, or false to disable it. |
-| `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Notifications present when the provider first mounts. |
-| `pauseOnWindowBlur` | `boolean` | `true` | Whether automatic dismissal pauses while the browser window is inactive. |
-| `swipeDirection` | `'up' \| 'right' \| 'down' \| 'left'` | `'right'` | Direction in which a pointer swipe dismisses a notification. |
-| `swipeThreshold` | `number` | `50` | Pointer travel in pixels required to dismiss by swiping. |
-| `toasts` | `readonly ToastInput<string>[]` | `undefined` | Current notifications when the provider is controlled by the parent. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>closeLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>'Dismiss notification'</code></span></div>
+<p>Accessible label announced for each notification close action.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultDurationMs</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number | null</code></span><span><span class="component-api-definition__label">Default</span><code>5_000</code></span></div>
+<p>Initial timer duration in milliseconds.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dismissOnEscape</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether Escape dismisses the focused notification.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>hotkey</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[] | false</code></span><span><span class="component-api-definition__label">Default</span><code>['F8']</code></span></div>
+<p>Document hotkey that moves focus to the notification viewport, or false to disable it.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>initialToasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly ToastInput&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
+<p>Notifications present when the provider first mounts.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>maxVisible</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>3</code></span></div>
+<p>Maximum number of notifications shown at once.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pauseOnWindowBlur</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether automatic dismissal pauses while the browser window is inactive.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeDirection</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>'up' | 'right' | 'down' | 'left'</code></span><span><span class="component-api-definition__label">Default</span><code>'right'</code></span></div>
+<p>Direction in which a pointer swipe dismisses a notification.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>50</code></span></div>
+<p>Pointer travel in pixels required to dismiss by swiping.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly ToastInput&lt;string&gt;[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current notifications when the provider is controlled by the parent.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastPortalProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>'body'</code></span></div>
+<p>Teleport target for portalled content.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `value` | `string` | Required | Current value exposed by this contract. |
-| `as` | `PrimitiveAs` | `'li'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'li'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `ToastProviderSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `dismiss` | `void` | Dismisses one notification. |
-| `toast` | `void` | Notification represented by this item. |
-| `toasts` | `readonly ToastItem<string>[]` | Current notification collection. |
-| `dismissAll` | `void` | Dismisses every notification. |
-| `paused` | `boolean` | Whether automatic updates are paused. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dismiss</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Dismisses one notification.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dismissAll</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Dismisses every notification.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>paused</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether automatic updates are paused.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toast</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Notification represented by this item.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly ToastItem&lt;string&gt;[]</code></span></div>
+<p>Current notification collection.</p>
+</dd>
+</div>
+</dl>
 
 #### `ToastRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `open` | `boolean` | Whether the associated popup or disclosure is open. |
-| `toast` | `ToastItem<string> \| null` | Notification represented by this item. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>toast</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>ToastItem&lt;string&gt; | null</code></span></div>
+<p>Notification represented by this item.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `ToastProvider`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:toasts` | `readonly ToastInput<string>[]` | Emitted when the provider requests a new controlled notification collection. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:toasts</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>readonly ToastInput&lt;string&gt;[]</code></span></div>
+<p>Emitted when the provider requests a new controlled notification collection.</p>
+</dd>
+</div>
+</dl>
 
 ## Parts
 

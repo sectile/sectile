@@ -43,58 +43,214 @@ Vue 패키지: `@sectile/vue/feed`
 
 #### `FeedRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `items` | `readonly string[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
-| `defaultHighlightedValue` | `string \| null` | `null` | 컴포넌트가 관리하는 처음 강조 값입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
-| `getPosition` | `(id: string) => number` | `undefined` | 항목이 나타내는 수치 위치를 반환하는 함수입니다. |
-| `requestGeneration` | `number` | `undefined` | 완료할 구간 요청이 발급한 generation 토큰입니다. |
-| `revision` | `number` | `0` | 파생 콘텐츠를 다시 계산할 때 사용할 애플리케이션 변경 차수입니다. |
-| `setSize` | `number` | `undefined` | 현재 피드 구간이 나타내는 전체 항목 수입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>'div'</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultHighlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span><span><span class="component-api-definition__label">기본값</span><code>null</code></span></div>
+<p>컴포넌트가 관리하는 처음 강조 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getPosition</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(id: string) =&gt; number</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>항목이 나타내는 수치 위치를 반환하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">기본값</span>필수</span></div>
+<p>컴포넌트가 관리할 순서 있는 항목 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>완료할 구간 요청이 발급한 generation 토큰입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>0</code></span></div>
+<p>파생 콘텐츠를 다시 계산할 때 사용할 애플리케이션 변경 차수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>setSize</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>현재 피드 구간이 나타내는 전체 항목 수입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `FeedPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `FeedRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
-| `requestGeneration` | `number` | 현재 또는 가장 최근에 발급한 구간 요청의 generation입니다. |
-| `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pending</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FeedDirection | null</code></span></div>
+<p>요청 처리 중인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>현재 또는 가장 최근에 발급한 구간 요청의 generation입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>현재 상태 스냅샷의 변경 차수입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `FeedItemSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
-| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
-| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
-| `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
-| `requestGeneration` | `number` | 현재 또는 가장 최근에 발급한 구간 요청의 generation입니다. |
-| `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>조작 대상으로 강조된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | null</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pending</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FeedDirection | null</code></span></div>
+<p>요청 처리 중인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>requestGeneration</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>현재 또는 가장 최근에 발급한 구간 요청의 generation입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revision</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span></div>
+<p>현재 상태 스냅샷의 변경 차수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 이벤트
 
 #### `FeedRoot`
 
-| 이벤트 | 페이로드 | 설명 |
-| --- | --- | --- |
-| `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
-| `request-window` | `CollectionWindowDirection, string \| null, number, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>highlight</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string | null</code></span></div>
+<p>강조된 항목이 바뀔 때 발생합니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>request-window</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>CollectionWindowDirection, string | null, number, number</code></span></div>
+<p>피드가 현재 구간 밖의 항목을 요청할 때 발생합니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

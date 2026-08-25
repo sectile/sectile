@@ -299,11 +299,11 @@ function apiComponentEventGroup(componentEvents, korean) {
   const labels = korean ? ['이벤트', '페이로드', '설명'] : ['Event', 'Payload', 'Description'];
   return `### ${heading}\n\n${entries.map(([name, events]) => {
     const rows = sortApiProperties(events, 'events').map((event) => {
-      const payload = event.payload === '—' ? '—' : inlineCode(event.payload.replaceAll('|', '\\|'));
+      const payload = event.payload === '—' ? '—' : htmlCode(event.payload);
       const description = vueApiDescription(korean ? 'ko' : 'en', 'events', event.name);
-      return `| ${inlineCode(event.name)} | ${payload} | ${description} |`;
-    }).join('\n');
-    return `#### ${inlineCode(name)}\n\n| ${labels.join(' | ')} |\n| --- | --- | --- |\n${rows}`;
+      return { cells: [htmlCode(event.name), payload], description: escapeHtml(description) };
+    });
+    return `#### ${inlineCode(name)}\n\n${apiDefinitionList('events', labels, rows)}`;
   }).join('\n\n')}`;
 }
 
@@ -340,95 +340,51 @@ function apiContractGroup(component, names, contracts, defaults, kind, heading, 
       ? korean ? ['속성', '타입', '기본값', '설명'] : ['Prop', 'Type', 'Default', 'Description']
       : korean ? ['값', '타입', '설명'] : ['Value', 'Type', 'Description'];
     const rows = sortApiProperties(properties, kind).map((property) => {
-      const cells = [
-        inlineCode(property.name),
-        inlineCode(property.type.replaceAll('|', '\\|')),
-      ];
+      const cells = [htmlCode(property.name), htmlCode(property.type)];
       if (kind === 'props') {
         if (!property.optional) {
           cells.push(korean ? '필수' : 'Required');
         } else {
           const defaultValue = vueApiDefault(locale, component, name, property.name, defaults[name]?.[property.name]);
-          cells.push(defaultValue.code === undefined ? defaultValue.text : inlineCode(defaultValue.code));
+          cells.push(defaultValue.code === undefined ? escapeHtml(defaultValue.text) : htmlCode(defaultValue.code));
         }
       }
-      cells.push(vueApiDescription(locale, kind, property.name, component));
-      return `| ${cells.join(' | ')} |`;
-    }).join('\n');
-    return `#### ${inlineCode(name)}\n\n| ${labels.join(' | ')} |\n| ${labels.map(() => '---').join(' | ')} |\n${rows}`;
+      return {
+        cells,
+        description: escapeHtml(vueApiDescription(locale, kind, property.name, component)),
+      };
+    });
+    return `#### ${inlineCode(name)}\n\n${apiDefinitionList(kind, labels, rows)}`;
   }).join('\n\n');
   return `### ${heading}\n\n${entries}`;
 }
 
-const propPriority = Object.freeze([
-  'items', 'nodes', 'rows', 'slides', 'thumbs', 'total', 'length',
-  'value', 'item', 'index', 'for', 'depth', 'channel', 'coordinate', 'side',
-  'modelValue', 'defaultValue',
-  'highlightedValue', 'defaultHighlightedValue',
-  'inputValue', 'defaultInputValue',
-  'draft', 'defaultDraft',
-  'expandedValue', 'defaultExpandedValue', 'expandedValues', 'defaultExpandedValues',
-  'open', 'defaultOpen',
-  'paused', 'defaultPaused',
-  'editMode', 'defaultEditMode',
-  'itemsPerPage', 'defaultItemsPerPage',
-  'displayUnit', 'defaultDisplayUnit',
-  'format', 'defaultFormat',
-  'min', 'max', 'step', 'pageStep', 'orientation', 'direction', 'multiple',
-  'selectionMode', 'activationMode', 'loop', 'collapsible', 'clearable',
-  'mask', 'otp', 'placeholder',
-  'disabledItems', 'disabledValues', 'disabled', 'readonly', 'readOnly', 'required',
-  'id', 'name', 'form', 'label', 'startLabel', 'endLabel', 'autocomplete',
-  'policies', 'validate', 'textValue',
-  'as', 'asChild',
-]);
-
-const slotPriority = Object.freeze([
-  'index', 'item', 'value', 'targetValue', 'values', 'selectedValues', 'modelValue', 'inputValue', 'draft', 'character',
-  'selectedValue', 'highlightedValue', 'expandedValue', 'expandedValues', 'current', 'selection',
-  'open', 'view', 'viewMode', 'dates', 'months', 'items',
-  'complete', 'checked', 'pressed', 'selected', 'highlighted', 'expanded',
-  'active', 'focused', 'editing', 'invalid', 'disabled', 'readonly', 'required',
-  'index', 'page', 'count', 'progress', 'state', 'issues',
-  'start', 'pause', 'resume', 'reset', 'dismiss', 'close', 'submit',
-  'submitStarted', 'submitSucceeded', 'submitFailed', 'replaceIssues',
-]);
-
-const eventPriority = Object.freeze([
-  'update:modelValue', 'update:highlightedValue', 'update:inputValue',
-  'update:draft', 'update:expandedValue', 'update:expandedValues', 'update:open', 'update:paused',
-  'update:editMode', 'update:itemsPerPage', 'update:displayUnit', 'update:format',
-  'complete', 'commit', 'accept', 'invoke', 'select', 'submit', 'reset', 'dismiss',
-]);
-
-function apiPropertyRank(name, kind) {
-  const priorities = kind === 'props' ? propPriority : kind === 'slots' ? slotPriority : eventPriority;
-  const exact = priorities.indexOf(name);
-  if (exact >= 0) return exact;
-  if (kind === 'events' && name.startsWith('update:')) return eventPriority.length;
-  if (kind === 'props') {
-    if (name.startsWith('default')) return propPriority.length + 10;
-    if (/^(?:min|max|step|page|side|align|offset|duration|delay|limit|size)/u.test(name)) return propPriority.length + 20;
-    if (/^(?:disabled|readonly|required|modal|loop|multiple|clearable|collapsible)/u.test(name)) return propPriority.length + 30;
-    if (/^(?:id|name|form|label|placeholder|autocomplete|aria)/u.test(name)) return propPriority.length + 40;
-    if (/^(?:on|policies|validate|filter|compare|format|parse)/u.test(name)) return propPriority.length + 50;
-    if (name === 'as' || name === 'asChild') return propPriority.length + 60;
-  }
-  if (kind === 'slots' && /^(?:start|pause|resume|reset|dismiss|close|submit|replace)/u.test(name)) {
-    return slotPriority.length + 50;
-  }
-  return priorities.length + 25;
-}
-
-function sortApiProperties(properties, kind) {
-  return [...properties].sort((left, right) => {
-    const rank = apiPropertyRank(left.name, kind) - apiPropertyRank(right.name, kind);
-    return rank === 0 ? left.name.localeCompare(right.name, 'en') : rank;
-  });
+function sortApiProperties(properties) {
+  return [...properties].sort((left, right) => left.name.localeCompare(right.name, 'en', {
+    numeric: true,
+    sensitivity: 'base',
+  }));
 }
 
 function inlineCode(value) {
   return `\`${value}\``;
+}
+
+function htmlCode(value) {
+  return `<code>${escapeHtml(value)}</code>`;
+}
+
+function apiDefinitionList(kind, labels, rows) {
+  const metadataLabels = labels.slice(1, -1);
+  return `<dl class="component-api-definitions component-api-definitions--${kind}">
+${rows.map((row) => `<div class="component-api-definition">
+<dt>${row.cells[0]}</dt>
+<dd>
+<div class="component-api-definition__metadata">${row.cells.slice(1).map((cell, index) => `<span><span class="component-api-definition__label">${escapeHtml(metadataLabels[index])}</span>${cell}</span>`).join('')}</div>
+<p>${row.description}</p>
+</dd>
+</div>`).join('\n')}
+</dl>`;
 }
 
 function partsSection(component, korean = false) {

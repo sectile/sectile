@@ -107,71 +107,317 @@ function provideFormControlOwner(): void
 
 #### `FormRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `validate` | `FormValidateHandler<Schema>` | `undefined` | Validates the current field and returns application issues. |
-| `issues` | `readonly FormIssue[]` | `undefined` | Validation issues supplied by the application. |
-| `revalidateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | Interaction events that rerun the active validation intent after validation fails. |
-| `schema` | `Schema` | `undefined` | Standard Schema used for authoritative submission validation and output transformation. |
-| `onSubmit` | `FormSubmitHandler<Schema>` | `undefined` | Handles a validated native submission and may report asynchronous success or server issues. |
-| `validateOn` | `readonly FormInteractionValidationTrigger[]` | `undefined` | Interaction events that run validation before the first submission attempt. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Validation issues supplied by the application.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>onSubmit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Handles a validated native submission and may report asynchronous success or server issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>revalidateOn</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Interaction events that rerun the active validation intent after validation fails.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>schema</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Schema</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Standard Schema used for authoritative submission validation and output transformation.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormValidateHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Validates the current field and returns application issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validateOn</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Interaction events that run validation before the first submission attempt.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormFieldProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `undefined` | Whether the value can be inspected but not changed. |
-| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
-| `id` | `string` | `undefined` | Stable ID used to connect related parts. |
-| `name` | `FormFieldPath` | `undefined` | Name used for native form submission. |
-| `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>ID of the native form associated with the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Stable ID used to connect related parts.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldPath</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Name used for native form submission.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the control must contain a valid value before submission.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `FormRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `state` | `FormState` | Complete current form state. |
-| `reset` | `FormResetAction` | Restores the initial value and interaction state. |
-| `submitStarted` | `FormSubmitStartedAction` | Starts submission and returns its generation token. |
-| `submitSucceeded` | `FormSubmitSucceededAction` | Marks the identified submission as successful. |
-| `submitFailed` | `FormSubmitFailedAction` | Marks the identified submission as failed. |
-| `replaceIssues` | `FormReplaceIssuesAction` | Replaces validation issues for one source. |
-| `dirty` | `boolean` | Whether the current value differs from its initial value. |
-| `submissionStatus` | `FormState['submissionStatus']` | Current submission lifecycle. |
-| `touched` | `boolean` | Whether the user has interacted with the field. |
-| `valid` | `boolean` | Whether current validation has no issues. |
-| `validationIntent` | `FormState['validationIntent']` | Whether current validation uses interaction or submission rules. |
-| `validationStatus` | `FormState['validationStatus']` | Current validation lifecycle. |
-| `validationTrigger` | `FormState['validationTrigger']` | Event that started the current or latest validation run. |
-| `submitCount` | `number` | Number of submission attempts. |
-| `submitted` | `boolean` | Whether submission has been attempted. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dirty</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the current value differs from its initial value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>replaceIssues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormReplaceIssuesAction</code></span></div>
+<p>Replaces validation issues for one source.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>reset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormResetAction</code></span></div>
+<p>Restores the initial value and interaction state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>state</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState</code></span></div>
+<p>Complete current form state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submissionStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['submissionStatus']</code></span></div>
+<p>Current submission lifecycle.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitCount</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Number of submission attempts.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitFailed</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitFailedAction</code></span></div>
+<p>Marks the identified submission as failed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitStarted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitStartedAction</code></span></div>
+<p>Starts submission and returns its generation token.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitSucceeded</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitSucceededAction</code></span></div>
+<p>Marks the identified submission as successful.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>submitted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether submission has been attempted.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>touched</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the user has interacted with the field.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether current validation has no issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationIntent</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationIntent']</code></span></div>
+<p>Whether current validation uses interaction or submission rules.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationStatus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationStatus']</code></span></div>
+<p>Current validation lifecycle.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>validationTrigger</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormState['validationTrigger']</code></span></div>
+<p>Event that started the current or latest validation run.</p>
+</dd>
+</div>
+</dl>
 
 #### `FormFieldSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `issues` | `readonly FormIssue[]` | Current validation issues. |
-| `controlId` | `string` | ID assigned to the semantic control. |
-| `describedBy` | `string` | Space-separated IDs that describe the control. |
-| `descriptionId` | `string` | ID assigned to field help text. |
-| `dirty` | `boolean` | Whether the current value differs from its initial value. |
-| `id` | `string` | Stable ID for this field or item. |
-| `labelId` | `string` | ID assigned to the field label. |
-| `messageId` | `string` | ID assigned to the field error message. |
-| `touched` | `boolean` | Whether the user has interacted with the field. |
-| `valid` | `boolean` | Whether current validation has no issues. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>controlId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>ID assigned to the semantic control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>describedBy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Space-separated IDs that describe the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>descriptionId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>ID assigned to field help text.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>dirty</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the current value differs from its initial value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>id</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>Stable ID for this field or item.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>issues</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span></div>
+<p>Current validation issues.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>labelId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>ID assigned to the field label.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>messageId</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<p>ID assigned to the field error message.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>touched</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the user has interacted with the field.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>valid</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether current validation has no issues.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 

@@ -57,58 +57,214 @@ Vue package: `@sectile/vue/pagination`
 
 #### `PaginationRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `total` | `number` | Required | Total number of records represented by pagination. |
-| `modelValue` | `number` | `undefined` | Current value when state is controlled by the parent. |
-| `defaultValue` | `number` | `1` | Initial value used when the component owns its state. |
-| `itemsPerPage` | `number` | `undefined` | Controlled number of records shown per page. |
-| `defaultItemsPerPage` | `number` | `10` | Initial uncontrolled number of records shown per page. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
-| `label` | `string` | `'Pagination'` | Accessible name announced for the control. |
-| `as` | `PrimitiveAs` | `'nav'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
-| `showControls` | `boolean` | `true` | Whether first, previous, next, and last controls are included. |
-| `showEdges` | `boolean` | `true` | Whether the first and last page numbers remain visible. |
-| `siblingCount` | `number` | `1` | Number of adjacent page choices shown around the current page. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'nav'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultItemsPerPage</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>10</code></span></div>
+<p>Initial uncontrolled number of records shown per page.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>1</code></span></div>
+<p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>itemsPerPage</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Controlled number of records shown per page.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>'Pagination'</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>showControls</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether first, previous, next, and last controls are included.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>showEdges</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether the first and last page numbers remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>siblingCount</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>1</code></span></div>
+<p>Number of adjacent page choices shown around the current page.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>total</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Total number of records represented by pagination.</p>
+</dd>
+</div>
+</dl>
 
 #### `PaginationItemProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `item` | `PaginationViewItem` | Required | Pagination item rendered by this part. |
-| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'button'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>item</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PaginationViewItem</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Pagination item rendered by this part.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `PaginationRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `items` | `readonly PaginationViewItem[]` | Current derived item collection. |
-| `page` | `number` | Current one-based page number. |
-| `itemsPerPage` | `number` | Number of records currently shown per page. |
-| `pageCount` | `number` | Total number of available pages. |
-| `range` | `PaginationItemRange` | Current start and end values. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>items</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly PaginationViewItem[]</code></span></div>
+<p>Current derived item collection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>itemsPerPage</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Number of records currently shown per page.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>page</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Current one-based page number.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>pageCount</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
+<p>Total number of available pages.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>range</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PaginationItemRange</code></span></div>
+<p>Current start and end values.</p>
+</dd>
+</div>
+</dl>
 
 #### `PaginationItemSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `item` | `PaginationViewItem` | Current pagination item. |
-| `selected` | `boolean` | Whether this item is selected. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>item</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PaginationViewItem</code></span></div>
+<p>Current pagination item.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+</dl>
 
 ### Events
 
 #### `PaginationRoot`
 
-| Event | Payload | Description |
-| --- | --- | --- |
-| `update:modelValue` | `number` | Emitted when the component requests a new controlled value. |
-| `update:itemsPerPage` | `number` | Emitted when the requested page size changes. |
+<dl class="component-api-definitions component-api-definitions--events">
+<div class="component-api-definition">
+<dt><code>update:itemsPerPage</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>number</code></span></div>
+<p>Emitted when the requested page size changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>update:modelValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>number</code></span></div>
+<p>Emitted when the component requests a new controlled value.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 

@@ -63,45 +63,165 @@ Vue 패키지: `@sectile/vue/drawer`
 
 #### `DrawerRootProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `side` | `DrawerSide` | `'bottom'` | 드로어가 열릴 화면 가장자리입니다. |
-| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
-| `autoFocus` | `boolean` | `true` | 열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다. |
-| `closeOnInteractOutside` | `boolean` | `true` | 콘텐츠 밖을 조작하면 닫을지 여부입니다. |
-| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | 계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다. |
-| `restoreFocus` | `boolean` | `true` | 열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다. |
-| `swipeThreshold` | `number` | `80` | 밀어서 닫을 때 필요한 포인터 이동 거리(픽셀)입니다. |
-| `swipeToDismiss` | `boolean` | `true` | 바깥 방향 포인터 스와이프로 드로어를 닫을지 여부입니다. |
-| `swipeVelocityThreshold` | `number` | `0.5` | 드로어를 닫는 바깥 방향 드래그 속도 기준값(px/ms)입니다. |
-| `trapFocus` | `boolean` | `true` | 열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다. |
-| `modal` | `boolean` | `true` | 열린 콘텐츠가 주변 페이지 조작을 막을지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>autoFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>closeOnInteractOutside</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>콘텐츠 밖을 조작하면 닫을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>컴포넌트가 관리하는 초기 열림 상태입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>interactOutsideExclusions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modal</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열린 콘텐츠가 주변 페이지 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>restoreFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DrawerSide</code></span><span><span class="component-api-definition__label">기본값</span><code>'bottom'</code></span></div>
+<p>드로어가 열릴 화면 가장자리입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>80</code></span></div>
+<p>밀어서 닫을 때 필요한 포인터 이동 거리(픽셀)입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeToDismiss</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>바깥 방향 포인터 스와이프로 드로어를 닫을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeVelocityThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>0.5</code></span></div>
+<p>드로어를 닫는 바깥 방향 드래그 속도 기준값(px/ms)입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>trapFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `DrawerPartProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
-| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span>파트별로 다름</span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 #### `DrawerPortalProps`
 
-| 속성 | 타입 | 기본값 | 설명 |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
-| `to` | `string \| HTMLElement` | `'body'` | 포털 콘텐츠를 옮길 대상입니다. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">기본값</span><code>'body'</code></span></div>
+<p>포털 콘텐츠를 옮길 대상입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 슬롯
 
 #### `DrawerRootSlotProps`
 
-| 값 | 타입 | 설명 |
-| --- | --- | --- |
-| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
-| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+</dl>
 
 ### 기타 타입
 

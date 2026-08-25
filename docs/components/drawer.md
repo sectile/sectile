@@ -63,45 +63,165 @@ Vue package: `@sectile/vue/drawer`
 
 #### `DrawerRootProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `side` | `DrawerSide` | `'bottom'` | Viewport edge from which the drawer opens. |
-| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
-| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `label` | `string` | `undefined` | Accessible name announced for the control. |
-| `autoFocus` | `boolean` | `true` | Whether focus moves into the component when it opens. |
-| `closeOnInteractOutside` | `boolean` | `true` | Whether interaction outside the content closes it. |
-| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | Elements that stay interactive and do not count as outside interaction. |
-| `restoreFocus` | `boolean` | `true` | Whether focus returns to the trigger when open content closes. |
-| `swipeThreshold` | `number` | `80` | Pointer travel in pixels required to dismiss by swiping. |
-| `swipeToDismiss` | `boolean` | `true` | Whether an outward pointer swipe may dismiss the drawer. |
-| `swipeVelocityThreshold` | `number` | `0.5` | Outward drag velocity in pixels per millisecond that dismisses the drawer. |
-| `trapFocus` | `boolean` | `true` | Whether keyboard focus stays inside open content. |
-| `modal` | `boolean` | `true` | Whether open content blocks interaction with the surrounding page. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>autoFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether focus moves into the component when it opens.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>closeOnInteractOutside</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether interaction outside the content closes it.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Initial uncontrolled open state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>interactOutsideExclusions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Elements that stay interactive and do not count as outside interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>label</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>modal</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether open content blocks interaction with the surrounding page.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>restoreFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether focus returns to the trigger when open content closes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DrawerSide</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<p>Viewport edge from which the drawer opens.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>80</code></span></div>
+<p>Pointer travel in pixels required to dismiss by swiping.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeToDismiss</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether an outward pointer swipe may dismiss the drawer.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>swipeVelocityThreshold</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>0.5</code></span></div>
+<p>Outward drag velocity in pixels per millisecond that dismisses the drawer.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>trapFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether keyboard focus stays inside open content.</p>
+</dd>
+</div>
+</dl>
 
 #### `DrawerPartProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
-| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
 
 #### `DrawerPortalProps`
 
-| Prop | Type | Default | Description |
-| --- | --- | --- | --- |
-| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
-| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>'body'</code></span></div>
+<p>Teleport target for portalled content.</p>
+</dd>
+</div>
+</dl>
 
 ### Slots
 
 #### `DrawerRootSlotProps`
 
-| Value | Type | Description |
-| --- | --- | --- |
-| `open` | `boolean` | Whether the associated popup or disclosure is open. |
-| `disabled` | `boolean` | Whether interaction is unavailable. |
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+</dl>
 
 ### Other types
 
