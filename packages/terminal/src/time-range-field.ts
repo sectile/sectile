@@ -10,6 +10,11 @@ import { toTextEvent } from './text.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface TimeRangeFieldOptions { readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }
+
+export type TimeRangeFieldValueChangeHandler = NonNullable<TimeRangeFieldOptions['onValueChange']>;
+export type TimeRangeFieldStartInputStateChangeHandler = NonNullable<TimeRangeFieldOptions['onStartInputStateChange']>;
+export type TimeRangeFieldEndInputStateChangeHandler = NonNullable<TimeRangeFieldOptions['onEndInputStateChange']>;
+export type TimeRangeFieldUpdateHandler = NonNullable<TimeRangeFieldOptions['onUpdate']>;
 export interface TimeRangeFieldControlledValues { readonly value?: TimeRange | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState }
 export interface TimeRangeFieldConnection { getSnapshot(): RevisionSnapshot<TimeRangeFieldState>; getValue(): TimeRange | null; getText(endpoint: TimeRangeFieldEndpoint): string; syncControlledValues(values: TimeRangeFieldControlledValues): Result<RevisionSnapshot<TimeRangeFieldState>>; handleEvent(event: TimeRangeFieldEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export function createTimeRangeField(options: TimeRangeFieldOptions = {}): FacadeConnection<TimeRangeFieldConnection> { return unwrap(tryCreateTimeRangeField(options)); }

@@ -16,6 +16,9 @@ export interface DisclosureOptions {
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
 }
+
+export type DisclosureOpenChangeHandler = NonNullable<DisclosureOptions['onOpenChange']>;
+export type DisclosureUpdateHandler = NonNullable<DisclosureOptions['onUpdate']>;
 export interface DisclosureConnection {
   getSnapshot(): RevisionSnapshot<DisclosureState>;
   syncControlledValue(open: boolean): Result<RevisionSnapshot<DisclosureState>>;

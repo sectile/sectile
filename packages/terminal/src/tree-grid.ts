@@ -80,6 +80,11 @@ export interface TreeGridControllerOptions<
   readonly onEditModeChange?: (change: TreeGridEditModeChangeDetails) => void;
 }
 
+export type TreeGridControllerValueChangeHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridControllerOptions<RowID, CellID>['onValueChange']>;
+export type TreeGridControllerExpandedValueChangeHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridControllerOptions<RowID, CellID>['onExpandedValueChange']>;
+export type TreeGridControllerHighlightedValueChangeHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridControllerOptions<RowID, CellID>['onHighlightedValueChange']>;
+export type TreeGridControllerEditModeChangeHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridControllerOptions<RowID, CellID>['onEditModeChange']>;
+
 export interface TreeGridControlledValues<
   RowID extends StableID = StableID,
   CellID extends StableID = StableID,
@@ -125,6 +130,11 @@ export interface TreeGridConnectionOptions<
   readonly onTransition?: (details: TreeGridTransitionDetails<RowID, CellID>) => void;
   readonly onUpdate?: () => void;
 }
+
+export type TreeGridConnectionCellValueResolver<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridConnectionOptions<RowID, CellID>['getCellValue']>;
+export type TreeGridConnectionCellValueSetter<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridConnectionOptions<RowID, CellID>['setCellValue']>;
+export type TreeGridConnectionTransitionHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridConnectionOptions<RowID, CellID>['onTransition']>;
+export type TreeGridConnectionUpdateHandler<RowID extends StableID = StableID, CellID extends StableID = StableID> = NonNullable<TreeGridConnectionOptions<RowID, CellID>['onUpdate']>;
 
 export interface TreeGridConnection<
   RowID extends StableID = StableID,

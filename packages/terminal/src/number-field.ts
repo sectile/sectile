@@ -40,6 +40,10 @@ export interface NumberFieldOptions {
   readonly onUpdate?: () => void;
 }
 
+export type NumberFieldValueChangeHandler = NonNullable<NumberFieldOptions['onValueChange']>;
+export type NumberFieldInputStateChangeHandler = NonNullable<NumberFieldOptions['onInputStateChange']>;
+export type NumberFieldUpdateHandler = NonNullable<NumberFieldOptions['onUpdate']>;
+
 export interface NumberFieldControlledValues {
   readonly value?: string | null;
   readonly inputState?: TextEditingState;

@@ -22,6 +22,8 @@ export interface TTYKeyboard {
   close(): void;
 }
 
+export type TTYKeyboardInputHandler = (input: TerminalKeyboardInput) => void;
+
 export interface NodeTerminalOutput {
   readonly isTTY?: boolean;
   readonly columns?: number;
@@ -80,7 +82,7 @@ export function toTerminalKeyboardInput(
 
 export function createTTYKeyboard(
   input: ReadStream,
-  listener: (input: TerminalKeyboardInput) => void,
+  listener: TTYKeyboardInputHandler,
 ): Result<TTYKeyboard> {
   if (!input.isTTY || input.setRawMode === undefined) {
     return {

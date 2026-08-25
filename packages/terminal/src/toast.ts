@@ -7,6 +7,11 @@ import { createSemanticController, type SemanticController } from './internal/se
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface ToastOptions<ID extends StableID = StableID> extends ToastPolicies { readonly initialToasts?: readonly ToastInput<ID>[]; readonly onItemsChange?: (items: readonly ToastItem<ID>[]) => void; readonly onAnnounce?: (item: ToastItem<ID>) => void; readonly onDismiss?: (id: ID, reason: 'manual' | 'timeout' | 'overflow') => void; readonly onUpdate?: () => void }
+
+export type ToastItemsChangeHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onItemsChange']>;
+export type ToastAnnounceHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onAnnounce']>;
+export type ToastDismissHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onDismiss']>;
+export type ToastUpdateHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onUpdate']>;
 export interface ToastConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<ToastState<ID>>; handleEvent(event: ToastEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; push(toast: ToastInput<ID>): boolean; updateToast(id: ID, toast: Partial<Omit<ToastInput<ID>, 'id'>>): boolean; dismiss(id: ID): boolean; dismissAll(): boolean; tick(elapsedMs: number): boolean }
 export function createToast<ID extends StableID>(options: ToastOptions<ID> = {}): FacadeConnection<ToastConnection<ID>> { return unwrap(tryCreateToast(options)); }
 export function tryCreateToast<ID extends StableID>(options: ToastOptions<ID> = {}): Result<FacadeConnection<ToastConnection<ID>>> { return createFacadeConnection(options, (normalized) => tryCreateToastConnection(normalized)); }

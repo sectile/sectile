@@ -6,6 +6,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateRadioGroup, type RadioGroupConnection, type RadioGroupOptions } from './radio-group.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 export type RatingOptions<ID extends StableID = StableID> = Omit<RadioGroupOptions<ID>, 'orientation' | 'onValueChange'> & { readonly clearable?: boolean; readonly onValueChange?: (value: ID | null) => void };
+
+export type RatingValueChangeHandler<ID extends StableID = StableID> = NonNullable<RatingOptions<ID>['onValueChange']>;
 export interface RatingConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<RatingState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<RatingState<ID>>>; handleEvent(event: RatingEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export function createRating<ID extends StableID>(options: RatingOptions<ID>): FacadeConnection<RatingConnection<ID>> {
   return unwrap(tryCreateRating(options));

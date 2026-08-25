@@ -16,6 +16,10 @@ export interface AccordionOptions<ID extends StableID = StableID> {
   readonly onOpenChange?: (openIDs: readonly ID[]) => void;
   readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onUpdate?: () => void;
 }
+
+export type AccordionOpenChangeHandler<ID extends StableID = StableID> = NonNullable<AccordionOptions<ID>['onOpenChange']>;
+export type AccordionHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<AccordionOptions<ID>['onHighlightedValueChange']>;
+export type AccordionUpdateHandler<ID extends StableID = StableID> = NonNullable<AccordionOptions<ID>['onUpdate']>;
 export interface AccordionConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<AccordionState<ID>>;
   syncControlledValues(values: { readonly openIDs?: readonly ID[]; readonly highlightedValue?: ID | null }): Result<RevisionSnapshot<AccordionState<ID>>>;

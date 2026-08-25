@@ -7,6 +7,10 @@ import { createSemanticController, type SemanticController } from './internal/se
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface TimerOptions extends TimerPolicies { readonly autoStart?: boolean; readonly onTick?: (valueMs: number, parts: TimerParts) => void; readonly onComplete?: (valueMs: number) => void; readonly onUpdate?: () => void }
+
+export type TimerTickHandler = NonNullable<TimerOptions['onTick']>;
+export type TimerCompleteHandler = NonNullable<TimerOptions['onComplete']>;
+export type TimerUpdateHandler = NonNullable<TimerOptions['onUpdate']>;
 export interface TimerConnection { getSnapshot(): RevisionSnapshot<TimerState>; handleEvent(event: TimerEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; start(): boolean; pause(): boolean; resume(): boolean; reset(): boolean; restart(): boolean; tick(elapsedMs: number): boolean; getParts(): TimerParts; getProgress(): number | null }
 export function createTimer(options: TimerOptions = {}): FacadeConnection<TimerConnection> { return unwrap(tryCreateTimer(options)); }
 export function tryCreateTimer(options: TimerOptions = {}): Result<FacadeConnection<TimerConnection>> { return createFacadeConnection(options, (normalized) => tryCreateTimerConnection(normalized)); }

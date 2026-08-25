@@ -24,6 +24,10 @@ export interface EditableOptions {
   readonly onUpdate?: () => void;
 }
 
+export type EditableValueChangeHandler = NonNullable<EditableOptions['onValueChange']>;
+export type EditableEditingChangeHandler = NonNullable<EditableOptions['onEditingChange']>;
+export type EditableUpdateHandler = NonNullable<EditableOptions['onUpdate']>;
+
 export interface EditableConnection {
   getSnapshot(): RevisionSnapshot<EditableState>;
   syncControlledValue(value: string): Result<RevisionSnapshot<EditableState>>;

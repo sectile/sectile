@@ -64,6 +64,10 @@ export interface TreeViewControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: TreeViewHighlightChangeDetails<ID>) => void;
 }
 
+export type TreeViewControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<TreeViewControllerOptions<ID>['onValueChange']>;
+export type TreeViewControllerExpandedValuesChangeHandler<ID extends StableID = StableID> = NonNullable<TreeViewControllerOptions<ID>['onExpandedValuesChange']>;
+export type TreeViewControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<TreeViewControllerOptions<ID>['onHighlightedValueChange']>;
+
 export interface TreeViewControlledValues<ID extends StableID = StableID> {
   readonly value?: readonly ID[];
   readonly expandedValues?: readonly ID[];
@@ -94,6 +98,9 @@ export interface TreeViewConnectionOptions<ID extends StableID = StableID> {
   readonly onTransition?: (details: TreeViewTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
+
+export type TreeViewConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<TreeViewConnectionOptions<ID>['onTransition']>;
+export type TreeViewConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<TreeViewConnectionOptions<ID>['onUpdate']>;
 
 export interface TreeViewConnection<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;

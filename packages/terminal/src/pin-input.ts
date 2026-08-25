@@ -6,6 +6,10 @@ import { applyPinInputEvent, tryCreatePinInputState, type PinInputCommand, type 
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 export interface PinInputOptions { readonly length: number; readonly policies?: PinInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: string; readonly defaultValue?: string; readonly onValueChange?: (value: string) => void; readonly onComplete?: (value: string) => void; readonly onUpdate?: () => void }
+
+export type PinInputValueChangeHandler = NonNullable<PinInputOptions['onValueChange']>;
+export type PinInputCompleteHandler = NonNullable<PinInputOptions['onComplete']>;
+export type PinInputUpdateHandler = NonNullable<PinInputOptions['onUpdate']>;
 export interface PinInputConnection { getSnapshot(): RevisionSnapshot<PinInputState>; syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>>; handleEvent(event: PinInputEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export function createPinInput(options: PinInputOptions): FacadeConnection<PinInputConnection> {
   return unwrap(tryCreatePinInput(options));

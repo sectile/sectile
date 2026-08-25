@@ -8,6 +8,11 @@ import { createSemanticController, type SemanticController } from './internal/se
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface DatePickerOptions { readonly policies?: DatePickerPolicies; readonly value?: DateValue | null; readonly defaultValue?: DateValue | null; readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateValue | null) => void; readonly onHighlightedValueChange?: (value: DateValue) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void; }
+
+export type DatePickerValueChangeHandler = NonNullable<DatePickerOptions['onValueChange']>;
+export type DatePickerHighlightedValueChangeHandler = NonNullable<DatePickerOptions['onHighlightedValueChange']>;
+export type DatePickerOpenChangeHandler = NonNullable<DatePickerOptions['onOpenChange']>;
+export type DatePickerUpdateHandler = NonNullable<DatePickerOptions['onUpdate']>;
 export interface DatePickerControlledValues { readonly value?: DateValue | null; readonly highlightedValue?: DateValue; readonly open?: boolean; }
 export interface DatePickerConnection { getSnapshot(): RevisionSnapshot<DatePickerState>; getMonth(): readonly (readonly DateValue[])[]; syncControlledValues(values: DatePickerControlledValues): Result<RevisionSnapshot<DatePickerState>>; handleEvent(event: DatePickerEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; }
 export function createDatePicker(options: DatePickerOptions = {}): FacadeConnection<DatePickerConnection> { return unwrap(tryCreateDatePicker(options)); }

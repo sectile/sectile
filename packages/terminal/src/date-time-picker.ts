@@ -35,6 +35,11 @@ export interface DateTimePickerOptions {
   readonly onUpdate?: () => void;
 }
 
+export type DateTimePickerValueChangeHandler = NonNullable<DateTimePickerOptions['onValueChange']>;
+export type DateTimePickerHighlightedValueChangeHandler = NonNullable<DateTimePickerOptions['onHighlightedValueChange']>;
+export type DateTimePickerOpenChangeHandler = NonNullable<DateTimePickerOptions['onOpenChange']>;
+export type DateTimePickerUpdateHandler = NonNullable<DateTimePickerOptions['onUpdate']>;
+
 export interface DateTimePickerControlledValues {
   readonly value?: DateTimeValue | null;
   readonly highlightedValue?: DateValue;

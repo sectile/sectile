@@ -45,6 +45,8 @@ export interface SliderControllerOptions {
   readonly onValueChange?: (change: SliderValueChangeDetails) => void;
 }
 
+export type SliderControllerValueChangeHandler = NonNullable<SliderControllerOptions['onValueChange']>;
+
 export interface SliderControlledValues {
   readonly value: number;
 }
@@ -71,6 +73,9 @@ export interface SliderConnectionOptions {
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
+
+export type SliderConnectionTransitionHandler = NonNullable<SliderConnectionOptions['onTransition']>;
+export type SliderConnectionUpdateHandler = NonNullable<SliderConnectionOptions['onUpdate']>;
 
 export interface SliderConnection {
   readonly range: QuantizedRange;

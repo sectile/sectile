@@ -17,8 +17,10 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
+export type CarouselScheduleHandler = () => void;
+
 export interface CarouselScheduler {
-  schedule(callback: () => void, delayMs: number): unknown;
+  schedule(callback: CarouselScheduleHandler, delayMs: number): unknown;
   cancel(token: unknown): void;
 }
 
@@ -43,6 +45,11 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly onAnnounce?: (id: ID) => void;
   readonly onUpdate?: () => void;
 }
+
+export type CarouselValueChangeHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onValueChange']>;
+export type CarouselPausedChangeHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onPausedChange']>;
+export type CarouselAnnounceHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onAnnounce']>;
+export type CarouselUpdateHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onUpdate']>;
 
 export interface CarouselControlledValues<ID extends StableID = StableID> {
   readonly value?: ID | null;

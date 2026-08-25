@@ -36,6 +36,11 @@ export interface TabsOptions<ID extends StableID = StableID> {
   readonly onUpdate?: () => void;
 }
 
+export type TabsValueChangeHandler<ID extends StableID = StableID> = NonNullable<TabsOptions<ID>['onValueChange']>;
+export type TabsHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<TabsOptions<ID>['onHighlightedValueChange']>;
+export type TabsActivateHandler<ID extends StableID = StableID> = NonNullable<TabsOptions<ID>['onActivate']>;
+export type TabsUpdateHandler<ID extends StableID = StableID> = NonNullable<TabsOptions<ID>['onUpdate']>;
+
 export interface TabsConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<TabsState<ID>>;
   syncControlledValues(values: {

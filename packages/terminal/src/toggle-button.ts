@@ -2,6 +2,9 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core'; import { applyToggleButtonEvent, tryCreateToggleButtonState, type ToggleButtonCommand, type ToggleButtonEvent, type ToggleButtonState } from '@sectile/core/toggle-button'; import { createTerminalCheckedControl, type TerminalCheckedControl } from './internal/checked-control.js';
 export interface ToggleButtonOptions { readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
+
+export type ToggleButtonPressedChangeHandler = NonNullable<ToggleButtonOptions['onPressedChange']>;
+export type ToggleButtonUpdateHandler = NonNullable<ToggleButtonOptions['onUpdate']>;
 export type ToggleButtonConnection = TerminalCheckedControl<ToggleButtonState, ToggleButtonEvent, boolean>;
 export function createToggleButton(options: ToggleButtonOptions = {}): FacadeConnection<ToggleButtonConnection> {
   return unwrap(tryCreateToggleButton(options));

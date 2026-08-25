@@ -53,6 +53,8 @@ export interface TextControllerOptions {
   readonly onValueChange?: (change: TextValueChangeDetails) => void;
 }
 
+export type TextControllerValueChangeHandler = NonNullable<TextControllerOptions['onValueChange']>;
+
 export interface TextControlledValues {
   readonly value: TextEditingState;
 }
@@ -80,6 +82,9 @@ export interface TextConnectionOptions {
   readonly onTransition?: (details: TextTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
+
+export type TextConnectionTransitionHandler = NonNullable<TextConnectionOptions['onTransition']>;
+export type TextConnectionUpdateHandler = NonNullable<TextConnectionOptions['onUpdate']>;
 
 export interface TextConnection {
   getSnapshot(): RevisionSnapshot<TextEditingState>;

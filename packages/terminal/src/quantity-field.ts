@@ -39,6 +39,11 @@ export interface QuantityFieldOptions {
   readonly onUpdate?: () => void;
 }
 
+export type QuantityFieldQuantityChangeHandler = NonNullable<QuantityFieldOptions['onQuantityChange']>;
+export type QuantityFieldDisplayUnitChangeHandler = NonNullable<QuantityFieldOptions['onDisplayUnitChange']>;
+export type QuantityFieldInputStateChangeHandler = NonNullable<QuantityFieldOptions['onInputStateChange']>;
+export type QuantityFieldUpdateHandler = NonNullable<QuantityFieldOptions['onUpdate']>;
+
 export interface QuantityFieldControlledValues {
   readonly quantity?: QuantityValue | null;
   readonly displayUnit?: string;

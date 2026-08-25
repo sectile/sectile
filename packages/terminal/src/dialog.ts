@@ -4,6 +4,11 @@ import type { Result } from '@sectile/core';
 import { applyDialogEvent, tryCreateDialogState, type DialogCommand, type DialogEvent, type DialogState } from '@sectile/core/dialog';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 export interface DialogOptions { readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onUpdate?: () => void }
+
+export type DialogOpenChangeHandler = NonNullable<DialogOptions['onOpenChange']>;
+export type DialogInitialFocusHandler = NonNullable<DialogOptions['onInitialFocus']>;
+export type DialogFocusRestoreHandler = NonNullable<DialogOptions['onFocusRestore']>;
+export type DialogUpdateHandler = NonNullable<DialogOptions['onUpdate']>;
 export type DialogConnection = TerminalPopupConnection<DialogState, DialogEvent>;
 export function createDialog(o: DialogOptions = {}): FacadeConnection<DialogConnection> {
   return unwrap(tryCreateDialog(o));

@@ -7,6 +7,14 @@ import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
 export interface GridOptions<ID extends StableID = StableID> extends StructureGridOptions { readonly rows: readonly (readonly (ID | null)[])[]; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly editMode?: GridEditMode; readonly defaultEditMode?: GridEditMode; readonly policies?: GridPolicies<ID>; readonly disabledItems?: readonly ID[]; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onEditModeChange?: (mode: GridEditMode) => void; readonly onEditStart?: (id: ID) => void; readonly onEditCommit?: (id: ID) => void; readonly onEditCancel?: (id: ID) => void; readonly onUpdate?: () => void }
+
+export type GridValueChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onValueChange']>;
+export type GridHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onHighlightedValueChange']>;
+export type GridEditModeChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditModeChange']>;
+export type GridEditStartHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditStart']>;
+export type GridEditCommitHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditCommit']>;
+export type GridEditCancelHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditCancel']>;
+export type GridUpdateHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onUpdate']>;
 export interface GridControlledValues<ID extends StableID = StableID> { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly editMode?: GridEditMode }
 export interface GridConnection<ID extends StableID = StableID> { readonly grid: Grid<ID>; getSnapshot(): RevisionSnapshot<GridState<ID>>; syncControlledValues(values: GridControlledValues<ID>): Result<RevisionSnapshot<GridState<ID>>>; handleEvent(event: GridEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 

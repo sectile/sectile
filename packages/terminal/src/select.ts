@@ -8,6 +8,11 @@ import type { TerminalKeyboardInput } from './keyboard.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 export interface SelectOptions<ID extends StableID = StableID> { readonly items: readonly ID[]; readonly disabledItems?: readonly ID[]; readonly policies?: SelectPolicies<ID>; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly open?: boolean; readonly defaultOpen?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
+
+export type SelectValueChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onValueChange']>;
+export type SelectHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onHighlightedValueChange']>;
+export type SelectOpenChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onOpenChange']>;
+export type SelectUpdateHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onUpdate']>;
 export type SelectEffect<ID extends StableID = StableID> = { readonly type: 'move-highlight'; readonly id: ID } | { readonly type: 'close-popup' };
 export interface SelectConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<SelectState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<SelectState<ID>>>; handleEvent(event: SelectEvent<ID>): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export function createSelect<ID extends StableID>(options: SelectOptions<ID>): FacadeConnection<SelectConnection<ID>> {

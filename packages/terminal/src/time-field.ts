@@ -10,6 +10,10 @@ import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTextEvent } from './text.js';
 
 export interface TimeFieldOptions { readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: TimeValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
+
+export type TimeFieldValueChangeHandler = NonNullable<TimeFieldOptions['onValueChange']>;
+export type TimeFieldInputStateChangeHandler = NonNullable<TimeFieldOptions['onInputStateChange']>;
+export type TimeFieldUpdateHandler = NonNullable<TimeFieldOptions['onUpdate']>;
 export interface TimeFieldControlledValues { readonly value?: TimeValue | null; readonly inputState?: TextEditingState; }
 export interface TimeFieldConnection { getSnapshot(): RevisionSnapshot<TimeFieldState>; getText(): string; getValue(): TimeValue | null; getCaret(): number; syncControlledValues(values: TimeFieldControlledValues): Result<RevisionSnapshot<TimeFieldState>>; handleEvent(event: TimeFieldEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; handleTextInput(text: string): boolean; }
 export function createTimeField(options: TimeFieldOptions = {}): FacadeConnection<TimeFieldConnection> { return unwrap(tryCreateTimeField(options)); }

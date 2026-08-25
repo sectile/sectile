@@ -10,6 +10,10 @@ import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTextEvent } from './text.js';
 
 export interface DateFieldOptions { readonly policies?: DateFieldPolicies; readonly value?: DateValue | null; readonly defaultValue?: DateValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
+
+export type DateFieldValueChangeHandler = NonNullable<DateFieldOptions['onValueChange']>;
+export type DateFieldInputStateChangeHandler = NonNullable<DateFieldOptions['onInputStateChange']>;
+export type DateFieldUpdateHandler = NonNullable<DateFieldOptions['onUpdate']>;
 export interface DateFieldControlledValues { readonly value?: DateValue | null; readonly inputState?: TextEditingState; }
 export interface DateFieldConnection { getSnapshot(): RevisionSnapshot<DateFieldState>; getText(): string; getValue(): DateValue | null; getCaret(): number; syncControlledValues(values: DateFieldControlledValues): Result<RevisionSnapshot<DateFieldState>>; handleEvent(event: DateFieldEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; handleTextInput(text: string): boolean; }
 export function createDateField(options: DateFieldOptions = {}): FacadeConnection<DateFieldConnection> { return unwrap(tryCreateDateField(options)); }

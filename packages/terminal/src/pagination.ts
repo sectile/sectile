@@ -32,6 +32,10 @@ export interface PaginationOptions extends Omit<PaginationModelOptions, 'itemsPe
   readonly onUpdate?: () => void;
 }
 
+export type PaginationPageChangeHandler = NonNullable<PaginationOptions['onPageChange']>;
+export type PaginationItemsPerPageChangeHandler = NonNullable<PaginationOptions['onItemsPerPageChange']>;
+export type PaginationUpdateHandler = NonNullable<PaginationOptions['onUpdate']>;
+
 export type PaginationControlledValues =
   | { readonly page: number; readonly itemsPerPage: number }
   | { readonly page?: never; readonly itemsPerPage?: never };

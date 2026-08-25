@@ -29,6 +29,11 @@ export interface CascadeSelectOptions<ID extends StableID = StableID> {
   readonly onUpdate?: () => void;
 }
 
+export type CascadeSelectValueChangeHandler<ID extends StableID = StableID> = NonNullable<CascadeSelectOptions<ID>['onValueChange']>;
+export type CascadeSelectHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<CascadeSelectOptions<ID>['onHighlightedValueChange']>;
+export type CascadeSelectOpenChangeHandler<ID extends StableID = StableID> = NonNullable<CascadeSelectOptions<ID>['onOpenChange']>;
+export type CascadeSelectUpdateHandler<ID extends StableID = StableID> = NonNullable<CascadeSelectOptions<ID>['onUpdate']>;
+
 export interface CascadeSelectConnection<ID extends StableID = StableID> {
   readonly tree: Tree<ID>;
   getSnapshot(): RevisionSnapshot<CascadeSelectState<ID>>;

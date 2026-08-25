@@ -6,6 +6,10 @@ import { applyTagsInputEvent, tryCreateTagsInputState, type TagsInputCommand, ty
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 export interface TagsInputOptions { readonly policies?: TagsInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: readonly string[]; readonly defaultValue?: readonly string[]; readonly inputValue?: string; readonly defaultInputValue?: string; readonly onValueChange?: (value: readonly string[]) => void; readonly onInputValueChange?: (value: string) => void; readonly onUpdate?: () => void }
+
+export type TagsInputValueChangeHandler = NonNullable<TagsInputOptions['onValueChange']>;
+export type TagsInputInputValueChangeHandler = NonNullable<TagsInputOptions['onInputValueChange']>;
+export type TagsInputUpdateHandler = NonNullable<TagsInputOptions['onUpdate']>;
 export interface TagsInputConnection { getSnapshot(): RevisionSnapshot<TagsInputState>; syncControlledValues(values: { readonly value?: readonly string[]; readonly inputValue?: string }): Result<RevisionSnapshot<TagsInputState>>; handleEvent(event: TagsInputEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export function createTagsInput(options: TagsInputOptions = {}): FacadeConnection<TagsInputConnection> {
   return unwrap(tryCreateTagsInput(options));

@@ -10,6 +10,11 @@ import type { TerminalKeyboardInput } from './keyboard.js';
 import { toDatePickerEvent } from './date-picker.js';
 
 export interface DateRangePickerOptions { readonly policies?: DatePickerPolicies; readonly value?: DateRange | null; readonly defaultValue?: DateRange | null; readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateRange | null) => void; readonly onHighlightedValueChange?: (value: DateValue) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void; }
+
+export type DateRangePickerValueChangeHandler = NonNullable<DateRangePickerOptions['onValueChange']>;
+export type DateRangePickerHighlightedValueChangeHandler = NonNullable<DateRangePickerOptions['onHighlightedValueChange']>;
+export type DateRangePickerOpenChangeHandler = NonNullable<DateRangePickerOptions['onOpenChange']>;
+export type DateRangePickerUpdateHandler = NonNullable<DateRangePickerOptions['onUpdate']>;
 export interface DateRangePickerControlledValues { readonly value?: DateRange | null; readonly highlightedValue?: DateValue; readonly open?: boolean; }
 export interface DateRangePickerConnection { getSnapshot(): RevisionSnapshot<DateRangePickerState>; getMonth(): readonly (readonly DateValue[])[]; syncControlledValues(values: DateRangePickerControlledValues): Result<RevisionSnapshot<DateRangePickerState>>; handleEvent(event: DateRangePickerEvent): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean; }
 export function createDateRangePicker(options: DateRangePickerOptions = {}): FacadeConnection<DateRangePickerConnection> { return unwrap(tryCreateDateRangePicker(options)); }

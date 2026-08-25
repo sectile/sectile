@@ -31,6 +31,10 @@ export interface DateTimeFieldOptions {
   readonly onUpdate?: () => void;
 }
 
+export type DateTimeFieldValueChangeHandler = NonNullable<DateTimeFieldOptions['onValueChange']>;
+export type DateTimeFieldInputStateChangeHandler = NonNullable<DateTimeFieldOptions['onInputStateChange']>;
+export type DateTimeFieldUpdateHandler = NonNullable<DateTimeFieldOptions['onUpdate']>;
+
 export interface DateTimeFieldControlledValues {
   readonly value?: DateTimeValue | null;
   readonly inputState?: TextEditingState;
