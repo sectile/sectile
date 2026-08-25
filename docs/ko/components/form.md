@@ -112,6 +112,10 @@ function provideFormControlOwner(): void
 | 속성 | 타입 | 기본값 | 설명 |
 | --- | --- | --- | --- |
 | `issues` | `readonly FormIssue[]` | `[]` | 애플리케이션이 제공하는 검증 이슈입니다. |
+| `schema` | `FormSchema` | `undefined` | 제출 시 최종 검증과 출력값 변환에 사용하는 Standard Schema입니다. |
+| `validate` | `FormValidateHandler` | `undefined` | 입력 과정과 제출 검증을 구분할 수 있는 폼 단위 validator입니다. |
+| `validateOn` | `readonly ('input' \| 'blur')[]` | `[]` | 첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다. |
+| `revalidateOn` | `readonly ('input' \| 'blur')[]` | `['input']` | 검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다. |
 | `onSubmit` | `FormSubmitHandler` | `undefined` | 검증을 통과한 제출을 처리하고 관리형 성공·실패 결과를 반환하는 함수입니다. 템플릿에서는 `@submit.prevent`를 권장합니다. |
 
 #### `FormFieldProps`
@@ -124,7 +128,6 @@ function provideFormControlOwner(): void
 | `id` | `string` | `undefined` | 관련 파트를 연결하는 안정적인 ID입니다. |
 | `name` | `FormFieldPath` | `undefined` | 네이티브 폼 제출에 사용할 이름입니다. |
 | `form` | `string` | `undefined` | 컨트롤을 연결할 네이티브 form 요소의 ID입니다. |
-| `validate` | `FormValidateHandler` | `undefined` | 현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다. |
 | `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
 | `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
 
@@ -148,7 +151,10 @@ function provideFormControlOwner(): void
 | `submitFailed` | `(issues?: readonly FormIssue[]) => boolean` | 현재 제출을 실패로 기록하는 함수입니다. |
 | `replaceIssues` | `(source: FormIssueSource, issues: readonly FormIssue[]) => boolean` | 한 출처의 검증 이슈를 바꾸는 함수입니다. |
 | `dirty` | `boolean` | 현재 값이 초깃값과 다른지 여부입니다. |
-| `status` | `FormState['status']` | 현재 제출 상태입니다. |
+| `validationStatus` | `FormState['validationStatus']` | 현재 검증 생명주기입니다. |
+| `validationTrigger` | `FormState['validationTrigger']` | 현재 또는 최근 검증을 시작한 이벤트입니다. |
+| `validationIntent` | `FormState['validationIntent']` | 현재 또는 최근 검증이 입력 과정용인지 최종 제출용인지 나타냅니다. |
+| `submissionStatus` | `FormState['submissionStatus']` | 현재 제출 생명주기입니다. |
 | `touched` | `boolean` | 사용자가 필드를 조작했는지 여부입니다. |
 | `valid` | `boolean` | 현재 검증 이슈가 없는지 여부입니다. |
 | `submitCount` | `number` | 제출을 시도한 횟수입니다. |
@@ -184,11 +190,11 @@ function provideFormControlOwner(): void
 #### `FormSubmitEvent`
 
 ```ts
-interface FormSubmitEvent<Shape extends object = Record<string, unknown>> {
+interface FormSubmitEvent<Schema extends FormSchema = FormSchema> {
   readonly nativeEvent: SubmitEvent
   readonly defaultPrevented: boolean
   readonly formData: FormData
-  readonly values: FormValues<Shape>
+  readonly values: FormSchemaOutput<Schema>
   readonly submitter: HTMLElement | null
   readonly state: FormState
   preventDefault(): void
@@ -207,20 +213,25 @@ type FormSubmitResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
 
-type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
-  (event: FormSubmitEvent<Shape>) =>
+type FormSubmitHandler<Schema extends FormSchema = FormSchema> =
+  (event: FormSubmitEvent<Schema>) =>
     FormSubmitResult | PromiseLike<FormSubmitResult>
 ```
 
-`void` 또는 `{ ok: true }`를 반환하면 제출에 성공합니다. `{ ok: false, issues }`를 반환하거나 예외·Promise 거부가 발생하면 실패합니다. 필드 이슈는 `fieldId`로 `FormMessage`에 연결하고, `fieldId`가 없는 이슈는 폼 전체 이슈로 처리합니다.
+`FormSubmitHandler<typeof schema>`를 사용하면 `event.values`가 Standard Schema 출력 타입으로 추론됩니다. `void` 또는 `{ ok: true }`를 반환하면 제출에 성공합니다. `{ ok: false, issues }`를 반환하거나 예외·Promise 거부가 발생하면 실패합니다. 필드 이슈는 `fieldId`로 `FormMessage`에 연결하고, `fieldId`가 없는 이슈는 폼 전체 이슈로 처리합니다.
 
 #### 이벤트 핸들러
 
 ```ts
 type FormResetHandler = () => void
 type FormStateChangeHandler = (state: FormState) => void
-type FormValidateHandler = () => FormParticipantValidation<string>
+type FormValidateHandler<Shape extends object = Record<string, unknown>> = (
+  values: FormValues<Shape>,
+  context: FormValidateContext,
+) => FormValidationResult | PromiseLike<FormValidationResult>
 ```
+
+`context.trigger`는 `input`, `blur`, `submit` 중 검증을 시작한 이벤트를 나타내고, `context.intent`는 입력 과정 검증인지 최종 제출 검증인지 나타냅니다. Standard Schema는 제출 의도에서만 실행합니다. 제출 검증에 실패한 뒤에는 `revalidateOn` 이벤트에서도 제출 의도를 유지하므로 최종 제약을 통과할 때까지 오류가 갱신됩니다.
 
 #### 상태 동작
 

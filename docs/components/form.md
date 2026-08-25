@@ -112,6 +112,10 @@ function provideFormControlOwner(): void
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `issues` | `readonly FormIssue[]` | `[]` | Validation issues supplied by the application. |
+| `schema` | `FormSchema` | `undefined` | Standard Schema used for authoritative submission validation and output transformation. |
+| `validate` | `FormValidateHandler` | `undefined` | Form-level validator that can distinguish interaction and submission validation. |
+| `validateOn` | `readonly ('input' \| 'blur')[]` | `[]` | Interaction events that run validation before the first submission attempt. |
+| `revalidateOn` | `readonly ('input' \| 'blur')[]` | `['input']` | Interaction events that rerun the active validation intent after validation fails. |
 | `onSubmit` | `FormSubmitHandler` | `undefined` | Handles a valid submission and returns its managed success or failure result. Prefer `@submit.prevent` in templates. |
 
 #### `FormFieldProps`
@@ -124,7 +128,6 @@ function provideFormControlOwner(): void
 | `id` | `string` | `undefined` | Stable ID used to connect related parts. |
 | `name` | `FormFieldPath` | `undefined` | Name used for native form submission. |
 | `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `validate` | `FormValidateHandler` | `undefined` | Validates the current field and returns application issues. |
 | `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
 | `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
 
@@ -148,7 +151,10 @@ function provideFormControlOwner(): void
 | `submitFailed` | `(issues?: readonly FormIssue[]) => boolean` | Marks the active submission as failed. |
 | `replaceIssues` | `(source: FormIssueSource, issues: readonly FormIssue[]) => boolean` | Replaces validation issues for one source. |
 | `dirty` | `boolean` | Whether the current value differs from its initial value. |
-| `status` | `FormState['status']` | Current submission status. |
+| `validationStatus` | `FormState['validationStatus']` | Current validation lifecycle. |
+| `validationTrigger` | `FormState['validationTrigger']` | Event that started the current or latest validation run. |
+| `validationIntent` | `FormState['validationIntent']` | Whether the current or latest validation uses interaction or submission rules. |
+| `submissionStatus` | `FormState['submissionStatus']` | Current submission lifecycle. |
 | `touched` | `boolean` | Whether the user has interacted with the field. |
 | `valid` | `boolean` | Whether current validation has no issues. |
 | `submitCount` | `number` | Number of submission attempts. |
@@ -184,11 +190,11 @@ function provideFormControlOwner(): void
 #### `FormSubmitEvent`
 
 ```ts
-interface FormSubmitEvent<Shape extends object = Record<string, unknown>> {
+interface FormSubmitEvent<Schema extends FormSchema = FormSchema> {
   readonly nativeEvent: SubmitEvent
   readonly defaultPrevented: boolean
   readonly formData: FormData
-  readonly values: FormValues<Shape>
+  readonly values: FormSchemaOutput<Schema>
   readonly submitter: HTMLElement | null
   readonly state: FormState
   preventDefault(): void
@@ -207,20 +213,25 @@ type FormSubmitResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
 
-type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
-  (event: FormSubmitEvent<Shape>) =>
+type FormSubmitHandler<Schema extends FormSchema = FormSchema> =
+  (event: FormSubmitEvent<Schema>) =>
     FormSubmitResult | PromiseLike<FormSubmitResult>
 ```
 
-Returning `void` or `{ ok: true }` succeeds the submission. Returning `{ ok: false, issues }`, throwing, or rejecting fails it. Field issues use `fieldId` to connect to `FormMessage`; issues without `fieldId` remain form-wide.
+Use `FormSubmitHandler<typeof schema>` to infer `event.values` from the Standard Schema output. Returning `void` or `{ ok: true }` succeeds the submission. Returning `{ ok: false, issues }`, throwing, or rejecting fails it. Field issues use `fieldId` to connect to `FormMessage`; issues without `fieldId` remain form-wide.
 
 #### Event handlers
 
 ```ts
 type FormResetHandler = () => void
 type FormStateChangeHandler = (state: FormState) => void
-type FormValidateHandler = () => FormParticipantValidation<string>
+type FormValidateHandler<Shape extends object = Record<string, unknown>> = (
+  values: FormValues<Shape>,
+  context: FormValidateContext,
+) => FormValidationResult | PromiseLike<FormValidationResult>
 ```
+
+`context.trigger` identifies `input`, `blur`, or `submit`; `context.intent` identifies interaction or authoritative submission validation. Standard Schema runs only for submission intent. After a failed submission, `revalidateOn` preserves submission intent so final constraints stay visible until they pass.
 
 #### State actions
 
