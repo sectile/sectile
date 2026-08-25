@@ -96,7 +96,7 @@ function update(next: FieldValue): void {
           :disabled="disabled"
           :readonly="readonly"
           :policies="policies"
-          class="text-field temporal-field__input"
+          class="text-field temporal-input"
           @update:model-value="update"
         />
       </label>

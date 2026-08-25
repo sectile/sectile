@@ -50,12 +50,12 @@ function update(next: DateRange | null): void { value.value = next; revision.val
       >
         <label class="text-label temporal-range__field">
           <span>Start date</span>
-          <DateRangeFieldStartInput class="text-field" name="start" />
+          <DateRangeFieldStartInput class="text-field temporal-input" name="start" />
         </label>
         <span class="temporal-range__separator" aria-hidden="true"><ArrowRight :size="18" /></span>
         <label class="text-label temporal-range__field">
           <span>End date</span>
-          <DateRangeFieldEndInput class="text-field" name="end" />
+          <DateRangeFieldEndInput class="text-field temporal-input" name="end" />
         </label>
       </DateRangeFieldRoot>
       <p class="temporal-value" role="status" aria-live="polite">

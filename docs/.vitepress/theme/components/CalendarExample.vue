@@ -39,7 +39,7 @@ function select(value: string | null): void {
 </script>
 
 <template>
-  <section class="catalog-calendar-shell">
+  <section class="catalog-calendar-shell catalog-picker-popup">
     <header class="catalog-calendar-heading">
       <div>
         <strong>{{ title }}</strong>
@@ -52,24 +52,26 @@ function select(value: string | null): void {
         </div>
       </div>
     </header>
-    <div class="catalog-weekdays" aria-hidden="true"><span v-for="day in weekdayLabels" :key="day">{{ day }}</span></div>
-    <CalendarRoot
-      :key="`${viewMode}:${anchor}`"
-      :rows="rows"
-      :model-value="visibleValue"
-      :disabled-values="disabledDates"
-      :label="title"
-      class="catalog-calendar"
-      :data-view="viewMode"
-      @update:model-value="select"
-      @page="move($event.direction)"
-    >
-      <CalendarCell
-        v-for="day in rows.flat()"
-        :key="day"
-        :value="day"
-        :class="{ 'is-outside': viewMode === 'month' && !isSameCalendarMonth(day, anchor) }"
-      >{{ Number(day.slice(-2)) }}</CalendarCell>
-    </CalendarRoot>
+    <div class="catalog-picker-calendar">
+      <div class="catalog-picker-weekdays" aria-hidden="true"><span v-for="day in weekdayLabels" :key="day">{{ day }}</span></div>
+      <CalendarRoot
+        :key="`${viewMode}:${anchor}`"
+        :rows="rows"
+        :model-value="visibleValue"
+        :disabled-values="disabledDates"
+        :label="title"
+        class="catalog-calendar"
+        :data-view="viewMode"
+        @update:model-value="select"
+        @page="move($event.direction)"
+      >
+        <CalendarCell
+          v-for="day in rows.flat()"
+          :key="day"
+          :value="day"
+          :class="{ 'is-outside': viewMode === 'month' && !isSameCalendarMonth(day, anchor) }"
+        >{{ Number(day.slice(-2)) }}</CalendarCell>
+      </CalendarRoot>
+    </div>
   </section>
 </template>

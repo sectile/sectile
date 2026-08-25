@@ -61,12 +61,12 @@ function update(next: TimeRange | null): void {
       >
         <label class="text-label temporal-range__field">
           <span>Opens</span>
-          <TimeRangeFieldStartInput class="text-field" name="opens" />
+          <TimeRangeFieldStartInput class="text-field temporal-input" name="opens" />
         </label>
         <span class="temporal-range__separator" aria-hidden="true"><ArrowRight :size="18" /></span>
         <label class="text-label temporal-range__field">
           <span>Closes</span>
-          <TimeRangeFieldEndInput class="text-field" name="closes" />
+          <TimeRangeFieldEndInput class="text-field temporal-input" name="closes" />
         </label>
       </TimeRangeFieldRoot>
       <p class="temporal-value" role="status" aria-live="polite">
