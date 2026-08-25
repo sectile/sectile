@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jinyongp/sectile.git",
+    "url": "https://github.com/sectile/sectile.git",
     "directory": "packages/dom"
   },
   "types": "./dist/index.d.ts",
