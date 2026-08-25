@@ -12,6 +12,33 @@ Import components from their public component subpath:
 import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
 ```
 
+## Host defaults
+
+`HostProvider` supplies environment defaults without rendering a wrapper element. Use it once near the application root, then override it in a nested subtree only when that subtree uses a different host boundary.
+
+```vue
+<script setup lang="ts">
+import { HostProvider } from '@sectile/vue/host-provider'
+</script>
+
+<template>
+  <HostProvider
+    direction="rtl"
+    portal-target="#overlays"
+  >
+    <RouterView />
+  </HostProvider>
+</template>
+```
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `direction` | `'ltr' \| 'rtl'` | inherited, then `'ltr'` | Reading direction used by owned surfaces and horizontal keyboard navigation. |
+| `portalTarget` | `string \| HTMLElement` | inherited, then `'body'` | Default target for popup Portal parts. A Portal's own `to` prop takes priority. |
+| `createId` | `() => string` | inherited, then Vue `useId()` | Creates the unique suffix shared by related ARIA IDs. Each call must return a unique, SSR-stable value. |
+
+`useHostDirection`, `useHostPortalTarget`, and `useHostId` expose the resolved values to application-owned compound parts. Nested providers inherit each omitted prop independently.
+
 ## Basic usage
 
 The root owns interaction state and shares it with its compound parts. `v-model` uses controlled Vue state; `default-value` creates an uncontrolled component.

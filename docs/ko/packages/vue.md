@@ -12,6 +12,33 @@ pnpm add @sectile/vue vue
 import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
 ```
 
+## 실행 환경 기본값
+
+`HostProvider`는 별도 래퍼 요소를 렌더링하지 않고 실행 환경 기본값을 하위 컴포넌트에 전달합니다. 일반적으로 응용 프로그램 루트 가까이에 한 번 두고, 방향이나 포털 경계가 다른 하위 영역에서만 중첩해 재정의합니다.
+
+```vue
+<script setup lang="ts">
+import { HostProvider } from '@sectile/vue/host-provider'
+</script>
+
+<template>
+  <HostProvider
+    direction="rtl"
+    portal-target="#overlays"
+  >
+    <RouterView />
+  </HostProvider>
+</template>
+```
+
+| Prop | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `direction` | `'ltr' \| 'rtl'` | 상위 값, 없으면 `'ltr'` | 컴포넌트가 소유한 영역과 수평 키보드 탐색에 적용할 읽기 방향입니다. |
+| `portalTarget` | `string \| HTMLElement` | 상위 값, 없으면 `'body'` | 팝업 Portal 파트가 사용할 기본 대상입니다. 각 Portal의 `to`가 있으면 그 값을 우선합니다. |
+| `createId` | `() => string` | 상위 값, 없으면 Vue `useId()` | 서로 연결된 ARIA ID가 공유할 고유 접미사를 만듭니다. 호출할 때마다 SSR에서도 동일한 고유 값을 반환해야 합니다. |
+
+응용 프로그램이 직접 만든 조합형 파트에서는 `useHostDirection`, `useHostPortalTarget`, `useHostId`로 확정된 값을 읽을 수 있습니다. 중첩한 Provider는 생략한 속성만 상위 값을 물려받습니다.
+
 ## 기본 사용법
 
 Root가 상호작용 상태를 소유하고 하위 구성 요소에 공유합니다. `v-model`은 Vue의 제어 상태를 사용하고, `default-value`는 컴포넌트가 소유하는 비제어 상태를 만듭니다.
