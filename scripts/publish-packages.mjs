@@ -32,6 +32,13 @@ function assertSupportedNpm() {
   assert.equal(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), true, `npm 11.5.1 or newer is required for trusted publishing; found ${version}`);
 }
 
+function assertPackedDistribution(name, tarball) {
+  const entries = run('tar', ['-tzf', tarball], { capture: true }).split('\n');
+  const contains = (extension) => entries.some((entry) => /^(?:package\/)?dist\//.test(entry) && entry.endsWith(extension));
+  assert.equal(contains('.js'), true, `${name} tarball does not contain built JavaScript`);
+  assert.equal(contains('.d.ts'), true, `${name} tarball does not contain declarations`);
+}
+
 function isPublished(name, version) {
   const result = spawnSync('npm', ['view', `${name}@${version}`, 'version', '--json', '--registry', registry], {
     cwd: root,
@@ -57,6 +64,13 @@ assert.equal(versions.size, 1, 'package versions must be synchronized');
 const version = packages[0].manifest.version;
 if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package version before publishing');
 run('node', packOnly ? ['scripts/check-release.mjs'] : ['scripts/check-release.mjs', `v${version}`]);
+run('pnpm', [
+  '--recursive',
+  '--filter', '@sectile/core',
+  '--filter', '@sectile/dom',
+  '--filter', '@sectile/terminal',
+  'build',
+]);
 
 const temporaryRoot = join(root, '.tmp');
 await mkdir(temporaryRoot, { recursive: true });
@@ -69,7 +83,9 @@ try {
     run('pnpm', ['pack', '--pack-destination', packRoot], { cwd: entry.packageRoot });
     const files = (await readdir(packRoot)).filter((file) => file.endsWith('.tgz') && !before.has(file));
     assert.equal(files.length, 1, `${entry.manifest.name} did not produce exactly one tarball`);
-    packed.push({ ...entry, tarball: join(packRoot, files[0]) });
+    const tarball = join(packRoot, files[0]);
+    assertPackedDistribution(entry.manifest.name, tarball);
+    packed.push({ ...entry, tarball });
   }
 
   if (packOnly) {
