@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Check, ChevronDown } from '@lucide/vue';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import {
+  SelectContent,
+  SelectItem,
+  SelectItemIndicator,
+  SelectRoot,
+  SelectTrigger,
+} from '@sectile/vue/select';
+import { computed } from 'vue';
 
 interface Option {
   readonly label: string;
@@ -19,62 +26,38 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
-
-const root = ref<HTMLDetailsElement | null>(null);
-
-function close(): void {
-  if (root.value) root.value.open = false;
-}
-
-function select(value: string): void {
-  emit('update:modelValue', value);
-  close();
-}
-
-function handlePointerDown(event: PointerEvent): void {
-  if (root.value && !root.value.contains(event.target as Node)) close();
-}
-
-function handleKeydown(event: KeyboardEvent): void {
-  if (event.key !== 'Escape' || !root.value?.open) return;
-  close();
-  root.value.querySelector('summary')?.focus();
-}
-
-onMounted(() => {
-  document.addEventListener('pointerdown', handlePointerDown);
-  document.addEventListener('keydown', handleKeydown);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('pointerdown', handlePointerDown);
-  document.removeEventListener('keydown', handleKeydown);
-});
+const values = computed(() => props.options.map((option) => option.value));
 </script>
 
 <template>
-  <details ref="root" class="nav-preference-menu" :class="{ 'nav-preference-menu--mobile': props.mobile }">
-    <summary :aria-label="props.accessibleLabel">
+  <SelectRoot
+    :items="values"
+    :model-value="props.modelValue"
+    :label="props.accessibleLabel"
+    :text-value="(value) => props.options.find((option) => option.value === value)?.label ?? value"
+    class="nav-preference-menu"
+    :class="{ 'nav-preference-menu--mobile': props.mobile }"
+    @update:model-value="emit('update:modelValue', $event ?? props.modelValue)"
+  >
+    <SelectTrigger class="nav-preference-menu__trigger">
       <slot name="icon" />
       <span class="nav-preference-menu__label">{{ props.label }}</span>
       <strong>{{ props.currentLabel }}</strong>
       <ChevronDown class="nav-preference-menu__chevron" :size="14" aria-hidden="true" />
-    </summary>
+    </SelectTrigger>
 
-    <div class="nav-preference-menu__items" role="radiogroup" :aria-label="props.accessibleLabel">
-      <button
+    <SelectContent class="nav-preference-menu__items">
+      <SelectItem
         v-for="option in props.options"
         :key="option.value"
-        type="button"
-        role="radio"
-        :aria-checked="props.modelValue === option.value"
-        @click="select(option.value)"
+        :value="option.value"
+        class="nav-preference-menu__item"
       >
         {{ option.label }}
-        <Check v-if="props.modelValue === option.value" :size="15" aria-hidden="true" />
-      </button>
-    </div>
-  </details>
+        <SelectItemIndicator><Check :size="15" aria-hidden="true" /></SelectItemIndicator>
+      </SelectItem>
+    </SelectContent>
+  </SelectRoot>
 </template>
 
 <style scoped>
@@ -83,30 +66,29 @@ onBeforeUnmount(() => {
   height: var(--vp-nav-height);
 }
 
-.nav-preference-menu summary {
+.nav-preference-menu__trigger {
   display: flex;
+  width: 100%;
   height: var(--vp-nav-height);
   align-items: center;
+  border: 0;
   padding: 0 12px;
   color: var(--vp-c-text-1);
+  background: transparent;
   cursor: pointer;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  list-style: none;
   transition: color 0.2s;
 }
 
-.nav-preference-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.nav-preference-menu summary:hover,
-.nav-preference-menu summary:focus-visible {
+.nav-preference-menu__trigger:hover,
+.nav-preference-menu__trigger:focus-visible {
   outline: 0;
   color: var(--vp-c-text-2);
 }
 
-.nav-preference-menu summary:focus-visible {
+.nav-preference-menu__trigger:focus-visible {
   box-shadow: inset 0 -2px var(--vp-c-brand-1);
 }
 
@@ -126,7 +108,7 @@ onBeforeUnmount(() => {
   transition: transform 0.2s;
 }
 
-.nav-preference-menu[open] .nav-preference-menu__chevron {
+.nav-preference-menu[data-state="open"] .nav-preference-menu__chevron {
   transform: rotate(180deg);
 }
 
@@ -145,7 +127,7 @@ onBeforeUnmount(() => {
   box-shadow: var(--vp-shadow-3);
 }
 
-.nav-preference-menu__items button {
+.nav-preference-menu__item {
   display: flex;
   width: 100%;
   align-items: center;
@@ -162,14 +144,15 @@ onBeforeUnmount(() => {
   transition: background-color 0.2s, color 0.2s;
 }
 
-.nav-preference-menu__items button:hover,
-.nav-preference-menu__items button:focus-visible {
+.nav-preference-menu__item:hover,
+.nav-preference-menu__item:focus-visible,
+.nav-preference-menu__item[data-highlighted] {
   outline: 0;
   background: var(--vp-c-default-soft);
   color: var(--vp-c-brand-1);
 }
 
-.nav-preference-menu__items button[aria-checked="true"] {
+.nav-preference-menu__item[data-selected] {
   color: var(--vp-c-brand-1);
 }
 
@@ -180,7 +163,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--vp-c-divider);
 }
 
-.nav-preference-menu--mobile summary {
+.nav-preference-menu--mobile .nav-preference-menu__trigger {
   height: 48px;
   padding: 0;
 }

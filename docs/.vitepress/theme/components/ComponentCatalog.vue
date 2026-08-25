@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TextField } from '@sectile/vue/text';
 import { computed, ref } from 'vue';
 import catalog from '../../../data/components.json' with { type: 'json' };
 import { useDocsLocale } from '../locale.js';
@@ -51,13 +52,13 @@ const familyName = (family: string) => isKorean.value ? (koFamilies[family] ?? t
 
 <template>
   <div class="component-catalog">
-    <input
+    <TextField
       v-model="query"
       class="component-catalog__search"
       type="search"
       :placeholder="isKorean ? '이름이나 기능으로 찾기' : 'Filter by component, family, or capability'"
       :aria-label="isKorean ? '컴포넌트 찾기' : 'Filter components'"
-    >
+    />
     <div class="component-catalog__grid">
       <a
         v-for="component in components"
