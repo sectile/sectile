@@ -123,6 +123,7 @@ sectile/
 │   │   ├── date-time-range-picker.md
 │   │   ├── dialog.md
 │   │   ├── disclosure.md
+│   │   ├── drawer.md
 │   │   ├── editable.md
 │   │   ├── feed.md
 │   │   ├── form.md
@@ -212,6 +213,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.md
 │   │   │   ├── dialog.md
 │   │   │   ├── disclosure.md
+│   │   │   ├── drawer.md
 │   │   │   ├── editable.md
 │   │   │   ├── feed.md
 │   │   │   ├── form.md
@@ -422,6 +424,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── drawer.ts
 │   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── form.ts
@@ -485,6 +488,7 @@ sectile/
 │   │   │   │   ├── color-picker.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
 │   │   │   │   ├── date-picker.test.mjs
+│   │   │   │   ├── drawer.reference-law.test.mjs
 │   │   │   │   ├── expansion-controls.reference-law.test.mjs
 │   │   │   │   ├── extended-components.test.mjs
 │   │   │   │   ├── feed.reference-law.test.mjs
@@ -561,6 +565,7 @@ sectile/
 │   │   │   │   ├── layer-binding.ts
 │   │   │   │   ├── layer-manager.ts
 │   │   │   │   ├── menu-control.ts
+│   │   │   │   ├── modal-effects.ts
 │   │   │   │   ├── popup-control.ts
 │   │   │   │   ├── semantic-controller.ts
 │   │   │   │   └── text-element.ts
@@ -582,11 +587,13 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── drawer.ts
 │   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── form.ts
 │   │   │   ├── grid.ts
 │   │   │   ├── index.ts
+│   │   │   ├── interact-outside.ts
 │   │   │   ├── listbox.ts
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
@@ -633,6 +640,8 @@ sectile/
 │   │   │   ├── color-picker.test.mjs
 │   │   │   ├── combobox.test.mjs
 │   │   │   ├── date-time.test.mjs
+│   │   │   ├── dialog-browser.test.mjs
+│   │   │   ├── drawer-browser.test.mjs
 │   │   │   ├── expansion-controls.test.mjs
 │   │   │   ├── extended-components.test.mjs
 │   │   │   ├── factory-api.test.mjs
@@ -652,6 +661,7 @@ sectile/
 │   │   │   ├── spin-button.test.mjs
 │   │   │   ├── text.test.mjs
 │   │   │   ├── timer.test.mjs
+│   │   │   ├── toast-browser.test.mjs
 │   │   │   ├── toast.test.mjs
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
@@ -695,6 +705,7 @@ sectile/
 │   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
+│   │   │   ├── drawer.ts
 │   │   │   ├── editable.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── form.ts
@@ -794,6 +805,7 @@ sectile/
 │       │   │   ├── native-input.ts
 │       │   │   ├── part-contract.ts
 │       │   │   ├── popup.ts
+│       │   │   ├── presence.ts
 │       │   │   └── tabs-context.ts
 │       │   ├── accordion.ts
 │       │   ├── alert-dialog.ts
@@ -813,6 +825,7 @@ sectile/
 │       │   ├── date-time-range-picker.ts
 │       │   ├── dialog.ts
 │       │   ├── disclosure.ts
+│       │   ├── drawer.ts
 │       │   ├── editable.ts
 │       │   ├── feed.ts
 │       │   ├── form.ts
@@ -874,6 +887,7 @@ sectile/
 │       │   ├── date-range-field.test.mjs
 │       │   ├── derived-selection.test.mjs
 │       │   ├── disclosure.test.mjs
+│       │   ├── drawer.dom.test.mjs
 │       │   ├── editable.test.mjs
 │       │   ├── extended-controls.test.mjs
 │       │   ├── form.dom.test.mjs
@@ -886,6 +900,7 @@ sectile/
 │       │   ├── native-fields.test.mjs
 │       │   ├── pin-input.dom.test.mjs
 │       │   ├── popup.test.mjs
+│       │   ├── presence.dom.test.mjs
 │       │   ├── public-parity.test.mjs
 │       │   ├── renderer.mjs
 │       │   ├── slider.test.mjs
