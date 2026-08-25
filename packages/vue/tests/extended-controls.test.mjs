@@ -35,6 +35,9 @@ test('Vue PIN and tags inputs render persistent native inputs', async () => {
   const pin = await render(() => h(PinInputRoot, { length: 4, defaultValue: '12' }, {
     default: () => [0, 1, 2, 3].map((index) => h(PinInputInput, { index })),
   }));
+  const otp = await render(() => h(PinInputRoot, { length: 4, otp: true }, {
+    default: () => [0, 1, 2, 3].map((index) => h(PinInputInput, { index })),
+  }));
   const tags = await render(() => h(TagsInputRoot, { defaultValue: ['Vue'] }, {
     default: ({ value }) => [
       ...value.map((_tag, index) => h(TagsInputItem, { index }, { default: () => [h(TagsInputItemText), h(TagsInputItemDelete)] })),
@@ -42,6 +45,8 @@ test('Vue PIN and tags inputs render persistent native inputs', async () => {
     ],
   }));
   assert.equal((pin.match(/data-part="input"/g) ?? []).length, 4);
+  assert.doesNotMatch(pin, /autocomplete="one-time-code"/);
+  assert.equal((otp.match(/autocomplete="one-time-code"/g) ?? []).length, 1);
   assert.match(tags, /data-part="item-text"/);
   assert.match(tags, /data-part="item-delete"/);
 });

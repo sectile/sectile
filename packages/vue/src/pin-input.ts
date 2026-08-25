@@ -46,7 +46,7 @@ export const PinInputRoot = defineComponent({
   props: {
     length: { type: Number, default: 6 }, modelValue: { type: String, default: undefined },
     defaultValue: { type: String, default: '' }, mask: { type: Boolean, default: false },
-    otp: { type: Boolean, default: true }, disabled: { type: Boolean, default: false },
+    otp: { type: Boolean, default: false }, disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false }, label: { type: String, default: 'PIN' },
     name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false },
     policies: { type: Object as PropType<PinInputPolicies>, default: undefined },
