@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const packageDirectories = ['core', 'dom', 'terminal'];
+const packageDirectories = publishedPackageDirectories;
 const expectedNames = packageDirectories.map((directory) => `@sectile/${directory}`);
 const expectedTag = process.argv[2] ?? process.env.GITHUB_REF_NAME;
 const expectedRepository = process.env.GITHUB_REPOSITORY;

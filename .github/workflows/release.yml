@@ -47,7 +47,7 @@ jobs:
           git merge-base --is-ancestor "refs/tags/${RELEASE_TAG}^{commit}" origin/main
       - name: Protect retry package contents
         if: github.event_name == 'workflow_dispatch'
-        run: git diff --exit-code "refs/tags/${RELEASE_TAG}^{commit}" HEAD -- packages/core packages/dom packages/terminal pnpm-lock.yaml
+        run: git diff --exit-code "refs/tags/${RELEASE_TAG}^{commit}" HEAD -- packages/core packages/dom packages/terminal packages/vue pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
       - run: pnpm release:check "$RELEASE_TAG"

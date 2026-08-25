@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
   classifyReleaseBranch,
@@ -8,8 +11,22 @@ import {
   prependChangelog,
   recommendBump,
 } from './lib/release.mjs';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
 const commit = (subject, body = '') => ({ hash: 'abcdef123456', shortHash: 'abcdef1', subject, body });
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+test('includes every public workspace package in releases', () => {
+  const publicDirectories = readdirSync(join(root, 'packages'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((directory) => {
+      const manifest = JSON.parse(readFileSync(join(root, 'packages', directory, 'package.json'), 'utf8'));
+      return manifest.private !== true;
+    })
+    .sort();
+  assert.deepEqual([...publishedPackageDirectories].sort(), publicDirectories);
+});
 
 test('allows synchronized and fast-forwardable local release branches', () => {
   assert.equal(classifyReleaseBranch('same', 'same', true), 'synchronized');

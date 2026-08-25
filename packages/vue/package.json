@@ -1,11 +1,13 @@
 {
   "name": "@sectile/vue",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.2.1",
   "description": "Headless Vue components for Sectile DOM interaction semantics.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],

@@ -13,9 +13,10 @@ import {
   prependChangelog,
   recommendBump,
 } from './lib/release.mjs';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const packageDirectories = ['core', 'dom', 'terminal'];
+const packageDirectories = publishedPackageDirectories;
 const packages = packageDirectories.map((directory) => ({
   directory,
   manifestPath: join(root, 'packages', directory, 'package.json'),

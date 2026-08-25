@@ -3,9 +3,10 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const packageDirectories = ['core', 'dom', 'terminal'];
+const packageDirectories = publishedPackageDirectories;
 const registry = 'https://registry.npmjs.org';
 const packOnly = process.argv.includes('--pack-only');
 const unexpectedArguments = process.argv.slice(2).filter((argument) => argument !== '--pack-only' && argument !== '--');
@@ -66,9 +67,7 @@ if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package ve
 run('node', packOnly ? ['scripts/check-release.mjs'] : ['scripts/check-release.mjs', `v${version}`]);
 run('pnpm', [
   '--recursive',
-  '--filter', '@sectile/core',
-  '--filter', '@sectile/dom',
-  '--filter', '@sectile/terminal',
+  ...packages.flatMap(({ manifest }) => ['--filter', manifest.name]),
   'build',
 ]);
 
