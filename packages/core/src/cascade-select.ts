@@ -36,6 +36,9 @@ export interface CascadeSelectPolicies<ID extends StableID = StableID> {
   readonly selectable?: (id: ID, leaf: boolean) => boolean;
 }
 
+export type CascadeSelectEligiblePredicate<ID extends StableID = StableID> = NonNullable<CascadeSelectPolicies<ID>['eligible']>;
+export type CascadeSelectSelectablePredicate<ID extends StableID = StableID> = NonNullable<CascadeSelectPolicies<ID>['selectable']>;
+
 export interface CascadeSelectUpdate<ID extends StableID = StableID> {
   readonly state: CascadeSelectState<ID>;
   readonly commands: readonly CascadeSelectCommand<ID>[];

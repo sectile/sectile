@@ -7,6 +7,9 @@ export interface EditableState { readonly value: string; readonly draft: string;
 export type EditableEvent = 'start-edit' | 'commit' | 'cancel' | { readonly type: 'input'; readonly text: string };
 export type EditableCommand = { readonly type: 'focus-input' | 'focus-preview' } | { readonly type: 'commit'; readonly value: string };
 export interface EditablePolicies { readonly normalize?: (draft: string) => string; readonly validate?: (draft: string) => boolean; readonly allowEmpty?: boolean }
+
+export type EditableNormalizer = NonNullable<EditablePolicies['normalize']>;
+export type EditableValidatePredicate = NonNullable<EditablePolicies['validate']>;
 export type EditableUpdate = MachineUpdate<EditableState, EditableCommand>;
 
 export function createEditableState(value: string = '', draft: string = value, editing: boolean = false): EditableState {

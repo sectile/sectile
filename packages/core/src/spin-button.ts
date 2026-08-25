@@ -30,6 +30,8 @@ export interface SpinButtonPolicies {
   readonly parse?: (text: string) => string | null;
 }
 
+export type SpinButtonParser = NonNullable<SpinButtonPolicies['parse']>;
+
 export interface SpinButtonUpdate {
   readonly state: SpinButtonState;
   readonly commands: readonly SpinButtonCommand[];

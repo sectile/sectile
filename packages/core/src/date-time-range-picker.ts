@@ -81,6 +81,8 @@ export interface DateTimeRangePickerPolicies {
   readonly unavailable?: (value: DateTimeValue) => boolean;
 }
 
+export type DateTimeRangePickerUnavailablePredicate = NonNullable<DateTimeRangePickerPolicies['unavailable']>;
+
 export interface DateTimeRangePickerUpdate {
   readonly state: DateTimeRangePickerState;
   readonly commands: readonly DateTimeRangePickerCommand[];

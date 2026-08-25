@@ -69,6 +69,8 @@ export interface DatePickerPolicies {
   readonly maxScan?: number;
 }
 
+export type DatePickerUnavailablePredicate = NonNullable<DatePickerPolicies['unavailable']>;
+
 export interface DatePickerUpdate {
   readonly state: DatePickerState;
   readonly commands: readonly DatePickerCommand[];

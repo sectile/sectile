@@ -7,6 +7,8 @@ export interface PinInputState { readonly values: readonly string[]; readonly cu
 export type PinInputEvent = 'next' | 'previous' | 'backspace' | 'delete' | { readonly type: 'focus'; readonly index: number } | { readonly type: 'input'; readonly value: string };
 export type PinInputCommand = { readonly type: 'focus-cell'; readonly index: number } | { readonly type: 'complete'; readonly value: string };
 export interface PinInputPolicies { readonly accept?: (value: string, index: number) => boolean }
+
+export type PinInputAcceptPredicate = NonNullable<PinInputPolicies['accept']>;
 export interface PinInputUpdate { readonly state: PinInputState; readonly commands: readonly PinInputCommand[] }
 
 export function createPinInputState(length: number, value: string | readonly string[] = ''): PinInputState {

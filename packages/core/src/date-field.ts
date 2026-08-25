@@ -48,6 +48,8 @@ export interface DateFieldPolicies {
   readonly unavailable?: (value: DateValue) => boolean;
 }
 
+export type DateFieldUnavailablePredicate = NonNullable<DateFieldPolicies['unavailable']>;
+
 export interface DateFieldUpdate {
   readonly state: DateFieldState;
   readonly commands: readonly DateFieldCommand[];

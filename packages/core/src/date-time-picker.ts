@@ -71,6 +71,8 @@ export interface DateTimePickerPolicies {
   readonly defaultTime?: TimeValue;
 }
 
+export type DateTimePickerUnavailablePredicate = NonNullable<DateTimePickerPolicies['unavailable']>;
+
 export interface DateTimePickerUpdate {
   readonly state: DateTimePickerState;
   readonly commands: readonly DateTimePickerCommand[];

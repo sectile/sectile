@@ -7,6 +7,8 @@ export interface TagsInputState { readonly tags: readonly string[]; readonly dra
 export type TagsInputEvent = { readonly type: 'input'; readonly value: string } | { readonly type: 'add'; readonly value?: string } | { readonly type: 'remove'; readonly index: number } | 'remove-current' | 'next' | 'previous' | 'focus-input' | { readonly type: 'focus-tag'; readonly index: number };
 export type TagsInputCommand = { readonly type: 'focus-tag'; readonly index: number } | { readonly type: 'focus-input' } | { readonly type: 'announce-tag'; readonly action: 'added' | 'removed'; readonly value: string };
 export interface TagsInputPolicies { readonly maxTags?: number; readonly normalize?: (value: string) => string; readonly allowDuplicate?: boolean }
+
+export type TagsInputNormalizer = NonNullable<TagsInputPolicies['normalize']>;
 export interface TagsInputUpdate { readonly state: TagsInputState; readonly commands: readonly TagsInputCommand[] }
 
 export function createTagsInputState(tags: readonly string[] = [], draft = '', current: number | null = null): TagsInputState {

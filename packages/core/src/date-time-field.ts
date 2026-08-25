@@ -73,6 +73,8 @@ export interface DateTimeFieldPolicies {
   readonly step?: Partial<Record<DateTimeSegment, number>>;
 }
 
+export type DateTimeFieldUnavailablePredicate = NonNullable<DateTimeFieldPolicies['unavailable']>;
+
 export interface DateTimeFieldUpdate {
   readonly state: DateTimeFieldState;
   readonly commands: readonly DateTimeFieldCommand[];

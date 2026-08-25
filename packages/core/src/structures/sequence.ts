@@ -16,6 +16,8 @@ export interface SequenceOptions extends ResourceCeilings {
   readonly maxItems?: number;
 }
 
+export type SequenceProjectionPredicate<ID extends StableID = StableID> = (id: ID, index: number) => boolean;
+
 export interface Sequence<ID extends StableID = StableID> {
   readonly size: number;
   readonly ids: readonly ID[];
@@ -23,7 +25,7 @@ export interface Sequence<ID extends StableID = StableID> {
   indexOf(id: ID): number | null;
   contains(id: ID): boolean;
   compare(left: ID, right: ID): -1 | 0 | 1 | null;
-  project(predicate: (id: ID, index: number) => boolean): Sequence<ID>;
+  project(predicate: SequenceProjectionPredicate<ID>): Sequence<ID>;
   move(
     current: ID,
     direction: Direction,

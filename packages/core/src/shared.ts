@@ -30,6 +30,8 @@ export interface ScanOptions<ID extends StableID> {
   readonly maxScan?: number;
 }
 
+export type ScanEligiblePredicate<ID extends StableID> = NonNullable<ScanOptions<ID>['eligible']>;
+
 export type MoveResult<ID extends StableID> =
   | { readonly kind: 'found'; readonly id: ID; readonly scanned: number }
   | { readonly kind: 'none'; readonly scanned: number }
