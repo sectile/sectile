@@ -130,15 +130,19 @@ export const ComboboxInput = defineComponent({
     const root = useRoot('ComboboxInput');
     const input = shallowRef<HTMLInputElement | null>(null);
     const participation = useNativeInputFormControl(input);
+    const renderServerValue = typeof window === 'undefined';
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
-      input.value = node instanceof HTMLInputElement ? node : null;
-      root.registerInput(input.value ?? undefined);
-    },
-    type: 'text', role: 'combobox', value: root.state.value.inputValue, name: props.name, form: props.form, required: props.required,
-    disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': root.label.value,
-    'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open), 'data-scope': 'combobox', 'data-part': 'input',
-  }, participation.controlProps.value));
+      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
+        input.value = node instanceof HTMLInputElement ? node : null;
+        root.registerInput(input.value ?? undefined);
+      },
+      type: 'text', role: 'combobox',
+      ...(renderServerValue ? { value: root.state.value.inputValue } : {}),
+      name: props.name, form: props.form, required: props.required,
+      disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': root.label.value,
+      'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open),
+      'data-scope': 'combobox', 'data-part': 'input',
+    }, participation.controlProps.value));
   },
 });
 
