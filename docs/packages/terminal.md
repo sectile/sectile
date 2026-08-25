@@ -80,6 +80,8 @@ The key map follows the shape shown by the terminal interface. Vertical lists us
 
 Component pages list extra editing, paging, and range shortcuts where applicable.
 
+`@sectile/terminal/reorder` exposes `move-up`, `move-down`, `move-start`, `move-end`, `indent`, and `outdent` as explicit sequence/tree movement keys. `@sectile/terminal/layer-stack` creates an application-owned layer scope so mixed terminal popups share topmost dismissal and descendant close order.
+
 ## Try the terminal adapter
 
 This is a browser-hosted preview of terminal input and output, not a `sectile` CLI command. Its state transitions use the real `@sectile/terminal` checkbox connection. Click the row, or focus the preview and press <kbd>Space</kbd> or <kbd>Enter</kbd>.

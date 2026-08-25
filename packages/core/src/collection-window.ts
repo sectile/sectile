@@ -174,6 +174,14 @@ export function synchronizeCollectionWindow<ID extends StableID>(
       { revision: replacement.revision, currentRevision: state.revision },
     );
   }
+  if (state.pending !== null && replacement.requestGeneration === undefined) {
+    return fail(
+      'transition-rejection',
+      'collection-window-request-generation-required',
+      'A replacement that resolves a pending request must identify its generation.',
+      { currentGeneration: state.pending.generation },
+    );
+  }
   if (
     replacement.requestGeneration !== undefined
     && replacement.requestGeneration !== state.pending?.generation

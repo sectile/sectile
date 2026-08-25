@@ -182,6 +182,8 @@ Vue components reuse `@sectile/dom` for ARIA projection, normalized input, focus
 
 Use `@sectile/vue` for Vue templates and compound composition. Use `@sectile/dom` directly when markup is created outside Vue or when a custom renderer must own the connection lifecycle.
 
+`@sectile/vue/reorder` provides `SequenceReorderRoot`/`SequenceReorderItem` and `TreeReorderRoot`/`TreeReorderItem`. They emit `update:items` or `update:nodes` while reusing the DOM keyboard and pointer contract. Feed window requests include a request generation that must be returned with the replacement, and Form submission actions complete only with the generation returned by `submitStarted`.
+
 ## Explore components
 
 The [component catalog](/components/) documents each component's examples, public parts, keyboard behavior, accessibility contract, and API. Start with the basic example, then use Anatomy to inspect the exact `data-scope` and `data-part` boundaries exposed for styling.

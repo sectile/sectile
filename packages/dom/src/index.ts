@@ -1,6 +1,15 @@
 export type { FacadeConnection } from './internal/facade.js';
 export type { ReadingDirection } from './internal/direction.js';
 export {
+  createReorder,
+  tryCreateReorder,
+  type ReorderOrientation,
+  type SequenceReorderConnection,
+  type SequenceReorderOptions,
+  type TreeReorderConnection,
+  type TreeReorderOptions,
+} from './reorder.js';
+export {
   connectListbox,
   createListbox, tryCreateListbox,
   createListboxController,

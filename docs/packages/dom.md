@@ -120,6 +120,12 @@ Use the component's native element when possible. Choose a non-native host only 
 
 Popover and tooltip connections use Floating UI for offset, collision flipping, shifting, available-size data, arrow placement, detached-anchor hiding, and open-only automatic updates. Boundary, padding, strategy, observers, and middleware remain configurable. Floating UI middleware is re-exported from the relevant component subpaths for custom positioning.
 
+Every trigger-owned popup also joins one layer stack per document. Mixed nesting across dialogs, popovers, selects, comboboxes, menus, cascade selects, and date pickers therefore shares topmost Escape handling, outside dismissal, descendant close propagation, and focus restoration.
+
+## Reorder
+
+`@sectile/dom/reorder` maps sequence and tree reorder semantics onto Alt-modified movement keys and pointer placement. Pointer capture and hit-testing stay in the DOM adapter; Core receives only stable identities and semantic before/after or parent placement.
+
 ## Styling hooks
 
 DOM connections provide behavior, not a theme. Style the element through your own classes and the projected state attributes.

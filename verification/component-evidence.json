@@ -1,12 +1,28 @@
 {
   "schemaVersion": 1,
+  "support": {
+    "layer-stack": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
+      "core": ["packages/core/tests/runtime/layer-stack.test.mjs"],
+      "dom": ["packages/dom/tests/popup-controls.test.mjs"],
+      "terminal": ["packages/terminal/tests/layer-stack.test.mjs"]
+    },
+    "reorder": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
+      "core": ["packages/core/tests/runtime/reorder.test.mjs"],
+      "dom": ["packages/dom/tests/reorder.test.mjs"],
+      "terminal": ["packages/terminal/tests/reorder.test.mjs"]
+    }
+  },
   "families": {
     "checked": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/checked-controls.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/checked-controls.test.mjs"],
       "terminal": ["packages/terminal/tests/checked-controls.test.mjs"]
     },
     "collection": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "timer"], "terminal": ["keyboard", "timer"] },
       "core": [
         "packages/core/tests/composites/calendar.reference-law.test.mjs",
         "packages/core/tests/composites/carousel.reference-law.test.mjs",
@@ -20,66 +36,79 @@
       "terminal": ["packages/terminal/tests/calendar.test.mjs", "packages/terminal/tests/carousel.test.mjs", "packages/terminal/tests/combobox.test.mjs", "packages/terminal/tests/feed.test.mjs", "packages/terminal/tests/grid.test.mjs", "packages/terminal/tests/tree-grid.test.mjs", "packages/terminal/tests/tree-view.test.mjs"]
     },
     "date-time": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "text"], "terminal": ["keyboard", "text"] },
       "core": ["packages/core/tests/composites/date-picker.test.mjs"],
       "dom": ["packages/dom/tests/date-time.test.mjs"],
       "terminal": ["packages/terminal/tests/date-time.test.mjs"]
     },
     "editing": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "text"], "terminal": ["keyboard", "text"] },
       "core": ["packages/core/tests/composites/color-picker.test.mjs", "packages/core/tests/editing/date-time-field.test.mjs", "packages/core/tests/editing/editable.test.mjs", "packages/core/tests/editing/number-field.test.mjs", "packages/core/tests/editing/quantity-field.test.mjs", "packages/core/tests/editing/text.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/color-picker.test.mjs", "packages/dom/tests/date-time.test.mjs", "packages/dom/tests/extended-components.test.mjs", "packages/dom/tests/number-field.test.mjs", "packages/dom/tests/quantity-field.test.mjs", "packages/dom/tests/text.test.mjs"],
       "terminal": ["packages/terminal/tests/color-picker.test.mjs", "packages/terminal/tests/date-time.test.mjs", "packages/terminal/tests/extended-components.test.mjs", "packages/terminal/tests/number-field.test.mjs", "packages/terminal/tests/quantity-field.test.mjs", "packages/terminal/tests/text.test.mjs"]
     },
     "expansion": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/expansion-controls.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/expansion-controls.test.mjs"],
       "terminal": ["packages/terminal/tests/expansion-controls.test.mjs"]
     },
     "feedback": {
+      "hostInputs": { "dom": ["pointer", "focus", "timer"], "terminal": ["keyboard", "timer"] },
       "core": ["packages/core/tests/composites/toast.test.mjs"],
       "dom": ["packages/dom/tests/toast.test.mjs"],
       "terminal": ["packages/terminal/tests/toast.test.mjs"]
     },
     "form": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "native-form"], "terminal": ["keyboard", "text"] },
       "core": ["packages/core/tests/composites/form.test.mjs"],
       "dom": ["packages/dom/tests/form.test.mjs"],
       "terminal": ["packages/terminal/tests/form.test.mjs"]
     },
     "linear-action": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/linear-action.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/linear-controls.test.mjs"],
       "terminal": ["packages/terminal/tests/linear-controls.test.mjs"]
     },
     "linear-choice": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/linear-choice.reference-law.test.mjs", "packages/core/tests/composites/extended-components.test.mjs"],
       "dom": ["packages/dom/tests/linear-controls.test.mjs", "packages/dom/tests/extended-components.test.mjs"],
       "terminal": ["packages/terminal/tests/linear-controls.test.mjs", "packages/terminal/tests/extended-components.test.mjs"]
     },
     "menu": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/menu.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/menu.test.mjs"],
       "terminal": ["packages/terminal/tests/menu.test.mjs"]
     },
     "navigation": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/menu.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/menu.test.mjs"],
       "terminal": ["packages/terminal/tests/menu.test.mjs"]
     },
     "paged-navigation": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/extended-components.test.mjs"],
       "dom": ["packages/dom/tests/extended-components.test.mjs"],
       "terminal": ["packages/terminal/tests/extended-components.test.mjs"]
     },
     "popup": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/popup-controls.reference-law.test.mjs", "packages/core/tests/runtime/layer-stack.test.mjs"],
       "dom": ["packages/dom/tests/popup-controls.test.mjs", "packages/dom/tests/popover-positioning.test.mjs"],
       "terminal": ["packages/terminal/tests/popup-controls.test.mjs"]
     },
     "range": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "timer"], "terminal": ["keyboard", "timer"] },
       "core": ["packages/core/tests/composites/multi-thumb-slider.reference-law.test.mjs", "packages/core/tests/composites/slider.reference-law.test.mjs", "packages/core/tests/composites/spin-button.reference-law.test.mjs", "packages/core/tests/composites/timer.test.mjs", "packages/core/tests/composites/window-splitter.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/multi-thumb-slider.test.mjs", "packages/dom/tests/slider.test.mjs", "packages/dom/tests/spin-button.test.mjs", "packages/dom/tests/timer.test.mjs", "packages/dom/tests/window-splitter.test.mjs"],
       "terminal": ["packages/terminal/tests/multi-thumb-slider.test.mjs", "packages/terminal/tests/slider.test.mjs", "packages/terminal/tests/spin-button.test.mjs", "packages/terminal/tests/timer.test.mjs", "packages/terminal/tests/window-splitter.test.mjs"]
     },
     "tree-choice": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/composites/cascade-select.test.mjs"],
       "dom": ["packages/dom/tests/cascade-select.test.mjs"],
       "terminal": ["packages/terminal/tests/cascade-select.test.mjs"]

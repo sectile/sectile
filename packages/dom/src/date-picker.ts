@@ -11,6 +11,7 @@ import { createSemanticController, type SemanticController } from './internal/se
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 
 export interface DatePickerOptions {
   readonly root: HTMLElement;
@@ -64,6 +65,7 @@ function construct(options: DatePickerOptions): Result<DatePickerConnection> {
 class DOMDatePicker implements DatePickerConnection {
   readonly options: DatePickerOptions; readonly runtime: SemanticController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #field: FacadeConnection<DateFieldConnection> | null;
+  readonly #layer: DOMLayerBinding;
   #syncingField = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => { const semantic = keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
@@ -72,6 +74,7 @@ class DOMDatePicker implements DatePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
+    this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     this.#field = options.input === undefined ? null : createDateField({
       input: options.input,
       defaultValue: runtime.getSnapshot().state.value,
@@ -116,8 +119,10 @@ class DOMDatePicker implements DatePickerConnection {
       this.#field.handleEvent({ type: 'set-value', value: state.value });
       this.#syncingField = false;
     }
+    this.#layer.sync();
   }
   public disconnect(): void {
+    this.#layer.disconnect();
     this.#field?.disconnect();
     this.options.trigger.removeEventListener('click', this.#trigger);
     this.options.grid.removeEventListener('keydown', this.#keydown);

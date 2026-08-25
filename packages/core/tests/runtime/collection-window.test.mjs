@@ -40,6 +40,18 @@ test('WIN-02, WIN-03: collection window accepts only newer matching replacements
   }).ok, false);
 });
 
+test('WIN-05: pending collection replacement requires its request generation', () => {
+  const requested = applyCollectionWindowEvent(
+    createCollectionWindowState({ revision: 1, start: 0, size: 2, total: 4 }),
+    { type: 'request-window', direction: 'after', anchor: 'b' },
+  ).value.state;
+  const missing = synchronizeCollectionWindow(requested, {
+    revision: 2, start: 2, size: 2, total: 4,
+  });
+  assert.equal(missing.ok, false);
+  assert.equal(missing.error.code, 'collection-window-request-generation-required');
+});
+
 test('WIN-04: known collection bounds suppress impossible requests', () => {
   const first = createCollectionWindowState({ start: 0, size: 10, total: 10 });
   assert.equal(canRequestCollectionWindow(first, 'before'), false);

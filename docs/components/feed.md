@@ -52,6 +52,7 @@ Vue package: `@sectile/vue/feed`
 | `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
 | `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
 | `getPosition` | `(id: string) => number` | `undefined` | Returns the numeric position represented by an item. |
+| `requestGeneration` | `number` | `undefined` | Generation token returned by the window request being resolved. |
 | `revision` | `number` | `0` | Application revision used to refresh derived content. |
 | `setSize` | `number` | `undefined` | Total number of items represented by the current feed window. |
 
@@ -71,6 +72,7 @@ Vue package: `@sectile/vue/feed`
 | `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 | `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
+| `requestGeneration` | `number` | Generation of the current or most recently issued window request. |
 | `revision` | `number` | Revision of the current state snapshot. |
 
 #### `FeedItemSlotProps`
@@ -82,6 +84,7 @@ Vue package: `@sectile/vue/feed`
 | `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
 | `disabled` | `boolean` | Whether interaction is unavailable. |
 | `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
+| `requestGeneration` | `number` | Generation of the current or most recently issued window request. |
 | `revision` | `number` | Revision of the current state snapshot. |
 
 ### Events
@@ -91,7 +94,7 @@ Vue package: `@sectile/vue/feed`
 | Event | Payload | Description |
 | --- | --- | --- |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
-| `request-window` | `CollectionWindowDirection, string \| null, number` | Emitted when the feed needs items outside the current window. |
+| `request-window` | `CollectionWindowDirection, string \| null, number, number` | Emitted when the feed needs items outside the current window. |
 
 ### Other types
 
@@ -110,7 +113,7 @@ type FeedHighlightHandler = (value: string | null) => void
 #### `FeedRequestWindowHandler`
 
 ```ts
-type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number) => void
+type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number, requestGeneration: number) => void
 ```
 
 #### `FeedDirection`

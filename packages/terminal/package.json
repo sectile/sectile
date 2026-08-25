@@ -29,6 +29,8 @@
       "default": "./dist/listbox.js"
     },
     "./form": { "types": "./dist/form.d.ts", "import": "./dist/form.js", "default": "./dist/form.js" },
+    "./reorder": { "types": "./dist/reorder.d.ts", "import": "./dist/reorder.js", "default": "./dist/reorder.js" },
+    "./layer-stack": { "types": "./dist/layer-stack.d.ts", "import": "./dist/layer-stack.js", "default": "./dist/layer-stack.js" },
     "./checkbox-group": { "types": "./dist/checkbox-group.d.ts", "import": "./dist/checkbox-group.js", "default": "./dist/checkbox-group.js" },
     "./select": { "types": "./dist/select.d.ts", "import": "./dist/select.js", "default": "./dist/select.js" },
     "./pagination": { "types": "./dist/pagination.d.ts", "import": "./dist/pagination.js", "default": "./dist/pagination.js" },

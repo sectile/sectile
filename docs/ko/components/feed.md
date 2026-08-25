@@ -52,6 +52,7 @@ Vue 패키지: `@sectile/vue/feed`
 | `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
 | `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
 | `getPosition` | `(id: string) => number` | `undefined` | 항목이 나타내는 수치 위치를 반환하는 함수입니다. |
+| `requestGeneration` | `number` | `undefined` | 완료할 구간 요청이 발급한 generation 토큰입니다. |
 | `revision` | `number` | `0` | 파생 콘텐츠를 다시 계산할 때 사용할 애플리케이션 변경 차수입니다. |
 | `setSize` | `number` | `undefined` | 현재 피드 구간이 나타내는 전체 항목 수입니다. |
 
@@ -71,6 +72,7 @@ Vue 패키지: `@sectile/vue/feed`
 | `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
 | `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
 | `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
+| `requestGeneration` | `number` | 현재 또는 가장 최근에 발급한 구간 요청의 generation입니다. |
 | `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
 
 #### `FeedItemSlotProps`
@@ -82,6 +84,7 @@ Vue 패키지: `@sectile/vue/feed`
 | `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
 | `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
 | `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
+| `requestGeneration` | `number` | 현재 또는 가장 최근에 발급한 구간 요청의 generation입니다. |
 | `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
 
 ### 이벤트
@@ -91,7 +94,7 @@ Vue 패키지: `@sectile/vue/feed`
 | 이벤트 | 페이로드 | 설명 |
 | --- | --- | --- |
 | `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
-| `request-window` | `CollectionWindowDirection, string \| null, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
+| `request-window` | `CollectionWindowDirection, string \| null, number, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
 
 ### 기타 타입
 
@@ -110,7 +113,7 @@ type FeedHighlightHandler = (value: string | null) => void
 #### `FeedRequestWindowHandler`
 
 ```ts
-type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number) => void
+type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number, requestGeneration: number) => void
 ```
 
 #### `FeedDirection`

@@ -98,6 +98,7 @@
     "./carousel": { "types": "./dist/carousel.d.ts", "import": "./dist/carousel.js", "default": "./dist/carousel.js" },
     "./feed": { "types": "./dist/feed.d.ts", "import": "./dist/feed.js", "default": "./dist/feed.js" },
     "./form": { "types": "./dist/form.d.ts", "import": "./dist/form.js", "default": "./dist/form.js" },
+    "./reorder": { "types": "./dist/reorder.d.ts", "import": "./dist/reorder.js", "default": "./dist/reorder.js" },
     "./calendar": {
       "types": "./dist/calendar.d.ts",
       "import": "./dist/calendar.js",

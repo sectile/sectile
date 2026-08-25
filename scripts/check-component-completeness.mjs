@@ -25,6 +25,10 @@ const migrationBaselineIDs = new Set([
 
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
 const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
+const allowedHostInputs = {
+  dom: new Set(['focus', 'ime', 'keyboard', 'native-form', 'pointer', 'text', 'timer']),
+  terminal: new Set(['keyboard', 'text', 'timer']),
+};
 assert.equal(manifest.schemaVersion, 1, 'Unsupported component completeness schema.');
 assert.ok(Array.isArray(manifest.requirements) && manifest.requirements.length > 0,
   'Completeness requirements must be declared.');
@@ -63,6 +67,17 @@ assert.deepEqual(Object.keys(evidence.families).sort(), declaredFamilies,
   'Every semantic component family must have exactly one evidence entry.');
 for (const family of declaredFamilies) {
   const familyEvidence = evidence.families[family];
+  for (const host of ['dom', 'terminal']) {
+    const inputs = familyEvidence.hostInputs?.[host];
+    assert.ok(Array.isArray(inputs) && inputs.length > 0,
+      `${family}: ${host} host inputs must be declared.`);
+    assert.equal(new Set(inputs).size, inputs.length,
+      `${family}: ${host} host inputs must be unique.`);
+    for (const input of inputs) {
+      assert.ok(allowedHostInputs[host].has(input),
+        `${family}: unsupported ${host} host input ${input}.`);
+    }
+  }
   for (const witness of ['core', 'dom', 'terminal']) {
     const paths = familyEvidence[witness];
     assert.ok(Array.isArray(paths) && paths.length > 0,
@@ -72,6 +87,29 @@ for (const family of declaredFamilies) {
     for (const path of paths) {
       assert.equal((await stat(path)).isFile(), true,
         `${family}: missing ${witness} evidence ${path}.`);
+    }
+  }
+}
+
+for (const support of ['layer-stack', 'reorder']) {
+  const supportEvidence = evidence.support?.[support];
+  assert.ok(supportEvidence !== undefined, `${support} host evidence must be declared.`);
+  for (const host of ['core', 'dom', 'terminal']) {
+    const paths = supportEvidence[host];
+    assert.ok(Array.isArray(paths) && paths.length > 0,
+      `${support}: ${host} evidence must name at least one test file.`);
+    for (const path of paths) {
+      assert.equal((await stat(path)).isFile(), true,
+        `${support}: missing ${host} evidence ${path}.`);
+    }
+  }
+  for (const host of ['dom', 'terminal']) {
+    const inputs = supportEvidence.hostInputs?.[host];
+    assert.ok(Array.isArray(inputs) && inputs.length > 0,
+      `${support}: ${host} host inputs must be declared.`);
+    for (const input of inputs) {
+      assert.ok(allowedHostInputs[host].has(input),
+        `${support}: unsupported ${host} host input ${input}.`);
     }
   }
 }

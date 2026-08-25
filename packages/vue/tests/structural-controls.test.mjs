@@ -5,6 +5,7 @@ import { createSSRApp, h } from 'vue';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '../dist/carousel.js';
 import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '../dist/feed.js';
 import { GridCell, GridRoot, GridRow } from '../dist/grid.js';
+import { SequenceReorderItem, SequenceReorderRoot, TreeReorderItem, TreeReorderRoot } from '../dist/reorder.js';
 import { TreeGridCell, TreeGridDisclosure, TreeGridEditor, TreeGridRoot, TreeGridRow } from '../dist/tree-grid.js';
 import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '../dist/tree-view.js';
 
@@ -26,6 +27,19 @@ test('Vue feed exposes native articles and explicit window requests', async () =
   assert.match(html, /data-part="load-earlier"/);
   assert.equal((html.match(/<article/g) ?? []).length, 2);
   assert.match(html, /data-part="load-newer"/);
+});
+
+test('Vue reorder roots expose sequence and tree compound boundaries', async () => {
+  const sequence = await render(() => h(SequenceReorderRoot, { items: ['a', 'b'] }, {
+    default: () => [h(SequenceReorderItem, { value: 'a' }), h(SequenceReorderItem, { value: 'b' })],
+  }));
+  const tree = await render(() => h(TreeReorderRoot, { nodes: [{ id: 'root', parentID: null }] }, {
+    default: () => h(TreeReorderItem, { value: 'root' }),
+  }));
+  assert.match(sequence, /data-scope="sequence-reorder"/);
+  assert.equal((sequence.match(/data-part="item"/g) ?? []).length, 2);
+  assert.match(tree, /role="tree"/);
+  assert.match(tree, /role="treeitem"/);
 });
 
 test('Vue grid and tree view expose their semantic compound parts', async () => {

@@ -4,7 +4,7 @@ const registry = JSON.parse(await readFile('testing/law-registry.json', 'utf8'))
 const evidence = JSON.parse(await readFile('testing/law-evidence.json', 'utf8'));
 const ids = registry.laws.map((law) => law.id);
 assert.equal(new Set(ids).size, ids.length);
-assert.equal(ids.length, 52);
+assert.equal(ids.length, 53);
 assert.deepEqual(Object.keys(evidence.evidence).sort(), [...ids].sort());
 const evidenceFiles = new Set(Object.values(evidence.evidence));
 for (const path of evidenceFiles) assert.equal((await stat(path)).isFile(), true);

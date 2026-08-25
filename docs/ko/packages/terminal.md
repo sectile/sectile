@@ -78,6 +78,8 @@ Node 화면 출력기는 첫 화면 이후 달라진 행만 다시 씁니다. �
 
 화살표 키의 의미는 터미널 화면에 보이는 배치와 일치합니다. 세로 목록은 <kbd>↑</kbd>/<kbd>↓</kbd>, 가로 목록은 <kbd>←</kbd>/<kbd>→</kbd>로 이동합니다. 세로 계층에서는 <kbd>→</kbd>로 하위 단계에 들어가고 <kbd>←</kbd> 또는 <kbd>Esc</kbd>로 돌아옵니다. <kbd>Home</kbd>/<kbd>End</kbd>가 없는 키보드에서는 <kbd>Fn</kbd>+<kbd>←</kbd>/<kbd>→</kbd> 또는 <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd>로 현재 단계의 처음과 끝으로 이동합니다. <kbd>Fn</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>는 <kbd>Page Up</kbd>/<kbd>Page Down</kbd>으로 처리합니다. <kbd>Enter</kbd> 또는 <kbd>Space</kbd>는 하위 메뉴를 열거나 명령을 실행합니다.
 
+`@sectile/terminal/reorder`는 `move-up`, `move-down`, `move-start`, `move-end`, `indent`, `outdent`를 sequence/tree 이동 명령으로 제공합니다. `@sectile/terminal/layer-stack`은 애플리케이션이 소유하는 레이어 범위를 만들어 여러 터미널 팝업의 최상위 닫기와 하위 레이어 닫기 순서를 통일합니다.
+
 편집, 페이지 이동, 범위 조절에 필요한 추가 키는 각 컴포넌트 문서에서 따로 안내합니다.
 
 ## 터미널에서 체험하기

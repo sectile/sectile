@@ -32,6 +32,7 @@ import type { TextElement } from './text.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { findDelegatedID } from './internal/delegated-event.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -267,6 +268,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   readonly #onTransition: ((details: ComboboxTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
   readonly #binding: DOMTextElementBinding;
+  readonly #layer: DOMLayerBinding | undefined;
   readonly #handleKeydown: (event: Event) => void;
   readonly #handleClick: (event: MouseEvent) => void;
 
@@ -285,6 +287,13 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       element: this.#input,
       getState: () => this.#controller.getSnapshot().state.text,
       dispatch: (input) => this.#dispatchTextInput(input).ok,
+    });
+    this.#layer = this.#popup === undefined ? undefined : createDOMLayerBinding({
+      surface: this.#popup,
+      owner: this.#input,
+      dismissOnInteractOutside: true,
+      readOpen: () => this.#controller.getSnapshot().state.popupOpen,
+      close: () => { this.handleEvent('close'); },
     });
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault();
@@ -384,9 +393,11 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.#binding.render();
     this.setInputAttributes(this.#input.getAttribute('aria-label') ?? undefined);
     this.setPopupAttributes(this.#popup?.getAttribute('aria-label') ?? undefined);
+    this.#layer?.sync();
   }
 
   public disconnect(): void {
+    this.#layer?.disconnect();
     this.#binding.disconnect();
     this.#input.removeEventListener('keydown', this.#handleKeydown);
     this.#popup?.removeEventListener('click', this.#handleClick);

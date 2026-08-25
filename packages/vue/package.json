@@ -171,6 +171,11 @@
       "import": "./dist/form.js",
       "default": "./dist/form.js"
     },
+    "./reorder": {
+      "types": "./dist/reorder.d.ts",
+      "import": "./dist/reorder.js",
+      "default": "./dist/reorder.js"
+    },
     "./grid": {
       "types": "./dist/grid.d.ts",
       "import": "./dist/grid.js",

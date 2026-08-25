@@ -49,6 +49,7 @@
     { "id": "WIN-02", "theory": "collection-window", "statement": "replacement revisions increase strictly" },
     { "id": "WIN-03", "theory": "collection-window", "statement": "replacement generation matches the pending request" },
     { "id": "WIN-04", "theory": "collection-window", "statement": "loaded ranges remain inside known totals" },
+    { "id": "WIN-05", "theory": "collection-window", "statement": "a pending request can be resolved only by an explicitly identified generation" },
     { "id": "ORD-01", "theory": "reorder", "statement": "sequence reorder preserves the identity permutation" },
     { "id": "ORD-02", "theory": "reorder", "statement": "sequence destinations identify an existing item" },
     { "id": "ORD-03", "theory": "reorder", "statement": "tree reparenting preserves acyclicity" },

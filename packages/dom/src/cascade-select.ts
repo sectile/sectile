@@ -11,6 +11,7 @@ import {
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 
 export type { TreeNodeInput as CascadeSelectItemDefinition } from '@sectile/core/tree';
 export type { CascadeSelectPolicies } from '@sectile/core/cascade-select';
@@ -120,9 +121,11 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
   readonly #triggerClick: () => void;
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
+  readonly #layer: DOMLayerBinding;
 
   public constructor(options: CascadeSelectOptions<ID>, tree: Tree<ID>, runtime: SemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) {
     this.#options = options; this.tree = tree; this.#runtime = runtime; this.#disabled = disabled; this.#controlled = controlled;
+    this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
     setInteractionAttributes(options.root, options, { readOnly: true });
     options.trigger.disabled = options.disabled === true;
     options.trigger.setAttribute('aria-haspopup', 'listbox');
@@ -158,8 +161,8 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
     }
     this.#options.onUpdate?.(); return true;
   }
-  public disconnect(): void { this.#options.trigger.removeEventListener('click', this.#triggerClick); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('click', this.#click); }
-  #render(): void { const state = this.getSnapshot().state; this.#options.trigger.setAttribute('aria-expanded', String(state.open)); this.#options.popup.hidden = !state.open; }
+  public disconnect(): void { this.#layer.disconnect(); this.#options.trigger.removeEventListener('click', this.#triggerClick); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('click', this.#click); }
+  #render(): void { const state = this.getSnapshot().state; this.#options.trigger.setAttribute('aria-expanded', String(state.open)); this.#options.popup.hidden = !state.open; this.#layer.sync(); }
 }
 
 export function toCascadeSelectEvent<ID extends StableID>(input: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey'>): CascadeSelectEvent<ID> | null {

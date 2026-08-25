@@ -5,6 +5,7 @@ import { applyMenuEvent, tryCreateMenuModel, tryCreateMenuState, type MenuComman
 import { createSemanticController, type SemanticController } from './semantic-controller.js';
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -60,12 +61,13 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>; readonly #policies: MenuPolicies<ID>; readonly #openControlled: boolean; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #reposition: () => void; readonly #view: Window | null; readonly #instanceID: string;
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #reposition: () => void; readonly #view: Window | null; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined;
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>, policies: MenuPolicies<ID>, openControlled: boolean) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies; this.#openControlled = openControlled;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
     this.#view = options.root.ownerDocument?.defaultView ?? null; this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
+    this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
     this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind, options.direction); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { for (const [id, element] of this.#elements) if (event.target === element || (typeof Node !== 'undefined' && event.target instanceof Node && element.contains(event.target))) { const wasOpen = this.getSnapshot().state.openPath.includes(id); this.handleEvent({ type: 'focus', id }); if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu'); return; } };
     this.#triggerClick = () => { this.handleEvent(this.getSnapshot().state.open ? 'close-popup' : 'open-popup'); };
@@ -88,7 +90,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#refresh();
   }
   public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } this.#options.onUpdate?.(); } return result.ok; }
-  public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#view?.removeEventListener('resize', this.#reposition); this.#view?.removeEventListener('scroll', this.#reposition, true); this.#elements.clear(); this.#submenus.clear(); }
+  public disconnect(): void { this.#layer?.disconnect(); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#view?.removeEventListener('resize', this.#reposition); this.#view?.removeEventListener('scroll', this.#reposition, true); this.#elements.clear(); this.#submenus.clear(); }
   #refresh(): void {
     const state = this.getSnapshot().state;
     this.#options.root.setAttribute('role', this.#options.kind === 'navigation-menu' ? 'navigation' : this.#options.kind === 'menubar' ? 'menubar' : 'menu');
@@ -113,6 +115,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       if (!open) { submenu.removeAttribute('data-placement'); this.#elements.get(parentID)?.removeAttribute('data-submenu-placement'); }
     }
     if (!state.open) this.#options.root.removeAttribute('data-placement');
+    this.#layer?.sync();
     this.#reposition();
   }
   #positionPopup(): void {

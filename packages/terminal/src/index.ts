@@ -1,5 +1,19 @@
 export type { FacadeConnection } from './internal/facade.js';
 export {
+  createLayerStack,
+  tryCreateLayerStack,
+  type TerminalLayerRegistration,
+  type TerminalLayerScope,
+} from './layer-stack.js';
+export {
+  createReorder,
+  tryCreateReorder,
+  type TerminalSequenceReorderConnection,
+  type TerminalSequenceReorderOptions,
+  type TerminalTreeReorderConnection,
+  type TerminalTreeReorderOptions,
+} from './reorder.js';
+export {
   createForm,
   tryCreateForm,
   type TerminalFormConnection,

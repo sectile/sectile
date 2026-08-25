@@ -93,9 +93,10 @@ test('DOM Form reads successful native controls through FormData and observes su
     assert.equal(values.email, 'release@sectile.dev');
     assert.equal(form.state.fields[0].dirty, true);
     assert.equal(form.state.validationStatus, 'valid');
-    assert.equal(form.submitStarted(), true);
+    const generation = form.submitStarted();
+    assert.equal(generation, form.state.submissionGeneration);
     assert.equal(form.state.submissionStatus, 'submitting');
-    assert.equal(form.submitFailed([{
+    assert.equal(form.submitFailed(generation, [{
       id: 'email:taken',
       fieldId: 'email',
       source: 'server',
@@ -103,6 +104,30 @@ test('DOM Form reads successful native controls through FormData and observes su
     }]), true);
     assert.equal(form.state.submissionStatus, 'failed');
     assert.equal(form.state.fields[0].issues[0].source, 'server');
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form rejects completion from a submission invalidated by reset', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+    const form = createForm({ form: formElement });
+
+    formElement.requestSubmit();
+    const generation = form.submitStarted();
+    assert.equal(typeof generation, 'number');
+    form.reset();
+    assert.equal(form.submitSucceeded(generation), false);
+
+    formElement.requestSubmit();
+    const nextGeneration = form.submitStarted();
+    assert.notEqual(nextGeneration, generation);
+    assert.equal(form.submitSucceeded(generation), false);
+    assert.equal(form.submitSucceeded(nextGeneration), true);
   } finally {
     dom.restore();
   }

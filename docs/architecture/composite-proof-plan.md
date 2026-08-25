@@ -180,18 +180,20 @@ genuinely unbounded feed remains out of scope until stream theory is added.
 
 `collection-window` generalizes Feed's loaded-range ownership without owning transport or
 item storage. It maintains one pending generation-bound request, strict replacement
-revisions, and known total bounds.
+revisions, and known total bounds. Resolving a pending request requires the exact request
+generation; omitting the token cannot bypass stale-response protection.
 
-`layer-stack` gives dialogs, popovers, and tooltips one deterministic ownership order.
+`layer-stack` gives every trigger-owned popup one deterministic ownership order.
 Nested layers form a contiguous parent chain, only the top layer handles dismissal, and an
 ancestor close propagates through descendants in reverse stack order. DOM popup controls
-share one manager per document; terminal applications can own an explicit stack per scope.
+share one manager per document; terminal applications use an explicit stack per scope.
 
 `reorder` separates host hit-testing from semantic placement. Sequence moves use stable
 identities and preserve the exact identity permutation. Tree moves additionally validate
 the new parent, prevent cycles, and require any placement target to be a sibling under that
-parent.
+parent. DOM maps pointer hit-testing and Alt-modified movement keys onto those events,
+Terminal exposes explicit movement keys, and Vue provides sequence/tree compound roots.
 
 Form validation and submission use monotonically increasing generations. Completion events
-must identify the active generation, so reset or newer work makes prior asynchronous results
-unusable instead of merely unlikely to win a race.
+must use the token returned when submission starts, so reset or newer work makes prior
+asynchronous results unusable instead of merely unlikely to win a race.

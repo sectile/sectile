@@ -58,9 +58,10 @@ test('terminal Form focuses and announces the first invalid field on submit', ()
   assert.equal(form.submit(), true);
   assert.equal(form.state.validationStatus, 'valid');
   assert.deepEqual(submissions, ['valid']);
-  assert.equal(form.submitStarted(), true);
+  const generation = form.submitStarted();
+  assert.equal(generation, form.state.submissionGeneration);
   assert.equal(form.state.submissionStatus, 'submitting');
-  assert.equal(form.submitSucceeded(), true);
+  assert.equal(form.submitSucceeded(generation), true);
   assert.equal(form.state.submissionStatus, 'succeeded');
 });
 
@@ -76,8 +77,9 @@ test('terminal Form coordinates reset and server issues without serializing fiel
   form.refreshField('email', { dirty: true, touched: true });
   assert.equal(form.state.dirty, true);
   assert.equal(form.submit(), true);
-  assert.equal(form.submitStarted(), true);
-  assert.equal(form.submitFailed([{
+  const generation = form.submitStarted();
+  assert.equal(generation, form.state.submissionGeneration);
+  assert.equal(form.submitFailed(generation, [{
     id: 'email:taken',
     fieldId: 'email',
     source: 'server',
@@ -92,6 +94,7 @@ test('terminal Form coordinates reset and server issues without serializing fiel
   assert.equal(form.state.submissionStatus, 'idle');
   assert.equal(form.state.dirty, false);
   assert.equal(form.summaryIssues.length, 0);
+  assert.equal(form.submitSucceeded(generation), false);
 });
 
 test('terminal Form supports dynamic field registration and subscriptions', () => {

@@ -27,7 +27,10 @@ The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
 
 `verification/component-completeness.json` is the machine-readable inventory, and
 `verification/component-evidence.json` binds every semantic family to concrete Core, DOM,
-and Terminal test files. Existing gaps are an explicit migration baseline. The checker
+and Terminal test files. Each family also declares the host-input channels exercised by
+those witnesses: keyboard, pointer, focus, IME, text, timers, or native form behavior as
+applicable. Coordination support such as layer ownership and reorder has the same
+cross-host evidence contract. Existing gaps are an explicit migration baseline. The checker
 rejects an unlisted public subpath, package export drift, an invalid capability entry,
 missing host evidence, or a newly introduced component with an unaudited gap. Migration
 entries are deleted as implementation and evidence land; the target is an empty

@@ -144,9 +144,9 @@ function provideFormControlOwner(): void
 | --- | --- | --- |
 | `state` | `FormState` | Complete current form state. |
 | `reset` | `FormResetAction` | Restores the initial value and interaction state. |
-| `submitStarted` | `FormSubmitStartedAction` | Marks a submission attempt as started. |
-| `submitSucceeded` | `FormSubmitSucceededAction` | Marks the active submission as successful. |
-| `submitFailed` | `FormSubmitFailedAction` | Marks the active submission as failed. |
+| `submitStarted` | `FormSubmitStartedAction` | Starts submission and returns its generation token. |
+| `submitSucceeded` | `FormSubmitSucceededAction` | Marks the identified submission as successful. |
+| `submitFailed` | `FormSubmitFailedAction` | Marks the identified submission as failed. |
 | `replaceIssues` | `FormReplaceIssuesAction` | Replaces validation issues for one source. |
 | `dirty` | `boolean` | Whether the current value differs from its initial value. |
 | `submissionStatus` | `FormState['submissionStatus']` | Current submission lifecycle. |
@@ -295,19 +295,23 @@ type FormValidateHandler<Schema extends FormSchema = FormSchema> = DOMFormValida
 #### `FormSubmitStartedAction`
 
 ```ts
-type FormSubmitStartedAction = () => boolean
+type FormSubmitStartedAction = () => number | null
 ```
 
 #### `FormSubmitSucceededAction`
 
 ```ts
-type FormSubmitSucceededAction = () => boolean
+type FormSubmitSucceededAction = (generation: number) => boolean
 ```
 
 #### `FormSubmitFailedAction`
 
 ```ts
-type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
+type FormSubmitFailedAction =
+(
+  generation: number,
+  issues?: readonly FormIssue[],
+) => boolean
 ```
 
 #### `FormReplaceIssuesAction`

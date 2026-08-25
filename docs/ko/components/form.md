@@ -144,9 +144,9 @@ function provideFormControlOwner(): void
 | --- | --- | --- |
 | `state` | `FormState` | 현재 전체 폼 상태입니다. |
 | `reset` | `FormResetAction` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
-| `submitStarted` | `FormSubmitStartedAction` | 제출 시도를 시작 상태로 기록하는 함수입니다. |
-| `submitSucceeded` | `FormSubmitSucceededAction` | 현재 제출을 성공으로 기록하는 함수입니다. |
-| `submitFailed` | `FormSubmitFailedAction` | 현재 제출을 실패로 기록하는 함수입니다. |
+| `submitStarted` | `FormSubmitStartedAction` | 제출을 시작하고 generation 토큰을 반환하는 함수입니다. |
+| `submitSucceeded` | `FormSubmitSucceededAction` | 식별한 제출을 성공으로 기록하는 함수입니다. |
+| `submitFailed` | `FormSubmitFailedAction` | 식별한 제출을 실패로 기록하는 함수입니다. |
 | `replaceIssues` | `FormReplaceIssuesAction` | 한 출처의 검증 이슈를 바꾸는 함수입니다. |
 | `dirty` | `boolean` | 현재 값이 초깃값과 다른지 여부입니다. |
 | `submissionStatus` | `FormState['submissionStatus']` | 현재 제출 생명주기입니다. |
@@ -295,19 +295,23 @@ type FormValidateHandler<Schema extends FormSchema = FormSchema> = DOMFormValida
 #### `FormSubmitStartedAction`
 
 ```ts
-type FormSubmitStartedAction = () => boolean
+type FormSubmitStartedAction = () => number | null
 ```
 
 #### `FormSubmitSucceededAction`
 
 ```ts
-type FormSubmitSucceededAction = () => boolean
+type FormSubmitSucceededAction = (generation: number) => boolean
 ```
 
 #### `FormSubmitFailedAction`
 
 ```ts
-type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
+type FormSubmitFailedAction =
+(
+  generation: number,
+  issues?: readonly FormIssue[],
+) => boolean
 ```
 
 #### `FormReplaceIssuesAction`

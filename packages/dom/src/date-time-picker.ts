@@ -18,6 +18,7 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDateTimeField, type DateTimeFieldConnection } from './date-time-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
@@ -152,6 +153,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
   readonly #dateTimeField: FacadeConnection<DateTimeFieldConnection> | null;
   readonly #dateField: FacadeConnection<DateFieldConnection> | null;
   readonly #timeField: FacadeConnection<TimeFieldConnection> | null;
+  readonly #layer: DOMLayerBinding;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
@@ -182,6 +184,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
+    this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); } });
     const state = runtime.getSnapshot().state;
     this.#dateTimeField = options.dateTimeInput === undefined ? null : createDateTimeField({
       input: options.dateTimeInput,
@@ -326,9 +329,11 @@ class DOMDateTimePicker implements DateTimePickerConnection {
       this.#timeField.handleEvent({ type: 'set-value', value: state.time });
     }
     this.#syncingFields = false;
+    this.#layer.sync();
   }
 
   public disconnect(): void {
+    this.#layer.disconnect();
     this.#dateTimeField?.disconnect();
     this.#dateField?.disconnect();
     this.#timeField?.disconnect();

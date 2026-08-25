@@ -80,9 +80,12 @@ export type FormValidationIssue = DOMFormValidationIssue;
 export type FormValidationResult = DOMFormValidationResult;
 export type FormValidateHandler<Schema extends FormSchema = FormSchema> =
   DOMFormValidateHandler<string, FormSchemaInput<Schema>>;
-export type FormSubmitStartedAction = () => boolean;
-export type FormSubmitSucceededAction = () => boolean;
-export type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean;
+export type FormSubmitStartedAction = () => number | null;
+export type FormSubmitSucceededAction = (generation: number) => boolean;
+export type FormSubmitFailedAction = (
+  generation: number,
+  issues?: readonly FormIssue[],
+) => boolean;
 export type FormReplaceIssuesAction = (
   source: FormIssueSource,
   issues: readonly FormIssue[],
@@ -319,21 +322,23 @@ const FormRootImpl = defineComponent({
     };
     const settleSubmission = (
       target: FormConnection<string>,
+      generation: number,
       result: FormSubmitResult,
     ): void => {
       if (connection.value !== target) return;
       if (typeof result === 'object' && result !== null && result.ok === false) {
-        target.submitFailed(toServerIssues(result.issues));
+        target.submitFailed(generation, toServerIssues(result.issues));
         return;
       }
-      target.submitSucceeded();
+      target.submitSucceeded(generation);
     };
     const rejectSubmission = (
       target: FormConnection<string>,
+      generation: number,
       reason: unknown,
     ): void => {
       if (connection.value !== target) return;
-      target.submitFailed([submissionErrorIssue(reason)]);
+      target.submitFailed(generation, [submissionErrorIssue(reason)]);
     };
     const submit = (payload: DOMFormSubmitPayload<string>): void => {
       const handler = props.onSubmit;
@@ -344,22 +349,23 @@ const FormRootImpl = defineComponent({
       if (target.getSnapshot().state.submissionStatus === 'submitting') {
         return;
       }
-      if (!target.submitStarted()) return;
+      const generation = target.submitStarted();
+      if (generation === null) return;
       let result: FormSubmitResult | PromiseLike<FormSubmitResult>;
       try {
         result = handler(toFormSubmitEvent(payload));
       } catch (error) {
-        rejectSubmission(target, error);
+        rejectSubmission(target, generation, error);
         return;
       }
       if (isPromiseLike(result)) {
         void Promise.resolve(result).then(
-          (resolved) => settleSubmission(target, resolved),
-          (error: unknown) => rejectSubmission(target, error),
+          (resolved) => settleSubmission(target, generation, resolved),
+          (error: unknown) => rejectSubmission(target, generation, error),
         );
         return;
       }
-      settleSubmission(target, result);
+      settleSubmission(target, generation, result);
     };
     const mount = (): void => {
       if (root.value === null) return;
@@ -395,9 +401,9 @@ const FormRootImpl = defineComponent({
     ], () => { void nextTick(mount); });
 
     const actions = {
-      submitStarted: (): boolean => connection.value?.submitStarted() ?? false,
-      submitSucceeded: (): boolean => connection.value?.submitSucceeded() ?? false,
-      submitFailed: (issues: readonly FormIssue[] = []): boolean => connection.value?.submitFailed(issues) ?? false,
+      submitStarted: (): number | null => connection.value?.submitStarted() ?? null,
+      submitSucceeded: (generation: number): boolean => connection.value?.submitSucceeded(generation) ?? false,
+      submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => connection.value?.submitFailed(generation, issues) ?? false,
       replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => connection.value?.replaceIssues(source, issues) ?? false,
       reset: (): void => connection.value?.reset(),
     };
@@ -837,9 +843,9 @@ function useRootSlotProps(form: FormContext): ComputedRef<FormRootSlotProps> {
     dirty: form.state.value.dirty,
     submitted: form.state.value.submitted,
     submitCount: form.state.value.submitCount,
-    submitStarted: (): boolean => form.connection.value?.submitStarted() ?? false,
-    submitSucceeded: (): boolean => form.connection.value?.submitSucceeded() ?? false,
-    submitFailed: (issues: readonly FormIssue[] = []): boolean => form.connection.value?.submitFailed(issues) ?? false,
+    submitStarted: (): number | null => form.connection.value?.submitStarted() ?? null,
+    submitSucceeded: (generation: number): boolean => form.connection.value?.submitSucceeded(generation) ?? false,
+    submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => form.connection.value?.submitFailed(generation, issues) ?? false,
     replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => form.connection.value?.replaceIssues(source, issues) ?? false,
     reset: (): void => form.connection.value?.reset(),
   }));

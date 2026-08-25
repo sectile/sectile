@@ -1,4 +1,19 @@
 export {
+  SequenceReorderItem,
+  SequenceReorderRoot,
+  TreeReorderItem,
+  TreeReorderRoot,
+  type ReorderItemProps,
+  type ReorderItemSlotProps,
+  type ReorderOrientation,
+  type ReorderRootSlotProps,
+  type SequenceReorderRootProps,
+  type TreeReorderNode,
+  type TreeReorderRootProps,
+  type TreeReorderRootSlotProps,
+} from './reorder.js';
+
+export {
   HostProvider,
   useHostDirection,
   useHostId,

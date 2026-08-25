@@ -18,6 +18,7 @@ import { createFacadeConnection, type FacadeConnection } from './internal/facade
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
+import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 
@@ -152,6 +153,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly #endTimeField: FacadeConnection<TimeFieldConnection> | null;
   readonly #startDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
+  readonly #layer: DOMLayerBinding;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
@@ -182,6 +184,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
+    this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); } });
     const state = runtime.getSnapshot().state;
     this.#startDateField = options.startDateInput === undefined ? null : createDateField({
       input: options.startDateInput,
@@ -335,9 +338,11 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     syncTimeField(this.#startTimeField, state.startTime);
     syncTimeField(this.#endTimeField, state.endTime);
     this.#syncingFields = false;
+    this.#layer.sync();
   }
 
   public disconnect(): void {
+    this.#layer.disconnect();
     this.#startTimeField?.disconnect();
     this.#endTimeField?.disconnect();
     this.#startDateField?.disconnect();

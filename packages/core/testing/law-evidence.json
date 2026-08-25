@@ -49,6 +49,7 @@
     "WIN-02": "tests/runtime/collection-window.test.mjs",
     "WIN-03": "tests/runtime/collection-window.test.mjs",
     "WIN-04": "tests/runtime/collection-window.test.mjs",
+    "WIN-05": "tests/runtime/collection-window.test.mjs",
     "ORD-01": "tests/runtime/reorder.test.mjs",
     "ORD-02": "tests/runtime/reorder.test.mjs",
     "ORD-03": "tests/runtime/reorder.test.mjs",

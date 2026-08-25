@@ -76,9 +76,9 @@ export interface TerminalFormConnection<ID extends StableID = StableID> {
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
   submit(): boolean;
-  submitStarted(): boolean;
-  submitSucceeded(): boolean;
-  submitFailed(issues?: readonly FormIssue<ID>[]): boolean;
+  submitStarted(): number | null;
+  submitSucceeded(generation: number): boolean;
+  submitFailed(generation: number, issues?: readonly FormIssue<ID>[]): boolean;
   reset(): boolean;
   subscribe(listener: TerminalFormSnapshotListener<ID>): () => void;
   destroy(): void;
@@ -266,9 +266,12 @@ export function tryCreateForm<ID extends StableID = StableID>(
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }),
     submit: validateAllForSubmission,
-    submitStarted: () => transition({ type: 'submit-started', generation: state.submissionGeneration }),
-    submitSucceeded: () => transition({ type: 'submit-succeeded', generation: state.submissionGeneration }),
-    submitFailed: (issues = []) => transition({ type: 'submit-failed', generation: state.submissionGeneration, issues }),
+    submitStarted: () => {
+      const generation = state.submissionGeneration;
+      return transition({ type: 'submit-started', generation }) ? generation : null;
+    },
+    submitSucceeded: (generation) => transition({ type: 'submit-succeeded', generation }),
+    submitFailed: (generation, issues = []) => transition({ type: 'submit-failed', generation, issues }),
     reset: () => {
       summaryIssues = Object.freeze([]);
       const reset = transition('reset');

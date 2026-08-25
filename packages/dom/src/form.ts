@@ -132,9 +132,9 @@ export interface FormConnection<ID extends StableID = StableID> {
   registerParticipant(participant: FormParticipant<ID>): () => void;
   refreshParticipant(id: ID): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
-  submitStarted(): boolean;
-  submitSucceeded(): boolean;
-  submitFailed(issues?: readonly FormIssue<ID>[]): boolean;
+  submitStarted(): number | null;
+  submitSucceeded(generation: number): boolean;
+  submitFailed(generation: number, issues?: readonly FormIssue<ID>[]): boolean;
   reset(): void;
   subscribe(listener: FormSnapshotListener<ID>): () => void;
   destroy(): void;
@@ -528,10 +528,13 @@ export function tryCreateForm<
       return true;
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
-    submitStarted: () => transition({ type: 'submit-started', generation: state.submissionGeneration }) !== null,
-    submitSucceeded: () => transition({ type: 'submit-succeeded', generation: state.submissionGeneration }) !== null,
-    submitFailed: (issues = []) => {
-      const commands = transition({ type: 'submit-failed', generation: state.submissionGeneration, issues });
+    submitStarted: () => {
+      const generation = state.submissionGeneration;
+      return transition({ type: 'submit-started', generation }) === null ? null : generation;
+    },
+    submitSucceeded: (generation) => transition({ type: 'submit-succeeded', generation }) !== null,
+    submitFailed: (generation, issues = []) => {
+      const commands = transition({ type: 'submit-failed', generation, issues });
       if (commands === null) return false;
       execute(commands);
       return true;

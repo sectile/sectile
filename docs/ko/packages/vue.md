@@ -182,6 +182,8 @@ Vue 컴포넌트는 ARIA 속성, 정규화된 입력, 포커스 효과, 팝업 �
 
 Vue 템플릿과 조합형 구성에는 `@sectile/vue`를 사용합니다. Vue 밖에서 마크업을 만들거나 사용자 정의 렌더러가 연결 객체의 수명 주기를 소유해야 하면 `@sectile/dom`을 직접 사용합니다.
 
+`@sectile/vue/reorder`는 `SequenceReorderRoot`/`SequenceReorderItem`과 `TreeReorderRoot`/`TreeReorderItem`을 제공합니다. DOM 키보드·포인터 계약을 재사용하면서 `update:items` 또는 `update:nodes`를 발생시킵니다. Feed 구간 요청은 응답에 다시 넣어야 하는 request generation을 포함하고, Form 제출 완료 함수는 `submitStarted`가 반환한 generation으로만 현재 제출을 완료합니다.
+
 ## 컴포넌트 살펴보기
 
 [컴포넌트 목록](/ko/components/)에는 각 컴포넌트의 예시, 공개 구성 요소, 키보드 동작, 접근성 규약, API가 정리되어 있습니다. 기본 예시로 시작한 뒤 Anatomy에서 스타일에 사용할 정확한 `data-scope`와 `data-part` 경계를 확인합니다.
