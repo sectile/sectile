@@ -574,7 +574,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'quantity-field': quantityFieldSource(),
   dialog: sfc(
     'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
-    `  <DialogRoot default-open>
+    `  <DialogRoot>
     <DialogTrigger>Open deployment</DialogTrigger>
     <DialogOverlay class="dialog-overlay" />
     <DialogContent>
@@ -914,7 +914,7 @@ const values = new Map([
 const dialogScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   modal: sfc(
     'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
-    `  <DialogRoot default-open>
+    `  <DialogRoot>
     <DialogTrigger>Open deployment</DialogTrigger>
     <DialogOverlay class="dialog-overlay" />
     <DialogContent>
@@ -926,7 +926,7 @@ const dialogScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   ),
   'non-modal': sfc(
     'DialogRoot, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose',
-    `  <DialogRoot default-open :modal="false">
+    `  <DialogRoot :modal="false">
     <DialogTrigger>Open deployment details</DialogTrigger>
     <DialogContent>
       <DialogTitle>Deployment details</DialogTitle>

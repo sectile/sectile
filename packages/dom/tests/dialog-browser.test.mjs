@@ -100,3 +100,23 @@ test('modal isolation covers background nodes added while open', async () => {
   assert.equal(lateBackground.hasAttribute('aria-hidden'), false);
   dialog.disconnect();
 });
+
+test('initial focus retries after a framework makes managed content visible', () => {
+  const window = new Window();
+  const document = window.document;
+  const trigger = document.createElement('button');
+  const surface = document.createElement('section');
+  const close = document.createElement('button');
+  surface.append(close);
+  document.body.append(trigger, surface);
+  surface.hidden = true;
+  trigger.focus();
+
+  const dialog = createDialog({ root: surface, trigger, manageVisibility: false });
+  dialog.handleEvent('open');
+  assert.notEqual(document.activeElement, close);
+  surface.hidden = false;
+  dialog.refresh();
+  assert.equal(document.activeElement, close);
+  dialog.disconnect();
+});

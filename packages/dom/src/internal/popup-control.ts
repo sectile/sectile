@@ -75,6 +75,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   readonly #layerID: string;
   readonly #layers: DOMLayerManager;
   #modalEffects: ModalEffects | undefined;
+  #initialFocusApplied = false;
   #focused = false;
   #hovered = false;
 
@@ -198,9 +199,15 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     }
     if (this.#options.manageVisibility !== false) this.#options.root.hidden = !open;
     if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
-    if (previous === open || previous === undefined) return;
-    if (open && this.#options.autoFocus === true) focusElement(this.#options.initialFocus ?? firstFocusable(this.#options.root) ?? this.#options.root);
-    else if (!open && this.#options.restoreFocus === true) focusElement(this.#options.trigger);
+    if (!open) this.#initialFocusApplied = false;
+    if (open) this.#applyInitialFocus();
+    else if (previous === true && this.#options.restoreFocus === true) focusElement(this.#options.trigger);
+  }
+  #applyInitialFocus(): void {
+    if (this.#initialFocusApplied || this.#options.autoFocus !== true || this.#options.root.hidden) return;
+    const target = this.#options.initialFocus ?? firstFocusable(this.#options.root) ?? this.#options.root;
+    focusElement(target);
+    this.#initialFocusApplied = this.#options.root.ownerDocument?.activeElement === target;
   }
   #trapTab(event: KeyboardEvent): void {
     const focusable = [...this.#options.root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.hasAttribute('disabled') && element.tabIndex >= 0);

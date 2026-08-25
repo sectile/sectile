@@ -13,15 +13,17 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DialogContent, DialogRoot } = await import('../dist/dialog.js');
+const { DialogClose, DialogContent, DialogRoot } = await import('../dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../dist/select.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
 
 test('dialog keeps closed content present until its exit motion completes', async () => {
-  const host = document.createElement('div'); document.body.append(host); const open = ref(true);
-  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionDuration: '50ms' } }, { default: () => 'Dialog' }) }) });
-  app.mount(host); await nextTick(); const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement);
+  const host = document.createElement('div'); document.body.append(host); const open = ref(false);
+  const app = createApp({ render: () => h(DialogRoot, { open: open.value, modal: false, 'onUpdate:open': (value) => { open.value = value; } }, { default: () => h(DialogContent, { style: { transitionDuration: '50ms' } }, { default: () => h(DialogClose, null, { default: () => 'Close' }) }) }) });
+  app.mount(host); await nextTick(); const content = host.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, true);
+  open.value = true; await nextTick(); await nextTick();
+  const close = host.querySelector('[data-part="close"]'); assert.ok(close instanceof HTMLButtonElement); assert.equal(document.activeElement, close);
   open.value = false; await nextTick();
   assert.equal(content.dataset.state, 'closed'); assert.equal(content.hidden, false);
   content.dispatchEvent(new Event('transitionend', { bubbles: true })); await nextTick();

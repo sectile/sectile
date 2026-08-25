@@ -119,6 +119,7 @@ const weekdayNames = Object.freeze(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'S
 const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 }) });
 const morningDateTime = Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 7, minute: 45, second: 0, millisecond: 0 }) });
 const controlledDateTime = ref<DateTimeValue | null>(Object.freeze({ date: Object.freeze({ year: 2026, month: 9, day: 3 }), time: Object.freeze({ hour: 14, minute: 15, second: 0, millisecond: 0 }) }));
+const dialogOpen = ref(false);
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const standardQuantityPolicies = createStandardQuantityPolicies('metre', 'metric');
@@ -460,7 +461,12 @@ const recordAction = (value: string): void => {
         <QuantityFieldValue />
       </QuantityFieldRoot>
 
-      <DialogRoot v-else-if="component === 'dialog'" :default-open="true" :modal="!isScenario('non-modal')">
+      <DialogRoot
+        v-else-if="component === 'dialog'"
+        :open="isScenario('controlled') ? dialogOpen : undefined"
+        :modal="!isScenario('non-modal')"
+        @update:open="dialogOpen = $event"
+      >
         <DialogTrigger>Open details</DialogTrigger>
         <DialogOverlay v-if="!isScenario('non-modal')" class="catalog-dialog-overlay" />
         <DialogContent :class="['catalog-dialog', isScenario('non-modal') ? 'catalog-nonmodal-dialog' : 'catalog-modal-dialog']">
