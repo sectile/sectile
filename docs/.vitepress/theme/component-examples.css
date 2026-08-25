@@ -1040,6 +1040,11 @@
   align-items: start;
 }
 
+.component-example-stage[data-component='quantity-field']:has(.demo-select__trigger[data-state='open']) {
+  min-height: 21rem;
+  align-items: start;
+}
+
 .component-example-stage .demo-copy,
 .component-example-stage .catalog-description {
   display: none;
@@ -1112,18 +1117,17 @@
 .component-example-stage[data-component='quantity-field'] .catalog-inline {
   display: grid;
   width: min(100%, 42rem);
-  grid-template-columns: minmax(0, 1fr) 4rem;
+  grid-template-columns: minmax(0, 1fr) 5.25rem;
   align-items: center;
   gap: 0.5rem;
 }
 
-.component-example-stage[data-component='quantity-field'] .catalog-select {
-  width: 4rem;
-  min-width: 4rem;
-  padding-inline: 0.7rem;
+.component-example-stage[data-component='quantity-field'] .quantity-unit-select {
+  width: 5.25rem;
+  min-width: 0;
 }
 
-.component-example-stage[data-component='quantity-field'] [data-part='value'] {
+.component-example-stage[data-component='quantity-field'] [data-scope='quantity-field'][data-part='value'] {
   display: none;
 }
 

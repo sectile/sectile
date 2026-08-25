@@ -59,8 +59,9 @@ const optionLabel = (id: string): string => (
       @update:model-value="emit('update:modelValue', $event)"
     >
       <SelectTrigger class="demo-select__trigger demo-collection-field">
-        <SelectValue v-if="placeholder !== undefined" :placeholder="placeholder" />
-        <SelectValue v-else />
+        <SelectValue :placeholder="placeholder ?? ''" v-slot="{ value }">
+          {{ value === null ? (placeholder ?? '') : optionLabel(value) }}
+        </SelectValue>
         <ChevronDown class="demo-select__chevron" :size="16" aria-hidden="true" />
       </SelectTrigger>
 

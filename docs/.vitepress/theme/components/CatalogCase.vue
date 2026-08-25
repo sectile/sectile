@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { createCalculatorExpression } from '@sectile/core/number-field';
 import {
   CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Download, FileCode2, FilePlus2,
   FolderPlus, GitBranch, PackageCheck, Pause, Play, Share2, Star, Trash2, Upload, X,
@@ -22,7 +23,7 @@ import { YearPickerCell, YearPickerContent, YearPickerGrid, YearPickerInput, Yea
 import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, YearRangePickerGrid, YearRangePickerNextPage, YearRangePickerPreviousPage, YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerTrigger } from '@sectile/vue/year-range-picker';
 import { DateTimePickerContent, DateTimePickerDateInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger, type DateTimeValue } from '@sectile/vue/date-time-picker';
 import { DateTimeRangePickerContent, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
-import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
+import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
 import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogOverlay, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
@@ -120,7 +121,20 @@ const morningDateTime = Object.freeze({ date: dateRange.end, time: Object.freeze
 const controlledDateTime = ref<DateTimeValue | null>(Object.freeze({ date: Object.freeze({ year: 2026, month: 9, day: 3 }), time: Object.freeze({ hour: 14, minute: 15, second: 0, millisecond: 0 }) }));
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
-const quantityPolicies = createStandardQuantityPolicies('metre', 'metric');
+const standardQuantityPolicies = createStandardQuantityPolicies('metre', 'metric');
+const quantityEvaluator = createCalculatorExpression({ precision: 12, rounding: 'half-even' });
+const quantityPolicies = computed(() => (
+  ['calculator', 'compound'].includes(props.scenario)
+    ? Object.freeze({ ...standardQuantityPolicies, evaluator: quantityEvaluator })
+    : standardQuantityPolicies
+));
+const quantityUnitOptions = Object.freeze([
+  { id: 'millimetre', label: 'mm' },
+  { id: 'centimetre', label: 'cm' },
+  { id: 'metre', label: 'm' },
+  { id: 'kilometre', label: 'km' },
+]);
+const quantityDisplayUnit = ref(props.scenario === 'length' ? 'centimetre' : 'metre');
 const parts: Record<string, readonly string[]> = {
   'checkbox-group': ['CheckboxGroupRoot', 'CheckboxGroupItem', 'CheckboxGroupIndicator'], select: ['SelectRoot', 'SelectTrigger', 'SelectValue', 'SelectContent', 'SelectItem'],
   pagination: ['PaginationRoot', 'PaginationItem', 'PaginationPrevious', 'PaginationNext'], stepper: ['StepperRoot', 'StepperList', 'StepperStep', 'StepperContent'],
@@ -135,7 +149,7 @@ const parts: Record<string, readonly string[]> = {
   'year-range-picker': ['YearRangePickerRoot', 'YearRangePickerStartInput', 'YearRangePickerEndInput', 'YearRangePickerTrigger', 'YearRangePickerContent', 'YearRangePickerGrid', 'YearRangePickerCell', 'YearRangePickerPreviousPage', 'YearRangePickerNextPage'],
   'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerDateInput', 'DateTimePickerTimeInput', 'DateTimePickerTrigger', 'DateTimePickerContent', 'DateTimePickerPreviousWeek', 'DateTimePickerPreviousMonth', 'DateTimePickerPreviousYear', 'DateTimePickerNextWeek', 'DateTimePickerNextMonth', 'DateTimePickerNextYear', 'DateTimePickerWeekViewTrigger', 'DateTimePickerMonthViewTrigger', 'DateTimePickerYearViewTrigger', 'DateTimePickerGrid', 'DateTimePickerCell', 'DateTimePickerMonthCell'],
   'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartDateTimeInput', 'DateTimeRangePickerEndDateTimeInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerPreviousWeek', 'DateTimeRangePickerPreviousMonth', 'DateTimeRangePickerPreviousYear', 'DateTimeRangePickerNextWeek', 'DateTimeRangePickerNextMonth', 'DateTimeRangePickerNextYear', 'DateTimeRangePickerWeekViewTrigger', 'DateTimeRangePickerMonthViewTrigger', 'DateTimeRangePickerYearViewTrigger', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell', 'DateTimeRangePickerMonthCell'],
-  'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput', 'QuantityFieldUnitSelect'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
+  'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
@@ -429,11 +443,18 @@ const recordAction = (value: string): void => {
         v-else-if="component === 'quantity-field'"
         :policies="quantityPolicies"
         :default-value="{ value: isScenario('calculator', 'controlled') ? '2.5' : '1.25', unit: 'metre' }"
-        :default-display-unit="isScenario('length') ? 'centimetre' : 'metre'"
+        :display-unit="quantityDisplayUnit"
+        @update:display-unit="quantityDisplayUnit = $event"
         class="catalog-inline"
       >
         <QuantityFieldInput class="catalog-input" />
-        <QuantityFieldUnitSelect class="catalog-select" />
+        <DemoSelect
+          :model-value="quantityDisplayUnit"
+          :options="quantityUnitOptions"
+          label="Display unit"
+          class="quantity-unit-select"
+          @update:model-value="quantityDisplayUnit = $event ?? quantityDisplayUnit"
+        />
         <QuantityFieldValue />
       </QuantityFieldRoot>
 

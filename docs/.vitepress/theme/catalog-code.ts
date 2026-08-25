@@ -30,6 +30,57 @@ function moduleName(imports: string): string {
     .toLowerCase();
 }
 
+function quantityFieldSource(calculator = false): string {
+  return sfc(
+    'QuantityFieldRoot, QuantityFieldInput, QuantityFieldValue, createStandardQuantityPolicies',
+    `  <QuantityFieldRoot
+    v-model:display-unit="displayUnit"
+    :policies="policies"
+    :default-value="{ value: '1.25', unit: 'metre' }"
+  >
+    <QuantityFieldInput />
+    <SelectRoot
+      v-model="displayUnit"
+      :items="unitIDs"
+      :text-value="unitLabel"
+      label="Display unit"
+    >
+      <SelectTrigger><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
+          {{ unit.label }}
+          <SelectItemIndicator><Check :size="15" aria-hidden="true" /></SelectItemIndicator>
+        </SelectItem>
+      </SelectContent>
+    </SelectRoot>
+    <QuantityFieldValue />
+  </QuantityFieldRoot>`,
+    `${calculator ? "import { createCalculatorExpression } from '@sectile/core/number-field'\n" : ''}import { Check } from '@lucide/vue'
+import {
+  SelectContent,
+  SelectItem,
+  SelectItemIndicator,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from '@sectile/vue/select'
+import { ref } from 'vue'
+
+const policies = { ...createStandardQuantityPolicies('metre', 'metric')${calculator
+  ? ", evaluator: createCalculatorExpression({ precision: 12, rounding: 'half-even' })"
+  : ''} }
+const units = [
+  { id: 'millimetre', label: 'mm' },
+  { id: 'centimetre', label: 'cm' },
+  { id: 'metre', label: 'm' },
+  { id: 'kilometre', label: 'km' },
+]
+const unitIDs = units.map(({ id }) => id)
+const unitLabel = (id: string) => units.find((unit) => unit.id === id)?.label ?? id
+const displayUnit = ref('centimetre')`,
+  );
+}
+
 export const catalogCode: Readonly<Record<string, string>> = Object.freeze({
   'checkbox-group': sfc(
     'CheckboxGroupRoot, CheckboxGroupItem, CheckboxGroupIndicator',
@@ -521,19 +572,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
-  'quantity-field': sfc(
-    'QuantityFieldRoot, QuantityFieldInput, QuantityFieldUnitSelect, QuantityFieldValue, createStandardQuantityPolicies',
-    `  <QuantityFieldRoot
-    :policies="policies"
-    :default-value="{ value: '1.25', unit: 'metre' }"
-    default-display-unit="centimetre"
-  >
-    <QuantityFieldInput />
-    <QuantityFieldUnitSelect />
-    <QuantityFieldValue />
-  </QuantityFieldRoot>`,
-    `const policies = createStandardQuantityPolicies('metre', 'metric')`,
-  ),
+  'quantity-field': quantityFieldSource(),
   dialog: sfc(
     'DialogRoot, DialogTrigger, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose',
     `  <DialogRoot default-open>
@@ -1295,7 +1334,13 @@ const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> =
   grid: exactScenarios(requiredCatalogSource('grid'), ['selectable', 'disabled-wrap', 'editable', 'controlled']),
   menubar: exactScenarios(requiredCatalogSource('menubar'), ['application', 'disabled-root', 'typeahead']),
   pagination: exactScenarios(requiredCatalogSource('pagination'), ['compact', 'long-range', 'page-size', 'pages-only', 'controlled']),
-  'quantity-field': exactScenarios(requiredCatalogSource('quantity-field'), ['length', 'temperature', 'calculator', 'compound', 'controlled']),
+  'quantity-field': Object.freeze({
+    length: requiredCatalogSource('quantity-field'),
+    temperature: requiredCatalogSource('quantity-field'),
+    calculator: quantityFieldSource(true),
+    compound: quantityFieldSource(true),
+    controlled: requiredCatalogSource('quantity-field'),
+  }),
   rating: exactScenarios(requiredCatalogSource('rating'), ['five-star', 'required', 'controlled']),
   select: exactScenarios(requiredCatalogSource('select'), ['environment', 'disabled-option', 'controlled']),
   stepper: exactScenarios(requiredCatalogSource('stepper'), ['checkout', 'gated-step', 'controlled']),
