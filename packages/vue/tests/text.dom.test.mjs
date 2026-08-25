@@ -30,6 +30,12 @@ const replaceInputValue = (input, value) => {
   }));
 };
 
+const compositionEvent = (type, data) => {
+  const event = new Event(type, { bubbles: true });
+  Object.defineProperty(event, 'data', { value: data });
+  return event;
+};
+
 test('Vue TextField delegates trim and number modifiers to standard v-model semantics', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -94,6 +100,45 @@ test('Vue TextField lazy modifier emits only after the native change boundary', 
   assert.deepEqual(updates, ['release']);
   assert.equal(value.value, 'release');
   assert.equal(input.value, 'release');
+
+  app.unmount();
+  host.remove();
+});
+
+test('controlled Vue TextField preserves Hangul composition metadata between model updates', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const value = ref('Mina Kim');
+  const app = createApp({
+    render: () => h(TextField, {
+      modelValue: value.value,
+      'onUpdate:modelValue': (nextValue) => { value.value = nextValue; },
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+
+  valueDescriptor.set.call(input, 'Mina Kimㅎ');
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionupdate', '한'));
+
+  valueDescriptor.set.call(input, 'Mina Kim한');
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionend', '한'));
+  valueDescriptor.set.call(input, 'Mina Kim한한');
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
+
+  assert.equal(value.value, 'Mina Kim한');
+  assert.equal(input.value, 'Mina Kim한');
 
   app.unmount();
   host.remove();

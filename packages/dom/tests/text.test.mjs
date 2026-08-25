@@ -222,6 +222,33 @@ test('controlled DOM text emits a full-state proposal until synchronized', () =>
   assert.equal(synchronized.state.snapshot.text, 'a😀');
 });
 
+test('controlled DOM text carries one IME proposal across synchronous composition events', () => {
+  const changes = [];
+  const controller = unwrap(createTextController({
+    value: createTextEditingState('', selection(0)),
+    onValueChange: ({ value }) => changes.push(value),
+  }));
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 0,
+    endCodeUnitOffset: 0,
+    selection: selection(0),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '한',
+    selection: selection(1),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.equal(changes.at(-1).composition, null);
+  assert.equal(controller.getSnapshot().state.snapshot.text, '');
+  assert.equal(unwrap(controller.syncControlledValues({ value: changes.at(-1) })).state.snapshot.text, '한');
+});
+
 test('DOM text rejects unsupported input and malformed external state atomically', () => {
   const malformed = createTextController({ value: { snapshot: null, composition: null } });
   assert.equal(malformed.ok, false);

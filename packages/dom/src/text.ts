@@ -268,6 +268,7 @@ class DOMTextController implements TextController {
   readonly #interaction: InteractionState;
   readonly #onValueChange: ((change: TextValueChangeDetails) => void) | undefined;
   #snapshot: RevisionSnapshot<TextEditingState>;
+  #pendingComposition: TextEditingState | null = null;
 
   public constructor(
     options: TextControllerOptions,
@@ -295,6 +296,9 @@ class DOMTextController implements TextController {
     );
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
+    this.#pendingComposition = snapshot.value.state.composition === null
+      ? null
+      : snapshot.value.state;
     return snapshot;
   }
 
@@ -312,22 +316,33 @@ class DOMTextController implements TextController {
         message: 'DOM text input does not map to a semantic text event.',
       });
     }
+    const current = this.#snapshot;
+    const base = this.#controlled && this.#pendingComposition !== null
+      ? Object.freeze({ revision: current.revision, state: this.#pendingComposition })
+      : current;
+    const proposal: { value: TextEditingState | null } = { value: null };
     const result = applyControllerEvent(
-      this.#snapshot,
+      base,
       expectedRevision,
       event,
       applyTextEvent,
-      (previous, proposed) => normalizeTextEditingState(
-        this.#controlled ? previous : proposed,
-      ),
-      (previous, proposed) => {
-        if (!sameControllerState(previous, proposed)) {
-          this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
+      (_previous, proposed) => {
+        proposal.value = proposed;
+        return normalizeTextEditingState(this.#controlled ? current.state : proposed);
+      },
+      (_previous, proposed) => {
+        if (!sameControllerState(current.state, proposed)) {
+          this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: current.state }));
         }
       },
       impossibleEffect,
     );
-    if (result.ok) this.#snapshot = result.snapshot;
+    if (result.ok) {
+      this.#snapshot = result.snapshot;
+      if (this.#controlled) {
+        this.#pendingComposition = proposal.value?.composition === null ? null : proposal.value;
+      }
+    }
     return result;
   }
 }

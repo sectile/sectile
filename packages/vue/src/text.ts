@@ -2,6 +2,7 @@ import {
   defineComponent,
   h,
   mergeProps,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -81,7 +82,18 @@ export const TextField = defineComponent({
         readOnly: props.readonly,
         onValueChange: (change) => {
           proposedState = change.value;
-          if (!props.modelModifiers.lazy) emit('update:modelValue', change.value.snapshot.text);
+          if (!props.modelModifiers.lazy) {
+            const proposal = change.value;
+            const text = proposal.snapshot.text;
+            emit('update:modelValue', text);
+            void nextTick(() => {
+              if (connection === null || proposedState !== proposal) return;
+              if (String(props.modelValue) !== text) return;
+              proposedState = null;
+              const result = connection.syncControlledValues({ value: proposal });
+              if (!result.ok) throw new TypeError(result.error.message);
+            });
+          }
         },
       });
       if (!result.ok) throw new TypeError(result.error.message);
