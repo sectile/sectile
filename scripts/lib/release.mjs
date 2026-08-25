@@ -19,6 +19,11 @@ export function bumpVersion(version, bump) {
   return `${major}.${minor}.${patch + 1}`;
 }
 
+export function classifyReleaseBranch(localHead, remoteHead, remoteIsAncestor) {
+  if (localHead === remoteHead) return 'synchronized';
+  return remoteIsAncestor ? 'ahead' : 'blocked';
+}
+
 export function recommendBump(commits) {
   const breaking = commits.find(({ subject, body }) => breakingSubjectPattern.test(subject) || breakingBodyPattern.test(body));
   if (breaking !== undefined) return { bump: 'major', reason: breaking.subject };

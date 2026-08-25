@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
+  classifyReleaseBranch,
   formatCommitList,
   formatReleaseNotes,
   parseGitLog,
@@ -32,6 +33,18 @@ function run(command, args, options = {}) {
     input: options.input,
     stdio: options.capture || options.input !== undefined ? ['pipe', 'pipe', 'pipe'] : 'inherit',
   })?.trim();
+}
+
+function isAncestor(ancestor, descendant) {
+  const result = spawnSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.ok(
+    result.status === 0 || result.status === 1,
+    `failed to compare ${ancestor} and ${descendant}: ${(result.stderr ?? '').trim()}`,
+  );
+  return result.status === 0;
 }
 
 function synchronizedVersion() {
@@ -81,7 +94,10 @@ for (const { manifestPath } of packages) {
 }
 
 run('git', ['fetch', 'origin', 'main', '--tags']);
-assert.equal(run('git', ['rev-parse', 'HEAD'], { capture: true }), run('git', ['rev-parse', 'origin/main'], { capture: true }), 'local main must match origin/main');
+const localHead = run('git', ['rev-parse', 'HEAD'], { capture: true });
+const remoteHead = run('git', ['rev-parse', 'origin/main'], { capture: true });
+const branchState = classifyReleaseBranch(localHead, remoteHead, isAncestor('origin/main', 'HEAD'));
+assert.notEqual(branchState, 'blocked', 'local main must contain origin/main; fetch and reconcile remote changes before release');
 
 const baseTag = latestPublishedTag(repository);
 const previousVersion = baseTag.slice(1);
@@ -102,6 +118,7 @@ const version = bumpVersion(previousVersion, releaseBump);
 const tag = `v${version}`;
 
 console.log(`release base: ${baseTag}`);
+console.log(`release branch: ${branchState}`);
 console.log(`commits:\n${formatCommitList(commits)}`);
 console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
 if (requestedBump !== undefined) console.log(`override bump: ${requestedBump}`);

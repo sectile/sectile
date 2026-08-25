@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   bumpVersion,
+  classifyReleaseBranch,
   formatReleaseNotes,
   parseGitLog,
   prependChangelog,
@@ -9,6 +10,12 @@ import {
 } from './lib/release.mjs';
 
 const commit = (subject, body = '') => ({ hash: 'abcdef123456', shortHash: 'abcdef1', subject, body });
+
+test('allows synchronized and fast-forwardable local release branches', () => {
+  assert.equal(classifyReleaseBranch('same', 'same', true), 'synchronized');
+  assert.equal(classifyReleaseBranch('local-ahead', 'remote', true), 'ahead');
+  assert.equal(classifyReleaseBranch('local-diverged', 'remote', false), 'blocked');
+});
 
 test('recommends major for a breaking subject or body', () => {
   assert.deepEqual(recommendBump([commit('feat(core)!: replace state shape')]), {
