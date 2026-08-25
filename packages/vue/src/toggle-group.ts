@@ -135,6 +135,9 @@ export const ToggleGroupRoot = defineComponent({
   },
 });
 
+export type ToggleGroupValueChangeHandler = (value: readonly string[]) => void;
+export type ToggleGroupHighlightHandler = (value: string | null) => void;
+
 export const ToggleGroupItem = defineComponent({
   name: 'SectileToggleGroupItem', inheritAttrs: false,
   props: {

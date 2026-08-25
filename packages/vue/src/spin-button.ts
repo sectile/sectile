@@ -166,6 +166,9 @@ export const SpinButtonRoot = defineComponent({
   },
 });
 
+export type SpinButtonValueChangeHandler = (value: string) => void;
+export type SpinButtonDraftChangeHandler = (value: string | null) => void;
+
 export const SpinButtonInput = defineComponent({
   name: 'SectileSpinButtonInput',
   inheritAttrs: false,

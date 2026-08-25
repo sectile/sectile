@@ -129,6 +129,9 @@ export const PaginationRoot = defineComponent({
   },
 });
 
+export type PaginationValueChangeHandler = (value: number) => void;
+export type PaginationItemsPerPageChangeHandler = (value: number) => void;
+
 export const PaginationItem = defineComponent({
   name: 'SectilePaginationItem', inheritAttrs: false,
   props: {

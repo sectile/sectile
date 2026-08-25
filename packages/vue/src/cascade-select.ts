@@ -32,6 +32,8 @@ export interface CascadeSelectRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type CascadeSelectTextValueResolver = NonNullable<CascadeSelectRootProps['textValue']>;
 export interface CascadeSelectRootSlotProps { readonly value: string | null; readonly valuePath: readonly string[]; readonly highlightedValue: string | null; readonly path: readonly string[]; readonly columns: readonly (readonly string[])[]; readonly open: boolean; readonly disabled: boolean; readonly: boolean }
 export interface CascadeSelectColumnProps { readonly depth: number; readonly label?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface CascadeSelectColumnSlotProps { readonly depth: number; readonly items: readonly string[]; readonly parentValue: string | null }
@@ -60,7 +62,7 @@ export const CascadeSelectRoot = defineComponent({
     nodes: { type: Array as PropType<readonly CascadeSelectItemDefinition<string>[]>, required: true }, modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
     open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false }, disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false },
-    textValue: { type: Function as PropType<(id: string) => string>, default: undefined }, policies: { type: Object as PropType<CascadeSelectPolicies<string>>, default: undefined },
+    textValue: { type: Function as PropType<CascadeSelectTextValueResolver>, default: undefined }, policies: { type: Object as PropType<CascadeSelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:open': (_value: boolean): boolean => true, highlight: (_value: string | null): boolean => true },
@@ -114,6 +116,10 @@ export const CascadeSelectRoot = defineComponent({
     };
   },
 });
+
+export type CascadeSelectValueChangeHandler = (value: string | null) => void;
+export type CascadeSelectOpenChangeHandler = (value: boolean) => void;
+export type CascadeSelectHighlightHandler = (value: string | null) => void;
 
 export const CascadeSelectTrigger = defineComponent({ name: 'SectileCascadeSelectTrigger', inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: CascadeSelectRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('CascadeSelectTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLButtonElement ? node : undefined), type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled, 'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'data-scope': 'cascade-select', 'data-part': 'trigger', 'data-state': root.state.value.open ? 'open' : 'closed' }), { default: () => slots['default']?.(root.state.value) }); } });
 

@@ -113,6 +113,10 @@ export const CarouselRoot = defineComponent({
   },
 });
 
+export type CarouselValueChangeHandler = (value: string | null) => void;
+export type CarouselPausedChangeHandler = (value: boolean) => void;
+export type CarouselAnnounceHandler = (value: string) => void;
+
 export const CarouselViewport = part('SectileCarouselViewport', 'viewport', 'div');
 export const CarouselTrack = part('SectileCarouselTrack', 'track', 'div');
 export const CarouselIndicatorGroup = registeredPart('SectileCarouselIndicatorGroup', 'indicators', 'indicator-group', 'div');

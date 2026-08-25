@@ -28,6 +28,8 @@ export const TimeRangeFieldRoot = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { root.value = element as HTMLElement | null; }, role: 'group', 'data-scope': 'time-range-field', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
+
+export type TimeRangeFieldValueChangeHandler = (value: TimeRange | null) => void;
 export const TimeRangeFieldStartInput = createEndpointInput('start', 'SectileTimeRangeFieldStartInput');
 export const TimeRangeFieldEndInput = createEndpointInput('end', 'SectileTimeRangeFieldEndInput');
 function createEndpointInput(endpoint: 'start' | 'end', name: string) { return defineComponent({ name, inheritAttrs: false, setup(_props, { attrs }) { const context = useContext(name); return (): VNodeChild => h('input', mergeProps(attrs, { ref: (element: unknown) => { context[endpoint === 'start' ? 'startInput' : 'endInput'].value = element as HTMLInputElement | null; }, type: 'text', inputmode: 'numeric', placeholder: 'HH:mm', value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText, disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly, 'aria-disabled': String(context.slotProps.value.disabled), 'aria-readonly': String(context.slotProps.value.readonly), 'data-scope': 'time-range-field', 'data-part': `${endpoint}-input`, 'data-active': context.slotProps.value.active === endpoint ? '' : undefined })); } }); }

@@ -179,6 +179,8 @@ export const SwitchRoot = defineComponent({
   },
 });
 
+export type SwitchValueChangeHandler = (value: boolean) => void;
+
 export const SwitchThumb = defineComponent({
   name: 'SectileSwitchThumb',
   inheritAttrs: false,

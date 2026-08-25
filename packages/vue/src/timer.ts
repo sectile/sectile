@@ -28,6 +28,9 @@ export const TimerRoot = defineComponent({
   },
 });
 
+export type TimerTickHandler = (valueMs: number) => void;
+export type TimerCompleteHandler = (valueMs: number) => void;
+
 export const TimerArea = timerPart('SectileTimerArea', 'area', 'div');
 export const TimerSeparator = timerPart('SectileTimerSeparator', 'separator', 'span');
 export const TimerControl = timerPart('SectileTimerControl', 'control', 'div');

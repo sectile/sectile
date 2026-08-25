@@ -194,6 +194,8 @@ export const CheckboxRoot = defineComponent({
   },
 });
 
+export type CheckboxValueChangeHandler = (value: CheckboxValue) => void;
+
 export interface CheckboxIndicatorProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;

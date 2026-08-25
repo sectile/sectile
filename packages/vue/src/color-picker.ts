@@ -85,6 +85,10 @@ export const ColorPickerRoot = defineComponent({
   },
 });
 
+export type ColorPickerValueChangeHandler = (value: string) => void;
+export type ColorPickerDraftChangeHandler = (value: string | null) => void;
+export type ColorPickerFormatChangeHandler = (value: ColorFormat) => void;
+
 export const ColorPickerLabel = simplePart('Label', 'label', 'label');
 export const ColorPickerControl = simplePart('Control', 'control', 'div');
 export const ColorPickerNativeInput = inputPart('NativeInput', 'native-input', (root, element) => root.registerNative(element));

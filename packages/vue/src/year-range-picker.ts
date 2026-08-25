@@ -20,6 +20,9 @@ export interface YearRangePickerRootProps {
 }
 
 export const YearRangePickerRoot = createPickerRoot('date-range', 'SectileYearRangePickerRoot', { scope: 'year-range-picker', granularity: 'year', defaultView: 'year' });
+export type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>;
+export type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:open']>;
+export type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const YearRangePickerTrigger = PickerTrigger;
 export const YearRangePickerContent = PickerContent;
 export const YearRangePickerGrid = PickerGrid;

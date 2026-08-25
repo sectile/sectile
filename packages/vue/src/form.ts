@@ -402,7 +402,7 @@ export const FormField = defineComponent({
     required: { type: Boolean, default: undefined },
     disabled: { type: Boolean, default: undefined },
     readonly: { type: Boolean, default: undefined },
-    validate: { type: Function as PropType<() => FormParticipantValidation<string>>, default: undefined },
+    validate: { type: Function as PropType<FormValidateHandler>, default: undefined },
     ...partProps,
   },
   slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,

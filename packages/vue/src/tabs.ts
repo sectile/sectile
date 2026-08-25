@@ -167,6 +167,10 @@ export const TabsRoot = defineComponent({
   },
 });
 
+export type TabsValueChangeHandler = (value: string) => void;
+export type TabsHighlightHandler = (value: string | null) => void;
+export type TabsActivateHandler = (value: string) => void;
+
 export const TabsList = defineComponent({
   name: 'SectileTabsList',
   inheritAttrs: false,

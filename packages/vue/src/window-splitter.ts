@@ -10,6 +10,7 @@ import {
 import { providePartContract } from './internal/part-contract.js';
 
 export type WindowSplitterRootProps = Omit<SliderRootProps, 'readonly' | 'role'>;
+export type WindowSplitterValueFormatter = NonNullable<WindowSplitterRootProps['formatValue']>;
 export interface WindowSplitterPaneProps { readonly side: 'before' | 'after'; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 export const WindowSplitterRoot = defineComponent({
@@ -20,7 +21,7 @@ export const WindowSplitterRoot = defineComponent({
     pageStep: { type: Number, default: 10 }, orientation: { type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal' },
     disabled: { type: Boolean, default: false }, label: { type: String, default: 'Resize panels' },
     name: { type: String, default: undefined }, form: { type: String, default: undefined },
-    formatValue: { type: Function as PropType<(value: string) => string>, default: undefined },
+    formatValue: { type: Function as PropType<WindowSplitterValueFormatter>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
   emits: { 'update:modelValue': (_value: string): boolean => true },
@@ -61,6 +62,8 @@ export const WindowSplitterRoot = defineComponent({
     });
   },
 });
+
+export type WindowSplitterValueChangeHandler = (value: string) => void;
 
 export const WindowSplitterPane = defineComponent({
   name: 'SectileWindowSplitterPane', inheritAttrs: false,

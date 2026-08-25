@@ -26,6 +26,8 @@ const parts = createPopupComponents({
 });
 
 export const TooltipRoot = parts.Root;
+export type TooltipOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
+export type TooltipPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
 export const TooltipTrigger = parts.Trigger;
 export const TooltipPortal = parts.Portal;
 export const TooltipContent = parts.Content;

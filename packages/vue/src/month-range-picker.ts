@@ -20,6 +20,9 @@ export interface MonthRangePickerRootProps {
 }
 
 export const MonthRangePickerRoot = createPickerRoot('date-range', 'SectileMonthRangePickerRoot', { scope: 'month-range-picker', granularity: 'month', defaultView: 'year' });
+export type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>;
+export type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>;
+export type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const MonthRangePickerTrigger = PickerTrigger;
 export const MonthRangePickerContent = PickerContent;
 export const MonthRangePickerGrid = PickerGrid;

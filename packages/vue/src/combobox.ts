@@ -123,6 +123,12 @@ export const ComboboxRoot = defineComponent({
   },
 });
 
+export type ComboboxValueChangeHandler = (value: string | null) => void;
+export type ComboboxInputValueChangeHandler = (value: string) => void;
+export type ComboboxOpenChangeHandler = (value: boolean) => void;
+export type ComboboxHighlightHandler = (value: string | null) => void;
+export type ComboboxAcceptHandler = (value: string) => void;
+
 export const ComboboxInput = defineComponent({
   name: 'SectileComboboxInput', inheritAttrs: false,
   props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },

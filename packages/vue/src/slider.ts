@@ -37,6 +37,8 @@ export interface SliderRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type SliderValueFormatter = NonNullable<SliderRootProps['formatValue']>;
 export interface SliderSlotProps { readonly value: string; readonly percentage: number; readonly disabled: boolean; readonly: boolean }
 export interface SliderPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
@@ -78,7 +80,7 @@ export const SliderRoot = defineComponent({
     name: { type: String, default: undefined },
     form: { type: String, default: undefined },
     required: { type: Boolean, default: false },
-    formatValue: { type: Function as PropType<(value: string) => string>, default: undefined },
+    formatValue: { type: Function as PropType<SliderValueFormatter>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
   },
@@ -158,6 +160,8 @@ export const SliderRoot = defineComponent({
     };
   },
 });
+
+export type SliderValueChangeHandler = (value: string) => void;
 
 export const SliderTrack = defineComponent({
   name: 'SectileSliderTrack', inheritAttrs: false, props: partProps,

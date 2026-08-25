@@ -106,6 +106,10 @@ export const QuantityFieldRoot = defineComponent({
   },
 });
 
+export type QuantityFieldValueChangeHandler = (value: QuantityValue | null) => void;
+export type QuantityFieldDisplayUnitChangeHandler = (value: string) => void;
+export type QuantityFieldCommitHandler = (details: { value: QuantityValue | null; expression: string; displayUnit: string }) => void;
+
 export const QuantityFieldInput = defineComponent({
   name: 'SectileQuantityFieldInput', inheritAttrs: false,
   props: {

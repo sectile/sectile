@@ -34,3 +34,4 @@ export const TimeField = createNativeFieldComponent<TimeValue>({
       : { policies: options.policies as NonNullable<TimeFieldOptions['policies']> }),
   }),
 });
+export type TimeFieldValueChangeHandler = (value: TimeValue | null) => void;

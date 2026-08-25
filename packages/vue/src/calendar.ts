@@ -90,6 +90,10 @@ export const CalendarRoot = defineComponent({
   },
 });
 
+export type CalendarValueChangeHandler = (value: string | null) => void;
+export type CalendarHighlightedValueChangeHandler = (value: string | null) => void;
+export type CalendarPageHandler = (details: { direction: -1 | 1; from: string | null }) => void;
+
 export const CalendarCell = defineComponent({
   name: 'SectileCalendarCell', inheritAttrs: false,
   props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },

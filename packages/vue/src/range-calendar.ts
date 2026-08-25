@@ -24,6 +24,9 @@ export const RangeCalendarRoot = createPickerRoot('date-range', 'SectileRangeCal
   defaultView: 'month',
   inline: true,
 });
+export type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:modelValue']>;
+export type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>;
+export type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>;
 export const RangeCalendarContent = PickerContent;
 export const RangeCalendarGrid = PickerGrid;
 export const RangeCalendarCell = PickerCell;

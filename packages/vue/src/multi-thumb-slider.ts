@@ -33,6 +33,9 @@ export interface MultiThumbSliderRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type MultiThumbSliderThumbLabelResolver = NonNullable<MultiThumbSliderRootProps['getThumbLabel']>;
+export type MultiThumbSliderValueFormatter = NonNullable<MultiThumbSliderRootProps['formatValue']>;
 export interface MultiThumbSliderRootSlotProps { readonly values: readonly string[]; readonly percentages: readonly number[]; readonly activeThumb: string | null; readonly disabled: boolean; readonly: boolean }
 export interface MultiThumbSliderThumbProps { readonly value: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface MultiThumbSliderThumbSlotProps extends MultiThumbSliderRootSlotProps { readonly value: string; readonly index: number; readonly percentage: number }
@@ -58,8 +61,8 @@ export const MultiThumbSliderRoot = defineComponent({
     min: { type: [Number, String], default: 0 }, max: { type: [Number, String], default: 100 }, step: { type: [Number, String], default: 1 },
     orientation: { type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal' },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined },
-    getThumbLabel: { type: Function as PropType<(id: string) => string>, default: undefined },
-    formatValue: { type: Function as PropType<(value: string, id: string) => string>, default: undefined },
+    getThumbLabel: { type: Function as PropType<MultiThumbSliderThumbLabelResolver>, default: undefined },
+    formatValue: { type: Function as PropType<MultiThumbSliderValueFormatter>, default: undefined },
     policies: { type: Object as PropType<MultiThumbSliderPolicies>, default: undefined },
     name: { type: String, default: undefined }, form: { type: String, default: undefined },
     required: { type: Boolean, default: false },
@@ -176,6 +179,8 @@ export const MultiThumbSliderRoot = defineComponent({
     };
   },
 });
+
+export type MultiThumbSliderValueChangeHandler = (values: readonly string[]) => void;
 
 export const MultiThumbSliderTrack = defineComponent({
   name: 'SectileMultiThumbSliderTrack', inheritAttrs: false, props: partProps,

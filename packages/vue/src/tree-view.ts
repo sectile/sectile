@@ -28,6 +28,8 @@ export interface TreeViewRootProps {
   readonly asChild?: boolean;
 }
 export interface TreeViewPolicies<ID extends string = string> { readonly eligible?: (id: ID) => boolean }
+
+export type TreeViewEligiblePredicate<ID extends string = string> = NonNullable<TreeViewPolicies<ID>['eligible']>;
 export interface TreeViewRootSlotProps { readonly value: readonly string[]; readonly expandedValues: readonly string[]; readonly highlightedValue: string | null; readonly disabled: boolean; readonly: boolean }
 export interface TreeViewItemSlotProps extends Omit<TreeViewRootSlotProps, 'value'> { readonly value: string; readonly selectedValues: readonly string[]; readonly selected: boolean; readonly expanded: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface TreeViewPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -108,6 +110,10 @@ export const TreeViewRoot = defineComponent({
     }), { default: () => slots['default']?.(state.value) });
   },
 });
+
+export type TreeViewValueChangeHandler = (value: readonly string[]) => void;
+export type TreeViewExpandedValuesChangeHandler = (value: readonly string[]) => void;
+export type TreeViewHighlightedValueChangeHandler = (value: string | null) => void;
 
 export const TreeViewGroup = defineComponent({
   name: 'SectileTreeViewGroup', inheritAttrs: false,

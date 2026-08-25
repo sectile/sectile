@@ -45,6 +45,8 @@ export interface ListboxRootProps {
   readonly asChild?: boolean;
 }
 
+export type ListboxTextValueResolver = NonNullable<ListboxRootProps['textValue']>;
+
 export interface ListboxRootSlotProps {
   readonly value: ListboxValue;
   readonly highlightedValue: string | null;
@@ -122,7 +124,7 @@ export const ListboxRoot = defineComponent({
     name: { type: String, default: undefined },
     form: { type: String, default: undefined },
     required: { type: Boolean, default: false },
-    textValue: { type: Function as PropType<(id: string) => string>, default: undefined },
+    textValue: { type: Function as PropType<ListboxTextValueResolver>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
   },
@@ -242,6 +244,10 @@ export const ListboxRoot = defineComponent({
     };
   },
 });
+
+export type ListboxValueChangeHandler = (value: ListboxValue) => void;
+export type ListboxHighlightHandler = (value: string | null) => void;
+export type ListboxActivateHandler = (value: string) => void;
 
 export const ListboxItem = defineComponent({
   name: 'SectileListboxItem',

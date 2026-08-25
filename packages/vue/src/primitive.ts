@@ -18,13 +18,15 @@ export interface PrimitiveProps {
   readonly elementRef?: (element: unknown) => void;
 }
 
+export type PrimitiveElementRefHandler = NonNullable<PrimitiveProps['elementRef']>;
+
 export const Primitive = defineComponent({
   name: 'SectilePrimitive',
   inheritAttrs: false,
   props: {
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
     asChild: { type: Boolean, default: false },
-    elementRef: { type: Function as PropType<(element: unknown) => void>, default: undefined },
+    elementRef: { type: Function as PropType<PrimitiveElementRefHandler>, default: undefined },
   },
   setup(props, { attrs, slots }) {
     return (): VNodeChild => renderPrimitive(props, mergeProps(

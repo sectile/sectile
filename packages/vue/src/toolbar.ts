@@ -54,6 +54,9 @@ export const ToolbarRoot = defineComponent({
   },
 });
 
+export type ToolbarValueChangeHandler = (value: string | null) => void;
+export type ToolbarInvokeHandler = (value: string) => void;
+
 export const ToolbarItem = defineComponent({
   name: 'SectileToolbarItem', inheritAttrs: false,
   props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },

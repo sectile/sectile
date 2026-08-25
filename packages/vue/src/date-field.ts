@@ -34,3 +34,4 @@ export const DateField = createNativeFieldComponent<DateValue>({
       : { policies: options.policies as NonNullable<DateFieldOptions['policies']> }),
   }),
 });
+export type DateFieldValueChangeHandler = (value: DateValue | null) => void;

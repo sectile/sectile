@@ -20,6 +20,8 @@ export interface MenuRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type MenuTextValueResolver = NonNullable<MenuRootProps['textValue']>;
 export interface MenuButtonRootProps extends MenuRootProps { readonly open?: boolean; readonly defaultOpen?: boolean }
 export interface MenuRootSlotProps { readonly open: boolean; readonly highlightedValue: string | null; readonly openPath: readonly string[]; readonly disabled: boolean }
 export interface MenuItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -44,7 +46,7 @@ const commonProps = {
   items: { type: Array as PropType<readonly MenuItemDefinition<string>[]>, required: true },
   disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
   defaultHighlightedValue: { type: String as PropType<string | null>, default: null }, label: { type: String, default: undefined },
-  textValue: { type: Function as PropType<(id: string) => string>, default: undefined },
+  textValue: { type: Function as PropType<MenuTextValueResolver>, default: undefined },
   policies: { type: Object as PropType<MenuPolicies<string>>, default: undefined },
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
 };
@@ -117,6 +119,14 @@ export const MenuRoot = createRoot('menu');
 export const MenubarRoot = createRoot('menubar');
 export const NavigationMenuRoot = createRoot('navigation-menu');
 export const MenuButtonRoot = createRoot('menu-button', true);
+export type MenuOpenChangeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onUpdate:open']>;
+export type MenuInvokeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onInvoke']>;
+export type MenubarOpenChangeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onUpdate:open']>;
+export type MenubarInvokeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onInvoke']>;
+export type NavigationMenuOpenChangeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onUpdate:open']>;
+export type NavigationMenuInvokeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onInvoke']>;
+export type MenuButtonOpenChangeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onUpdate:open']>;
+export type MenuButtonInvokeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onInvoke']>;
 
 export const MenuButtonTrigger = defineComponent({
   name: 'SectileMenuButtonTrigger', inheritAttrs: false,

@@ -16,6 +16,8 @@ export interface FeedRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type FeedPositionResolver = NonNullable<FeedRootProps['getPosition']>;
 export interface FeedRootSlotProps { readonly highlightedValue: string | null; readonly pending: FeedDirection | null; readonly revision: number; readonly disabled: boolean }
 export interface FeedItemSlotProps extends FeedRootSlotProps { readonly value: string; readonly highlighted: boolean }
 export interface FeedPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -32,7 +34,7 @@ export const FeedRoot = defineComponent({
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true }, revision: { type: Number, default: 0 },
     defaultHighlightedValue: { type: String as PropType<string | null>, default: null }, disabled: { type: Boolean, default: false },
-    label: { type: String, default: undefined }, setSize: { type: Number, default: undefined }, getPosition: { type: Function as PropType<(id: string) => number>, default: undefined },
+    label: { type: String, default: undefined }, setSize: { type: Number, default: undefined }, getPosition: { type: Function as PropType<FeedPositionResolver>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
   emits: { highlight: (_value: string | null): boolean => true, 'request-window': (_direction: FeedDirection, _anchor: string | null, _revision: number): boolean => true },
@@ -71,6 +73,9 @@ export const FeedRoot = defineComponent({
     }), { default: () => slots['default']?.(state.value) });
   },
 });
+
+export type FeedHighlightHandler = (value: string | null) => void;
+export type FeedRequestWindowHandler = (direction: FeedDirection, anchor: string | null, revision: number) => void;
 
 export const FeedItem = defineComponent({
   name: 'SectileFeedItem', inheritAttrs: false,

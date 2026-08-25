@@ -111,6 +111,8 @@ export const ToggleButton = defineComponent({
   },
 });
 
+export type ToggleButtonValueChangeHandler = (value: boolean) => void;
+
 function createController(
   controlled: boolean,
   pressed: boolean,

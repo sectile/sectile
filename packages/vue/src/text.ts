@@ -163,3 +163,5 @@ export const TextField = defineComponent({
     ));
   },
 });
+
+export type TextFieldValueChangeHandler = (value: string | number) => void;

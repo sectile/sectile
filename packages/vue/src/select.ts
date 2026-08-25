@@ -25,6 +25,8 @@ export interface SelectRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type SelectTextValueResolver = NonNullable<SelectRootProps['textValue']>;
 export interface SelectRootSlotProps { readonly value: string | null; readonly highlightedValue: string | null; readonly open: boolean; readonly disabled: boolean; readonly: boolean }
 export interface SelectItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface SelectItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
@@ -51,7 +53,7 @@ export const SelectRoot = defineComponent({
     disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined },
     form: { type: String, default: undefined }, required: { type: Boolean, default: false },
-    textValue: { type: Function as PropType<(id: string) => string>, default: undefined },
+    textValue: { type: Function as PropType<SelectTextValueResolver>, default: undefined },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -136,6 +138,10 @@ export const SelectRoot = defineComponent({
     };
   },
 });
+
+export type SelectValueChangeHandler = (value: string | null) => void;
+export type SelectOpenChangeHandler = (value: boolean) => void;
+export type SelectHighlightHandler = (value: string | null) => void;
 
 export const SelectTrigger = defineComponent({
   name: 'SectileSelectTrigger', inheritAttrs: false,

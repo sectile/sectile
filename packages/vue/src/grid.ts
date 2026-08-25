@@ -94,6 +94,13 @@ export const GridRoot = defineComponent({
   },
 });
 
+export type GridValueChangeHandler = (value: string | null) => void;
+export type GridHighlightedValueChangeHandler = (value: string | null) => void;
+export type GridEditModeChangeHandler = (value: GridEditMode) => void;
+export type GridEditStartHandler = (value: string) => void;
+export type GridEditCommitHandler = (value: string) => void;
+export type GridEditCancelHandler = (value: string) => void;
+
 export const GridRow = defineComponent({ name: 'SectileGridRow', inheritAttrs: false, props: partProps, slots: Object as SlotsType<{ default: (props: GridRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('GridRow'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: 'row', 'data-scope': 'grid', 'data-part': 'row' }), { default: () => slots['default']?.(root.state.value) }); } });
 
 export const GridCell = defineComponent({

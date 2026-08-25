@@ -14,6 +14,9 @@ export interface DateTimePickerRootProps {
   readonly required?: boolean; readonly label?: string; readonly policies?: DateTimePickerOptions['policies'];
 }
 export const DateTimePickerRoot = createPickerRoot('date-time', 'SectileDateTimePickerRoot');
+export type DateTimePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:modelValue']>;
+export type DateTimePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:open']>;
+export type DateTimePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DateTimePickerTrigger = PickerTrigger;
 export const DateTimePickerContent = PickerContent;
 export const DateTimePickerGrid = PickerGrid;

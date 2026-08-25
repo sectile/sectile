@@ -123,6 +123,9 @@ export const PinInputRoot = defineComponent({
   },
 });
 
+export type PinInputValueChangeHandler = (value: string) => void;
+export type PinInputCompleteHandler = (value: string) => void;
+
 export const PinInputInput = defineComponent({
   name: 'SectilePinInputInput', inheritAttrs: false,
   props: {

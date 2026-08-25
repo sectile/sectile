@@ -99,6 +99,8 @@ export const CheckboxGroupRoot = defineComponent({
   },
 });
 
+export type CheckboxGroupValueChangeHandler = (value: readonly string[]) => void;
+
 export const CheckboxGroupItem = defineComponent({
   name: 'SectileCheckboxGroupItem', inheritAttrs: false,
   props: {

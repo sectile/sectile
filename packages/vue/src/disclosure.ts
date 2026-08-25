@@ -132,6 +132,8 @@ export const DisclosureRoot = defineComponent({
   },
 });
 
+export type DisclosureValueChangeHandler = (value: boolean) => void;
+
 export const DisclosureTrigger = defineComponent({
   name: 'SectileDisclosureTrigger',
   inheritAttrs: false,

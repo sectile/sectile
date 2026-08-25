@@ -201,6 +201,8 @@ export const AccordionRoot = defineComponent({
   },
 });
 
+export type AccordionValueChangeHandler = (value: AccordionValue) => void;
+
 export const AccordionItem = defineComponent({
   name: 'SectileAccordionItem',
   inheritAttrs: false,

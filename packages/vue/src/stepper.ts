@@ -56,6 +56,10 @@ export const StepperRoot = defineComponent({
   },
 });
 
+export type StepperValueChangeHandler = (value: string) => void;
+export type StepperHighlightHandler = (value: string | null) => void;
+export type StepperActivateHandler = (value: string) => void;
+
 export const StepperList = TabsList;
 export const StepperStep = TabsTrigger;
 export const StepperContent = TabsContent;

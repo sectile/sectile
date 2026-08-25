@@ -29,6 +29,9 @@ export interface TreeGridRootProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+
+export type TreeGridCellValueResolver = NonNullable<TreeGridRootProps['getCellValue']>;
+export type TreeGridCellValueSetter = NonNullable<TreeGridRootProps['setCellValue']>;
 export interface TreeGridRootSlotProps { readonly value: string | null; readonly expandedValue: readonly string[]; readonly highlightedValue: string | null; readonly editMode: TreeGridEditMode; readonly disabled: boolean; readonly: boolean }
 export interface TreeGridRowSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly expanded: boolean }
 export interface TreeGridCellSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly editing: boolean }
@@ -48,7 +51,7 @@ export const TreeGridRoot = defineComponent({
   name: 'SectileTreeGridRoot', inheritAttrs: false,
   props: {
     rows: { type: Array as PropType<readonly TreeGridRowInput<string, string>[]>, required: true },
-    getCellValue: { type: Function as PropType<(id: string) => string>, required: true }, setCellValue: { type: Function as PropType<(id: string, value: string) => void>, required: true },
+    getCellValue: { type: Function as PropType<TreeGridCellValueResolver>, required: true }, setCellValue: { type: Function as PropType<TreeGridCellValueSetter>, required: true },
     modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
     expandedValue: { type: Array as PropType<readonly string[]>, default: undefined }, defaultExpandedValue: { type: Array as PropType<readonly string[]>, default: () => [] },
     highlightedValue: { type: String as PropType<string | null>, default: undefined }, defaultHighlightedValue: { type: String as PropType<string | null>, default: null },
@@ -109,6 +112,11 @@ export const TreeGridRoot = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; }, 'data-scope': 'tree-grid', 'data-part': 'root', 'data-edit-mode': state.value.editMode }), { default: () => slots['default']?.(state.value) });
   },
 });
+
+export type TreeGridValueChangeHandler = (value: string | null) => void;
+export type TreeGridExpandedValueChangeHandler = (value: readonly string[]) => void;
+export type TreeGridHighlightedValueChangeHandler = (value: string | null) => void;
+export type TreeGridEditModeChangeHandler = (value: TreeGridEditMode) => void;
 
 export const TreeGridRow = defineComponent({
   name: 'SectileTreeGridRow', inheritAttrs: false,

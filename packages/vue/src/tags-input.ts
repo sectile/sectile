@@ -145,6 +145,9 @@ export const TagsInputRoot = defineComponent({
   },
 });
 
+export type TagsInputValueChangeHandler = (value: readonly string[]) => void;
+export type TagsInputInputValueChangeHandler = (value: string) => void;
+
 export const TagsInputItem = defineComponent({
   name: 'SectileTagsInputItem', inheritAttrs: false,
   props: { index: { type: Number, required: true }, ...partProps },

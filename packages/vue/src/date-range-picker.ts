@@ -13,6 +13,9 @@ export interface DateRangePickerRootProps {
   readonly required?: boolean; readonly label?: string; readonly policies?: DateRangePickerOptions['policies'];
 }
 export const DateRangePickerRoot = createPickerRoot('date-range', 'SectileDateRangePickerRoot');
+export type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>;
+export type DateRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:open']>;
+export type DateRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DateRangePickerTrigger = PickerTrigger;
 export const DateRangePickerContent = PickerContent;
 export const DateRangePickerGrid = PickerGrid;

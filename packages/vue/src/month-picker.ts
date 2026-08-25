@@ -20,6 +20,9 @@ export interface MonthPickerRootProps {
 }
 
 export const MonthPickerRoot = createPickerRoot('date', 'SectileMonthPickerRoot', { scope: 'month-picker', granularity: 'month', defaultView: 'year' });
+export type MonthPickerValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:modelValue']>;
+export type MonthPickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:open']>;
+export type MonthPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const MonthPickerTrigger = PickerTrigger;
 export const MonthPickerContent = PickerContent;
 export const MonthPickerGrid = PickerGrid;

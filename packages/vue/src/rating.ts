@@ -109,6 +109,8 @@ export const RatingRoot = defineComponent({
   },
 });
 
+export type RatingValueChangeHandler = (value: string) => void;
+
 function explicitFormProps(
   vnodeProps: Readonly<Record<string, unknown>> | null,
   props: Readonly<{

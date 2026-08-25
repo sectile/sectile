@@ -154,6 +154,8 @@ export const DateRangeFieldRoot = defineComponent({
   },
 });
 
+export type DateRangeFieldValueChangeHandler = (value: DateRange | null) => void;
+
 export const DateRangeFieldStartInput = createEndpointInput('start', 'SectileDateRangeFieldStartInput');
 export const DateRangeFieldEndInput = createEndpointInput('end', 'SectileDateRangeFieldEndInput');
 

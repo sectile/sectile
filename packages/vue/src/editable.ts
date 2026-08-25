@@ -162,6 +162,9 @@ export const EditableRoot = defineComponent({
   },
 });
 
+export type EditableValueChangeHandler = (value: string) => void;
+export type EditableEditingChangeHandler = (editing: boolean) => void;
+
 export const EditableArea = defineComponent({
   name: 'SectileEditableArea', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: EditableRootSlotProps) => VNodeChild }>,

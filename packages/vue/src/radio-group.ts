@@ -156,6 +156,9 @@ export const RadioGroupRoot = defineComponent({
   },
 });
 
+export type RadioGroupValueChangeHandler = (value: string) => void;
+export type RadioGroupHighlightHandler = (value: string | null) => void;
+
 export const RadioGroupItem = defineComponent({
   name: 'SectileRadioGroupItem',
   inheritAttrs: false,
