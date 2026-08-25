@@ -4,6 +4,7 @@ const stableVersionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const breakingSubjectPattern = /^[A-Za-z]+(?:\([^)]*\))?!:/;
 const featureSubjectPattern = /^feat(?:\([^)]*\))?:/;
 const breakingBodyPattern = /(^|\s)BREAKING CHANGE:/;
+export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 
 export function parseStableVersion(version) {
   const match = stableVersionPattern.exec(version);
@@ -17,6 +18,28 @@ export function bumpVersion(version, bump) {
   if (bump === 'minor') return `${major}.${minor + 1}.0`;
   assert.equal(bump, 'patch', `invalid release bump: ${bump}`);
   return `${major}.${minor}.${patch + 1}`;
+}
+
+export function releaseBumpChoices(version, recommendedBump) {
+  assert.equal(releaseBumps.includes(recommendedBump), true, `invalid recommended release bump: ${recommendedBump}`);
+  return releaseBumps.map((bump, index) => Object.freeze({
+    bump,
+    index: index + 1,
+    version: bumpVersion(version, bump),
+    recommended: bump === recommendedBump,
+  }));
+}
+
+export function parseReleaseBumpChoice(input, recommendedBump) {
+  assert.equal(releaseBumps.includes(recommendedBump), true, `invalid recommended release bump: ${recommendedBump}`);
+  const choice = input.trim();
+  if (choice === '') return recommendedBump;
+  const numericIndex = Number(choice);
+  if (Number.isInteger(numericIndex) && numericIndex >= 1 && numericIndex <= releaseBumps.length) {
+    return releaseBumps[numericIndex - 1];
+  }
+  assert.equal(releaseBumps.includes(choice), true, 'select patch, minor, major, or 1, 2, 3');
+  return choice;
 }
 
 export function classifyReleaseBranch(localHead, remoteHead, remoteIsAncestor) {

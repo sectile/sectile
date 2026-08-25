@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
@@ -9,9 +10,11 @@ import {
   formatCommitList,
   formatReleaseNotes,
   parseGitLog,
+  parseReleaseBumpChoice,
   parseStableVersion,
   prependChangelog,
   recommendBump,
+  releaseBumpChoices,
 } from './lib/release.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
@@ -86,6 +89,34 @@ function updatePackages(version, commits) {
   }
 }
 
+async function selectReleaseBump(version, recommendation) {
+  if (requestedBump !== undefined) return requestedBump;
+  assert.equal(
+    process.stdin.isTTY && process.stdout.isTTY,
+    true,
+    'release bump is required without an interactive terminal: pnpm release patch|minor|major',
+  );
+
+  console.log('\nversion bump:');
+  for (const choice of releaseBumpChoices(version, recommendation.bump)) {
+    console.log(`  ${choice.index}) ${choice.bump.padEnd(5)} v${choice.version}${choice.recommended ? '  recommended' : ''}`);
+  }
+
+  const prompt = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    while (true) {
+      const answer = await prompt.question(`select bump [${recommendation.bump}]: `);
+      try {
+        return parseReleaseBumpChoice(answer, recommendation.bump);
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+  } finally {
+    prompt.close();
+  }
+}
+
 assert.equal(run('git', ['branch', '--show-current'], { capture: true }), 'main', 'release must run from main');
 assert.equal(run('git', ['status', '--porcelain=v1', '--untracked-files=all'], { capture: true }), '', 'release requires a clean worktree');
 const repository = githubRepository(run('git', ['remote', 'get-url', 'origin'], { capture: true }));
@@ -114,25 +145,24 @@ if (commits.length === 0) {
 }
 
 const recommendation = recommendBump(commits);
-const releaseBump = requestedBump ?? recommendation.bump;
-const version = bumpVersion(previousVersion, releaseBump);
-const tag = `v${version}`;
 
 console.log(`release base: ${baseTag}`);
 console.log(`release branch: ${branchState}`);
 console.log(`commits:\n${formatCommitList(commits)}`);
 console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
-if (requestedBump !== undefined) console.log(`override bump: ${requestedBump}`);
+const releaseBump = await selectReleaseBump(previousVersion, recommendation);
+const version = bumpVersion(previousVersion, releaseBump);
+const tag = `v${version}`;
+console.log(`${requestedBump === undefined ? 'selected' : 'requested'} bump: ${releaseBump}`);
 console.log(`release tag: ${tag}`);
 
 assert.equal(run('git', ['tag', '--list', tag], { capture: true }), '', `${tag} already exists locally`);
 assert.equal(run('git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true }), '', `${tag} already exists on origin`);
-run('pnpm', ['verify']);
 updatePackages(version, commits);
 run('pnpm', ['install', '--lockfile-only']);
 run('pnpm', ['update:tree']);
 run('pnpm', ['release:check', tag]);
-run('pnpm', ['verify']);
+run('pnpm', ['verify:release']);
 run('git', ['add', '--', 'packages', 'pnpm-lock.yaml', 'TREE.txt']);
 run('git', ['commit', '-m', `chore(release): ${tag}`]);
 const notes = `Sectile ${tag}\n\n${formatReleaseNotes(baseTag, commits)}`;

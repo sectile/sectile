@@ -14,7 +14,9 @@
     "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
     "check:components": "node scripts/check-component-completeness.mjs",
     "update:tree": "node scripts/update-tree.mjs",
-    "verify": "pnpm --filter @sectile/core verify && pnpm --filter @sectile/dom verify && pnpm --filter @sectile/terminal verify && pnpm --filter @sectile/vue verify && pnpm --filter @sectile/docs verify && node --test --test-concurrency=1 verification/cross-host/*.test.mjs && pnpm test:tooling && pnpm check:boundaries && pnpm check:components",
+    "verify": "node scripts/verify.mjs",
+    "verify:release": "node scripts/verify.mjs --quiet",
+    "verify:compat": "node scripts/verify.mjs --compat --quiet",
     "release": "node scripts/release.mjs",
     "release:check": "node scripts/check-release.mjs",
     "publish:packages": "node scripts/publish-packages.mjs"

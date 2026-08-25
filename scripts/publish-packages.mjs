@@ -67,6 +67,7 @@ if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package ve
 run('node', packOnly ? ['scripts/check-release.mjs'] : ['scripts/check-release.mjs', `v${version}`]);
 run('pnpm', [
   '--recursive',
+  '--workspace-concurrency=1',
   ...packages.flatMap(({ manifest }) => ['--filter', manifest.name]),
   'build',
 ]);
@@ -79,7 +80,7 @@ try {
   const packed = [];
   for (const entry of packages) {
     const before = new Set(await readdir(packRoot));
-    run('pnpm', ['pack', '--pack-destination', packRoot], { cwd: entry.packageRoot });
+    run('pnpm', ['pack', '--pack-destination', packRoot], { cwd: entry.packageRoot, capture: true });
     const files = (await readdir(packRoot)).filter((file) => file.endsWith('.tgz') && !before.has(file));
     assert.equal(files.length, 1, `${entry.manifest.name} did not produce exactly one tarball`);
     const tarball = join(packRoot, files[0]);

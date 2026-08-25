@@ -8,8 +8,10 @@ import {
   classifyReleaseBranch,
   formatReleaseNotes,
   parseGitLog,
+  parseReleaseBumpChoice,
   prependChangelog,
   recommendBump,
+  releaseBumpChoices,
 } from './lib/release.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
@@ -52,6 +54,18 @@ test('bumps stable synchronized versions', () => {
   assert.equal(bumpVersion('1.2.3', 'minor'), '1.3.0');
   assert.equal(bumpVersion('1.2.3', 'major'), '2.0.0');
   assert.throws(() => bumpVersion('1.2.3-beta.1', 'patch'));
+});
+
+test('offers every bump while keeping the recommendation optional', () => {
+  assert.deepEqual(releaseBumpChoices('0.3.0', 'minor'), [
+    { bump: 'patch', index: 1, version: '0.3.1', recommended: false },
+    { bump: 'minor', index: 2, version: '0.4.0', recommended: true },
+    { bump: 'major', index: 3, version: '1.0.0', recommended: false },
+  ]);
+  assert.equal(parseReleaseBumpChoice('', 'minor'), 'minor');
+  assert.equal(parseReleaseBumpChoice('1', 'minor'), 'patch');
+  assert.equal(parseReleaseBumpChoice('major', 'minor'), 'major');
+  assert.throws(() => parseReleaseBumpChoice('automatic', 'minor'), /select patch, minor, major/u);
 });
 
 test('parses git records and renders commit-based notes', () => {

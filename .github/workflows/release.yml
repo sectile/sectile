@@ -28,7 +28,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [24.x, 26.x]
+        include:
+          - node: 24.x
+            verification: verify:release
+          - node: 26.x
+            verification: verify:compat
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,30 +53,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: git diff --exit-code "refs/tags/${RELEASE_TAG}^{commit}" HEAD -- packages/core packages/dom packages/terminal packages/vue pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm verify
-      - run: pnpm release:check "$RELEASE_TAG"
-
-  build-docs:
-    needs: verify
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.ref }}
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24.x
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+      - run: pnpm ${{ matrix.verification }}
+      - if: matrix.node == '24.x'
+        run: pnpm release:check "$RELEASE_TAG"
+      - if: matrix.node == '24.x'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - if: matrix.node == '24.x'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: docs/.vitepress/dist
 
   publish:
-    needs: build-docs
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,7 +92,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   deploy-docs:
-    needs: [build-docs, publish]
+    needs: [verify, publish]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
