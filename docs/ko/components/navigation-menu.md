@@ -3,7 +3,7 @@
 
 기본 링크와 펼쳐지는 이동 패널을 하나의 막대에 구성합니다.
 
-## 예시
+## 용법
 
 ### 제품 이동 메뉴
 
@@ -17,34 +17,91 @@
 
 <ComponentExample component="navigation-menu" scenario="links" title="링크 이동" description="복합 메뉴 실행 요소와 함께 써도 링크의 기본 이동 동작을 유지합니다." :index="1" />
 
-## 공개 API
+### 비활성 항목
+
+키보드와 포인터 입력을 받지 않습니다.
+
+<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/navigation-menu`
 
 <div class="component-api-group">
 <strong class="component-api-label">컴포넌트</strong>
 <ul class="component-api-list">
-  <li><code class="component-api-token">NavigationMenuList</code></li>
-  <li><code class="component-api-token">NavigationMenuItem</code></li>
-  <li><code class="component-api-token">NavigationMenuViewport</code></li>
-  <li><code class="component-api-token">NavigationMenuIndicator</code></li>
   <li><code class="component-api-token">NavigationMenuRoot</code></li>
   <li><code class="component-api-token">NavigationMenuLink</code></li>
   <li><code class="component-api-token">NavigationMenuTrigger</code></li>
   <li><code class="component-api-token">NavigationMenuContent</code></li>
+  <li><code class="component-api-token">NavigationMenuList</code></li>
+  <li><code class="component-api-token">NavigationMenuItem</code></li>
+  <li><code class="component-api-token">NavigationMenuViewport</code></li>
+  <li><code class="component-api-token">NavigationMenuIndicator</code></li>
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">NavigationMenuItemProps</code></li>
-  <li><code class="component-api-token">NavigationMenuItemSlotProps</code></li>
-  <li><code class="component-api-token">NavigationMenuRootProps</code></li>
-  <li><code class="component-api-token">NavigationMenuRootSlotProps</code></li>
-  <li><code class="component-api-token">NavigationMenuContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `NavigationMenuItemProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `value` | `string` | 필수 | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
+| `as` | `PrimitiveAs` | `'li'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `NavigationMenuRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | 컴포넌트가 관리하는 처음 강조 값입니다. |
+| `disabledItems` | `readonly string[]` | `undefined` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
+| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `MenuPolicies<string>` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `textValue` | `(id: string) => string` | `undefined` | 항목 값을 검색 또는 표시 문자열로 바꾸는 함수입니다. |
+| `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `NavigationMenuContentProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `for` | `string` | 필수 | 이 컴포넌트가 연결할 관련 파트의 값 또는 ID입니다. |
+| `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `NavigationMenuItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+
+#### `NavigationMenuRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `openPath` | `readonly string[]` | 열린 메뉴 경로의 순서 있는 값입니다. |
+
+### 이벤트
+
+#### `NavigationMenuRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
+| `invoke` | `string` | 현재 작업을 실행할 때 발생합니다. |
 
 ## 파트
 

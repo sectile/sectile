@@ -3,7 +3,7 @@
 
 Adjust one quantized numeric value with pointer or keyboard input.
 
-## Examples
+## Usage
 
 ### Single value
 
@@ -17,7 +17,13 @@ Choose one vertical value with pointer or keyboard input.
 
 <ComponentExample component="slider" scenario="vertical-value" title="Vertical value" description="Choose one vertical value with pointer or keyboard input." :index="1" />
 
-## API reference
+### Controlled value
+
+Let the parent own the slider value while pointer and keyboard input emit requests.
+
+<ComponentExample component="slider" scenario="controlled-value" title="Controlled value" description="Let the parent own the slider value while pointer and keyboard input emit requests." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/slider`
 
@@ -31,14 +37,55 @@ Vue package: `@sectile/vue/slider`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">SliderRootProps</code></li>
-  <li><code class="component-api-token">SliderSlotProps</code></li>
-  <li><code class="component-api-token">SliderPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `SliderRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `number \| string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `number \| string` | `0` | Initial value used when the component owns its state. |
+| `min` | `number \| string` | `0` | Smallest value accepted by the component. |
+| `max` | `number \| string` | `100` | Largest value accepted by the component. |
+| `step` | `number \| string` | `1` | Smallest value increment accepted by the component. |
+| `pageStep` | `number` | `10` | Larger increment used by Page Up and Page Down. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `role` | `'slider' \| 'separator'` | `'slider'` | ARIA role applied to the rendered control. |
+| `formatValue` | `(value: string) => string` | `undefined` | Formats a value for visible text. |
+
+#### `SliderPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `SliderSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `percentage` | `number` | Current value expressed as a percentage of its range. |
+
+### Events
+
+#### `SliderRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

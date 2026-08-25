@@ -3,7 +3,7 @@
 
 Choose one calendar month from a focused year grid.
 
-## Examples
+## Usage
 
 ### Billing month
 
@@ -11,7 +11,19 @@ Choose the calendar month used for the next billing cycle.
 
 <ComponentExample component="month-picker" scenario="billing-month" title="Billing month" description="Choose the calendar month used for the next billing cycle." :index="0" />
 
-## API reference
+### Fiscal year
+
+Move by year and choose one month from the active fiscal calendar.
+
+<ComponentExample component="month-picker" scenario="fiscal-year" title="Fiscal year" description="Move by year and choose one month from the active fiscal calendar." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="month-picker" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/month-picker`
 
@@ -29,16 +41,77 @@ Vue package: `@sectile/vue/month-picker`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">MonthPickerRootProps</code></li>
-  <li><code class="component-api-token">MonthPickerValue</code></li>
-  <li><code class="component-api-token">MonthPickerCellSlotProps</code></li>
-  <li><code class="component-api-token">MonthPickerPartProps</code></li>
-  <li><code class="component-api-token">MonthPickerRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `MonthPickerRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateValue \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateValue \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `DateValue` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `DateValue` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `DatePickerOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+
+#### `MonthPickerPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `MonthPickerCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `DatePickerMonthValue` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `inRange` | `boolean` | Whether this value lies inside the selected range. |
+
+#### `MonthPickerRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `PickerValue` | Current value exposed by this contract. |
+| `highlightedValue` | `DateValue` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `view` | `{ readonly year: number; readonly month: number }` | Current calendar anchor. |
+| `viewMode` | `DatePickerViewMode` | Active calendar view mode. |
+| `dates` | `readonly (readonly DateValue[])[]` | Dates projected by the active view. |
+| `months` | `readonly (readonly DatePickerMonthValue[])[]` | Months projected by the active view. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `years` | `readonly (readonly PickerYearValue[])[]` | Years projected by the active view. |
+
+### Events
+
+#### `MonthPickerRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `PickerValue` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `DateValue` | Emitted when the requested highlighted value changes. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+
+### Other types
+
+#### `MonthPickerValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+| `day` | `number` | Yes |
 
 ## Parts
 

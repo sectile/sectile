@@ -3,7 +3,7 @@
 
 Preserve exact decimal input while validating or evaluating text drafts.
 
-## Examples
+## Usage
 
 ### Exact decimal
 
@@ -29,7 +29,7 @@ Reject values outside the configured minimum and maximum.
 
 <ComponentExample component="number-field" scenario="bounded" title="Bounded" description="Reject values outside the configured minimum and maximum." :index="3" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/number-field`
 
@@ -40,12 +40,19 @@ Vue package: `@sectile/vue/number-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">NumberFieldProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `NumberFieldProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `undefined` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `undefined` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `NumberFieldOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 Filter a collection with text, move through matches, and accept one result.
 
-## Examples
+## Usage
 
 ### Prefix
 
@@ -17,13 +17,21 @@ Filter items whose labels contain the query instead of only matching its prefix.
 
 <ComponentExample component="combobox" scenario="contains" title="Contains" description="Filter items whose labels contain the query instead of only matching its prefix." :index="1" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="combobox" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## Examples
+
 ### Ime
 
 Keep composition text separate until an IME commit produces the accepted query.
 
-<ComponentExample component="combobox" scenario="ime" title="Ime" description="Keep composition text separate until an IME commit produces the accepted query." :index="2" />
+<ComponentExample component="combobox" scenario="ime" title="Ime" description="Keep composition text separate until an IME commit produces the accepted query." :index="3" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/combobox`
 
@@ -38,16 +46,75 @@ Vue package: `@sectile/vue/combobox`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ComboboxRootProps</code></li>
-  <li><code class="component-api-token">ComboboxRootSlotProps</code></li>
-  <li><code class="component-api-token">ComboboxItemProps</code></li>
-  <li><code class="component-api-token">ComboboxItemSlotProps</code></li>
-  <li><code class="component-api-token">ComboboxPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ComboboxRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly ComboboxItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `inputValue` | `string` | `undefined` | Controlled text currently shown by the editable input. |
+| `defaultInputValue` | `string` | `''` | Initial uncontrolled text shown by the editable input. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `ComboboxPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ComboboxItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ComboboxPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ComboboxRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `inputValue` | `string` | Current editable input text. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `ComboboxItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `ComboboxRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:inputValue` | `string` | Emitted when editable input text changes. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `accept` | `string` | Emitted when the current draft becomes an accepted value. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
 ## Parts
 

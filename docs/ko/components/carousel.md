@@ -3,7 +3,7 @@
 
 이전·다음·직접 이동 제어로 연속된 슬라이드를 탐색합니다.
 
-## 예시
+## 용법
 
 ### 순환 이동
 
@@ -23,7 +23,13 @@
 
 <ComponentExample component="carousel" scenario="paused" title="일시 정지" description="자동 이동을 멈춘 상태에서도 직접 이전·다음 항목으로 이동할 수 있습니다." :index="2" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="carousel" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="3" />
+
+## API
 
 Vue 패키지: `@sectile/vue/carousel`
 
@@ -42,15 +48,64 @@ Vue 패키지: `@sectile/vue/carousel`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CarouselRootProps</code></li>
-  <li><code class="component-api-token">CarouselRootSlotProps</code></li>
-  <li><code class="component-api-token">CarouselSlideSlotProps</code></li>
-  <li><code class="component-api-token">CarouselPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CarouselRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `slides` | `readonly string[]` | 필수 | 캐러셀이 관리할 순서 있는 슬라이드 값입니다. |
+| `modelValue` | `string \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `paused` | `boolean` | `undefined` | 외부에서 제어하는 일시 정지 상태입니다. |
+| `defaultPaused` | `boolean` | `false` | 컴포넌트가 관리하는 초기 일시 정지 상태입니다. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | 배치와 키보드 이동에 사용할 축입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `CarouselPolicies` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'section'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `autoplay` | `boolean \| CarouselAutoplayOptions` | `false` | 직접 조작하지 않아도 캐러셀이 자동으로 넘어갈지 여부입니다. |
+
+#### `CarouselPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `CarouselRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `index` | `number \| null` | 부모 컬렉션 안의 0부터 시작하는 위치입니다. |
+| `value` | `string \| null` | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `count` | `number` | 컬렉션의 값 개수입니다. |
+| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+
+#### `CarouselSlideSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `index` | `number \| null` | 부모 컬렉션 안의 0부터 시작하는 위치입니다. |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `active` | `boolean` | 현재 활성 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `count` | `number` | 컬렉션의 값 개수입니다. |
+| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+
+### 이벤트
+
+#### `CarouselRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:paused` | `boolean` | 컴포넌트가 새 일시 정지 상태를 요청할 때 발생합니다. |
+| `announce` | `string` | 보조 기술에 피드백을 알려야 할 때 발생합니다. |
 
 ## 파트
 

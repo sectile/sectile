@@ -3,7 +3,7 @@
 
 Enter a short code across coordinated single-character fields.
 
-## Examples
+## Usage
 
 ### Verification code
 
@@ -11,13 +11,49 @@ Enter a short numeric verification code one segment at a time.
 
 <ComponentExample component="pin-input" scenario="verification-code" title="Verification code" description="Enter a short numeric verification code one segment at a time." :index="0" />
 
-### Prefilled
+### Custom length
 
-Start with a complete value and allow each segment to be replaced independently.
+Set the number of input cells to match the code format required by the service.
 
-<ComponentExample component="pin-input" scenario="prefilled" title="Prefilled" description="Start with a complete value and allow each segment to be replaced independently." :index="1" />
+<ComponentExample component="pin-input" scenario="custom-length" title="Custom length" description="Set the number of input cells to match the code format required by the service." :index="1" />
 
-## API reference
+### Masked input
+
+Hide entered characters when the code should not remain visible on screen.
+
+<ComponentExample component="pin-input" scenario="masked" title="Masked input" description="Hide entered characters when the code should not remain visible on screen." :index="2" />
+
+### Cell placeholders
+
+Pass a placeholder to each input cell without storing it as part of the value.
+
+<ComponentExample component="pin-input" scenario="placeholders" title="Cell placeholders" description="Pass a placeholder to each input cell without storing it as part of the value." :index="3" />
+
+### OTP autocomplete
+
+Opt in to one-time-code autocomplete for a value that is intentionally an OTP.
+
+<ComponentExample component="pin-input" scenario="otp" title="OTP autocomplete" description="Opt in to one-time-code autocomplete for a value that is intentionally an OTP." :index="4" />
+
+### Readonly
+
+Remain focusable for inspection while rejecting every mutation request.
+
+<ComponentExample component="pin-input" scenario="readonly" title="Readonly" description="Remain focusable for inspection while rejecting every mutation request." :index="5" />
+
+### Disabled
+
+Remove the control from keyboard and pointer interaction.
+
+<ComponentExample component="pin-input" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="6" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="pin-input" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="7" />
+
+## API
 
 Vue package: `@sectile/vue/pin-input`
 
@@ -29,15 +65,65 @@ Vue package: `@sectile/vue/pin-input`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">PinInputRootProps</code></li>
-  <li><code class="component-api-token">PinInputRootSlotProps</code></li>
-  <li><code class="component-api-token">PinInputInputProps</code></li>
-  <li><code class="component-api-token">PinInputInputSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `PinInputRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `length` | `number` | `6` | Number of coordinated character inputs. |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `mask` | `boolean` | `false` | Whether entered characters use password-style masking. |
+| `otp` | `boolean` | `false` | Whether to opt the first input into one-time-code autocomplete. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `'PIN'` | Accessible name announced for the control. |
+| `policies` | `PinInputPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `PinInputInputProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `index` | `number` | Required | Zero-based position of this part in its parent collection. |
+| `as` | `PrimitiveAs` | `'input'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `PinInputRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `complete` | `boolean` | Whether every required character or step is complete. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `PinInputInputSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `index` | `number` | Zero-based position in the parent collection. |
+| `value` | `string` | Current value exposed by this contract. |
+| `character` | `string` | Character displayed by this input. |
+| `complete` | `boolean` | Whether every required character or step is complete. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `PinInputRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `complete` | `string` | Emitted when every required segment is filled. |
 
 ## Parts
 

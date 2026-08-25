@@ -3,7 +3,7 @@
 
 Move across top-level menus before navigating each command hierarchy.
 
-## Examples
+## Usage
 
 ### Application
 
@@ -11,13 +11,19 @@ Move across top-level application menus, then enter the open command list.
 
 <ComponentExample component="menubar" scenario="application" title="Application" description="Move across top-level application menus, then enter the open command list." :index="0" />
 
+### Disabled root
+
+Skip an unavailable top-level menu while preserving movement between its siblings.
+
+<ComponentExample component="menubar" scenario="disabled-root" title="Disabled root" description="Skip an unavailable top-level menu while preserving movement between its siblings." :index="1" />
+
 ### Typeahead
 
 Move to the next menu whose label matches the typed prefix.
 
-<ComponentExample component="menubar" scenario="typeahead" title="Typeahead" description="Move to the next menu whose label matches the typed prefix." :index="1" />
+<ComponentExample component="menubar" scenario="typeahead" title="Typeahead" description="Move to the next menu whose label matches the typed prefix." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/menubar`
 
@@ -31,17 +37,74 @@ Vue package: `@sectile/vue/menubar`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">MenubarItemProps</code></li>
-  <li><code class="component-api-token">MenubarItemSlotProps</code></li>
-  <li><code class="component-api-token">MenubarPartProps</code></li>
-  <li><code class="component-api-token">MenubarRootProps</code></li>
-  <li><code class="component-api-token">MenubarRootSlotProps</code></li>
-  <li><code class="component-api-token">MenubarContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `MenubarItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenubarPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenubarRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `disabledItems` | `readonly string[]` | `undefined` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MenuPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenubarContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | `string` | Required | Value or ID of the related part targeted by this component. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `MenubarItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+#### `MenubarRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `openPath` | `readonly string[]` | Ordered values in the open menu path. |
+
+### Events
+
+#### `MenubarRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
 
 ## Parts
 

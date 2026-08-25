@@ -3,7 +3,7 @@
 
 Edit start and end times while enforcing interval and order rules.
 
-## Examples
+## Usage
 
 ### Office hours
 
@@ -17,7 +17,13 @@ Accept values only at the configured interval.
 
 <ComponentExample component="time-range-field" scenario="stepped" title="Stepped" description="Accept values only at the configured interval." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="time-range-field" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/time-range-field`
 
@@ -30,14 +36,52 @@ Vue package: `@sectile/vue/time-range-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TimeRangeFieldRootProps</code></li>
-  <li><code class="component-api-token">TimeRangeFieldRootSlotProps</code></li>
-  <li><code class="component-api-token">TimeRange</code></li>
-</ul>
-</div>
+### Props
+
+#### `TimeRangeFieldRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `TimeRange \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `TimeRange \| null` | `null` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `startLabel` | `string` | `undefined` | Accessible label for the range start input. |
+| `endLabel` | `string` | `undefined` | Accessible label for the range end input. |
+| `policies` | `TimeRangeFieldPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TimeRangeFieldRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `TimeRange \| null` | Current value exposed by this contract. |
+| `active` | `'start' \| 'end'` | Whether this item is currently active. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `endText` | `string` | Formatted text for the range end value. |
+| `startText` | `string` | Formatted text for the range start value. |
+
+### Events
+
+#### `TimeRangeFieldRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `TimeRange \| null` | Emitted when the component requests a new controlled value. |
+
+### Other types
+
+#### `TimeRange`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `start` | `TimeValue` | Yes |
+| `end` | `TimeValue` | Yes |
 
 ## Parts
 

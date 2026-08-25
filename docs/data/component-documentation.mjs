@@ -1,51 +1,46 @@
-const secondaryStateScenarios = Object.freeze([
-  /^controlled(?:-|$)/u,
-  /^readonly$/u,
-  /(?:^|-)disabled(?:-|$)/u,
-]);
-
-const standaloneStateScenarios = new Set([
-  'disabled-weekends',
-]);
-
-const curatedScenarios = Object.freeze({
-  calendar: ['month', 'week', 'disabled-weekends'],
-  'range-calendar': ['booking'],
-  'month-picker': ['billing-month'],
-  'month-range-picker': ['reporting-period'],
-  'year-picker': ['graduation-year'],
-  'year-range-picker': ['roadmap-horizon'],
-  disclosure: ['closed'],
-  switch: ['off'],
-  'tags-input': ['skills'],
-  toolbar: ['formatting', 'vertical'],
-  'toggle-button': ['formatting'],
-  'tree-grid': ['expanded', 'editable'],
-  'tree-view': ['expanded', 'multiple'],
+/**
+ * Usage owns ordinary props, states, orientations, and controlled ownership.
+ * Examples are opt-in and reserved for edge conditions or compositions that
+ * combine several ordinary capabilities into a distinct application pattern.
+ */
+const exampleScenarios = Object.freeze({
+  combobox: ['ime'],
+  'date-time-field': ['cross-midnight'],
+  feed: ['load-after', 'load-before'],
+  form: ['notifications', 'team-invite'],
+  pagination: ['long-range'],
+  popover: ['collision'],
+  'quantity-field': ['calculator', 'compound'],
+  'spin-button': ['invalid-draft'],
+  stepper: ['gated-step'],
+  text: ['ime-mixed'],
+  'window-splitter': ['nested-layout'],
 });
 
-function isSecondaryStateScenario(scenario) {
-  return secondaryStateScenarios.some((pattern) => pattern.test(scenario));
-}
-
 /**
- * Visual examples teach behavior that can be seen or exercised in the DOM.
- * State ownership, readonly, and disabled behavior remain documented by the
- * public API and accessibility contract unless a curated scenario demonstrates
- * an essential state that users need to recognize, such as unavailable dates.
+ * Every declared DOM scenario documents a distinct option, state, ownership
+ * mode, edge condition, or composition.
  */
 export function documentedScenarios(component) {
   const declared = component.scenarios?.dom;
   if (!Array.isArray(declared)) return Object.freeze([]);
+  return Object.freeze([...declared]);
+}
 
-  const curated = curatedScenarios[component.id];
-  const selected = curated ?? declared;
+export function documentedSections(component) {
+  const scenarios = documentedScenarios(component);
+  const requestedExamples = exampleScenarios[component.id] ?? [];
+  const scenarioSet = new Set(scenarios);
+  const examples = requestedExamples.filter((scenario) => scenarioSet.has(scenario));
+  const exampleSet = new Set(examples);
+  const usage = scenarios.filter((scenario) => !exampleSet.has(scenario));
 
-  return Object.freeze(curated === undefined
-    ? selected.filter((scenario) => !isSecondaryStateScenario(scenario))
-    : [...selected]);
+  return Object.freeze({
+    usage: Object.freeze(usage),
+    examples: Object.freeze(examples),
+  });
 }
 
 export function isStandaloneDocumentationScenario(scenario) {
-  return standaloneStateScenarios.has(scenario) || !isSecondaryStateScenario(scenario);
+  return typeof scenario === 'string' && scenario.length > 0;
 }

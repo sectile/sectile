@@ -3,7 +3,7 @@
 
 Coordinate one or several pressed actions within a roving focus group.
 
-## Examples
+## Usage
 
 ### Single
 
@@ -17,7 +17,13 @@ Select several values independently without collapsing the existing selection.
 
 <ComponentExample component="toggle-group" scenario="multiple" title="Multiple" description="Select several values independently without collapsing the existing selection." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="toggle-group" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/toggle-group`
 
@@ -29,15 +35,66 @@ Vue package: `@sectile/vue/toggle-group`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToggleGroupRootProps</code></li>
-  <li><code class="component-api-token">ToggleGroupRootSlotProps</code></li>
-  <li><code class="component-api-token">ToggleGroupItemProps</code></li>
-  <li><code class="component-api-token">ToggleGroupItemSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToggleGroupRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `readonly string[]` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `readonly string[]` | `[]` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `multiple` | `boolean` | `false` | Whether more than one value can be selected. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `deselectable` | `boolean` | `true` | Whether selecting the current item again clears it. |
+
+#### `ToggleGroupItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ToggleGroupRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `readonly string[]` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `ToggleGroupItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `pressed` | `boolean` | Whether the toggle is pressed. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `ToggleGroupRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
 ## Parts
 

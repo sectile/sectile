@@ -3,7 +3,7 @@
 
 Attach interactive supporting content to a trigger without blocking the page.
 
-## Examples
+## Usage
 
 ### Anchored
 
@@ -11,13 +11,21 @@ Keep the popup attached to its trigger while the surrounding layout changes.
 
 <ComponentExample component="popover" scenario="anchored" title="Anchored" description="Keep the popup attached to its trigger while the surrounding layout changes." :index="0" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="popover" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="1" />
+
+## Examples
+
 ### Collision
 
 Flip or shift the popup when its preferred side would leave the viewport.
 
-<ComponentExample component="popover" scenario="collision" title="Collision" description="Flip or shift the popup when its preferred side would leave the viewport." :index="1" />
+<ComponentExample component="popover" scenario="collision" title="Collision" description="Flip or shift the popup when its preferred side would leave the viewport." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/popover`
 
@@ -36,15 +44,55 @@ Vue package: `@sectile/vue/popover`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">PopoverRootProps</code></li>
-  <li><code class="component-api-token">PopoverRootSlotProps</code></li>
-  <li><code class="component-api-token">PopoverPartProps</code></li>
-  <li><code class="component-api-token">PopoverPortalProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `PopoverRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | Preferred side of the anchor for positioned content. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `align` | `'start' \| 'center' \| 'end'` | `'center'` | Alignment of positioned content relative to its anchor. |
+| `sideOffset` | `number` | `8` | Distance between positioned content and its anchor. |
+| `arrowPadding` | `Padding` | `8` | Minimum space kept between an arrow and the edge of positioned content. |
+| `autoFocus` | `boolean` | `true` | Whether focus moves into the component when it opens. |
+| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
+| `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
+| `closeOnInteractOutside` | `boolean` | `true` | Whether interaction outside the content closes it. |
+| `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
+| `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
+| `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
+| `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
+| `restoreFocus` | `boolean` | `true` | Whether focus returns to the trigger when open content closes. |
+| `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
+| `trapFocus` | `boolean` | `false` | Whether keyboard focus stays inside open content. |
+| `modal` | `boolean` | `false` | Whether open content blocks interaction with the surrounding page. |
+
+#### `PopoverPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `PopoverPortalProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+
+### Slots
+
+#### `PopoverRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
 
 ## Parts
 

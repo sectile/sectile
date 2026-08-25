@@ -3,7 +3,7 @@
 
 Switch between peer panels while coordinating focus and activation.
 
-## Examples
+## Usage
 
 ### Manual
 
@@ -17,7 +17,13 @@ Advance automatically while still exposing pause and direct navigation controls.
 
 <ComponentExample component="tabs" scenario="automatic" title="Automatic" description="Advance automatically while still exposing pause and direct navigation controls." :index="1" />
 
-## API reference
+### Vertical disabled
+
+Move vertically through actions while skipping an unavailable item.
+
+<ComponentExample component="tabs" scenario="vertical-disabled" title="Vertical disabled" description="Move vertically through actions while skipping an unavailable item." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/tabs`
 
@@ -32,20 +38,99 @@ Vue package: `@sectile/vue/tabs`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TabsActivationMode</code></li>
-  <li><code class="component-api-token">TabsRootProps</code></li>
-  <li><code class="component-api-token">TabsRootSlotProps</code></li>
-  <li><code class="component-api-token">TabsListProps</code></li>
-  <li><code class="component-api-token">TabsTriggerProps</code></li>
-  <li><code class="component-api-token">TabsTriggerSlotProps</code></li>
-  <li><code class="component-api-token">TabsContentProps</code></li>
-  <li><code class="component-api-token">TabsContentSlotProps</code></li>
-  <li><code class="component-api-token">TabsIndicatorProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TabsRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `activationMode` | `TabsActivationMode` | `'automatic'` | Whether focus activates a tab automatically or waits for explicit confirmation. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TabsListProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TabsTriggerProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TabsContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TabsIndicatorProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'span'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TabsRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `TabsTriggerSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+#### `TabsContentSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+
+### Events
+
+#### `TabsRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `activate` | `string` | Emitted when an item becomes active. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
+
+### Other types
+
+#### `TabsActivationMode`
+
+```ts
+type TabsActivationMode = 'automatic' | 'manual'
+```
 
 ## Parts
 

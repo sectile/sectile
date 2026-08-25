@@ -3,21 +3,57 @@
 
 여러 한 글자 입력 칸을 연결해 짧은 인증 번호를 입력합니다.
 
-## 예시
+## 용법
 
-### 인증 번호 번호
+### 인증 번호
 
 짧은 숫자 인증 번호를 한 칸씩 입력합니다.
 
-<ComponentExample component="pin-input" scenario="verification-code" title="인증 번호 번호" description="짧은 숫자 인증 번호를 한 칸씩 입력합니다." :index="0" />
+<ComponentExample component="pin-input" scenario="verification-code" title="인증 번호" description="짧은 숫자 인증 번호를 한 칸씩 입력합니다." :index="0" />
 
-### 미리 입력된 값
+### 입력 칸 수 설정
 
-완성된 값에서 시작하고 각 입력 칸을 따로 바꿀 수 있습니다.
+서비스에서 요구하는 번호 형식에 맞게 입력 칸 수를 설정합니다.
 
-<ComponentExample component="pin-input" scenario="prefilled" title="미리 입력된 값" description="완성된 값에서 시작하고 각 입력 칸을 따로 바꿀 수 있습니다." :index="1" />
+<ComponentExample component="pin-input" scenario="custom-length" title="입력 칸 수 설정" description="서비스에서 요구하는 번호 형식에 맞게 입력 칸 수를 설정합니다." :index="1" />
 
-## 공개 API
+### 입력값 가리기
+
+입력한 번호가 화면에 계속 보이면 안 될 때 문자를 가립니다.
+
+<ComponentExample component="pin-input" scenario="masked" title="입력값 가리기" description="입력한 번호가 화면에 계속 보이면 안 될 때 문자를 가립니다." :index="2" />
+
+### 입력 칸 자리표시자
+
+자리표시자를 값에 포함하지 않고 각 입력 칸에 전달합니다.
+
+<ComponentExample component="pin-input" scenario="placeholders" title="입력 칸 자리표시자" description="자리표시자를 값에 포함하지 않고 각 입력 칸에 전달합니다." :index="3" />
+
+### OTP 자동 완성
+
+입력값이 실제 일회용 인증 번호일 때만 OTP 자동 완성을 명시적으로 켭니다.
+
+<ComponentExample component="pin-input" scenario="otp" title="OTP 자동 완성" description="입력값이 실제 일회용 인증 번호일 때만 OTP 자동 완성을 명시적으로 켭니다." :index="4" />
+
+### 읽기 전용
+
+포커스로 값을 확인할 수 있지만 변경 요청은 모두 거부합니다.
+
+<ComponentExample component="pin-input" scenario="readonly" title="읽기 전용" description="포커스로 값을 확인할 수 있지만 변경 요청은 모두 거부합니다." :index="5" />
+
+### 비활성 항목
+
+키보드와 포인터 입력을 받지 않습니다.
+
+<ComponentExample component="pin-input" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="6" />
+
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="pin-input" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="7" />
+
+## API
 
 Vue 패키지: `@sectile/vue/pin-input`
 
@@ -29,15 +65,65 @@ Vue 패키지: `@sectile/vue/pin-input`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">PinInputRootProps</code></li>
-  <li><code class="component-api-token">PinInputRootSlotProps</code></li>
-  <li><code class="component-api-token">PinInputInputProps</code></li>
-  <li><code class="component-api-token">PinInputInputSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `PinInputRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `length` | `number` | `6` | 서로 연결된 한 글자 입력의 개수입니다. |
+| `modelValue` | `string` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string` | `''` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `mask` | `boolean` | `false` | 입력한 문자를 비밀번호 형태로 가릴지 여부입니다. |
+| `otp` | `boolean` | `false` | 첫 입력에서 일회용 코드 자동 완성을 명시적으로 사용할지 여부입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `name` | `string` | `undefined` | 네이티브 폼 제출에 사용할 이름입니다. |
+| `form` | `string` | `undefined` | 컨트롤을 연결할 네이티브 form 요소의 ID입니다. |
+| `label` | `string` | `'PIN'` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `PinInputPolicies` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `PinInputInputProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `index` | `number` | 필수 | 부모 컬렉션 안에서 이 파트의 0부터 시작하는 위치입니다. |
+| `as` | `PrimitiveAs` | `'input'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `PinInputRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `complete` | `boolean` | 필요한 모든 문자 또는 단계가 완료됐는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+#### `PinInputInputSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `index` | `number` | 부모 컬렉션 안의 0부터 시작하는 위치입니다. |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `character` | `string` | 이 입력 칸에 표시된 문자입니다. |
+| `complete` | `boolean` | 필요한 모든 문자 또는 단계가 완료됐는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+### 이벤트
+
+#### `PinInputRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `complete` | `string` | 필요한 모든 입력 칸이 채워질 때 발생합니다. |
 
 ## 파트
 

@@ -3,7 +3,7 @@
 
 문자열 입력을 검증하거나 계산하면서 정확한 십진수를 유지합니다.
 
-## 예시
+## 용법
 
 ### 정확한 값 정확한 소수
 
@@ -29,7 +29,7 @@
 
 <ComponentExample component="number-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="3" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/number-field`
 
@@ -40,12 +40,19 @@ Vue 패키지: `@sectile/vue/number-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">NumberFieldProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `NumberFieldProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `string \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `undefined` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `undefined` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `NumberFieldOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
 
 ## 파트
 

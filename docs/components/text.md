@@ -3,27 +3,35 @@
 
 Edit Unicode text while preserving selection and IME composition.
 
+## Usage
+
+### Unicode selection
+
+Move and replace selections by Unicode code point without splitting user-perceived text.
+
+<ComponentExample component="text" scenario="unicode-selection" title="Unicode selection" description="Move and replace selections by Unicode code point without splitting user-perceived text." :index="0" />
+
+### Multiline
+
+Edit multiple lines while preserving selection and composition state.
+
+<ComponentExample component="text" scenario="multiline" title="Multiline" description="Edit multiple lines while preserving selection and composition state." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="text" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
 ## Examples
 
 ### Ime mixed
 
 Edit Korean, Latin text, and emoji without splitting an active composition.
 
-<ComponentExample component="text" scenario="ime-mixed" title="Ime mixed" description="Edit Korean, Latin text, and emoji without splitting an active composition." :index="0" />
+<ComponentExample component="text" scenario="ime-mixed" title="Ime mixed" description="Edit Korean, Latin text, and emoji without splitting an active composition." :index="3" />
 
-### Unicode selection
-
-Move and replace selections by Unicode code point without splitting user-perceived text.
-
-<ComponentExample component="text" scenario="unicode-selection" title="Unicode selection" description="Move and replace selections by Unicode code point without splitting user-perceived text." :index="1" />
-
-### Multiline
-
-Edit multiple lines while preserving selection and composition state.
-
-<ComponentExample component="text" scenario="multiline" title="Multiline" description="Edit multiple lines while preserving selection and composition state." :index="2" />
-
-## API reference
+## API
 
 Vue package: `@sectile/vue/text`
 
@@ -34,13 +42,42 @@ Vue package: `@sectile/vue/text`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TextFieldProps</code></li>
-  <li><code class="component-api-token">TextFieldModelModifiers</code></li>
-</ul>
-</div>
+### Props
+
+#### `TextFieldProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `string \| number` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| number` | `''` | Initial value used when the component owns its state. |
+| `placeholder` | `string` | `undefined` | Text shown when no value has been entered. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `autocomplete` | `string` | `undefined` | Native autocomplete hint forwarded to the editable input. |
+| `modelModifiers` | `TextFieldModelModifiers` | `{}` | Vue v-model modifiers applied to text updates. |
+| `multiline` | `boolean` | `false` | Whether the text field renders a textarea. |
+| `type` | `string` | `'text'` | Selection or behavior mode used by the component. |
+
+### Events
+
+#### `TextField`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| number` | Emitted when the component requests a new controlled value. |
+
+### Other types
+
+#### `TextFieldModelModifiers`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `lazy` | `boolean` | — |
+| `number` | `boolean` | — |
+| `trim` | `boolean` | — |
 
 ## Parts
 

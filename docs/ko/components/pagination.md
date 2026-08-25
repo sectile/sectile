@@ -3,7 +3,7 @@
 
 큰 결과 목록을 직접 이동 가능한 페이지와 경계 버튼으로 줄여 보여 줍니다.
 
-## 예시
+## 용법
 
 ### 간결한 표시
 
@@ -11,25 +11,33 @@
 
 <ComponentExample component="pagination" scenario="compact" title="간결한 표시" description="가로 공간이 좁을 때 필요한 제어 요소만 표시합니다." :index="0" />
 
-### 긴 범위
-
-모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다.
-
-<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다." :index="1" />
-
 ### 페이지당 항목 수
 
 페이지당 항목 수를 바꾸고 필요하면 유효한 첫 페이지로 이동합니다.
 
-<ComponentExample component="pagination" scenario="page-size" title="페이지당 항목 수" description="페이지당 항목 수를 바꾸고 필요하면 유효한 첫 페이지로 이동합니다." :index="2" />
+<ComponentExample component="pagination" scenario="page-size" title="페이지당 항목 수" description="페이지당 항목 수를 바꾸고 필요하면 유효한 첫 페이지로 이동합니다." :index="1" />
 
 ### 페이지 번호만 표시
 
 처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다.
 
-<ComponentExample component="pagination" scenario="pages-only" title="페이지 번호만 표시" description="처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다." :index="3" />
+<ComponentExample component="pagination" scenario="pages-only" title="페이지 번호만 표시" description="처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다." :index="2" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="pagination" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="3" />
+
+## 예시
+
+### 긴 범위
+
+모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다.
+
+<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다." :index="4" />
+
+## API
 
 Vue 패키지: `@sectile/vue/pagination`
 
@@ -45,15 +53,62 @@ Vue 패키지: `@sectile/vue/pagination`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">PaginationRootProps</code></li>
-  <li><code class="component-api-token">PaginationRootSlotProps</code></li>
-  <li><code class="component-api-token">PaginationItemProps</code></li>
-  <li><code class="component-api-token">PaginationItemSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `PaginationRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `total` | `number` | 필수 | 페이지 나누기가 나타내는 전체 레코드 수입니다. |
+| `modelValue` | `number` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `number` | `1` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `itemsPerPage` | `number` | `undefined` | 한 페이지에 표시할 외부 제어 항목 수입니다. |
+| `defaultItemsPerPage` | `number` | `10` | 컴포넌트가 관리하는 초기 페이지당 항목 수입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `label` | `string` | `'Pagination'` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `as` | `PrimitiveAs` | `'nav'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `showControls` | `boolean` | `true` | 처음·이전·다음·마지막 이동 버튼을 포함할지 여부입니다. |
+| `showEdges` | `boolean` | `true` | 첫 페이지와 마지막 페이지 번호를 항상 표시할지 여부입니다. |
+| `siblingCount` | `number` | `1` | 현재 페이지 양옆에 표시할 페이지 수입니다. |
+
+#### `PaginationItemProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `item` | `PaginationViewItem` | 필수 | 이 파트가 렌더링할 페이지 항목입니다. |
+| `as` | `PrimitiveAs` | `'button'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `PaginationRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `items` | `readonly PaginationViewItem[]` | 현재 계산된 항목 컬렉션입니다. |
+| `page` | `number` | 1부터 시작하는 현재 페이지 번호입니다. |
+| `itemsPerPage` | `number` | 현재 페이지당 레코드 수입니다. |
+| `pageCount` | `number` | 사용 가능한 전체 페이지 수입니다. |
+| `range` | `PaginationItemRange` | 현재 시작값과 종료값입니다. |
+
+#### `PaginationItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `item` | `PaginationViewItem` | 현재 페이지 항목입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+
+### 이벤트
+
+#### `PaginationRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `number` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:itemsPerPage` | `number` | 새 페이지당 항목 수를 요청할 때 발생합니다. |
 
 ## 파트
 

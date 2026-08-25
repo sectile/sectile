@@ -3,7 +3,7 @@
 
 Project a large result set into direct pages and boundary controls.
 
-## Examples
+## Usage
 
 ### Compact
 
@@ -11,25 +11,33 @@ Use a reduced control set when horizontal space is limited.
 
 <ComponentExample component="pagination" scenario="compact" title="Compact" description="Use a reduced control set when horizontal space is limited." :index="0" />
 
-### Long range
-
-Navigate a large result set without rendering every page number.
-
-<ComponentExample component="pagination" scenario="long-range" title="Long range" description="Navigate a large result set without rendering every page number." :index="1" />
-
 ### Page size
 
 Change the number of items per page and return to the first valid page when necessary.
 
-<ComponentExample component="pagination" scenario="page-size" title="Page size" description="Change the number of items per page and return to the first valid page when necessary." :index="2" />
+<ComponentExample component="pagination" scenario="page-size" title="Page size" description="Change the number of items per page and return to the first valid page when necessary." :index="1" />
 
 ### Pages only
 
 Render direct page choices without first and last controls.
 
-<ComponentExample component="pagination" scenario="pages-only" title="Pages only" description="Render direct page choices without first and last controls." :index="3" />
+<ComponentExample component="pagination" scenario="pages-only" title="Pages only" description="Render direct page choices without first and last controls." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="pagination" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## Examples
+
+### Long range
+
+Navigate a large result set without rendering every page number.
+
+<ComponentExample component="pagination" scenario="long-range" title="Long range" description="Navigate a large result set without rendering every page number." :index="4" />
+
+## API
 
 Vue package: `@sectile/vue/pagination`
 
@@ -45,15 +53,62 @@ Vue package: `@sectile/vue/pagination`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">PaginationRootProps</code></li>
-  <li><code class="component-api-token">PaginationRootSlotProps</code></li>
-  <li><code class="component-api-token">PaginationItemProps</code></li>
-  <li><code class="component-api-token">PaginationItemSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `PaginationRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `total` | `number` | Required | Total number of records represented by pagination. |
+| `modelValue` | `number` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `number` | `1` | Initial value used when the component owns its state. |
+| `itemsPerPage` | `number` | `undefined` | Controlled number of records shown per page. |
+| `defaultItemsPerPage` | `number` | `10` | Initial uncontrolled number of records shown per page. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `'Pagination'` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'nav'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `showControls` | `boolean` | `true` | Whether first, previous, next, and last controls are included. |
+| `showEdges` | `boolean` | `true` | Whether the first and last page numbers remain visible. |
+| `siblingCount` | `number` | `1` | Number of adjacent page choices shown around the current page. |
+
+#### `PaginationItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `item` | `PaginationViewItem` | Required | Pagination item rendered by this part. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `PaginationRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `items` | `readonly PaginationViewItem[]` | Current derived item collection. |
+| `page` | `number` | Current one-based page number. |
+| `itemsPerPage` | `number` | Number of records currently shown per page. |
+| `pageCount` | `number` | Total number of available pages. |
+| `range` | `PaginationItemRange` | Current start and end values. |
+
+#### `PaginationItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `item` | `PaginationViewItem` | Current pagination item. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `PaginationRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `number` | Emitted when the component requests a new controlled value. |
+| `update:itemsPerPage` | `number` | Emitted when the requested page size changes. |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 Resize adjacent panes with a quantized, keyboard-accessible separator.
 
-## Examples
+## Usage
 
 ### Horizontal
 
@@ -17,13 +17,21 @@ Use vertical movement while preserving the same pane-size rules.
 
 <ComponentExample component="window-splitter" scenario="vertical" title="Vertical" description="Use vertical movement while preserving the same pane-size rules." :index="1" />
 
-### Mixed workspace
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="window-splitter" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## Examples
+
+### Mixed orientation
 
 Combine a resizable sidebar with an independently adjustable editor and preview stack.
 
-<ComponentExample component="window-splitter" scenario="nested-layout" title="Mixed workspace" description="Combine a resizable sidebar with an independently adjustable editor and preview stack." :index="2" />
+<ComponentExample component="window-splitter" scenario="nested-layout" title="Mixed orientation" description="Combine a resizable sidebar with an independently adjustable editor and preview stack." :index="3" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/window-splitter`
 
@@ -36,13 +44,43 @@ Vue package: `@sectile/vue/window-splitter`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">WindowSplitterRootProps</code></li>
-  <li><code class="component-api-token">WindowSplitterPaneProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `WindowSplitterRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `number \| string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `number \| string` | `50` | Initial value used when the component owns its state. |
+| `min` | `number \| string` | `0` | Smallest value accepted by the component. |
+| `max` | `number \| string` | `100` | Largest value accepted by the component. |
+| `step` | `number \| string` | `1` | Smallest value increment accepted by the component. |
+| `pageStep` | `number` | `10` | Larger increment used by Page Up and Page Down. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `'Resize panels'` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `formatValue` | `(value: string) => string` | `undefined` | Formats a value for visible text. |
+
+#### `WindowSplitterPaneProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `side` | `'before' \| 'after'` | Required | Preferred side of the anchor for positioned content. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Events
+
+#### `WindowSplitterRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

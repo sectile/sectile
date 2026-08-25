@@ -3,7 +3,7 @@
 
 Edit an exact color through native, text, channel, and spatial controls.
 
-## Examples
+## Usage
 
 ### Native
 
@@ -17,7 +17,13 @@ Edit the alpha channel together with the visible color channels.
 
 <ComponentExample component="color-picker" scenario="alpha" title="Alpha" description="Edit the alpha channel together with the visible color channels." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="color-picker" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/color-picker`
 
@@ -42,26 +48,161 @@ Vue package: `@sectile/vue/color-picker`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ColorPickerRootProps</code></li>
-  <li><code class="component-api-token">ColorPickerRootSlotProps</code></li>
-  <li><code class="component-api-token">ColorPickerPartProps</code></li>
-  <li><code class="component-api-token">ColorPickerChannelInputProps</code></li>
-  <li><code class="component-api-token">ColorPickerFormatTriggerProps</code></li>
-  <li><code class="component-api-token">ColorPickerCoordinateInputProps</code></li>
-  <li><code class="component-api-token">ColorPickerCoordinateSliderProps</code></li>
-  <li><code class="component-api-token">ColorAreaValue</code></li>
-  <li><code class="component-api-token">ColorChannel</code></li>
-  <li><code class="component-api-token">ColorCoordinate</code></li>
-  <li><code class="component-api-token">ColorCoordinateValue</code></li>
-  <li><code class="component-api-token">ColorFormat</code></li>
-  <li><code class="component-api-token">ColorModel</code></li>
-  <li><code class="component-api-token">ColorPickerPolicies</code></li>
-  <li><code class="component-api-token">ColorValue</code></li>
-</ul>
-</div>
+### Props
+
+#### `ColorPickerRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `'#5b6df6'` | Initial value used when the component owns its state. |
+| `draft` | `string \| null` | `undefined` | Controlled editable draft before commit. |
+| `defaultDraft` | `string \| null` | `null` | Editable draft used for uncontrolled initial state. |
+| `format` | `ColorFormat` | `undefined` | Controlled color format. |
+| `defaultFormat` | `ColorFormat` | `'hex'` | Initial uncontrolled color format. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `allowAlpha` | `boolean` | `true` | Whether the color value may include transparency. |
+| `alphaStep` | `number` | `17` | Increment applied when the alpha channel changes. |
+| `channelStep` | `number` | `1` | Increment applied when a color channel changes. |
+
+#### `ColorPickerPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ColorPickerChannelInputProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `channel` | `ColorChannel` | Required | Color channel edited by this input. |
+| `as` | `PrimitiveAs` | `'input'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ColorPickerFormatTriggerProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `format` | `ColorFormat` | Required | Controlled color format. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ColorPickerCoordinateInputProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `coordinate` | `ColorCoordinate` | Required | Coordinate edited within the selected color model. |
+| `format` | `ColorModel` | Required | Controlled color format. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ColorPickerCoordinateSliderProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `coordinate` | `ColorCoordinate` | Required | Coordinate edited within the selected color model. |
+| `format` | `ColorModel` | Required | Controlled color format. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ColorPickerRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `ColorValue` | Current value exposed by this contract. |
+| `draft` | `string \| null` | Current uncommitted input text. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `area` | `ColorAreaValue` | Current two-dimensional color area state. |
+| `channel` | `ColorChannel` | Current color channel. |
+| `coordinates` | `readonly ColorCoordinateValue[]` | Current coordinates in the active color model. |
+| `cssColor` | `string` | Current color serialized for CSS. |
+| `format` | `ColorFormat` | Current color format. |
+| `text` | `string` | Formatted text for the current value. |
+
+### Events
+
+#### `ColorPickerRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `update:draft` | `string \| null` | Emitted when the editable draft changes. |
+| `update:format` | `ColorFormat` | Emitted when the requested color format changes. |
+
+### Other types
+
+#### `ColorAreaValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `x` | `number` | Yes |
+| `y` | `number` | Yes |
+| `hue` | `number` | Yes |
+| `alpha` | `number` | Yes |
+
+#### `ColorChannel`
+
+```ts
+type ColorChannel = 'red' | 'green' | 'blue' | 'alpha'
+```
+
+#### `ColorCoordinate`
+
+```ts
+type ColorCoordinate = ColorChannel | 'hue' | 'saturation' | 'lightness' | 'value' | 'cyan' | 'magenta' | 'yellow' | 'black' | 'chroma'
+```
+
+#### `ColorCoordinateValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `coordinate` | `ColorCoordinate` | Yes |
+| `label` | `string` | Yes |
+| `value` | `number` | Yes |
+| `min` | `number` | Yes |
+| `max` | `number` | Yes |
+| `step` | `number` | Yes |
+| `unit` | `'' \| '%' \| '°'` | Yes |
+
+#### `ColorFormat`
+
+```ts
+type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk' | 'oklch'
+```
+
+#### `ColorModel`
+
+```ts
+type ColorModel = Exclude<ColorFormat, 'hex'>
+```
+
+#### `ColorPickerPolicies`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `allowAlpha` | `boolean` | — |
+| `channelStep` | `number` | — |
+| `alphaStep` | `number` | — |
+
+#### `ColorValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `red` | `number` | Yes |
+| `green` | `number` | Yes |
+| `blue` | `number` | Yes |
+| `alpha` | `number` | Yes |
 
 ## Parts
 

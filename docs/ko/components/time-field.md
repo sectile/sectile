@@ -3,7 +3,7 @@
 
 시간대와 무관한 시각을 입력하고 검증합니다.
 
-## 예시
+## 용법
 
 ### 시각 시각
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="time-field" scenario="stepped" title="일정 간격" description="설정한 간격에 맞는 값만 입력하고 조절합니다." :index="1" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="time-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/time-field`
 
@@ -28,13 +34,28 @@ Vue 패키지: `@sectile/vue/time-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TimeValue</code></li>
-  <li><code class="component-api-token">TimeFieldProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TimeFieldProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `TimeValue \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `TimeValue \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `undefined` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `undefined` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `TimeFieldOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `native` | `boolean` | `undefined` | 브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다. |
+
+### 기타 타입
+
+#### `TimeValue`
+
+```ts
+type TimeValue = NonNullable<TimeFieldOptions['value']>
+```
 
 ## 파트
 

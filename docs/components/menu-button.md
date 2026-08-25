@@ -3,21 +3,27 @@
 
 Open a command menu from one trigger and restore focus on dismissal.
 
-## Examples
+## Usage
 
-### Create menu
+### Action menu
 
 Create or import workspace resources from one compact trigger.
 
-<ComponentExample component="menu-button" scenario="actions" title="Create menu" description="Create or import workspace resources from one compact trigger." :index="0" />
+<ComponentExample component="menu-button" scenario="actions" title="Action menu" description="Create or import workspace resources from one compact trigger." :index="0" />
 
-### Export menu
+### Nested submenu
 
 Keep secondary export formats inside the Export as command.
 
-<ComponentExample component="menu-button" scenario="nested" title="Export menu" description="Keep secondary export formats inside the Export as command." :index="1" />
+<ComponentExample component="menu-button" scenario="nested" title="Nested submenu" description="Keep secondary export formats inside the Export as command." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="menu-button" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/menu-button`
 
@@ -33,17 +39,76 @@ Vue package: `@sectile/vue/menu-button`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">MenuButtonRootProps</code></li>
-  <li><code class="component-api-token">MenuItemProps</code></li>
-  <li><code class="component-api-token">MenuItemSlotProps</code></li>
-  <li><code class="component-api-token">MenuPartProps</code></li>
-  <li><code class="component-api-token">MenuRootSlotProps</code></li>
-  <li><code class="component-api-token">MenuSubContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `MenuButtonRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `undefined` | Initial uncontrolled open state. |
+| `disabledItems` | `readonly string[]` | `undefined` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MenuPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuSubContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | `string` | Required | Value or ID of the related part targeted by this component. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `MenuItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+#### `MenuRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `openPath` | `readonly string[]` | Ordered values in the open menu path. |
+
+### Events
+
+#### `MenuButtonRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 시간대 변환 없이 날짜와 현지 시각을 함께 편집합니다.
 
-## 예시
+## 용법
 
 ### 현지 일정 일정 선택
 
@@ -11,13 +11,21 @@
 
 <ComponentExample component="date-time-field" scenario="local-schedule" title="현지 일정 일정 선택" description="시간대 변환 없이 날짜와 현지 시각을 하나의 일정으로 확정합니다." :index="0" />
 
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="date-time-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="1" />
+
+## 예시
+
 ### 넘나드는 자정 넘김
 
 종료 시각이 다음 날로 넘어가는 일정도 올바르게 유지합니다.
 
-<ComponentExample component="date-time-field" scenario="cross-midnight" title="넘나드는 자정 넘김" description="종료 시각이 다음 날로 넘어가는 일정도 올바르게 유지합니다." :index="1" />
+<ComponentExample component="date-time-field" scenario="cross-midnight" title="넘나드는 자정 넘김" description="종료 시각이 다음 날로 넘어가는 일정도 올바르게 유지합니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/date-time-field`
 
@@ -28,13 +36,28 @@ Vue 패키지: `@sectile/vue/date-time-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateTimeValue</code></li>
-  <li><code class="component-api-token">DateTimeFieldProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateTimeFieldProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `DateTimeValue \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `DateTimeValue \| null` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `undefined` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `undefined` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `undefined` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `DateTimeFieldOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `native` | `boolean` | `undefined` | 브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다. |
+
+### 기타 타입
+
+#### `DateTimeValue`
+
+```ts
+type DateTimeValue = NonNullable<DateTimeFieldOptions['value']>
+```
 
 ## 파트
 

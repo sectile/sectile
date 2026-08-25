@@ -3,7 +3,7 @@ import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, extname, relative, resolve } from 'node:path';
 import catalog from '../data/components.json' with { type: 'json' };
 import { componentAnatomy } from '../.vitepress/theme/component-anatomy.ts';
-import { documentedScenarios } from '../data/component-documentation.mjs';
+import { documentedScenarios, documentedSections } from '../data/component-documentation.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const markdown = await paths(root, '.md');
@@ -78,6 +78,7 @@ for (const localeRoot of ['', 'ko']) {
     const catalogEntry = catalog.components.find((entry) => entry.id === componentId);
     assert.ok(catalogEntry, `catalog entry required for ${componentId}`);
     const scenarios = documentedScenarios(catalogEntry);
+    const sections = documentedSections(catalogEntry);
     assert.ok(scenarios.length >= 1, `${componentId} requires at least one meaningful DOM documentation example`);
     for (const scenario of scenarios) {
       const marker = `<ComponentExample component="${componentId}" scenario="${scenario}"`;
@@ -91,20 +92,23 @@ for (const localeRoot of ['', 'ko']) {
       .map((match) => match[1]);
     assert.deepEqual(
       renderedScenarios,
-      [...scenarios],
+      [...sections.usage, ...sections.examples],
       `${localeRoot || 'English'} ${componentId} must render only its curated DOM examples in order`,
     );
     const requiredHeadings = localeRoot === 'ko'
-      ? ['## 예시', '## 공개 API', '## 파트', '## 키보드 동작', '## 접근성']
-      : ['## Examples', '## API reference', '## Parts', '## Keyboard interaction', '## Accessibility'];
+      ? ['## 용법', '## API', '## 파트', '## 키보드 동작', '## 접근성']
+      : ['## Usage', '## API', '## Parts', '## Keyboard interaction', '## Accessibility'];
+    if (sections.examples.length > 0) {
+      requiredHeadings.splice(1, 0, localeRoot === 'ko' ? '## 예시' : '## Examples');
+    }
     for (const heading of requiredHeadings) {
       assert.equal(component.includes(heading), true, `${localeRoot || 'English'} ${componentId} requires ${heading}`);
     }
     for (const heading of ['## Features', '## 지원 기능', '## Example cases', '## 추가 예시']) {
       assert.equal(component.includes(heading), false, `${localeRoot || 'English'} ${componentId} must expose specific behavior sections instead of ${heading}`);
     }
-    assert.equal(component.includes('## Anatomy'), false, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with Anatomy`);
-    assert.equal(component.includes('## 구성'), false, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with 구성`);
+    assert.doesNotMatch(component, /^## Anatomy$/mu, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with Anatomy`);
+    assert.doesNotMatch(component, /^## 구성$/mu, `${localeRoot || 'English'} ${componentId} must not duplicate Parts with 구성`);
     assert.equal(component.includes('<ComponentAnatomy'), false, `${localeRoot || 'English'} ${componentId} must not render ComponentAnatomy`);
     assert.equal(
       component.includes(`@sectile/vue/${componentId}`),

@@ -3,7 +3,7 @@
 
 입력 필드와 달력을 연결해 현지 날짜와 시각을 고릅니다.
 
-## 예시
+## 용법
 
 ### 일정 선택
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="date-time-picker" scenario="morning" title="오전" description="오전의 날짜와 시각을 하나의 현지 일정으로 선택합니다." :index="1" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="date-time-picker" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/date-time-picker`
 
@@ -45,18 +51,96 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateTimePickerRootProps</code></li>
-  <li><code class="component-api-token">DateTimeValue</code></li>
-  <li><code class="component-api-token">DateValue</code></li>
-  <li><code class="component-api-token">DateTimePickerCellSlotProps</code></li>
-  <li><code class="component-api-token">DateTimePickerMonthCellSlotProps</code></li>
-  <li><code class="component-api-token">DateTimePickerPartProps</code></li>
-  <li><code class="component-api-token">DateTimePickerRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateTimePickerRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `DateTimeValue \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `DateTimeValue \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `highlightedValue` | `DateValue` | `undefined` | 키보드 조작 대상으로 강조된 현재 값입니다. |
+| `defaultHighlightedValue` | `DateValue` | `undefined` | 컴포넌트가 관리하는 처음 강조 값입니다. |
+| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `DateTimePickerOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `defaultView` | `PickerRootSlotProps['viewMode']` | `'month'` | 달력 또는 선택기의 초기 보기입니다. |
+
+#### `DateTimePickerPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `DateTimePickerCellSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `DateValue` | 이 계약이 노출하는 현재 값입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `inRange` | `boolean` | 선택한 범위 안에 있는 값인지 여부입니다. |
+| `outsideMonth` | `boolean` | 인접한 달의 날짜인지 여부입니다. |
+
+#### `DateTimePickerMonthCellSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `DatePickerMonthValue` | 이 계약이 노출하는 현재 값입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `inRange` | `boolean` | 선택한 범위 안에 있는 값인지 여부입니다. |
+
+#### `DateTimePickerRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `PickerValue` | 이 계약이 노출하는 현재 값입니다. |
+| `highlightedValue` | `DateValue` | 조작 대상으로 강조된 현재 값입니다. |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `view` | `{ readonly year: number; readonly month: number }` | 현재 달력 기준점입니다. |
+| `viewMode` | `DatePickerViewMode` | 현재 달력 보기 방식입니다. |
+| `dates` | `readonly (readonly DateValue[])[]` | 현재 보기에 표시할 날짜입니다. |
+| `months` | `readonly (readonly DatePickerMonthValue[])[]` | 현재 보기에 표시할 달입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `years` | `readonly (readonly PickerYearValue[])[]` | 현재 보기에 표시할 연도입니다. |
+
+### 이벤트
+
+#### `DateTimePickerRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `PickerValue` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:highlightedValue` | `DateValue` | 새 강조 값을 요청할 때 발생합니다. |
+| `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `DateTimeValue`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `date` | `DateValue` | 필수 |
+| `time` | `TimeValue` | 필수 |
+
+#### `DateValue`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `year` | `number` | 필수 |
+| `month` | `number` | 필수 |
+| `day` | `number` | 필수 |
 
 ## 파트
 

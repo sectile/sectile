@@ -3,21 +3,39 @@
 
 Browse an expandable hierarchy while keeping focus and selection distinct.
 
-## Examples
+## Usage
 
-### Project explorer
+### Expanded hierarchy
 
 Browse a realistic project hierarchy while each folder keeps its own independent expansion state.
 
-<ComponentExample component="tree-view" scenario="expanded" title="Project explorer" description="Browse a realistic project hierarchy while each folder keeps its own independent expansion state." :index="0" />
+<ComponentExample component="tree-view" scenario="expanded" title="Expanded hierarchy" description="Browse a realistic project hierarchy while each folder keeps its own independent expansion state." :index="0" />
 
-### Review selection
+### Collapsed
+
+Start with descendants hidden, then reveal them without changing the source data.
+
+<ComponentExample component="tree-view" scenario="collapsed" title="Collapsed" description="Start with descendants hidden, then reveal them without changing the source data." :index="1" />
+
+### Multiple selection
 
 Choose several files for review without confusing selection with folder expansion.
 
-<ComponentExample component="tree-view" scenario="multiple" title="Review selection" description="Choose several files for review without confusing selection with folder expansion." :index="1" />
+<ComponentExample component="tree-view" scenario="multiple" title="Multiple selection" description="Choose several files for review without confusing selection with folder expansion." :index="2" />
 
-## API reference
+### Unavailable
+
+Keep an unavailable tree item visible while excluding it from activation.
+
+<ComponentExample component="tree-view" scenario="unavailable" title="Unavailable" description="Keep an unavailable tree item visible while excluding it from activation." :index="3" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="tree-view" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="4" />
+
+## API
 
 Vue package: `@sectile/vue/tree-view`
 
@@ -31,17 +49,99 @@ Vue package: `@sectile/vue/tree-view`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TreeViewRootProps</code></li>
-  <li><code class="component-api-token">TreeViewRootSlotProps</code></li>
-  <li><code class="component-api-token">TreeViewItemSlotProps</code></li>
-  <li><code class="component-api-token">TreeViewPartProps</code></li>
-  <li><code class="component-api-token">TreeNodeInput</code></li>
-  <li><code class="component-api-token">TreeViewPolicies</code></li>
-</ul>
-</div>
+### Props
+
+#### `TreeViewRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `nodes` | `readonly TreeNodeInput<string>[]` | Required | Flat hierarchy used to build the tree. |
+| `modelValue` | `readonly string[]` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `readonly string[]` | `[]` | Initial value used when the component owns its state. |
+| `highlightedValue` | `string \| null` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
+| `expandedValues` | `readonly string[]` | `undefined` | Controlled values whose descendants are visible. |
+| `defaultExpandedValues` | `readonly string[]` | `[]` | Initially expanded values for uncontrolled state. |
+| `selectionMode` | `TreeViewSelectionMode` | `'single'` | Whether selection contains one value or multiple values. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `TreeViewPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TreeViewPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TreeViewGroupProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | `string` | Required | Value or ID of the related part targeted by this component. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TreeViewRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `readonly string[]` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `expandedValues` | `readonly string[]` | Values whose descendants are visible. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `TreeViewItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selectedValues` | `readonly string[]` | Current selected values. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `expandedValues` | `readonly string[]` | Values whose descendants are visible. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `expanded` | `boolean` | Whether descendants are visible. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `TreeViewRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
+| `update:expandedValues` | `readonly string[]` | Emitted when the requested expanded values change. |
+
+### Other types
+
+#### `TreeViewPolicies`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `eligible` | `(id: ID) => boolean` | — |
+
+#### `TreeNodeInput`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `id` | `ID` | Yes |
+| `parentID` | `ID \| null` | Yes |
+
+#### `TreeViewSelectionMode`
+
+```ts
+type TreeViewSelectionMode = 'single' | 'multiple'
+```
 
 ## Parts
 

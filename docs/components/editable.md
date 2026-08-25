@@ -3,7 +3,7 @@
 
 Switch inline content between preview and validated editing states.
 
-## Examples
+## Usage
 
 ### Basic
 
@@ -17,7 +17,13 @@ Reject an invalid edit while preserving the last accepted value.
 
 <ComponentExample component="editable" scenario="validated" title="Validated" description="Reject an invalid edit while preserving the last accepted value." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="editable" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/editable`
 
@@ -34,14 +40,50 @@ Vue package: `@sectile/vue/editable`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">EditableRootProps</code></li>
-  <li><code class="component-api-token">EditableRootSlotProps</code></li>
-  <li><code class="component-api-token">EditablePartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `EditableRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `EditablePolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `submitOnBlur` | `boolean` | `false` | Whether leaving the editor commits the current draft. |
+
+#### `EditablePartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `EditableRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `draft` | `string` | Current uncommitted input text. |
+| `editing` | `boolean` | Whether editing is active. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `EditableRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `update:editing` | `boolean` | Emitted when editing starts or stops. |
 
 ## Parts
 

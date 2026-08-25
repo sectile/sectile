@@ -3,7 +3,7 @@
 
 Create, navigate, and remove free-form tokens from one text field.
 
-## Examples
+## Usage
 
 ### Skills
 
@@ -11,7 +11,19 @@ Create and remove free-form skill tags without losing input focus.
 
 <ComponentExample component="tags-input" scenario="skills" title="Skills" description="Create and remove free-form skill tags without losing input focus." :index="0" />
 
-## API reference
+### Limited
+
+Enforce the configured item or visible-notification limit without losing existing values.
+
+<ComponentExample component="tags-input" scenario="limited" title="Limited" description="Enforce the configured item or visible-notification limit without losing existing values." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="tags-input" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/tags-input`
 
@@ -27,16 +39,69 @@ Vue package: `@sectile/vue/tags-input`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TagsInputRootProps</code></li>
-  <li><code class="component-api-token">TagsInputRootSlotProps</code></li>
-  <li><code class="component-api-token">TagsInputItemProps</code></li>
-  <li><code class="component-api-token">TagsInputItemSlotProps</code></li>
-  <li><code class="component-api-token">TagsInputPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TagsInputRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `readonly string[]` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `readonly string[]` | `[]` | Initial value used when the component owns its state. |
+| `inputValue` | `string` | `undefined` | Controlled text currently shown by the editable input. |
+| `defaultInputValue` | `string` | `''` | Initial uncontrolled text shown by the editable input. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `'Tags'` | Accessible name announced for the control. |
+| `policies` | `TagsInputPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TagsInputItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `index` | `number` | Required | Zero-based position of this part in its parent collection. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TagsInputPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TagsInputRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `readonly string[]` | Current value exposed by this contract. |
+| `inputValue` | `string` | Current editable input text. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `TagsInputItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `index` | `number` | Zero-based position in the parent collection. |
+| `value` | `string` | Current value exposed by this contract. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `TagsInputRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
+| `update:inputValue` | `string` | Emitted when editable input text changes. |
 
 ## Parts
 

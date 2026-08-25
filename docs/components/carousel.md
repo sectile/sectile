@@ -3,7 +3,7 @@
 
 Move through a bounded or wrapping sequence of slides with direct controls.
 
-## Examples
+## Usage
 
 ### Wrapping
 
@@ -23,7 +23,13 @@ Pause automatic carousel movement while keeping manual navigation available.
 
 <ComponentExample component="carousel" scenario="paused" title="Paused" description="Pause automatic carousel movement while keeping manual navigation available." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="carousel" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/carousel`
 
@@ -42,15 +48,64 @@ Vue package: `@sectile/vue/carousel`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CarouselRootProps</code></li>
-  <li><code class="component-api-token">CarouselRootSlotProps</code></li>
-  <li><code class="component-api-token">CarouselSlideSlotProps</code></li>
-  <li><code class="component-api-token">CarouselPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CarouselRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `slides` | `readonly string[]` | Required | Ordered slide values managed by the carousel. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `undefined` | Initial value used when the component owns its state. |
+| `paused` | `boolean` | `undefined` | Controlled pause state. |
+| `defaultPaused` | `boolean` | `false` | Initial uncontrolled pause state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `CarouselPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'section'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `autoplay` | `boolean \| CarouselAutoplayOptions` | `false` | Whether the carousel advances without direct input. |
+
+#### `CarouselPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `CarouselRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `index` | `number \| null` | Zero-based position in the parent collection. |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `count` | `number` | Number of values in the collection. |
+| `paused` | `boolean` | Whether automatic updates are paused. |
+
+#### `CarouselSlideSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `index` | `number \| null` | Zero-based position in the parent collection. |
+| `value` | `string` | Current value exposed by this contract. |
+| `active` | `boolean` | Whether this item is currently active. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `count` | `number` | Number of values in the collection. |
+| `paused` | `boolean` | Whether automatic updates are paused. |
+
+### Events
+
+#### `CarouselRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:paused` | `boolean` | Emitted when the component requests a new pause state. |
+| `announce` | `string` | Emitted when assistive feedback should be announced. |
 
 ## Parts
 

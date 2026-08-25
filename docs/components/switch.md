@@ -3,7 +3,7 @@
 
 Toggle one persistent setting with an immediate state change.
 
-## Examples
+## Usage
 
 ### Notifications
 
@@ -11,7 +11,19 @@ Toggle deployment notifications with one immediate action.
 
 <ComponentExample component="switch" scenario="off" title="Notifications" description="Toggle deployment notifications with one immediate action." :index="0" />
 
-## API reference
+### On
+
+Start on and expose the active state without changing the control label.
+
+<ComponentExample component="switch" scenario="on" title="On" description="Start on and expose the active state without changing the control label." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="switch" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/switch`
 
@@ -23,14 +35,47 @@ Vue package: `@sectile/vue/switch`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">SwitchRootProps</code></li>
-  <li><code class="component-api-token">SwitchSlotProps</code></li>
-  <li><code class="component-api-token">SwitchThumbProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `SwitchRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | `'on'` | Current value exposed by this contract. |
+| `modelValue` | `boolean` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `boolean` | `false` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `SwitchThumbProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'span'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `SwitchSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `checked` | `boolean` | Whether the control is checked. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `SwitchRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `boolean` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

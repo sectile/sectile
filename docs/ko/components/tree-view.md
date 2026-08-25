@@ -3,21 +3,39 @@
 
 포커스와 선택을 나눠 유지하면서 펼칠 수 있는 계층을 탐색합니다.
 
-## 예시
+## 용법
 
-### 프로젝트 탐색
+### 계층 펼치기
 
 각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다.
 
-<ComponentExample component="tree-view" scenario="expanded" title="프로젝트 탐색" description="각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다." :index="0" />
+<ComponentExample component="tree-view" scenario="expanded" title="계층 펼치기" description="각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다." :index="0" />
 
-### 검토 파일 선택
+### 접힌 상태
+
+원본 계층은 유지한 채 하위 항목을 숨겼다가 다시 펼칩니다.
+
+<ComponentExample component="tree-view" scenario="collapsed" title="접힌 상태" description="원본 계층은 유지한 채 하위 항목을 숨겼다가 다시 펼칩니다." :index="1" />
+
+### 여러 항목 선택
 
 폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다.
 
-<ComponentExample component="tree-view" scenario="multiple" title="검토 파일 선택" description="폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다." :index="1" />
+<ComponentExample component="tree-view" scenario="multiple" title="여러 항목 선택" description="폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다." :index="2" />
 
-## 공개 API
+### 비활성 항목
+
+비활성화된 항목을 계층에 표시하되 포커스와 선택 대상에서는 제외합니다.
+
+<ComponentExample component="tree-view" scenario="unavailable" title="비활성 항목" description="비활성화된 항목을 계층에 표시하되 포커스와 선택 대상에서는 제외합니다." :index="3" />
+
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="tree-view" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="4" />
+
+## API
 
 Vue 패키지: `@sectile/vue/tree-view`
 
@@ -31,17 +49,99 @@ Vue 패키지: `@sectile/vue/tree-view`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TreeViewRootProps</code></li>
-  <li><code class="component-api-token">TreeViewRootSlotProps</code></li>
-  <li><code class="component-api-token">TreeViewItemSlotProps</code></li>
-  <li><code class="component-api-token">TreeViewPartProps</code></li>
-  <li><code class="component-api-token">TreeNodeInput</code></li>
-  <li><code class="component-api-token">TreeViewPolicies</code></li>
-</ul>
-</div>
+### Props
+
+#### `TreeViewRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `nodes` | `readonly TreeNodeInput<string>[]` | 필수 | 계층을 구성할 평면 노드 목록입니다. |
+| `modelValue` | `readonly string[]` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `readonly string[]` | `[]` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `highlightedValue` | `string \| null` | `undefined` | 키보드 조작 대상으로 강조된 현재 값입니다. |
+| `defaultHighlightedValue` | `string \| null` | `null` | 컴포넌트가 관리하는 처음 강조 값입니다. |
+| `expandedValues` | `readonly string[]` | `undefined` | 하위 항목을 표시할 외부 제어 값 목록입니다. |
+| `defaultExpandedValues` | `readonly string[]` | `[]` | 컴포넌트가 관리하는 처음 펼친 값 목록입니다. |
+| `selectionMode` | `TreeViewSelectionMode` | `'single'` | 하나 또는 여러 값을 선택할지 정합니다. |
+| `disabledItems` | `readonly string[]` | `[]` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `TreeViewPolicies<string>` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `TreeViewPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `TreeViewGroupProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `for` | `string` | 필수 | 이 컴포넌트가 연결할 관련 파트의 값 또는 ID입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `TreeViewRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `readonly string[]` | 이 계약이 노출하는 현재 값입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `expandedValues` | `readonly string[]` | 하위 항목을 표시 중인 값 목록입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+#### `TreeViewItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `selectedValues` | `readonly string[]` | 현재 선택된 값입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `expandedValues` | `readonly string[]` | 하위 항목을 표시 중인 값 목록입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `expanded` | `boolean` | 하위 항목이 보이는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+### 이벤트
+
+#### `TreeViewRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:highlightedValue` | `string \| null` | 새 강조 값을 요청할 때 발생합니다. |
+| `update:expandedValues` | `readonly string[]` | 새 펼침 값 목록을 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `TreeViewPolicies`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `eligible` | `(id: ID) => boolean` | — |
+
+#### `TreeNodeInput`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `id` | `ID` | 필수 |
+| `parentID` | `ID \| null` | 필수 |
+
+#### `TreeViewSelectionMode`
+
+```ts
+type TreeViewSelectionMode = 'single' | 'multiple'
+```
 
 ## 파트
 

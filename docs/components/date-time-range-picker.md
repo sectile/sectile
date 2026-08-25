@@ -3,7 +3,7 @@
 
 Choose start and end dates with independent wall-clock times.
 
-## Examples
+## Usage
 
 ### Maintenance
 
@@ -17,7 +17,13 @@ Choose a start and end time constrained to ordinary office hours.
 
 <ComponentExample component="date-time-range-picker" scenario="office-hours" title="Office hours" description="Choose a start and end time constrained to ordinary office hours." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="date-time-range-picker" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/date-time-range-picker`
 
@@ -48,18 +54,96 @@ Vue package: `@sectile/vue/date-time-range-picker`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateTimeRangePickerRootProps</code></li>
-  <li><code class="component-api-token">DateTimeRange</code></li>
-  <li><code class="component-api-token">DateValue</code></li>
-  <li><code class="component-api-token">DateTimeRangePickerCellSlotProps</code></li>
-  <li><code class="component-api-token">DateTimeRangePickerMonthCellSlotProps</code></li>
-  <li><code class="component-api-token">DateTimeRangePickerPartProps</code></li>
-  <li><code class="component-api-token">DateTimeRangePickerRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateTimeRangePickerRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateTimeRange \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateTimeRange \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `DateValue` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `DateValue` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `DateTimeRangePickerOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `defaultView` | `PickerRootSlotProps['viewMode']` | `'month'` | Initial calendar or picker view. |
+
+#### `DateTimeRangePickerPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `DateTimeRangePickerCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `DateValue` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `inRange` | `boolean` | Whether this value lies inside the selected range. |
+| `outsideMonth` | `boolean` | Whether this date belongs to an adjacent month. |
+
+#### `DateTimeRangePickerMonthCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `DatePickerMonthValue` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `inRange` | `boolean` | Whether this value lies inside the selected range. |
+
+#### `DateTimeRangePickerRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `PickerValue` | Current value exposed by this contract. |
+| `highlightedValue` | `DateValue` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `view` | `{ readonly year: number; readonly month: number }` | Current calendar anchor. |
+| `viewMode` | `DatePickerViewMode` | Active calendar view mode. |
+| `dates` | `readonly (readonly DateValue[])[]` | Dates projected by the active view. |
+| `months` | `readonly (readonly DatePickerMonthValue[])[]` | Months projected by the active view. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `years` | `readonly (readonly PickerYearValue[])[]` | Years projected by the active view. |
+
+### Events
+
+#### `DateTimeRangePickerRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `PickerValue` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `DateValue` | Emitted when the requested highlighted value changes. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+
+### Other types
+
+#### `DateTimeRange`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `start` | `DateTimeValue` | Yes |
+| `end` | `DateTimeValue` | Yes |
+
+#### `DateValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+| `day` | `number` | Yes |
 
 ## Parts
 

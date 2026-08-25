@@ -3,7 +3,7 @@
 
 Choose an inclusive date range directly in an always-visible calendar grid.
 
-## Examples
+## Usage
 
 ### Booking
 
@@ -11,7 +11,19 @@ Choose an inclusive start and end date for a reservation.
 
 <ComponentExample component="range-calendar" scenario="booking" title="Booking" description="Choose an inclusive start and end date for a reservation." :index="0" />
 
-## API reference
+### Bounded
+
+Reject values outside the configured minimum and maximum.
+
+<ComponentExample component="range-calendar" scenario="bounded" title="Bounded" description="Reject values outside the configured minimum and maximum." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="range-calendar" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/range-calendar`
 
@@ -29,17 +41,84 @@ Vue package: `@sectile/vue/range-calendar`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">RangeCalendarRootProps</code></li>
-  <li><code class="component-api-token">DateRange</code></li>
-  <li><code class="component-api-token">DateValue</code></li>
-  <li><code class="component-api-token">RangeCalendarCellSlotProps</code></li>
-  <li><code class="component-api-token">RangeCalendarPartProps</code></li>
-  <li><code class="component-api-token">RangeCalendarRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `RangeCalendarRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateRange \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateRange \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `DateValue` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `DateValue` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `DateRangePickerOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `defaultView` | `PickerRootSlotProps['viewMode']` | `'month'` | Initial calendar or picker view. |
+
+#### `RangeCalendarPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `RangeCalendarCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `DateValue` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `inRange` | `boolean` | Whether this value lies inside the selected range. |
+| `outsideMonth` | `boolean` | Whether this date belongs to an adjacent month. |
+
+#### `RangeCalendarRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `PickerValue` | Current value exposed by this contract. |
+| `highlightedValue` | `DateValue` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `view` | `{ readonly year: number; readonly month: number }` | Current calendar anchor. |
+| `viewMode` | `DatePickerViewMode` | Active calendar view mode. |
+| `dates` | `readonly (readonly DateValue[])[]` | Dates projected by the active view. |
+| `months` | `readonly (readonly DatePickerMonthValue[])[]` | Months projected by the active view. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `years` | `readonly (readonly PickerYearValue[])[]` | Years projected by the active view. |
+
+### Events
+
+#### `RangeCalendarRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `PickerValue` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `DateValue` | Emitted when the requested highlighted value changes. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+
+### Other types
+
+#### `DateRange`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `start` | `DateValue` | Yes |
+| `end` | `DateValue` | Yes |
+
+#### `DateValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+| `day` | `number` | Yes |
 
 ## Parts
 

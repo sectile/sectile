@@ -3,7 +3,7 @@
 
 하나의 실행 요소로 선택적인 내용을 펼치고 접습니다.
 
-## 예시
+## 용법
 
 ### 닫힌 상태
 
@@ -11,7 +11,19 @@
 
 <ComponentExample component="disclosure" scenario="closed" title="닫힌 상태" description="닫힌 상태에서 시작하고 연결된 실행 요소를 눌렀을 때만 엽니다." :index="0" />
 
-## 공개 API
+### 열림 상태
+
+열린 상태에서 시작해 포커스, 닫힘, 화면 배치를 바로 확인합니다.
+
+<ComponentExample component="disclosure" scenario="open" title="열림 상태" description="열린 상태에서 시작해 포커스, 닫힘, 화면 배치를 바로 확인합니다." :index="1" />
+
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="disclosure" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/disclosure`
 
@@ -24,15 +36,51 @@ Vue 패키지: `@sectile/vue/disclosure`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DisclosureRootProps</code></li>
-  <li><code class="component-api-token">DisclosureSlotProps</code></li>
-  <li><code class="component-api-token">DisclosureTriggerProps</code></li>
-  <li><code class="component-api-token">DisclosureContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DisclosureRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `boolean` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `boolean` | `false` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `contentId` | `string` | `undefined` | 이 실행 요소가 제어하는 콘텐츠의 ID입니다. |
+
+#### `DisclosureTriggerProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'button'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `DisclosureContentProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `DisclosureSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+### 이벤트
+
+#### `DisclosureRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `boolean` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 
 ## 파트
 

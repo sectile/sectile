@@ -3,7 +3,7 @@
 
 관련 내용을 각각 펼치고 접을 수 있는 여러 영역으로 구성합니다.
 
-## 예시
+## 용법
 
 ### 하나만 선택
 
@@ -23,7 +23,13 @@
 
 <ComponentExample component="accordion" scenario="required" title="필수 선택" description="항상 하나의 값이 선택되거나 하나의 영역이 펼쳐진 상태를 유지합니다." :index="2" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="accordion" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="3" />
+
+## API
 
 Vue 패키지: `@sectile/vue/accordion`
 
@@ -38,18 +44,78 @@ Vue 패키지: `@sectile/vue/accordion`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">AccordionType</code></li>
-  <li><code class="component-api-token">AccordionValue</code></li>
-  <li><code class="component-api-token">AccordionRootProps</code></li>
-  <li><code class="component-api-token">AccordionRootSlotProps</code></li>
-  <li><code class="component-api-token">AccordionItemProps</code></li>
-  <li><code class="component-api-token">AccordionItemSlotProps</code></li>
-  <li><code class="component-api-token">AccordionPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `AccordionRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
+| `modelValue` | `AccordionValue` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `AccordionValue` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `collapsible` | `boolean` | `true` | 마지막으로 펼친 항목까지 접을 수 있는지 여부입니다. |
+| `disabledItems` | `readonly string[]` | `[]` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `type` | `AccordionType` | `'single'` | 컴포넌트가 사용할 선택 또는 동작 방식입니다. |
+
+#### `AccordionItemProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `value` | `string` | 필수 | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `AccordionPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `AccordionRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `AccordionValue` | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+#### `AccordionItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+
+### 이벤트
+
+#### `AccordionRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `AccordionValue` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `AccordionType`
+
+```ts
+type AccordionType = 'single' | 'multiple'
+```
+
+#### `AccordionValue`
+
+```ts
+type AccordionValue = string | readonly string[]
+```
 
 ## 파트
 

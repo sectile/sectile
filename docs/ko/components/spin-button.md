@@ -3,7 +3,7 @@
 
 숫자를 직접 입력하거나 증가·감소 버튼으로 바꿉니다.
 
-## 예시
+## 용법
 
 ### 정수
 
@@ -11,13 +11,21 @@
 
 <ComponentExample component="spin-button" scenario="integer" title="정수" description="정수 입력을 받고 증가·감소 제어 기능을 제공합니다." :index="0" />
 
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="spin-button" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="1" />
+
+## 예시
+
 ### 입력 복구
 
 수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다.
 
-<ComponentExample component="spin-button" scenario="invalid-draft" title="입력 복구" description="수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다." :index="1" />
+<ComponentExample component="spin-button" scenario="invalid-draft" title="입력 복구" description="수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/spin-button`
 
@@ -31,15 +39,61 @@ Vue 패키지: `@sectile/vue/spin-button`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">SpinButtonRootProps</code></li>
-  <li><code class="component-api-token">SpinButtonSlotProps</code></li>
-  <li><code class="component-api-token">SpinButtonInputProps</code></li>
-  <li><code class="component-api-token">SpinButtonTriggerProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `SpinButtonRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `number \| string` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `number \| string` | `undefined` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `draft` | `string \| null` | `undefined` | 확정 전 편집 중인 외부 제어 문자열입니다. |
+| `defaultDraft` | `string \| null` | `null` | 컴포넌트가 관리하는 편집 초깃값입니다. |
+| `min` | `number \| string` | 필수 | 컴포넌트가 받을 수 있는 최솟값입니다. |
+| `max` | `number \| string` | 필수 | 컴포넌트가 받을 수 있는 최댓값입니다. |
+| `step` | `number \| string` | `1` | 컴포넌트가 받을 수 있는 최소 증감 간격입니다. |
+| `pageStep` | `number` | `10` | Page Up과 Page Down이 사용할 큰 증감 간격입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `SpinButtonOptions['policies']` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `SpinButtonInputProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'input'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `SpinButtonTriggerProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `SpinButtonSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `draft` | `string \| null` | 아직 확정하지 않은 입력 문자열입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `text` | `string` | 현재 값을 표시한 문자열입니다. |
+
+### 이벤트
+
+#### `SpinButtonRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:draft` | `string \| null` | 편집 중인 입력 문자열이 바뀔 때 발생합니다. |
 
 ## 파트
 

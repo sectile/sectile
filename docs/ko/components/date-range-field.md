@@ -3,7 +3,7 @@
 
 완성되지 않았거나 잘못된 입력을 유지하면서 두 날짜를 편집합니다.
 
-## 예시
+## 용법
 
 ### 기본 사용
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="date-range-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="date-range-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/date-range-field`
 
@@ -30,14 +36,52 @@ Vue 패키지: `@sectile/vue/date-range-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateRangeFieldRootProps</code></li>
-  <li><code class="component-api-token">DateRangeFieldRootSlotProps</code></li>
-  <li><code class="component-api-token">DateRange</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateRangeFieldRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `DateRange \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `DateRange \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `startLabel` | `string` | `undefined` | 범위 시작 입력의 접근 가능한 이름입니다. |
+| `endLabel` | `string` | `undefined` | 범위 종료 입력의 접근 가능한 이름입니다. |
+| `policies` | `DateRangeFieldPolicies` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `DateRangeFieldRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `DateRange \| null` | 이 계약이 노출하는 현재 값입니다. |
+| `active` | `'start' \| 'end'` | 현재 활성 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `endText` | `string` | 범위 종료 값을 표시한 문자열입니다. |
+| `startText` | `string` | 범위 시작값을 표시한 문자열입니다. |
+
+### 이벤트
+
+#### `DateRangeFieldRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `DateRange \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `DateRange`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `start` | `DateValue` | 필수 |
+| `end` | `DateValue` | 필수 |
 
 ## 파트
 

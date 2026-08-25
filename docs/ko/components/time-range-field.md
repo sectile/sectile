@@ -3,7 +3,7 @@
 
 간격과 순서 규칙을 지키며 시작·종료 시각을 편집합니다.
 
-## 예시
+## 용법
 
 ### 업무 시간
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="time-range-field" scenario="stepped" title="일정 간격" description="설정한 간격에 맞는 값만 입력하고 조절합니다." :index="1" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="time-range-field" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/time-range-field`
 
@@ -30,14 +36,52 @@ Vue 패키지: `@sectile/vue/time-range-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TimeRangeFieldRootProps</code></li>
-  <li><code class="component-api-token">TimeRangeFieldRootSlotProps</code></li>
-  <li><code class="component-api-token">TimeRange</code></li>
-</ul>
-</div>
+### Props
+
+#### `TimeRangeFieldRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `TimeRange \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `TimeRange \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `startLabel` | `string` | `undefined` | 범위 시작 입력의 접근 가능한 이름입니다. |
+| `endLabel` | `string` | `undefined` | 범위 종료 입력의 접근 가능한 이름입니다. |
+| `policies` | `TimeRangeFieldPolicies` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `TimeRangeFieldRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `TimeRange \| null` | 이 계약이 노출하는 현재 값입니다. |
+| `active` | `'start' \| 'end'` | 현재 활성 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `endText` | `string` | 범위 종료 값을 표시한 문자열입니다. |
+| `startText` | `string` | 범위 시작값을 표시한 문자열입니다. |
+
+### 이벤트
+
+#### `TimeRangeFieldRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `TimeRange \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `TimeRange`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `start` | `TimeValue` | 필수 |
+| `end` | `TimeValue` | 필수 |
 
 ## 파트
 

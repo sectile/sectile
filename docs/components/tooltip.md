@@ -3,7 +3,7 @@
 
 Reveal concise supporting text from keyboard focus or pointer hover.
 
-## Examples
+## Usage
 
 ### Focus hover
 
@@ -17,7 +17,13 @@ Begin open without occupying layout space around the trigger.
 
 <ComponentExample component="tooltip" scenario="initially-open" title="Initially open" description="Begin open without occupying layout space around the trigger." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="tooltip" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/tooltip`
 
@@ -32,15 +38,49 @@ Vue package: `@sectile/vue/tooltip`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TooltipRootProps</code></li>
-  <li><code class="component-api-token">TooltipRootSlotProps</code></li>
-  <li><code class="component-api-token">TooltipPartProps</code></li>
-  <li><code class="component-api-token">TooltipPortalProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TooltipRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | Preferred side of the anchor for positioned content. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `align` | `'start' \| 'center' \| 'end'` | `'center'` | Alignment of positioned content relative to its anchor. |
+| `sideOffset` | `number` | `8` | Distance between positioned content and its anchor. |
+| `arrowPadding` | `Padding` | `8` | Minimum space kept between an arrow and the edge of positioned content. |
+| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
+| `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
+| `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
+| `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
+| `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
+| `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
+| `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
+
+#### `TooltipPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `TooltipPortalProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
+
+### Slots
+
+#### `TooltipRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
 
 ## Parts
 

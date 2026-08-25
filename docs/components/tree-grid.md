@@ -3,21 +3,27 @@
 
 Organize and edit nested resources without losing two-dimensional grid navigation.
 
-## Examples
+## Usage
 
-### Project structure
+### Expanded rows
 
 Inspect a project inventory whose nested applications and features remain visibly connected to their parents.
 
-<ComponentExample component="tree-grid" scenario="expanded" title="Project structure" description="Inspect a project inventory whose nested applications and features remain visibly connected to their parents." :index="0" />
+<ComponentExample component="tree-grid" scenario="expanded" title="Expanded rows" description="Inspect a project inventory whose nested applications and features remain visibly connected to their parents." :index="0" />
 
-### Editable ownership
+### Editable cells
 
 Edit the owner of a nested resource without leaving keyboard-based row and column navigation.
 
-<ComponentExample component="tree-grid" scenario="editable" title="Editable ownership" description="Edit the owner of a nested resource without leaving keyboard-based row and column navigation." :index="1" />
+<ComponentExample component="tree-grid" scenario="editable" title="Editable cells" description="Edit the owner of a nested resource without leaving keyboard-based row and column navigation." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="tree-grid" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/tree-grid`
 
@@ -32,19 +38,109 @@ Vue package: `@sectile/vue/tree-grid`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TreeGridRootProps</code></li>
-  <li><code class="component-api-token">TreeGridRootSlotProps</code></li>
-  <li><code class="component-api-token">TreeGridRowSlotProps</code></li>
-  <li><code class="component-api-token">TreeGridCellSlotProps</code></li>
-  <li><code class="component-api-token">TreeGridPartProps</code></li>
-  <li><code class="component-api-token">TreeGridEditMode</code></li>
-  <li><code class="component-api-token">TreeGridPolicies</code></li>
-  <li><code class="component-api-token">TreeGridRowInput</code></li>
-</ul>
-</div>
+### Props
+
+#### `TreeGridRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rows` | `readonly TreeGridRowInput<string, string>[]` | Required | Two-dimensional item structure managed by the component. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `string \| null` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
+| `expandedValue` | `readonly string[]` | `undefined` | Controlled values whose descendants are visible. |
+| `defaultExpandedValue` | `readonly string[]` | `[]` | Initially expanded values for uncontrolled state. |
+| `editMode` | `TreeGridEditMode` | `undefined` | Controlled editing mode. |
+| `defaultEditMode` | `TreeGridEditMode` | `'navigation'` | Initial uncontrolled editing mode. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `policies` | `TreeGridPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `getCellValue` | `(id: string) => string` | Required | Reads the editable value represented by a grid cell. |
+| `setCellValue` | `(id: string, value: string) => void` | Required | Commits a new editable value for a grid cell. |
+
+#### `TreeGridPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TreeGridRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `expandedValue` | `readonly string[]` | Values whose descendants are visible. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `editMode` | `TreeGridEditMode` | Current editing mode. |
+
+#### `TreeGridRowSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `expandedValue` | `readonly string[]` | Values whose descendants are visible. |
+| `expanded` | `boolean` | Whether descendants are visible. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `editMode` | `TreeGridEditMode` | Current editing mode. |
+
+#### `TreeGridCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `expandedValue` | `readonly string[]` | Values whose descendants are visible. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `editing` | `boolean` | Whether editing is active. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `editMode` | `TreeGridEditMode` | Current editing mode. |
+
+### Events
+
+#### `TreeGridRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
+| `update:expandedValue` | `readonly string[]` | Emitted when the requested expanded values change. |
+| `update:editMode` | `TreeGridEditMode` | Emitted when the requested edit mode changes. |
+
+### Other types
+
+#### `TreeGridEditMode`
+
+```ts
+type TreeGridEditMode = 'navigation' | 'editing'
+```
+
+#### `TreeGridPolicies`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `eligible` | `(id: CellID) => boolean` | — |
+| `boundary` | `AxisBoundaryPolicy` | — |
+| `maxScan` | `number` | — |
+
+#### `TreeGridRowInput`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `id` | `RowID` | Yes |
+| `parentID` | `RowID \| null` | Yes |
+| `cells` | `readonly (CellID \| null)[]` | Yes |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 Edit an exact physical quantity and convert compatible display units.
 
-## Examples
+## Usage
 
 ### Length
 
@@ -17,19 +17,27 @@ Convert a temperature between compatible units without changing its physical qua
 
 <ComponentExample component="quantity-field" scenario="temperature" title="Temperature" description="Convert a temperature between compatible units without changing its physical quantity." :index="1" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="quantity-field" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## Examples
+
 ### Calculator
 
 Enter 50-20% and commit the calculated result as 40.
 
-<ComponentExample component="quantity-field" scenario="calculator" title="Calculator" description="Enter 50-20% and commit the calculated result as 40." :index="2" />
+<ComponentExample component="quantity-field" scenario="calculator" title="Calculator" description="Enter 50-20% and commit the calculated result as 40." :index="3" />
 
 ### Compound
 
 Parse a compound unit while preserving one canonical quantity.
 
-<ComponentExample component="quantity-field" scenario="compound" title="Compound" description="Parse a compound unit while preserving one canonical quantity." :index="3" />
+<ComponentExample component="quantity-field" scenario="compound" title="Compound" description="Parse a compound unit while preserving one canonical quantity." :index="4" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/quantity-field`
 
@@ -43,23 +51,78 @@ Vue package: `@sectile/vue/quantity-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Functions</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">createStandardQuantityPolicies</code></li>
-</ul>
-</div>
+### Functions
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">QuantityFieldRootProps</code></li>
-  <li><code class="component-api-token">QuantityFieldRootSlotProps</code></li>
-  <li><code class="component-api-token">QuantityFieldInputProps</code></li>
-  <li><code class="component-api-token">QuantityFieldPartProps</code></li>
-  <li><code class="component-api-token">StandardQuantityUnitSystem</code></li>
-</ul>
-</div>
+#### `createStandardQuantityPolicies`
+
+```ts
+function createStandardQuantityPolicies(canonicalUnit: string, unitSystem?: StandardQuantityUnitSystem): QuantityFieldPolicies
+```
+
+### Props
+
+#### `QuantityFieldRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `QuantityValue \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `QuantityValue \| null` | `null` | Initial value used when the component owns its state. |
+| `displayUnit` | `string` | `undefined` | Controlled unit used to present the stored quantity. |
+| `defaultDisplayUnit` | `string` | `undefined` | Display unit used before the component receives a controlled unit. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `QuantityFieldPolicies` | Required | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `QuantityFieldInputProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `as` | `PrimitiveAs` | `'input'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `QuantityFieldPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `QuantityFieldRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `QuantityValue \| null` | Current value exposed by this contract. |
+| `invalid` | `boolean` | Whether the current draft fails validation. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `displayUnit` | `string` | Unit currently used for presentation. |
+| `text` | `string` | Formatted text for the current value. |
+
+### Events
+
+#### `QuantityFieldRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `QuantityValue \| null` | Emitted when the component requests a new controlled value. |
+| `update:displayUnit` | `string` | Emitted when the requested display unit changes. |
+| `commit` | `{ value: QuantityValue \| null; expression: string; displayUnit: string; }` | Emitted when the current draft is committed. |
+
+### Other types
+
+#### `StandardQuantityUnitSystem`
+
+```ts
+type StandardQuantityUnitSystem = 'metric' | 'imperial' | 'all'
+```
 
 ## Parts
 

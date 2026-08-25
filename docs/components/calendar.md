@@ -3,7 +3,7 @@
 
 Navigate a date grid, skip unavailable days, and select a civil date.
 
-## Examples
+## Usage
 
 ### Month
 
@@ -23,7 +23,13 @@ Keep weekend dates visible while preventing them from becoming the selected date
 
 <ComponentExample component="calendar" scenario="disabled-weekends" title="Disabled weekends" description="Keep weekend dates visible while preventing them from becoming the selected date." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="calendar" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/calendar`
 
@@ -35,15 +41,67 @@ Vue package: `@sectile/vue/calendar`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CalendarRootProps</code></li>
-  <li><code class="component-api-token">CalendarRootSlotProps</code></li>
-  <li><code class="component-api-token">CalendarCellProps</code></li>
-  <li><code class="component-api-token">CalendarCellSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CalendarRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rows` | `readonly (readonly string[])[]` | Required | Two-dimensional item structure managed by the component. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `string \| null` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
+| `disabledValues` | `readonly string[]` | `[]` | Values displayed but unavailable for selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `CalendarPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CalendarCellProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `CalendarRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `rows` | `readonly (readonly string[])[]` | Rows projected by the active view. |
+
+#### `CalendarCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `columnIndex` | `number` | Zero-based column position. |
+| `rowIndex` | `number` | Zero-based row position. |
+
+### Events
+
+#### `CalendarRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
+| `page` | `{ direction: -1 \| 1; from: string \| null; }` | Emitted when the requested page changes. |
 
 ## Parts
 

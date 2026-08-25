@@ -3,7 +3,7 @@
 
 Edit a numeric draft directly or change it with increment controls.
 
-## Examples
+## Usage
 
 ### Integer
 
@@ -11,13 +11,21 @@ Accept whole-number drafts and expose increment and decrement controls.
 
 <ComponentExample component="spin-button" scenario="integer" title="Integer" description="Accept whole-number drafts and expose increment and decrement controls." :index="0" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="spin-button" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="1" />
+
+## Examples
+
 ### Input recovery
 
 Type a quantity directly; leaving an invalid edit restores the last accepted value.
 
-<ComponentExample component="spin-button" scenario="invalid-draft" title="Input recovery" description="Type a quantity directly; leaving an invalid edit restores the last accepted value." :index="1" />
+<ComponentExample component="spin-button" scenario="invalid-draft" title="Input recovery" description="Type a quantity directly; leaving an invalid edit restores the last accepted value." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/spin-button`
 
@@ -31,15 +39,61 @@ Vue package: `@sectile/vue/spin-button`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">SpinButtonRootProps</code></li>
-  <li><code class="component-api-token">SpinButtonSlotProps</code></li>
-  <li><code class="component-api-token">SpinButtonInputProps</code></li>
-  <li><code class="component-api-token">SpinButtonTriggerProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `SpinButtonRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `number \| string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `number \| string` | `undefined` | Initial value used when the component owns its state. |
+| `draft` | `string \| null` | `undefined` | Controlled editable draft before commit. |
+| `defaultDraft` | `string \| null` | `null` | Editable draft used for uncontrolled initial state. |
+| `min` | `number \| string` | Required | Smallest value accepted by the component. |
+| `max` | `number \| string` | Required | Largest value accepted by the component. |
+| `step` | `number \| string` | `1` | Smallest value increment accepted by the component. |
+| `pageStep` | `number` | `10` | Larger increment used by Page Up and Page Down. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `SpinButtonOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `SpinButtonInputProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'input'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `SpinButtonTriggerProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `SpinButtonSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `draft` | `string \| null` | Current uncommitted input text. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `text` | `string` | Formatted text for the current value. |
+
+### Events
+
+#### `SpinButtonRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `update:draft` | `string \| null` | Emitted when the editable draft changes. |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 현재 작업을 막지 않고 짧은 피드백을 순서대로 알립니다.
 
-## 예시
+## 용법
 
 ### 자동 닫힘
 
@@ -23,7 +23,7 @@
 
 <ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/toast`
 
@@ -39,16 +39,49 @@ Vue 패키지: `@sectile/vue/toast`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToastProviderProps</code></li>
-  <li><code class="component-api-token">ToastProviderSlotProps</code></li>
-  <li><code class="component-api-token">ToastPartProps</code></li>
-  <li><code class="component-api-token">ToastRootProps</code></li>
-  <li><code class="component-api-token">ToastRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToastProviderProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `defaultDurationMs` | `number \| null` | `5_000` | 밀리초 단위의 초기 타이머 길이입니다. |
+| `maxVisible` | `number` | `3` | 한 번에 표시할 수 있는 최대 알림 수입니다. |
+| `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Provider가 처음 마운트될 때 존재할 알림입니다. |
+
+#### `ToastPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `ToastRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `value` | `string` | 필수 | 이 계약이 노출하는 현재 값입니다. |
+| `as` | `PrimitiveAs` | `'li'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `ToastProviderSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `dismiss` | `void` | 알림 하나를 닫는 함수입니다. |
+| `toast` | `void` | 이 항목이 나타내는 알림입니다. |
+| `toasts` | `readonly ToastItem<string>[]` | 현재 알림 컬렉션입니다. |
+| `dismissAll` | `void` | 모든 알림을 닫는 함수입니다. |
+| `paused` | `boolean` | 자동 갱신이 멈춘 상태인지 여부입니다. |
+
+#### `ToastRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `toast` | `ToastItem<string> \| null` | 이 항목이 나타내는 알림입니다. |
 
 ## 파트
 

@@ -3,7 +3,7 @@
 
 문자열로 항목을 걸러 내고 결과를 이동해 하나를 확정합니다.
 
-## 예시
+## 용법
 
 ### 앞부분 검색
 
@@ -17,13 +17,21 @@
 
 <ComponentExample component="combobox" scenario="contains" title="포함 검색" description="앞부분뿐 아니라 검색어가 포함된 모든 항목을 찾습니다." :index="1" />
 
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="combobox" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## 예시
+
 ### 한글 조합 입력
 
 한글 조합이 끝날 때까지 조합 중인 문자열과 확정된 검색어를 나눠 관리합니다.
 
-<ComponentExample component="combobox" scenario="ime" title="한글 조합 입력" description="한글 조합이 끝날 때까지 조합 중인 문자열과 확정된 검색어를 나눠 관리합니다." :index="2" />
+<ComponentExample component="combobox" scenario="ime" title="한글 조합 입력" description="한글 조합이 끝날 때까지 조합 중인 문자열과 확정된 검색어를 나눠 관리합니다." :index="3" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/combobox`
 
@@ -38,16 +46,75 @@ Vue 패키지: `@sectile/vue/combobox`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ComboboxRootProps</code></li>
-  <li><code class="component-api-token">ComboboxRootSlotProps</code></li>
-  <li><code class="component-api-token">ComboboxItemProps</code></li>
-  <li><code class="component-api-token">ComboboxItemSlotProps</code></li>
-  <li><code class="component-api-token">ComboboxPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ComboboxRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `items` | `readonly ComboboxItemDefinition<string>[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
+| `modelValue` | `string \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `inputValue` | `string` | `undefined` | 편집 입력에 표시할 외부 제어 문자열입니다. |
+| `defaultInputValue` | `string` | `''` | 편집 입력에 처음 표시할 내부 관리 문자열입니다. |
+| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `ComboboxPolicies<string>` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `ComboboxItemProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `value` | `string` | 필수 | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `ComboboxPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `ComboboxRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string \| null` | 이 계약이 노출하는 현재 값입니다. |
+| `inputValue` | `string` | 현재 편집 입력 문자열입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+#### `ComboboxItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+
+### 이벤트
+
+#### `ComboboxRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:inputValue` | `string` | 편집 입력 문자열이 바뀔 때 발생합니다. |
+| `update:open` | `boolean` | 컴포넌트가 새 열림 상태를 요청할 때 발생합니다. |
+| `accept` | `string` | 현재 입력이 허용된 값으로 확정될 때 발생합니다. |
+| `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
 ## 파트
 

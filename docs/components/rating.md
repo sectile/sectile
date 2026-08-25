@@ -3,7 +3,7 @@
 
 Choose, change, or clear one score on an ordered rating scale.
 
-## Examples
+## Usage
 
 ### Five star
 
@@ -17,7 +17,13 @@ Require one value to remain selected or one section to remain expanded.
 
 <ComponentExample component="rating" scenario="required" title="Required" description="Require one value to remain selected or one section to remain expanded." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="rating" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/rating`
 
@@ -31,14 +37,51 @@ Vue package: `@sectile/vue/rating`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">RatingRootProps</code></li>
-  <li><code class="component-api-token">RatingRootSlotProps</code></li>
-  <li><code class="component-api-token">RatingClearProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `RatingRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `clearable` | `boolean` | `false` | Whether the current selection can be cleared. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `RatingClearProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `RatingRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `clearable` | `boolean` | Whether the current value can be cleared. |
+
+### Events
+
+#### `RatingRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

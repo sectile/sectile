@@ -3,7 +3,7 @@
 
 Organize related content into independently expandable sections.
 
-## Examples
+## Usage
 
 ### Single
 
@@ -23,7 +23,13 @@ Require one value to remain selected or one section to remain expanded.
 
 <ComponentExample component="accordion" scenario="required" title="Required" description="Require one value to remain selected or one section to remain expanded." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="accordion" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/accordion`
 
@@ -38,18 +44,78 @@ Vue package: `@sectile/vue/accordion`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">AccordionType</code></li>
-  <li><code class="component-api-token">AccordionValue</code></li>
-  <li><code class="component-api-token">AccordionRootProps</code></li>
-  <li><code class="component-api-token">AccordionRootSlotProps</code></li>
-  <li><code class="component-api-token">AccordionItemProps</code></li>
-  <li><code class="component-api-token">AccordionItemSlotProps</code></li>
-  <li><code class="component-api-token">AccordionPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `AccordionRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `AccordionValue` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `AccordionValue` | `undefined` | Initial value used when the component owns its state. |
+| `collapsible` | `boolean` | `true` | Whether the final expanded item may be collapsed. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `type` | `AccordionType` | `'single'` | Selection or behavior mode used by the component. |
+
+#### `AccordionItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `AccordionPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `AccordionRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `AccordionValue` | Current value exposed by this contract. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `AccordionItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `AccordionRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `AccordionValue` | Emitted when the component requests a new controlled value. |
+
+### Other types
+
+#### `AccordionType`
+
+```ts
+type AccordionType = 'single' | 'multiple'
+```
+
+#### `AccordionValue`
+
+```ts
+type AccordionValue = string | readonly string[]
+```
 
 ## Parts
 

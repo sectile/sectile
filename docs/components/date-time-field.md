@@ -3,7 +3,7 @@
 
 Edit a civil date and wall-clock time without timezone conversion.
 
-## Examples
+## Usage
 
 ### Local schedule
 
@@ -11,13 +11,21 @@ Commit a civil date and wall-clock time without applying a timezone conversion.
 
 <ComponentExample component="date-time-field" scenario="local-schedule" title="Local schedule" description="Commit a civil date and wall-clock time without applying a timezone conversion." :index="0" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="date-time-field" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="1" />
+
+## Examples
+
 ### Cross midnight
 
 Keep a local schedule valid when its end time falls on the next civil day.
 
-<ComponentExample component="date-time-field" scenario="cross-midnight" title="Cross midnight" description="Keep a local schedule valid when its end time falls on the next civil day." :index="1" />
+<ComponentExample component="date-time-field" scenario="cross-midnight" title="Cross midnight" description="Keep a local schedule valid when its end time falls on the next civil day." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/date-time-field`
 
@@ -28,13 +36,28 @@ Vue package: `@sectile/vue/date-time-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateTimeValue</code></li>
-  <li><code class="component-api-token">DateTimeFieldProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateTimeFieldProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateTimeValue \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateTimeValue \| null` | `undefined` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `undefined` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `DateTimeFieldOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `native` | `boolean` | `undefined` | Whether to use the browser native date or time input UI. |
+
+### Other types
+
+#### `DateTimeValue`
+
+```ts
+type DateTimeValue = NonNullable<DateTimeFieldOptions['value']>
+```
 
 ## Parts
 

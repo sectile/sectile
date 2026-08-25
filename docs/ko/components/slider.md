@@ -3,7 +3,7 @@
 
 포인터나 키보드로 일정 간격의 숫자 하나를 조절합니다.
 
-## 예시
+## 용법
 
 ### 하나만 선택 값
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="slider" scenario="vertical-value" title="세로 방향 값" description="포인터나 키보드로 하나의 세로 값을 선택합니다." :index="1" />
 
-## 공개 API
+### 부모가 관리하는 값
+
+포인터와 키보드 입력은 변경을 요청하고 실제 슬라이더 값은 부모가 관리합니다.
+
+<ComponentExample component="slider" scenario="controlled-value" title="부모가 관리하는 값" description="포인터와 키보드 입력은 변경을 요청하고 실제 슬라이더 값은 부모가 관리합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/slider`
 
@@ -31,14 +37,55 @@ Vue 패키지: `@sectile/vue/slider`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">SliderRootProps</code></li>
-  <li><code class="component-api-token">SliderSlotProps</code></li>
-  <li><code class="component-api-token">SliderPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `SliderRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `number \| string` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `number \| string` | `0` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `min` | `number \| string` | `0` | 컴포넌트가 받을 수 있는 최솟값입니다. |
+| `max` | `number \| string` | `100` | 컴포넌트가 받을 수 있는 최댓값입니다. |
+| `step` | `number \| string` | `1` | 컴포넌트가 받을 수 있는 최소 증감 간격입니다. |
+| `pageStep` | `number` | `10` | Page Up과 Page Down이 사용할 큰 증감 간격입니다. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | 배치와 키보드 이동에 사용할 축입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `required` | `boolean` | `false` | 제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다. |
+| `name` | `string` | `undefined` | 네이티브 폼 제출에 사용할 이름입니다. |
+| `form` | `string` | `undefined` | 컨트롤을 연결할 네이티브 form 요소의 ID입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `role` | `'slider' \| 'separator'` | `'slider'` | 렌더링된 컨트롤에 적용할 ARIA 역할입니다. |
+| `formatValue` | `(value: string) => string` | `undefined` | 값을 화면에 표시할 문자열로 바꾸는 함수입니다. |
+
+#### `SliderPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `SliderSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `percentage` | `number` | 현재 값을 범위의 백분율로 나타낸 값입니다. |
+
+### 이벤트
+
+#### `SliderRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 
 ## 파트
 

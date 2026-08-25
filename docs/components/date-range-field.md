@@ -3,7 +3,7 @@
 
 Edit two date endpoints while preserving incomplete and invalid drafts.
 
-## Examples
+## Usage
 
 ### Basic
 
@@ -17,7 +17,13 @@ Reject values outside the configured minimum and maximum.
 
 <ComponentExample component="date-range-field" scenario="bounded" title="Bounded" description="Reject values outside the configured minimum and maximum." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="date-range-field" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/date-range-field`
 
@@ -30,14 +36,52 @@ Vue package: `@sectile/vue/date-range-field`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DateRangeFieldRootProps</code></li>
-  <li><code class="component-api-token">DateRangeFieldRootSlotProps</code></li>
-  <li><code class="component-api-token">DateRange</code></li>
-</ul>
-</div>
+### Props
+
+#### `DateRangeFieldRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateRange \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateRange \| null` | `null` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `startLabel` | `string` | `undefined` | Accessible label for the range start input. |
+| `endLabel` | `string` | `undefined` | Accessible label for the range end input. |
+| `policies` | `DateRangeFieldPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `DateRangeFieldRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `DateRange \| null` | Current value exposed by this contract. |
+| `active` | `'start' \| 'end'` | Whether this item is currently active. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `endText` | `string` | Formatted text for the range end value. |
+| `startText` | `string` | Formatted text for the range start value. |
+
+### Events
+
+#### `DateRangeFieldRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `DateRange \| null` | Emitted when the component requests a new controlled value. |
+
+### Other types
+
+#### `DateRange`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `start` | `DateValue` | Yes |
+| `end` | `DateValue` | Yes |
 
 ## Parts
 

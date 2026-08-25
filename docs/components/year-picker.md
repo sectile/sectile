@@ -3,7 +3,7 @@
 
 Choose one year from a compact paged year grid.
 
-## Examples
+## Usage
 
 ### Graduation year
 
@@ -11,7 +11,19 @@ Choose one graduation year from a paged year grid.
 
 <ComponentExample component="year-picker" scenario="graduation-year" title="Graduation year" description="Choose one graduation year from a paged year grid." :index="0" />
 
-## API reference
+### Planning window
+
+Choose a planning year from the active page of years.
+
+<ComponentExample component="year-picker" scenario="planning-window" title="Planning window" description="Choose a planning year from the active page of years." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="year-picker" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/year-picker`
 
@@ -29,16 +41,78 @@ Vue package: `@sectile/vue/year-picker`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">YearPickerRootProps</code></li>
-  <li><code class="component-api-token">YearPickerValue</code></li>
-  <li><code class="component-api-token">YearPickerPartProps</code></li>
-  <li><code class="component-api-token">YearPickerRootSlotProps</code></li>
-  <li><code class="component-api-token">YearPickerCellSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `YearPickerRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `DateValue \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `DateValue \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `DateValue` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `DateValue` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `DatePickerOptions['policies']` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+
+#### `YearPickerPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `YearPickerRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `PickerValue` | Current value exposed by this contract. |
+| `highlightedValue` | `DateValue` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `view` | `{ readonly year: number; readonly month: number }` | Current calendar anchor. |
+| `viewMode` | `DatePickerViewMode` | Active calendar view mode. |
+| `dates` | `readonly (readonly DateValue[])[]` | Dates projected by the active view. |
+| `months` | `readonly (readonly DatePickerMonthValue[])[]` | Months projected by the active view. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `years` | `readonly (readonly PickerYearValue[])[]` | Years projected by the active view. |
+
+#### `YearPickerCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `PickerYearValue` | Current value exposed by this contract. |
+| `current` | `boolean` | Whether this item represents the current position. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `inRange` | `boolean` | Whether this value lies inside the selected range. |
+
+### Events
+
+#### `YearPickerRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `PickerValue` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `DateValue` | Emitted when the requested highlighted value changes. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+
+### Other types
+
+#### `YearPickerValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+| `day` | `number` | Yes |
 
 ## Parts
 

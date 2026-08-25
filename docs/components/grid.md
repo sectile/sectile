@@ -3,7 +3,7 @@
 
 Move through two-dimensional cells, select values, and enter edit mode.
 
-## Examples
+## Usage
 
 ### Selectable
 
@@ -11,13 +11,25 @@ Move through a grid and select the active cell.
 
 <ComponentExample component="grid" scenario="selectable" title="Selectable" description="Move through a grid and select the active cell." :index="0" />
 
+### Disabled wrap
+
+Skip unavailable cells when movement wraps across a grid boundary.
+
+<ComponentExample component="grid" scenario="disabled-wrap" title="Disabled wrap" description="Skip unavailable cells when movement wraps across a grid boundary." :index="1" />
+
 ### Editable
 
 Move through grid cells and edit the active value without losing two-dimensional navigation.
 
-<ComponentExample component="grid" scenario="editable" title="Editable" description="Move through grid cells and edit the active value without losing two-dimensional navigation." :index="1" />
+<ComponentExample component="grid" scenario="editable" title="Editable" description="Move through grid cells and edit the active value without losing two-dimensional navigation." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="grid" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/grid`
 
@@ -30,17 +42,86 @@ Vue package: `@sectile/vue/grid`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">GridRootProps</code></li>
-  <li><code class="component-api-token">GridRootSlotProps</code></li>
-  <li><code class="component-api-token">GridCellSlotProps</code></li>
-  <li><code class="component-api-token">GridPartProps</code></li>
-  <li><code class="component-api-token">GridEditMode</code></li>
-  <li><code class="component-api-token">GridPolicies</code></li>
-</ul>
-</div>
+### Props
+
+#### `GridRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `rows` | `readonly (readonly (string \| null)[])[]` | Required | Two-dimensional item structure managed by the component. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `highlightedValue` | `string \| null` | `undefined` | Value currently highlighted for keyboard interaction. |
+| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
+| `editMode` | `GridEditMode` | `undefined` | Controlled editing mode. |
+| `defaultEditMode` | `GridEditMode` | `'navigation'` | Initial uncontrolled editing mode. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `GridPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `GridPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `GridRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `editMode` | `GridEditMode` | Current editing mode. |
+
+#### `GridCellSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `editMode` | `GridEditMode` | Current editing mode. |
+
+### Events
+
+#### `GridRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:highlightedValue` | `string \| null` | Emitted when the requested highlighted value changes. |
+| `update:editMode` | `GridEditMode` | Emitted when the requested edit mode changes. |
+| `edit-cancel` | `string` | Emitted when editing is cancelled without committing. |
+| `edit-commit` | `string` | Emitted when an edited cell value is committed. |
+| `edit-start` | `string` | Emitted when a cell enters editing mode. |
+
+### Other types
+
+#### `GridEditMode`
+
+```ts
+type GridEditMode = 'navigation' | 'editing'
+```
+
+#### `GridPolicies`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `eligible` | `(id: ID) => boolean` | — |
+| `boundary` | `AxisBoundaryPolicy` | — |
+| `maxScan` | `number` | — |
 
 ## Parts
 

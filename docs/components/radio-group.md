@@ -3,7 +3,7 @@
 
 Choose exactly one option while moving through a labeled set.
 
-## Examples
+## Usage
 
 ### Vertical
 
@@ -11,7 +11,19 @@ Use vertical movement while preserving the same pane-size rules.
 
 <ComponentExample component="radio-group" scenario="vertical" title="Vertical" description="Use vertical movement while preserving the same pane-size rules." :index="0" />
 
-## API reference
+### Horizontal disabled
+
+Move horizontally through radio choices while skipping an unavailable option.
+
+<ComponentExample component="radio-group" scenario="horizontal-disabled" title="Horizontal disabled" description="Move horizontally through radio choices while skipping an unavailable option." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="radio-group" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/radio-group`
 
@@ -24,16 +36,69 @@ Vue package: `@sectile/vue/radio-group`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">RadioGroupRootProps</code></li>
-  <li><code class="component-api-token">RadioGroupRootSlotProps</code></li>
-  <li><code class="component-api-token">RadioGroupItemProps</code></li>
-  <li><code class="component-api-token">RadioGroupItemSlotProps</code></li>
-  <li><code class="component-api-token">RadioGroupIndicatorProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `RadioGroupRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'vertical'` | Axis used for layout and keyboard movement. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `RadioGroupItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `RadioGroupIndicatorProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'span'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `RadioGroupRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `RadioGroupItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `checked` | `boolean` | Whether the control is checked. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `RadioGroupRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
 ## Parts
 

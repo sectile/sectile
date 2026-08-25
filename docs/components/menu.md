@@ -3,21 +3,27 @@
 
 Navigate hierarchical commands, open submenus, and invoke an action.
 
-## Examples
+## Usage
 
-### Project commands
+### Command list
 
 Run common project commands from one flat command list.
 
-<ComponentExample component="menu" scenario="commands" title="Project commands" description="Run common project commands from one flat command list." :index="0" />
+<ComponentExample component="menu" scenario="commands" title="Command list" description="Run common project commands from one flat command list." :index="0" />
 
-### Export formats
+### Disabled
+
+Remove the control from keyboard and pointer interaction.
+
+<ComponentExample component="menu" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="1" />
+
+### Nested submenu
 
 Choose an export format from a submenu owned by the Export command.
 
-<ComponentExample component="menu" scenario="nested" title="Export formats" description="Choose an export format from a submenu owned by the Export command." :index="1" />
+<ComponentExample component="menu" scenario="nested" title="Nested submenu" description="Choose an export format from a submenu owned by the Export command." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/menu`
 
@@ -36,18 +42,111 @@ Vue package: `@sectile/vue/menu`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">MenuRootProps</code></li>
-  <li><code class="component-api-token">MenuButtonRootProps</code></li>
-  <li><code class="component-api-token">MenuRootSlotProps</code></li>
-  <li><code class="component-api-token">MenuItemProps</code></li>
-  <li><code class="component-api-token">MenuItemSlotProps</code></li>
-  <li><code class="component-api-token">MenuSubContentProps</code></li>
-  <li><code class="component-api-token">MenuPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `MenuRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `disabledItems` | `readonly string[]` | `undefined` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MenuPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuButtonRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `undefined` | Initial uncontrolled open state. |
+| `disabledItems` | `readonly string[]` | `undefined` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MenuPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuSubContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | `string` | Required | Value or ID of the related part targeted by this component. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MenuPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `MenuRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `openPath` | `readonly string[]` | Ordered values in the open menu path. |
+
+#### `MenuItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `MenuRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
+
+#### `MenubarRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
+
+#### `NavigationMenuRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
+
+#### `MenuButtonRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
 
 ## Parts
 

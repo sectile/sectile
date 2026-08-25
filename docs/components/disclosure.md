@@ -3,7 +3,7 @@
 
 Reveal optional content from a single persistent trigger.
 
-## Examples
+## Usage
 
 ### Closed
 
@@ -11,7 +11,19 @@ Start closed and open only from the associated trigger.
 
 <ComponentExample component="disclosure" scenario="closed" title="Closed" description="Start closed and open only from the associated trigger." :index="0" />
 
-## API reference
+### Open
+
+Start open so focus, dismissal, and overlay placement can be inspected immediately.
+
+<ComponentExample component="disclosure" scenario="open" title="Open" description="Start open so focus, dismissal, and overlay placement can be inspected immediately." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="disclosure" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/disclosure`
 
@@ -24,15 +36,51 @@ Vue package: `@sectile/vue/disclosure`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">DisclosureRootProps</code></li>
-  <li><code class="component-api-token">DisclosureSlotProps</code></li>
-  <li><code class="component-api-token">DisclosureTriggerProps</code></li>
-  <li><code class="component-api-token">DisclosureContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `DisclosureRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `boolean` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `boolean` | `false` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `contentId` | `string` | `undefined` | ID of the content controlled by this trigger. |
+
+#### `DisclosureTriggerProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `DisclosureContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `DisclosureSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `DisclosureRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `boolean` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

@@ -3,7 +3,7 @@
 
 시작·일시 정지·초기화 동작으로 경과 시간이나 남은 시간을 잽니다.
 
-## 예시
+## 용법
 
 ### 스톱워치
 
@@ -23,7 +23,7 @@
 
 <ComponentExample component="timer" scenario="target" title="목표 시간" description="경과 시간 목표를 설정하고 완료될 때까지 진행 상태를 확인합니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/timer`
 
@@ -39,14 +39,52 @@ Vue 패키지: `@sectile/vue/timer`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TimerRootProps</code></li>
-  <li><code class="component-api-token">TimerSlotProps</code></li>
-  <li><code class="component-api-token">TimerPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TimerRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `autoStart` | `boolean` | `false` | 마운트 직후 타이머를 시작할지 여부입니다. |
+| `countdown` | `boolean` | `false` | 경과 시간을 재지 않고 남은 시간을 셀지 여부입니다. |
+| `intervalMs` | `number` | `100` | 자동 갱신 사이의 밀리초 단위 간격입니다. |
+| `startMs` | `number` | `0` | 밀리초 단위의 초기 경과 시간입니다. |
+| `targetMs` | `number \| null` | `undefined` | 밀리초 단위의 경과 시간 목표입니다. |
+
+#### `TimerPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `TimerSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `progress` | `number \| null` | 0부터 1까지의 완료 진행률입니다. |
+| `start` | `void` | 타이머 갱신을 시작하는 함수입니다. |
+| `pause` | `void` | 타이머 갱신을 멈추는 함수입니다. |
+| `resume` | `void` | 멈춘 타이머를 다시 시작하는 함수입니다. |
+| `reset` | `void` | 초깃값과 조작 상태로 되돌리는 함수입니다. |
+| `completed` | `boolean` | 타이머가 목표에 도달했는지 여부입니다. |
+| `parts` | `Readonly<Record<TimerItemType, number>>` | 현재 값을 나눈 표시 단위입니다. |
+| `restart` | `void` | 설정한 초깃값에서 타이머를 다시 시작하는 함수입니다. |
+| `running` | `boolean` | 타이머가 작동 중인지 여부입니다. |
+| `valueMs` | `number` | 밀리초 단위의 현재 타이머 값입니다. |
+
+### 이벤트
+
+#### `TimerRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `complete` | `number` | 필요한 모든 입력 칸이 채워질 때 발생합니다. |
+| `tick` | `number` | 타이머 간격마다 새 값이 만들어질 때 발생합니다. |
 
 ## 파트
 

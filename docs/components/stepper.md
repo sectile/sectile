@@ -3,7 +3,7 @@
 
 Guide a user through ordered tasks with progress and eligibility rules.
 
-## Examples
+## Usage
 
 ### Checkout
 
@@ -11,13 +11,21 @@ Move through an ordered checkout flow one available step at a time.
 
 <ComponentExample component="stepper" scenario="checkout" title="Checkout" description="Move through an ordered checkout flow one available step at a time." :index="0" />
 
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="stepper" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="1" />
+
+## Examples
+
 ### Gated step
 
 Block forward movement until the current step satisfies its completion rule.
 
-<ComponentExample component="stepper" scenario="gated-step" title="Gated step" description="Block forward movement until the current step satisfies its completion rule." :index="1" />
+<ComponentExample component="stepper" scenario="gated-step" title="Gated step" description="Block forward movement until the current step satisfies its completion rule." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/stepper`
 
@@ -32,12 +40,21 @@ Vue package: `@sectile/vue/stepper`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">StepperRootProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `StepperRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string` | `''` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
 
 ## Parts
 

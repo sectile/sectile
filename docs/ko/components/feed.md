@@ -3,27 +3,29 @@
 
 읽던 위치를 잃지 않고 새 활동이나 이전 기록을 불러오는 제품 활동 목록을 제공합니다.
 
-## 예시
+## 용법
 
-### 전체 릴리스 기록
+### 유한 피드
 
 하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다.
 
-<ComponentExample component="feed" scenario="finite" title="전체 릴리스 기록" description="하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다." :index="0" />
+<ComponentExample component="feed" scenario="finite" title="유한 피드" description="하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다." :index="0" />
 
-### 새 활동
+## 예시
+
+### 새 항목 불러오기
 
 읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다.
 
-<ComponentExample component="feed" scenario="load-after" title="새 활동" description="읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다." :index="1" />
+<ComponentExample component="feed" scenario="load-after" title="새 항목 불러오기" description="읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다." :index="1" />
 
-### 이전 활동
+### 이전 항목 불러오기
 
 현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다.
 
-<ComponentExample component="feed" scenario="load-before" title="이전 활동" description="현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다." :index="2" />
+<ComponentExample component="feed" scenario="load-before" title="이전 항목 불러오기" description="현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/feed`
 
@@ -37,16 +39,67 @@ Vue 패키지: `@sectile/vue/feed`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">FeedRootProps</code></li>
-  <li><code class="component-api-token">FeedRootSlotProps</code></li>
-  <li><code class="component-api-token">FeedItemSlotProps</code></li>
-  <li><code class="component-api-token">FeedPartProps</code></li>
-  <li><code class="component-api-token">FeedDirection</code></li>
-</ul>
-</div>
+### Props
+
+#### `FeedRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
+| `defaultHighlightedValue` | `string \| null` | `null` | 컴포넌트가 관리하는 처음 강조 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+| `getPosition` | `(id: string) => number` | `undefined` | 항목이 나타내는 수치 위치를 반환하는 함수입니다. |
+| `revision` | `number` | `0` | 파생 콘텐츠를 다시 계산할 때 사용할 애플리케이션 변경 차수입니다. |
+| `setSize` | `number` | `undefined` | 현재 피드 구간이 나타내는 전체 항목 수입니다. |
+
+#### `FeedPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `FeedRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
+| `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
+
+#### `FeedItemSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `pending` | `FeedDirection \| null` | 요청 처리 중인지 여부입니다. |
+| `revision` | `number` | 현재 상태 스냅샷의 변경 차수입니다. |
+
+### 이벤트
+
+#### `FeedRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
+| `request-window` | `FeedDirection, string \| null, number` | 피드가 현재 구간 밖의 항목을 요청할 때 발생합니다. |
+
+### 기타 타입
+
+#### `FeedDirection`
+
+```ts
+type FeedDirection = 'before' | 'after'
+```
 
 ## 파트
 

@@ -3,7 +3,7 @@
 
 Toggle one optional value or represent a partially selected parent.
 
-## Examples
+## Usage
 
 ### Binary
 
@@ -17,7 +17,13 @@ Represent a parent whose child values are only partly selected.
 
 <ComponentExample component="checkbox" scenario="mixed" title="Mixed" description="Represent a parent whose child values are only partly selected." :index="1" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="checkbox" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/checkbox`
 
@@ -29,15 +35,57 @@ Vue package: `@sectile/vue/checkbox`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CheckboxValue</code></li>
-  <li><code class="component-api-token">CheckboxRootProps</code></li>
-  <li><code class="component-api-token">CheckboxSlotProps</code></li>
-  <li><code class="component-api-token">CheckboxIndicatorProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CheckboxRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | `'on'` | Current value exposed by this contract. |
+| `modelValue` | `CheckboxValue` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `CheckboxValue` | `false` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CheckboxIndicatorProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'span'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `CheckboxSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `checked` | `CheckboxValue` | Whether the control is checked. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `isChecked` | `boolean` | Whether this checkbox value is selected. |
+| `isIndeterminate` | `boolean` | Whether only part of a grouped value is selected. |
+
+### Events
+
+#### `CheckboxRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `CheckboxValue` | Emitted when the component requests a new controlled value. |
+
+### Other types
+
+#### `CheckboxValue`
+
+```ts
+type CheckboxValue = boolean | 'indeterminate'
+```
 
 ## Parts
 

@@ -3,27 +3,74 @@
 
 Coordinate field metadata, validation issues, submission, and reset while native controls retain their values.
 
+## Usage
+
+### Composition model
+
+Form coordinates native `<form>` submission, reset, constraint validation, field metadata, and issue presentation across any input UI.
+
+| Part | Responsibility |
+| --- | --- |
+| `FormRoot` | Owns the native form element, participant registry, and submission/reset state. |
+| `FormField` | Declares one field name or nested path plus `id`, `required`, `disabled`, and `readonly` metadata. |
+| `FormLabel` | Connects `for` to atomic controls or `aria-labelledby` to composite controls. |
+| `FormDescription` / `FormMessage` | Connect description and current issue IDs through `aria-describedby` and `aria-errormessage`. |
+| `FormSummary` / `FormSubmit` | Expose form-wide issues and the submission action. |
+
+Sectile input components receive field metadata through the shared participation contract. Native `input`, `select`, and `textarea` elements also participate when placed inside a `FormField`.
+
+### Basic form
+
+Build a form from Sectile fields and inputs, then submit nested values.
+
+<ComponentExample component="form" scenario="profile" title="Basic form" description="Build a form from Sectile fields and inputs, then submit nested values." :index="0" />
+
+### Field metadata
+
+Metadata declared once on `FormField` is distributed according to each control's capabilities. An attribute written directly on a control remains authoritative.
+
+| Declaration | Connected target |
+| --- | --- |
+| `id` | Control `id`, label `for`, description ID, and message ID |
+| `name` | Native submission name and structured value path |
+| `form` | Form association for submission elements rendered outside the form |
+| `required`, `disabled`, `readonly` | Semantic control and hidden submission element when supported |
+| Label, description, and issue state | `aria-labelledby`, `aria-describedby`, `aria-errormessage`, `aria-invalid`, and related ARIA states |
+
+### Structured submission values
+
+A string name becomes a top-level key. A string/number path builds nested objects and arrays.
+
+| Field name | Result in `details.values` |
+| --- | --- |
+| `name="email"` | `values.email` |
+| `:name="['profile', 'displayName']"` | `values.profile.displayName` |
+| `:name="['members', 0, 'email']"` | `values.members[0].email` |
+
+The submit callback receives `event`, structured `values`, original `formData`, the `submitter`, and current form `state`. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
+
+### State and validation
+
+- Browser constraints and participant validation results are merged into one issue collection.
+- `FormSummary` presents form-wide issues while `FormMessage` presents the current field's issues.
+- Root slot actions `submitStarted`, `submitSucceeded`, `submitFailed`, and `replaceIssues` integrate asynchronous and server validation.
+- `TextField` supports `v-model.trim`, `v-model.number`, and `v-model.lazy`. Other inputs retain their component-specific value types and model contracts.
+
 ## Examples
 
-### Profile settings
+### With composed inputs
 
-Update nested profile values with field metadata supplied once by the form.
+Combine Select and Switch controls while FormField supplies shared metadata.
 
-<ComponentExample component="form" scenario="profile" title="Profile settings" description="Update nested profile values with field metadata supplied once by the form." :index="0" />
+<ComponentExample component="form" scenario="notifications" title="With composed inputs" description="Combine Select and Switch controls while FormField supplies shared metadata." :index="1" />
 
-### Notification preferences
+### With nested field paths
 
-Combine selection and checked controls in one notification preferences form.
+Compose Sectile inputs on nested field paths in the same structured submission.
 
-<ComponentExample component="form" scenario="notifications" title="Notification preferences" description="Combine selection and checked controls in one notification preferences form." :index="1" />
+<ComponentExample component="form" scenario="team-invite" title="With nested field paths" description="Compose Sectile inputs on nested field paths in the same structured submission." :index="2" />
 
-### Invite a teammate
-
-Invite a teammate with native controls that participate in the same structured submission.
-
-<ComponentExample component="form" scenario="team-invite" title="Invite a teammate" description="Invite a teammate with native controls that participate in the same structured submission." :index="2" />
-
-## API reference
+## API
 
 Vue package: `@sectile/vue/form`
 
@@ -37,33 +84,206 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormMessage</code></li>
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
-  <li><code class="component-api-token">useFormControl</code></li>
-  <li><code class="component-api-token">provideFormControlOwner</code></li>
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">FormState</code></li>
-  <li><code class="component-api-token">FormIssue</code></li>
-  <li><code class="component-api-token">FormIssueSource</code></li>
-  <li><code class="component-api-token">FormRootProps</code></li>
-  <li><code class="component-api-token">FormRootSlotProps</code></li>
-  <li><code class="component-api-token">FormFieldProps</code></li>
-  <li><code class="component-api-token">FormFieldSlotProps</code></li>
-  <li><code class="component-api-token">FormLabelMode</code></li>
-  <li><code class="component-api-token">FormMetadataAttribute</code></li>
-  <li><code class="component-api-token">FormControlCapabilities</code></li>
-  <li><code class="component-api-token">FormSubmissionCapabilities</code></li>
-  <li><code class="component-api-token">FormElementSource</code></li>
-  <li><code class="component-api-token">FormSubmissionRegistration</code></li>
-  <li><code class="component-api-token">FormSubmissionSource</code></li>
-  <li><code class="component-api-token">FormControlRegistration</code></li>
-  <li><code class="component-api-token">FormControlParticipation</code></li>
-  <li><code class="component-api-token">FormPartProps</code></li>
-</ul>
-</div>
+### Functions
+
+#### `useFormControl`
+
+```ts
+function useFormControl(registration: FormControlRegistration): FormControlParticipation
+```
+
+#### `provideFormControlOwner`
+
+```ts
+function provideFormControlOwner(): void
+```
+
+### Props
+
+#### `FormRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `issues` | `readonly FormIssue[]` | `[]` | Validation issues supplied by the application. |
+
+#### `FormFieldProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `undefined` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
+| `id` | `string` | `undefined` | Stable ID used to connect related parts. |
+| `name` | `FormFieldPath` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `validate` | `() => FormParticipantValidation<string>` | `undefined` | Validates the current field and returns application issues. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `FormPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `FormRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `state` | `FormState` | Complete current form state. |
+| `reset` | `() => void` | Restores the initial value and interaction state. |
+| `submitStarted` | `() => boolean` | Marks a submission attempt as started. |
+| `submitSucceeded` | `() => boolean` | Marks the active submission as successful. |
+| `submitFailed` | `(issues?: readonly FormIssue[]) => boolean` | Marks the active submission as failed. |
+| `replaceIssues` | `(source: FormIssueSource, issues: readonly FormIssue[]) => boolean` | Replaces validation issues for one source. |
+| `dirty` | `boolean` | Whether the current value differs from its initial value. |
+| `status` | `FormState['status']` | Current submission status. |
+| `touched` | `boolean` | Whether the user has interacted with the field. |
+| `valid` | `boolean` | Whether current validation has no issues. |
+| `submitCount` | `number` | Number of submission attempts. |
+| `submitted` | `boolean` | Whether submission has been attempted. |
+
+#### `FormFieldSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `issues` | `readonly FormIssue[]` | Current validation issues. |
+| `controlId` | `string` | ID assigned to the semantic control. |
+| `describedBy` | `string` | Space-separated IDs that describe the control. |
+| `descriptionId` | `string` | ID assigned to field help text. |
+| `dirty` | `boolean` | Whether the current value differs from its initial value. |
+| `id` | `string` | Stable ID for this field or item. |
+| `labelId` | `string` | ID assigned to the field label. |
+| `messageId` | `string` | ID assigned to the field error message. |
+| `touched` | `boolean` | Whether the user has interacted with the field. |
+| `valid` | `boolean` | Whether current validation has no issues. |
+
+### Events
+
+#### `FormRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `submit` | `FormSubmitDetails<string>` | Emitted when native form submission passes validation. |
+| `reset` | — | Emitted after the component resets its state. |
+| `state-change` | `FormState<string>` | Emitted whenever the public state snapshot changes. |
+
+### Other types
+
+#### `FormState`
+
+```ts
+type FormState = FormConnection<string>['state']
+```
+
+#### `FormIssue`
+
+```ts
+type FormIssue = NonNullable<FormOptions<string>['issues']>[number]
+```
+
+#### `FormIssueSource`
+
+```ts
+type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0]
+```
+
+#### `FormLabelMode`
+
+```ts
+type FormLabelMode = 'for' | 'labelledby' | 'legend'
+```
+
+#### `FormMetadataAttribute`
+
+```ts
+type FormMetadataAttribute =
+| 'id'
+  | 'name'
+  | 'form'
+  | 'required'
+  | 'disabled'
+  | 'readonly'
+  | 'aria-describedby'
+  | 'aria-errormessage'
+  | 'aria-invalid'
+  | 'aria-labelledby'
+  | 'aria-disabled'
+  | 'aria-required'
+  | 'aria-readonly'
+```
+
+#### `FormControlCapabilities`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `id` | `boolean` | — |
+| `describedBy` | `boolean` | — |
+| `invalid` | `boolean` | — |
+| `labelledBy` | `boolean` | — |
+| `required` | `boolean` | — |
+| `disabled` | `boolean` | — |
+| `readonly` | `boolean` | — |
+
+#### `FormSubmissionCapabilities`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `name` | `boolean` | — |
+| `form` | `boolean` | — |
+| `required` | `boolean` | — |
+| `disabled` | `boolean` | — |
+| `readonly` | `boolean` | — |
+
+#### `FormElementSource`
+
+```ts
+type FormElementSource<ElementType extends HTMLElement = HTMLElement> =
+| Ref<ElementType | null>
+  | (() => ElementType | null)
+```
+
+#### `FormSubmissionRegistration`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `element` | `FormElementSource<FormSubmissionElement>` | Yes |
+| `relativeName` | `FormRelativePath` | — |
+| `capabilities` | `FormSubmissionCapabilities` | — |
+| `explicit` | `readonly FormMetadataAttribute[]` | — |
+
+#### `FormSubmissionSource`
+
+```ts
+type FormSubmissionSource =
+| readonly FormSubmissionRegistration[]
+  | (() => readonly FormSubmissionRegistration[])
+```
+
+#### `FormControlRegistration`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `element` | `FormElementSource` | Yes |
+| `semanticControl` | `FormElementSource` | — |
+| `focusTarget` | `FormElementSource` | — |
+| `submissions` | `FormSubmissionSource` | — |
+| `labelMode` | `FormLabelMode` | — |
+| `capabilities` | `FormControlCapabilities` | — |
+| `explicit` | `readonly FormMetadataAttribute[]` | — |
+
+#### `FormControlParticipation`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `participating` | `boolean` | Yes |
+| `controlProps` | `ComputedRef<Readonly<Record<string, unknown>>>` | Yes |
 
 ## Parts
 

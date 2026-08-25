@@ -3,7 +3,7 @@
 
 Combine native links and expandable navigation panels in one bar.
 
-## Examples
+## Usage
 
 ### Product
 
@@ -17,34 +17,91 @@ Preserve native link navigation alongside compound menu triggers.
 
 <ComponentExample component="navigation-menu" scenario="links" title="Links" description="Preserve native link navigation alongside compound menu triggers." :index="1" />
 
-## API reference
+### Disabled
+
+Remove the control from keyboard and pointer interaction.
+
+<ComponentExample component="navigation-menu" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/navigation-menu`
 
 <div class="component-api-group">
 <strong class="component-api-label">Components</strong>
 <ul class="component-api-list">
-  <li><code class="component-api-token">NavigationMenuList</code></li>
-  <li><code class="component-api-token">NavigationMenuItem</code></li>
-  <li><code class="component-api-token">NavigationMenuViewport</code></li>
-  <li><code class="component-api-token">NavigationMenuIndicator</code></li>
   <li><code class="component-api-token">NavigationMenuRoot</code></li>
   <li><code class="component-api-token">NavigationMenuLink</code></li>
   <li><code class="component-api-token">NavigationMenuTrigger</code></li>
   <li><code class="component-api-token">NavigationMenuContent</code></li>
+  <li><code class="component-api-token">NavigationMenuList</code></li>
+  <li><code class="component-api-token">NavigationMenuItem</code></li>
+  <li><code class="component-api-token">NavigationMenuViewport</code></li>
+  <li><code class="component-api-token">NavigationMenuIndicator</code></li>
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">NavigationMenuItemProps</code></li>
-  <li><code class="component-api-token">NavigationMenuItemSlotProps</code></li>
-  <li><code class="component-api-token">NavigationMenuRootProps</code></li>
-  <li><code class="component-api-token">NavigationMenuRootSlotProps</code></li>
-  <li><code class="component-api-token">NavigationMenuContentProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `NavigationMenuItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'li'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `NavigationMenuRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly MenuItemDefinition<string>[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `undefined` | Initially highlighted value for uncontrolled state. |
+| `disabledItems` | `readonly string[]` | `undefined` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `undefined` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MenuPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `NavigationMenuContentProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | `string` | Required | Value or ID of the related part targeted by this component. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `NavigationMenuItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+#### `NavigationMenuRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `openPath` | `readonly string[]` | Ordered values in the open menu path. |
+
+### Events
+
+#### `NavigationMenuRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
 
 ## Parts
 

@@ -3,21 +3,27 @@
 
 Move through a compact set of related actions and invoke the active tool.
 
-## Examples
+## Usage
 
-### Text formatting
+### Horizontal toolbar
 
 Group inline text formatting actions in their natural horizontal order.
 
-<ComponentExample component="toolbar" scenario="formatting" title="Text formatting" description="Group inline text formatting actions in their natural horizontal order." :index="0" />
+<ComponentExample component="toolbar" scenario="formatting" title="Horizontal toolbar" description="Group inline text formatting actions in their natural horizontal order." :index="0" />
 
-### Canvas tools
+### Vertical toolbar
 
 Stack canvas tools vertically beside an editing surface.
 
-<ComponentExample component="toolbar" scenario="vertical" title="Canvas tools" description="Stack canvas tools vertically beside an editing surface." :index="1" />
+<ComponentExample component="toolbar" scenario="vertical" title="Vertical toolbar" description="Stack canvas tools vertically beside an editing surface." :index="1" />
 
-## API reference
+### Controlled focus
+
+Let the parent coordinate the active toolbar item without changing keyboard rules.
+
+<ComponentExample component="toolbar" scenario="controlled-focus" title="Controlled focus" description="Let the parent coordinate the active toolbar item without changing keyboard rules." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/toolbar`
 
@@ -30,16 +36,65 @@ Vue package: `@sectile/vue/toolbar`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToolbarRootProps</code></li>
-  <li><code class="component-api-token">ToolbarRootSlotProps</code></li>
-  <li><code class="component-api-token">ToolbarItemProps</code></li>
-  <li><code class="component-api-token">ToolbarItemSlotProps</code></li>
-  <li><code class="component-api-token">ToolbarPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToolbarRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `ToolbarPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ToolbarItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ToolbarPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ToolbarRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `orientation` | `'horizontal' \| 'vertical'` | Current layout and movement axis. |
+
+#### `ToolbarItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `ToolbarRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `invoke` | `string` | Emitted when the current action is invoked. |
 
 ## Parts
 

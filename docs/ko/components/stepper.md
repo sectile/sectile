@@ -3,7 +3,7 @@
 
 진행 상태와 사용 가능 조건을 보여 주며 순서가 있는 작업을 안내합니다.
 
-## 예시
+## 용법
 
 ### 결제
 
@@ -11,13 +11,21 @@
 
 <ComponentExample component="stepper" scenario="checkout" title="결제" description="사용 가능한 결제 단계를 정해진 순서대로 진행합니다." :index="0" />
 
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="stepper" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="1" />
+
+## 예시
+
 ### 진행 조건 증감 간격
 
 현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다.
 
-<ComponentExample component="stepper" scenario="gated-step" title="진행 조건 증감 간격" description="현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다." :index="1" />
+<ComponentExample component="stepper" scenario="gated-step" title="진행 조건 증감 간격" description="현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다." :index="2" />
 
-## 공개 API
+## API
 
 Vue 패키지: `@sectile/vue/stepper`
 
@@ -32,12 +40,21 @@ Vue 패키지: `@sectile/vue/stepper`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">StepperRootProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `StepperRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | 필수 | 컴포넌트가 관리할 순서 있는 항목 값입니다. |
+| `modelValue` | `string` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string` | `''` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | 배치와 키보드 이동에 사용할 축입니다. |
+| `disabledItems` | `readonly string[]` | `[]` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
 
 ## 파트
 

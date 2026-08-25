@@ -3,7 +3,7 @@
 
 Adjust several ordered values on one shared numeric track.
 
-## Examples
+## Usage
 
 ### Two thumb range
 
@@ -23,7 +23,13 @@ Prevent or normalize thumb crossing according to the configured range policy.
 
 <ComponentExample component="multi-thumb-slider" scenario="crossing-thumbs" title="Crossing thumbs" description="Prevent or normalize thumb crossing according to the configured range policy." :index="2" />
 
-## API reference
+### Controlled range
+
+Let the parent own every thumb value in the selected interval.
+
+<ComponentExample component="multi-thumb-slider" scenario="controlled-range" title="Controlled range" description="Let the parent own every thumb value in the selected interval." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/multi-thumb-slider`
 
@@ -37,16 +43,78 @@ Vue package: `@sectile/vue/multi-thumb-slider`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">MultiThumbSliderRootProps</code></li>
-  <li><code class="component-api-token">MultiThumbSliderRootSlotProps</code></li>
-  <li><code class="component-api-token">MultiThumbSliderThumbProps</code></li>
-  <li><code class="component-api-token">MultiThumbSliderThumbSlotProps</code></li>
-  <li><code class="component-api-token">MultiThumbSliderPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `MultiThumbSliderRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `thumbs` | `readonly string[]` | Required | Ordered slider thumb definitions. |
+| `modelValue` | `readonly (number \| string)[]` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `readonly (number \| string)[]` | `undefined` | Initial value used when the component owns its state. |
+| `min` | `number \| string` | `0` | Smallest value accepted by the component. |
+| `max` | `number \| string` | `100` | Largest value accepted by the component. |
+| `step` | `number \| string` | `1` | Smallest value increment accepted by the component. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Axis used for layout and keyboard movement. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `MultiThumbSliderPolicies` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `getThumbLabel` | `(id: string) => string` | `undefined` | Returns the accessible label for a slider thumb. |
+| `formatValue` | `(value: string, id: string) => string` | `undefined` | Formats a value for visible text. |
+
+#### `MultiThumbSliderThumbProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `MultiThumbSliderPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `MultiThumbSliderRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `values` | `readonly string[]` | Current ordered value collection. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `activeThumb` | `string \| null` | Index of the thumb currently being adjusted. |
+| `percentages` | `readonly number[]` | Percentage position for each thumb. |
+
+#### `MultiThumbSliderThumbSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `index` | `number` | Zero-based position in the parent collection. |
+| `value` | `string` | Current value exposed by this contract. |
+| `values` | `readonly string[]` | Current ordered value collection. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `activeThumb` | `string \| null` | Index of the thumb currently being adjusted. |
+| `percentage` | `number` | Current value expressed as a percentage of its range. |
+| `percentages` | `readonly number[]` | Percentage position for each thumb. |
+
+### Events
+
+#### `MultiThumbSliderRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

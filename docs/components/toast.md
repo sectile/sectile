@@ -3,7 +3,7 @@
 
 Queue concise feedback and announce it without interrupting the current task.
 
-## Examples
+## Usage
 
 ### Auto dismiss
 
@@ -23,7 +23,7 @@ Enforce the configured item or visible-notification limit without losing existin
 
 <ComponentExample component="toast" scenario="limited" title="Limited" description="Enforce the configured item or visible-notification limit without losing existing values." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/toast`
 
@@ -39,16 +39,49 @@ Vue package: `@sectile/vue/toast`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToastProviderProps</code></li>
-  <li><code class="component-api-token">ToastProviderSlotProps</code></li>
-  <li><code class="component-api-token">ToastPartProps</code></li>
-  <li><code class="component-api-token">ToastRootProps</code></li>
-  <li><code class="component-api-token">ToastRootSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToastProviderProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultDurationMs` | `number \| null` | `5_000` | Initial timer duration in milliseconds. |
+| `maxVisible` | `number` | `3` | Maximum number of notifications shown at once. |
+| `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Notifications present when the provider first mounts. |
+
+#### `ToastPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ToastRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `as` | `PrimitiveAs` | `'li'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ToastProviderSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `dismiss` | `void` | Dismisses one notification. |
+| `toast` | `void` | Notification represented by this item. |
+| `toasts` | `readonly ToastItem<string>[]` | Current notification collection. |
+| `dismissAll` | `void` | Dismisses every notification. |
+| `paused` | `boolean` | Whether automatic updates are paused. |
+
+#### `ToastRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `toast` | `ToastItem<string> \| null` | Notification represented by this item. |
 
 ## Parts
 

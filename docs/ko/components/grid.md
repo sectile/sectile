@@ -3,7 +3,7 @@
 
 2차원 칸을 이동하고 값을 선택하거나 편집 상태로 들어갑니다.
 
-## 예시
+## 용법
 
 ### 선택 가능
 
@@ -11,13 +11,25 @@
 
 <ComponentExample component="grid" scenario="selectable" title="선택 가능" description="격자 사이를 이동하고 현재 칸을 선택합니다." :index="0" />
 
+### 비활성 항목 끝에서 처음으로 이동
+
+격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다.
+
+<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다." :index="1" />
+
 ### 편집 가능
 
 격자 이동을 유지하면서 현재 칸의 값을 편집합니다.
 
-<ComponentExample component="grid" scenario="editable" title="편집 가능" description="격자 이동을 유지하면서 현재 칸의 값을 편집합니다." :index="1" />
+<ComponentExample component="grid" scenario="editable" title="편집 가능" description="격자 이동을 유지하면서 현재 칸의 값을 편집합니다." :index="2" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="grid" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="3" />
+
+## API
 
 Vue 패키지: `@sectile/vue/grid`
 
@@ -30,17 +42,86 @@ Vue 패키지: `@sectile/vue/grid`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">GridRootProps</code></li>
-  <li><code class="component-api-token">GridRootSlotProps</code></li>
-  <li><code class="component-api-token">GridCellSlotProps</code></li>
-  <li><code class="component-api-token">GridPartProps</code></li>
-  <li><code class="component-api-token">GridEditMode</code></li>
-  <li><code class="component-api-token">GridPolicies</code></li>
-</ul>
-</div>
+### Props
+
+#### `GridRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `rows` | `readonly (readonly (string \| null)[])[]` | 필수 | 컴포넌트가 관리할 2차원 항목 구조입니다. |
+| `modelValue` | `string \| null` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `string \| null` | `null` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `highlightedValue` | `string \| null` | `undefined` | 키보드 조작 대상으로 강조된 현재 값입니다. |
+| `defaultHighlightedValue` | `string \| null` | `null` | 컴포넌트가 관리하는 처음 강조 값입니다. |
+| `editMode` | `GridEditMode` | `undefined` | 외부에서 제어하는 편집 상태입니다. |
+| `defaultEditMode` | `GridEditMode` | `'navigation'` | 컴포넌트가 관리하는 초기 편집 상태입니다. |
+| `disabledItems` | `readonly string[]` | `[]` | 포커스와 선택 대상에서 제외할 항목 값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `label` | `string` | `undefined` | 보조 기술이 읽는 컨트롤 이름입니다. |
+| `policies` | `GridPolicies<string>` | `undefined` | 검증, 이동, 선택 동작을 조정하는 정책입니다. |
+| `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `GridPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `GridRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string \| null` | 이 계약이 노출하는 현재 값입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `editMode` | `GridEditMode` | 현재 편집 상태입니다. |
+
+#### `GridCellSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `highlightedValue` | `string \| null` | 조작 대상으로 강조된 현재 값입니다. |
+| `selected` | `boolean` | 현재 선택된 항목인지 여부입니다. |
+| `highlighted` | `boolean` | 조작 대상으로 강조된 항목인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `editMode` | `GridEditMode` | 현재 편집 상태입니다. |
+
+### 이벤트
+
+#### `GridRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `update:highlightedValue` | `string \| null` | 새 강조 값을 요청할 때 발생합니다. |
+| `update:editMode` | `GridEditMode` | 새 편집 상태를 요청할 때 발생합니다. |
+| `edit-cancel` | `string` | 값을 확정하지 않고 편집을 취소할 때 발생합니다. |
+| `edit-commit` | `string` | 편집한 셀 값을 확정할 때 발생합니다. |
+| `edit-start` | `string` | 셀이 편집 상태로 들어갈 때 발생합니다. |
+
+### 기타 타입
+
+#### `GridEditMode`
+
+```ts
+type GridEditMode = 'navigation' | 'editing'
+```
+
+#### `GridPolicies`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `eligible` | `(id: ID) => boolean` | — |
+| `boundary` | `AxisBoundaryPolicy` | — |
+| `maxScan` | `number` | — |
 
 ## 파트
 

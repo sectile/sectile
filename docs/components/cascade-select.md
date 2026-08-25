@@ -3,7 +3,7 @@
 
 Choose a leaf value by moving through progressive hierarchy columns.
 
-## Examples
+## Usage
 
 ### Location
 
@@ -11,7 +11,19 @@ Choose a location progressively from country to city.
 
 <ComponentExample component="cascade-select" scenario="location" title="Location" description="Choose a location progressively from country to city." :index="0" />
 
-## API reference
+### Disabled
+
+Remove the control from keyboard and pointer interaction.
+
+<ComponentExample component="cascade-select" scenario="disabled" title="Disabled" description="Remove the control from keyboard and pointer interaction." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="cascade-select" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/cascade-select`
 
@@ -29,18 +41,97 @@ Vue package: `@sectile/vue/cascade-select`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CascadeSelectRootProps</code></li>
-  <li><code class="component-api-token">CascadeSelectRootSlotProps</code></li>
-  <li><code class="component-api-token">CascadeSelectColumnProps</code></li>
-  <li><code class="component-api-token">CascadeSelectColumnSlotProps</code></li>
-  <li><code class="component-api-token">CascadeSelectItemProps</code></li>
-  <li><code class="component-api-token">CascadeSelectItemSlotProps</code></li>
-  <li><code class="component-api-token">CascadeSelectPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CascadeSelectRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `nodes` | `readonly CascadeSelectItemDefinition<string>[]` | Required | Flat hierarchy used to build the tree. |
+| `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
+| `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
+| `defaultOpen` | `boolean` | `false` | Initial uncontrolled open state. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `policies` | `CascadeSelectPolicies<string>` | `undefined` | Behavior policies that customize validation, movement, or selection. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CascadeSelectColumnProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `depth` | `number` | Required | Zero-based depth of this column in a cascading selection. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CascadeSelectItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CascadeSelectPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `CascadeSelectRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string \| null` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `open` | `boolean` | Whether the associated popup or disclosure is open. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+| `columns` | `readonly (readonly string[])[]` | Visible cascade-select columns. |
+| `path` | `readonly string[]` | Current selected path. |
+| `valuePath` | `readonly string[]` | Current selected values from root to leaf. |
+
+#### `CascadeSelectColumnSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `items` | `readonly string[]` | Current derived item collection. |
+| `depth` | `number` | Depth of the current hierarchical item. |
+| `parentValue` | `string \| null` | Value that owns the current cascade column. |
+
+#### `CascadeSelectItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `expanded` | `boolean` | Whether descendants are visible. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `branch` | `boolean` | Whether this item owns descendants. |
+
+### Events
+
+#### `CascadeSelectRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
+| `update:open` | `boolean` | Emitted when the component requests a new open state. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
 ## Parts
 

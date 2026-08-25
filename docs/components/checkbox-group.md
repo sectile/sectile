@@ -3,7 +3,7 @@
 
 Select any combination of independent options in one labeled group.
 
-## Examples
+## Usage
 
 ### Release channels
 
@@ -11,7 +11,19 @@ Choose one or more independent release channels.
 
 <ComponentExample component="checkbox-group" scenario="release-channels" title="Release channels" description="Choose one or more independent release channels." :index="0" />
 
-## API reference
+### Disabled choice
+
+Keep one choice visible but unavailable while other choices remain interactive.
+
+<ComponentExample component="checkbox-group" scenario="disabled-choice" title="Disabled choice" description="Keep one choice visible but unavailable while other choices remain interactive." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="checkbox-group" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/checkbox-group`
 
@@ -24,14 +36,50 @@ Vue package: `@sectile/vue/checkbox-group`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">CheckboxGroupRootProps</code></li>
-  <li><code class="component-api-token">CheckboxGroupRootSlotProps</code></li>
-  <li><code class="component-api-token">CheckboxGroupItemProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `CheckboxGroupRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `readonly string[]` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `readonly string[]` | `[]` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `CheckboxGroupItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `required` | `boolean` | `undefined` | Whether the control must contain a valid value before submission. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `CheckboxGroupRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `readonly string[]` | Current value exposed by this contract. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `CheckboxGroupRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `readonly string[]` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

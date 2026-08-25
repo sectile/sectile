@@ -3,7 +3,7 @@
 
 Move through a visible option list and select one or several values.
 
-## Examples
+## Usage
 
 ### Single
 
@@ -23,7 +23,13 @@ Move selection together with the active listbox item.
 
 <ComponentExample component="listbox" scenario="follow-focus" title="Follow focus" description="Move selection together with the active listbox item." :index="2" />
 
-## API reference
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="listbox" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="3" />
+
+## API
 
 Vue package: `@sectile/vue/listbox`
 
@@ -37,18 +43,86 @@ Vue package: `@sectile/vue/listbox`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ListboxSelectionMode</code></li>
-  <li><code class="component-api-token">ListboxValue</code></li>
-  <li><code class="component-api-token">ListboxRootProps</code></li>
-  <li><code class="component-api-token">ListboxRootSlotProps</code></li>
-  <li><code class="component-api-token">ListboxItemProps</code></li>
-  <li><code class="component-api-token">ListboxItemSlotProps</code></li>
-  <li><code class="component-api-token">ListboxPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ListboxRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `modelValue` | `ListboxValue` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `ListboxValue` | `undefined` | Initial value used when the component owns its state. |
+| `orientation` | `'horizontal' \| 'vertical'` | `'vertical'` | Axis used for layout and keyboard movement. |
+| `selectionMode` | `ListboxSelectionMode` | `'single'` | Whether selection contains one value or multiple values. |
+| `disabledItems` | `readonly string[]` | `[]` | Item values excluded from focus and selection. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `required` | `boolean` | `false` | Whether the control must contain a valid value before submission. |
+| `name` | `string` | `undefined` | Name used for native form submission. |
+| `form` | `string` | `undefined` | ID of the native form associated with the control. |
+| `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ListboxItemProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `string` | Required | Current value exposed by this contract. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ListboxPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ListboxRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `ListboxValue` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+#### `ListboxItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `selected` | `boolean` | Whether this item is selected. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `ListboxRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `ListboxValue` | Emitted when the component requests a new controlled value. |
+| `activate` | `string` | Emitted when an item becomes active. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
+
+### Other types
+
+#### `ListboxSelectionMode`
+
+```ts
+type ListboxSelectionMode = 'single' | 'multiple'
+```
+
+#### `ListboxValue`
+
+```ts
+type ListboxValue = string | readonly string[]
+```
 
 ## Parts
 

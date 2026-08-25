@@ -3,27 +3,29 @@
 
 Present live product activity while loading older or newer events without losing reading position.
 
-## Examples
+## Usage
 
-### Complete release history
+### Finite feed
 
 Review the complete activity history for one release.
 
-<ComponentExample component="feed" scenario="finite" title="Complete release history" description="Review the complete activity history for one release." :index="0" />
+<ComponentExample component="feed" scenario="finite" title="Finite feed" description="Review the complete activity history for one release." :index="0" />
 
-### Live updates
+## Examples
+
+### Load newer items
 
 Surface new deployment updates without interrupting the activity currently being read.
 
-<ComponentExample component="feed" scenario="load-after" title="Live updates" description="Surface new deployment updates without interrupting the activity currently being read." :index="1" />
+<ComponentExample component="feed" scenario="load-after" title="Load newer items" description="Surface new deployment updates without interrupting the activity currently being read." :index="1" />
 
-### Earlier activity
+### Load earlier items
 
 Append older release events while preserving the current activity order.
 
-<ComponentExample component="feed" scenario="load-before" title="Earlier activity" description="Append older release events while preserving the current activity order." :index="2" />
+<ComponentExample component="feed" scenario="load-before" title="Load earlier items" description="Append older release events while preserving the current activity order." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/feed`
 
@@ -37,16 +39,67 @@ Vue package: `@sectile/vue/feed`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">FeedRootProps</code></li>
-  <li><code class="component-api-token">FeedRootSlotProps</code></li>
-  <li><code class="component-api-token">FeedItemSlotProps</code></li>
-  <li><code class="component-api-token">FeedPartProps</code></li>
-  <li><code class="component-api-token">FeedDirection</code></li>
-</ul>
-</div>
+### Props
+
+#### `FeedRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `defaultHighlightedValue` | `string \| null` | `null` | Initially highlighted value for uncontrolled state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `label` | `string` | `undefined` | Accessible name announced for the control. |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `getPosition` | `(id: string) => number` | `undefined` | Returns the numeric position represented by an item. |
+| `revision` | `number` | `0` | Application revision used to refresh derived content. |
+| `setSize` | `number` | `undefined` | Total number of items represented by the current feed window. |
+
+#### `FeedPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `FeedRootSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
+| `revision` | `number` | Revision of the current state snapshot. |
+
+#### `FeedItemSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `highlightedValue` | `string \| null` | Value currently highlighted for interaction. |
+| `highlighted` | `boolean` | Whether this item is highlighted for interaction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `pending` | `FeedDirection \| null` | Whether a request is currently pending. |
+| `revision` | `number` | Revision of the current state snapshot. |
+
+### Events
+
+#### `FeedRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
+| `request-window` | `FeedDirection, string \| null, number` | Emitted when the feed needs items outside the current window. |
+
+### Other types
+
+#### `FeedDirection`
+
+```ts
+type FeedDirection = 'before' | 'after'
+```
 
 ## Parts
 

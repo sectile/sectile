@@ -3,7 +3,7 @@
 
 Keep one action pressed until the same action is invoked again.
 
-## Examples
+## Usage
 
 ### Formatting
 
@@ -11,7 +11,19 @@ Keep a formatting action pressed until the same action is invoked again.
 
 <ComponentExample component="toggle-button" scenario="formatting" title="Formatting" description="Keep a formatting action pressed until the same action is invoked again." :index="0" />
 
-## API reference
+### Alert
+
+Keep an alert-watching action active until the user turns it off.
+
+<ComponentExample component="toggle-button" scenario="alert" title="Alert" description="Keep an alert-watching action active until the user turns it off." :index="1" />
+
+### Controlled
+
+Let the parent own the current value and apply accepted changes back to the component.
+
+<ComponentExample component="toggle-button" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
+
+## API
 
 Vue package: `@sectile/vue/toggle-button`
 
@@ -22,13 +34,36 @@ Vue package: `@sectile/vue/toggle-button`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToggleButtonProps</code></li>
-  <li><code class="component-api-token">ToggleButtonSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToggleButtonProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `modelValue` | `boolean` | `undefined` | Current value when state is controlled by the parent. |
+| `defaultValue` | `boolean` | `false` | Initial value used when the component owns its state. |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `ToggleButtonSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `pressed` | `boolean` | Whether the toggle is pressed. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+| `readonly` | `boolean` | Whether the value can be inspected but not changed. |
+
+### Events
+
+#### `ToggleButton`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `boolean` | Emitted when the component requests a new controlled value. |
 
 ## Parts
 

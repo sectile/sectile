@@ -3,7 +3,7 @@
 
 같은 작업을 다시 실행할 때까지 눌림 상태를 유지합니다.
 
-## 예시
+## 용법
 
 ### 서식
 
@@ -11,7 +11,19 @@
 
 <ComponentExample component="toggle-button" scenario="formatting" title="서식" description="같은 작업을 다시 누를 때까지 서식 기능의 눌림 상태를 유지합니다." :index="0" />
 
-## 공개 API
+### 경고
+
+알림 감시 기능을 다시 끌 때까지 활성 상태로 유지합니다.
+
+<ComponentExample component="toggle-button" scenario="alert" title="경고" description="알림 감시 기능을 다시 끌 때까지 활성 상태로 유지합니다." :index="1" />
+
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="toggle-button" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/toggle-button`
 
@@ -22,13 +34,36 @@ Vue 패키지: `@sectile/vue/toggle-button`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">ToggleButtonProps</code></li>
-  <li><code class="component-api-token">ToggleButtonSlotProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `ToggleButtonProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `modelValue` | `boolean` | `undefined` | 부모가 상태를 관리할 때 사용할 현재 값입니다. |
+| `defaultValue` | `boolean` | `false` | 컴포넌트가 값을 관리할 때 사용할 초깃값입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+| `as` | `PrimitiveAs` | `'button'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `ToggleButtonSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `pressed` | `boolean` | 토글이 눌린 상태인지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+| `readonly` | `boolean` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
+
+### 이벤트
+
+#### `ToggleButton`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `boolean` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
 
 ## 파트
 

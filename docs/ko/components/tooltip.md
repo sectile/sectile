@@ -3,7 +3,7 @@
 
 키보드 포커스나 마우스 올림으로 짧은 도움말을 표시합니다.
 
-## 예시
+## 용법
 
 ### 포커스 마우스 올림
 
@@ -17,7 +17,13 @@
 
 <ComponentExample component="tooltip" scenario="initially-open" title="처음부터 열림 상태" description="처음부터 열려 있어도 실행 요소 주변 배치를 밀어내지 않습니다." :index="1" />
 
-## 공개 API
+### 외부 상태 관리
+
+현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다.
+
+<ComponentExample component="tooltip" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
+
+## API
 
 Vue 패키지: `@sectile/vue/tooltip`
 
@@ -32,15 +38,49 @@ Vue 패키지: `@sectile/vue/tooltip`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">타입</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TooltipRootProps</code></li>
-  <li><code class="component-api-token">TooltipRootSlotProps</code></li>
-  <li><code class="component-api-token">TooltipPartProps</code></li>
-  <li><code class="component-api-token">TooltipPortalProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TooltipRootProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | 기준 요소를 중심으로 팝업을 우선 배치할 방향입니다. |
+| `open` | `boolean` | `undefined` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `defaultOpen` | `boolean` | `false` | 컴포넌트가 관리하는 초기 열림 상태입니다. |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `align` | `'start' \| 'center' \| 'end'` | `'center'` | 기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다. |
+| `sideOffset` | `number` | `8` | 팝업과 기준 요소 사이 거리입니다. |
+| `arrowPadding` | `Padding` | `8` | 화살표와 팝업 가장자리 사이에 둘 최소 간격입니다. |
+| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | 레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다. |
+| `avoidCollisions` | `boolean` | `true` | 팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다. |
+| `collisionBoundary` | `Boundary` | `undefined` | 팝업을 화면 안에 유지할 때 사용할 경계입니다. |
+| `collisionPadding` | `Padding` | `8` | 팝업과 충돌 경계 사이에 둘 간격입니다. |
+| `hideWhenDetached` | `boolean` | `true` | 기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다. |
+| `middleware` | `Middleware[]` | `undefined` | 기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다. |
+| `strategy` | `Strategy` | `'fixed'` | 기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다. |
+
+#### `TooltipPartProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `TooltipPortalProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `to` | `string \| HTMLElement` | `'body'` | 포털 콘텐츠를 옮길 대상입니다. |
+
+### 슬롯
+
+#### `TooltipRootSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
 
 ## 파트
 

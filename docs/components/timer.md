@@ -3,7 +3,7 @@
 
 Measure elapsed or remaining time with start, pause, and reset actions.
 
-## Examples
+## Usage
 
 ### Stopwatch
 
@@ -23,7 +23,7 @@ Set an elapsed-time goal and track progress until completion.
 
 <ComponentExample component="timer" scenario="target" title="Target" description="Set an elapsed-time goal and track progress until completion." :index="2" />
 
-## API reference
+## API
 
 Vue package: `@sectile/vue/timer`
 
@@ -39,14 +39,52 @@ Vue package: `@sectile/vue/timer`
 </ul>
 </div>
 
-<div class="component-api-group">
-<strong class="component-api-label">Types</strong>
-<ul class="component-api-list">
-  <li><code class="component-api-token">TimerRootProps</code></li>
-  <li><code class="component-api-token">TimerSlotProps</code></li>
-  <li><code class="component-api-token">TimerPartProps</code></li>
-</ul>
-</div>
+### Props
+
+#### `TimerRootProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `autoStart` | `boolean` | `false` | Whether the timer starts immediately after mounting. |
+| `countdown` | `boolean` | `false` | Whether the timer counts down instead of measuring elapsed time. |
+| `intervalMs` | `number` | `100` | Delay in milliseconds between automatic updates. |
+| `startMs` | `number` | `0` | Initial elapsed time in milliseconds. |
+| `targetMs` | `number \| null` | `undefined` | Elapsed-time target in milliseconds. |
+
+#### `TimerPartProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `TimerSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `progress` | `number \| null` | Completion progress from 0 to 1. |
+| `start` | `void` | Starts timer updates. |
+| `pause` | `void` | Pauses timer updates. |
+| `resume` | `void` | Resumes a paused timer. |
+| `reset` | `void` | Restores the initial value and interaction state. |
+| `completed` | `boolean` | Whether the timer reached its target. |
+| `parts` | `Readonly<Record<TimerItemType, number>>` | Formatted segments of the current value. |
+| `restart` | `void` | Restarts timing from the configured initial value. |
+| `running` | `boolean` | Whether the timer is currently running. |
+| `valueMs` | `number` | Current timer value in milliseconds. |
+
+### Events
+
+#### `TimerRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `complete` | `number` | Emitted when every required segment is filled. |
+| `tick` | `number` | Emitted when a timer interval produces a new value. |
 
 ## Parts
 
