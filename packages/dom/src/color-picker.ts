@@ -22,6 +22,11 @@ export interface ColorPickerOptions extends ColorPickerPolicies {
   readonly onUpdate?: () => void;
 }
 
+export type ColorPickerValueChangeHandler = NonNullable<ColorPickerOptions['onValueChange']>;
+export type ColorPickerDraftChangeHandler = NonNullable<ColorPickerOptions['onDraftChange']>;
+export type ColorPickerFormatChangeHandler = NonNullable<ColorPickerOptions['onFormatChange']>;
+export type ColorPickerUpdateHandler = NonNullable<ColorPickerOptions['onUpdate']>;
+
 export interface ColorPickerConnection {
   getSnapshot(): RevisionSnapshot<ColorPickerState>;
   getText(): string;

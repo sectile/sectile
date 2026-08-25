@@ -8,6 +8,10 @@ import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
 export interface PinInputOptions { readonly root: HTMLElement; readonly inputs: readonly HTMLInputElement[]; readonly policies?: PinInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: string; readonly defaultValue?: string; readonly label?: string; readonly onValueChange?: (value: string) => void; readonly onComplete?: (value: string) => void; readonly onUpdate?: () => void }
+
+export type PinInputValueChangeHandler = NonNullable<PinInputOptions['onValueChange']>;
+export type PinInputCompleteHandler = NonNullable<PinInputOptions['onComplete']>;
+export type PinInputUpdateHandler = NonNullable<PinInputOptions['onUpdate']>;
 export type PinInputEffect = PinInputCommand;
 export interface PinInputConnection { getSnapshot(): RevisionSnapshot<PinInputState>; syncControlledValue(value: string): Result<RevisionSnapshot<PinInputState>>; handleEvent(event: PinInputEvent): boolean; disconnect(): void }
 export function createPinInput(options: PinInputOptions): FacadeConnection<PinInputConnection> {

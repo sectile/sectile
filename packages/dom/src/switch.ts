@@ -11,8 +11,13 @@ import {
 } from './internal/checked-control.js';
 import { getCheckboxInputAttributes, type CheckboxInputAttributes, type CheckboxInputOptions } from './checkbox.js';
 export interface SwitchOptions { readonly element: HTMLElement; readonly checked?: boolean; readonly defaultChecked?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onCheckedChange?: (checked: boolean) => void; readonly onUpdate?: () => void }
+
+export type SwitchCheckedChangeHandler = NonNullable<SwitchOptions['onCheckedChange']>;
+export type SwitchUpdateHandler = NonNullable<SwitchOptions['onUpdate']>;
 export type SwitchConnection = DOMCheckedControl<SwitchState, SwitchEvent, boolean>;
 export interface SwitchControllerOptions { readonly checked?: boolean; readonly defaultChecked?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onCheckedChange?: (checked: boolean) => void }
+
+export type SwitchControllerCheckedChangeHandler = NonNullable<SwitchControllerOptions['onCheckedChange']>;
 export type SwitchController = CheckedControlController<SwitchState, SwitchEvent, boolean>;
 export interface SwitchAttributeOptions { readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly native?: boolean }
 export type SwitchAttributes = CheckedControlAttributes & { readonly 'aria-required': 'true' | undefined; readonly 'data-scope': 'switch'; readonly 'data-part': 'root' };

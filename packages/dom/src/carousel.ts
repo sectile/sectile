@@ -19,8 +19,10 @@ import { setInteractionAttributes } from './internal/interaction.js';
 
 export type { CarouselPolicies, CarouselPosition } from '@sectile/core/carousel';
 
+export type CarouselScheduleHandler = () => void;
+
 export interface CarouselScheduler {
-  schedule(callback: () => void, delayMs: number): unknown;
+  schedule(callback: CarouselScheduleHandler, delayMs: number): unknown;
   cancel(token: unknown): void;
 }
 
@@ -55,6 +57,13 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly onAnnounce?: (id: ID) => void;
   readonly onUpdate?: () => void;
 }
+
+export type CarouselSlideLabelResolver<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['getSlideLabel']>;
+export type CarouselIndicatorLabelResolver<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['getIndicatorLabel']>;
+export type CarouselValueChangeHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onValueChange']>;
+export type CarouselPausedChangeHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onPausedChange']>;
+export type CarouselAnnounceHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onAnnounce']>;
+export type CarouselUpdateHandler<ID extends StableID = StableID> = NonNullable<CarouselOptions<ID>['onUpdate']>;
 
 export interface CarouselControlledValues<ID extends StableID = StableID> {
   readonly value?: ID | null;

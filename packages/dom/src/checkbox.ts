@@ -12,8 +12,13 @@ import {
 } from './internal/checked-control.js';
 export type { CheckboxPolicies, CheckboxState, CheckboxValue } from '@sectile/core/checkbox';
 export interface CheckboxOptions { readonly element: HTMLElement; readonly value?: CheckboxValue; readonly defaultValue?: CheckboxValue; readonly policies?: CheckboxPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: CheckboxValue) => void; readonly onUpdate?: () => void }
+
+export type CheckboxValueChangeHandler = NonNullable<CheckboxOptions['onValueChange']>;
+export type CheckboxUpdateHandler = NonNullable<CheckboxOptions['onUpdate']>;
 export type CheckboxConnection = DOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxValue>;
 export interface CheckboxControllerOptions { readonly value?: CheckboxValue; readonly defaultValue?: CheckboxValue; readonly policies?: CheckboxPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: CheckboxValue) => void }
+
+export type CheckboxControllerValueChangeHandler = NonNullable<CheckboxControllerOptions['onValueChange']>;
 export type CheckboxController = CheckedControlController<CheckboxState, CheckboxEvent, CheckboxValue>;
 export interface CheckboxAttributeOptions { readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly native?: boolean }
 export type CheckboxAttributes = CheckedControlAttributes & { readonly 'aria-required': 'true' | undefined; readonly 'data-scope': 'checkbox'; readonly 'data-part': 'root' };

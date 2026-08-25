@@ -10,6 +10,11 @@ export interface DialogOptions {
   readonly autoFocus?: boolean; readonly restoreFocus?: boolean; readonly trapFocus?: boolean; readonly onOpenChange?: (open: boolean) => void;
   readonly onInitialFocus?: () => void; readonly onFocusRestore?: () => void; readonly onUpdate?: () => void;
 }
+
+export type DialogOpenChangeHandler = NonNullable<DialogOptions['onOpenChange']>;
+export type DialogInitialFocusHandler = NonNullable<DialogOptions['onInitialFocus']>;
+export type DialogFocusRestoreHandler = NonNullable<DialogOptions['onFocusRestore']>;
+export type DialogUpdateHandler = NonNullable<DialogOptions['onUpdate']>;
 export type DialogConnection = DOMPopupConnection<DialogState, DialogEvent>;
 export function createDialog(o: DialogOptions): FacadeConnection<DialogConnection> {
   return unwrap(tryCreateDialog(o));

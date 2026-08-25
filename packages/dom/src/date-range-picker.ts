@@ -11,6 +11,11 @@ import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 
 export interface DateRangePickerOptions { readonly root: HTMLElement; readonly grid: HTMLElement; readonly trigger: HTMLElement; readonly startInput?: HTMLInputElement; readonly endInput?: HTMLInputElement; readonly policies?: DatePickerPolicies; readonly value?: DateRange | null; readonly defaultValue?: DateRange | null; readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly onValueChange?: (value: DateRange | null) => void; readonly onHighlightedValueChange?: (value: DateValue) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void; }
+
+export type DateRangePickerValueChangeHandler = NonNullable<DateRangePickerOptions['onValueChange']>;
+export type DateRangePickerHighlightedValueChangeHandler = NonNullable<DateRangePickerOptions['onHighlightedValueChange']>;
+export type DateRangePickerOpenChangeHandler = NonNullable<DateRangePickerOptions['onOpenChange']>;
+export type DateRangePickerUpdateHandler = NonNullable<DateRangePickerOptions['onUpdate']>;
 export interface DateRangePickerControlledValues { readonly value?: DateRange | null; readonly highlightedValue?: DateValue; readonly open?: boolean; }
 export interface DateRangePickerConnection { getSnapshot(): RevisionSnapshot<DateRangePickerState>; getMonth(): readonly (readonly DateValue[])[]; getWeek(): readonly DateValue[]; getYear(): readonly (readonly DatePickerMonthValue[])[]; syncControlledValues(values: DateRangePickerControlledValues): Result<RevisionSnapshot<DateRangePickerState>>; setCellAttributes(element: HTMLElement, value: DateValue): void; handleEvent(event: DateRangePickerEvent): boolean; refresh(): void; disconnect(): void; }
 export function createDateRangePicker(options: DateRangePickerOptions): FacadeConnection<DateRangePickerConnection> { return unwrap(tryCreateDateRangePicker(options)); }

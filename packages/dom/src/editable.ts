@@ -13,6 +13,10 @@ export interface EditableOptions {
   readonly submitOnBlur?: boolean; readonly policies?: EditablePolicies; readonly label?: string; readonly name?: string;
   readonly onValueChange?: (value: string) => void; readonly onEditingChange?: (editing: boolean) => void; readonly onUpdate?: () => void;
 }
+
+export type EditableValueChangeHandler = NonNullable<EditableOptions['onValueChange']>;
+export type EditableEditingChangeHandler = NonNullable<EditableOptions['onEditingChange']>;
+export type EditableUpdateHandler = NonNullable<EditableOptions['onUpdate']>;
 export interface EditableConnection { getSnapshot(): RevisionSnapshot<EditableState>; syncControlledValue(value: string): Result<RevisionSnapshot<EditableState>>; handleEvent(event: EditableEvent): boolean; refresh(): void; disconnect(): void }
 
 export function createEditable(options: EditableOptions): FacadeConnection<EditableConnection> { return unwrap(tryCreateEditable(options)); }

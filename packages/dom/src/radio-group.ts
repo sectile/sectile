@@ -37,6 +37,10 @@ export interface RadioGroupOptions<ID extends StableID = StableID> {
   readonly onUpdate?: () => void;
 }
 
+export type RadioGroupValueChangeHandler<ID extends StableID = StableID> = NonNullable<RadioGroupOptions<ID>['onValueChange']>;
+export type RadioGroupHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<RadioGroupOptions<ID>['onHighlightedValueChange']>;
+export type RadioGroupUpdateHandler<ID extends StableID = StableID> = NonNullable<RadioGroupOptions<ID>['onUpdate']>;
+
 export interface RadioGroupConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<RadioGroupState<ID>>;
   syncControlledValues(values: {

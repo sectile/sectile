@@ -28,6 +28,10 @@ export interface SpinButtonOptions extends BoundedRangeInput {
   readonly onUpdate?: () => void;
 }
 
+export type SpinButtonValueChangeHandler = NonNullable<SpinButtonOptions['onValueChange']>;
+export type SpinButtonDraftChangeHandler = NonNullable<SpinButtonOptions['onDraftChange']>;
+export type SpinButtonUpdateHandler = NonNullable<SpinButtonOptions['onUpdate']>;
+
 export interface SpinButtonConnection {
   readonly range: QuantizedRange;
   getSnapshot(): RevisionSnapshot<SpinButtonState>;

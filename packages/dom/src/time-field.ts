@@ -13,6 +13,10 @@ export { formatTimeValue } from '@sectile/core/time-field';
 export type { TimeValue } from '@sectile/core/time-field';
 
 export interface TimeFieldOptions { readonly input: HTMLInputElement; readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly native?: boolean; readonly onValueChange?: (value: TimeValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
+
+export type TimeFieldValueChangeHandler = NonNullable<TimeFieldOptions['onValueChange']>;
+export type TimeFieldInputStateChangeHandler = NonNullable<TimeFieldOptions['onInputStateChange']>;
+export type TimeFieldUpdateHandler = NonNullable<TimeFieldOptions['onUpdate']>;
 export interface TimeFieldControlledValues { readonly value?: TimeValue | null; readonly inputState?: TextEditingState; }
 export interface TimeFieldConnection { getSnapshot(): RevisionSnapshot<TimeFieldState>; getText(): string; getValue(): TimeValue | null; syncControlledValues(values: TimeFieldControlledValues): Result<RevisionSnapshot<TimeFieldState>>; handleEvent(event: TimeFieldEvent): boolean; refresh(): void; disconnect(): void; }
 

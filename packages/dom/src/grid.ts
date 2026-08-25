@@ -27,6 +27,14 @@ export interface GridOptions<ID extends StableID = StableID> extends StructureGr
   readonly onEditCancel?: (id: ID) => void;
   readonly onUpdate?: () => void;
 }
+
+export type GridValueChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onValueChange']>;
+export type GridHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onHighlightedValueChange']>;
+export type GridEditModeChangeHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditModeChange']>;
+export type GridEditStartHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditStart']>;
+export type GridEditCommitHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditCommit']>;
+export type GridEditCancelHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onEditCancel']>;
+export type GridUpdateHandler<ID extends StableID = StableID> = NonNullable<GridOptions<ID>['onUpdate']>;
 export interface GridControlledValues<ID extends StableID = StableID> { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly editMode?: GridEditMode }
 export interface GridCellAttributes { readonly disabled?: boolean }
 export interface GridConnection<ID extends StableID = StableID> {

@@ -63,6 +63,10 @@ export interface TooltipOptions {
   readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate?: () => void;
 }
+
+export type TooltipOpenChangeHandler = NonNullable<TooltipOptions['onOpenChange']>;
+export type TooltipPositionChangeHandler = NonNullable<TooltipOptions['onPositionChange']>;
+export type TooltipUpdateHandler = NonNullable<TooltipOptions['onUpdate']>;
 export interface TooltipConnection extends DOMPopupConnection<TooltipState, TooltipEvent> {
   updatePosition(): void;
 }

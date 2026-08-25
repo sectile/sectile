@@ -8,6 +8,10 @@ import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
 
 export interface TagsInputOptions { readonly root: HTMLElement; readonly input: HTMLInputElement; readonly policies?: TagsInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: readonly string[]; readonly defaultValue?: readonly string[]; readonly inputValue?: string; readonly defaultInputValue?: string; readonly label?: string; readonly onValueChange?: (value: readonly string[]) => void; readonly onInputValueChange?: (value: string) => void; readonly onUpdate?: () => void }
+
+export type TagsInputValueChangeHandler = NonNullable<TagsInputOptions['onValueChange']>;
+export type TagsInputInputValueChangeHandler = NonNullable<TagsInputOptions['onInputValueChange']>;
+export type TagsInputUpdateHandler = NonNullable<TagsInputOptions['onUpdate']>;
 export interface TagsInputConnection { getSnapshot(): RevisionSnapshot<TagsInputState>; syncControlledValues(values: { readonly value?: readonly string[]; readonly inputValue?: string }): Result<RevisionSnapshot<TagsInputState>>; setTagAttributes(element: HTMLElement, index: number): void; handleEvent(event: TagsInputEvent): boolean; disconnect(): void }
 export function createTagsInput(options: TagsInputOptions): FacadeConnection<TagsInputConnection> {
   return unwrap(tryCreateTagsInput(options));

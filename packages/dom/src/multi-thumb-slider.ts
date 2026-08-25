@@ -26,6 +26,11 @@ export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends
   readonly onValuesChange?: (ticks: readonly number[]) => void;
   readonly onUpdate?: () => void;
 }
+
+export type MultiThumbSliderThumbLabelResolver<ID extends StableID = StableID> = NonNullable<MultiThumbSliderOptions<ID>['getThumbLabel']>;
+export type MultiThumbSliderValueFormatter<ID extends StableID = StableID> = NonNullable<MultiThumbSliderOptions<ID>['formatValue']>;
+export type MultiThumbSliderValuesChangeHandler<ID extends StableID = StableID> = NonNullable<MultiThumbSliderOptions<ID>['onValuesChange']>;
+export type MultiThumbSliderUpdateHandler<ID extends StableID = StableID> = NonNullable<MultiThumbSliderOptions<ID>['onUpdate']>;
 export interface MultiThumbSliderControlledValues<ID extends StableID = StableID> { readonly values: readonly number[]; readonly highlightedValue?: ID | null }
 export interface MultiThumbSliderConnection<ID extends StableID = StableID> {
   readonly range: QuantizedRange;

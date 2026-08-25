@@ -59,6 +59,9 @@ export interface CalendarControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: CalendarHighlightChangeDetails<ID>) => void;
 }
 
+export type CalendarControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<CalendarControllerOptions<ID>['onValueChange']>;
+export type CalendarControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<CalendarControllerOptions<ID>['onHighlightedValueChange']>;
+
 export interface CalendarControlledValues<ID extends StableID = StableID> {
   readonly value?: ID | null;
   readonly highlightedValue?: ID | null;
@@ -98,6 +101,10 @@ export interface CalendarConnectionOptions<ID extends StableID = StableID> {
   readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
+
+export type CalendarConnectionPageRequestHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onPageRequest']>;
+export type CalendarConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onTransition']>;
+export type CalendarConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onUpdate']>;
 
 export interface CalendarCellAttributes<ID extends StableID = StableID> {
   readonly id: ID;

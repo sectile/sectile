@@ -37,6 +37,10 @@ export interface ToolbarOptions<ID extends StableID = StableID> {
   readonly onUpdate?: () => void;
 }
 
+export type ToolbarHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<ToolbarOptions<ID>['onHighlightedValueChange']>;
+export type ToolbarInvokeHandler<ID extends StableID = StableID> = NonNullable<ToolbarOptions<ID>['onInvoke']>;
+export type ToolbarUpdateHandler<ID extends StableID = StableID> = NonNullable<ToolbarOptions<ID>['onUpdate']>;
+
 export interface ToolbarConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<ToolbarState<ID>>;
   syncControlledValue(value: ID | null): Result<RevisionSnapshot<ToolbarState<ID>>>;

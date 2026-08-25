@@ -85,6 +85,11 @@ export interface ComboboxControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: ComboboxHighlightChangeDetails<ID>) => void;
 }
 
+export type ComboboxControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<ComboboxControllerOptions<ID>['onValueChange']>;
+export type ComboboxControllerInputStateChangeHandler<ID extends StableID = StableID> = NonNullable<ComboboxControllerOptions<ID>['onInputStateChange']>;
+export type ComboboxControllerOpenChangeHandler<ID extends StableID = StableID> = NonNullable<ComboboxControllerOptions<ID>['onOpenChange']>;
+export type ComboboxControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<ComboboxControllerOptions<ID>['onHighlightedValueChange']>;
+
 export interface ComboboxControlledValues<ID extends StableID = StableID> {
   readonly value?: ID | null;
   readonly inputState?: TextEditingState;
@@ -134,6 +139,11 @@ export interface ComboboxConnectionOptions<ID extends StableID = StableID> {
   readonly onTransition?: (details: ComboboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
+
+export type ComboboxConnectionItemElementIDResolver<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['getItemElementID']>;
+export type ComboboxConnectionAcceptHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onAccept']>;
+export type ComboboxConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onTransition']>;
+export type ComboboxConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onUpdate']>;
 
 export interface ComboboxItemAttributes<ID extends StableID = StableID> {
   readonly id: ID;

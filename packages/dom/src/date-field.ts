@@ -29,6 +29,10 @@ export interface DateFieldOptions {
   readonly onUpdate?: () => void;
 }
 
+export type DateFieldValueChangeHandler = NonNullable<DateFieldOptions['onValueChange']>;
+export type DateFieldInputStateChangeHandler = NonNullable<DateFieldOptions['onInputStateChange']>;
+export type DateFieldUpdateHandler = NonNullable<DateFieldOptions['onUpdate']>;
+
 export interface DateFieldControlledValues { readonly value?: DateValue | null; readonly inputState?: TextEditingState; }
 export interface DateFieldConnection {
   getSnapshot(): RevisionSnapshot<DateFieldState>;

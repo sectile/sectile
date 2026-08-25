@@ -65,6 +65,9 @@ export interface ListboxControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: ListboxHighlightChangeDetails<ID>) => void;
 }
 
+export type ListboxControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<ListboxControllerOptions<ID>['onValueChange']>;
+export type ListboxControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<ListboxControllerOptions<ID>['onHighlightedValueChange']>;
+
 export type ListboxItemsControllerOptions<ID extends StableID = StableID> =
   Omit<ListboxControllerOptions<ID>, 'domain'> & { readonly items: readonly ID[] };
 
@@ -74,6 +77,10 @@ export interface ListboxTypeaheadOptions<ID extends StableID = StableID> {
   readonly timeoutMs?: number;
   readonly now?: () => number;
 }
+
+export type ListboxTypeaheadTextValueResolver<ID extends StableID = StableID> = NonNullable<ListboxTypeaheadOptions<ID>['textValue']>;
+export type ListboxTypeaheadNormalizer<ID extends StableID = StableID> = NonNullable<ListboxTypeaheadOptions<ID>['normalize']>;
+export type ListboxTypeaheadClock<ID extends StableID = StableID> = NonNullable<ListboxTypeaheadOptions<ID>['now']>;
 
 export interface ListboxControlledValues<ID extends StableID = StableID> {
   readonly value?: readonly ID[];
@@ -115,6 +122,10 @@ export interface ListboxConnectionOptions<ID extends StableID = StableID> {
   readonly onTransition?: (details: ListboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
+
+export type ListboxConnectionActivateHandler<ID extends StableID = StableID> = NonNullable<ListboxConnectionOptions<ID>['onActivate']>;
+export type ListboxConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<ListboxConnectionOptions<ID>['onTransition']>;
+export type ListboxConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<ListboxConnectionOptions<ID>['onUpdate']>;
 
 export interface ListboxItemAttributes<ID extends StableID = StableID> {
   readonly id: ID;

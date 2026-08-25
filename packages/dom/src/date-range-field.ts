@@ -17,6 +17,11 @@ export interface DateRangeFieldOptions {
   readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string;
   readonly onValueChange?: (value: DateRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void;
 }
+
+export type DateRangeFieldValueChangeHandler = NonNullable<DateRangeFieldOptions['onValueChange']>;
+export type DateRangeFieldStartInputStateChangeHandler = NonNullable<DateRangeFieldOptions['onStartInputStateChange']>;
+export type DateRangeFieldEndInputStateChangeHandler = NonNullable<DateRangeFieldOptions['onEndInputStateChange']>;
+export type DateRangeFieldUpdateHandler = NonNullable<DateRangeFieldOptions['onUpdate']>;
 export interface DateRangeFieldControlledValues { readonly value?: DateRange | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState }
 export interface DateRangeFieldConnection { getSnapshot(): RevisionSnapshot<DateRangeFieldState>; getValue(): DateRange | null; syncControlledValues(values: DateRangeFieldControlledValues): Result<RevisionSnapshot<DateRangeFieldState>>; handleEvent(event: DateRangeFieldEvent): boolean; refresh(): void; disconnect(): void }
 

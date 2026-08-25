@@ -78,6 +78,12 @@ export interface PopoverOptions {
   readonly onFocusRestore?: () => void;
   readonly onUpdate?: () => void;
 }
+
+export type PopoverOpenChangeHandler = NonNullable<PopoverOptions['onOpenChange']>;
+export type PopoverPositionChangeHandler = NonNullable<PopoverOptions['onPositionChange']>;
+export type PopoverInitialFocusHandler = NonNullable<PopoverOptions['onInitialFocus']>;
+export type PopoverFocusRestoreHandler = NonNullable<PopoverOptions['onFocusRestore']>;
+export type PopoverUpdateHandler = NonNullable<PopoverOptions['onUpdate']>;
 export interface PopoverConnection extends DOMPopupConnection<PopoverState, PopoverEvent> {
   updatePosition(): void;
 }

@@ -9,6 +9,7 @@ interface FacadeOptions {
 }
 
 type SnapshotOf<Connection extends SnapshotConnection> = ReturnType<Connection['getSnapshot']>;
+export type FacadeSnapshotListener<Connection extends SnapshotConnection> = (snapshot: SnapshotOf<Connection>) => void;
 type StateOf<Connection extends SnapshotConnection> = SnapshotOf<Connection>['state'];
 type SendInput<Connection> = Connection extends { handleEvent(input: infer Input): boolean }
   ? Input
@@ -38,7 +39,7 @@ export type FacadeConnection<Connection extends SnapshotConnection> = Connection
   readonly state: StateOf<Connection>;
   send(input: SendInput<Connection>): boolean;
   update(input: UpdateInput<Connection>): UpdateResult<Connection>;
-  subscribe(listener: (snapshot: SnapshotOf<Connection>) => void): () => void;
+  subscribe(listener: FacadeSnapshotListener<Connection>): () => void;
   destroy(): void;
 };
 
@@ -49,7 +50,7 @@ export function createFacadeConnection<
   options: Options,
   construct: (options: Options) => Result<Connection>,
 ): Result<FacadeConnection<Connection>> {
-  const subscribers = new Set<(snapshot: SnapshotOf<Connection>) => void>();
+  const subscribers = new Set<FacadeSnapshotListener<Connection>>();
   let connection: Connection | undefined;
   let active = true;
   const onUpdate = (): void => {
@@ -67,7 +68,7 @@ export function createFacadeConnection<
       if (property === 'state') return connection?.getSnapshot().state;
       if (property === 'send') return (input: unknown): boolean => active && Boolean(callFirst(target, ['handleEvent', 'handleKeyboardInput', 'handleKeyboardEvent', 'handleBeforeInput'], input));
       if (property === 'update') return (input: unknown): unknown => callFirst(target, ['syncControlledValues', 'syncControlledValue', 'syncWindow'], input);
-      if (property === 'subscribe') return (listener: (snapshot: SnapshotOf<Connection>) => void): (() => void) => {
+      if (property === 'subscribe') return (listener: FacadeSnapshotListener<Connection>): (() => void) => {
         subscribers.add(listener);
         return (): void => { subscribers.delete(listener); };
       };

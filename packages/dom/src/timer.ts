@@ -8,6 +8,10 @@ import { createSemanticController, type SemanticController } from './internal/se
 export type TimerItemType = keyof TimerParts;
 export type TimerAction = 'start' | 'pause' | 'resume' | 'reset' | 'restart' | 'toggle';
 export interface TimerOptions extends TimerPolicies { readonly root: HTMLElement; readonly autoStart?: boolean; readonly intervalMs?: number; readonly onTick?: (valueMs: number, parts: TimerParts) => void; readonly onComplete?: (valueMs: number) => void; readonly onUpdate?: () => void }
+
+export type TimerTickHandler = NonNullable<TimerOptions['onTick']>;
+export type TimerCompleteHandler = NonNullable<TimerOptions['onComplete']>;
+export type TimerUpdateHandler = NonNullable<TimerOptions['onUpdate']>;
 export interface TimerConnection { getSnapshot(): RevisionSnapshot<TimerState>; handleEvent(event: TimerEvent): boolean; start(): boolean; pause(): boolean; resume(): boolean; reset(): boolean; restart(): boolean; setItemAttributes(element: HTMLElement, type: TimerItemType): void; setActionAttributes(element: HTMLButtonElement, action: TimerAction): void; disconnect(): void }
 export function createTimer(options: TimerOptions): FacadeConnection<TimerConnection> { return unwrap(tryCreateTimer(options)); }
 export function tryCreateTimer(options: TimerOptions): Result<FacadeConnection<TimerConnection>> { return createFacadeConnection(options, (normalized) => tryCreateTimerConnection(normalized)); }

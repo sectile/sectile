@@ -33,6 +33,11 @@ export interface DatePickerOptions {
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
 }
+
+export type DatePickerValueChangeHandler = NonNullable<DatePickerOptions['onValueChange']>;
+export type DatePickerHighlightedValueChangeHandler = NonNullable<DatePickerOptions['onHighlightedValueChange']>;
+export type DatePickerOpenChangeHandler = NonNullable<DatePickerOptions['onOpenChange']>;
+export type DatePickerUpdateHandler = NonNullable<DatePickerOptions['onUpdate']>;
 export interface DatePickerControlledValues { readonly value?: DateValue | null; readonly highlightedValue?: DateValue; readonly open?: boolean; }
 export interface DatePickerConnection {
   getSnapshot(): RevisionSnapshot<DatePickerState>;

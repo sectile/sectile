@@ -10,8 +10,13 @@ import {
   type DOMCheckedControl,
 } from './internal/checked-control.js';
 export interface ToggleButtonOptions { readonly element: HTMLElement; readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onPressedChange?: (pressed: boolean) => void; readonly onUpdate?: () => void }
+
+export type ToggleButtonPressedChangeHandler = NonNullable<ToggleButtonOptions['onPressedChange']>;
+export type ToggleButtonUpdateHandler = NonNullable<ToggleButtonOptions['onUpdate']>;
 export type ToggleButtonConnection = DOMCheckedControl<ToggleButtonState, ToggleButtonEvent, boolean>;
 export interface ToggleButtonControllerOptions { readonly pressed?: boolean; readonly defaultPressed?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onPressedChange?: (pressed: boolean) => void }
+
+export type ToggleButtonControllerPressedChangeHandler = NonNullable<ToggleButtonControllerOptions['onPressedChange']>;
 export type ToggleButtonController = CheckedControlController<ToggleButtonState, ToggleButtonEvent, boolean>;
 export interface ToggleButtonAttributeOptions { readonly disabled?: boolean; readonly readOnly?: boolean; readonly native?: boolean }
 export type ToggleButtonAttributes = CheckedControlAttributes & { readonly 'data-scope': 'toggle-button'; readonly 'data-part': 'root' };

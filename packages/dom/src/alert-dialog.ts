@@ -10,6 +10,12 @@ export interface AlertDialogOptions {
   readonly restoreFocus?: boolean; readonly trapFocus?: boolean; readonly onOpenChange?: (open: boolean) => void; readonly onInitialFocus?: () => void;
   readonly onFocusRestore?: () => void; readonly onAnnounce?: () => void; readonly onUpdate?: () => void;
 }
+
+export type AlertDialogOpenChangeHandler = NonNullable<AlertDialogOptions['onOpenChange']>;
+export type AlertDialogInitialFocusHandler = NonNullable<AlertDialogOptions['onInitialFocus']>;
+export type AlertDialogFocusRestoreHandler = NonNullable<AlertDialogOptions['onFocusRestore']>;
+export type AlertDialogAnnounceHandler = NonNullable<AlertDialogOptions['onAnnounce']>;
+export type AlertDialogUpdateHandler = NonNullable<AlertDialogOptions['onUpdate']>;
 export type AlertDialogConnection = DOMPopupConnection<AlertDialogState, AlertDialogEvent>;
 export function createAlertDialog(o: AlertDialogOptions): FacadeConnection<AlertDialogConnection> {
   return unwrap(tryCreateAlertDialog(o));

@@ -44,6 +44,9 @@ export interface AccordionControllerOptions<ID extends StableID = StableID> {
   readonly onHighlightedValueChange?: (change: AccordionHighlightChangeDetails<ID>) => void;
 }
 
+export type AccordionControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<AccordionControllerOptions<ID>['onValueChange']>;
+export type AccordionControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<AccordionControllerOptions<ID>['onHighlightedValueChange']>;
+
 export interface AccordionControlledValues<ID extends StableID = StableID> {
   readonly value?: readonly ID[];
   readonly openIDs?: readonly ID[];
@@ -65,6 +68,9 @@ export interface AccordionOptions<ID extends StableID = StableID>
   readonly onOpenChange?: (openIDs: readonly ID[]) => void;
   readonly onUpdate?: () => void;
 }
+
+export type AccordionOpenChangeHandler<ID extends StableID = StableID> = NonNullable<AccordionOptions<ID>['onOpenChange']>;
+export type AccordionUpdateHandler<ID extends StableID = StableID> = NonNullable<AccordionOptions<ID>['onUpdate']>;
 
 export interface AccordionRootAttributesOptions {
   readonly disabled?: boolean;

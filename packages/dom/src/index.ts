@@ -170,6 +170,7 @@ export {
   type CarouselConnection,
   type CarouselControlledValues,
   type CarouselOptions,
+  type CarouselScheduleHandler,
   type CarouselScheduler,
 } from './carousel.js';
 export { createFeed, tryCreateFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
@@ -340,3 +341,279 @@ export { createYearPicker, tryCreateYearPicker, type YearPickerConnection, type 
 export { createYearRangePicker, tryCreateYearRangePicker, type YearRangePickerConnection, type YearRangePickerControlledValues, type YearRangePickerOptions } from './year-range-picker.js';
 export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';
 export { createDateTimeRangePicker, tryCreateDateTimeRangePicker, type DateTimeRangePickerConnection, type DateTimeRangePickerControlledValues, type DateTimeRangePickerOptions } from './date-time-range-picker.js';
+
+export type {
+  AccordionControllerHighlightedValueChangeHandler,
+  AccordionControllerValueChangeHandler,
+  AccordionOpenChangeHandler,
+  AccordionUpdateHandler,
+} from './accordion.js';
+export type {
+  AlertDialogAnnounceHandler,
+  AlertDialogFocusRestoreHandler,
+  AlertDialogInitialFocusHandler,
+  AlertDialogOpenChangeHandler,
+  AlertDialogUpdateHandler,
+} from './alert-dialog.js';
+export type {
+  CalendarConnectionPageRequestHandler,
+  CalendarConnectionTransitionHandler,
+  CalendarConnectionUpdateHandler,
+  CalendarControllerHighlightedValueChangeHandler,
+  CalendarControllerValueChangeHandler,
+} from './calendar.js';
+export type {
+  CarouselAnnounceHandler,
+  CarouselIndicatorLabelResolver,
+  CarouselPausedChangeHandler,
+  CarouselSlideLabelResolver,
+  CarouselUpdateHandler,
+  CarouselValueChangeHandler,
+} from './carousel.js';
+export type {
+  CascadeSelectHighlightedValueChangeHandler,
+  CascadeSelectOpenChangeHandler,
+  CascadeSelectUpdateHandler,
+  CascadeSelectValueChangeHandler,
+} from './cascade-select.js';
+export type {
+  CheckboxControllerValueChangeHandler,
+  CheckboxUpdateHandler,
+  CheckboxValueChangeHandler,
+} from './checkbox.js';
+export type {
+  ColorPickerDraftChangeHandler,
+  ColorPickerFormatChangeHandler,
+  ColorPickerUpdateHandler,
+  ColorPickerValueChangeHandler,
+} from './color-picker.js';
+export type {
+  ComboboxConnectionAcceptHandler,
+  ComboboxConnectionItemElementIDResolver,
+  ComboboxConnectionTransitionHandler,
+  ComboboxConnectionUpdateHandler,
+  ComboboxControllerHighlightedValueChangeHandler,
+  ComboboxControllerInputStateChangeHandler,
+  ComboboxControllerOpenChangeHandler,
+  ComboboxControllerValueChangeHandler,
+} from './combobox.js';
+export type {
+  DateFieldInputStateChangeHandler,
+  DateFieldUpdateHandler,
+  DateFieldValueChangeHandler,
+} from './date-field.js';
+export type {
+  DatePickerHighlightedValueChangeHandler,
+  DatePickerOpenChangeHandler,
+  DatePickerUpdateHandler,
+  DatePickerValueChangeHandler,
+} from './date-picker.js';
+export type {
+  DateRangeFieldEndInputStateChangeHandler,
+  DateRangeFieldStartInputStateChangeHandler,
+  DateRangeFieldUpdateHandler,
+  DateRangeFieldValueChangeHandler,
+} from './date-range-field.js';
+export type {
+  DateRangePickerHighlightedValueChangeHandler,
+  DateRangePickerOpenChangeHandler,
+  DateRangePickerUpdateHandler,
+  DateRangePickerValueChangeHandler,
+} from './date-range-picker.js';
+export type {
+  DateTimeFieldInputStateChangeHandler,
+  DateTimeFieldUpdateHandler,
+  DateTimeFieldValueChangeHandler,
+} from './date-time-field.js';
+export type {
+  DateTimePickerHighlightedValueChangeHandler,
+  DateTimePickerOpenChangeHandler,
+  DateTimePickerUpdateHandler,
+  DateTimePickerValueChangeHandler,
+} from './date-time-picker.js';
+export type {
+  DateTimeRangePickerHighlightedValueChangeHandler,
+  DateTimeRangePickerOpenChangeHandler,
+  DateTimeRangePickerUpdateHandler,
+  DateTimeRangePickerValueChangeHandler,
+} from './date-time-range-picker.js';
+export type {
+  DialogFocusRestoreHandler,
+  DialogInitialFocusHandler,
+  DialogOpenChangeHandler,
+  DialogUpdateHandler,
+} from './dialog.js';
+export type {
+  DisclosureControllerOpenChangeHandler,
+  DisclosureOpenChangeHandler,
+  DisclosureUpdateHandler,
+} from './disclosure.js';
+export type {
+  EditableEditingChangeHandler,
+  EditableUpdateHandler,
+  EditableValueChangeHandler,
+} from './editable.js';
+export type {
+  FeedHighlightedValueChangeHandler,
+  FeedPositionResolver,
+  FeedRequestWindowHandler,
+  FeedUpdateHandler,
+} from './feed.js';
+export type {
+  GridEditCancelHandler,
+  GridEditCommitHandler,
+  GridEditModeChangeHandler,
+  GridEditStartHandler,
+  GridHighlightedValueChangeHandler,
+  GridUpdateHandler,
+  GridValueChangeHandler,
+} from './grid.js';
+export type {
+  ListboxConnectionActivateHandler,
+  ListboxConnectionTransitionHandler,
+  ListboxConnectionUpdateHandler,
+  ListboxControllerHighlightedValueChangeHandler,
+  ListboxControllerValueChangeHandler,
+  ListboxTypeaheadClock,
+  ListboxTypeaheadNormalizer,
+  ListboxTypeaheadTextValueResolver,
+} from './listbox.js';
+export type {
+  MultiThumbSliderThumbLabelResolver,
+  MultiThumbSliderUpdateHandler,
+  MultiThumbSliderValueFormatter,
+  MultiThumbSliderValuesChangeHandler,
+} from './multi-thumb-slider.js';
+export type {
+  NumberFieldInputStateChangeHandler,
+  NumberFieldUpdateHandler,
+  NumberFieldValueChangeHandler,
+} from './number-field.js';
+export type {
+  PaginationControlLabelResolver,
+  PaginationItemsPerPageChangeHandler,
+  PaginationPageChangeHandler,
+  PaginationPageLabelResolver,
+  PaginationUpdateHandler,
+} from './pagination.js';
+export type {
+  PinInputCompleteHandler,
+  PinInputUpdateHandler,
+  PinInputValueChangeHandler,
+} from './pin-input.js';
+export type {
+  PopoverFocusRestoreHandler,
+  PopoverInitialFocusHandler,
+  PopoverOpenChangeHandler,
+  PopoverPositionChangeHandler,
+  PopoverUpdateHandler,
+} from './popover.js';
+export type {
+  QuantityFieldDisplayUnitChangeHandler,
+  QuantityFieldInputStateChangeHandler,
+  QuantityFieldQuantityChangeHandler,
+  QuantityFieldUpdateHandler,
+} from './quantity-field.js';
+export type {
+  RadioGroupHighlightedValueChangeHandler,
+  RadioGroupUpdateHandler,
+  RadioGroupValueChangeHandler,
+} from './radio-group.js';
+export type {
+  RatingValueChangeHandler,
+} from './rating.js';
+export type {
+  SelectHighlightedValueChangeHandler,
+  SelectOpenChangeHandler,
+  SelectUpdateHandler,
+  SelectValueChangeHandler,
+} from './select.js';
+export type {
+  SliderAttributeValueFormatter,
+  SliderConnectionTransitionHandler,
+  SliderConnectionUpdateHandler,
+  SliderConnectionValueFormatter,
+  SliderControllerValueChangeHandler,
+  SliderRangeControllerValueChangeHandler,
+} from './slider.js';
+export type {
+  SpinButtonDraftChangeHandler,
+  SpinButtonUpdateHandler,
+  SpinButtonValueChangeHandler,
+} from './spin-button.js';
+export type {
+  SwitchCheckedChangeHandler,
+  SwitchControllerCheckedChangeHandler,
+  SwitchUpdateHandler,
+} from './switch.js';
+export type {
+  TabsActivateHandler,
+  TabsHighlightedValueChangeHandler,
+  TabsUpdateHandler,
+  TabsValueChangeHandler,
+} from './tabs.js';
+export type {
+  TagsInputInputValueChangeHandler,
+  TagsInputUpdateHandler,
+  TagsInputValueChangeHandler,
+} from './tags-input.js';
+export type {
+  TextConnectionTransitionHandler,
+  TextConnectionUpdateHandler,
+  TextControllerValueChangeHandler,
+} from './text.js';
+export type {
+  TimeFieldInputStateChangeHandler,
+  TimeFieldUpdateHandler,
+  TimeFieldValueChangeHandler,
+} from './time-field.js';
+export type {
+  TimeRangeFieldEndInputStateChangeHandler,
+  TimeRangeFieldStartInputStateChangeHandler,
+  TimeRangeFieldUpdateHandler,
+  TimeRangeFieldValueChangeHandler,
+} from './time-range-field.js';
+export type {
+  TimerCompleteHandler,
+  TimerTickHandler,
+  TimerUpdateHandler,
+} from './timer.js';
+export type {
+  ToastAnnounceHandler,
+  ToastDismissHandler,
+  ToastItemsChangeHandler,
+  ToastUpdateHandler,
+} from './toast.js';
+export type {
+  ToggleButtonControllerPressedChangeHandler,
+  ToggleButtonPressedChangeHandler,
+  ToggleButtonUpdateHandler,
+} from './toggle-button.js';
+export type {
+  ToolbarHighlightedValueChangeHandler,
+  ToolbarInvokeHandler,
+  ToolbarUpdateHandler,
+} from './toolbar.js';
+export type {
+  TooltipOpenChangeHandler,
+  TooltipPositionChangeHandler,
+  TooltipUpdateHandler,
+} from './tooltip.js';
+export type {
+  TreeGridConnectionCellValueResolver,
+  TreeGridConnectionCellValueSetter,
+  TreeGridConnectionTransitionHandler,
+  TreeGridConnectionUpdateHandler,
+  TreeGridControllerEditModeChangeHandler,
+  TreeGridControllerExpandedValueChangeHandler,
+  TreeGridControllerHighlightedValueChangeHandler,
+  TreeGridControllerValueChangeHandler,
+} from './tree-grid.js';
+export type {
+  TreeViewConnectionTransitionHandler,
+  TreeViewConnectionUpdateHandler,
+  TreeViewControllerExpandedValuesChangeHandler,
+  TreeViewControllerHighlightedValueChangeHandler,
+  TreeViewControllerValueChangeHandler,
+} from './tree-view.js';
+export type { FacadeSnapshotListener } from './internal/facade.js';

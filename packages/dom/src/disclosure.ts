@@ -20,6 +20,9 @@ export interface DisclosureOptions {
   readonly onOpenChange?: (open: boolean) => void;
   readonly onUpdate?: () => void;
 }
+
+export type DisclosureOpenChangeHandler = NonNullable<DisclosureOptions['onOpenChange']>;
+export type DisclosureUpdateHandler = NonNullable<DisclosureOptions['onUpdate']>;
 export interface DisclosureControllerOptions {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
@@ -27,6 +30,8 @@ export interface DisclosureControllerOptions {
   readonly readOnly?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
 }
+
+export type DisclosureControllerOpenChangeHandler = NonNullable<DisclosureControllerOptions['onOpenChange']>;
 export interface DisclosureController {
   getSnapshot(): RevisionSnapshot<DisclosureState>;
   syncControlledValue(open: boolean): Result<RevisionSnapshot<DisclosureState>>;

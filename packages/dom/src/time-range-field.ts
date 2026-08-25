@@ -11,6 +11,11 @@ import { toTextEvent, type TextInput } from './text.js';
 
 export type { TimeRange } from '@sectile/core/time-range-field';
 export interface TimeRangeFieldOptions { readonly startInput: HTMLInputElement; readonly endInput: HTMLInputElement; readonly policies?: TimeRangeFieldPolicies; readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }
+
+export type TimeRangeFieldValueChangeHandler = NonNullable<TimeRangeFieldOptions['onValueChange']>;
+export type TimeRangeFieldStartInputStateChangeHandler = NonNullable<TimeRangeFieldOptions['onStartInputStateChange']>;
+export type TimeRangeFieldEndInputStateChangeHandler = NonNullable<TimeRangeFieldOptions['onEndInputStateChange']>;
+export type TimeRangeFieldUpdateHandler = NonNullable<TimeRangeFieldOptions['onUpdate']>;
 export interface TimeRangeFieldControlledValues { readonly value?: TimeRange | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState }
 export interface TimeRangeFieldConnection { getSnapshot(): RevisionSnapshot<TimeRangeFieldState>; getValue(): TimeRange | null; syncControlledValues(values: TimeRangeFieldControlledValues): Result<RevisionSnapshot<TimeRangeFieldState>>; handleEvent(event: TimeRangeFieldEvent): boolean; refresh(): void; disconnect(): void }
 export function createTimeRangeField(options: TimeRangeFieldOptions): FacadeConnection<TimeRangeFieldConnection> { return unwrap(tryCreateTimeRangeField(options)); }

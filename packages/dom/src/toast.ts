@@ -17,6 +17,11 @@ export interface ToastOptions<ID extends StableID = StableID> extends ToastPolic
   readonly onDismiss?: (id: ID, reason: 'manual' | 'timeout' | 'overflow') => void;
   readonly onUpdate?: () => void;
 }
+
+export type ToastItemsChangeHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onItemsChange']>;
+export type ToastAnnounceHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onAnnounce']>;
+export type ToastDismissHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onDismiss']>;
+export type ToastUpdateHandler<ID extends StableID = StableID> = NonNullable<ToastOptions<ID>['onUpdate']>;
 export interface ToastConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<ToastState<ID>>;
   handleEvent(event: ToastEvent<ID>): boolean;

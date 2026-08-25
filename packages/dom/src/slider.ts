@@ -50,6 +50,8 @@ export interface SliderControllerOptions {
   readonly onValueChange?: (change: SliderValueChangeDetails) => void;
 }
 
+export type SliderControllerValueChangeHandler = NonNullable<SliderControllerOptions['onValueChange']>;
+
 export interface SliderRangeValueChangeDetails {
   readonly value: string;
   readonly previousValue: string;
@@ -63,6 +65,8 @@ export type SliderRangeControllerOptions = Omit<SliderControllerOptions, 'range'
     readonly onValueChange?: (change: SliderRangeValueChangeDetails) => void;
   };
 
+export type SliderRangeControllerValueChangeHandler = NonNullable<SliderRangeControllerOptions['onValueChange']>;
+
 export interface SliderAttributeOptions {
   readonly scope?: string;
   readonly part?: string;
@@ -73,6 +77,8 @@ export interface SliderAttributeOptions {
   readonly readOnly?: boolean;
   readonly formatValue?: (value: string) => string;
 }
+
+export type SliderAttributeValueFormatter = NonNullable<SliderAttributeOptions['formatValue']>;
 
 export interface SliderInputOptions {
   readonly name?: string;
@@ -118,6 +124,10 @@ export interface SliderConnectionOptions {
   readonly onTransition?: (details: SliderTransitionDetails) => void;
   readonly onUpdate?: () => void;
 }
+
+export type SliderConnectionValueFormatter = NonNullable<SliderConnectionOptions['formatValue']>;
+export type SliderConnectionTransitionHandler = NonNullable<SliderConnectionOptions['onTransition']>;
+export type SliderConnectionUpdateHandler = NonNullable<SliderConnectionOptions['onUpdate']>;
 
 export interface SliderConnection {
   readonly range: QuantizedRange;
