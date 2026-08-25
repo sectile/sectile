@@ -31,16 +31,47 @@ import {
   type FormParticipantValidation,
   type FormRelativePath,
   type FormSubmissionElement,
-  type FormSubmitDetails,
+  type FormSubmitPayload as DOMFormSubmitPayload,
+  type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
 export type FormState = FormConnection<string>['state'];
 export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
 export type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0];
+export type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>;
+export type FormSubmitEvent<Shape extends object = Record<string, unknown>> = Omit<
+  DOMFormSubmitPayload<string, FormValues<Shape>>,
+  'event'
+> & {
+  readonly nativeEvent: SubmitEvent;
+  readonly defaultPrevented: boolean;
+  preventDefault(): void;
+  stopPropagation(): void;
+  stopImmediatePropagation(): void;
+};
+export type FormSubmitIssue = Omit<FormIssue, 'source'>;
+export type FormSubmitResult =
+  | void
+  | { readonly ok: true }
+  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] };
+export type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
+  (event: FormSubmitEvent<Shape>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
+export type FormResetHandler = () => void;
+export type FormStateChangeHandler = (state: FormState) => void;
+export type FormValidateHandler = () => FormParticipantValidation<string>;
+export type FormSubmitStartedAction = () => boolean;
+export type FormSubmitSucceededAction = () => boolean;
+export type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean;
+export type FormReplaceIssuesAction = (
+  source: FormIssueSource,
+  issues: readonly FormIssue[],
+) => boolean;
+export type FormResetAction = () => void;
 
 export interface FormRootProps {
   readonly issues?: readonly FormIssue[];
+  readonly onSubmit?: FormSubmitHandler;
 }
 
 export interface FormRootSlotProps {
@@ -51,11 +82,11 @@ export interface FormRootSlotProps {
   readonly dirty: boolean;
   readonly submitted: boolean;
   readonly submitCount: number;
-  readonly submitStarted: () => boolean;
-  readonly submitSucceeded: () => boolean;
-  readonly submitFailed: (issues?: readonly FormIssue[]) => boolean;
-  readonly replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]) => boolean;
-  readonly reset: () => void;
+  readonly submitStarted: FormSubmitStartedAction;
+  readonly submitSucceeded: FormSubmitSucceededAction;
+  readonly submitFailed: FormSubmitFailedAction;
+  readonly replaceIssues: FormReplaceIssuesAction;
+  readonly reset: FormResetAction;
 }
 
 export interface FormFieldProps {
@@ -65,7 +96,7 @@ export interface FormFieldProps {
   readonly required?: boolean;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
-  readonly validate?: () => FormParticipantValidation<string>;
+  readonly validate?: FormValidateHandler;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -196,9 +227,9 @@ export const FormRoot = defineComponent({
   inheritAttrs: false,
   props: {
     issues: { type: Array as PropType<readonly FormIssue[]>, default: () => [] },
+    onSubmit: { type: Function as PropType<FormSubmitHandler>, default: undefined },
   },
   emits: {
-    submit: (_details: FormSubmitDetails<string>): boolean => true,
     reset: (): boolean => true,
     'state-change': (_state: FormState): boolean => true,
   },
@@ -226,6 +257,50 @@ export const FormRoot = defineComponent({
         sync();
       };
     };
+    const settleSubmission = (
+      target: FormConnection<string>,
+      result: FormSubmitResult,
+    ): void => {
+      if (connection.value !== target) return;
+      if (typeof result === 'object' && result !== null && result.ok === false) {
+        target.submitFailed(toServerIssues(result.issues));
+        return;
+      }
+      target.submitSucceeded();
+    };
+    const rejectSubmission = (
+      target: FormConnection<string>,
+      reason: unknown,
+    ): void => {
+      if (connection.value !== target) return;
+      target.submitFailed([submissionErrorIssue(reason)]);
+    };
+    const submit = (payload: DOMFormSubmitPayload<string>): void => {
+      const handler = props.onSubmit;
+      if (handler === undefined) return;
+      const target = connection.value;
+      if (target === null) return;
+      if (target.getSnapshot().state.status === 'submitting') {
+        payload.event.preventDefault();
+        return;
+      }
+      if (!target.submitStarted()) return;
+      let result: FormSubmitResult | PromiseLike<FormSubmitResult>;
+      try {
+        result = handler(toFormSubmitEvent(payload));
+      } catch (error) {
+        rejectSubmission(target, error);
+        return;
+      }
+      if (isPromiseLike(result)) {
+        void Promise.resolve(result).then(
+          (resolved) => settleSubmission(target, resolved),
+          (error: unknown) => rejectSubmission(target, error),
+        );
+        return;
+      }
+      settleSubmission(target, result);
+    };
     const mount = (): void => {
       if (root.value === null) return;
       connection.value?.destroy();
@@ -233,7 +308,7 @@ export const FormRoot = defineComponent({
         form: root.value,
         ...(summary.value === null ? {} : { summary: summary.value }),
         issues: props.issues,
-        onSubmit: (details) => emit('submit', details),
+        onSubmit: submit,
         onReset: () => emit('reset'),
         onStateChange: (next) => {
           state.value = next;
@@ -277,6 +352,45 @@ export const FormRoot = defineComponent({
     }), slots['default']?.(slotProps.value) ?? []);
   },
 });
+
+function toFormSubmitEvent(
+  payload: DOMFormSubmitPayload<string>,
+): FormSubmitEvent {
+  return Object.freeze({
+    formData: payload.formData,
+    values: payload.values,
+    submitter: payload.submitter,
+    state: payload.state,
+    nativeEvent: payload.event,
+    get defaultPrevented() { return payload.event.defaultPrevented; },
+    preventDefault: () => payload.event.preventDefault(),
+    stopPropagation: () => payload.event.stopPropagation(),
+    stopImmediatePropagation: () => payload.event.stopImmediatePropagation(),
+  });
+}
+
+function isPromiseLike(value: unknown): value is PromiseLike<FormSubmitResult> {
+  return typeof value === 'object'
+    && value !== null
+    && 'then' in value
+    && typeof value.then === 'function';
+}
+
+function toServerIssues(input: readonly FormSubmitIssue[] | undefined): readonly FormIssue[] {
+  if (input === undefined || input.length === 0) return [submissionErrorIssue()];
+  return Object.freeze(input.map((issue) => Object.freeze({ ...issue, source: 'server' as const })));
+}
+
+function submissionErrorIssue(reason?: unknown): FormIssue {
+  const message = reason instanceof Error
+    ? reason.message.trim()
+    : typeof reason === 'string' ? reason.trim() : '';
+  return Object.freeze({
+    id: 'form-submit-error',
+    message: message || 'Form submission failed.',
+    source: 'server',
+  });
+}
 
 export const FormField = defineComponent({
   name: 'SectileFormField',
@@ -597,6 +711,23 @@ export const FormSummary = defineComponent({
       hidden: form.state.value.valid,
       'data-scope': 'form',
       'data-part': 'summary',
+    }), { default: () => slots['default']?.(slotProps.value) });
+  },
+});
+
+export const FormReset = defineComponent({
+  name: 'SectileFormReset', inheritAttrs: false,
+  props: { ...partProps, as: { ...partProps.as, default: 'button' } },
+  setup(props, { attrs, slots }) {
+    const form = useFormContext('FormReset');
+    const slotProps = useRootSlotProps(form);
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as,
+      asChild: props.asChild,
+      ...(props.as === 'button' && !props.asChild ? { type: 'reset' } : {}),
+      'data-scope': 'form',
+      'data-part': 'reset',
+      'data-status': form.state.value.status,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });

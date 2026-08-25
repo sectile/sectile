@@ -88,13 +88,14 @@ export {
   type DateTimeValue,
 } from './date-time-field.js';
 export {
-  FormDescription,
+  FormRoot,
   FormField,
   FormLabel,
+  FormDescription,
   FormMessage,
-  FormRoot,
-  FormSubmit,
   FormSummary,
+  FormReset,
+  FormSubmit,
   type FormFieldProps,
   type FormFieldSlotProps,
   type FormIssue,
@@ -103,6 +104,19 @@ export {
   type FormRootProps,
   type FormRootSlotProps,
   type FormState,
+  type FormReplaceIssuesAction,
+  type FormResetAction,
+  type FormResetHandler,
+  type FormStateChangeHandler,
+  type FormSubmitFailedAction,
+  type FormSubmitEvent,
+  type FormSubmitHandler,
+  type FormSubmitIssue,
+  type FormSubmitResult,
+  type FormSubmitStartedAction,
+  type FormSubmitSucceededAction,
+  type FormValidateHandler,
+  type FormValues,
 } from './form.js';
 export { NumberField, type NumberFieldProps } from './number-field.js';
 export {

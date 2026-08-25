@@ -32,6 +32,7 @@ export type {
   FormStateInput,
   FormStatus,
   FormUpdate,
+  FormValues,
 } from './form.js';
 export type {
   CalculatorExpressionOptions,

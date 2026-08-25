@@ -176,11 +176,20 @@ export { createFeed, tryCreateFeed, type FeedConnection, type FeedOptions, type 
 export {
   createForm, tryCreateForm,
   type FormConnection,
+  type FormAnnounceSummaryHandler,
+  type FormFocusHandler,
   type FormOptions,
   type FormParticipant,
   type FormParticipantValidation,
+  type FormResetHandler,
   type FormSnapshot,
-  type FormSubmitDetails,
+  type FormSnapshotListener,
+  type FormStateChangeHandler,
+  type FormSubmitHandler,
+  type FormSubmitPayload,
+  type FormUpdateHandler,
+  type FormValidateHandler,
+  type FormValues,
 } from './form.js';
 export { createGridControl, tryCreateGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {

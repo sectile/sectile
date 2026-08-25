@@ -15,7 +15,8 @@ Form은 다양한 입력 UI에 네이티브 `<form>` 제출·초기화·제약 �
 | `FormField` | 하나의 필드 이름 또는 중첩 경로와 `id`, `required`, `disabled`, `readonly` 메타데이터를 선언합니다. |
 | `FormLabel` | 일반 입력에는 `for`를, 복합 입력에는 `aria-labelledby`를 연결합니다. |
 | `FormDescription` / `FormMessage` | 설명과 현재 오류를 `aria-describedby`, `aria-errormessage`에 연결합니다. |
-| `FormSummary` / `FormSubmit` | 폼 전체 오류와 제출 동작을 노출합니다. |
+| `FormSummary` | 폼 전체 오류를 노출합니다. |
+| `FormReset` / `FormSubmit` | 네이티브 초기화와 제출 동작을 노출합니다. |
 
 Sectile 입력 컴포넌트는 공통 참여 규약을 통해 필드 메타데이터를 받습니다. 일반 `input`, `select`, `textarea`도 `FormField` 안에서 같은 제출에 참여합니다.
 
@@ -41,19 +42,21 @@ Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다
 
 문자열 이름은 최상위 키가 되고, 문자열·숫자 배열은 객체와 배열 경로가 됩니다.
 
-| 필드 이름 | `details.values` 결과 |
+| 필드 이름 | `event.values` 결과 |
 | --- | --- |
 | `name="email"` | `values.email` |
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-제출 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받습니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
+제출 콜백은 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받습니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
 
 ### 상태와 검증
 
 - 브라우저 제약 조건과 각 참여 입력의 검증 결과를 하나의 이슈 목록으로 합칩니다.
 - `FormSummary`는 폼 전체 이슈를, `FormMessage`는 현재 필드 이슈를 표시합니다.
-- 루트 슬롯의 `submitStarted`, `submitSucceeded`, `submitFailed`, `replaceIssues`로 비동기 및 서버 검증 상태를 반영할 수 있습니다.
+- Form이 제출 생명주기를 소유합니다. 핸들러 실행 전 `submitting`으로 바뀌고, 핸들러가 완료되면 `succeeded`, `{ ok: false }`를 반환하거나 예외·거부가 발생하면 `failed`로 바뀝니다.
+- `{ ok: false, issues }`로 반환한 이슈에는 `server` 출처가 자동으로 지정됩니다. `FormMessage`와 `FormSummary`가 이를 표시하고 첫 번째 오류 필드로 포커스를 옮깁니다. 다시 제출하면 이전 서버 이슈를 먼저 지운 뒤 검증합니다.
+- 루트 슬롯의 `submitStarted`, `submitSucceeded`, `submitFailed`, `replaceIssues`는 관리형 제출 핸들러를 쓰지 않는 저수준 연동용으로 유지됩니다.
 - `TextField`는 `v-model.trim`, `v-model.number`, `v-model.lazy`를 지원합니다. 다른 입력은 각 컴포넌트의 값 타입과 모델 계약을 유지합니다.
 
 ## 예시
@@ -83,6 +86,7 @@ Vue 패키지: `@sectile/vue/form`
   <li><code class="component-api-token">FormDescription</code></li>
   <li><code class="component-api-token">FormMessage</code></li>
   <li><code class="component-api-token">FormSummary</code></li>
+  <li><code class="component-api-token">FormReset</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
 </ul>
 </div>
@@ -108,6 +112,7 @@ function provideFormControlOwner(): void
 | 속성 | 타입 | 기본값 | 설명 |
 | --- | --- | --- | --- |
 | `issues` | `readonly FormIssue[]` | `[]` | 애플리케이션이 제공하는 검증 이슈입니다. |
+| `onSubmit` | `FormSubmitHandler` | `undefined` | 검증을 통과한 제출을 처리하고 관리형 성공·실패 결과를 반환하는 함수입니다. 템플릿에서는 `@submit.prevent`를 권장합니다. |
 
 #### `FormFieldProps`
 
@@ -119,7 +124,7 @@ function provideFormControlOwner(): void
 | `id` | `string` | `undefined` | 관련 파트를 연결하는 안정적인 ID입니다. |
 | `name` | `FormFieldPath` | `undefined` | 네이티브 폼 제출에 사용할 이름입니다. |
 | `form` | `string` | `undefined` | 컨트롤을 연결할 네이티브 form 요소의 ID입니다. |
-| `validate` | `() => FormParticipantValidation<string>` | `undefined` | 현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다. |
+| `validate` | `FormValidateHandler` | `undefined` | 현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다. |
 | `as` | `PrimitiveAs` | `undefined` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
 | `asChild` | `boolean` | `undefined` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
 
@@ -170,11 +175,71 @@ function provideFormControlOwner(): void
 
 | 이벤트 | 페이로드 | 설명 |
 | --- | --- | --- |
-| `submit` | `FormSubmitDetails<string>` | 네이티브 폼 제출이 검증을 통과할 때 발생합니다. |
+| `submit` | `FormSubmitEvent` | 네이티브 폼 제출이 검증을 통과할 때 발생합니다. `@submit.prevent` 같은 Vue 이벤트 수식어를 지원하며, 함수에는 `FormSubmitHandler<Schema>`를 지정할 수 있습니다. |
 | `reset` | — | 컴포넌트 상태를 초기화한 뒤 발생합니다. |
 | `state-change` | `FormState<string>` | 공개 상태 스냅샷이 바뀔 때마다 발생합니다. |
 
 ### 기타 타입
+
+#### `FormSubmitEvent`
+
+```ts
+interface FormSubmitEvent<Shape extends object = Record<string, unknown>> {
+  readonly nativeEvent: SubmitEvent
+  readonly defaultPrevented: boolean
+  readonly formData: FormData
+  readonly values: FormValues<Shape>
+  readonly submitter: HTMLElement | null
+  readonly state: FormState
+  preventDefault(): void
+  stopPropagation(): void
+  stopImmediatePropagation(): void
+}
+```
+
+#### `FormSubmitHandler`
+
+```ts
+type FormSubmitIssue = Omit<FormIssue, 'source'>
+
+type FormSubmitResult =
+  | void
+  | { readonly ok: true }
+  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
+
+type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
+  (event: FormSubmitEvent<Shape>) =>
+    FormSubmitResult | PromiseLike<FormSubmitResult>
+```
+
+`void` 또는 `{ ok: true }`를 반환하면 제출에 성공합니다. `{ ok: false, issues }`를 반환하거나 예외·Promise 거부가 발생하면 실패합니다. 필드 이슈는 `fieldId`로 `FormMessage`에 연결하고, `fieldId`가 없는 이슈는 폼 전체 이슈로 처리합니다.
+
+#### 이벤트 핸들러
+
+```ts
+type FormResetHandler = () => void
+type FormStateChangeHandler = (state: FormState) => void
+type FormValidateHandler = () => FormParticipantValidation<string>
+```
+
+#### 상태 동작
+
+```ts
+type FormSubmitStartedAction = () => boolean
+type FormSubmitSucceededAction = () => boolean
+type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
+type FormReplaceIssuesAction = (
+  source: FormIssueSource,
+  issues: readonly FormIssue[],
+) => boolean
+type FormResetAction = () => void
+```
+
+#### `FormValues`
+
+```ts
+type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>
+```
 
 #### `FormState`
 
@@ -332,9 +397,15 @@ type FormSubmissionSource =
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>
+  <td><code class="component-part-token">reset</code></td>
+  <td><code>[data-part="reset"]</code></td>
+  <td>네이티브 폼 값과 연결된 폼 상태를 초기화합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
   <td><code class="component-part-token">submit</code></td>
   <td><code>[data-part="submit"]</code></td>
-  <td>Submit 스타일 영역을 노출합니다.</td>
+  <td>연결된 검증을 거쳐 네이티브 폼을 제출합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>

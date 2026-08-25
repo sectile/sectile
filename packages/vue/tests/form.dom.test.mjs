@@ -29,6 +29,7 @@ const {
   FormField,
   FormLabel,
   FormMessage,
+  FormReset,
   FormRoot,
   FormSubmit,
   FormSummary,
@@ -132,9 +133,9 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   const states = [];
   const app = createApp({
     render: () => h(FormRoot, {
-      onSubmit: (details) => {
-        details.event.preventDefault();
-        submissions.push([...details.formData.entries()]);
+      onSubmit: (event) => {
+        event.preventDefault();
+        submissions.push([...event.formData.entries()]);
       },
       onStateChange: (state) => states.push(state.status),
     }, {
@@ -151,6 +152,7 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
             h(FormMessage),
           ],
         }),
+        h(FormReset, null, { default: () => 'Reset' }),
         h(FormSubmit, null, { default: () => 'Save' }),
       ],
     }),
@@ -186,10 +188,85 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   await nextTick();
   assert.deepEqual(submissions, [[['account.email', 'release@sectile.dev']]]);
 
-  form.reset();
+  const reset = host.querySelector('[data-part="reset"]');
+  assert.ok(reset instanceof HTMLButtonElement);
+  reset.click();
   await nextTick();
   assert.equal(input.value, 'initial@sectile.dev');
   assert.equal(states.at(-1), 'idle');
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue Form owns async submission success and failure lifecycle', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let mode = 'pending';
+  let resolveSubmission;
+  const handler = (event) => {
+    event.preventDefault();
+    if (mode === 'pending') {
+      return new Promise((resolve) => { resolveSubmission = resolve; });
+    }
+    if (mode === 'field-error') {
+      return {
+        ok: false,
+        issues: [{ id: 'email-taken', fieldId: 'email', message: 'Email already in use.' }],
+      };
+    }
+    return Promise.reject(new Error('Network unavailable.'));
+  };
+  const app = createApp({
+    render: () => h(FormRoot, { onSubmit: handler }, {
+      default: () => [
+        h(FormSummary),
+        h(FormField, { id: 'email', name: 'email' }, {
+          default: () => [
+            h(FormLabel, null, { default: () => 'Email' }),
+            h(TextField, { defaultValue: 'mina@sectile.dev' }),
+            h(FormMessage),
+          ],
+        }),
+        h(FormSubmit, null, { default: () => 'Save' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  const form = host.querySelector('form');
+  const input = host.querySelector('input');
+  const message = host.querySelector('[data-part="message"]');
+  const summary = host.querySelector('[data-part="summary"]');
+  assert.ok(form instanceof HTMLFormElement);
+  assert.ok(input instanceof HTMLInputElement);
+  assert.ok(message instanceof HTMLElement);
+  assert.ok(summary instanceof HTMLElement);
+
+  form.requestSubmit();
+  await nextTick();
+  assert.equal(form.dataset.status, 'submitting');
+  resolveSubmission();
+  await Promise.resolve();
+  await nextTick();
+  assert.equal(form.dataset.status, 'succeeded');
+
+  mode = 'field-error';
+  form.requestSubmit();
+  await nextTick();
+  assert.equal(form.dataset.status, 'failed');
+  assert.equal(message.textContent, 'Email already in use.');
+  assert.equal(summary.hidden, false);
+  assert.equal(document.activeElement, input);
+
+  mode = 'reject';
+  form.requestSubmit();
+  await Promise.resolve();
+  await nextTick();
+  assert.equal(form.dataset.status, 'failed');
+  assert.match(summary.textContent ?? '', /Network unavailable/);
 
   app.unmount();
   host.remove();
@@ -479,9 +556,9 @@ test('TextField and Select remain editable inside a reactive FormField', async (
   const roles = ['member', 'admin'];
   const app = createApp({
     render: () => h(FormRoot, {
-      onSubmit: (details) => {
-        details.event.preventDefault();
-        submissions.push(details.values);
+      onSubmit: (event) => {
+        event.preventDefault();
+        submissions.push(event.values);
       },
     }, {
       default: () => [

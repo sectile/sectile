@@ -6,9 +6,11 @@ import {
   FormField,
   FormLabel,
   FormMessage,
+  FormReset,
   FormRoot,
   FormSubmit,
   FormSummary,
+  type FormSubmitHandler,
 } from '@sectile/vue/form';
 import { SwitchRoot, SwitchThumb } from '@sectile/vue/switch';
 import { TextField } from '@sectile/vue/text';
@@ -21,13 +23,22 @@ const props = defineProps<{
   readonly scenario: 'profile' | 'notifications' | 'team-invite';
 }>();
 
-interface SubmitDetails {
-  readonly event: SubmitEvent;
-  readonly values: Readonly<Record<string, unknown>>;
+interface FormDemoValues {
+  readonly profile?: {
+    readonly displayName?: string;
+    readonly email?: string;
+  };
+  readonly notifications?: {
+    readonly channel?: string;
+    readonly digest?: string;
+  };
+  readonly invitation?: {
+    readonly email?: string;
+    readonly role?: string;
+  };
 }
 
 const revision = ref(0);
-const displayName = ref('Mina Kim');
 const weeklyDigest = ref(true);
 const savedMessage = ref('');
 const channelOptions: readonly DemoSelectOption[] = Object.freeze([
@@ -56,16 +67,14 @@ const panelCopy = computed(() => ({
   },
 })[props.scenario]);
 
-function submit(details: SubmitDetails): void {
-  details.event.preventDefault();
-  const value = details.values[props.scenario === 'team-invite' ? 'invitation' : props.scenario];
+const submit: FormSubmitHandler<FormDemoValues> = ({ values }) => {
   savedMessage.value = props.scenario === 'profile'
-    ? `Saved ${(value as { displayName?: string } | undefined)?.displayName ?? 'profile'}`
+    ? `Saved ${values.profile?.displayName ?? 'profile'}`
     : props.scenario === 'notifications'
       ? 'Notification preferences saved'
-      : `Invitation sent to ${(value as { email?: string } | undefined)?.email ?? 'teammate'}`;
+      : `Invitation sent to ${values.invitation?.email ?? 'teammate'}`;
   revision.value += 1;
-}
+};
 </script>
 
 <template>
@@ -77,7 +86,7 @@ function submit(details: SubmitDetails): void {
     interaction="enabled"
     code=""
   >
-    <FormRoot v-slot="{ state }" class="form-demo" @submit="submit">
+    <FormRoot v-slot="{ state }" class="form-demo" @submit.prevent="submit">
       <header class="form-demo__header">
         <div>
           <strong>{{ panelCopy.title }}</strong>
@@ -98,7 +107,7 @@ function submit(details: SubmitDetails): void {
         <div class="form-demo__fields">
           <FormField id="profile-name" :name="['profile', 'displayName']" required class="form-demo__field">
             <FormLabel class="form-demo__label"><UserRound :size="15" aria-hidden="true" /> Display name</FormLabel>
-            <TextField v-model.trim="displayName" minlength="2" autocomplete="name" />
+            <TextField default-value="Mina Kim" minlength="2" autocomplete="name" />
             <FormDescription>Shown in approvals and release activity.</FormDescription>
             <FormMessage />
           </FormField>
@@ -111,7 +120,7 @@ function submit(details: SubmitDetails): void {
           </FormField>
         </div>
         <footer class="form-demo__actions">
-          <button type="reset">Reset</button>
+          <FormReset>Reset</FormReset>
           <FormSubmit>Save profile</FormSubmit>
         </footer>
       </template>

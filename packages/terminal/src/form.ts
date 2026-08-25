@@ -17,12 +17,16 @@ export interface TerminalFormFieldValidation<ID extends StableID = StableID> {
   readonly issues?: readonly FormIssue<ID>[];
 }
 
+export type TerminalFormFieldValidator<ID extends StableID = StableID> =
+  () => TerminalFormFieldValidation<ID>;
+export type TerminalFormFieldResetHandler = () => void;
+
 export interface TerminalFormField<ID extends StableID = StableID>
   extends Omit<FormFieldInput<ID>, 'valid' | 'issues'> {
   readonly label: string;
   readonly available?: boolean;
-  readonly validate?: () => TerminalFormFieldValidation<ID>;
-  readonly reset?: () => void;
+  readonly validate?: TerminalFormFieldValidator<ID>;
+  readonly reset?: TerminalFormFieldResetHandler;
 }
 
 export interface TerminalFormSnapshot<ID extends StableID = StableID> {
@@ -32,20 +36,33 @@ export interface TerminalFormSnapshot<ID extends StableID = StableID> {
   readonly summaryIssues: readonly FormIssue<ID>[];
 }
 
-export interface TerminalFormSubmitDetails<ID extends StableID = StableID> {
+export type TerminalFormSnapshotListener<ID extends StableID = StableID> =
+  (snapshot: TerminalFormSnapshot<ID>) => void;
+
+export interface TerminalFormSubmitPayload<ID extends StableID = StableID> {
   readonly state: FormState<ID>;
   readonly currentFieldId: ID | null;
 }
+
+export type TerminalFormSubmitHandler<ID extends StableID = StableID> =
+  (payload: TerminalFormSubmitPayload<ID>) => void;
+export type TerminalFormCurrentFieldChangeHandler<ID extends StableID = StableID> =
+  (id: ID | null) => void;
+export type TerminalFormAnnounceSummaryHandler<ID extends StableID = StableID> =
+  (issues: readonly FormIssue<ID>[]) => void;
+export type TerminalFormStateChangeHandler<ID extends StableID = StableID> =
+  (state: FormState<ID>) => void;
+export type TerminalFormUpdateHandler = () => void;
 
 export interface TerminalFormOptions<ID extends StableID = StableID> {
   readonly fields?: readonly TerminalFormField<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
   readonly defaultCurrentFieldId?: ID | null;
-  readonly onCurrentFieldChange?: (id: ID | null) => void;
-  readonly onSubmit?: (details: TerminalFormSubmitDetails<ID>) => void;
-  readonly onAnnounceSummary?: (issues: readonly FormIssue<ID>[]) => void;
-  readonly onStateChange?: (state: FormState<ID>) => void;
-  readonly onUpdate?: () => void;
+  readonly onCurrentFieldChange?: TerminalFormCurrentFieldChangeHandler<ID>;
+  readonly onSubmit?: TerminalFormSubmitHandler<ID>;
+  readonly onAnnounceSummary?: TerminalFormAnnounceSummaryHandler<ID>;
+  readonly onStateChange?: TerminalFormStateChangeHandler<ID>;
+  readonly onUpdate?: TerminalFormUpdateHandler;
 }
 
 export interface TerminalFormConnection<ID extends StableID = StableID> {
@@ -63,7 +80,7 @@ export interface TerminalFormConnection<ID extends StableID = StableID> {
   submitSucceeded(): boolean;
   submitFailed(issues?: readonly FormIssue<ID>[]): boolean;
   reset(): boolean;
-  subscribe(listener: (snapshot: TerminalFormSnapshot<ID>) => void): () => void;
+  subscribe(listener: TerminalFormSnapshotListener<ID>): () => void;
   destroy(): void;
 }
 

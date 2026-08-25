@@ -24,11 +24,22 @@ export {
   type FormPathSegment,
   type FormRelativePath,
 } from '@sectile/core/form';
+export type { FormValues } from '@sectile/core/form';
 
 export interface FormParticipantValidation<ID extends StableID = StableID> {
   readonly valid: boolean;
   readonly issues?: readonly FormIssue<ID>[];
 }
+
+export type FormValidateHandler<ID extends StableID = StableID> =
+  () => FormParticipantValidation<ID>;
+export type FormFocusHandler = () => boolean | void;
+export type FormResetHandler = () => void;
+export type FormAnnounceSummaryHandler<ID extends StableID = StableID> =
+  (issues: readonly FormIssue<ID>[]) => void;
+export type FormStateChangeHandler<ID extends StableID = StableID> =
+  (state: FormState<ID>) => void;
+export type FormUpdateHandler = () => void;
 
 export type FormSubmissionElement =
   | HTMLButtonElement
@@ -39,40 +50,52 @@ export type FormSubmissionElement =
 export interface FormParticipant<ID extends StableID = StableID> {
   readonly id: ID;
   readonly element: HTMLElement;
-  /** @deprecated Use semanticControl. */
-  readonly control?: HTMLElement;
   readonly semanticControl?: HTMLElement;
   readonly focusTarget?: HTMLElement;
   readonly submissionElements?: readonly FormSubmissionElement[];
   readonly name?: FormFieldPath | null;
-  readonly validate?: () => FormParticipantValidation<ID>;
-  readonly focus?: () => boolean | void;
-  readonly reset?: () => void;
+  readonly validate?: FormValidateHandler<ID>;
+  readonly focus?: FormFocusHandler;
+  readonly reset?: FormResetHandler;
 }
 
-export interface FormSubmitDetails<ID extends StableID = StableID> {
+export interface FormSubmitPayload<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+> {
   readonly event: SubmitEvent;
   readonly formData: FormData;
-  readonly values: FormValues;
+  readonly values: Values;
   readonly submitter: HTMLElement | null;
   readonly state: FormState<ID>;
 }
+
+export type FormSubmitHandler<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+> = (payload: FormSubmitPayload<ID, Values>) => void;
 
 export interface FormSnapshot<ID extends StableID = StableID> {
   readonly revision: number;
   readonly state: FormState<ID>;
 }
 
-export interface FormOptions<ID extends StableID = StableID> {
+export type FormSnapshotListener<ID extends StableID = StableID> =
+  (snapshot: FormSnapshot<ID>) => void;
+
+export interface FormOptions<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+> {
   readonly form: HTMLFormElement;
   readonly summary?: HTMLElement;
   readonly participants?: readonly FormParticipant<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
-  readonly onSubmit?: (details: FormSubmitDetails<ID>) => void;
-  readonly onReset?: () => void;
-  readonly onAnnounceSummary?: (issues: readonly FormIssue<ID>[]) => void;
-  readonly onStateChange?: (state: FormState<ID>) => void;
-  readonly onUpdate?: () => void;
+  readonly onSubmit?: FormSubmitHandler<ID, Values>;
+  readonly onReset?: FormResetHandler;
+  readonly onAnnounceSummary?: FormAnnounceSummaryHandler<ID>;
+  readonly onStateChange?: FormStateChangeHandler<ID>;
+  readonly onUpdate?: FormUpdateHandler;
 }
 
 export interface FormConnection<ID extends StableID = StableID> {
@@ -86,18 +109,24 @@ export interface FormConnection<ID extends StableID = StableID> {
   submitSucceeded(): boolean;
   submitFailed(issues?: readonly FormIssue<ID>[]): boolean;
   reset(): void;
-  subscribe(listener: (snapshot: FormSnapshot<ID>) => void): () => void;
+  subscribe(listener: FormSnapshotListener<ID>): () => void;
   destroy(): void;
 }
 
-export function createForm<ID extends StableID = StableID>(
-  options: FormOptions<ID>,
+export function createForm<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+>(
+  options: FormOptions<ID, Values>,
 ): FormConnection<ID> {
   return unwrap(tryCreateForm(options));
 }
 
-export function tryCreateForm<ID extends StableID = StableID>(
-  options: FormOptions<ID>,
+export function tryCreateForm<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+>(
+  options: FormOptions<ID, Values>,
 ): Result<FormConnection<ID>> {
   const initial = tryCreateFormState<ID>({ issues: options.issues ?? [] });
   if (!initial.ok) return initial;
@@ -172,7 +201,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       ...(custom?.issues ?? []),
     ];
     return {
-      valid: native === null && (custom?.valid ?? true) && issues.length === 0,
+      valid: native === null && (custom?.valid ?? true),
       issues,
     };
   };
@@ -210,7 +239,6 @@ export function tryCreateForm<ID extends StableID = StableID>(
       }
       const control = participant.focusTarget
         ?? participant.semanticControl
-        ?? participant.control
         ?? participant.element;
       const focusable = control as HTMLElement & { readonly disabled?: boolean };
       if (focusable.hidden || focusable.disabled === true) continue;
@@ -249,7 +277,9 @@ export function tryCreateForm<ID extends StableID = StableID>(
     options.onSubmit?.({
       event,
       formData,
-      values: createFormValues([...formData.entries()].map(([path, value]) => ({ path, value }))),
+      values: createFormValues(
+        [...formData.entries()].map(([path, value]) => ({ path, value })),
+      ) as Values,
       submitter,
       state,
     });
@@ -339,7 +369,12 @@ export function tryCreateForm<ID extends StableID = StableID>(
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
     submitStarted: () => transition('submit-started') !== null,
     submitSucceeded: () => transition('submit-succeeded') !== null,
-    submitFailed: (issues = []) => transition({ type: 'submit-failed', issues }) !== null,
+    submitFailed: (issues = []) => {
+      const commands = transition({ type: 'submit-failed', issues });
+      if (commands === null) return false;
+      execute(commands);
+      return true;
+    },
     reset: () => options.form.reset(),
     subscribe: (listener) => {
       subscribers.add(listener);
@@ -377,7 +412,7 @@ function readParticipantName<ID extends StableID>(
     if (name !== null) return name;
   }
   return readControlName(
-    participant.semanticControl ?? participant.control ?? participant.element,
+    participant.semanticControl ?? participant.element,
   );
 }
 
@@ -387,7 +422,6 @@ function participantTargets<ID extends StableID>(
   return [...new Set([
     participant.element,
     participant.semanticControl,
-    participant.control,
     participant.focusTarget,
     ...(participant.submissionElements ?? []),
   ].filter((element): element is HTMLElement => element !== undefined))];
@@ -396,7 +430,7 @@ function participantTargets<ID extends StableID>(
 function validationTargets<ID extends StableID>(
   participant: FormParticipant<ID>,
 ): readonly HTMLElement[] {
-  const semantic = participant.semanticControl ?? participant.control;
+  const semantic = participant.semanticControl;
   const submissions = participant.submissionElements ?? [];
   const targets = [...new Set([semantic, ...submissions].filter(
     (element): element is HTMLElement => element !== undefined,

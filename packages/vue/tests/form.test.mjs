@@ -7,6 +7,7 @@ import {
   FormField,
   FormLabel,
   FormMessage,
+  FormReset,
   FormRoot,
   FormSubmit,
   FormSummary,
@@ -31,6 +32,7 @@ test('Vue Form renders native semantics and stable compound part boundaries duri
             h(FormMessage),
           ],
         }),
+        h(FormReset, null, { default: () => 'Reset account' }),
         h(FormSubmit, null, { default: () => 'Save account' }),
       ],
     }),
@@ -41,12 +43,13 @@ test('Vue Form renders native semantics and stable compound part boundaries duri
   assert.match(html, /action="\/account"/);
   assert.match(html, /method="post"/);
   assert.match(html, /data-scope="form"/);
-  for (const part of ['root', 'summary', 'field', 'label', 'description', 'message', 'submit']) {
+  for (const part of ['root', 'summary', 'field', 'label', 'description', 'message', 'reset', 'submit']) {
     assert.match(html, new RegExp(`data-part="${part}"`));
   }
   assert.match(html, /for="email-control"/);
   assert.match(html, /id="email-control"/);
   assert.match(html, /aria-describedby="email-description email-message"/);
   assert.match(html, /type="submit"/);
+  assert.match(html, /type="reset"/);
   assert.match(html, /role="alert"/);
 });

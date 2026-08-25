@@ -12,7 +12,7 @@ export interface FormValueEntry<Value = unknown> {
   readonly value: Value;
 }
 
-export type FormValues = Readonly<Record<string, unknown>>;
+export type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>;
 
 export type FormStatus =
   | 'idle'
@@ -465,10 +465,11 @@ function replaceIssues<ID extends StableID>(
 
 function submit<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>> {
   if (state.status === 'submitting') return update(state);
-  const submitCount = state.submitCount + 1;
-  if (!state.valid) {
-    const allIssues = orderedIssues(state);
-    const firstInvalid = state.fields.find(
+  const current = withoutIssueSource(state, 'server');
+  const submitCount = current.submitCount + 1;
+  if (!current.valid) {
+    const allIssues = orderedIssues(current);
+    const firstInvalid = current.fields.find(
       (field) => !field.valid || field.issues.length > 0,
     );
     const commands: FormCommand<ID>[] = [];
@@ -482,12 +483,12 @@ function submit<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID
       });
     }
     return update(
-      buildState({ ...state, status: 'invalid', submitCount, submitted: true }),
+      buildState({ ...current, status: 'invalid', submitCount, submitted: true }),
       commands,
     );
   }
   return update(
-    buildState({ ...state, status: 'ready', submitCount, submitted: true }),
+    buildState({ ...current, status: 'ready', submitCount, submitted: true }),
     [{ type: 'submit-requested' }],
   );
 }
@@ -512,7 +513,20 @@ function submitFailed<ID extends StableID>(
   }
   const replaced = replaceIssues(state, 'server', issues);
   if (!replaced.ok) return replaced;
-  return update(buildState({ ...replaced.value.state, status: 'failed' }));
+  const failed = buildState({ ...replaced.value.state, status: 'failed' });
+  const ordered = orderedIssues(failed);
+  const firstInvalid = failed.fields.find(
+    (field) => !field.valid || field.issues.length > 0,
+  );
+  const commands: FormCommand<ID>[] = [];
+  if (firstInvalid !== undefined) commands.push({ type: 'focus-field', id: firstInvalid.id });
+  if (ordered.length > 0) {
+    commands.push({
+      type: 'announce-summary',
+      issueIds: Object.freeze(ordered.map((issue) => issue.id)),
+    });
+  }
+  return update(failed, commands);
 }
 
 function reset<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>> {

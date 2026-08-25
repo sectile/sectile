@@ -15,7 +15,8 @@ Form coordinates native `<form>` submission, reset, constraint validation, field
 | `FormField` | Declares one field name or nested path plus `id`, `required`, `disabled`, and `readonly` metadata. |
 | `FormLabel` | Connects `for` to atomic controls or `aria-labelledby` to composite controls. |
 | `FormDescription` / `FormMessage` | Connect description and current issue IDs through `aria-describedby` and `aria-errormessage`. |
-| `FormSummary` / `FormSubmit` | Expose form-wide issues and the submission action. |
+| `FormSummary` | Exposes form-wide issues. |
+| `FormReset` / `FormSubmit` | Expose native reset and submission actions. |
 
 Sectile input components receive field metadata through the shared participation contract. Native `input`, `select`, and `textarea` elements also participate when placed inside a `FormField`.
 
@@ -41,19 +42,21 @@ Metadata declared once on `FormField` is distributed according to each control's
 
 A string name becomes a top-level key. A string/number path builds nested objects and arrays.
 
-| Field name | Result in `details.values` |
+| Field name | Result in `event.values` |
 | --- | --- |
 | `name="email"` | `values.email` |
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-The submit callback receives `event`, structured `values`, original `formData`, the `submitter`, and current form `state`. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
+The submit callback receives structured `values`, original `formData`, the `submitter`, and current form `state`. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
 
 ### State and validation
 
 - Browser constraints and participant validation results are merged into one issue collection.
 - `FormSummary` presents form-wide issues while `FormMessage` presents the current field's issues.
-- Root slot actions `submitStarted`, `submitSucceeded`, `submitFailed`, and `replaceIssues` integrate asynchronous and server validation.
+- Form owns the submission lifecycle. It enters `submitting` before invoking the handler, then settles to `succeeded` when the handler resolves or `failed` when it returns `{ ok: false }`, throws, or rejects.
+- Issues returned with `{ ok: false, issues }` are assigned the `server` source, displayed by `FormMessage` and `FormSummary`, and focus the first invalid field. A new submission clears stale server issues before validation.
+- Root slot actions `submitStarted`, `submitSucceeded`, `submitFailed`, and `replaceIssues` remain available for low-level integrations that do not use the managed submit handler.
 - `TextField` supports `v-model.trim`, `v-model.number`, and `v-model.lazy`. Other inputs retain their component-specific value types and model contracts.
 
 ## Examples
@@ -83,6 +86,7 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormDescription</code></li>
   <li><code class="component-api-token">FormMessage</code></li>
   <li><code class="component-api-token">FormSummary</code></li>
+  <li><code class="component-api-token">FormReset</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
 </ul>
 </div>
@@ -108,6 +112,7 @@ function provideFormControlOwner(): void
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `issues` | `readonly FormIssue[]` | `[]` | Validation issues supplied by the application. |
+| `onSubmit` | `FormSubmitHandler` | `undefined` | Handles a valid submission and returns its managed success or failure result. Prefer `@submit.prevent` in templates. |
 
 #### `FormFieldProps`
 
@@ -119,7 +124,7 @@ function provideFormControlOwner(): void
 | `id` | `string` | `undefined` | Stable ID used to connect related parts. |
 | `name` | `FormFieldPath` | `undefined` | Name used for native form submission. |
 | `form` | `string` | `undefined` | ID of the native form associated with the control. |
-| `validate` | `() => FormParticipantValidation<string>` | `undefined` | Validates the current field and returns application issues. |
+| `validate` | `FormValidateHandler` | `undefined` | Validates the current field and returns application issues. |
 | `as` | `PrimitiveAs` | `undefined` | Element or component rendered for this part. |
 | `asChild` | `boolean` | `undefined` | Whether to merge this part into its single child instead of rendering a wrapper. |
 
@@ -170,11 +175,71 @@ function provideFormControlOwner(): void
 
 | Event | Payload | Description |
 | --- | --- | --- |
-| `submit` | `FormSubmitDetails<string>` | Emitted when native form submission passes validation. |
+| `submit` | `FormSubmitEvent` | Emitted when native form submission passes validation. Supports Vue modifiers such as `@submit.prevent`. Type the callback with `FormSubmitHandler<Schema>`. |
 | `reset` | — | Emitted after the component resets its state. |
 | `state-change` | `FormState<string>` | Emitted whenever the public state snapshot changes. |
 
 ### Other types
+
+#### `FormSubmitEvent`
+
+```ts
+interface FormSubmitEvent<Shape extends object = Record<string, unknown>> {
+  readonly nativeEvent: SubmitEvent
+  readonly defaultPrevented: boolean
+  readonly formData: FormData
+  readonly values: FormValues<Shape>
+  readonly submitter: HTMLElement | null
+  readonly state: FormState
+  preventDefault(): void
+  stopPropagation(): void
+  stopImmediatePropagation(): void
+}
+```
+
+#### `FormSubmitHandler`
+
+```ts
+type FormSubmitIssue = Omit<FormIssue, 'source'>
+
+type FormSubmitResult =
+  | void
+  | { readonly ok: true }
+  | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] }
+
+type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
+  (event: FormSubmitEvent<Shape>) =>
+    FormSubmitResult | PromiseLike<FormSubmitResult>
+```
+
+Returning `void` or `{ ok: true }` succeeds the submission. Returning `{ ok: false, issues }`, throwing, or rejecting fails it. Field issues use `fieldId` to connect to `FormMessage`; issues without `fieldId` remain form-wide.
+
+#### Event handlers
+
+```ts
+type FormResetHandler = () => void
+type FormStateChangeHandler = (state: FormState) => void
+type FormValidateHandler = () => FormParticipantValidation<string>
+```
+
+#### State actions
+
+```ts
+type FormSubmitStartedAction = () => boolean
+type FormSubmitSucceededAction = () => boolean
+type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean
+type FormReplaceIssuesAction = (
+  source: FormIssueSource,
+  issues: readonly FormIssue[],
+) => boolean
+type FormResetAction = () => void
+```
+
+#### `FormValues`
+
+```ts
+type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>
+```
 
 #### `FormState`
 
@@ -332,9 +397,15 @@ Shared scope: <code class="component-scope-token">[data-scope="form"]</code>. Co
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>
+  <td><code class="component-part-token">reset</code></td>
+  <td><code>[data-part="reset"]</code></td>
+  <td>Resets native form values and coordinated form state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
   <td><code class="component-part-token">submit</code></td>
   <td><code>[data-part="submit"]</code></td>
-  <td>Exposes the submit styling region.</td>
+  <td>Submits the native form through coordinated validation.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>
