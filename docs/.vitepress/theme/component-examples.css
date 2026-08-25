@@ -308,7 +308,8 @@
   .catalog-stepper-panel > strong { font-size: 1.15rem; }
   .catalog-stepper-panel > p { margin: 0 0 0.45rem; color: var(--demo-muted); font-size: 0.8rem; }
   .catalog-stepper-kicker { color: var(--demo-brand); font-size: 0.68rem; font-weight: 750; }
-  .catalog-stepper-panel > button { color: var(--demo-on-brand); background: var(--demo-brand); }
+  .catalog-stepper-actions { display: flex; gap: 0.55rem; }
+  .catalog-stepper-actions [data-part="next"] { color: var(--demo-on-brand); background: var(--demo-brand); }
   .catalog-field-shell { display: grid; width: min(100%, 34rem); margin: 0 auto; gap: 0.45rem; }
   .catalog-field-label { color: var(--demo-text); font-size: 0.82rem; font-weight: 700; }
   .catalog-field-help { color: var(--demo-muted); font-size: 0.72rem; line-height: 1.45; }

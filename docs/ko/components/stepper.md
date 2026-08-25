@@ -19,11 +19,11 @@
 
 ## 예시
 
-### 진행 조건 증감 간격
+### 진행 조건
 
 현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다.
 
-<ComponentExample component="stepper" scenario="gated-step" title="진행 조건 증감 간격" description="현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다." :index="2" />
+<ComponentExample component="stepper" scenario="gated-step" title="진행 조건" description="현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다." :index="2" />
 
 ## API
 
@@ -37,6 +37,8 @@ Vue 패키지: `@sectile/vue/stepper`
   <li><code class="component-api-token">StepperStep</code></li>
   <li><code class="component-api-token">StepperContent</code></li>
   <li><code class="component-api-token">StepperIndicator</code></li>
+  <li><code class="component-api-token">StepperPrevious</code></li>
+  <li><code class="component-api-token">StepperNext</code></li>
 </ul>
 </div>
 
@@ -55,6 +57,34 @@ Vue 패키지: `@sectile/vue/stepper`
 | `readonly` | `boolean` | `false` | 값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다. |
 | `as` | `PrimitiveAs` | `'div'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
 | `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `StepperActionProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `as` | `PrimitiveAs` | `'button'` | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
+| `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+### 슬롯
+
+#### `StepperActionSlotProps`
+
+| 값 | 타입 | 설명 |
+| --- | --- | --- |
+| `value` | `string` | 이 계약이 노출하는 현재 값입니다. |
+| `targetValue` | `string \| null` | 이 동작이 활성화할 값입니다. 해당 방향에 활성화할 단계가 없으면 null입니다. |
+| `disabled` | `boolean` | 사용자 조작을 막을지 여부입니다. |
+
+### 이벤트
+
+#### `StepperRoot`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:modelValue` | `string` | 컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다. |
+| `activate` | `string` | 항목이 활성화될 때 발생합니다. |
+| `highlight` | `string \| null` | 강조된 항목이 바뀔 때 발생합니다. |
 
 ## 파트
 
@@ -95,6 +125,18 @@ Vue 패키지: `@sectile/vue/stepper`
   <td><code>[data-part="content"]</code></td>
   <td>현재 상태에 맞는 컴포넌트 콘텐츠를 담습니다.</td>
   <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous</code></td>
+  <td><code>[data-part="previous"]</code></td>
+  <td>이전의 활성화 가능한 단계를 선택하고 포커스를 옮깁니다.</td>
+  <td><code>data-target-value="&lt;value&gt;"</code><br><code>data-disabled=""</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next</code></td>
+  <td><code>[data-part="next"]</code></td>
+  <td>다음의 활성화 가능한 단계를 선택하고 포커스를 옮깁니다.</td>
+  <td><code>data-target-value="&lt;value&gt;"</code><br><code>data-disabled=""</code></td>
 </tr>
 </tbody>
 </table>

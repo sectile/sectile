@@ -37,6 +37,8 @@ Vue package: `@sectile/vue/stepper`
   <li><code class="component-api-token">StepperStep</code></li>
   <li><code class="component-api-token">StepperContent</code></li>
   <li><code class="component-api-token">StepperIndicator</code></li>
+  <li><code class="component-api-token">StepperPrevious</code></li>
+  <li><code class="component-api-token">StepperNext</code></li>
 </ul>
 </div>
 
@@ -55,6 +57,34 @@ Vue package: `@sectile/vue/stepper`
 | `readonly` | `boolean` | `false` | Whether the value can be inspected but not changed. |
 | `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
 | `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `StepperActionProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `as` | `PrimitiveAs` | `'button'` | Element or component rendered for this part. |
+| `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+### Slots
+
+#### `StepperActionSlotProps`
+
+| Value | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | Current value exposed by this contract. |
+| `targetValue` | `string \| null` | Value the action will activate, or null when no enabled step remains in that direction. |
+| `disabled` | `boolean` | Whether interaction is unavailable. |
+
+### Events
+
+#### `StepperRoot`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:modelValue` | `string` | Emitted when the component requests a new controlled value. |
+| `activate` | `string` | Emitted when an item becomes active. |
+| `highlight` | `string \| null` | Emitted when the highlighted item changes. |
 
 ## Parts
 
@@ -95,6 +125,18 @@ Shared scope: <code class="component-scope-token">[data-scope="stepper"]</code>.
   <td><code>[data-part="content"]</code></td>
   <td>Contains the component content shown for the active state.</td>
   <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous</code></td>
+  <td><code>[data-part="previous"]</code></td>
+  <td>Activates and focuses the previous enabled step.</td>
+  <td><code>data-target-value="&lt;value&gt;"</code><br><code>data-disabled=""</code></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next</code></td>
+  <td><code>[data-part="next"]</code></td>
+  <td>Activates and focuses the next enabled step.</td>
+  <td><code>data-target-value="&lt;value&gt;"</code><br><code>data-disabled=""</code></td>
 </tr>
 </tbody>
 </table>

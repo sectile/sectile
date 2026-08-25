@@ -7,7 +7,7 @@ import {
 } from '@lucide/vue';
 import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '@sectile/vue/checkbox-group';
 import { PaginationFirst, PaginationItem, PaginationLast, PaginationNext, PaginationPrevious, PaginationRoot } from '@sectile/vue/pagination';
-import { StepperContent, StepperList, StepperRoot, StepperStep } from '@sectile/vue/stepper';
+import { StepperContent, StepperList, StepperNext, StepperPrevious, StepperRoot, StepperStep } from '@sectile/vue/stepper';
 import { RatingClear, RatingIndicator, RatingItem, RatingRoot } from '@sectile/vue/rating';
 import { PinInputInput, PinInputRoot } from '@sectile/vue/pin-input';
 import { TagsInputClear, TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInputItemText, TagsInputRoot } from '@sectile/vue/tags-input';
@@ -137,7 +137,7 @@ const quantityUnitOptions = Object.freeze([
 const quantityDisplayUnit = ref(props.scenario === 'length' ? 'centimetre' : 'metre');
 const parts: Record<string, readonly string[]> = {
   'checkbox-group': ['CheckboxGroupRoot', 'CheckboxGroupItem', 'CheckboxGroupIndicator'], select: ['SelectRoot', 'SelectTrigger', 'SelectValue', 'SelectContent', 'SelectItem'],
-  pagination: ['PaginationRoot', 'PaginationItem', 'PaginationPrevious', 'PaginationNext'], stepper: ['StepperRoot', 'StepperList', 'StepperStep', 'StepperContent'],
+  pagination: ['PaginationRoot', 'PaginationItem', 'PaginationPrevious', 'PaginationNext'], stepper: ['StepperRoot', 'StepperList', 'StepperStep', 'StepperContent', 'StepperPrevious', 'StepperNext'],
   rating: ['RatingRoot', 'RatingItem', 'RatingIndicator', 'RatingClear'], 'pin-input': ['PinInputRoot', 'PinInputInput'], 'tags-input': ['TagsInputRoot', 'TagsInputItem', 'TagsInputInput'],
   grid: ['GridRoot', 'GridRow', 'GridCell'], toolbar: ['ToolbarRoot', 'ToolbarItem', 'ToolbarSeparator'], 'window-splitter': ['WindowSplitterRoot', 'WindowSplitterPane', 'WindowSplitterHandle'],
   'date-picker': ['DatePickerRoot', 'DatePickerTrigger', 'DatePickerInput', 'DatePickerContent', 'DatePickerPreviousWeek', 'DatePickerPreviousMonth', 'DatePickerPreviousYear', 'DatePickerNextWeek', 'DatePickerNextMonth', 'DatePickerNextYear', 'DatePickerWeekViewTrigger', 'DatePickerMonthViewTrigger', 'DatePickerYearViewTrigger', 'DatePickerGrid', 'DatePickerCell', 'DatePickerMonthCell'],
@@ -205,20 +205,8 @@ const dateTimePickerProps = computed(() => isScenario('controlled')
 const updateControlledDateTime = (value: unknown): void => {
   if (isScenario('controlled')) controlledDateTime.value = value as DateTimeValue | null;
 };
-const nextCheckoutStep = (current: string): string | undefined => {
-  const next = checkoutStepIDs[checkoutStepIDs.indexOf(current) + 1];
-  if (next === undefined || (isScenario('gated-step') && ['payment', 'review'].includes(next))) return undefined;
-  return next;
-};
-const checkoutActionLabel = (current: string): string => {
-  const next = nextCheckoutStep(current);
-  if (next !== undefined) return `Continue to ${checkoutSteps.find(({ id }) => id === next)?.label ?? next}`;
-  return isScenario('gated-step') && current === 'delivery' ? 'Complete delivery to unlock Payment' : 'Checkout steps complete';
-};
-const advanceCheckout = (current: string): void => {
-  const next = nextCheckoutStep(current);
-  if (next !== undefined) checkoutValue.value = next;
-};
+const checkoutStepLabel = (value: string | null): string =>
+  checkoutSteps.find(({ id }) => id === value)?.label ?? '';
 const recordAction = (value: string): void => {
   const labels: Readonly<Record<string, string>> = Object.freeze({
     bold: 'Bold', italic: 'Italic', link: 'Link', select: 'Select', comment: 'Comment', upload: 'Upload',
@@ -272,7 +260,17 @@ const recordAction = (value: string): void => {
 
       <StepperRoot v-else-if="component === 'stepper'" v-model="checkoutValue" :items="checkoutStepIDs" :disabled-items="isScenario('gated-step') ? ['payment', 'review'] : []" class="catalog-stepper" v-slot="{ value }">
         <StepperList class="catalog-stepper-list"><StepperStep v-for="(step, index) in checkoutSteps" :key="step.id" :value="step.id" class="catalog-stepper-step" :class="{ 'is-complete': checkoutStepIDs.indexOf(value) > index }"><span class="catalog-stepper-index"><Check v-if="checkoutStepIDs.indexOf(value) > index" :size="15" :stroke-width="2.6" /><span v-else>{{ index + 1 }}</span></span><strong>{{ step.label }}</strong></StepperStep></StepperList>
-        <StepperContent v-for="(step, index) in checkoutSteps" :key="step.id" :value="step.id" class="catalog-stepper-panel"><span class="catalog-stepper-kicker">Step {{ index + 1 }} of {{ checkoutSteps.length }}</span><strong>{{ step.label }}</strong><p>{{ step.detail }}</p><button type="button" :disabled="nextCheckoutStep(step.id) === undefined" @click="advanceCheckout(step.id)">{{ checkoutActionLabel(step.id) }}</button></StepperContent>
+        <StepperContent v-for="(step, index) in checkoutSteps" :key="step.id" :value="step.id" class="catalog-stepper-panel">
+          <span class="catalog-stepper-kicker">Step {{ index + 1 }} of {{ checkoutSteps.length }}</span>
+          <strong>{{ step.label }}</strong>
+          <p>{{ step.detail }}</p>
+          <div class="catalog-stepper-actions">
+            <StepperPrevious>Back</StepperPrevious>
+            <StepperNext v-slot="{ targetValue }">
+              {{ targetValue === null ? 'Checkout steps complete' : `Continue to ${checkoutStepLabel(targetValue)}` }}
+            </StepperNext>
+          </div>
+        </StepperContent>
       </StepperRoot>
 
       <RatingRoot v-else-if="component === 'rating'" :items="['1', '2', '3', '4', '5']" :default-value="isScenario('required', 'controlled') ? '4' : '3'" :clearable="!isScenario('required')" class="catalog-rating" v-slot="{ value: ratingValue }">

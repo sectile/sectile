@@ -3,7 +3,14 @@ import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
 import { RatingClear, RatingIndicator, RatingItem, RatingRoot } from '../dist/rating.js';
-import { StepperContent, StepperList, StepperRoot, StepperStep } from '../dist/stepper.js';
+import {
+  StepperContent,
+  StepperList,
+  StepperNext,
+  StepperPrevious,
+  StepperRoot,
+  StepperStep,
+} from '../dist/stepper.js';
 
 test('Vue rating specializes radio semantics and exposes an optional clear control', async () => {
   const app = createSSRApp({
@@ -37,6 +44,8 @@ test('Vue stepper reuses linked tab semantics with manual activation', async () 
         }),
         h(StepperContent, { value: 'account' }, { default: () => 'Account form' }),
         h(StepperContent, { value: 'confirm' }, { default: () => 'Confirmation' }),
+        h(StepperPrevious, null, { default: ({ targetValue }) => targetValue ?? 'Start' }),
+        h(StepperNext, null, { default: ({ targetValue }) => targetValue ?? 'Complete' }),
       ],
     }),
   });
@@ -44,7 +53,9 @@ test('Vue stepper reuses linked tab semantics with manual activation', async () 
   assert.match(html, /aria-roledescription="stepper"/);
   assert.match(html, /role="tablist"/);
   assert.match(html, /role="tabpanel"/);
-  assert.equal((html.match(/data-scope="stepper"/g) ?? []).length, 6);
+  assert.equal((html.match(/data-scope="stepper"/g) ?? []).length, 8);
   assert.equal((html.match(/data-part="step"/g) ?? []).length, 2);
+  assert.match(html, /<button[^>]*disabled[^>]*data-part="previous"/);
+  assert.match(html, /data-part="next"[^>]*data-target-value="confirm"/);
   assert.doesNotMatch(html, /data-scope="tabs"|data-part="trigger"/);
 });

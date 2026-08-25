@@ -1,6 +1,6 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, nextTick, provide, shallowRef, watch,
-  type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  computed, defineComponent, h, mergeProps, nextTick, provide, shallowRef, watch,
+  type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
   getTabsContentAttributes,
@@ -10,7 +10,13 @@ import {
 } from '@sectile/dom/tabs';
 import { createListboxControllerFromItems, type ListboxController, type ListboxEffect } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { usePartContract, type PartContract } from './internal/part-contract.js';
+import { usePartContract } from './internal/part-contract.js';
+import {
+  tabsRootContextKey,
+  useTabsRootContext,
+  type TabsIDs,
+  type TabsRootContext,
+} from './internal/tabs-context.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -33,20 +39,6 @@ export interface TabsContentProps { readonly value: string; readonly as?: Primit
 export interface TabsContentSlotProps { readonly value: string; readonly selected: boolean }
 export interface TabsIndicatorProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
-interface IDs { readonly trigger: string; readonly content: string }
-interface RootContext {
-  readonly value: ComputedRef<string>;
-  readonly highlighted: ComputedRef<string | null>;
-  readonly disabled: ComputedRef<boolean>;
-  readonly readonly: ComputedRef<boolean>;
-  readonly disabledItems: ComputedRef<ReadonlySet<string>>;
-  readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
-  readonly partContract: PartContract;
-  select(value: string, target: HTMLElement): void;
-  keydown(event: KeyboardEvent): void;
-  ids(value: string): IDs;
-}
-const rootKey = Symbol('SectileTabsRoot');
 let tabsID = 0;
 
 export const TabsRoot = defineComponent({
@@ -73,8 +65,9 @@ export const TabsRoot = defineComponent({
   setup(props, { attrs, emit, slots }) {
     const controlled = props.modelValue !== undefined;
     const instanceID = ++tabsID;
-    const idMap = new Map<string, IDs>();
-    const ids = (value: string): IDs => {
+    const rootElement = shallowRef<HTMLElement | null>(null);
+    const idMap = new Map<string, TabsIDs>();
+    const ids = (value: string): TabsIDs => {
       const found = idMap.get(value);
       if (found !== undefined) return found;
       const safe = encodeURIComponent(value).replaceAll('%', '-');
@@ -128,17 +121,47 @@ export const TabsRoot = defineComponent({
       if (root !== undefined) void nextTick(() => focusTrigger(root, result.snapshot.state.cursor.current));
       return true;
     };
+    const relativeTarget = (direction: -1 | 1): string | null => {
+      if (props.disabled || props.readonly) return null;
+      const selectedIndex = props.items.indexOf(value.value);
+      let index = selectedIndex < 0
+        ? direction > 0 ? 0 : props.items.length - 1
+        : selectedIndex + direction;
+      while (index >= 0 && index < props.items.length) {
+        const candidate = props.items[index];
+        if (candidate !== undefined && !disabledItems.value.has(candidate)) return candidate;
+        index += direction;
+      }
+      return null;
+    };
+    const activateRelative = (direction: -1 | 1): boolean => {
+      const target = relativeTarget(direction);
+      if (target === null) return false;
+      if (!apply(controller.value.handleEvent({ type: 'focus', id: target }))) return false;
+      if (!apply(controller.value.handleEvent({ type: 'activate', id: target }))) return false;
+      void nextTick(() => {
+        if (rootElement.value !== null) focusTrigger(rootElement.value, target);
+      });
+      return true;
+    };
     const part = usePartContract('tabs', 'root');
-    provide<RootContext>(rootKey, {
+    provide<TabsRootContext>(tabsRootContextKey, {
       value, highlighted, disabled, readonly, orientation, disabledItems, partContract: part, ids,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="tablist"]') as HTMLElement | undefined),
       keydown: (event) => {
         if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
         event.preventDefault();
       },
+      relativeTarget,
+      activateRelative,
     });
     const slotProps = computed<TabsRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), { as: props.as, asChild: props.asChild, 'data-scope': part.scope }), {
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), {
+      as: props.as,
+      asChild: props.asChild,
+      elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
+      'data-scope': part.scope,
+    }), {
       default: () => slots['default']?.(slotProps.value),
     });
   },
@@ -154,7 +177,7 @@ export const TabsList = defineComponent({
   },
   slots: Object as SlotsType<{ default: () => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('TabsList');
+    const root = useTabsRootContext('TabsList');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['list'] ?? 'list' };
     const attributes = computed(() => getTabsListAttributes({
       orientation: root.orientation.value,
@@ -177,7 +200,7 @@ export const TabsTrigger = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TabsTriggerSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('TabsTrigger');
+    const root = useTabsRootContext('TabsTrigger');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['trigger'] ?? 'trigger' };
     const state = computed<TabsTriggerSlotProps>(() => ({
       value: props.value,
@@ -210,7 +233,7 @@ export const TabsContent = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TabsContentSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('TabsContent');
+    const root = useTabsRootContext('TabsContent');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['content'] ?? 'content' };
     const selected = computed(() => root.value.value === props.value);
     const attributes = computed(() => {
@@ -232,7 +255,7 @@ export const TabsIndicator = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: { value: string }) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('TabsIndicator');
+    const root = useTabsRootContext('TabsIndicator');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['indicator'] ?? 'indicator' };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
@@ -244,11 +267,6 @@ export const TabsIndicator = defineComponent({
   },
 });
 
-function useRoot(part: string): RootContext {
-  const root = inject<RootContext>(rootKey);
-  if (root === undefined) throw new TypeError(`${part} must be used inside TabsRoot.`);
-  return root;
-}
 function applyEffects(effects: readonly ListboxEffect<string>[], emit: (event: 'activate', value: string) => void): void {
   for (const effect of effects) if (effect.type === 'dispatch-activation') emit('activate', effect.id);
 }

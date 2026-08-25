@@ -47,6 +47,11 @@ const popupRootDefaults = Object.freeze({
 });
 
 export function vueApiDefault(locale, component, typeName, property, extracted) {
+  if (component === 'stepper' && typeName === 'StepperActionProps') {
+    if (property === 'disabled' || property === 'asChild') return { code: 'false' };
+    if (property === 'as') return { code: "'button'" };
+  }
+
   if (component === 'tree-view' && typeName === 'TreeViewGroupProps') {
     if (property === 'as') return { code: "'div'" };
     if (property === 'asChild') return { code: 'false' };
