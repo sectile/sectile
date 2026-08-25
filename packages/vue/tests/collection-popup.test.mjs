@@ -5,7 +5,7 @@ import { createSSRApp, h } from 'vue';
 import { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } from '../dist/combobox.js';
 import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuRoot, MenubarRoot } from '../dist/menu.js';
 import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '../dist/navigation-menu.js';
-import { SelectContent, SelectItem, SelectItemIndicator, SelectRoot, SelectTrigger, SelectValue } from '../dist/select.js';
+import { SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectValue, SelectViewport } from '../dist/select.js';
 import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '../dist/toolbar.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
@@ -21,6 +21,21 @@ test('Vue select keeps trigger, popup, options, and native form fallback', async
   assert.match(html, /role="option"/);
   assert.match(html, /name="release"/);
   assert.match(html, /data-part="item-indicator"/);
+});
+
+test('Vue select exposes portal-safe anatomy and active descendant linkage', async () => {
+  const html = await render(() => h(SelectRoot, { items: ['alpha'], defaultOpen: true }, {
+    default: () => [
+      h(SelectTrigger, null, { default: () => h(SelectValue) }),
+      h(SelectPortal, { disabled: true }, { default: () => h(SelectContent, null, {
+        default: () => h(SelectViewport, null, { default: () => h(SelectItem, { value: 'alpha' }, { default: () => h(SelectItemText, null, { default: () => 'Alpha' }) }) }),
+      }) }),
+    ],
+  }));
+  assert.match(html, /aria-controls="sectile-select-[^"]+-content"/);
+  assert.match(html, /data-part="viewport"/);
+  assert.match(html, /data-part="item-text"/);
+  assert.match(html, /id="sectile-select-[^"]+-content-item-alpha"/);
 });
 
 test('Vue combobox renders one native editing input and persistent listbox content', async () => {

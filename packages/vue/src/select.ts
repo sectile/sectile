@@ -1,11 +1,14 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref,
-  shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  Teleport, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref,
+  shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
+import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
+import { useHostId, useHostPortalTarget } from './host-provider.js';
+import { usePresence } from './internal/presence.js';
 
 export interface SelectRootProps {
   readonly items: readonly string[];
@@ -21,6 +24,18 @@ export interface SelectRootProps {
   readonly form?: string;
   readonly required?: boolean;
   readonly textValue?: (id: string) => string;
+  readonly typeaheadTimeoutMs?: number;
+  readonly position?: boolean;
+  readonly side?: 'top' | 'right' | 'bottom' | 'left';
+  readonly align?: 'start' | 'center' | 'end';
+  readonly sideOffset?: number;
+  readonly collisionPadding?: Padding;
+  readonly collisionBoundary?: Boundary;
+  readonly avoidCollisions?: boolean;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: Strategy;
+  readonly middleware?: Middleware[];
+  readonly autoUpdate?: boolean | AutoUpdateOptions;
   readonly policies?: SelectPolicies<string>;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -31,15 +46,19 @@ export interface SelectRootSlotProps { readonly value: string | null; readonly h
 export interface SelectItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface SelectItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface SelectPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
 
 interface RootContext {
   readonly state: ComputedRef<SelectRootSlotProps>;
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly contentID: string;
+  itemID(id: string): string;
   registerTrigger(element?: HTMLButtonElement): void;
   registerPopup(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
+  refresh(): void;
 }
 interface ItemContext { readonly state: ComputedRef<SelectItemSlotProps> }
 const rootKey = Symbol('SectileSelectRoot'); const itemKey = Symbol('SectileSelectItem');
@@ -54,6 +73,14 @@ export const SelectRoot = defineComponent({
     readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined },
     form: { type: String, default: undefined }, required: { type: Boolean, default: false },
     textValue: { type: Function as PropType<SelectTextValueResolver>, default: undefined },
+    typeaheadTimeoutMs: { type: Number, default: 700 },
+    position: { type: Boolean, default: true },
+    side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
+    align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
+    sideOffset: { type: Number, default: 4 }, collisionPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
+    collisionBoundary: { type: [String, Object, Array] as PropType<Boundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
+    hideWhenDetached: { type: Boolean, default: true }, strategy: { type: String as PropType<Strategy>, default: 'fixed' },
+    middleware: { type: Array as PropType<Middleware[]>, default: undefined }, autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -61,6 +88,7 @@ export const SelectRoot = defineComponent({
     'update:modelValue': (_value: string | null): boolean => true,
     'update:open': (_value: boolean): boolean => true,
     highlight: (_value: string | null): boolean => true,
+    'position-change': (_position: ComputePositionReturn): boolean => true,
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
@@ -74,6 +102,7 @@ export const SelectRoot = defineComponent({
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
     });
     const connection = shallowRef<SelectConnection<string>>();
+    const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${encodeURIComponent(value)}`;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value);
     const valueControlled = props.modelValue !== undefined; const openControlled = props.open !== undefined;
@@ -98,24 +127,31 @@ export const SelectRoot = defineComponent({
       if (root.value === undefined || trigger.value === undefined || popup.value === undefined) return;
       connection.value = createSelect({
         root: root.value, trigger: trigger.value, popup: popup.value, items: props.items, disabledItems: props.disabledItems,
+        textValue: props.textValue ?? ((value: string) => value), typeaheadTimeoutMs: props.typeaheadTimeoutMs,
+        position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding,
+        ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions,
+        hideWhenDetached: props.hideWhenDetached, strategy: props.strategy,
+        manageVisibility: false,
+        ...(props.middleware === undefined ? {} : { middleware: props.middleware }), ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
         ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
-        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onUpdate: refresh,
+        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (position) => { emit('position-change', position); }, onUpdate: refresh,
       });
       refreshItems(); refresh();
     };
     provide<RootContext>(rootKey, {
-      state, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)),
+      state, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: computed(() => new Set(props.disabledItems)),
-      registerTrigger: (element) => { trigger.value = element; }, registerPopup: (element) => { popup.value = element; },
+      registerTrigger: (element) => { trigger.value = element; }, registerPopup: (element) => { popup.value = element; if (element !== undefined) connection.value?.refresh(); },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled),
+      refresh: () => connection.value?.refresh(),
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.middleware, () => props.autoUpdate, () => props.policies], connect);
     watch([() => props.modelValue, () => props.open], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
@@ -150,7 +186,7 @@ export const SelectTrigger = defineComponent({
   setup(props, { attrs, slots }) { const root = useRoot('SelectTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLButtonElement ? node : undefined),
     type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled,
-    'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'aria-label': root.label.value,
+    'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'aria-controls': root.contentID, 'aria-label': root.label.value,
     'data-scope': 'select', 'data-part': 'trigger', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
@@ -168,9 +204,10 @@ export const SelectContent = defineComponent({
   name: 'SectileSelectContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerPopup(node instanceof HTMLElement ? node : undefined),
-    role: 'listbox', hidden: !root.state.value.open, 'aria-label': root.label.value,
+  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, () => root.refresh()); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
+    id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
+    'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
     'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
@@ -188,7 +225,7 @@ export const SelectItem = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value, state.value.disabled); },
-      role: 'option', 'aria-selected': String(state.value.selected), 'aria-disabled': state.value.disabled ? 'true' : undefined,
+      id: root.itemID(props.value), role: 'option', 'aria-selected': String(state.value.selected), 'aria-disabled': state.value.disabled ? 'true' : undefined,
       'data-sectile-select-id': props.value, 'data-scope': 'select', 'data-part': 'item',
       'data-selected': state.value.selected ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
     }), { default: () => slots['default']?.(state.value) });
@@ -201,6 +238,21 @@ export const SelectItemIndicator = defineComponent({
   setup(props, { attrs, slots }) { const item = useItem('SelectItemIndicator'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, hidden: !item.state.value.selected, 'aria-hidden': 'true', 'data-scope': 'select', 'data-part': 'item-indicator',
   }), { default: () => slots['default']?.(item.state.value) }); },
+});
+
+export const SelectViewport = defineComponent({
+  name: 'SectileSelectViewport', inheritAttrs: false, props: { ...partProps, as: { ...partProps.as, default: 'div' } },
+  setup(props, { attrs, slots }) { useRoot('SelectViewport'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'select', 'data-part': 'viewport' }), slots); },
+});
+
+export const SelectItemText = defineComponent({
+  name: 'SectileSelectItemText', inheritAttrs: false, props: partProps,
+  setup(props, { attrs, slots }) { useItem('SelectItemText'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'select', 'data-part': 'item-text' }), slots); },
+});
+
+export const SelectPortal = defineComponent({
+  name: 'SectileSelectPortal', props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined }, disabled: { type: Boolean, default: false } },
+  setup(props, { slots }) { useRoot('SelectPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled }, slots['default']?.()); },
 });
 
 function useRoot(part: string): RootContext { const root = inject<RootContext>(rootKey); if (root === undefined) throw new TypeError(`${part} must be used inside SelectRoot.`); return root; }

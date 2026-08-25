@@ -165,6 +165,6 @@ Shared scope: <code class="component-scope-token">[data-scope="dialog"]</code>. 
 
 ## Accessibility
 
-The dialog connects title and description, traps focus only in modal mode, and restores focus when it closes.
+The dialog connects title and description, isolates modal background content, traps focus, locks page scroll, and restores focus on close.
 
 See the [corresponding WAI-ARIA pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) for the host accessibility contract.

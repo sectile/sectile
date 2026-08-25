@@ -62,6 +62,7 @@ export interface TooltipOptions {
   readonly onOpenChange?: (open: boolean) => void;
   readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate?: () => void;
+  readonly manageVisibility?: boolean;
 }
 
 export type TooltipOpenChangeHandler = NonNullable<TooltipOptions['onOpenChange']>;
@@ -92,6 +93,7 @@ function tryCreateTooltipConnection(o: TooltipOptions): Result<TooltipConnection
     read: (state) => state.open,
     interaction: o,
     triggerMode: 'focus-hover',
+    ...(o.manageVisibility === undefined ? {} : { manageVisibility: o.manageVisibility }),
     ...(o.id === undefined ? {} : { tooltipID: o.id }),
     onOpenChange: o.onOpenChange,
     onUpdate: () => { connection?.updatePosition(); o.onUpdate?.(); },

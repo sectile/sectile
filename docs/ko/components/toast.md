@@ -31,6 +31,7 @@ Vue 패키지: `@sectile/vue/toast`
 <strong class="component-api-label">컴포넌트</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">ToastProvider</code></li>
+  <li><code class="component-api-token">ToastPortal</code></li>
   <li><code class="component-api-token">ToastViewport</code></li>
   <li><code class="component-api-token">ToastRoot</code></li>
   <li><code class="component-api-token">ToastTitle</code></li>
@@ -47,7 +48,14 @@ Vue 패키지: `@sectile/vue/toast`
 | --- | --- | --- | --- |
 | `defaultDurationMs` | `number \| null` | `5_000` | 밀리초 단위의 초기 타이머 길이입니다. |
 | `maxVisible` | `number` | `3` | 한 번에 표시할 수 있는 최대 알림 수입니다. |
+| `closeLabel` | `string` | `'Dismiss notification'` | 각 알림 닫기 작업에 제공할 접근 가능한 이름입니다. |
+| `dismissOnEscape` | `boolean` | `true` | Escape 키로 포커스된 알림을 닫을지 여부입니다. |
+| `hotkey` | `readonly string[] \| false` | `['F8']` | 알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false면 사용하지 않습니다. |
 | `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Provider가 처음 마운트될 때 존재할 알림입니다. |
+| `pauseOnWindowBlur` | `boolean` | `true` | 브라우저 창이 비활성 상태일 때 자동 닫기 시간을 멈출지 여부입니다. |
+| `swipeDirection` | `'up' \| 'right' \| 'down' \| 'left'` | `'right'` | 포인터로 알림을 밀어 닫을 방향입니다. |
+| `swipeThreshold` | `number` | `50` | 밀어서 닫을 때 필요한 포인터 이동 거리(픽셀)입니다. |
+| `toasts` | `readonly ToastInput<string>[]` | `undefined` | 부모가 Provider를 제어할 때 사용할 현재 알림 목록입니다. |
 
 #### `ToastPartProps`
 
@@ -55,6 +63,13 @@ Vue 패키지: `@sectile/vue/toast`
 | --- | --- | --- | --- |
 | `as` | `PrimitiveAs` | 파트별로 다름 | 이 파트가 렌더링할 요소 또는 컴포넌트입니다. |
 | `asChild` | `boolean` | `false` | 래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다. |
+
+#### `ToastPortalProps`
+
+| 속성 | 타입 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | 사용자 조작을 막을지 여부입니다. |
+| `to` | `string \| HTMLElement` | `'body'` | 포털 콘텐츠를 옮길 대상입니다. |
 
 #### `ToastRootProps`
 
@@ -82,6 +97,14 @@ Vue 패키지: `@sectile/vue/toast`
 | --- | --- | --- |
 | `open` | `boolean` | 연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다. |
 | `toast` | `ToastItem<string> \| null` | 이 항목이 나타내는 알림입니다. |
+
+### 이벤트
+
+#### `ToastProvider`
+
+| 이벤트 | 페이로드 | 설명 |
+| --- | --- | --- |
+| `update:toasts` | `readonly ToastInput<string>[]` | Provider가 새 외부 제어 알림 목록을 요청할 때 발생합니다. |
 
 ## 파트
 
@@ -131,9 +154,11 @@ Vue 패키지: `@sectile/vue/toast`
 
 | 키 | 동작 |
 | --- | --- |
-| <kbd>Tab</kbd> | 컴포넌트의 기본 작업 컨트롤 사이를 이동합니다. |
-| <kbd>Enter</kbd> / <kbd>Space</kbd> | 포커스된 작업을 실행합니다. |
+| <kbd>F8</kbd> | 알림 표시 영역으로 포커스를 옮깁니다. |
+| <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> | 알림 작업 컨트롤 사이에서 포커스를 이동합니다. |
+| <kbd>Escape</kbd> | 포커스된 알림을 닫습니다. |
+| <kbd>Pointer swipe</kbd> | 설정한 거리보다 멀리 알림을 밀면 닫습니다. |
 
 ## 접근성
 
-표시 영역이 알림 순서를 유지하고 각 토스트에 제목·설명·닫기 작업의 이름을 제공합니다.
+표시 영역이 알림 순서와 키보드 접근을 유지하며 각 알림에 지역화된 닫기 작업을 제공하고 사용자 조작이나 창 상태에 따라 자동 닫기를 멈춥니다.

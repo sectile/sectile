@@ -213,7 +213,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'radio-group': anatomy('radio-group', ['root', 'item', 'indicator']),
   'range-calendar': anatomy('range-calendar', ['content', 'grid', 'cell', 'previous-month', 'next-month', 'previous-year', 'next-year']),
   rating: anatomy('rating', ['root', 'item', 'indicator', 'clear']),
-  select: anatomy('select', ['root', 'trigger', 'value', 'content', 'item', 'item-indicator']),
+  select: anatomy('select', ['root', 'trigger', 'value', 'content', 'viewport', 'item', 'item-text', 'item-indicator']),
   slider: anatomy('slider', ['root', 'track', 'range', 'thumb']),
   'spin-button': anatomy('spin-button', ['root', 'input', 'increment', 'decrement']),
   stepper: anatomy('stepper', ['root', 'list', 'step', 'indicator', 'content', 'previous', 'next'], {

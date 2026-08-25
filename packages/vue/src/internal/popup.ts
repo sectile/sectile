@@ -6,6 +6,7 @@ import {
   h,
   inject,
   mergeProps,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   provide,
@@ -22,11 +23,13 @@ import {
 import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
+import { usePresence } from './presence.js';
 
 export interface PopupConnection {
   getSnapshot(): { readonly revision: number };
   syncControlledValue(open: boolean): { readonly ok: boolean };
   handleEvent(event: 'open' | 'close' | 'toggle'): boolean;
+  refresh(): void;
   disconnect(): void;
 }
 
@@ -60,6 +63,7 @@ export interface PopupFactoryOptions {
   readonly onOpenChange: (open: boolean) => void;
   readonly onPositionChange?: (position: ComputePositionReturn) => void;
   readonly onUpdate: () => void;
+  readonly manageVisibility?: boolean;
 }
 
 export interface PopupComponentConfig {
@@ -68,6 +72,7 @@ export interface PopupComponentConfig {
   readonly modal: boolean;
   readonly triggerMode: 'click' | 'focus-hover';
   readonly closeOnInteractOutside?: boolean;
+  readonly closeOnOverlayClick?: boolean;
   create(options: PopupFactoryOptions): PopupConnection;
 }
 
@@ -104,6 +109,7 @@ interface PopupContext {
   readonly open: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
   readonly modal: ComputedRef<boolean>;
+  readonly label: ComputedRef<string | undefined>;
   readonly contentID: string;
   readonly titleID: string;
   readonly descriptionID: string;
@@ -114,6 +120,7 @@ interface PopupContext {
   connect(): void;
   disconnect(): void;
   close(): void;
+  refresh(): void;
 }
 
 export function createPopupComponents(config: PopupComponentConfig): Readonly<{
@@ -187,6 +194,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const open = computed(() => localOpen.value);
       const disabled = computed(() => props.disabled);
       const modal = computed(() => props.modal);
+      const label = computed(() => props.label);
       const update = (): void => {
         if (connection.value === undefined) return;
         void connection.value.getSnapshot().revision;
@@ -223,6 +231,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           strategy: props.strategy,
           ...(props.middleware === undefined ? {} : { middleware: props.middleware }),
           ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
+          manageVisibility: false,
           onOpenChange: (next) => {
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
@@ -238,10 +247,18 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         if (!result.ok) throw new TypeError(`${config.scope} controlled open state could not be synchronized.`);
         localOpen.value = next;
       });
+      watch([
+        () => props.disabled, () => props.modal, () => props.label, () => props.autoFocus, () => props.restoreFocus,
+        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.side, () => props.align,
+        () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
+        () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
+        () => props.strategy, () => props.middleware, () => props.autoUpdate,
+      ], connect);
       onBeforeUnmount(disconnect);
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, contentID, titleID, descriptionID, trigger, anchor, arrow, content, connect, disconnect,
+        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, content, connect, disconnect,
         close: () => { connection.value?.handleEvent('close'); },
+        refresh: () => { connection.value?.refresh(); },
       });
       return (): VNodeChild => h(Fragment as Component, null, slots['default']?.({ open: open.value, disabled: props.disabled }) ?? []);
     },
@@ -271,14 +288,17 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     setup(props, { attrs, slots }) {
       const root = useRoot('Content');
       const direction = useHostDirection();
+      const element = shallowRef<HTMLElement>();
+      const present = usePresence(root.open, element);
+      watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
       onMounted(root.connect);
       onBeforeUnmount(root.disconnect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.content.value = element instanceof HTMLElement ? element : undefined; },
-        id: root.contentID, role: config.role, hidden: !root.open.value, dir: direction.value,
+        elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.content.value = node; },
+        id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
         'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
-        'aria-labelledby': root.titleID, 'aria-describedby': root.descriptionID,
+        'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
         'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
       }), slots);
     },
@@ -314,10 +334,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Overlay`, inheritAttrs: false, props: primitiveProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Overlay');
+      const element = shallowRef<HTMLElement>();
+      const present = usePresence(root.open, element);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, hidden: !root.open.value, 'aria-hidden': 'true',
+        as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { element.value = candidate instanceof HTMLElement ? candidate : undefined; }, hidden: !present.value, 'aria-hidden': 'true',
         'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
-        onClick: (event: MouseEvent) => { if (event.target === event.currentTarget) root.close(); },
+        onClick: (event: MouseEvent) => { if (config.closeOnOverlayClick === true && event.target === event.currentTarget) root.close(); },
       }), slots);
     },
   });

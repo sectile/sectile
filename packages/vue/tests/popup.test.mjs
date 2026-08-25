@@ -37,6 +37,16 @@ test('Vue dialog links persistent compound parts with native dialog semantics', 
   assert.match(html, /data-part="close"/);
 });
 
+test('Vue dialog uses an explicit accessible label without a dangling title reference', async () => {
+  const html = await renderToString(createSSRApp({
+    render: () => h(DialogRoot, { defaultOpen: true, label: 'Preferences' }, {
+      default: () => h(DialogContent, null, { default: () => 'Settings' }),
+    }),
+  }));
+  assert.match(html, /aria-label="Preferences"/);
+  assert.doesNotMatch(html, /aria-labelledby=/);
+});
+
 test('Vue alert dialog and tooltip preserve their distinct native roles', async () => {
   const alert = await renderToString(createSSRApp({
     render: () => h(AlertDialogRoot, { defaultOpen: true }, {

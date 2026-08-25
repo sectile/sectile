@@ -77,6 +77,7 @@ export interface PopoverOptions {
   readonly onInitialFocus?: () => void;
   readonly onFocusRestore?: () => void;
   readonly onUpdate?: () => void;
+  readonly manageVisibility?: boolean;
 }
 
 export type PopoverOpenChangeHandler = NonNullable<PopoverOptions['onOpenChange']>;
@@ -118,6 +119,7 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
     restoreFocus: options.restoreFocus ?? true,
     trapFocus: options.trapFocus ?? false,
     closeOnInteractOutside: options.closeOnInteractOutside ?? true,
+    ...(options.manageVisibility === undefined ? {} : { manageVisibility: options.manageVisibility }),
     onOpenChange: options.onOpenChange,
     command: (command) => command.type === 'request-initial-focus' ? options.onInitialFocus?.() : options.onFocusRestore?.(),
     onUpdate: () => { connection?.updatePosition(); options.onUpdate?.(); },

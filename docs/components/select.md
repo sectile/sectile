@@ -36,6 +36,9 @@ Vue package: `@sectile/vue/select`
   <li><code class="component-api-token">SelectContent</code></li>
   <li><code class="component-api-token">SelectItem</code></li>
   <li><code class="component-api-token">SelectItemIndicator</code></li>
+  <li><code class="component-api-token">SelectViewport</code></li>
+  <li><code class="component-api-token">SelectItemText</code></li>
+  <li><code class="component-api-token">SelectPortal</code></li>
 </ul>
 </div>
 
@@ -46,6 +49,7 @@ Vue package: `@sectile/vue/select`
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
 | `items` | `readonly string[]` | Required | Ordered item values managed by the component. |
+| `side` | `'top' \| 'right' \| 'bottom' \| 'left'` | `'bottom'` | Preferred side of the anchor for positioned content. |
 | `modelValue` | `string \| null` | `undefined` | Current value when state is controlled by the parent. |
 | `defaultValue` | `string \| null` | `null` | Initial value used when the component owns its state. |
 | `open` | `boolean` | `undefined` | Whether the associated popup or disclosure is open. |
@@ -61,6 +65,17 @@ Vue package: `@sectile/vue/select`
 | `textValue` | `(id: string) => string` | `undefined` | Returns searchable or presentational text for an item value. |
 | `as` | `PrimitiveAs` | `'div'` | Element or component rendered for this part. |
 | `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+| `align` | `'start' \| 'center' \| 'end'` | `'start'` | Alignment of positioned content relative to its anchor. |
+| `sideOffset` | `number` | `4` | Distance between positioned content and its anchor. |
+| `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
+| `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
+| `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
+| `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
+| `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
+| `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
+| `position` | `boolean` | `true` | Whether the popup is positioned relative to its trigger. |
+| `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
+| `typeaheadTimeoutMs` | `number` | `700` | Idle time in milliseconds before the printable-text search buffer resets. |
 
 #### `SelectItemProps`
 
@@ -77,6 +92,13 @@ Vue package: `@sectile/vue/select`
 | --- | --- | --- | --- |
 | `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
 | `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `SelectPortalProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
 
 ### Slots
 
@@ -108,6 +130,7 @@ Vue package: `@sectile/vue/select`
 | `update:modelValue` | `string \| null` | Emitted when the component requests a new controlled value. |
 | `update:open` | `boolean` | Emitted when the component requests a new open state. |
 | `highlight` | `string \| null` | Emitted when the highlighted item changes. |
+| `position-change` | `ComputePositionReturn` | Emitted after positioned content receives a new calculated placement. |
 
 ### Other types
 
@@ -170,9 +193,21 @@ Shared scope: <code class="component-scope-token">[data-scope="select"]</code>. 
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>
+  <td><code class="component-part-token">viewport</code></td>
+  <td><code>[data-part="viewport"]</code></td>
+  <td>Clips and positions the currently visible content.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
   <td><code class="component-part-token">item</code></td>
   <td><code>[data-part="item"]</code></td>
   <td>Represents one selectable or actionable item.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">item-text</code></td>
+  <td><code>[data-part="item-text"]</code></td>
+  <td>Renders the item label independently from its controls.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>
@@ -196,6 +231,6 @@ Shared scope: <code class="component-scope-token">[data-scope="select"]</code>. 
 
 ## Accessibility
 
-The trigger exposes expanded state while the popup listbox exposes selected, highlighted, and disabled options.
+The trigger owns a portalled listbox whose active descendant, selected options, and disabled options remain linked across DOM boundaries.
 
 See the [corresponding WAI-ARIA pattern](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) for the host accessibility contract.

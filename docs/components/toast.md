@@ -31,6 +31,7 @@ Vue package: `@sectile/vue/toast`
 <strong class="component-api-label">Components</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">ToastProvider</code></li>
+  <li><code class="component-api-token">ToastPortal</code></li>
   <li><code class="component-api-token">ToastViewport</code></li>
   <li><code class="component-api-token">ToastRoot</code></li>
   <li><code class="component-api-token">ToastTitle</code></li>
@@ -47,7 +48,14 @@ Vue package: `@sectile/vue/toast`
 | --- | --- | --- | --- |
 | `defaultDurationMs` | `number \| null` | `5_000` | Initial timer duration in milliseconds. |
 | `maxVisible` | `number` | `3` | Maximum number of notifications shown at once. |
+| `closeLabel` | `string` | `'Dismiss notification'` | Accessible label announced for each notification close action. |
+| `dismissOnEscape` | `boolean` | `true` | Whether Escape dismisses the focused notification. |
+| `hotkey` | `readonly string[] \| false` | `['F8']` | Document hotkey that moves focus to the notification viewport, or false to disable it. |
 | `initialToasts` | `readonly ToastInput<string>[]` | `[]` | Notifications present when the provider first mounts. |
+| `pauseOnWindowBlur` | `boolean` | `true` | Whether automatic dismissal pauses while the browser window is inactive. |
+| `swipeDirection` | `'up' \| 'right' \| 'down' \| 'left'` | `'right'` | Direction in which a pointer swipe dismisses a notification. |
+| `swipeThreshold` | `number` | `50` | Pointer travel in pixels required to dismiss by swiping. |
+| `toasts` | `readonly ToastInput<string>[]` | `undefined` | Current notifications when the provider is controlled by the parent. |
 
 #### `ToastPartProps`
 
@@ -55,6 +63,13 @@ Vue package: `@sectile/vue/toast`
 | --- | --- | --- | --- |
 | `as` | `PrimitiveAs` | Varies by part | Element or component rendered for this part. |
 | `asChild` | `boolean` | `false` | Whether to merge this part into its single child instead of rendering a wrapper. |
+
+#### `ToastPortalProps`
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `disabled` | `boolean` | `false` | Whether interaction is unavailable. |
+| `to` | `string \| HTMLElement` | `'body'` | Teleport target for portalled content. |
 
 #### `ToastRootProps`
 
@@ -82,6 +97,14 @@ Vue package: `@sectile/vue/toast`
 | --- | --- | --- |
 | `open` | `boolean` | Whether the associated popup or disclosure is open. |
 | `toast` | `ToastItem<string> \| null` | Notification represented by this item. |
+
+### Events
+
+#### `ToastProvider`
+
+| Event | Payload | Description |
+| --- | --- | --- |
+| `update:toasts` | `readonly ToastInput<string>[]` | Emitted when the provider requests a new controlled notification collection. |
 
 ## Parts
 
@@ -131,9 +154,11 @@ Shared scope: <code class="component-scope-token">[data-scope="toast"]</code>. C
 
 | Key | Behavior |
 | --- | --- |
-| <kbd>Tab</kbd> | Move between the component's native action controls. |
-| <kbd>Enter</kbd> / <kbd>Space</kbd> | Invoke the focused action. |
+| <kbd>F8</kbd> | Move focus to the notification viewport. |
+| <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> | Move between notification action controls. |
+| <kbd>Escape</kbd> | Dismiss the focused notification. |
+| <kbd>Pointer swipe</kbd> | Dismiss a notification after moving it past the configured threshold. |
 
 ## Accessibility
 
-The viewport preserves announcement order; each visible toast has named title, description, and dismiss action.
+The viewport preserves announcement order and keyboard access; each visible toast has a localized dismiss action and pauses while interaction or window state requires it.

@@ -165,6 +165,6 @@ type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionCh
 
 ## 접근성
 
-대화상자는 제목과 설명을 연결하고 모달일 때만 포커스를 가둔 뒤 닫힐 때 복원합니다.
+대화상자는 제목과 설명을 연결하고 모달 배경을 격리하며 포커스를 가두고 페이지 스크롤을 잠근 뒤 닫힐 때 포커스를 복원합니다.
 
 [관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

@@ -9,7 +9,7 @@ import {
 } from './internal/popup.js';
 
 const parts = createPopupComponents({
-  scope: 'dialog', role: 'dialog', modal: true, triggerMode: 'click',
+  scope: 'dialog', role: 'dialog', modal: true, triggerMode: 'click', closeOnOverlayClick: true,
   create: (options: PopupFactoryOptions): DialogConnection => createDialog(options as DialogOptions),
 });
 

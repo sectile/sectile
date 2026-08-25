@@ -159,6 +159,12 @@ const profiles = Object.freeze({
     row('Tab', 'Move between the component\'s native action controls.', '컴포넌트의 기본 작업 컨트롤 사이를 이동합니다.'),
     row('Enter / Space', 'Invoke the focused action.', '포커스된 작업을 실행합니다.'),
   ],
+  toast: [
+    row('F8', 'Move focus to the notification viewport.', '알림 표시 영역으로 포커스를 옮깁니다.'),
+    row('Tab / Shift+Tab', 'Move between notification action controls.', '알림 작업 컨트롤 사이에서 포커스를 이동합니다.'),
+    row('Escape', 'Dismiss the focused notification.', '포커스된 알림을 닫습니다.'),
+    row('Pointer swipe', 'Dismiss a notification after moving it past the configured threshold.', '설정한 거리보다 멀리 알림을 밀면 닫습니다.'),
+  ],
 });
 
 const profileByComponent = Object.freeze({
@@ -175,7 +181,7 @@ const profileByComponent = Object.freeze({
   'quantity-field': 'textInput', 'radio-group': 'listChoice', rating: 'listChoice', select: 'listChoice',
   slider: 'range', 'spin-button': 'range', stepper: 'tabs', switch: 'toggle', tabs: 'tabs',
   'tags-input': 'tags', text: 'textInput', 'time-field': 'segmentedInput', 'time-range-field': 'segmentedInput',
-  timer: 'actions', toast: 'actions', 'toggle-button': 'toggle', 'toggle-group': 'listChoice',
+  timer: 'actions', toast: 'toast', 'toggle-button': 'toggle', 'toggle-group': 'listChoice',
   toolbar: 'toolbar', tooltip: 'tooltip', 'tree-grid': 'grid', 'tree-view': 'tree', 'window-splitter': 'range',
 });
 
@@ -201,7 +207,7 @@ const accessibilityByComponent = Object.freeze({
   'month-range-picker': ['Start and end month inputs share one year grid while retaining independently named endpoints.', '시작·종료 월 입력이 하나의 연도 격자를 공유하면서 양 끝의 이름을 독립적으로 유지합니다.'],
   'year-picker': ['The labeled input and trigger own a paged year grid with selected, highlighted, and disabled cells.', '이름이 있는 입력과 실행 요소가 선택·강조·비활성 칸이 있는 연도 격자를 연결합니다.'],
   'year-range-picker': ['Start and end year inputs share a paged grid and expose one inclusive year interval.', '시작·종료 연도 입력이 페이지형 격자를 공유하고 양 끝을 포함하는 연도 범위를 노출합니다.'],
-  dialog: ['The dialog connects title and description, traps focus only in modal mode, and restores focus when it closes.', '대화상자는 제목과 설명을 연결하고 모달일 때만 포커스를 가둔 뒤 닫힐 때 복원합니다.'],
+  dialog: ['The dialog connects title and description, isolates modal background content, traps focus, locks page scroll, and restores focus on close.', '대화상자는 제목과 설명을 연결하고 모달 배경을 격리하며 포커스를 가두고 페이지 스크롤을 잠근 뒤 닫힐 때 포커스를 복원합니다.'],
   disclosure: ['The trigger exposes expanded state and its relationship to the controlled content.', '실행 요소가 펼침 상태와 연결된 내용의 관계를 노출합니다.'],
   editable: ['Preview and input states remain distinguishable; invalid drafts are announced on the real input.', '미리보기와 입력 상태를 구분하고 잘못된 입력은 실제 입력 요소에서 전달합니다.'],
   form: ['The native form and controls retain their semantics while labels, descriptions, messages, and the issue summary expose validation state; the first invalid control receives focus.', '네이티브 폼과 컨트롤의 의미를 유지하면서 레이블·설명·오류 메시지·오류 요약이 검증 상태를 전달하고 첫 번째 잘못된 컨트롤로 포커스를 옮깁니다.'],
@@ -220,7 +226,7 @@ const accessibilityByComponent = Object.freeze({
   'quantity-field': ['The labeled input exposes the accepted quantity while unit selection and formatted output remain separately identifiable.', '이름이 있는 입력이 확정된 수량을 노출하고 단위 선택과 형식화된 출력을 별도로 식별할 수 있게 합니다.'],
   'radio-group': ['The group and each radio expose checked, highlighted, and disabled state with one roving tab stop.', '묶음과 각 라디오가 선택·강조·비활성 상태를 노출하고 하나의 이동 탭 위치를 사용합니다.'],
   rating: ['Rating choices use radio-group semantics, keep every score named, and provide an explicit clear action.', '평점 선택은 라디오 묶음 의미를 사용하고 각 점수에 이름을 제공하며 명시적인 지우기 작업을 제공합니다.'],
-  select: ['The trigger exposes expanded state while the popup listbox exposes selected, highlighted, and disabled options.', '실행 요소가 열림 상태를 노출하고 팝업 목록 상자가 선택·강조·비활성 항목을 노출합니다.'],
+  select: ['The trigger owns a portalled listbox whose active descendant, selected options, and disabled options remain linked across DOM boundaries.', '실행 요소가 포털 목록 상자를 소유하며 DOM 경계를 넘어 현재 항목·선택 항목·비활성 항목 연결을 유지합니다.'],
   slider: ['The thumb exposes its accessible name, minimum, maximum, current value, orientation, and interaction state.', '핸들이 이름, 최솟값, 최댓값, 현재 값, 방향, 상호작용 상태를 노출합니다.'],
   'spin-button': ['The input exposes spinbutton value metadata while increment and decrement remain named native controls.', '입력란이 증감 입력 값 정보를 노출하고 증가·감소 요소는 이름이 있는 기본 컨트롤로 유지됩니다.'],
   stepper: ['The ordered step list exposes the current step and associates each step trigger with its content panel.', '순서 있는 단계 목록이 현재 단계를 노출하고 각 단계 실행 요소를 내용 패널과 연결합니다.'],
@@ -231,7 +237,7 @@ const accessibilityByComponent = Object.freeze({
   'time-field': ['The labeled input preserves native text entry while exposing time validation as one value.', '이름이 있는 입력란은 기본 텍스트 입력을 유지하며 시간 검증을 하나의 값으로 노출합니다.'],
   'time-range-field': ['Separate labeled start and end inputs expose one ordered time range and keep endpoint errors visible.', '시작과 종료 입력에 각각 이름을 제공하고 양 끝의 오류가 보이는 하나의 순서 있는 시간 범위로 노출합니다.'],
   timer: ['Formatted time parts are grouped as one value while start, pause, reset, and restart remain named actions.', '형식화된 시간 조각을 하나의 값으로 묶고 시작·일시 정지·초기화·재시작을 이름이 있는 작업으로 유지합니다.'],
-  toast: ['The viewport preserves announcement order; each visible toast has named title, description, and dismiss action.', '표시 영역이 알림 순서를 유지하고 각 토스트에 제목·설명·닫기 작업의 이름을 제공합니다.'],
+  toast: ['The viewport preserves announcement order and keyboard access; each visible toast has a localized dismiss action and pauses while interaction or window state requires it.', '표시 영역이 알림 순서와 키보드 접근을 유지하며 각 알림에 지역화된 닫기 작업을 제공하고 사용자 조작이나 창 상태에 따라 자동 닫기를 멈춥니다.'],
   'toggle-button': ['The button exposes pressed state and keeps disabled and readonly behavior distinct.', '버튼이 눌림 상태를 노출하고 비활성 동작과 읽기 전용 동작을 구분합니다.'],
   'toggle-group': ['The labeled group exposes each item as a pressed button and uses one roving tab stop.', '이름이 있는 묶음이 각 항목을 눌림 버튼으로 노출하고 하나의 이동 탭 위치를 사용합니다.'],
   toolbar: ['The labeled toolbar uses one roving tab stop and keeps separators out of the focus order.', '이름이 있는 도구 막대가 하나의 이동 탭 위치를 사용하고 구분선을 포커스 순서에서 제외합니다.'],

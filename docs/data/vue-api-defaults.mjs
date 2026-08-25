@@ -11,6 +11,7 @@ const pickerComponents = new Set([
 ]);
 
 const popupComponents = new Set(['alert-dialog', 'dialog', 'popover', 'tooltip']);
+const portalComponents = new Set([...popupComponents, 'select', 'toast']);
 
 const pickerRootDefaults = Object.freeze({
   modelValue: 'undefined',
@@ -79,7 +80,7 @@ export function vueApiDefault(locale, component, typeName, property, extracted) 
     if (value !== undefined) return { code: value };
   }
 
-  if (popupComponents.has(component) && typeName.endsWith('PortalProps')) {
+  if (portalComponents.has(component) && typeName.endsWith('PortalProps')) {
     if (property === 'to') return { code: "'body'" };
     if (property === 'disabled') return { code: 'false' };
   }

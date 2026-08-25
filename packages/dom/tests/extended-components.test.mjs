@@ -50,6 +50,21 @@ test('DOM selection facades project checkbox, select, pagination, and step seman
   assert.equal(stepperRoot.attributes.get('aria-roledescription'), 'stepper');
 });
 
+test('DOM select handles keyboard and typeahead events on a portalled popup', () => {
+  const root = new FakeElement();
+  const trigger = new FakeElement();
+  const popup = new FakeElement();
+  const select = createSelect({ root, trigger, popup, items: ['alpha', 'beta', 'gamma'], textValue: (id) => ({ alpha: 'Apple', beta: 'Banana', gamma: 'Grape' })[id], position: false });
+  let prevented = false;
+  popup.emit('keydown', { key: 'b', target: popup, altKey: false, ctrlKey: false, metaKey: false, preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(select.getSnapshot().state.open, true);
+  assert.equal(select.getSnapshot().state.choice.cursor.current, 'beta');
+  popup.emit('keydown', { key: 'ArrowDown', target: popup, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} });
+  assert.equal(select.getSnapshot().state.choice.cursor.current, 'gamma');
+  select.disconnect();
+});
+
 test('DOM toggle group projects pressed buttons and toggles single values', () => {
   const root = new FakeElement();
   const group = createToggleGroup({ root, items: ['bold', 'italic'], defaultValue: ['bold'] });

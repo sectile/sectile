@@ -54,22 +54,27 @@ export function createFloatingPosition(options: FloatingPositionOptions): Floati
   };
   const compute = async (): Promise<void> => {
     const { reference, root } = options;
-    if (root.hidden || reference === undefined || typeof window === 'undefined') return;
+    if (root.hidden || reference === undefined || !canPosition(root)) return;
     const request = ++positionRequest;
     const strategy = options.strategy ?? 'fixed';
     root.style.position = strategy;
-    const position = await computePosition(reference, root, {
-      placement: toPlacement(options.side ?? 'bottom', options.align ?? 'center'),
-      strategy,
-      middleware: options.middleware ?? defaultMiddleware(options),
-    });
+    let position: ComputePositionReturn;
+    try {
+      position = await computePosition(reference, root, {
+        placement: toPlacement(options.side ?? 'bottom', options.align ?? 'center'),
+        strategy,
+        middleware: options.middleware ?? defaultMiddleware(options),
+      });
+    } catch {
+      return;
+    }
     if (request !== positionRequest || root.hidden) return;
     Object.assign(root.style, { left: `${position.x}px`, top: `${position.y}px` });
     applyPositionData(root, options.arrow, position);
     options.onPositionChange?.(position);
   };
   const update = (): void => {
-    if (options.root.hidden || options.reference === undefined || typeof window === 'undefined') {
+    if (options.root.hidden || options.reference === undefined || !canPosition(options.root)) {
       stopAutoUpdate();
       return;
     }
@@ -88,6 +93,11 @@ export function createFloatingPosition(options: FloatingPositionOptions): Floati
       positionRequest += 1;
     },
   });
+}
+
+function canPosition(root: HTMLElement): boolean {
+  return typeof root.getBoundingClientRect === 'function'
+    && typeof root.ownerDocument?.defaultView?.getComputedStyle === 'function';
 }
 
 function toPlacement(side: FloatingSide, align: FloatingAlign): ComputePositionConfig['placement'] {

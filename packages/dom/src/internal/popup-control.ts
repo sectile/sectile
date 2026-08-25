@@ -8,6 +8,7 @@ import {
   getDOMLayerManager,
   type DOMLayerManager,
 } from './layer-manager.js';
+import { acquireModalEffects, type ModalEffects } from './modal-effects.js';
 
 export interface DOMPopupConnection<State, Event> {
   getSnapshot(): RevisionSnapshot<State>;
@@ -44,6 +45,7 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly command?: (command: Command) => void;
   readonly onUpdate?: (() => void) | undefined;
   readonly interaction?: InteractionStateInput;
+  readonly manageVisibility?: boolean;
 }
 
 export function createDOMPopup<State, Event, Command>(options: DOMPopupOptions<State, Event, Command>): Result<DOMPopupConnection<State, Event>> {
@@ -64,6 +66,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   readonly #runtime: SemanticController<State, Event, Command>;
   readonly #click: () => void;
   readonly #keydown: (event: KeyboardEvent) => void;
+  readonly #documentKeydown: (event: KeyboardEvent) => void;
   readonly #focusIn: () => void;
   readonly #focusOut: () => void;
   readonly #pointerEnter: () => void;
@@ -71,6 +74,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   readonly #pointerDown: (event: PointerEvent) => void;
   readonly #layerID: string;
   readonly #layers: DOMLayerManager;
+  #modalEffects: ModalEffects | undefined;
   #focused = false;
   #hovered = false;
 
@@ -87,6 +91,13 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
         this.#trapTab(event);
       }
     };
+    this.#documentKeydown = (event): void => {
+      if (event.key !== 'Escape' || !this.#isOpen()) return;
+      if (this.#layers.dismiss(this.#layerID, 'escape')) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+      }
+    };
     this.#focusIn = (): void => { this.#focused = true; this.handleEvent(options.open); };
     this.#focusOut = (): void => { this.#focused = false; if (!this.#hovered) this.handleEvent(options.close); };
     this.#pointerEnter = (): void => { this.#hovered = true; this.handleEvent(options.open); };
@@ -94,7 +105,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     this.#pointerDown = (event): void => {
       if (!this.#isOpen() || options.closeOnInteractOutside !== true) return;
       const target = event.target;
-      if (target instanceof Node && (options.root.contains(target) || options.trigger?.contains(target) === true)) return;
+      if (contains(options.root, target) || (options.trigger !== undefined && contains(options.trigger, target))) return;
       this.#layers.dismiss(this.#layerID, 'interact-outside');
     };
     options.root.setAttribute('role', options.role);
@@ -106,6 +117,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options.interaction ?? {}, { native: true });
     options.root.addEventListener('keydown', this.#keydown);
     options.trigger?.addEventListener('keydown', this.#keydown);
+    options.root.ownerDocument?.addEventListener?.('keydown', this.#documentKeydown, true);
     if (options.triggerMode === 'focus-hover') {
       options.trigger?.addEventListener('focus', this.#focusIn);
       options.trigger?.addEventListener('blur', this.#focusOut);
@@ -118,9 +130,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     } else {
       options.trigger?.addEventListener('click', this.#click);
     }
-    if (options.closeOnInteractOutside === true && typeof document !== 'undefined') {
-      document.addEventListener('pointerdown', this.#pointerDown, true);
-    }
+    if (options.closeOnInteractOutside === true) options.root.ownerDocument?.addEventListener?.('pointerdown', this.#pointerDown, true);
     this.#refresh(false);
   }
 
@@ -145,19 +155,21 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     if (this.#isOpen()) this.#layers.close(this.#layerID);
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.trigger?.removeEventListener('keydown', this.#keydown);
+    this.#options.root.ownerDocument?.removeEventListener?.('keydown', this.#documentKeydown, true);
     this.#options.trigger?.removeEventListener('click', this.#click);
     this.#options.trigger?.removeEventListener('focus', this.#focusIn);
     this.#options.trigger?.removeEventListener('blur', this.#focusOut);
     this.#options.trigger?.removeEventListener('mouseenter', this.#pointerEnter);
     this.#options.trigger?.removeEventListener('mouseleave', this.#pointerLeave);
-    if (this.#options.closeOnInteractOutside === true && typeof document !== 'undefined') {
-      document.removeEventListener('pointerdown', this.#pointerDown, true);
-    }
+    if (this.#options.closeOnInteractOutside === true) this.#options.root.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerDown, true);
+    this.#modalEffects?.release();
+    this.#modalEffects = undefined;
   }
   #isOpen(): boolean { return this.#options.read(this.#runtime.getSnapshot().state); }
   #refresh(previous: boolean | undefined): void {
     const open = this.#isOpen();
     if (open && previous !== true) {
+      if (this.#options.modal === true && this.#modalEffects === undefined) this.#modalEffects = acquireModalEffects(this.#options.root);
       this.#layers.register({
         id: this.#layerID,
         surface: this.#options.root,
@@ -181,18 +193,19 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
       });
     } else if (!open && previous === true) {
       this.#layers.close(this.#layerID);
+      this.#modalEffects?.release();
+      this.#modalEffects = undefined;
     }
-    this.#options.root.hidden = !open;
+    if (this.#options.manageVisibility !== false) this.#options.root.hidden = !open;
     if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
     if (previous === open || previous === undefined) return;
     if (open && this.#options.autoFocus === true) focusElement(this.#options.initialFocus ?? firstFocusable(this.#options.root) ?? this.#options.root);
     else if (!open && this.#options.restoreFocus === true) focusElement(this.#options.trigger);
   }
   #trapTab(event: KeyboardEvent): void {
-    if (typeof document === 'undefined') return;
     const focusable = [...this.#options.root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.hasAttribute('disabled') && element.tabIndex >= 0);
     if (focusable.length === 0) { event.preventDefault(); this.#options.root.focus(); return; }
-    const activeIndex = focusable.indexOf(document.activeElement as HTMLElement);
+    const activeIndex = focusable.indexOf(this.#options.root.ownerDocument?.activeElement as HTMLElement);
     const nextIndex = event.shiftKey ? activeIndex <= 0 ? focusable.length - 1 : activeIndex - 1 : activeIndex < 0 || activeIndex === focusable.length - 1 ? 0 : activeIndex + 1;
     event.preventDefault();
     focusable[nextIndex]?.focus();
@@ -202,3 +215,4 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
 const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]';
 function firstFocusable(root: HTMLElement): HTMLElement | null { return root.querySelectorAll?.<HTMLElement>(FOCUSABLE)[0] ?? null; }
 function focusElement(element: HTMLElement | undefined): void { element?.focus?.(); }
+function contains(root: HTMLElement, target: EventTarget | null): boolean { if (target === null) return false; try { return root === target || root.contains(target as Node); } catch { return false; } }
