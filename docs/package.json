@@ -9,7 +9,6 @@
     "preview": "vitepress preview --host 127.0.0.1",
     "generate": "node scripts/generate-component-pages.mjs",
     "generate:check": "node scripts/generate-component-pages.mjs --check",
-    "test": "node --test tests/*.test.mjs",
     "check": "node scripts/check-content.mjs",
     "typecheck": "vue-tsc --noEmit",
     "verify": "pnpm generate:check && pnpm check && pnpm typecheck && pnpm build"
