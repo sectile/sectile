@@ -159,6 +159,27 @@ test('DOM rating and structured input facades expose complete state transitions'
   assert.deepEqual(tags.getSnapshot().state.tags, ['terminal']);
 });
 
+test('DOM controlled PIN input keeps its active cell while values synchronize', () => {
+  const inputs = Array.from({ length: 6 }, () => new FakeElement());
+  let value = '';
+  const pin = createPinInput({
+    root: new FakeElement(),
+    inputs,
+    value,
+    onValueChange: (next) => { value = next; },
+  });
+
+  for (const character of '123456') {
+    pin.handleEvent({ type: 'input', value: character });
+    assert.equal(pin.getSnapshot().state.current, Math.min(value.length, 5));
+    assert.equal(pin.syncControlledValue(value).ok, true);
+  }
+
+  assert.equal(value, '123456');
+  assert.deepEqual(pin.getSnapshot().state.values, ['1', '2', '3', '4', '5', '6']);
+  assert.equal(pin.getSnapshot().state.current, 5);
+});
+
 test('DOM extended facades reject mutations while read-only', () => {
   const select = createSelect({ root: new FakeElement(), trigger: new FakeElement(), popup: new FakeElement(), items: ['a', 'b'], defaultValue: 'a', readOnly: true });
   assert.equal(select.handleEvent({ type: 'select', id: 'b' }), false);
