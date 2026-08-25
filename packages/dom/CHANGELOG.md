@@ -1,5 +1,12 @@
 # @sectile/dom
 
+## 0.2.1
+
+### Changes
+
+- fix(release): validate built package artifacts (ff75428)
+- fix(release): gate deployment on clean verification (7715121)
+
 ## 0.2.0
 
 ### Changes

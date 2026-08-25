@@ -1,8 +1,6 @@
 sectile/
 ├── .github/
 │   └── workflows/
-│       ├── docs.yml
-│       ├── quality.yml
 │       ├── release.yml
 │       └── testing.yml
 ├── .tasks/
