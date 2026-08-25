@@ -10,7 +10,7 @@ const pickerComponents = new Set([
   'year-range-picker',
 ]);
 
-const popupComponents = new Set(['alert-dialog', 'dialog', 'popover', 'tooltip']);
+const popupComponents = new Set(['alert-dialog', 'dialog', 'drawer', 'popover', 'tooltip']);
 const portalComponents = new Set([...popupComponents, 'select', 'toast']);
 
 const pickerRootDefaults = Object.freeze({
@@ -73,9 +73,12 @@ export function vueApiDefault(locale, component, typeName, property, extracted) 
   }
 
   if (popupComponents.has(component) && typeName.endsWith('RootProps')) {
-    if (property === 'modal') return { code: component === 'dialog' ? 'true' : 'false' };
-    if (property === 'trapFocus') return { code: ['alert-dialog', 'dialog'].includes(component) ? 'true' : 'false' };
-    if (property === 'closeOnInteractOutside') return { code: ['dialog', 'popover'].includes(component) ? 'true' : 'false' };
+    if (property === 'modal') return { code: ['dialog', 'drawer'].includes(component) ? 'true' : 'false' };
+    if (property === 'trapFocus') return { code: ['alert-dialog', 'dialog', 'drawer'].includes(component) ? 'true' : 'false' };
+    if (property === 'closeOnInteractOutside') return { code: ['dialog', 'drawer', 'popover'].includes(component) ? 'true' : 'false' };
+    if (property === 'swipeToDismiss') return { code: 'true' };
+    if (property === 'swipeThreshold') return { code: '80' };
+    if (property === 'swipeVelocityThreshold') return { code: '0.5' };
     const value = popupRootDefaults[property];
     if (value !== undefined) return { code: value };
   }

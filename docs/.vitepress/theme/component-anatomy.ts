@@ -192,6 +192,12 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'date-time-range-picker': anatomy('date-time-range-picker', ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
   'date-picker': anatomy('date-picker', pickerParts),
   dialog: anatomy('dialog', popupParts),
+  drawer: anatomy('drawer', ['trigger', 'overlay', 'content', 'handle', 'title', 'description', 'close'], {
+    handle: Object.freeze({
+      attributes: Object.freeze([['aria-hidden', 'true'] as const]),
+      purpose: copy('Provides the directional swipe dismissal surface.', '바깥 방향 스와이프로 닫는 조작 영역을 제공합니다.'),
+    }),
+  }),
   disclosure: anatomy('disclosure', ['root', 'trigger', 'content']),
   editable: anatomy('editable', ['root', 'area', 'preview', 'input', 'edit-trigger', 'submit-trigger', 'cancel-trigger']),
   form: anatomy('form', ['root', 'field', 'label', 'description', 'message', 'summary', 'reset', 'submit']),

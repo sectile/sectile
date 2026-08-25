@@ -130,6 +130,8 @@ const enProps = Object.freeze({
   siblingCount: 'Number of adjacent page choices shown around the current page.',
   side: 'Preferred side of the anchor for positioned content.',
   sideOffset: 'Distance between positioned content and its anchor.',
+  swipeToDismiss: 'Whether an outward pointer swipe may dismiss the drawer.',
+  swipeVelocityThreshold: 'Outward drag velocity in pixels per millisecond that dismisses the drawer.',
   slides: 'Ordered slide values managed by the carousel.',
   startLabel: 'Accessible label for the range start input.',
   startMs: 'Initial elapsed time in milliseconds.',
@@ -253,6 +255,8 @@ const koProps = Object.freeze({
   siblingCount: '현재 페이지 양옆에 표시할 페이지 수입니다.',
   side: '기준 요소를 중심으로 팝업을 우선 배치할 방향입니다.',
   sideOffset: '팝업과 기준 요소 사이 거리입니다.',
+  swipeToDismiss: '바깥 방향 포인터 스와이프로 드로어를 닫을지 여부입니다.',
+  swipeVelocityThreshold: '드로어를 닫는 바깥 방향 드래그 속도 기준값(px/ms)입니다.',
   slides: '캐러셀이 관리할 순서 있는 슬라이드 값입니다.',
   startLabel: '범위 시작 입력의 접근 가능한 이름입니다.',
   startMs: '밀리초 단위의 초기 경과 시간입니다.',
@@ -390,7 +394,14 @@ const descriptions = Object.freeze({
   ko: Object.freeze({ props: koProps, slots: koSlots, events: koEvents }),
 });
 
-export function vueApiDescription(locale, kind, name) {
+const componentDescriptions = Object.freeze({
+  en: Object.freeze({ drawer: Object.freeze({ props: Object.freeze({ side: 'Viewport edge from which the drawer opens.' }) }) }),
+  ko: Object.freeze({ drawer: Object.freeze({ props: Object.freeze({ side: '드로어가 열릴 화면 가장자리입니다.' }) }) }),
+});
+
+export function vueApiDescription(locale, kind, name, component) {
+  const scopedDescription = componentDescriptions[locale]?.[component]?.[kind]?.[name];
+  if (typeof scopedDescription === 'string') return scopedDescription;
   const description = descriptions[locale]?.[kind]?.[name];
   if (typeof description !== 'string') throw new TypeError(`Missing ${locale} ${kind} API description: ${name}`);
   return description;

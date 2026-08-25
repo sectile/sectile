@@ -2,15 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createDialog as createDOMDialog } from '@sectile/dom/dialog';
 import { createAlertDialog as createDOMAlertDialog } from '@sectile/dom/alert-dialog';
+import { createDrawer as createDOMDrawer } from '@sectile/dom/drawer';
 import { createTooltip as createDOMTooltip } from '@sectile/dom/tooltip';
 import { createDialog as createTerminalDialog } from '@sectile/terminal/dialog';
 import { createAlertDialog as createTerminalAlertDialog } from '@sectile/terminal/alert-dialog';
+import { createDrawer as createTerminalDrawer } from '@sectile/terminal/drawer';
 import { createTooltip as createTerminalTooltip } from '@sectile/terminal/tooltip';
 
 test('DOM and terminal popups preserve open-state traces and controlled reconciliation', () => {
   const factories = [
     [createDOMDialog, createTerminalDialog],
     [createDOMAlertDialog, createTerminalAlertDialog],
+    [createDOMDrawer, createTerminalDrawer],
     [createDOMTooltip, createTerminalTooltip],
   ];
   for (const [createDOM, createTerminal] of factories) {
@@ -20,6 +23,16 @@ test('DOM and terminal popups preserve open-state traces and controlled reconcil
     assert.deepEqual(DOM.syncControlledValue(true), terminal.syncControlledValue(true));
     assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
   }
+});
+
+test('DOM and terminal drawers preserve side changes', () => {
+  const DOM = createDOMDrawer({ root: new FakeElement(), side: 'right', autoFocus: false });
+  const terminal = createTerminalDrawer({ side: 'right' });
+
+  assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
+  assert.equal(DOM.handleEvent({ type: 'set-side', side: 'left' }), true);
+  assert.equal(terminal.handleEvent({ type: 'set-side', side: 'left' }), true);
+  assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
 });
 
 test('DOM and terminal alert dialogs deliver equivalent semantic obligations', () => {
@@ -52,9 +65,11 @@ function assertTrace(DOM, terminal, events) {
 function observe(snapshot) { return JSON.parse(JSON.stringify(snapshot)); }
 class FakeElement {
   attributes = new Map(); listeners = new Map(); hidden = false; id = ''; tabIndex = -1;
+  style = { setProperty() {}, removeProperty() {} };
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   setAttribute(name, value) { this.attributes.set(name, value); }
+  removeAttribute(name) { this.attributes.delete(name); }
   querySelectorAll() { return []; }
   focus() {}
 }

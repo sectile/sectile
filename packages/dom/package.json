@@ -203,6 +203,11 @@
       "import": "./dist/dialog.js",
       "default": "./dist/dialog.js"
     },
+    "./drawer": {
+      "types": "./dist/drawer.d.ts",
+      "import": "./dist/drawer.js",
+      "default": "./dist/drawer.js"
+    },
     "./popover": {
       "types": "./dist/popover.d.ts",
       "import": "./dist/popover.js",

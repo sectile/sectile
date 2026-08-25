@@ -584,6 +584,19 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     </DialogContent>
   </DialogRoot>`,
   ),
+  drawer: sfc(
+    'DrawerRoot, DrawerTrigger, DrawerOverlay, DrawerContent, DrawerHandle, DrawerTitle, DrawerDescription, DrawerClose',
+    `  <DrawerRoot>
+    <DrawerTrigger>Open filters</DrawerTrigger>
+    <DrawerOverlay class="drawer-overlay" />
+    <DrawerContent class="drawer-content">
+      <DrawerHandle class="drawer-handle" />
+      <DrawerTitle>Filters</DrawerTitle>
+      <DrawerDescription>Refine the deployment list.</DrawerDescription>
+      <DrawerClose>Apply filters</DrawerClose>
+    </DrawerContent>
+  </DrawerRoot>`,
+  ),
   'alert-dialog': sfc(
     'AlertDialogRoot, AlertDialogTrigger, AlertDialogOverlay, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose',
     `  <AlertDialogRoot>
@@ -948,6 +961,38 @@ const dialogScenarioCode: Readonly<Record<string, string>> = Object.freeze({
       <DialogClose>Close</DialogClose>
     </DialogContent>
   </DialogRoot>`,
+    `import { ref } from 'vue'
+
+const open = ref(false)`,
+  ),
+});
+
+const drawerScenarioCode: Readonly<Record<string, string>> = Object.freeze({
+  bottom: catalogCode['drawer'] ?? '',
+  side: sfc(
+    'DrawerRoot, DrawerTrigger, DrawerOverlay, DrawerContent, DrawerHandle, DrawerTitle, DrawerDescription, DrawerClose',
+    `  <DrawerRoot side="right">
+    <DrawerTrigger>Open inspector</DrawerTrigger>
+    <DrawerOverlay class="drawer-overlay" />
+    <DrawerContent class="drawer-content drawer-content-side">
+      <DrawerHandle class="drawer-handle" />
+      <DrawerTitle>Inspector</DrawerTitle>
+      <DrawerDescription>Review the selected deployment.</DrawerDescription>
+      <DrawerClose>Close</DrawerClose>
+    </DrawerContent>
+  </DrawerRoot>`,
+  ),
+  controlled: sfc(
+    'DrawerRoot, DrawerTrigger, DrawerOverlay, DrawerContent, DrawerHandle, DrawerTitle, DrawerClose',
+    `  <DrawerRoot v-model:open="open">
+    <DrawerTrigger>Open filters</DrawerTrigger>
+    <DrawerOverlay class="drawer-overlay" />
+    <DrawerContent class="drawer-content">
+      <DrawerHandle class="drawer-handle" />
+      <DrawerTitle>Controlled filters</DrawerTitle>
+      <DrawerClose>Done</DrawerClose>
+    </DrawerContent>
+  </DrawerRoot>`,
     `import { ref } from 'vue'
 
 const open = ref(false)`,
@@ -1509,6 +1554,7 @@ const inviteMember: FormSubmitHandler<InvitationFormValues> = ({ values }) => {
 </template>`,
   }),
   dialog: dialogScenarioCode,
+  drawer: drawerScenarioCode,
   'alert-dialog': alertDialogScenarioCode,
   menu: menuScenarioCode,
   'menu-button': menuButtonScenarioCode,

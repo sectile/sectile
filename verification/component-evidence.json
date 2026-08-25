@@ -97,8 +97,8 @@
     },
     "popup": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
-      "core": ["packages/core/tests/composites/popup-controls.reference-law.test.mjs", "packages/core/tests/runtime/layer-stack.test.mjs"],
-      "dom": ["packages/dom/tests/popup-controls.test.mjs", "packages/dom/tests/popover-positioning.test.mjs"],
+      "core": ["packages/core/tests/composites/popup-controls.reference-law.test.mjs", "packages/core/tests/composites/drawer.reference-law.test.mjs", "packages/core/tests/runtime/layer-stack.test.mjs"],
+      "dom": ["packages/dom/tests/popup-controls.test.mjs", "packages/dom/tests/drawer-browser.test.mjs", "packages/dom/tests/popover-positioning.test.mjs"],
       "terminal": ["packages/terminal/tests/popup-controls.test.mjs"]
     },
     "range": {

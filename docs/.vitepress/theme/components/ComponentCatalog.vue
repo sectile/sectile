@@ -26,7 +26,7 @@ const koNames: Record<string, string> = {
   'cascade-select': '단계별 선택', checkbox: '체크박스', 'checkbox-group': '체크박스 묶음',
   'color-picker': '색상 선택기', combobox: '콤보박스', 'date-field': '날짜 입력', 'date-picker': '날짜 선택기',
   'date-range-field': '날짜 범위 입력', 'date-range-picker': '날짜 범위 선택기', 'date-time-field': '날짜·시간 입력',
-  'date-time-picker': '날짜·시간 선택기', 'date-time-range-picker': '날짜·시간 범위 선택기', dialog: '대화상자',
+  'date-time-picker': '날짜·시간 선택기', 'date-time-range-picker': '날짜·시간 범위 선택기', dialog: '대화상자', drawer: '드로어',
   disclosure: '상세 내용 펼치기', editable: '인라인 편집', feed: '피드', grid: '격자', listbox: '목록 상자',
   menu: '메뉴', 'menu-button': '메뉴 버튼', menubar: '메뉴 막대', 'multi-thumb-slider': '다중 슬라이더',
   'month-picker': '월 선택기', 'month-range-picker': '월 범위 선택기',

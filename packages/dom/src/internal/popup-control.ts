@@ -37,7 +37,7 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly toggle: Event;
   readonly close: Event;
   readonly reducer: (state: State, event: Event) => Result<MachineUpdate<State, Command>>;
-  readonly create: (open: boolean) => Result<State>;
+  readonly create: (open: boolean, state: State) => Result<State>;
   readonly read: (state: State) => boolean;
   readonly triggerMode?: 'click' | 'focus-hover';
   readonly tooltipID?: string;
@@ -60,7 +60,7 @@ export function createDOMPopup<State, Event, Command>(options: DOMPopupOptions<S
   const runtime = createSemanticController<State, Event, Command, Command>({
     initial: options.initial,
     reducer: options.reducer,
-    reconcile: (previous, proposed) => options.create(options.controlled ? options.read(previous) : options.read(proposed)),
+    reconcile: (previous, proposed) => options.create(options.controlled ? options.read(previous) : options.read(proposed), proposed),
     notify: (previous, proposed) => { if (options.read(previous) !== options.read(proposed)) options.onOpenChange?.(options.read(proposed)); },
     toEffect: (command) => command,
     interaction: options.interaction,
@@ -150,7 +150,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<State>> {
     if (!this.#options.controlled) return { ok: false, error: { class: 'construction', code: 'uncontrolled-controller-sync', message: 'An uncontrolled popup cannot be synchronized externally.' } };
     const previous = this.#isOpen();
-    const result = this.#runtime.replace(this.#options.create(open));
+    const result = this.#runtime.replace(this.#options.create(open, this.#runtime.getSnapshot().state));
     if (result.ok) { this.#refresh(previous); this.#options.onUpdate?.(); }
     return result;
   }

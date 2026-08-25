@@ -500,6 +500,29 @@
     background: rgb(31 31 38 / 0.34);
     backdrop-filter: blur(2px);
   }
+  .catalog-drawer-overlay {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    background: rgb(31 31 38 / calc(0.34 * (1 - var(--sectile-drawer-swipe-progress, 0))));
+    backdrop-filter: blur(2px);
+  }
+  .catalog-drawer {
+    position: absolute;
+    z-index: 21;
+    display: grid;
+    gap: 0.8rem;
+    padding: 1.25rem;
+    border: 1px solid var(--demo-border);
+    color: var(--demo-text);
+    background: var(--demo-surface);
+    box-shadow: var(--demo-floating-shadow);
+    transform: translate3d(var(--sectile-drawer-swipe-movement-x, 0px), var(--sectile-drawer-swipe-movement-y, 0px), 0);
+  }
+  .catalog-drawer[data-side='bottom'] { right: 0; bottom: 0; left: 0; max-height: min(70%, 24rem); border-radius: 1rem 1rem 0 0; }
+  .catalog-drawer[data-side='right'] { top: 0; right: 0; bottom: 0; width: min(78%, 24rem); border-radius: 1rem 0 0 1rem; }
+  .catalog-drawer-handle { width: 3rem; height: 0.35rem; margin: -0.35rem auto 0; border-radius: 999px; background: var(--demo-border); cursor: grab; touch-action: none; }
+  .catalog-drawer[data-side='right'] .catalog-drawer-handle { width: 0.35rem; height: 3rem; margin: auto 0 auto -0.35rem; }
   .catalog-alert-dialog {
     position: absolute;
     z-index: 21;
@@ -533,7 +556,7 @@
   .catalog-danger-button:hover:not(:disabled) { border-color: #a92e3c; background: #a92e3c; }
   .catalog-warning-button { border-color: #a76b17; color: #fff; background: #a76b17; }
   .catalog-warning-button:hover:not(:disabled) { border-color: #82500e; background: #82500e; }
-  .catalog-dialog[hidden], .catalog-popup[hidden], .catalog-tooltip[hidden], .catalog-submenu[hidden], .catalog-menubar-popup[hidden], .catalog-navigation-panel[hidden] { display: none; }
+  .catalog-dialog[hidden], .catalog-drawer[hidden], .catalog-drawer-overlay[hidden], .catalog-popup[hidden], .catalog-tooltip[hidden], .catalog-submenu[hidden], .catalog-menubar-popup[hidden], .catalog-navigation-panel[hidden] { display: none; }
   .catalog-panel { min-height: 6rem; padding: 1rem; border: 1px solid var(--demo-border); border-radius: 0.75rem; background: var(--demo-surface); }
   .catalog-pin { width: 2.6rem; height: 2.6rem; box-sizing: border-box; border: 1px solid var(--demo-border); border-radius: 0.58rem; padding: 0; color: var(--demo-text); background: var(--demo-surface); font: inherit; text-align: center; }
   .catalog-chip { min-height: 2.35rem; padding: 0.35rem 0.55rem; color: var(--demo-brand); background: var(--demo-brand-soft); }
@@ -1065,7 +1088,7 @@
   color: var(--demo-muted);
 }
 
-.component-example-stage:is([data-component='alert-dialog'], [data-component='dialog']) {
+.component-example-stage:is([data-component='alert-dialog'], [data-component='dialog'], [data-component='drawer']) {
   position: relative;
   min-height: 20rem;
   overflow: hidden;

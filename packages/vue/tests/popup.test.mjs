@@ -11,6 +11,15 @@ import {
   DialogTrigger,
 } from '../dist/dialog.js';
 import { AlertDialogContent, AlertDialogRoot, AlertDialogTitle } from '../dist/alert-dialog.js';
+import {
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHandle,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from '../dist/drawer.js';
 import { PopoverAnchor, PopoverArrow, PopoverContent, PopoverRoot, PopoverTrigger } from '../dist/popover.js';
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '../dist/tooltip.js';
 
@@ -45,6 +54,29 @@ test('Vue dialog uses an explicit accessible label without a dangling title refe
   }));
   assert.match(html, /aria-label="Preferences"/);
   assert.doesNotMatch(html, /aria-labelledby=/);
+});
+
+test('Vue drawer exposes directional dialog anatomy and a decorative gesture handle', async () => {
+  const html = await renderToString(createSSRApp({
+    render: () => h(DrawerRoot, { defaultOpen: true, side: 'left' }, {
+      default: () => [
+        h(DrawerTrigger, null, { default: () => 'Open drawer' }),
+        h(DrawerContent, null, {
+          default: () => [
+            h(DrawerHandle),
+            h(DrawerTitle, null, { default: () => 'Filters' }),
+            h(DrawerDescription, null, { default: () => 'Refine the results.' }),
+            h(DrawerClose, null, { default: () => 'Close' }),
+          ],
+        }),
+      ],
+    }),
+  }));
+  assert.match(html, /data-scope="drawer"/);
+  assert.match(html, /role="dialog"/);
+  assert.match(html, /data-side="left"/);
+  assert.match(html, /data-swipe-direction="left"/);
+  assert.match(html, /<div aria-hidden="true"[^>]*data-part="handle"/);
 });
 
 test('Vue alert dialog and tooltip preserve their distinct native roles', async () => {

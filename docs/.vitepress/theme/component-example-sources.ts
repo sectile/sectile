@@ -24,6 +24,7 @@ const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze
   'date-time-picker': 'DateTimePicker',
   'date-time-range-picker': 'DateTimeRangePicker',
   dialog: 'Dialog',
+  drawer: 'Drawer',
   disclosure: 'Disclosure',
   editable: 'Editable',
   feed: 'Feed',

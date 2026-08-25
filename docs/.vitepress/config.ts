@@ -96,6 +96,7 @@ const componentSidebarSections = [
     componentIds: [
       'alert-dialog',
       'dialog',
+      'drawer',
       'popover',
       'tooltip',
       'toast',

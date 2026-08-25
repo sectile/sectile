@@ -38,6 +38,7 @@ import { createDateRangeField } from '@sectile/terminal/date-range-field';
 import { createEditable } from '@sectile/terminal/editable';
 import { createNavigationMenu } from '@sectile/terminal/navigation-menu';
 import { createPopover } from '@sectile/terminal/popover';
+import { createDrawer } from '@sectile/terminal/drawer';
 import { createTimeRangeField } from '@sectile/terminal/time-range-field';
 import { createTimer } from '@sectile/terminal/timer';
 import { createToast } from '@sectile/terminal/toast';
@@ -89,6 +90,7 @@ export const demos = Object.freeze([
   { id: 'year-picker', label: 'Year picker', description: 'year grid · page navigation · [/] cases', readOnly: true, create: createYearPickerDemo },
   { id: 'year-range-picker', label: 'Year range picker', description: 'inclusive year span · page navigation · [/] cases', readOnly: true, create: createYearRangePickerDemo },
   { id: 'dialog', label: 'Dialog', description: 'modal · non-modal · controlled · [/] cases', create: (host) => createPopupDemo(host, 'dialog') },
+  { id: 'drawer', label: 'Drawer', description: 'bottom · side · controlled · [/] cases', create: (host) => createPopupDemo(host, 'drawer') },
   { id: 'alert-dialog', label: 'Alert dialog', description: 'destructive · unsaved · controlled · [/] cases', create: (host) => createPopupDemo(host, 'alert-dialog') },
   { id: 'tooltip', label: 'Tooltip', description: 'closed · open · controlled · [/] cases', create: (host) => createPopupDemo(host, 'tooltip') },
   { id: 'multi-thumb-slider', label: 'Multi-thumb slider', description: 'bounded · multi · crossing · controlled · [/] cases', readOnly: true, create: createMultiThumbSliderDemo },
@@ -2252,6 +2254,12 @@ function createPopupDemo(host, kind) {
       { title: 'Non-modal inspector', initial: true, controlled: false, detail: 'background interaction remains available' },
       { title: 'Controlled preview', initial: false, controlled: true, detail: 'application owns open state' },
     ]
+    : kind === 'drawer'
+      ? [
+        { title: 'Bottom filters', initial: false, controlled: false, side: 'bottom', detail: 'modal drawer from the bottom edge' },
+        { title: 'Side inspector', initial: true, controlled: false, side: 'right', detail: 'same semantics from a horizontal edge' },
+        { title: 'Controlled drawer', initial: false, controlled: true, side: 'bottom', detail: 'application owns open state' },
+      ]
     : kind === 'alert-dialog'
       ? [
         { title: 'Delete project?', initial: false, controlled: false, detail: 'destructive confirmation' },
@@ -2296,6 +2304,8 @@ function createPopupDemo(host, kind) {
     };
     connection = kind === 'dialog'
       ? createDialog({ ...shared, onInitialFocus: () => { focusRequests += 1; }, onFocusRestore: () => { restoreRequests += 1; } })
+      : kind === 'drawer'
+        ? createDrawer({ ...shared, side: scenario.side, onInitialFocus: () => { focusRequests += 1; }, onFocusRestore: () => { restoreRequests += 1; } })
       : kind === 'alert-dialog'
         ? createAlertDialog({ ...shared, onInitialFocus: () => { focusRequests += 1; }, onFocusRestore: () => { restoreRequests += 1; }, onAnnounce: () => { announcements += 1; } })
         : kind === 'popover'
@@ -2304,7 +2314,7 @@ function createPopupDemo(host, kind) {
     return {
       handle(input) {
         const { open } = connection.getSnapshot().state;
-        if (kind === 'dialog' && open) {
+        if ((kind === 'dialog' || kind === 'drawer') && open) {
           if (input.key === 'tab' || input.key === 'down' || input.key === 'right') {
             dialogFocus = (dialogFocus + 1) % dialogTargets.length;
             host.render();
@@ -2330,7 +2340,7 @@ function createPopupDemo(host, kind) {
           dialogFocus = 0;
           return connection.handleEvent('open');
         }
-        if (kind !== 'dialog' && (input.key === 'enter' || input.key === 'space')) {
+        if (kind !== 'dialog' && kind !== 'drawer' && (input.key === 'enter' || input.key === 'space')) {
           return connection.handleEvent(open ? 'close' : 'open');
         }
         return connection.handleKeyboardInput(input);
@@ -2338,7 +2348,7 @@ function createPopupDemo(host, kind) {
       lines(width) {
         const { state } = connection.getSnapshot();
         const frame = Math.max(30, Math.min(58, width - 4));
-        const panel = kind === 'dialog' && state.open
+        const panel = (kind === 'dialog' || kind === 'drawer') && state.open
           ? [
               `┌─ ${plain('Notification settings ', frame - 4)}┐`,
               `│ ${plain('Choose which deployment events should notify you.', frame - 4)} │`,
@@ -2365,11 +2375,11 @@ function createPopupDemo(host, kind) {
           '',
           ...panel,
           '',
-          ...(kind === 'dialog' && state.open
+          ...((kind === 'dialog' || kind === 'drawer') && state.open
             ? [`${ansi.dim}Tab/Arrows move · Space toggles · Enter activates · Esc closes${ansi.reset}`]
             : []),
           `open=${state.open}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
-          `focus=${state.open && kind === 'dialog' ? dialogTargets[dialogFocus].id : '−'}  entered=${focusRequests}  restored=${restoreRequests}  announced=${announcements}`,
+          `focus=${state.open && (kind === 'dialog' || kind === 'drawer') ? dialogTargets[dialogFocus].id : '−'}  entered=${focusRequests}  restored=${restoreRequests}  announced=${announcements}`,
         ];
       },
     };

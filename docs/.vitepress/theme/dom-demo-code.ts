@@ -385,6 +385,23 @@ const dialog = createDialog({
 close.addEventListener('click', () => dialog.handleEvent('close'))
 window.addEventListener('pagehide', () => dialog.disconnect(), { once: true })`),
 
+  drawer: example('drawer', 'createDrawer', `const root = document.querySelector<HTMLElement>('[data-drawer]')!
+const trigger = document.querySelector<HTMLButtonElement>('[data-drawer-trigger]')!
+const overlay = document.querySelector<HTMLElement>('[data-drawer-overlay]')!
+const handle = document.querySelector<HTMLElement>('[data-drawer-handle]')!
+const drawer = createDrawer({
+  root,
+  trigger,
+  overlay,
+  handle,
+  side: 'bottom',
+  labelledBy: 'drawer-title',
+  describedBy: 'drawer-description',
+  swipeThreshold: 80,
+})
+
+window.addEventListener('pagehide', () => drawer.disconnect(), { once: true })`),
+
   'alert-dialog': example('alert-dialog', 'createAlertDialog', `const root = document.querySelector<HTMLElement>('[data-alert-dialog]')!
 const trigger = document.querySelector<HTMLButtonElement>('[data-alert-dialog-trigger]')!
 const cancel = document.querySelector<HTMLButtonElement>('[data-alert-dialog-cancel]')!

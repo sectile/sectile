@@ -86,6 +86,23 @@ export {
   type DialogRootSlotProps,
 } from './dialog.js';
 export {
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHandle,
+  DrawerOverlay,
+  DrawerPortal,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+  type DrawerInteractOutsideHandler,
+  type DrawerPartProps,
+  type DrawerPortalProps,
+  type DrawerRootProps,
+  type DrawerRootSlotProps,
+  type DrawerSide,
+} from './drawer.js';
+export {
   PopoverAnchor,
   PopoverArrow,
   PopoverClose,

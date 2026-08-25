@@ -167,6 +167,7 @@ export { createSpinButton, tryCreateSpinButton, toSpinButtonEvent, type SpinButt
 export { createNumberField, tryCreateNumberField, type NumberFieldConnection, type NumberFieldOptions, type NumberFieldValueChangeDetails } from './number-field.js';
 export { createQuantityField, tryCreateQuantityField, type QuantityFieldConnection, type QuantityFieldOptions, type QuantityFieldValueChangeDetails } from './quantity-field.js';
 export { createDialog, tryCreateDialog, type DialogConnection, type DialogOptions } from './dialog.js';
+export { createDrawer, tryCreateDrawer, type DrawerConnection, type DrawerOptions, type DrawerSide } from './drawer.js';
 export { createPopover, tryCreatePopover, type PopoverAlign, type PopoverConnection, type PopoverOptions, type PopoverSide } from './popover.js';
 export { createAlertDialog, tryCreateAlertDialog, type AlertDialogConnection, type AlertDialogOptions } from './alert-dialog.js';
 export { createTooltip, tryCreateTooltip, type TooltipConnection, type TooltipOptions } from './tooltip.js';
@@ -460,6 +461,13 @@ export type {
   DialogOpenChangeHandler,
   DialogUpdateHandler,
 } from './dialog.js';
+export type {
+  DrawerFocusRestoreHandler,
+  DrawerInitialFocusHandler,
+  DrawerInteractOutsideHandler,
+  DrawerOpenChangeHandler,
+  DrawerUpdateHandler,
+} from './drawer.js';
 export type {
   DisclosureControllerOpenChangeHandler,
   DisclosureOpenChangeHandler,

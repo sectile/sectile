@@ -25,6 +25,7 @@ import { DateTimePickerContent, DateTimePickerDateInput, DateTimePickerRoot, Dat
 import { DateTimeRangePickerContent, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
 import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
+import { DrawerClose, DrawerContent, DrawerDescription, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTitle, DrawerTrigger } from '@sectile/vue/drawer';
 import { AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogOverlay, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from '@sectile/vue/alert-dialog';
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from '@sectile/vue/tooltip';
 import { MultiThumbSliderRange, MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '@sectile/vue/multi-thumb-slider';
@@ -120,6 +121,7 @@ const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30
 const morningDateTime = Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 7, minute: 45, second: 0, millisecond: 0 }) });
 const controlledDateTime = ref<DateTimeValue | null>(Object.freeze({ date: Object.freeze({ year: 2026, month: 9, day: 3 }), time: Object.freeze({ hour: 14, minute: 15, second: 0, millisecond: 0 }) }));
 const dialogOpen = ref(false);
+const drawerOpen = ref(false);
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const standardQuantityPolicies = createStandardQuantityPolicies('metre', 'metric');
@@ -150,7 +152,7 @@ const parts: Record<string, readonly string[]> = {
   'year-range-picker': ['YearRangePickerRoot', 'YearRangePickerStartInput', 'YearRangePickerEndInput', 'YearRangePickerTrigger', 'YearRangePickerContent', 'YearRangePickerGrid', 'YearRangePickerCell', 'YearRangePickerPreviousPage', 'YearRangePickerNextPage'],
   'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerDateInput', 'DateTimePickerTimeInput', 'DateTimePickerTrigger', 'DateTimePickerContent', 'DateTimePickerPreviousWeek', 'DateTimePickerPreviousMonth', 'DateTimePickerPreviousYear', 'DateTimePickerNextWeek', 'DateTimePickerNextMonth', 'DateTimePickerNextYear', 'DateTimePickerWeekViewTrigger', 'DateTimePickerMonthViewTrigger', 'DateTimePickerYearViewTrigger', 'DateTimePickerGrid', 'DateTimePickerCell', 'DateTimePickerMonthCell'],
   'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartDateTimeInput', 'DateTimeRangePickerEndDateTimeInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerPreviousWeek', 'DateTimeRangePickerPreviousMonth', 'DateTimeRangePickerPreviousYear', 'DateTimeRangePickerNextWeek', 'DateTimeRangePickerNextMonth', 'DateTimeRangePickerNextYear', 'DateTimeRangePickerWeekViewTrigger', 'DateTimeRangePickerMonthViewTrigger', 'DateTimeRangePickerYearViewTrigger', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell', 'DateTimeRangePickerMonthCell'],
-  'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
+  'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], drawer: ['DrawerRoot', 'DrawerTrigger', 'DrawerContent', 'DrawerHandle'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
@@ -463,7 +465,7 @@ const recordAction = (value: string): void => {
 
       <DialogRoot
         v-else-if="component === 'dialog'"
-        :open="isScenario('controlled') ? dialogOpen : undefined"
+        v-bind="isScenario('controlled') ? { open: dialogOpen } : {}"
         :modal="!isScenario('non-modal')"
         @update:open="dialogOpen = $event"
       >
@@ -475,6 +477,21 @@ const recordAction = (value: string): void => {
           <div class="catalog-dialog-actions"><DialogClose class="secondary">Close</DialogClose></div>
         </DialogContent>
       </DialogRoot>
+      <DrawerRoot
+        v-else-if="component === 'drawer'"
+        v-bind="isScenario('controlled') ? { open: drawerOpen } : {}"
+        :side="isScenario('side') ? 'right' : 'bottom'"
+        @update:open="drawerOpen = $event"
+      >
+        <DrawerTrigger>{{ isScenario('side') ? 'Open inspector' : 'Open filters' }}</DrawerTrigger>
+        <DrawerOverlay class="catalog-drawer-overlay" />
+        <DrawerContent class="catalog-drawer">
+          <DrawerHandle class="catalog-drawer-handle" />
+          <DrawerTitle class="catalog-dialog-title">{{ isScenario('side') ? 'Deployment inspector' : 'Filters' }}</DrawerTitle>
+          <DrawerDescription class="catalog-dialog-description">{{ isScenario('side') ? 'Review the selected deployment.' : 'Refine the deployment list.' }}</DrawerDescription>
+          <div class="catalog-dialog-actions"><DrawerClose class="secondary">Done</DrawerClose></div>
+        </DrawerContent>
+      </DrawerRoot>
       <AlertDialogRoot v-else-if="component === 'alert-dialog'">
         <AlertDialogTrigger>{{ isScenario('unsaved') ? 'Discard draft' : 'Delete project' }}</AlertDialogTrigger>
         <AlertDialogOverlay class="catalog-dialog-overlay" />

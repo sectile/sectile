@@ -40,6 +40,7 @@ export interface PopupFactoryOptions {
   readonly anchor?: HTMLElement;
   readonly arrow?: HTMLElement;
   readonly overlay?: HTMLElement;
+  readonly handle?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -54,6 +55,9 @@ export interface PopupFactoryOptions {
   readonly interactOutsideExclusions?: readonly HTMLElement[];
   readonly onInteractOutside?: InteractOutsideHandler;
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
+  readonly swipeToDismiss?: boolean;
+  readonly swipeThreshold?: number;
+  readonly swipeVelocityThreshold?: number;
   readonly align?: 'start' | 'center' | 'end';
   readonly sideOffset?: number;
   readonly collisionPadding?: Padding;
@@ -76,6 +80,8 @@ export interface PopupComponentConfig {
   readonly modal: boolean;
   readonly triggerMode: 'click' | 'focus-hover';
   readonly closeOnInteractOutside?: boolean;
+  readonly directional?: boolean;
+  readonly defaultSide?: 'top' | 'right' | 'bottom' | 'left';
   create(options: PopupFactoryOptions): PopupConnection;
 }
 
@@ -121,7 +127,9 @@ interface PopupContext {
   readonly anchor: ShallowRef<HTMLElement | undefined>;
   readonly arrow: ShallowRef<HTMLElement | undefined>;
   readonly overlay: ShallowRef<HTMLElement | undefined>;
+  readonly handle: ShallowRef<HTMLElement | undefined>;
   readonly content: ShallowRef<HTMLElement | undefined>;
+  readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
   connect(): void;
   disconnect(): void;
   close(): void;
@@ -134,6 +142,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   Anchor: Component;
   Portal: Component;
   Overlay: Component;
+  Handle: Component;
   Content: Component;
   Title: Component;
   Description: Component;
@@ -168,7 +177,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       trapFocus: { type: Boolean, default: config.modal },
       closeOnInteractOutside: { type: Boolean, default: config.closeOnInteractOutside ?? false },
       interactOutsideExclusions: { type: Array as PropType<readonly HTMLElement[]>, default: undefined },
-      side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
+      side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: config.defaultSide ?? 'bottom' },
+      swipeToDismiss: { type: Boolean, default: true },
+      swipeThreshold: { type: Number, default: 80 },
+      swipeVelocityThreshold: { type: Number, default: 0.5 },
       align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
       sideOffset: { type: Number, default: 8 },
       collisionPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
@@ -193,6 +205,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const anchor = shallowRef<HTMLElement>();
       const arrow = shallowRef<HTMLElement>();
       const overlay = shallowRef<HTMLElement>();
+      const handle = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
       const connection = shallowRef<PopupConnection>();
       const id = useHostId();
@@ -203,6 +216,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const disabled = computed(() => props.disabled);
       const modal = computed(() => props.modal);
       const label = computed(() => props.label);
+      const side = computed(() => props.side);
       const update = (): void => {
         if (connection.value === undefined) return;
         void connection.value.getSnapshot().revision;
@@ -220,6 +234,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           ...(anchor.value === undefined ? {} : { anchor: anchor.value }),
           ...(arrow.value === undefined ? {} : { arrow: arrow.value }),
           ...(overlay.value === undefined ? {} : { overlay: overlay.value }),
+          ...(handle.value === undefined ? {} : { handle: handle.value }),
           ...(controlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
           disabled: props.disabled,
           modal: props.modal,
@@ -231,6 +246,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           closeOnInteractOutside: props.closeOnInteractOutside,
           ...(props.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: props.interactOutsideExclusions }),
           side: props.side,
+          swipeToDismiss: props.swipeToDismiss,
+          swipeThreshold: props.swipeThreshold,
+          swipeVelocityThreshold: props.swipeVelocityThreshold,
           align: props.align,
           sideOffset: props.sideOffset,
           collisionPadding: props.collisionPadding,
@@ -260,14 +278,15 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       });
       watch([
         () => props.disabled, () => props.modal, () => props.label, () => props.autoFocus, () => props.restoreFocus,
-        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side, () => props.align,
+        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side,
+        () => props.swipeToDismiss, () => props.swipeThreshold, () => props.swipeVelocityThreshold, () => props.align,
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
         () => props.strategy, () => props.middleware, () => props.autoUpdate,
       ], connect);
       onBeforeUnmount(disconnect);
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, content, connect, disconnect,
+        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side, connect, disconnect,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
       });
@@ -311,6 +330,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
         'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
         'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
+        'data-side': config.directional === true ? root.side.value : undefined,
+        'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
       }), slots);
     },
   });
@@ -351,6 +372,24 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.overlay.value = node; }, hidden: !present.value, 'aria-hidden': 'true',
         'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
+        'data-side': config.directional === true ? root.side.value : undefined,
+        'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
+      }), slots);
+    },
+  });
+
+  const Handle = defineComponent({
+    name: `Sectile${pascal(config.scope)}Handle`, inheritAttrs: false, props: primitiveProps,
+    setup(props, { attrs, slots }) {
+      const root = useRoot('Handle');
+      onMounted(root.connect);
+      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (candidate: unknown) => { root.handle.value = candidate instanceof HTMLElement ? candidate : undefined; },
+        'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'handle',
+        'data-state': root.open.value ? 'open' : 'closed',
+        'data-side': config.directional === true ? root.side.value : undefined,
+        'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
       }), slots);
     },
   });
@@ -391,11 +430,15 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     });
   }
 
-  return Object.freeze({ Root, Trigger, Anchor, Portal, Overlay, Content, Title, Description, Close, Arrow });
+  return Object.freeze({ Root, Trigger, Anchor, Portal, Overlay, Content, Handle, Title, Description, Close, Arrow });
 }
 
 export type { InteractOutsideEvent, InteractOutsideHandler };
 
 function pascal(value: string): string {
   return value.split('-').map((part) => part[0]?.toUpperCase() + part.slice(1)).join('');
+}
+
+function swipeDirection(side: 'top' | 'right' | 'bottom' | 'left'): 'up' | 'right' | 'down' | 'left' {
+  return side === 'top' ? 'up' : side === 'bottom' ? 'down' : side;
 }

@@ -526,6 +526,16 @@ console.log(page, update.state.highlighted.year)`;
       return dateRangePickerExample(component, 'YearRangePicker', scenario);
     case 'dialog':
       return openExample(component, 'createDialogState', 'applyDialogEvent', scenario);
+    case 'drawer': {
+      const side = scenario === 'side' ? 'right' : 'bottom';
+      return `import { applyDrawerEvent, createDrawerState } from '@sectile/core/drawer'
+
+const state = createDrawerState(false, '${side}')
+const opened = applyDrawerEvent(state, 'open').value
+const update = applyDrawerEvent(opened.state, { type: 'set-side', side: '${side}' }).value
+
+console.log(update.state, opened.commands)`;
+    }
     case 'disclosure':
       return openExample(component, 'createDisclosureState', 'applyDisclosureEvent', scenario);
     case 'editable': {

@@ -38,6 +38,7 @@ export const catalogScenarios: Readonly<Record<string, readonly CatalogScenario[
   'date-time-range-picker': scenarios('date-time-range-picker', ['Maintenance window', 'Choose start and end dates with wall-clock times.'], ['Same-day window', 'A shorter range keeps date and time endpoints atomic.']),
   'quantity-field': scenarios('quantity-field', ['Metric length', 'Edit an exact quantity and choose a compatible display unit.'], ['Converted length', 'A different display unit preserves the canonical quantity.']),
   dialog: scenarios('dialog', ['Deployment details', 'Open a non-destructive dialog without moving surrounding layout.'], ['Initially open dialog', 'Controlled visibility can begin open while content remains overlaid.']),
+  drawer: scenarios('drawer', ['Mobile filters', 'Open a modal panel from the bottom edge.'], ['Side inspector', 'Use the same contract from a horizontal edge.']),
   'alert-dialog': scenarios('alert-dialog', ['Delete project', 'Confirm a destructive action with explicit cancellation.'], ['Open confirmation', 'The confirmation surface can begin open for review.']),
   tooltip: scenarios('tooltip', ['Keyboard hint', 'Reveal supporting text on hover or keyboard focus.'], ['Visible hint', 'An initially visible tooltip demonstrates non-layout overlay placement.']),
   'multi-thumb-slider': scenarios('multi-thumb-slider', ['Price range', 'Two thumbs select a bounded numeric interval.'], ['Three-point range', 'Additional thumbs compose without creating another primitive.']),
