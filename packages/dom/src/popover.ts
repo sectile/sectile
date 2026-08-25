@@ -13,6 +13,9 @@ import {
 import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
 import { createFloatingPosition, type FloatingPositionConnection } from './internal/floating-position.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
+import type { InteractOutsideHandler } from './interact-outside.js';
+
+export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
 
 export {
   arrow,
@@ -59,6 +62,8 @@ export interface PopoverOptions {
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
+  readonly interactOutsideExclusions?: readonly HTMLElement[];
+  readonly onInteractOutside?: InteractOutsideHandler;
   readonly side?: PopoverSide;
   readonly align?: PopoverAlign;
   readonly sideOffset?: number;
@@ -84,6 +89,7 @@ export type PopoverOpenChangeHandler = NonNullable<PopoverOptions['onOpenChange'
 export type PopoverPositionChangeHandler = NonNullable<PopoverOptions['onPositionChange']>;
 export type PopoverInitialFocusHandler = NonNullable<PopoverOptions['onInitialFocus']>;
 export type PopoverFocusRestoreHandler = NonNullable<PopoverOptions['onFocusRestore']>;
+export type PopoverInteractOutsideHandler = NonNullable<PopoverOptions['onInteractOutside']>;
 export type PopoverUpdateHandler = NonNullable<PopoverOptions['onUpdate']>;
 export interface PopoverConnection extends DOMPopupConnection<PopoverState, PopoverEvent> {
   updatePosition(): void;
@@ -119,6 +125,8 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
     restoreFocus: options.restoreFocus ?? true,
     trapFocus: options.trapFocus ?? false,
     closeOnInteractOutside: options.closeOnInteractOutside ?? true,
+    ...(options.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: options.interactOutsideExclusions }),
+    ...(options.onInteractOutside === undefined ? {} : { onInteractOutside: options.onInteractOutside }),
     ...(options.manageVisibility === undefined ? {} : { manageVisibility: options.manageVisibility }),
     onOpenChange: options.onOpenChange,
     command: (command) => command.type === 'request-initial-focus' ? options.onInitialFocus?.() : options.onFocusRestore?.(),

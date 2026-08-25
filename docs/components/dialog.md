@@ -23,6 +23,19 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 <ComponentExample component="dialog" scenario="controlled" title="Controlled" description="Let the parent own the current value and apply accepted changes back to the component." :index="2" />
 
+## Outside interaction
+
+`closeOnInteractOutside` controls whether a pointer interaction outside the content closes it. Elements in `interactOutsideExclusions` stay interactive in a modal and do not count as outside. For conditional decisions, call `preventDefault()` from the `interact-outside` event.
+
+```vue
+<DialogRoot
+  :interact-outside-exclusions="[ignoredElement]"
+  @interact-outside="(event) => {
+    if (event.isInside(temporarilyIgnoredElement)) event.preventDefault()
+  }"
+/>
+```
+
 ## API
 
 Vue package: `@sectile/vue/dialog`
@@ -58,10 +71,11 @@ Vue package: `@sectile/vue/dialog`
 | `autoFocus` | `boolean` | `true` | Whether focus moves into the component when it opens. |
 | `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | Whether and how positioned content tracks layout changes. |
 | `avoidCollisions` | `boolean` | `true` | Whether positioned content may flip or shift to remain visible. |
-| `closeOnInteractOutside` | `boolean` | `false` | Whether interaction outside the content closes it. |
+| `closeOnInteractOutside` | `boolean` | `true` | Whether interaction outside the content closes it. |
 | `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
 | `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
 | `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
+| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | Elements that stay interactive and do not count as outside interaction. |
 | `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
 | `restoreFocus` | `boolean` | `true` | Whether focus returns to the trigger when open content closes. |
 | `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
@@ -103,6 +117,12 @@ type DialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
 
 ```ts
 type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
+#### `DialogInteractOutsideHandler`
+
+```ts
+type DialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>
 ```
 
 ## Parts

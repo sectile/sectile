@@ -25,6 +25,19 @@ Flip or shift the popup when its preferred side would leave the viewport.
 
 <ComponentExample component="popover" scenario="collision" title="Collision" description="Flip or shift the popup when its preferred side would leave the viewport." :index="2" />
 
+## Outside interaction
+
+`closeOnInteractOutside` controls whether a pointer interaction outside the content closes it. Elements in `interactOutsideExclusions` stay interactive in a modal and do not count as outside. For conditional decisions, call `preventDefault()` from the `interact-outside` event.
+
+```vue
+<PopoverRoot
+  :interact-outside-exclusions="[ignoredElement]"
+  @interact-outside="(event) => {
+    if (event.isInside(temporarilyIgnoredElement)) event.preventDefault()
+  }"
+/>
+```
+
 ## API
 
 Vue package: `@sectile/vue/popover`
@@ -65,6 +78,7 @@ Vue package: `@sectile/vue/popover`
 | `collisionBoundary` | `Boundary` | `undefined` | Boundary used to keep positioned content visible. |
 | `collisionPadding` | `Padding` | `8` | Space kept between positioned content and its collision boundary. |
 | `hideWhenDetached` | `boolean` | `true` | Whether positioned content hides when its anchor leaves the layout. |
+| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | Elements that stay interactive and do not count as outside interaction. |
 | `middleware` | `Middleware[]` | `undefined` | Positioning middleware applied after the built-in placement rules. |
 | `restoreFocus` | `boolean` | `true` | Whether focus returns to the trigger when open content closes. |
 | `strategy` | `Strategy` | `'fixed'` | CSS positioning strategy used for anchored content. |
@@ -106,6 +120,12 @@ type PopoverOpenChangeHandler = PopupFactoryOptions['onOpenChange']
 
 ```ts
 type PopoverPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
+#### `PopoverInteractOutsideHandler`
+
+```ts
+type PopoverInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>
 ```
 
 ## Parts

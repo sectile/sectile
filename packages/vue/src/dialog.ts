@@ -9,13 +9,14 @@ import {
 } from './internal/popup.js';
 
 const parts = createPopupComponents({
-  scope: 'dialog', role: 'dialog', modal: true, triggerMode: 'click', closeOnOverlayClick: true,
+  scope: 'dialog', role: 'dialog', modal: true, triggerMode: 'click', closeOnInteractOutside: true,
   create: (options: PopupFactoryOptions): DialogConnection => createDialog(options as DialogOptions),
 });
 
 export const DialogRoot = parts.Root;
 export type DialogOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
 export type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>;
+export type DialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export const DialogTrigger = parts.Trigger;
 export const DialogPortal = parts.Portal;
 export const DialogOverlay = parts.Overlay;

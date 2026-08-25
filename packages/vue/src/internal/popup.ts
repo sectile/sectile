@@ -21,6 +21,7 @@ import {
   type VNodeChild,
 } from 'vue';
 import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
+import type { InteractOutsideEvent, InteractOutsideHandler } from '@sectile/dom';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
 import { usePresence } from './presence.js';
@@ -38,6 +39,7 @@ export interface PopupFactoryOptions {
   readonly trigger?: HTMLElement;
   readonly anchor?: HTMLElement;
   readonly arrow?: HTMLElement;
+  readonly overlay?: HTMLElement;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -49,6 +51,8 @@ export interface PopupFactoryOptions {
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
+  readonly interactOutsideExclusions?: readonly HTMLElement[];
+  readonly onInteractOutside?: InteractOutsideHandler;
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
   readonly align?: 'start' | 'center' | 'end';
   readonly sideOffset?: number;
@@ -72,7 +76,6 @@ export interface PopupComponentConfig {
   readonly modal: boolean;
   readonly triggerMode: 'click' | 'focus-hover';
   readonly closeOnInteractOutside?: boolean;
-  readonly closeOnOverlayClick?: boolean;
   create(options: PopupFactoryOptions): PopupConnection;
 }
 
@@ -90,6 +93,7 @@ export interface PopupRootProps {
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
+  readonly interactOutsideExclusions?: readonly HTMLElement[];
   readonly side?: 'top' | 'right' | 'bottom' | 'left';
   readonly align?: 'start' | 'center' | 'end';
   readonly sideOffset?: number;
@@ -116,6 +120,7 @@ interface PopupContext {
   readonly trigger: ShallowRef<HTMLElement | undefined>;
   readonly anchor: ShallowRef<HTMLElement | undefined>;
   readonly arrow: ShallowRef<HTMLElement | undefined>;
+  readonly overlay: ShallowRef<HTMLElement | undefined>;
   readonly content: ShallowRef<HTMLElement | undefined>;
   connect(): void;
   disconnect(): void;
@@ -162,6 +167,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       restoreFocus: { type: Boolean, default: true },
       trapFocus: { type: Boolean, default: config.modal },
       closeOnInteractOutside: { type: Boolean, default: config.closeOnInteractOutside ?? false },
+      interactOutsideExclusions: { type: Array as PropType<readonly HTMLElement[]>, default: undefined },
       side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
       align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
       sideOffset: { type: Number, default: 8 },
@@ -177,6 +183,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     emits: {
       'update:open': (_open: boolean): boolean => true,
       'position-change': (_position: ComputePositionReturn): boolean => true,
+      'interact-outside': (_event: InteractOutsideEvent): boolean => true,
     },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
@@ -185,6 +192,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const trigger = shallowRef<HTMLElement>();
       const anchor = shallowRef<HTMLElement>();
       const arrow = shallowRef<HTMLElement>();
+      const overlay = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
       const connection = shallowRef<PopupConnection>();
       const id = useHostId();
@@ -211,6 +219,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           ...(trigger.value === undefined ? {} : { trigger: trigger.value }),
           ...(anchor.value === undefined ? {} : { anchor: anchor.value }),
           ...(arrow.value === undefined ? {} : { arrow: arrow.value }),
+          ...(overlay.value === undefined ? {} : { overlay: overlay.value }),
           ...(controlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
           disabled: props.disabled,
           modal: props.modal,
@@ -220,6 +229,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           restoreFocus: props.restoreFocus,
           trapFocus: props.trapFocus,
           closeOnInteractOutside: props.closeOnInteractOutside,
+          ...(props.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: props.interactOutsideExclusions }),
           side: props.side,
           align: props.align,
           sideOffset: props.sideOffset,
@@ -237,6 +247,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             emit('update:open', next);
           },
           onPositionChange: (position) => { emit('position-change', position); },
+          onInteractOutside: (event) => { emit('interact-outside', event); },
           onUpdate: update,
         });
         update();
@@ -249,14 +260,14 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       });
       watch([
         () => props.disabled, () => props.modal, () => props.label, () => props.autoFocus, () => props.restoreFocus,
-        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.side, () => props.align,
+        () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side, () => props.align,
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
         () => props.strategy, () => props.middleware, () => props.autoUpdate,
       ], connect);
       onBeforeUnmount(disconnect);
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, content, connect, disconnect,
+        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, content, connect, disconnect,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
       });
@@ -336,10 +347,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Overlay');
       const element = shallowRef<HTMLElement>();
       const present = usePresence(root.open, element);
+      onMounted(root.connect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { element.value = candidate instanceof HTMLElement ? candidate : undefined; }, hidden: !present.value, 'aria-hidden': 'true',
+        as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.overlay.value = node; }, hidden: !present.value, 'aria-hidden': 'true',
         'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
-        onClick: (event: MouseEvent) => { if (config.closeOnOverlayClick === true && event.target === event.currentTarget) root.close(); },
       }), slots);
     },
   });
@@ -382,6 +393,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
 
   return Object.freeze({ Root, Trigger, Anchor, Portal, Overlay, Content, Title, Description, Close, Arrow });
 }
+
+export type { InteractOutsideEvent, InteractOutsideHandler };
 
 function pascal(value: string): string {
   return value.split('-').map((part) => part[0]?.toUpperCase() + part.slice(1)).join('');

@@ -1,5 +1,6 @@
 export type { FacadeConnection } from './internal/facade.js';
 export type { ReadingDirection } from './internal/direction.js';
+export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
 export {
   createReorder,
   tryCreateReorder,
@@ -366,6 +367,7 @@ export type {
   AlertDialogAnnounceHandler,
   AlertDialogFocusRestoreHandler,
   AlertDialogInitialFocusHandler,
+  AlertDialogInteractOutsideHandler,
   AlertDialogOpenChangeHandler,
   AlertDialogUpdateHandler,
 } from './alert-dialog.js';
@@ -454,6 +456,7 @@ export type {
 export type {
   DialogFocusRestoreHandler,
   DialogInitialFocusHandler,
+  DialogInteractOutsideHandler,
   DialogOpenChangeHandler,
   DialogUpdateHandler,
 } from './dialog.js';
@@ -518,6 +521,7 @@ export type {
 export type {
   PopoverFocusRestoreHandler,
   PopoverInitialFocusHandler,
+  PopoverInteractOutsideHandler,
   PopoverOpenChangeHandler,
   PopoverPositionChangeHandler,
   PopoverUpdateHandler,

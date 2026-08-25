@@ -120,3 +120,58 @@ test('initial focus retries after a framework makes managed content visible', ()
   assert.equal(document.activeElement, close);
   dialog.disconnect();
 });
+
+test('dialog overlay uses the common interact-outside dismissal path', () => {
+  const window = new Window();
+  const document = window.document;
+  const background = document.createElement('main');
+  const overlay = document.createElement('div');
+  overlay.setAttribute('aria-hidden', 'true');
+  const surface = document.createElement('section');
+  document.body.append(background, overlay, surface);
+  let outsideEvent;
+  const dialog = createDialog({ root: surface, overlay, onInteractOutside: (event) => { outsideEvent = event; } });
+
+  dialog.handleEvent('open');
+  assert.equal(background.inert, true);
+  assert.equal(overlay.inert, false);
+  assert.equal(overlay.getAttribute('aria-hidden'), 'true');
+  overlay.dispatchEvent(new window.PointerEvent('pointerdown', { bubbles: true, composed: true }));
+
+  assert.equal(outsideEvent?.target, overlay);
+  assert.equal(outsideEvent?.surface, surface);
+  assert.equal(dialog.getSnapshot().state.open, false);
+  dialog.disconnect();
+});
+
+test('interact-outside can be cancelled or excluded for specific elements', () => {
+  const window = new Window();
+  const document = window.document;
+  const ignored = document.createElement('aside');
+  const ignoredChild = document.createElement('button');
+  const overlay = document.createElement('div');
+  const surface = document.createElement('section');
+  ignored.append(ignoredChild);
+  document.body.append(ignored, overlay, surface);
+  let outsideCalls = 0;
+  const dialog = createDialog({
+    root: surface,
+    overlay,
+    interactOutsideExclusions: [ignored],
+    onInteractOutside: (event) => {
+      outsideCalls += 1;
+      if (event.isInside(overlay)) event.preventDefault();
+    },
+  });
+
+  dialog.handleEvent('open');
+  assert.equal(ignored.inert, false);
+  ignoredChild.dispatchEvent(new window.PointerEvent('pointerdown', { bubbles: true, composed: true }));
+  assert.equal(outsideCalls, 0);
+  assert.equal(dialog.getSnapshot().state.open, true);
+
+  overlay.dispatchEvent(new window.PointerEvent('pointerdown', { bubbles: true, composed: true }));
+  assert.equal(outsideCalls, 1);
+  assert.equal(dialog.getSnapshot().state.open, true);
+  dialog.disconnect();
+});

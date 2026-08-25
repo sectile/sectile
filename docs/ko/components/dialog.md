@@ -23,6 +23,19 @@
 
 <ComponentExample component="dialog" scenario="controlled" title="외부 상태 관리" description="현재 값은 부모가 관리하고, 허용된 변경을 컴포넌트에 다시 전달합니다." :index="2" />
 
+## 외부 조작
+
+`closeOnInteractOutside`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. `interactOutsideExclusions`에 넣은 요소는 모달에서도 계속 조작할 수 있고 외부 조작으로 간주하지 않습니다. 조건부로 유지하려면 `interact-outside` 이벤트에서 `preventDefault()`를 호출합니다.
+
+```vue
+<DialogRoot
+  :interact-outside-exclusions="[ignoredElement]"
+  @interact-outside="(event) => {
+    if (event.isInside(temporarilyIgnoredElement)) event.preventDefault()
+  }"
+/>
+```
+
 ## API
 
 Vue 패키지: `@sectile/vue/dialog`
@@ -58,10 +71,11 @@ Vue 패키지: `@sectile/vue/dialog`
 | `autoFocus` | `boolean` | `true` | 열릴 때 컴포넌트 안으로 포커스를 옮길지 여부입니다. |
 | `autoUpdate` | `boolean \| AutoUpdateOptions` | `undefined` | 레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다. |
 | `avoidCollisions` | `boolean` | `true` | 팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다. |
-| `closeOnInteractOutside` | `boolean` | `false` | 콘텐츠 밖을 조작하면 닫을지 여부입니다. |
+| `closeOnInteractOutside` | `boolean` | `true` | 콘텐츠 밖을 조작하면 닫을지 여부입니다. |
 | `collisionBoundary` | `Boundary` | `undefined` | 팝업을 화면 안에 유지할 때 사용할 경계입니다. |
 | `collisionPadding` | `Padding` | `8` | 팝업과 충돌 경계 사이에 둘 간격입니다. |
 | `hideWhenDetached` | `boolean` | `true` | 기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다. |
+| `interactOutsideExclusions` | `readonly HTMLElement[]` | `undefined` | 계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다. |
 | `middleware` | `Middleware[]` | `undefined` | 기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다. |
 | `restoreFocus` | `boolean` | `true` | 열린 콘텐츠를 닫을 때 실행 요소로 포커스를 되돌릴지 여부입니다. |
 | `strategy` | `Strategy` | `'fixed'` | 기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다. |
@@ -103,6 +117,12 @@ type DialogOpenChangeHandler = PopupFactoryOptions['onOpenChange']
 
 ```ts
 type DialogPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionChange']>
+```
+
+#### `DialogInteractOutsideHandler`
+
+```ts
+type DialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>
 ```
 
 ## 파트

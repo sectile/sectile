@@ -9,6 +9,11 @@ import {
   type DOMLayerManager,
 } from './layer-manager.js';
 import { acquireModalEffects, type ModalEffects } from './modal-effects.js';
+import {
+  createInteractOutsideEvent,
+  isEventInside,
+  type InteractOutsideHandler,
+} from '../interact-outside.js';
 
 export interface DOMPopupConnection<State, Event> {
   getSnapshot(): RevisionSnapshot<State>;
@@ -41,6 +46,9 @@ export interface DOMPopupOptions<State, Event, Command> {
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
+  readonly interactOutsideExclusions?: readonly HTMLElement[];
+  readonly modalBranches?: readonly HTMLElement[];
+  readonly onInteractOutside?: InteractOutsideHandler;
   readonly onOpenChange?: ((open: boolean) => void) | undefined;
   readonly command?: (command: Command) => void;
   readonly onUpdate?: (() => void) | undefined;
@@ -104,9 +112,12 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     this.#pointerEnter = (): void => { this.#hovered = true; this.handleEvent(options.open); };
     this.#pointerLeave = (): void => { this.#hovered = false; if (!this.#focused) this.handleEvent(options.close); };
     this.#pointerDown = (event): void => {
-      if (!this.#isOpen() || options.closeOnInteractOutside !== true) return;
-      const target = event.target;
-      if (contains(options.root, target) || (options.trigger !== undefined && contains(options.trigger, target))) return;
+      if (!this.#isOpen()) return;
+      if (isEventInside(event, options.root) || (options.trigger !== undefined && isEventInside(event, options.trigger))) return;
+      if (options.interactOutsideExclusions?.some((element) => isEventInside(event, element)) === true) return;
+      const outsideEvent = createInteractOutsideEvent(event, options.root);
+      options.onInteractOutside?.(outsideEvent);
+      if (outsideEvent.defaultPrevented || options.closeOnInteractOutside !== true) return;
       this.#layers.dismiss(this.#layerID, 'interact-outside');
     };
     options.root.setAttribute('role', options.role);
@@ -131,7 +142,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     } else {
       options.trigger?.addEventListener('click', this.#click);
     }
-    if (options.closeOnInteractOutside === true) options.root.ownerDocument?.addEventListener?.('pointerdown', this.#pointerDown, true);
+    if (options.closeOnInteractOutside === true || options.onInteractOutside !== undefined) options.root.ownerDocument?.addEventListener?.('pointerdown', this.#pointerDown, true);
     this.#refresh(false);
   }
 
@@ -162,7 +173,7 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
     this.#options.trigger?.removeEventListener('blur', this.#focusOut);
     this.#options.trigger?.removeEventListener('mouseenter', this.#pointerEnter);
     this.#options.trigger?.removeEventListener('mouseleave', this.#pointerLeave);
-    if (this.#options.closeOnInteractOutside === true) this.#options.root.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerDown, true);
+    if (this.#options.closeOnInteractOutside === true || this.#options.onInteractOutside !== undefined) this.#options.root.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerDown, true);
     this.#modalEffects?.release();
     this.#modalEffects = undefined;
   }
@@ -170,7 +181,12 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
   #refresh(previous: boolean | undefined): void {
     const open = this.#isOpen();
     if (open && previous !== true) {
-      if (this.#options.modal === true && this.#modalEffects === undefined) this.#modalEffects = acquireModalEffects(this.#options.root);
+      if (this.#options.modal === true && this.#modalEffects === undefined) {
+        this.#modalEffects = acquireModalEffects(this.#options.root, [
+          ...(this.#options.modalBranches ?? []),
+          ...(this.#options.interactOutsideExclusions ?? []),
+        ]);
+      }
       this.#layers.register({
         id: this.#layerID,
         surface: this.#options.root,
@@ -222,4 +238,3 @@ class DOMPopup<State, Event, Command> implements DOMPopupConnection<State, Event
 const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]';
 function firstFocusable(root: HTMLElement): HTMLElement | null { return root.querySelectorAll?.<HTMLElement>(FOCUSABLE)[0] ?? null; }
 function focusElement(element: HTMLElement | undefined): void { element?.focus?.(); }
-function contains(root: HTMLElement, target: EventTarget | null): boolean { if (target === null) return false; try { return root === target || root.contains(target as Node); } catch { return false; } }

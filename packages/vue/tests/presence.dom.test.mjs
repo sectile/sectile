@@ -13,7 +13,7 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DialogClose, DialogContent, DialogRoot } = await import('../dist/dialog.js');
+const { DialogClose, DialogContent, DialogOverlay, DialogRoot } = await import('../dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../dist/select.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
@@ -54,6 +54,25 @@ test('alert-dialog overlay interaction does not dismiss a destructive decision',
     await nextTick(); const overlay = host.querySelector('[data-part="overlay"]'); assert.ok(overlay instanceof HTMLElement);
     overlay.click(); await nextTick();
     assert.equal(open.value, true);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('dialog emits a cancellable interact-outside event for its overlay', async () => {
+  const host = document.createElement('div'); document.body.append(host); const open = ref(true); let outsideCalls = 0;
+  const app = createApp({ render: () => h(DialogRoot, {
+    open: open.value,
+    'onUpdate:open': (value) => { open.value = value; },
+    onInteractOutside: (event) => { outsideCalls += 1; if (outsideCalls === 1) event.preventDefault(); },
+  }, { default: () => [h(DialogOverlay), h(DialogContent, null, { default: () => h('button', null, 'Close') })] }) });
+  app.mount(host);
+  try {
+    await nextTick(); const overlay = host.querySelector('[data-part="overlay"]'); assert.ok(overlay instanceof HTMLElement); assert.equal(overlay.inert, false); assert.equal(overlay.getAttribute('aria-hidden'), 'true');
+    overlay.dispatchEvent(new browserWindow.PointerEvent('pointerdown', { bubbles: true, composed: true })); await nextTick();
+    assert.equal(outsideCalls, 1); assert.equal(open.value, true);
+    overlay.dispatchEvent(new browserWindow.PointerEvent('pointerdown', { bubbles: true, composed: true })); await nextTick();
+    assert.equal(outsideCalls, 2); assert.equal(open.value, false);
   } finally {
     app.unmount(); host.remove();
   }

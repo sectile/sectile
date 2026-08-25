@@ -75,7 +75,7 @@ export function vueApiDefault(locale, component, typeName, property, extracted) 
   if (popupComponents.has(component) && typeName.endsWith('RootProps')) {
     if (property === 'modal') return { code: component === 'dialog' ? 'true' : 'false' };
     if (property === 'trapFocus') return { code: ['alert-dialog', 'dialog'].includes(component) ? 'true' : 'false' };
-    if (property === 'closeOnInteractOutside') return { code: component === 'popover' ? 'true' : 'false' };
+    if (property === 'closeOnInteractOutside') return { code: ['dialog', 'popover'].includes(component) ? 'true' : 'false' };
     const value = popupRootDefaults[property];
     if (value !== undefined) return { code: value };
   }

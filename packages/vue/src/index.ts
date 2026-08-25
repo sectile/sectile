@@ -48,6 +48,7 @@ export {
   AlertDialogTrigger,
   type AlertDialogPartProps,
   type AlertDialogPortalProps,
+  type AlertDialogInteractOutsideHandler,
   type AlertDialogRootProps,
   type AlertDialogRootSlotProps,
 } from './alert-dialog.js';
@@ -79,6 +80,7 @@ export {
   DialogTitle,
   DialogTrigger,
   type DialogPartProps,
+  type DialogInteractOutsideHandler,
   type DialogPortalProps,
   type DialogRootProps,
   type DialogRootSlotProps,
@@ -94,10 +96,12 @@ export {
   PopoverTitle,
   PopoverTrigger,
   type PopoverPartProps,
+  type PopoverInteractOutsideHandler,
   type PopoverPortalProps,
   type PopoverRootProps,
   type PopoverRootSlotProps,
 } from './popover.js';
+export type { InteractOutsideEvent, InteractOutsideHandler } from './internal/popup.js';
 export { DateField, type DateFieldProps, type DateValue } from './date-field.js';
 export {
   DateRangeFieldEndInput,

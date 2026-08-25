@@ -15,7 +15,7 @@ interface ScrollSnapshot {
 
 interface ModalEntry {
   readonly id: symbol;
-  readonly surface: HTMLElement;
+  readonly branches: readonly HTMLElement[];
 }
 
 interface ModalState {
@@ -28,11 +28,11 @@ interface ModalState {
 
 const states = new WeakMap<Document, ModalState>();
 
-export function acquireModalEffects(surface: HTMLElement): ModalEffects {
+export function acquireModalEffects(surface: HTMLElement, additionalBranches: readonly HTMLElement[] = []): ModalEffects {
   const document = surface.ownerDocument;
   if (document?.body === undefined || document.body === null) return Object.freeze({ release(): void {} });
   const state = states.get(document) ?? createState(document);
-  const entry = { id: Symbol('sectile-modal'), surface };
+  const entry = { id: Symbol('sectile-modal'), branches: [surface, ...additionalBranches] };
   state.entries.push(entry);
   applyTopModal(state);
   let released = false;
@@ -70,25 +70,45 @@ function createState(document: Document): ModalState {
 
 function applyTopModal(state: ModalState): void {
   restoreIsolation(state);
-  const surface = state.entries.at(-1)?.surface;
-  if (surface === undefined || !surface.isConnected) return;
-  let branch: Element | null = surface;
-  while (branch !== null && branch !== state.document.body) {
-    const branchElement = branch as HTMLElement;
-    capture(state, branchElement);
-    branchElement.inert = false;
-    branchElement.removeAttribute('aria-hidden');
-    const parent = branch.parentElement as HTMLElement | null;
-    if (parent === null) break;
-    for (const sibling of parent.children) {
-      if (sibling === branch) continue;
-      const siblingElement = sibling as HTMLElement;
-      capture(state, siblingElement);
-      siblingElement.inert = true;
-      siblingElement.setAttribute('aria-hidden', 'true');
+  const branches = state.entries.at(-1)?.branches.filter((branch) => branch.isConnected) ?? [];
+  if (branches.length === 0) return;
+  const preserveAriaHidden = new Set(branches.slice(1));
+  const allowedChildren = new Map<HTMLElement, Set<HTMLElement>>();
+  for (const surface of branches) {
+    let branch: HTMLElement | null = surface;
+    while (branch !== null && branch !== state.document.body) {
+      capture(state, branch);
+      branch.inert = false;
+      if (preserveAriaHidden.has(branch)) restoreAriaHidden(state, branch);
+      else branch.removeAttribute('aria-hidden');
+      const parent = branch.parentElement as HTMLElement | null;
+      if (parent === null) break;
+      const allowed = allowedChildren.get(parent) ?? new Set<HTMLElement>();
+      allowed.add(branch);
+      allowedChildren.set(parent, allowed);
+      branch = parent;
     }
-    branch = parent;
   }
+  for (const [parent, allowed] of allowedChildren) {
+    for (const child of parent.children) {
+      const element = child as HTMLElement;
+      capture(state, element);
+      if (allowed.has(element)) {
+        element.inert = false;
+        if (preserveAriaHidden.has(element)) restoreAriaHidden(state, element);
+        else element.removeAttribute('aria-hidden');
+      } else {
+        element.inert = true;
+        element.setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+}
+
+function restoreAriaHidden(state: ModalState, element: HTMLElement): void {
+  const value = state.hidden.get(element)?.ariaHidden;
+  if (value === null || value === undefined) element.removeAttribute('aria-hidden');
+  else element.setAttribute('aria-hidden', value);
 }
 
 function capture(state: ModalState, element: HTMLElement): void {

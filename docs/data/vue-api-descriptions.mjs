@@ -87,6 +87,7 @@ const enProps = Object.freeze({
   id: 'Stable ID used to connect related parts.',
   index: 'Zero-based position of this part in its parent collection.',
   initialToasts: 'Notifications present when the provider first mounts.',
+  interactOutsideExclusions: 'Elements that stay interactive and do not count as outside interaction.',
   inputValue: 'Controlled text currently shown by the editable input.',
   intervalMs: 'Delay in milliseconds between automatic updates.',
   issues: 'Validation issues supplied by the application.',
@@ -210,6 +211,7 @@ const koProps = Object.freeze({
   id: '관련 파트를 연결하는 안정적인 ID입니다.',
   index: '부모 컬렉션 안에서 이 파트의 0부터 시작하는 위치입니다.',
   initialToasts: 'Provider가 처음 마운트될 때 존재할 알림입니다.',
+  interactOutsideExclusions: '계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다.',
   inputValue: '편집 입력에 표시할 외부 제어 문자열입니다.',
   intervalMs: '자동 갱신 사이의 밀리초 단위 간격입니다.',
   issues: '애플리케이션이 제공하는 검증 이슈입니다.',
@@ -361,6 +363,7 @@ const enEvents = Object.freeze({
   'update:itemsPerPage': 'Emitted when the requested page size changes.', 'update:modelValue': 'Emitted when the component requests a new controlled value.',
   'update:open': 'Emitted when the component requests a new open state.', 'update:paused': 'Emitted when the component requests a new pause state.',
   'update:toasts': 'Emitted when the provider requests a new controlled notification collection.',
+  'interact-outside': 'Emitted before an outside interaction closes the content; call preventDefault() to keep it open.',
   'position-change': 'Emitted after positioned content receives a new calculated placement.',
 });
 
@@ -378,6 +381,7 @@ const koEvents = Object.freeze({
   'update:itemsPerPage': '새 페이지당 항목 수를 요청할 때 발생합니다.', 'update:modelValue': '컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.',
   'update:open': '컴포넌트가 새 열림 상태를 요청할 때 발생합니다.', 'update:paused': '컴포넌트가 새 일시 정지 상태를 요청할 때 발생합니다.',
   'update:toasts': 'Provider가 새 외부 제어 알림 목록을 요청할 때 발생합니다.',
+  'interact-outside': '외부 조작으로 콘텐츠를 닫기 전에 발생하며, preventDefault()를 호출하면 열린 상태를 유지합니다.',
   'position-change': '팝업 콘텐츠의 계산된 배치가 갱신된 뒤 발생합니다.',
 });
 
