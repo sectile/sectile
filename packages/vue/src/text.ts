@@ -131,7 +131,9 @@ export const TextField = defineComponent({
       {
         ref: element,
         ...(!props.multiline ? { type: props.type } : {}),
-        value: controlled ? props.modelValue : initialValue,
+        value: controlled && !props.modelModifiers.lazy
+          ? props.modelValue
+          : controller?.getSnapshot().state.snapshot.text ?? initialValue,
         disabled: props.disabled,
         readonly: props.readonly,
         required: props.required,

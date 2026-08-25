@@ -296,6 +296,9 @@ export const FormField = defineComponent({
     const formContext = useFormContext('FormField');
     const generatedId = useId();
     const id = computed(() => props.id ?? `form-field-${generatedId}`);
+    const nameKey = computed(() => (
+      props.name === undefined ? undefined : encodeFormFieldPath(props.name)
+    ));
     const root = ref<HTMLElement | null>(null);
     const controls = shallowRef<readonly FormControlRegistration[]>([]);
     const fallback = shallowRef<FormControlRegistration | null>(null);
@@ -490,7 +493,7 @@ export const FormField = defineComponent({
       restoreControlAttributes();
       unregister?.();
     });
-    watch([id, () => props.name, () => props.validate], () => { void nextTick(mount); });
+    watch([id, nameKey, () => props.validate], () => { void nextTick(mount); });
     watch([
       activeControl,
       effectiveControlId,
@@ -663,9 +666,10 @@ export function useFormControl(
   const controlProps = computed<Readonly<Record<string, unknown>>>(() => (
     field !== null && !owned ? field.attributesFor(normalized) : Object.freeze({})
   ));
+  let unregister: (() => void) | undefined;
   if (field !== null && !owned) {
-    const unregister = field.registerControl(normalized);
-    onBeforeUnmount(unregister);
+    onMounted(() => { unregister = field.registerControl(normalized); });
+    onBeforeUnmount(() => unregister?.());
   }
   return Object.freeze({ participating: field !== null && !owned, controlProps });
 }

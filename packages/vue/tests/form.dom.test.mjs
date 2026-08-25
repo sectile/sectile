@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { Window } from 'happy-dom';
 
@@ -9,11 +11,13 @@ Object.assign(globalThis, {
   Node: browserWindow.Node,
   Element: browserWindow.Element,
   HTMLElement: browserWindow.HTMLElement,
+  HTMLButtonElement: browserWindow.HTMLButtonElement,
   HTMLFormElement: browserWindow.HTMLFormElement,
   HTMLInputElement: browserWindow.HTMLInputElement,
   HTMLSelectElement: browserWindow.HTMLSelectElement,
   SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event,
+  InputEvent: browserWindow.InputEvent,
   SubmitEvent: browserWindow.SubmitEvent,
   FormData: browserWindow.FormData,
   MutationObserver: browserWindow.MutationObserver,
@@ -47,7 +51,13 @@ const { ListboxRoot } = await import('../dist/listbox.js');
 const { MultiThumbSliderRoot } = await import('../dist/multi-thumb-slider.js');
 const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
 const { RadioGroupRoot } = await import('../dist/radio-group.js');
-const { SelectRoot } = await import('../dist/select.js');
+const {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} = await import('../dist/select.js');
 const { SliderRoot } = await import('../dist/slider.js');
 const { SpinButtonInput, SpinButtonRoot } = await import('../dist/spin-button.js');
 const { SwitchRoot } = await import('../dist/switch.js');
@@ -56,6 +66,18 @@ const { TextField } = await import('../dist/text.js');
 const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../dist/time-range-field.js');
 const { ToggleGroupRoot } = await import('../dist/toggle-group.js');
 const { formValueControlInventory } = await import('../dist/internal/form-control-inventory.js');
+
+test('nested Form controls mount without a reactive render loop', () => {
+  const fixture = fileURLToPath(new URL('./fixtures/form-nested-mount.mjs', import.meta.url));
+  const result = spawnSync(process.execPath, [fixture], {
+    encoding: 'utf8',
+    timeout: 3_000,
+  });
+
+  assert.equal(result.error?.code, undefined, result.error?.message);
+  assert.equal(result.signal, null, `fixture terminated with ${result.signal}`);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+});
 
 test('Vue Form value-control inventory is an explicit integration ratchet', () => {
   assert.deepEqual(Object.keys(formValueControlInventory), [
@@ -445,6 +467,81 @@ test('Sectile group and selection controls keep semantics separate from successf
       ['deployment.environment', 'production', false],
     ],
   );
+
+  app.unmount();
+  host.remove();
+});
+
+test('TextField and Select remain editable inside a reactive FormField', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const submissions = [];
+  const roles = ['member', 'admin'];
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: (details) => {
+        details.event.preventDefault();
+        submissions.push(details.values);
+      },
+    }, {
+      default: () => [
+        h(FormField, { name: ['invitation', 'email'] }, {
+          default: () => h(TextField, { defaultValue: 'alex@example.com' }),
+        }),
+        h(FormField, { name: ['invitation', 'role'] }, {
+          default: () => h(SelectRoot, { items: roles, defaultValue: 'member' }, {
+            default: () => [
+              h(SelectTrigger, null, { default: () => h(SelectValue) }),
+              h(SelectContent, null, {
+                default: () => roles.map((role) => h(SelectItem, { value: role }, {
+                  default: () => role,
+                })),
+              }),
+            ],
+          }),
+        }),
+        h(FormSubmit, null, { default: () => 'Invite' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+
+  const form = host.querySelector('form');
+  const email = host.querySelector('input[type="text"]');
+  const trigger = host.querySelector('[data-scope="select"][data-part="trigger"]');
+  const content = host.querySelector('[data-scope="select"][data-part="content"]');
+  const admin = host.querySelector('[data-sectile-select-id="admin"]');
+  assert.ok(form instanceof HTMLFormElement);
+  assert.ok(email instanceof HTMLInputElement);
+  assert.ok(trigger instanceof browserWindow.HTMLButtonElement);
+  assert.ok(content instanceof HTMLElement);
+  assert.ok(admin instanceof HTMLElement);
+
+  email.value = 'mina@sectile.dev';
+  email.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertReplacementText',
+  }));
+  await nextTick();
+  assert.equal(email.value, 'mina@sectile.dev');
+
+  trigger.click();
+  await nextTick();
+  assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+  assert.equal(content.hidden, false);
+
+  admin.click();
+  await nextTick();
+  assert.equal(trigger.textContent, 'admin');
+  assert.equal(content.hidden, true);
+
+  form.requestSubmit();
+  await nextTick();
+  assert.equal(submissions[0]?.invitation?.email, 'mina@sectile.dev');
+  assert.equal(submissions[0]?.invitation?.role, 'admin');
 
   app.unmount();
   host.remove();
