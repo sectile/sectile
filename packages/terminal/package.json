@@ -358,7 +358,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "pnpm --silent run build && node --test tests/*.test.mjs",
+    "test": "pnpm --silent run build && node --test --test-concurrency=1 tests/*.test.mjs",
     "verify": "pnpm run typecheck && pnpm run test",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },

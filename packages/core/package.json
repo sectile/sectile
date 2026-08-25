@@ -374,7 +374,7 @@
     "build": "node scripts/build.mjs production",
     "build:verification": "node scripts/build.mjs verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "pnpm --silent run build:verification && node --test tests/*/*.test.mjs",
+    "test": "pnpm --silent run build:verification && node --test --test-concurrency=1 tests/*/*.test.mjs",
     "benchmark": "pnpm run build && node benchmarks/structures.mjs",
     "verify:theory": "node scripts/verify-theory.mjs",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
