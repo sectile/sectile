@@ -45,23 +45,23 @@ test('terminal Form focuses and announces the first invalid field on submit', ()
     ],
     defaultCurrentFieldId: 'region',
     onAnnounceSummary: (issues) => announcements.push(issues.map((issue) => issue.message)),
-    onSubmit: (details) => submissions.push(details.state.status),
+    onSubmit: (details) => submissions.push(details.state.validationStatus),
   });
 
   assert.equal(form.submit(), true);
-  assert.equal(form.state.status, 'invalid');
+  assert.equal(form.state.validationStatus, 'invalid');
   assert.equal(form.currentFieldId, 'name');
   assert.deepEqual(announcements, [['Enter a project name.']]);
   assert.deepEqual(submissions, []);
 
   nameValid = true;
   assert.equal(form.submit(), true);
-  assert.equal(form.state.status, 'ready');
-  assert.deepEqual(submissions, ['ready']);
+  assert.equal(form.state.validationStatus, 'valid');
+  assert.deepEqual(submissions, ['valid']);
   assert.equal(form.submitStarted(), true);
-  assert.equal(form.state.status, 'submitting');
+  assert.equal(form.state.submissionStatus, 'submitting');
   assert.equal(form.submitSucceeded(), true);
-  assert.equal(form.state.status, 'succeeded');
+  assert.equal(form.state.submissionStatus, 'succeeded');
 });
 
 test('terminal Form coordinates reset and server issues without serializing fields', () => {
@@ -83,12 +83,13 @@ test('terminal Form coordinates reset and server issues without serializing fiel
     source: 'server',
     message: 'This email is already registered.',
   }]), true);
-  assert.equal(form.state.status, 'failed');
+  assert.equal(form.state.submissionStatus, 'failed');
   assert.equal(form.state.fields[0].issues[0].source, 'server');
 
   assert.equal(form.reset(), true);
   assert.deepEqual(resets, ['email', 'team']);
-  assert.equal(form.state.status, 'idle');
+  assert.equal(form.state.validationStatus, 'idle');
+  assert.equal(form.state.submissionStatus, 'idle');
   assert.equal(form.state.dirty, false);
   assert.equal(form.summaryIssues.length, 0);
 });

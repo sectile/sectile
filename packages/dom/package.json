@@ -145,7 +145,8 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
-    "@sectile/core": "workspace:*"
+    "@sectile/core": "workspace:*",
+    "@standard-schema/spec": "^1.1.0"
   },
   "devDependencies": {
     "happy-dom": "^20.11.6",

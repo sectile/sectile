@@ -25,7 +25,10 @@ const revision = ref(0);
 const FormCase = defineComponent({
   setup() {
     return () => h(FormRoot, null, {
-      default: ({ state }) => h('section', { 'data-status': state.status }, [
+      default: ({ state }) => h('section', {
+        'data-validation-status': state.validationStatus,
+        'data-submission-status': state.submissionStatus,
+      }, [
         h(FormField, {
           id: 'profile-name',
           name: ['profile', 'displayName'],

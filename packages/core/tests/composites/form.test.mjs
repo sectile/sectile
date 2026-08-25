@@ -130,8 +130,14 @@ test('invalid submit focuses the first invalid field and announces its issues', 
       },
     ],
   });
-  const submitted = applyFormEvent(state, 'submit').value;
-  assert.equal(submitted.state.status, 'invalid');
+  const started = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  const submitted = applyFormEvent(started, {
+    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+  }).value;
+  assert.equal(submitted.state.validationStatus, 'invalid');
+  assert.equal(submitted.state.submissionStatus, 'idle');
   assert.equal(submitted.state.submitCount, 1);
   assert.deepEqual(submitted.commands, [
     { type: 'focus-field', id: 'email' },
@@ -144,19 +150,24 @@ test('invalid submit focuses the first invalid field and announces its issues', 
 
 test('valid submit has an explicit request, pending, success, and failure lifecycle', () => {
   let state = createFormState({ fields: [{ id: 'email', name: 'email' }] });
-  const requested = applyFormEvent(state, 'submit').value;
-  assert.equal(requested.state.status, 'ready');
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  const requested = applyFormEvent(state, {
+    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+  }).value;
+  assert.equal(requested.state.validationStatus, 'valid');
+  assert.equal(requested.state.submissionStatus, 'idle');
   assert.deepEqual(requested.commands, [{ type: 'submit-requested' }]);
 
   state = applyFormEvent(requested.state, 'submit-started').value.state;
-  assert.equal(state.status, 'submitting');
-  assert.equal(applyFormEvent(state, 'submit').value.state, state);
+  assert.equal(state.submissionStatus, 'submitting');
 
   const failed = applyFormEvent(state, {
     type: 'submit-failed',
     issues: [{ id: 'server-down', message: 'Try again.', source: 'server' }],
   }).value.state;
-  assert.equal(failed.status, 'failed');
+  assert.equal(failed.submissionStatus, 'failed');
   assert.equal(failed.valid, false);
 
   state = applyFormEvent(failed, {
@@ -164,10 +175,15 @@ test('valid submit has an explicit request, pending, success, and failure lifecy
     source: 'server',
     issues: [],
   }).value.state;
-  state = applyFormEvent(state, 'submit').value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-started', trigger: 'submit', intent: 'submission',
+  }).value.state;
+  state = applyFormEvent(state, {
+    type: 'validation-completed', trigger: 'submit', intent: 'submission',
+  }).value.state;
   state = applyFormEvent(state, 'submit-started').value.state;
   state = applyFormEvent(state, 'submit-succeeded').value.state;
-  assert.equal(state.status, 'succeeded');
+  assert.equal(state.submissionStatus, 'succeeded');
   assert.equal(state.issues.length, 0);
 });
 
@@ -206,7 +222,10 @@ test('issue replacement preserves other sources and unregistered server issues',
 
 test('reset clears coordinator metadata and emits participant commands in order', () => {
   const state = createFormState({
-    status: 'failed',
+    validationStatus: 'invalid',
+    validationTrigger: 'submit',
+    validationIntent: 'submission',
+    submissionStatus: 'failed',
     submitCount: 2,
     submitted: true,
     fields: [
@@ -216,7 +235,8 @@ test('reset clears coordinator metadata and emits participant commands in order'
     issues: [{ id: 'server-down', message: 'Try again.', source: 'server' }],
   });
   const reset = applyFormEvent(state, 'reset').value;
-  assert.equal(reset.state.status, 'idle');
+  assert.equal(reset.state.validationStatus, 'idle');
+  assert.equal(reset.state.submissionStatus, 'idle');
   assert.equal(reset.state.submitCount, 0);
   assert.equal(reset.state.submitted, false);
   assert.equal(reset.state.dirty, false);

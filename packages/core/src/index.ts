@@ -30,8 +30,11 @@ export type {
   FormIssueSource,
   FormState,
   FormStateInput,
-  FormStatus,
+  FormSubmissionStatus,
   FormUpdate,
+  FormValidationIntent,
+  FormValidationStatus,
+  FormValidationTrigger,
   FormValues,
 } from './form.js';
 export type {

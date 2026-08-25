@@ -561,9 +561,18 @@ const validation = applyFormEvent(state, {
   }],
 }).value
 
-const submission = applyFormEvent(validation.state, 'submit').value
+const started = applyFormEvent(validation.state, {
+  type: 'validation-started',
+  trigger: 'submit',
+  intent: 'submission',
+}).value
+const submission = applyFormEvent(started.state, {
+  type: 'validation-completed',
+  trigger: 'submit',
+  intent: 'submission',
+}).value
 
-console.log(submission.state.status, submission.commands)`;
+console.log(submission.state.validationStatus, submission.commands)`;
     }
     case 'feed': {
       const direction = scenario === 'load-after' ? 'after' : 'before';

@@ -2,7 +2,7 @@ import { fail, ok } from './internal/kernel/foundation.js';
 import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 
-export type FormIssueSource = 'native' | 'field' | 'form' | 'server';
+export type FormIssueSource = 'native' | 'field' | 'form' | 'validate' | 'schema' | 'server';
 export type FormPathSegment = string | number;
 export type FormFieldPath = string | readonly FormPathSegment[];
 export type FormRelativePath = FormPathSegment | readonly FormPathSegment[];
@@ -14,13 +14,10 @@ export interface FormValueEntry<Value = unknown> {
 
 export type FormValues<Shape extends object = Record<string, unknown>> = Readonly<Shape>;
 
-export type FormStatus =
-  | 'idle'
-  | 'invalid'
-  | 'ready'
-  | 'submitting'
-  | 'succeeded'
-  | 'failed';
+export type FormValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
+export type FormSubmissionStatus = 'idle' | 'submitting' | 'succeeded' | 'failed';
+export type FormValidationTrigger = 'input' | 'blur' | 'submit';
+export type FormValidationIntent = 'interaction' | 'submission';
 
 export interface FormIssue<ID extends StableID = StableID> {
   readonly id: StableID;
@@ -48,7 +45,10 @@ export interface FormFieldState<ID extends StableID = StableID> {
 }
 
 export interface FormState<ID extends StableID = StableID> {
-  readonly status: FormStatus;
+  readonly validationStatus: FormValidationStatus;
+  readonly validationTrigger: FormValidationTrigger | null;
+  readonly validationIntent: FormValidationIntent | null;
+  readonly submissionStatus: FormSubmissionStatus;
   readonly submitCount: number;
   readonly submitted: boolean;
   readonly touched: boolean;
@@ -75,7 +75,17 @@ export type FormEvent<ID extends StableID = StableID> =
       readonly source: FormIssueSource;
       readonly issues: readonly FormIssue<ID>[];
     }
-  | 'submit'
+  | { readonly type: 'validation-invalidated' }
+  | {
+      readonly type: 'validation-started';
+      readonly trigger: FormValidationTrigger;
+      readonly intent: FormValidationIntent;
+    }
+  | {
+      readonly type: 'validation-completed';
+      readonly trigger: FormValidationTrigger;
+      readonly intent: FormValidationIntent;
+    }
   | 'submit-started'
   | 'submit-succeeded'
   | { readonly type: 'submit-failed'; readonly issues?: readonly FormIssue<ID>[] }
@@ -93,7 +103,10 @@ export interface FormUpdate<ID extends StableID = StableID> {
 }
 
 export interface FormStateInput<ID extends StableID = StableID> {
-  readonly status?: FormStatus;
+  readonly validationStatus?: FormValidationStatus;
+  readonly validationTrigger?: FormValidationTrigger | null;
+  readonly validationIntent?: FormValidationIntent | null;
+  readonly submissionStatus?: FormSubmissionStatus;
   readonly submitCount?: number;
   readonly submitted?: boolean;
   readonly fields?: readonly FormFieldInput<ID>[];
@@ -258,10 +271,48 @@ export function createFormState<ID extends StableID = StableID>(
 export function tryCreateFormState<ID extends StableID = StableID>(
   input: FormStateInput<ID> = {},
 ): Result<FormState<ID>> {
-  const status = input.status ?? 'idle';
+  const validationStatus = input.validationStatus ?? 'idle';
+  const validationTrigger = input.validationTrigger ?? null;
+  const validationIntent = input.validationIntent ?? null;
+  const submissionStatus = input.submissionStatus ?? 'idle';
   const submitCount = input.submitCount ?? 0;
-  if (!isStatus(status)) {
-    return fail('construction', 'form-status-invalid', 'Form status is invalid.');
+  if (!isValidationStatus(validationStatus)) {
+    return fail(
+      'construction',
+      'form-validation-status-invalid',
+      'Form validation status is invalid.',
+    );
+  }
+  if (validationTrigger !== null && !isValidationTrigger(validationTrigger)) {
+    return fail(
+      'construction',
+      'form-validation-trigger-invalid',
+      'Form validation trigger is invalid.',
+    );
+  }
+  if (validationIntent !== null && !isValidationIntent(validationIntent)) {
+    return fail(
+      'construction',
+      'form-validation-intent-invalid',
+      'Form validation intent is invalid.',
+    );
+  }
+  if (!isSubmissionStatus(submissionStatus)) {
+    return fail(
+      'construction',
+      'form-submission-status-invalid',
+      'Form submission status is invalid.',
+    );
+  }
+  if (
+    (validationStatus === 'idle' && (validationTrigger !== null || validationIntent !== null))
+    || (validationStatus !== 'idle' && (validationTrigger === null || validationIntent === null))
+  ) {
+    return fail(
+      'construction',
+      'form-validation-context-invalid',
+      'Form validation context must be present exactly while validation has run.',
+    );
   }
   if (!Number.isSafeInteger(submitCount) || submitCount < 0) {
     return fail(
@@ -300,7 +351,10 @@ export function tryCreateFormState<ID extends StableID = StableID>(
   }
 
   return ok(buildState({
-    status,
+    validationStatus,
+    validationTrigger,
+    validationIntent,
+    submissionStatus,
     submitCount,
     submitted: input.submitted ?? submitCount > 0,
     fields,
@@ -325,22 +379,32 @@ export function applyFormEvent<ID extends StableID>(
     if (event.type === 'replace-issues') {
       return replaceIssues(state, event.source, event.issues);
     }
+    if (event.type === 'validation-invalidated') return invalidateValidation(state);
+    if (event.type === 'validation-started') {
+      return startValidation(state, event.trigger, event.intent);
+    }
+    if (event.type === 'validation-completed') {
+      return completeValidation(state, event.trigger, event.intent);
+    }
     if (event.type === 'submit-failed') return submitFailed(state, event.issues ?? []);
   }
 
-  if (event === 'submit') return submit(state);
   if (event === 'submit-started') {
-    if (state.status !== 'ready') {
+    if (
+      state.submissionStatus !== 'idle'
+      || state.validationStatus !== 'valid'
+      || state.validationIntent !== 'submission'
+    ) {
       return fail(
         'transition-rejection',
         'form-submit-not-requested',
         'Form submission can start only after a valid submit request.',
       );
     }
-    return update(buildState({ ...state, status: 'submitting' }));
+    return update(buildState({ ...state, submissionStatus: 'submitting' }));
   }
   if (event === 'submit-succeeded') {
-    if (state.status !== 'submitting') {
+    if (state.submissionStatus !== 'submitting') {
       return fail(
         'transition-rejection',
         'form-submit-not-pending',
@@ -349,7 +413,7 @@ export function applyFormEvent<ID extends StableID>(
     }
     return update(buildState({
       ...withoutIssueSource(state, 'server'),
-      status: 'succeeded',
+      submissionStatus: 'succeeded',
     }));
   }
   return reset(state);
@@ -447,13 +511,17 @@ function replaceIssues<ID extends StableID>(
   const normalized = normalizeIssues(inputIssues, undefined);
   if (!normalized.ok) return transitionError(normalized);
   const registered = new Set(state.fields.map((field) => field.id));
-  const fields = state.fields.map((field) => Object.freeze({
-    ...field,
-    issues: Object.freeze([
+  const fields = state.fields.map((field) => {
+    const fieldIssues = Object.freeze([
       ...field.issues.filter((issue) => issue.source !== source),
       ...normalized.value.filter((issue) => issue.fieldId === field.id),
-    ]),
-  }));
+    ]);
+    return Object.freeze({
+      ...field,
+      valid: fieldIssues.length === 0,
+      issues: fieldIssues,
+    });
+  });
   const issues = [
     ...state.issues.filter((issue) => issue.source !== source),
     ...normalized.value.filter(
@@ -463,41 +531,93 @@ function replaceIssues<ID extends StableID>(
   return rebuild(state, fields, issues);
 }
 
-function submit<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>> {
-  if (state.status === 'submitting') return update(state);
-  const current = withoutIssueSource(state, 'server');
-  const submitCount = current.submitCount + 1;
-  if (!current.valid) {
-    const allIssues = orderedIssues(current);
-    const firstInvalid = current.fields.find(
-      (field) => !field.valid || field.issues.length > 0,
-    );
-    const commands: FormCommand<ID>[] = [];
-    if (firstInvalid !== undefined) {
-      commands.push({ type: 'focus-field', id: firstInvalid.id });
-    }
-    if (allIssues.length > 0) {
-      commands.push({
-        type: 'announce-summary',
-        issueIds: Object.freeze(allIssues.map((issue) => issue.id)),
-      });
-    }
-    return update(
-      buildState({ ...current, status: 'invalid', submitCount, submitted: true }),
-      commands,
+function invalidateValidation<ID extends StableID>(
+  state: FormState<ID>,
+): Result<FormUpdate<ID>> {
+  if (state.validationStatus === 'idle' && state.submissionStatus === 'idle') {
+    return update(state);
+  }
+  return update(buildState({
+    ...state,
+    validationStatus: 'idle',
+    validationTrigger: null,
+    validationIntent: null,
+    submissionStatus: state.submissionStatus === 'submitting'
+      ? 'submitting'
+      : 'idle',
+  }));
+}
+
+function startValidation<ID extends StableID>(
+  state: FormState<ID>,
+  trigger: FormValidationTrigger,
+  intent: FormValidationIntent,
+): Result<FormUpdate<ID>> {
+  if (state.submissionStatus === 'submitting') {
+    return fail(
+      'transition-rejection',
+      'form-validation-during-submit',
+      'Form validation cannot start while submission is pending.',
     );
   }
-  return update(
-    buildState({ ...current, status: 'ready', submitCount, submitted: true }),
-    [{ type: 'submit-requested' }],
+  const submission = intent === 'submission';
+  const current = submission ? withoutIssueSource(state, 'server') : state;
+  return update(buildState({
+    ...current,
+    validationStatus: 'validating',
+    validationTrigger: trigger,
+    validationIntent: intent,
+    submissionStatus: 'idle',
+    submitCount: current.submitCount + (submission ? 1 : 0),
+    submitted: current.submitted || submission,
+  }));
+}
+
+function completeValidation<ID extends StableID>(
+  state: FormState<ID>,
+  trigger: FormValidationTrigger,
+  intent: FormValidationIntent,
+): Result<FormUpdate<ID>> {
+  if (
+    state.validationStatus !== 'validating'
+    || state.validationTrigger !== trigger
+    || state.validationIntent !== intent
+  ) {
+    return fail(
+      'transition-rejection',
+      'form-validation-not-pending',
+      'Form validation can complete only for the active validation run.',
+    );
+  }
+  const completed = buildState({
+    ...state,
+    validationStatus: state.valid ? 'valid' : 'invalid',
+  });
+  if (intent !== 'submission') return update(completed);
+
+  if (completed.valid) {
+    return update(completed, [{ type: 'submit-requested' }]);
+  }
+  const allIssues = orderedIssues(completed);
+  const firstInvalid = completed.fields.find(
+    (field) => !field.valid || field.issues.length > 0,
   );
+  const commands: FormCommand<ID>[] = [];
+  if (firstInvalid !== undefined) commands.push({ type: 'focus-field', id: firstInvalid.id });
+  if (allIssues.length > 0) {
+    commands.push({
+      type: 'announce-summary',
+      issueIds: Object.freeze(allIssues.map((issue) => issue.id)),
+    });
+  }
+  return update(completed, commands);
 }
 
 function submitFailed<ID extends StableID>(
   state: FormState<ID>,
   issues: readonly FormIssue<ID>[],
 ): Result<FormUpdate<ID>> {
-  if (state.status !== 'submitting') {
+  if (state.submissionStatus !== 'submitting') {
     return fail(
       'transition-rejection',
       'form-submit-not-pending',
@@ -513,7 +633,7 @@ function submitFailed<ID extends StableID>(
   }
   const replaced = replaceIssues(state, 'server', issues);
   if (!replaced.ok) return replaced;
-  const failed = buildState({ ...replaced.value.state, status: 'failed' });
+  const failed = buildState({ ...replaced.value.state, submissionStatus: 'failed' });
   const ordered = orderedIssues(failed);
   const firstInvalid = failed.fields.find(
     (field) => !field.valid || field.issues.length > 0,
@@ -539,7 +659,10 @@ function reset<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>
   }));
   return update(
     buildState({
-      status: 'idle',
+      validationStatus: 'idle',
+      validationTrigger: null,
+      validationIntent: null,
+      submissionStatus: 'idle',
       submitCount: 0,
       submitted: false,
       fields,
@@ -612,7 +735,10 @@ function normalizeIssues<ID extends StableID>(
 }
 
 function buildState<ID extends StableID>(input: {
-  readonly status: FormStatus;
+  readonly validationStatus: FormValidationStatus;
+  readonly validationTrigger: FormValidationTrigger | null;
+  readonly validationIntent: FormValidationIntent | null;
+  readonly submissionStatus: FormSubmissionStatus;
   readonly submitCount: number;
   readonly submitted: boolean;
   readonly fields: readonly FormFieldState<ID>[];
@@ -676,13 +802,26 @@ function transitionError<T>(result: Result<T>): Result<never> {
   return fail('transition-rejection', result.error.code, result.error.message);
 }
 
-function isStatus(value: string): value is FormStatus {
+function isValidationStatus(value: string): value is FormValidationStatus {
   return value === 'idle'
-    || value === 'invalid'
-    || value === 'ready'
+    || value === 'validating'
+    || value === 'valid'
+    || value === 'invalid';
+}
+
+function isSubmissionStatus(value: string): value is FormSubmissionStatus {
+  return value === 'idle'
     || value === 'submitting'
     || value === 'succeeded'
     || value === 'failed';
+}
+
+function isValidationTrigger(value: string): value is FormValidationTrigger {
+  return value === 'input' || value === 'blur' || value === 'submit';
+}
+
+function isValidationIntent(value: string): value is FormValidationIntent {
+  return value === 'interaction' || value === 'submission';
 }
 
 function parsePath(path: string): Result<readonly FormPathSegment[]> {

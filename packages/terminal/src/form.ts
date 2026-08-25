@@ -162,17 +162,49 @@ export function tryCreateForm<ID extends StableID = StableID>(
     const current = state.fields.find((candidate) => candidate.id === id);
     if (field === undefined || current === undefined) return false;
     const validation = field.validate?.() ?? { valid: true, issues: [] };
-    return transition({
+    if (!transition({
+      type: 'validation-started',
+      trigger: 'input',
+      intent: 'interaction',
+    })) return false;
+    if (!transition({
       type: 'update-field',
       id,
       touched: flags.touched ?? current.touched,
       dirty: flags.dirty ?? current.dirty,
       valid: validation.valid,
       issues: validation.issues ?? [],
+    })) return false;
+    return transition({
+      type: 'validation-completed',
+      trigger: 'input',
+      intent: 'interaction',
     });
   };
-  const refreshAll = (): void => {
-    for (const id of fields.keys()) refreshField(id);
+  const validateAllForSubmission = (): boolean => {
+    if (!transition({
+      type: 'validation-started',
+      trigger: 'submit',
+      intent: 'submission',
+    })) return false;
+    for (const [id, field] of fields) {
+      const current = state.fields.find((candidate) => candidate.id === id);
+      if (current === undefined) continue;
+      const validation = field.validate?.() ?? { valid: true, issues: [] };
+      if (!transition({
+        type: 'update-field',
+        id,
+        touched: current.touched,
+        dirty: current.dirty,
+        valid: validation.valid,
+        issues: validation.issues ?? [],
+      })) return false;
+    }
+    return transition({
+      type: 'validation-completed',
+      trigger: 'submit',
+      intent: 'submission',
+    });
   };
   const move = (offset: -1 | 1): boolean => {
     const available = [...fields.values()].filter((field) => isAvailable(field));
@@ -229,10 +261,7 @@ export function tryCreateForm<ID extends StableID = StableID>(
       return false;
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }),
-    submit: () => {
-      refreshAll();
-      return transition('submit');
-    },
+    submit: validateAllForSubmission,
     submitStarted: () => transition('submit-started'),
     submitSucceeded: () => transition('submit-succeeded'),
     submitFailed: (issues = []) => transition({ type: 'submit-failed', issues }),
@@ -257,14 +286,11 @@ export function tryCreateForm<ID extends StableID = StableID>(
 }
 
 function toFieldInput<ID extends StableID>(field: TerminalFormField<ID>): FormFieldInput<ID> {
-  const validation = field.validate?.() ?? { valid: true, issues: [] };
   return {
     id: field.id,
     ...(field.name === undefined ? {} : { name: field.name }),
     ...(field.touched === undefined ? {} : { touched: field.touched }),
     ...(field.dirty === undefined ? {} : { dirty: field.dirty }),
-    valid: validation.valid,
-    issues: validation.issues ?? [],
   };
 }
 

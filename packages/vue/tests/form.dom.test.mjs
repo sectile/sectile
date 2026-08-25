@@ -137,7 +137,7 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
         event.preventDefault();
         submissions.push([...event.formData.entries()]);
       },
-      onStateChange: (state) => states.push(state.status),
+      onStateChange: (state) => states.push(state),
     }, {
       default: () => [
         h(FormSummary),
@@ -180,7 +180,7 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   assert.equal(input.getAttribute('aria-invalid'), 'true');
   assert.equal(summary.hidden, false);
   assert.equal(submissions.length, 0);
-  assert.equal(states.includes('invalid'), true);
+  assert.equal(states.some((state) => state.validationStatus === 'invalid'), true);
 
   input.value = 'release@sectile.dev';
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -193,7 +193,8 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   reset.click();
   await nextTick();
   assert.equal(input.value, 'initial@sectile.dev');
-  assert.equal(states.at(-1), 'idle');
+  assert.equal(states.at(-1).validationStatus, 'idle');
+  assert.equal(states.at(-1).submissionStatus, 'idle');
 
   app.unmount();
   host.remove();
@@ -247,16 +248,16 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
 
   form.requestSubmit();
   await nextTick();
-  assert.equal(form.dataset.status, 'submitting');
+  assert.equal(form.dataset.submissionStatus, 'submitting');
   resolveSubmission();
   await Promise.resolve();
   await nextTick();
-  assert.equal(form.dataset.status, 'succeeded');
+  assert.equal(form.dataset.submissionStatus, 'succeeded');
 
   mode = 'field-error';
   form.requestSubmit();
   await nextTick();
-  assert.equal(form.dataset.status, 'failed');
+  assert.equal(form.dataset.submissionStatus, 'failed');
   assert.equal(message.textContent, 'Email already in use.');
   assert.equal(summary.hidden, false);
   assert.equal(document.activeElement, input);
@@ -265,7 +266,7 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   form.requestSubmit();
   await Promise.resolve();
   await nextTick();
-  assert.equal(form.dataset.status, 'failed');
+  assert.equal(form.dataset.submissionStatus, 'failed');
   assert.match(summary.textContent ?? '', /Network unavailable/);
 
   app.unmount();

@@ -102,7 +102,12 @@ export {
   type FormIssueSource,
   type FormPartProps,
   type FormRootProps,
+  type FormRootComponent,
+  type FormRootPublicProps,
   type FormRootSlotProps,
+  type FormSchema,
+  type FormSchemaInput,
+  type FormSchemaOutput,
   type FormState,
   type FormReplaceIssuesAction,
   type FormResetAction,
@@ -115,7 +120,10 @@ export {
   type FormSubmitResult,
   type FormSubmitStartedAction,
   type FormSubmitSucceededAction,
+  type FormValidateContext,
   type FormValidateHandler,
+  type FormValidationIssue,
+  type FormValidationResult,
   type FormValues,
 } from './form.js';
 export { NumberField, type NumberFieldProps } from './number-field.js';

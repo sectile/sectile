@@ -10,10 +10,13 @@ import {
   type FormIssue,
   type FormIssueSource,
   type FormState,
+  type FormValidationIntent,
+  type FormValidationTrigger,
   type FormValues,
 } from '@sectile/core/form';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 export {
   appendFormFieldPath,
@@ -26,13 +29,33 @@ export {
 } from '@sectile/core/form';
 export type { FormValues } from '@sectile/core/form';
 
-export interface FormParticipantValidation<ID extends StableID = StableID> {
-  readonly valid: boolean;
-  readonly issues?: readonly FormIssue<ID>[];
+export interface FormValidationIssue {
+  readonly message: string;
+  readonly path?: FormFieldPath;
 }
 
-export type FormValidateHandler<ID extends StableID = StableID> =
-  () => FormParticipantValidation<ID>;
+export interface FormValidationResult {
+  readonly issues?: readonly FormValidationIssue[];
+}
+
+export type FormSchema<Input = unknown, Output = Input> = StandardSchemaV1<Input, Output>;
+
+export type FormInteractionValidationTrigger = Exclude<FormValidationTrigger, 'submit'>;
+
+export interface FormValidateContext<ID extends StableID = StableID> {
+  readonly trigger: FormValidationTrigger;
+  readonly intent: FormValidationIntent;
+  readonly changedFieldId: ID | null;
+  readonly signal: AbortSignal;
+}
+
+export type FormValidateHandler<
+  ID extends StableID = StableID,
+  Values extends object = FormValues,
+> = (
+  values: Values,
+  context: FormValidateContext<ID>,
+) => FormValidationResult | PromiseLike<FormValidationResult>;
 export type FormFocusHandler = () => boolean | void;
 export type FormResetHandler = () => void;
 export type FormAnnounceSummaryHandler<ID extends StableID = StableID> =
@@ -54,7 +77,6 @@ export interface FormParticipant<ID extends StableID = StableID> {
   readonly focusTarget?: HTMLElement;
   readonly submissionElements?: readonly FormSubmissionElement[];
   readonly name?: FormFieldPath | null;
-  readonly validate?: FormValidateHandler<ID>;
   readonly focus?: FormFocusHandler;
   readonly reset?: FormResetHandler;
 }
@@ -85,13 +107,18 @@ export type FormSnapshotListener<ID extends StableID = StableID> =
 
 export interface FormOptions<
   ID extends StableID = StableID,
-  Values extends object = FormValues,
+  Input extends object = FormValues,
+  Output extends object = Input,
 > {
   readonly form: HTMLFormElement;
   readonly summary?: HTMLElement;
   readonly participants?: readonly FormParticipant<ID>[];
   readonly issues?: readonly FormIssue<ID>[];
-  readonly onSubmit?: FormSubmitHandler<ID, Values>;
+  readonly schema?: FormSchema<Input, Output>;
+  readonly validate?: FormValidateHandler<ID, Input>;
+  readonly validateOn?: readonly FormInteractionValidationTrigger[];
+  readonly revalidateOn?: readonly FormInteractionValidationTrigger[];
+  readonly onSubmit?: FormSubmitHandler<ID, Output>;
   readonly onReset?: FormResetHandler;
   readonly onAnnounceSummary?: FormAnnounceSummaryHandler<ID>;
   readonly onStateChange?: FormStateChangeHandler<ID>;
@@ -115,18 +142,20 @@ export interface FormConnection<ID extends StableID = StableID> {
 
 export function createForm<
   ID extends StableID = StableID,
-  Values extends object = FormValues,
+  Input extends object = FormValues,
+  Output extends object = Input,
 >(
-  options: FormOptions<ID, Values>,
+  options: FormOptions<ID, Input, Output>,
 ): FormConnection<ID> {
   return unwrap(tryCreateForm(options));
 }
 
 export function tryCreateForm<
   ID extends StableID = StableID,
-  Values extends object = FormValues,
+  Input extends object = FormValues,
+  Output extends object = Input,
 >(
-  options: FormOptions<ID, Values>,
+  options: FormOptions<ID, Input, Output>,
 ): Result<FormConnection<ID>> {
   const initial = tryCreateFormState<ID>({ issues: options.issues ?? [] });
   if (!initial.ok) return initial;
@@ -137,6 +166,10 @@ export function tryCreateForm<
   let revision = 0;
   let active = true;
   let invalidBatchPending = false;
+  let validationSequence = 0;
+  let validationController: AbortController | null = null;
+  const validateOn = new Set(options.validateOn ?? []);
+  const revalidateOn = new Set(options.revalidateOn ?? ['input']);
 
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
@@ -167,62 +200,18 @@ export function tryCreateForm<
   const field = (id: ID): FormFieldState<ID> | undefined => (
     state.fields.find((candidate) => candidate.id === id)
   );
-  const nativeIssue = (participant: FormParticipant<ID>): FormIssue<ID> | null => {
-    for (const control of validationTargets(participant)) {
-      const candidate = control as HTMLElement & {
-        readonly validity?: ValidityState;
-        readonly validationMessage?: string;
-        readonly willValidate?: boolean;
-      };
-      if (candidate.willValidate === false || candidate.validity?.valid !== false) continue;
-      const message = candidate.validationMessage?.trim()
-        || `${readParticipantName(participant) ?? participant.id} is invalid.`;
-      return Object.freeze({
-        id: `${participant.id}:native`,
-        fieldId: participant.id,
-        message,
-        source: 'native',
-      });
-    }
-    return null;
-  };
-  const participantIssues = (
-    participant: FormParticipant<ID>,
-  ): FormParticipantValidation<ID> => {
-    const current = field(participant.id);
-    const retained = current?.issues.filter(
-      (issue) => issue.source !== 'native' && issue.source !== 'field',
-    ) ?? [];
-    const native = nativeIssue(participant);
-    const custom = participant.validate?.();
-    const issues = [
-      ...retained,
-      ...(native === null ? [] : [native]),
-      ...(custom?.issues ?? []),
-    ];
-    return {
-      valid: native === null && (custom?.valid ?? true),
-      issues,
-    };
-  };
-  const refresh = (
+  const updateParticipant = (
     participant: FormParticipant<ID>,
     flags: { readonly touched?: boolean; readonly dirty?: boolean } = {},
   ): boolean => {
     const current = field(participant.id);
     if (current === undefined) return false;
-    const validation = participantIssues(participant);
     return transition({
       type: 'update-field',
       id: participant.id,
       touched: flags.touched ?? current.touched,
       dirty: flags.dirty ?? current.dirty,
-      valid: validation.valid,
-      issues: validation.issues ?? [],
     }) !== null;
-  };
-  const refreshAll = (): void => {
-    for (const participant of participants.values()) refresh(participant);
   };
   const focusInvalid = (startId: ID): void => {
     const invalid = state.fields.filter(
@@ -261,35 +250,191 @@ export function tryCreateForm<
       if (command.type === 'reset-field') participants.get(command.id)?.reset?.();
     }
   };
-  const submit = (event: SubmitEvent): void => {
-    refreshAll();
-    const commands = transition('submit');
+  const collectNativeIssues = (): readonly FormIssue<ID>[] => {
+    const issues: FormIssue<ID>[] = [];
+    for (const participant of participants.values()) {
+      for (const control of validationTargets(participant)) {
+        const candidate = control as HTMLElement & {
+          readonly validity?: ValidityState;
+          readonly validationMessage?: string;
+          readonly willValidate?: boolean;
+        };
+        if (candidate.willValidate === false || candidate.validity?.valid !== false) continue;
+        issues.push(Object.freeze({
+          id: `${participant.id}:native`,
+          fieldId: participant.id,
+          message: candidate.validationMessage?.trim()
+            || `${readParticipantName(participant) ?? participant.id} is invalid.`,
+          source: 'native',
+        }));
+        break;
+      }
+    }
+    return Object.freeze(issues);
+  };
+  const mapValidationIssues = (
+    source: 'validate' | 'schema',
+    issues: readonly FormValidationIssue[],
+  ): readonly FormIssue<ID>[] => Object.freeze(issues.map((issue, index) => {
+    const name = issue.path === undefined ? null : encodeFormFieldPath(issue.path);
+    const owner = name === null
+      ? undefined
+      : state.fields.find((candidate) => candidate.name === name);
+    return Object.freeze({
+      id: `${source}:${name ?? 'form'}:${index}`,
+      message: issue.message,
+      source,
+      ...(owner === undefined ? {} : { fieldId: owner.id }),
+    });
+  }));
+  const finishValidation = (
+    sequence: number,
+    trigger: FormValidationTrigger,
+    intent: FormValidationIntent,
+    formData: FormData,
+    input: Input,
+    submitter: HTMLElement | null,
+    event: SubmitEvent | null,
+    custom: FormValidationResult,
+    schema: StandardSchemaV1.Result<Output> | null,
+    includeNative: boolean,
+  ): void => {
+    if (!active || sequence !== validationSequence) return;
+    if (intent === 'submission') {
+      transition({
+        type: 'replace-issues',
+        source: 'native',
+        issues: includeNative ? collectNativeIssues() : [],
+      });
+    }
+    transition({
+      type: 'replace-issues',
+      source: 'validate',
+      issues: mapValidationIssues('validate', custom.issues ?? []),
+    });
+    if (intent === 'submission') {
+      const schemaIssues = schema?.issues === undefined
+        ? []
+        : schema.issues.map((issue) => {
+            const path = standardSchemaPath(issue.path);
+            return { message: issue.message, ...(path === undefined ? {} : { path }) };
+          });
+      transition({
+        type: 'replace-issues',
+        source: 'schema',
+        issues: mapValidationIssues('schema', schemaIssues),
+      });
+    }
+    const commands = transition({ type: 'validation-completed', trigger, intent });
     if (commands === null) return;
     execute(commands);
+    if (intent !== 'submission') return;
     if (!state.valid) {
-      event.preventDefault();
+      event?.preventDefault();
       return;
     }
-    const submitter = event.submitter instanceof HTMLElement && isNativeSubmitter(event.submitter)
-      ? event.submitter
-      : null;
-    const formData = createNativeFormData(options.form, submitter);
+    if (event === null) return;
     options.onSubmit?.({
       event,
       formData,
-      values: createFormValues(
-        [...formData.entries()].map(([path, value]) => ({ path, value })),
-      ) as Values,
+      values: schema !== null && schema.issues === undefined ? schema.value : input as unknown as Output,
       submitter,
       state,
     });
   };
+  const runValidation = (
+    trigger: FormValidationTrigger,
+    intent: FormValidationIntent,
+    changedFieldId: ID | null,
+    event: SubmitEvent | null = null,
+    submitter: HTMLElement | null = null,
+  ): void => {
+    if (state.submissionStatus === 'submitting') {
+      event?.preventDefault();
+      return;
+    }
+    validationController?.abort();
+    const controller = new AbortController();
+    validationController = controller;
+    const sequence = ++validationSequence;
+    const commands = transition({ type: 'validation-started', trigger, intent });
+    if (commands === null) return;
+    execute(commands);
+
+    const formData = createNativeFormData(options.form, submitter);
+    const input = createFormValues(
+      [...formData.entries()].map(([path, value]) => ({ path, value })),
+    ) as Input;
+    const context: FormValidateContext<ID> = Object.freeze({
+      trigger,
+      intent,
+      changedFieldId,
+      signal: controller.signal,
+    });
+    let custom: FormValidationResult | PromiseLike<FormValidationResult> = {};
+    let schema: StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>> | null = null;
+    try {
+      custom = options.validate?.(input, context) ?? {};
+    } catch (error) {
+      custom = validationException(error);
+    }
+    if (intent === 'submission' && options.schema !== undefined) {
+      try {
+        schema = options.schema['~standard'].validate(input);
+      } catch (error) {
+        schema = schemaException(error);
+      }
+    }
+    const includeNative = intent === 'submission'
+      && !options.form.noValidate
+      && !isFormNoValidateSubmitter(submitter);
+    if (isPromiseLike(custom) || isPromiseLike(schema)) {
+      event?.preventDefault();
+      void Promise.all([
+        Promise.resolve(custom).catch(validationException),
+        schema === null
+          ? Promise.resolve(null)
+          : Promise.resolve(schema).catch(schemaException),
+      ]).then(([customResult, schemaResult]) => {
+        if (controller.signal.aborted) return;
+        finishValidation(
+          sequence,
+          trigger,
+          intent,
+          formData,
+          input,
+          submitter,
+          event,
+          customResult,
+          schemaResult,
+          includeNative,
+        );
+      });
+      return;
+    }
+    finishValidation(
+      sequence,
+      trigger,
+      intent,
+      formData,
+      input,
+      submitter,
+      event,
+      custom,
+      schema,
+      includeNative,
+    );
+  };
+  const submit = (event: SubmitEvent): void => {
+    const submitter = event.submitter instanceof HTMLElement && isNativeSubmitter(event.submitter)
+      ? event.submitter
+      : null;
+    runValidation('submit', 'submission', null, event, submitter);
+  };
   const submitInvalidBatch = (): void => {
     invalidBatchPending = false;
     if (!active) return;
-    refreshAll();
-    const commands = transition('submit');
-    if (commands !== null) execute(commands);
+    runValidation('submit', 'submission', null);
   };
   const participantFor = (target: EventTarget | null): FormParticipant<ID> | undefined => {
     if (!(target instanceof Node)) return undefined;
@@ -300,23 +445,32 @@ export function tryCreateForm<
         || participant.element.contains(target);
     });
   };
-  const onInput = (event: Event): void => {
+  const interact = (event: Event, trigger: FormInteractionValidationTrigger): void => {
     const participant = participantFor(event.target);
-    if (participant !== undefined) refresh(participant, { dirty: true });
+    const previousIntent = state.validationStatus === 'invalid'
+      ? state.validationIntent
+      : null;
+    if (participant !== undefined) {
+      updateParticipant(participant, trigger === 'input' ? { dirty: true } : { touched: true });
+    }
+    if (previousIntent !== null && !revalidateOn.has(trigger)) return;
+    transition({ type: 'validation-invalidated' });
+    const intent = previousIntent ?? (validateOn.has(trigger) ? 'interaction' : null);
+    if (intent !== null) runValidation(trigger, intent, participant?.id ?? null);
   };
-  const onBlur = (event: Event): void => {
-    const participant = participantFor(event.target);
-    if (participant !== undefined) refresh(participant, { touched: true });
-  };
+  const onInput = (event: Event): void => interact(event, 'input');
+  const onBlur = (event: Event): void => interact(event, 'blur');
   const onInvalid = (event: Event): void => {
     const participant = participantFor(event.target);
-    if (participant !== undefined) refresh(participant, { touched: true });
+    if (participant !== undefined) updateParticipant(participant, { touched: true });
     if (invalidBatchPending) return;
     invalidBatchPending = true;
     queueMicrotask(submitInvalidBatch);
   };
   const onSubmit = (event: Event): void => submit(event as SubmitEvent);
   const onReset = (): void => {
+    validationController?.abort();
+    validationSequence += 1;
     const commands = transition('reset');
     if (commands !== null) execute(commands);
     if (options.summary !== undefined) {
@@ -337,14 +491,11 @@ export function tryCreateForm<
     participants.set(participant.id, participant);
     participant.element.dataset['scope'] = 'form';
     participant.element.dataset['part'] = 'field';
-    const validation = participantIssues(participant);
     transition({
       type: 'register-field',
       field: {
         id: participant.id,
         name: readParticipantName(participant),
-        valid: validation.valid,
-        issues: validation.issues ?? [],
       },
     });
     reorderParticipants(participants, state, transition);
@@ -364,7 +515,10 @@ export function tryCreateForm<
     registerParticipant,
     refreshParticipant: (id) => {
       const participant = participants.get(id);
-      return participant === undefined ? false : refresh(participant);
+      if (participant === undefined) return false;
+      transition({ type: 'validation-invalidated' });
+      runValidation('input', 'interaction', id);
+      return true;
     },
     replaceIssues: (source, issues) => transition({ type: 'replace-issues', source, issues }) !== null,
     submitStarted: () => transition('submit-started') !== null,
@@ -383,6 +537,7 @@ export function tryCreateForm<
     destroy: () => {
       if (!active) return;
       active = false;
+      validationController?.abort();
       options.form.removeEventListener('input', onInput, true);
       options.form.removeEventListener('change', onInput, true);
       options.form.removeEventListener('blur', onBlur, true);
@@ -453,6 +608,49 @@ function isNativeSubmitter(element: HTMLElement): boolean {
   if (element.tagName !== 'INPUT') return false;
   const type = element.getAttribute('type')?.toLowerCase() ?? 'text';
   return type === 'submit' || type === 'image';
+}
+
+function isFormNoValidateSubmitter(element: HTMLElement | null): boolean {
+  if (element === null) return false;
+  return (element as HTMLElement & { readonly formNoValidate?: boolean }).formNoValidate === true;
+}
+
+function isPromiseLike<T>(value: T | PromiseLike<T> | null): value is PromiseLike<T> {
+  return value !== null
+    && typeof value === 'object'
+    && 'then' in value
+    && typeof value.then === 'function';
+}
+
+function validationException(reason: unknown): FormValidationResult {
+  return Object.freeze({
+    issues: Object.freeze([{ message: errorMessage(reason, 'Form validation failed.') }]),
+  });
+}
+
+function schemaException<Output>(reason: unknown): StandardSchemaV1.FailureResult {
+  return Object.freeze({
+    issues: Object.freeze([{ message: errorMessage(reason, 'Schema validation failed.') }]),
+  });
+}
+
+function errorMessage(reason: unknown, fallback: string): string {
+  return reason instanceof Error && reason.message.trim().length > 0
+    ? reason.message.trim()
+    : fallback;
+}
+
+function standardSchemaPath(
+  path: StandardSchemaV1.Issue['path'],
+): FormFieldPath | undefined {
+  if (path === undefined || path.length === 0) return undefined;
+  const result: Array<string | number> = [];
+  for (const segment of path) {
+    const key = typeof segment === 'object' && segment !== null ? segment.key : segment;
+    if (typeof key === 'symbol') return undefined;
+    result.push(typeof key === 'number' ? key : String(key));
+  }
+  return result;
 }
 
 function orderedIssues<ID extends StableID>(state: FormState<ID>): readonly FormIssue<ID>[] {

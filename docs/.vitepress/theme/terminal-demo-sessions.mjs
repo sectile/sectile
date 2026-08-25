@@ -194,7 +194,7 @@ function createFormDemo(host) {
           return `${terminalCell(value, Math.min(width, 52), { current })}${state?.valid === false ? `  ${ansi.yellow}invalid${ansi.reset}` : ''}`;
         }),
         '',
-        `status=${snapshot.state.status}  valid=${snapshot.state.valid}  submitCount=${snapshot.state.submitCount}`,
+        `validation=${snapshot.state.validationStatus}  submission=${snapshot.state.submissionStatus}  valid=${snapshot.state.valid}  submitCount=${snapshot.state.submitCount}`,
         'Field values remain outside the form coordinator.',
       ];
     },

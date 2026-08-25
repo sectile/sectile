@@ -13,12 +13,15 @@ import {
   shallowRef,
   useId,
   watch,
+  type AllowedComponentProps,
+  type ComponentCustomProps,
   type ComputedRef,
   type PropType,
   type Ref,
   type ShallowRef,
   type SlotsType,
   type VNodeChild,
+  type VNodeProps,
 } from 'vue';
 import {
   appendFormFieldPath,
@@ -26,12 +29,17 @@ import {
   encodeFormFieldPath,
   type FormConnection,
   type FormFieldPath,
+  type FormInteractionValidationTrigger,
   type FormOptions,
   type FormParticipant,
-  type FormParticipantValidation,
   type FormRelativePath,
+  type FormSchema as DOMFormSchema,
   type FormSubmissionElement,
   type FormSubmitPayload as DOMFormSubmitPayload,
+  type FormValidateContext as DOMFormValidateContext,
+  type FormValidateHandler as DOMFormValidateHandler,
+  type FormValidationIssue as DOMFormValidationIssue,
+  type FormValidationResult as DOMFormValidationResult,
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
 import { Primitive, type PrimitiveAs } from './primitive.js';
@@ -40,8 +48,16 @@ export type FormState = FormConnection<string>['state'];
 export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
 export type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0];
 export type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>;
-export type FormSubmitEvent<Shape extends object = Record<string, unknown>> = Omit<
-  DOMFormSubmitPayload<string, FormValues<Shape>>,
+export type FormSchema<
+  Input extends object = Record<string, unknown>,
+  Output extends object = Input,
+> = DOMFormSchema<FormValues<Input>, FormValues<Output>>;
+export type FormSchemaInput<Schema extends FormSchema> =
+  Schema extends DOMFormSchema<infer Input extends object, object> ? Input : never;
+export type FormSchemaOutput<Schema extends FormSchema> =
+  Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never;
+export type FormSubmitEvent<Schema extends FormSchema = FormSchema> = Omit<
+  DOMFormSubmitPayload<string, FormSchemaOutput<Schema>>,
   'event'
 > & {
   readonly nativeEvent: SubmitEvent;
@@ -55,11 +71,15 @@ export type FormSubmitResult =
   | void
   | { readonly ok: true }
   | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] };
-export type FormSubmitHandler<Shape extends object = Record<string, unknown>> =
-  (event: FormSubmitEvent<Shape>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
+export type FormSubmitHandler<Schema extends FormSchema = FormSchema> =
+  (event: FormSubmitEvent<Schema>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
 export type FormResetHandler = () => void;
 export type FormStateChangeHandler = (state: FormState) => void;
-export type FormValidateHandler = () => FormParticipantValidation<string>;
+export type FormValidateContext = DOMFormValidateContext<string>;
+export type FormValidationIssue = DOMFormValidationIssue;
+export type FormValidationResult = DOMFormValidationResult;
+export type FormValidateHandler<Schema extends FormSchema = FormSchema> =
+  DOMFormValidateHandler<string, FormSchemaInput<Schema>>;
 export type FormSubmitStartedAction = () => boolean;
 export type FormSubmitSucceededAction = () => boolean;
 export type FormSubmitFailedAction = (issues?: readonly FormIssue[]) => boolean;
@@ -69,14 +89,21 @@ export type FormReplaceIssuesAction = (
 ) => boolean;
 export type FormResetAction = () => void;
 
-export interface FormRootProps {
+export interface FormRootProps<Schema extends FormSchema = FormSchema> {
   readonly issues?: readonly FormIssue[];
-  readonly onSubmit?: FormSubmitHandler;
+  readonly schema?: Schema;
+  readonly validate?: FormValidateHandler<Schema>;
+  readonly validateOn?: readonly FormInteractionValidationTrigger[];
+  readonly revalidateOn?: readonly FormInteractionValidationTrigger[];
+  readonly onSubmit?: FormSubmitHandler<Schema>;
 }
 
 export interface FormRootSlotProps {
   readonly state: FormState;
-  readonly status: FormState['status'];
+  readonly validationStatus: FormState['validationStatus'];
+  readonly validationTrigger: FormState['validationTrigger'];
+  readonly validationIntent: FormState['validationIntent'];
+  readonly submissionStatus: FormState['submissionStatus'];
   readonly valid: boolean;
   readonly touched: boolean;
   readonly dirty: boolean;
@@ -89,6 +116,25 @@ export interface FormRootSlotProps {
   readonly reset: FormResetAction;
 }
 
+export type FormRootPublicProps<Schema extends FormSchema = FormSchema> =
+  FormRootProps<Schema>
+  & VNodeProps
+  & AllowedComponentProps
+  & ComponentCustomProps
+  & {
+    readonly onReset?: () => unknown;
+    readonly 'onState-change'?: (state: FormState) => unknown;
+  };
+
+export interface FormRootComponent {
+  new <Schema extends FormSchema = FormSchema>(props: FormRootPublicProps<Schema>): {
+    $props: FormRootPublicProps<Schema>;
+    $slots: {
+      default?: (props: FormRootSlotProps) => VNodeChild;
+    };
+  };
+}
+
 export interface FormFieldProps {
   readonly id?: string;
   readonly name?: FormFieldPath;
@@ -96,7 +142,6 @@ export interface FormFieldProps {
   readonly required?: boolean;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
-  readonly validate?: FormValidateHandler;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -208,7 +253,10 @@ const formContextKey = Symbol('SectileForm');
 const formFieldContextKey = Symbol('SectileFormField');
 const formControlOwnerKey = Symbol('SectileFormControlOwner');
 const emptyState: FormState = Object.freeze({
-  status: 'idle',
+  validationStatus: 'idle',
+  validationTrigger: null,
+  validationIntent: null,
+  submissionStatus: 'idle',
   submitCount: 0,
   submitted: false,
   touched: false,
@@ -222,11 +270,21 @@ const partProps = {
   asChild: { type: Boolean, default: false },
 };
 
-export const FormRoot = defineComponent({
+const FormRootImpl = defineComponent({
   name: 'SectileFormRoot',
   inheritAttrs: false,
   props: {
     issues: { type: Array as PropType<readonly FormIssue[]>, default: () => [] },
+    schema: { type: Object as PropType<FormSchema>, default: undefined },
+    validate: { type: Function as PropType<FormValidateHandler>, default: undefined },
+    validateOn: {
+      type: Array as PropType<readonly FormInteractionValidationTrigger[]>,
+      default: () => [],
+    },
+    revalidateOn: {
+      type: Array as PropType<readonly FormInteractionValidationTrigger[]>,
+      default: () => ['input'],
+    },
     onSubmit: { type: Function as PropType<FormSubmitHandler>, default: undefined },
   },
   emits: {
@@ -280,8 +338,8 @@ export const FormRoot = defineComponent({
       if (handler === undefined) return;
       const target = connection.value;
       if (target === null) return;
-      if (target.getSnapshot().state.status === 'submitting') {
-        payload.event.preventDefault();
+      payload.event.preventDefault();
+      if (target.getSnapshot().state.submissionStatus === 'submitting') {
         return;
       }
       if (!target.submitStarted()) return;
@@ -308,6 +366,10 @@ export const FormRoot = defineComponent({
         form: root.value,
         ...(summary.value === null ? {} : { summary: summary.value }),
         issues: props.issues,
+        ...(props.schema === undefined ? {} : { schema: props.schema }),
+        ...(props.validate === undefined ? {} : { validate: props.validate }),
+        validateOn: props.validateOn,
+        revalidateOn: props.revalidateOn,
         onSubmit: submit,
         onReset: () => emit('reset'),
         onStateChange: (next) => {
@@ -323,6 +385,12 @@ export const FormRoot = defineComponent({
 
     onMounted(() => { void nextTick(mount); });
     onBeforeUnmount(() => connection.value?.destroy());
+    watch([
+      () => props.schema,
+      () => props.validate,
+      () => props.validateOn,
+      () => props.revalidateOn,
+    ], () => { void nextTick(mount); });
 
     const actions = {
       submitStarted: (): boolean => connection.value?.submitStarted() ?? false,
@@ -333,7 +401,10 @@ export const FormRoot = defineComponent({
     };
     const slotProps = computed<FormRootSlotProps>(() => Object.freeze({
       state: state.value,
-      status: state.value.status,
+      validationStatus: state.value.validationStatus,
+      validationTrigger: state.value.validationTrigger,
+      validationIntent: state.value.validationIntent,
+      submissionStatus: state.value.submissionStatus,
       valid: state.value.valid,
       touched: state.value.touched,
       dirty: state.value.dirty,
@@ -348,10 +419,13 @@ export const FormRoot = defineComponent({
       ref: (element: unknown) => { root.value = element as HTMLFormElement | null; },
       'data-scope': 'form',
       'data-part': 'root',
-      'data-status': state.value.status,
+      'data-validation-status': state.value.validationStatus,
+      'data-submission-status': state.value.submissionStatus,
     }), slots['default']?.(slotProps.value) ?? []);
   },
 });
+
+export const FormRoot = FormRootImpl as unknown as FormRootComponent;
 
 function toFormSubmitEvent(
   payload: DOMFormSubmitPayload<string>,
@@ -402,7 +476,6 @@ export const FormField = defineComponent({
     required: { type: Boolean, default: undefined },
     disabled: { type: Boolean, default: undefined },
     readonly: { type: Boolean, default: undefined },
-    validate: { type: Function as PropType<FormValidateHandler>, default: undefined },
     ...partProps,
   },
   slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,
@@ -596,7 +669,6 @@ export const FormField = defineComponent({
           return control !== null && document.activeElement === control;
         },
         ...(props.name === undefined ? {} : { name: props.name }),
-        ...(props.validate === undefined ? {} : { validate: props.validate }),
       };
       unregister = formContext.register(participant);
     };
@@ -607,7 +679,7 @@ export const FormField = defineComponent({
       restoreControlAttributes();
       unregister?.();
     });
-    watch([id, nameKey, () => props.validate], () => { void nextTick(mount); });
+    watch([id, nameKey], () => { void nextTick(mount); });
     watch([
       activeControl,
       effectiveControlId,
@@ -727,7 +799,8 @@ export const FormReset = defineComponent({
       ...(props.as === 'button' && !props.asChild ? { type: 'reset' } : {}),
       'data-scope': 'form',
       'data-part': 'reset',
-      'data-status': form.state.value.status,
+      'data-validation-status': form.state.value.validationStatus,
+      'data-submission-status': form.state.value.submissionStatus,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
@@ -744,7 +817,8 @@ export const FormSubmit = defineComponent({
       ...(props.as === 'button' && !props.asChild ? { type: 'submit' } : {}),
       'data-scope': 'form',
       'data-part': 'submit',
-      'data-status': form.state.value.status,
+      'data-validation-status': form.state.value.validationStatus,
+      'data-submission-status': form.state.value.submissionStatus,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });
@@ -752,7 +826,10 @@ export const FormSubmit = defineComponent({
 function useRootSlotProps(form: FormContext): ComputedRef<FormRootSlotProps> {
   return computed(() => Object.freeze({
     state: form.state.value,
-    status: form.state.value.status,
+    validationStatus: form.state.value.validationStatus,
+    validationTrigger: form.state.value.validationTrigger,
+    validationIntent: form.state.value.validationIntent,
+    submissionStatus: form.state.value.submissionStatus,
     valid: form.state.value.valid,
     touched: form.state.value.touched,
     dirty: form.state.value.dirty,

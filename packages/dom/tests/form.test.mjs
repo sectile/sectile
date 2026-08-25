@@ -45,7 +45,8 @@ test('DOM Form coordinates native invalid submission and accessible focus recove
     formElement.requestSubmit();
     await Promise.resolve();
 
-    assert.equal(form.state.status, 'invalid');
+    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.submissionStatus, 'idle');
     assert.equal(form.state.submitCount, 1);
     assert.equal(form.state.fields[0].touched, true);
     assert.equal(form.state.fields[0].issues[0].source, 'native');
@@ -91,16 +92,16 @@ test('DOM Form reads successful native controls through FormData and observes su
     assert.deepEqual(entries, [['email', 'release@sectile.dev']]);
     assert.equal(values.email, 'release@sectile.dev');
     assert.equal(form.state.fields[0].dirty, true);
-    assert.equal(form.state.status, 'ready');
+    assert.equal(form.state.validationStatus, 'valid');
     assert.equal(form.submitStarted(), true);
-    assert.equal(form.state.status, 'submitting');
+    assert.equal(form.state.submissionStatus, 'submitting');
     assert.equal(form.submitFailed([{
       id: 'email:taken',
       fieldId: 'email',
       source: 'server',
       message: 'This email is already registered.',
     }]), true);
-    assert.equal(form.state.status, 'failed');
+    assert.equal(form.state.submissionStatus, 'failed');
     assert.equal(form.state.fields[0].issues[0].source, 'server');
   } finally {
     dom.restore();
@@ -164,6 +165,62 @@ test('DOM Form derives nested values from the exact submitter-aware successful c
   }
 });
 
+test('DOM Form defers Standard Schema until submit and revalidates failed submission on input', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const code = document.createElement('input');
+    code.name = 'code';
+    code.value = '12345678';
+    formElement.append(code);
+    document.body.append(formElement);
+    let validations = 0;
+    let submitted;
+
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'code', element: code, name: 'code' }],
+      schema: {
+        '~standard': {
+          version: 1,
+          vendor: 'test',
+          validate(value) {
+            validations += 1;
+            return value.code.length === 10
+              ? { value: { code: Number(value.code) } }
+              : { issues: [{ path: ['code'], message: 'Enter exactly ten digits.' }] };
+          },
+        },
+      },
+      onSubmit(payload) {
+        payload.event.preventDefault();
+        submitted = payload.values;
+      },
+    });
+
+    code.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(validations, 0);
+    assert.equal(form.state.validationStatus, 'idle');
+
+    formElement.requestSubmit();
+    assert.equal(validations, 1);
+    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.fields[0].issues[0].source, 'schema');
+
+    code.value = '1234567890';
+    code.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(validations, 2);
+    assert.equal(form.state.validationStatus, 'valid');
+
+    formElement.requestSubmit();
+    assert.equal(validations, 3);
+    assert.deepEqual(submitted, { code: 1234567890 });
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form keeps field, semantic, focus, and submission targets distinct', () => {
   const dom = installDOM();
   try {
@@ -180,7 +237,14 @@ test('DOM Form keeps field, semantic, focus, and submission targets distinct', (
     formElement.append(field);
     document.body.append(formElement);
 
-    const form = createForm({ form: formElement });
+    const form = createForm({
+      form: formElement,
+      validate: (_values, context) => ({
+        issues: context.intent === 'submission'
+          ? [{ path: ['profile', 'preference'], message: 'Choose a preference.' }]
+          : [],
+      }),
+    });
     form.registerParticipant({
       id: 'preference',
       element: field,
@@ -188,15 +252,6 @@ test('DOM Form keeps field, semantic, focus, and submission targets distinct', (
       focusTarget,
       submissionElements: [submission],
       name: ['profile', 'preference'],
-      validate: () => ({
-        valid: false,
-        issues: [{
-          id: 'preference:required',
-          fieldId: 'preference',
-          source: 'field',
-          message: 'Choose a preference.',
-        }],
-      }),
     });
 
     formElement.requestSubmit();
@@ -237,7 +292,8 @@ test('DOM Form preserves document order and delegates reset to participants and 
     form.reset();
     assert.equal(first.value, 'initial');
     assert.deepEqual(resets, ['first', 'second']);
-    assert.equal(form.state.status, 'idle');
+    assert.equal(form.state.validationStatus, 'idle');
+    assert.equal(form.state.submissionStatus, 'idle');
     assert.equal(form.state.dirty, false);
     assert.equal(form.state.touched, false);
     assert.equal(form.state.submitCount, 0);
