@@ -21,6 +21,7 @@ import {
 } from 'vue';
 import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@sectile/dom/popover';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
+import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
 
 export interface PopupConnection {
   getSnapshot(): { readonly revision: number };
@@ -115,8 +116,6 @@ interface PopupContext {
   close(): void;
 }
 
-let popupID = 0;
-
 export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   Root: Component;
   Trigger: Component;
@@ -181,7 +180,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const arrow = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
       const connection = shallowRef<PopupConnection>();
-      const id = ++popupID;
+      const id = useHostId();
       const contentID = `sectile-${config.scope}-${id}-content`;
       const titleID = `sectile-${config.scope}-${id}-title`;
       const descriptionID = `sectile-${config.scope}-${id}-description`;
@@ -271,12 +270,13 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Content`, inheritAttrs: false, props: primitiveProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Content');
+      const direction = useHostDirection();
       onMounted(root.connect);
       onBeforeUnmount(root.disconnect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
         elementRef: (element: unknown) => { root.content.value = element instanceof HTMLElement ? element : undefined; },
-        id: root.contentID, role: config.role, hidden: !root.open.value,
+        id: root.contentID, role: config.role, hidden: !root.open.value, dir: direction.value,
         'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
         'aria-labelledby': root.titleID, 'aria-describedby': root.descriptionID,
         'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
@@ -336,9 +336,13 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   });
   const Portal = defineComponent({
     name: `Sectile${pascal(config.scope)}Portal`,
-    props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: 'body' }, disabled: { type: Boolean, default: false } },
+    props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined }, disabled: { type: Boolean, default: false } },
     setup(props, { slots }) {
-      return (): VNodeChild => h(Teleport as Component, { to: props.to, disabled: props.disabled }, slots['default']?.());
+      const portalTarget = useHostPortalTarget();
+      return (): VNodeChild => h(Teleport as Component, {
+        to: props.to ?? portalTarget.value ?? 'body',
+        disabled: props.disabled,
+      }, slots['default']?.());
     },
   });
 

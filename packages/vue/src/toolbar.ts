@@ -4,6 +4,7 @@ import {
 } from 'vue';
 import { createToolbar, type ToolbarConnection, type ToolbarPolicies } from '@sectile/dom/toolbar';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostDirection } from './host-provider.js';
 
 export interface ToolbarRootProps { readonly items: readonly string[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly disabledItems?: readonly string[]; readonly disabled?: boolean; readonly orientation?: 'horizontal' | 'vertical'; readonly label?: string; readonly policies?: ToolbarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ToolbarRootSlotProps { readonly highlightedValue: string | null; readonly disabled: boolean; readonly orientation: 'horizontal' | 'vertical' }
@@ -25,6 +26,7 @@ export const ToolbarRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string | null): boolean => true, invoke: (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: ToolbarRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const direction = useHostDirection();
     const root = shallowRef<HTMLElement>(); const connection = shallowRef<ToolbarConnection<string>>();
     const current = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const controlled = props.modelValue !== undefined;
@@ -37,18 +39,19 @@ export const ToolbarRoot = defineComponent({
         root: root.value, items: props.items, disabledItems: props.disabledItems,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(controlled ? { highlightedValue: props.modelValue as string | null } : { defaultHighlightedValue: current.value }),
-        disabled: props.disabled, orientation: props.orientation, ...(props.label === undefined ? {} : { label: props.label }),
+        disabled: props.disabled, orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }),
         onHighlightedValueChange: (value) => { current.value = value; emit('update:modelValue', value); },
         onInvoke: (value) => emit('invoke', value), onUpdate: refresh,
       }); refreshItems(); refresh();
     };
     provide<Context>(key, { state, disabledItems: computed(() => new Set(props.disabledItems)), register: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.orientation, () => props.label, () => props.policies], connect);
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.orientation, () => props.label, () => props.policies, direction], connect);
     watch(() => props.modelValue, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
       role: 'toolbar', 'aria-label': props.label, 'aria-orientation': props.orientation, 'aria-disabled': props.disabled ? 'true' : undefined,
+      dir: direction.value,
       'data-scope': 'toolbar', 'data-part': 'root', 'data-orientation': props.orientation,
     }), { default: () => slots['default']?.(state.value) });
   },

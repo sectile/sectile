@@ -33,7 +33,7 @@ test('Vue dialog links persistent compound parts with native dialog semantics', 
   assert.match(html, /aria-haspopup="dialog"/);
   assert.match(html, /role="dialog"/);
   assert.match(html, /aria-modal="true"/);
-  assert.match(html, /aria-labelledby="sectile-dialog-\d+-title"/);
+  assert.match(html, /aria-labelledby="sectile-dialog-[^"]+-title"/);
   assert.match(html, /data-part="close"/);
 });
 
@@ -55,7 +55,7 @@ test('Vue alert dialog and tooltip preserve their distinct native roles', async 
   }));
   assert.match(alert, /role="alertdialog"/);
   assert.match(tooltip, /role="tooltip"/);
-  assert.match(tooltip, /aria-describedby="sectile-tooltip-\d+-content"/);
+  assert.match(tooltip, /aria-describedby="sectile-tooltip-[^"]+-content"/);
   assert.match(tooltip, /data-part="arrow"/);
 });
 

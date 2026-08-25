@@ -9,6 +9,7 @@ import {
   type CarouselPolicies,
 } from '@sectile/dom/carousel';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostDirection, useHostId } from './host-provider.js';
 
 export interface CarouselRootProps {
   readonly slides: readonly string[];
@@ -57,6 +58,8 @@ export const CarouselRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:paused': (_value: boolean): boolean => true, announce: (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: CarouselRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const generatedID = `sectile-carousel-${useHostId()}`;
+    const direction = useHostDirection();
     const elements = new Map<string, HTMLElement>(); const connection = shallowRef<CarouselConnection<string>>();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue ?? props.slides[0] ?? null);
     const localPaused = shallowRef(props.paused ?? props.defaultPaused);
@@ -81,7 +84,7 @@ export const CarouselRoot = defineComponent({
         root, slides: props.slides,
         ...(controlled.value ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
         ...(controlled.paused ? { paused: props.paused as boolean } : { defaultPaused: localPaused.value }),
-        disabled: props.disabled, orientation: props.orientation, autoplay: props.autoplay,
+        disabled: props.disabled, orientation: props.orientation, direction: direction.value, autoplay: props.autoplay,
         ...(props.policies === undefined ? {} : { policies: props.policies }), ...(props.label === undefined ? {} : { label: props.label }),
         ...(elements.get('previous') === undefined ? {} : { previousButton: elements.get('previous') as HTMLElement }),
         ...(elements.get('next') === undefined ? {} : { nextButton: elements.get('next') as HTMLElement }),
@@ -100,7 +103,7 @@ export const CarouselRoot = defineComponent({
       registerIndicator: (element, id) => connection.value?.setIndicatorAttributes(element, id),
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.slides, () => props.disabled, () => props.orientation, () => props.autoplay, () => props.policies, () => props.label], connect);
+    watch([() => props.slides, () => props.disabled, () => props.orientation, () => props.autoplay, () => props.policies, () => props.label, direction], connect);
     watch([() => props.modelValue, () => props.paused], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue } : {}), ...(controlled.paused ? { paused: props.paused } : {}) });
@@ -108,6 +111,8 @@ export const CarouselRoot = defineComponent({
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) elements.set('root', node); },
+      id: typeof attrs['id'] === 'string' ? attrs['id'] : generatedID,
+      dir: direction.value,
       'data-scope': 'carousel', 'data-part': 'root', 'data-orientation': props.orientation,
     }), { default: () => slots['default']?.(state.value) });
   },

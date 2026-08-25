@@ -11,7 +11,6 @@ import {
   provide,
   ref,
   shallowRef,
-  useId,
   watch,
   type AllowedComponentProps,
   type ComponentCustomProps,
@@ -43,6 +42,7 @@ import {
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostId } from './host-provider.js';
 
 export type FormState = FormConnection<string>['state'];
 export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
@@ -481,7 +481,7 @@ export const FormField = defineComponent({
   slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const formContext = useFormContext('FormField');
-    const generatedId = useId();
+    const generatedId = useHostId();
     const id = computed(() => props.id ?? `form-field-${generatedId}`);
     const nameKey = computed(() => (
       props.name === undefined ? undefined : encodeFormFieldPath(props.name)

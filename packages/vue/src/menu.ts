@@ -7,6 +7,7 @@ import { createMenuButton } from '@sectile/dom/menu-button';
 import { createMenubar } from '@sectile/dom/menubar';
 import { createNavigationMenu } from '@sectile/dom/navigation-menu';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostDirection, useHostId } from './host-provider.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
 export interface MenuRootProps {
@@ -34,6 +35,7 @@ interface Context {
   readonly kind: MenuKind;
   readonly label: ComputedRef<string | undefined>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  readonly direction: ComputedRef<'ltr' | 'rtl'>;
   registerRoot(element?: HTMLElement): void;
   registerTrigger(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string): void;
@@ -59,6 +61,8 @@ function createRoot(kind: MenuKind, providerOnly = false) {
     emits: { 'update:open': (_value: boolean): boolean => true, invoke: (_value: string): boolean => true },
     slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
     setup(props, { attrs, emit, slots }) {
+      const direction = useHostDirection();
+      const baseID = useHostId();
       const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLElement>(); const connection = shallowRef<MenuConnection<string>>();
       const openProp = props.open;
       const open = shallowRef(kind === 'menu-button' ? openProp ?? props.defaultOpen : true);
@@ -82,6 +86,7 @@ function createRoot(kind: MenuKind, providerOnly = false) {
         connection.value?.disconnect(); if (root.value === undefined || (kind === 'menu-button' && trigger.value === undefined)) return;
         const options = {
           root: root.value, items: props.items as readonly MenuItemDefinition<string>[], disabledItems: props.disabledItems, disabled: props.disabled,
+          direction: direction.value, baseID,
           ...(props.policies === undefined ? {} : { policies: props.policies }),
           defaultHighlightedValue: props.defaultHighlightedValue,
           ...(props.label === undefined ? {} : { label: props.label }),
@@ -95,19 +100,20 @@ function createRoot(kind: MenuKind, providerOnly = false) {
         refreshParts(); refresh();
       };
       provide<Context>(key, {
-        state, kind, label: computed(() => props.label), disabledItems: computed(() => new Set(props.disabledItems)),
+        state, kind, label: computed(() => props.label), disabledItems: computed(() => new Set(props.disabledItems)), direction,
         registerRoot: (element) => { root.value = element; }, registerTrigger: (element) => { trigger.value = element; },
         registerItem: (element, id) => connection.value?.setItemAttributes(element, id),
         registerSubmenu: (element, parent) => connection.value?.setSubmenuAttributes(element, parent),
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-      watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.label, () => props.textValue, () => props.policies], connect);
+      watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.label, () => props.textValue, () => props.policies, direction], connect);
       watch(() => props.open, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
       return (): VNodeChild => {
         if (providerOnly) return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
         return h(Primitive, mergeProps(attrs, {
           as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
           role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': props.label,
+          dir: direction.value,
           'data-scope': kind === 'navigation-menu' ? 'navigation-menu' : kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
         }), { default: () => slots['default']?.(state.value) });
       };
@@ -144,7 +150,7 @@ export const MenuButtonContent = defineComponent({
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuButtonContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerRoot(node instanceof HTMLElement ? node : undefined),
-    role: 'menu', hidden: !root.state.value.open, 'aria-label': root.label.value,
+    role: 'menu', hidden: !root.state.value.open, 'aria-label': root.label.value, dir: root.direction.value,
     'data-scope': 'menu-button', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
@@ -167,7 +173,7 @@ export const MenuSubContent = defineComponent({
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MenuSubContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerSubmenu(node, props.for); },
-    role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.state.value.openPath.includes(props.for), 'data-sectile-submenu-for': props.for,
+    role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.state.value.openPath.includes(props.for), dir: root.direction.value, 'data-sectile-submenu-for': props.for,
     'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': root.state.value.openPath.includes(props.for) ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });

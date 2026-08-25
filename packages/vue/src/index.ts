@@ -1,4 +1,14 @@
 export {
+  HostProvider,
+  useHostDirection,
+  useHostId,
+  useHostPortalTarget,
+  type HostDirection,
+  type HostIdGenerator,
+  type HostPortalTarget,
+  type HostProviderProps,
+} from './host-provider.js';
+export {
   AccordionContent,
   AccordionHeader,
   AccordionItem,

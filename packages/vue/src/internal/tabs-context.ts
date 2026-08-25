@@ -1,5 +1,6 @@
 import { inject, type ComputedRef } from 'vue';
 import type { PartContract } from './part-contract.js';
+import type { HostDirection } from '../host-provider.js';
 
 export interface TabsIDs {
   readonly trigger: string;
@@ -13,6 +14,7 @@ export interface TabsRootContext {
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
+  readonly direction: ComputedRef<HostDirection>;
   readonly partContract: PartContract;
   select(value: string, target: HTMLElement): void;
   keydown(event: KeyboardEvent): void;

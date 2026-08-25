@@ -11,6 +11,7 @@ import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useHostDirection } from './host-provider.js';
 
 export interface ToggleGroupRootProps {
   readonly items: readonly string[];
@@ -62,6 +63,7 @@ export const ToggleGroupRoot = defineComponent({
   emits: { 'update:modelValue': (_value: readonly string[]): boolean => true, highlight: (_value: string | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: ToggleGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
     const participation = useCompositeFormControl({
@@ -78,7 +80,7 @@ export const ToggleGroupRoot = defineComponent({
         items: props.items,
         selectionMode: props.multiple ? 'multiple' : 'single',
         disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
-        orientation: props.orientation, activationMode: 'toggle', clearOnEscape: false,
+        orientation: props.orientation, direction: direction.value, activationMode: 'toggle', clearOnEscape: false,
         policies: { deselectable: props.deselectable, boundary: 'wrap' },
         ...(controlled ? { value } : { defaultValue: value }),
         defaultHighlightedValue: value[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
@@ -100,7 +102,7 @@ export const ToggleGroupRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => props.multiple, () => props.deselectable], rebuild);
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => props.multiple, () => props.deselectable, direction], rebuild);
     const value = computed(() => snapshot.value.state.selection.selected);
     const highlighted = computed(() => snapshot.value.state.cursor.current);
     const disabled = computed(() => props.disabled);
@@ -118,7 +120,7 @@ export const ToggleGroupRoot = defineComponent({
     });
     const slotProps = computed<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
     return (): VNodeChild => {
-      const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, ...(props.label === undefined ? {} : { label: props.label }), disabled: props.disabled, readOnly: props.readonly }) as Record<string, unknown>, {
+      const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }), disabled: props.disabled, readOnly: props.readonly }) as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
       onKeydown: (event: KeyboardEvent) => { if (apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) event.preventDefault(); },

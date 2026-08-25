@@ -6,7 +6,6 @@ import {
   mergeProps,
   provide,
   shallowRef,
-  useId,
   watch,
   type ComputedRef,
   type PropType,
@@ -20,6 +19,7 @@ import {
   type DisclosureController,
 } from '@sectile/dom/disclosure';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostId } from './host-provider.js';
 
 export interface DisclosureRootProps {
   readonly modelValue?: boolean;
@@ -84,7 +84,7 @@ export const DisclosureRoot = defineComponent({
   }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = props.modelValue !== undefined;
-    const generatedId = useId();
+    const generatedId = useHostId();
     const contentId = props.contentId ?? `sectile-disclosure-${generatedId}`;
     const controller = shallowRef(createController(
       controlled,

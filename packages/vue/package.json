@@ -301,6 +301,11 @@
       "import": "./dist/primitive.js",
       "default": "./dist/primitive.js"
     },
+    "./host-provider": {
+      "types": "./dist/host-provider.d.ts",
+      "import": "./dist/host-provider.js",
+      "default": "./dist/host-provider.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

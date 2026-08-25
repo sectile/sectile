@@ -6,7 +6,6 @@ import {
   mergeProps,
   provide,
   shallowRef,
-  useId,
   watch,
   type ComputedRef,
   type PropType,
@@ -22,6 +21,7 @@ import {
   type AccordionController,
 } from '@sectile/dom/accordion';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostId } from './host-provider.js';
 
 export type AccordionType = 'single' | 'multiple';
 export type AccordionValue = string | readonly string[];
@@ -217,7 +217,7 @@ export const AccordionItem = defineComponent({
   }>,
   setup(props, { attrs, slots }) {
     const root = useAccordionRootContext('AccordionItem');
-    const generatedID = useId();
+    const generatedID = useHostId();
     const triggerID = `sectile-accordion-trigger-${generatedID}`;
     const panelID = `sectile-accordion-panel-${generatedID}`;
     const slotProps = computed<AccordionItemSlotProps>(() => Object.freeze({

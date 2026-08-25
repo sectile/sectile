@@ -10,6 +10,7 @@ import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useHostDirection } from './host-provider.js';
 
 export interface TagsInputRootProps {
   readonly modelValue?: readonly string[];
@@ -64,6 +65,7 @@ export const TagsInputRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TagsInputRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null); const input = shallowRef<HTMLInputElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
     const participation = useCompositeFormControl({
@@ -99,7 +101,7 @@ export const TagsInputRoot = defineComponent({
       connection.value?.disconnect();
       if (root.value === null || input.value === null) return;
       connection.value = createTagsInput({
-        root: root.value, input: input.value,
+        root: root.value, input: input.value, direction: direction.value,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value: props.modelValue as readonly string[] } : { defaultValue: localTags.value }),
         ...(inputControlled ? { inputValue: props.inputValue as string } : { defaultInputValue: localInput.value }),
@@ -117,7 +119,7 @@ export const TagsInputRoot = defineComponent({
       clear: () => { for (let index = state.value.value.length - 1; index >= 0; index -= 1) connection.value?.handleEvent({ type: 'remove', index }); },
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], connect);
     watch([() => props.modelValue, () => props.inputValue], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
@@ -130,7 +132,7 @@ export const TagsInputRoot = defineComponent({
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
-        role: 'group', 'aria-label': props.label, 'data-scope': 'tags-input', 'data-part': 'root',
+        role: 'group', 'aria-label': props.label, dir: direction.value, 'data-scope': 'tags-input', 'data-part': 'root',
         'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return visual;

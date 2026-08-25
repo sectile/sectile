@@ -17,6 +17,7 @@ import {
   type TabsIDs,
   type TabsRootContext,
 } from './internal/tabs-context.js';
+import { useHostDirection, useHostId } from './host-provider.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -38,8 +39,6 @@ export interface TabsTriggerSlotProps { readonly value: string; readonly selecte
 export interface TabsContentProps { readonly value: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsContentSlotProps { readonly value: string; readonly selected: boolean }
 export interface TabsIndicatorProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-
-let tabsID = 0;
 
 export const TabsRoot = defineComponent({
   name: 'SectileTabsRoot',
@@ -64,7 +63,8 @@ export const TabsRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: TabsRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const controlled = props.modelValue !== undefined;
-    const instanceID = ++tabsID;
+    const instanceID = useHostId();
+    const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);
     const idMap = new Map<string, TabsIDs>();
     const ids = (value: string): TabsIDs => {
@@ -84,6 +84,7 @@ export const TabsRoot = defineComponent({
         disabled: props.disabled,
         readOnly: props.readonly,
         orientation: props.orientation,
+        direction: direction.value,
         policies: { selectionFollowsFocus: props.activationMode === 'automatic' },
         ...(controlled ? { value: selected } : { defaultValue: selected }),
         defaultHighlightedValue: value || props.items.find((id) => !props.disabledItems.includes(id)) || null,
@@ -107,7 +108,7 @@ export const TabsRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => props.activationMode], rebuild);
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => props.activationMode, direction], rebuild);
     const value = computed(() => snapshot.value.state.selection.selected[0] ?? '');
     const highlighted = computed(() => snapshot.value.state.cursor.current);
     const disabled = computed(() => props.disabled);
@@ -146,7 +147,7 @@ export const TabsRoot = defineComponent({
     };
     const part = usePartContract('tabs', 'root');
     provide<TabsRootContext>(tabsRootContextKey, {
-      value, highlighted, disabled, readonly, orientation, disabledItems, partContract: part, ids,
+      value, highlighted, disabled, readonly, orientation, direction, disabledItems, partContract: part, ids,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="tablist"]') as HTMLElement | undefined),
       keydown: (event) => {
         if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
@@ -185,6 +186,7 @@ export const TabsList = defineComponent({
     const part = { scope: root.partContract.scope, part: root.partContract.parts['list'] ?? 'list' };
     const attributes = computed(() => getTabsListAttributes({
       orientation: root.orientation.value,
+      direction: root.direction.value,
       ...(props.label === undefined ? {} : { label: props.label }),
       disabled: root.disabled.value,
       readOnly: root.readonly.value,

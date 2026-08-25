@@ -24,6 +24,7 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
+import { useHostDirection, type HostDirection } from './host-provider.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];
@@ -99,6 +100,7 @@ interface ListboxControllerProps {
   readonly disabled: boolean;
   readonly readonly: boolean;
   readonly orientation: 'horizontal' | 'vertical';
+  readonly direction: HostDirection;
   readonly textValue: ((id: string) => string) | undefined;
 }
 
@@ -135,6 +137,7 @@ export const ListboxRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: ListboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const direction = useHostDirection();
     const rootElement = ref<HTMLElement | null>(null);
     const submissionElement = ref<HTMLSelectElement | null>(null);
     const participation = useCompositeFormControl({
@@ -145,7 +148,7 @@ export const ListboxRoot = defineComponent({
     const controller = shallowRef(createController(
       controlled,
       toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode),
-      props,
+      { ...props, direction: direction.value },
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
@@ -153,7 +156,7 @@ export const ListboxRoot = defineComponent({
       const value = controlled
         ? toIDs(props.modelValue, props.selectionMode)
         : snapshot.value.state.selection.selected;
-      controller.value = createController(controlled, value, props, emit);
+      controller.value = createController(controlled, value, { ...props, direction: direction.value }, emit);
       snapshot.value = controller.value.getSnapshot();
     };
     watch(() => props.modelValue, (value) => {
@@ -166,7 +169,7 @@ export const ListboxRoot = defineComponent({
     });
     watch(
       [() => props.items, () => props.selectionMode, () => props.disabledItems,
-        () => props.disabled, () => props.readonly, () => props.orientation, () => props.textValue],
+        () => props.disabled, () => props.readonly, () => props.orientation, () => props.textValue, direction],
       rebuild,
     );
 
@@ -214,6 +217,7 @@ export const ListboxRoot = defineComponent({
     const rootAttributes = computed(() => getListboxRootAttributes({
       selectionMode: props.selectionMode,
       orientation: props.orientation,
+      direction: direction.value,
       disabled: props.disabled,
       readOnly: props.readonly,
     }));
@@ -350,6 +354,7 @@ function createController(
     disabled: props.disabled,
     readOnly: props.readonly,
     orientation: props.orientation,
+    direction: props.direction,
     typeahead: { textValue: props.textValue ?? ((id) => id) },
     ...(controlled ? { value } : { defaultValue: value }),
     defaultHighlightedValue: value[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
