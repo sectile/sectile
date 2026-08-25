@@ -25,6 +25,9 @@ test('DOM number field commits calculator expressions and retains invalid drafts
   input.emit('keydown', keyboard('Enter'));
   assert.equal(field.getText(), '1/0');
   assert.equal(input.attributes.get('aria-invalid'), 'true');
+  input.emit('blur', {});
+  assert.equal(field.getText(), '40');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
 test('DOM number field ignores Enter while IME composition is active', () => {

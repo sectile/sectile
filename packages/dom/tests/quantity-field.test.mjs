@@ -38,6 +38,11 @@ test('DOM quantity field owns compatible unit options, text editing, and canonic
   unitSelect.value = 'meter';
   unitSelect.emit('change', {});
   assert.equal(field.getText(), '2.505');
+  input.setSelectionRange(0, input.value.length);
+  input.emit('beforeinput', beforeInput('2+2'));
+  input.emit('blur', {});
+  assert.equal(field.getText(), '2.505');
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
 test('DOM read-only quantity field rejects text mutation but allows display conversion', () => {

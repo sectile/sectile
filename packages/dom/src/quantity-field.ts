@@ -135,7 +135,10 @@ class DOMQuantityField implements QuantityFieldConnection {
     if (event.key === 'Enter') { event.preventDefault(); this.handleEvent('commit'); }
     else if (event.key === 'Escape') { event.preventDefault(); this.handleEvent('cancel'); }
   };
-  readonly #blur = (): void => { if (!this.#binding.isComposing) this.handleEvent('commit'); };
+  readonly #blur = (): void => {
+    if (this.#binding.isComposing) return;
+    if (!this.handleEvent('commit')) this.handleEvent('cancel');
+  };
   readonly #unitChange = (): void => {
     const unit = this.#options.unitSelect?.value;
     if (unit !== undefined) this.handleEvent({ type: 'set-display-unit', unit });

@@ -117,7 +117,8 @@ class DOMNumberField implements NumberFieldConnection {
     }
   };
   readonly #blur = (): void => {
-    if (!this.#binding.isComposing) this.handleEvent('commit');
+    if (this.#binding.isComposing) return;
+    if (!this.handleEvent('commit')) this.handleEvent('cancel');
   };
 
   public constructor(
