@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { CalendarDays, Clock3, SlidersHorizontal } from '@lucide/vue';
 import { computed, ref, type Component } from 'vue';
 import { DateField, type DateValue } from '@sectile/vue/date-field';
 import { DateTimeField, type DateTimeValue } from '@sectile/vue/date-time-field';
@@ -59,11 +58,6 @@ const summaryLabel = computed(() => ({
   'date-time-field': 'Scheduled for',
   'number-field': 'Committed value',
 })[props.kind]);
-const fieldIcon = computed(() => props.kind === 'date-field'
-  ? CalendarDays
-  : props.kind === 'time-field' || props.kind === 'date-time-field'
-    ? Clock3
-    : SlidersHorizontal);
 const sourceCode = computed(() => `<script setup lang="ts">
 import { ${component.value.name?.replace('Sectile', '') ?? 'Field'} } from '@sectile/vue/${props.kind}';
 <\/script>
@@ -95,7 +89,7 @@ function update(next: FieldValue): void {
   >
     <div class="native-field-demo">
       <label class="text-label" :class="{ 'temporal-field': temporal }">
-        <span class="temporal-field__label"><component :is="fieldIcon" :size="16" aria-hidden="true" />{{ title }}</span>
+        <span class="temporal-field__label">{{ title }}</span>
         <component
           :is="component"
           v-bind="ownershipProps"

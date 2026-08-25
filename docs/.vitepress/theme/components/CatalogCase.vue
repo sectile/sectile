@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Download, FileCode2, FilePlus2,
   FolderPlus, GitBranch, PackageCheck, Pause, Play, Share2, Star, Trash2, Upload, X,
 } from '@lucide/vue';
 import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '@sectile/vue/checkbox-group';
-import { SelectContent, SelectItem, SelectItemIndicator, SelectRoot, SelectTrigger, SelectValue } from '@sectile/vue/select';
 import { PaginationFirst, PaginationItem, PaginationLast, PaginationNext, PaginationPrevious, PaginationRoot } from '@sectile/vue/pagination';
 import { StepperContent, StepperList, StepperRoot, StepperStep } from '@sectile/vue/stepper';
 import { RatingClear, RatingIndicator, RatingItem, RatingRoot } from '@sectile/vue/rating';
@@ -33,10 +32,12 @@ import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuB
 import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger, NavigationMenuViewport } from '@sectile/vue/navigation-menu';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPause, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '@sectile/vue/carousel';
 import { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxRoot } from '@sectile/vue/combobox';
-import { catalogCodeFor } from '../catalog-code.js';
+import { componentExampleSources } from '../component-example-sources.js';
 import { multiThumbSliderExampleState } from '../catalog-example-state.js';
+import type { PinInputExampleOptions } from '../pin-input-example-options.js';
 import CalendarExample from './CalendarExample.vue';
 import DemoCard from './DemoCard.vue';
+import DemoSelect from './DemoSelect.vue';
 import MenubarExample from './MenubarExample.vue';
 import PickerCalendarDemo from './PickerCalendarDemo.vue';
 
@@ -45,6 +46,7 @@ const props = defineProps<{
   readonly scenario: string;
   readonly title: string;
   readonly description: string;
+  readonly pinInputOptions?: PinInputExampleOptions | undefined;
 }>();
 const releaseChannels = Object.freeze([
   { id: 'stable', label: 'Stable', detail: 'Production-ready updates' },
@@ -57,8 +59,6 @@ const environments = Object.freeze([
   { id: 'staging', label: 'Staging', detail: 'staging.customer.app' },
   { id: 'development', label: 'Development', detail: 'Local workspace' },
 ]);
-const environmentIDs = environments.map(({ id }) => id);
-const environmentLabel = (id: string): string => environments.find((item) => item.id === id)?.label ?? id;
 const checkoutSteps = Object.freeze([
   { id: 'account', label: 'Account', detail: 'Contact and sign-in details' },
   { id: 'delivery', label: 'Delivery', detail: 'Address and shipping method' },
@@ -141,7 +141,11 @@ const parts: Record<string, readonly string[]> = {
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
 };
-const code = computed(() => catalogCodeFor(props.component, props.scenario));
+const code = computed(() => {
+  const source = componentExampleSources(props.component, props.scenario).vue;
+  if (source === undefined) throw new Error(`Missing exact Vue example: ${props.component}/${props.scenario}`);
+  return source;
+});
 const state = computed(() => ({ component: props.component, scenario: props.scenario, parts: parts[props.component] ?? [] }));
 const isScenario = (...values: readonly string[]) => values.includes(props.scenario);
 const unavailableBookingDates = new Set(['2026-08-27', '2026-08-29']);
@@ -158,6 +162,27 @@ const gridRows = computed(() => isScenario('editable', 'controlled', 'disabled-w
   ? [['Production', 'Ready', 'v0.2'], ['Preview', 'Pending', 'next']]
   : [['Core', 'Ready'], ['Vue', 'Active']]);
 const checkoutValue = ref('delivery');
+const pinValue = ref('');
+const pinOptions = computed(() => {
+  if (props.pinInputOptions === undefined) throw new Error('Pin Input examples require editable options.');
+  return props.pinInputOptions;
+});
+const pinLength = computed(() => pinOptions.value.length);
+const pinRootProps = computed(() => ({
+  length: pinLength.value,
+  mask: pinOptions.value.mask,
+  otp: pinOptions.value.otp,
+  readonly: pinOptions.value.readonly,
+  disabled: pinOptions.value.disabled,
+  ...(isScenario('controlled')
+    ? { modelValue: pinValue.value }
+    : { defaultValue: pinOptions.value.value }),
+}));
+const pinDemoKey = computed(() => `${props.scenario}:${pinLength.value}:${pinOptions.value.value}`);
+if (props.component === 'pin-input') {
+  if (props.pinInputOptions === undefined) throw new Error('Pin Input examples require editable options.');
+  watch(() => props.pinInputOptions?.value, (value) => { pinValue.value = value ?? ''; }, { immediate: true });
+}
 const actionStatus = ref('');
 const pickerDateTime = computed(() => isScenario('morning') ? morningDateTime : dateTime);
 const dateTimePickerProps = computed(() => isScenario('controlled')
@@ -212,10 +237,13 @@ const recordAction = (value: string): void => {
 
       <div v-else-if="component === 'select'" class="catalog-field-shell">
         <span class="catalog-field-label">Deployment environment</span>
-        <SelectRoot :items="environmentIDs" :text-value="environmentLabel" :disabled-items="isScenario('disabled-option') ? ['development'] : []" default-value="production" :default-open="isScenario('disabled-option')" label="Deployment environment" class="catalog-popup-root">
-          <SelectTrigger class="catalog-trigger catalog-select-trigger"><SelectValue /><ChevronDown :size="17" aria-hidden="true" /></SelectTrigger>
-          <SelectContent class="catalog-popup catalog-select-popup"><SelectItem v-for="item in environments" :key="item.id" :value="item.id" class="catalog-option catalog-select-option"><span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span><SelectItemIndicator><Check :size="16" aria-hidden="true" /></SelectItemIndicator></SelectItem></SelectContent>
-        </SelectRoot>
+        <DemoSelect
+          :options="environments"
+          :disabled-items="isScenario('disabled-option') ? ['development'] : []"
+          default-value="production"
+          :default-open="isScenario('disabled-option')"
+          label="Deployment environment"
+        />
         <small class="catalog-field-help">Deployments inherit variables from the selected environment.</small>
       </div>
 
@@ -247,8 +275,20 @@ const recordAction = (value: string): void => {
         <RatingClear class="catalog-rating-clear">Clear rating</RatingClear>
       </RatingRoot>
 
-      <PinInputRoot v-else-if="component === 'pin-input'" :length="isScenario('prefilled') ? 8 : 6" :default-value="isScenario('prefilled') ? '8472' : '12'" class="catalog-inline">
-        <PinInputInput v-for="index in (isScenario('prefilled') ? 8 : 6)" :key="index" :index="index - 1" class="catalog-pin" />
+      <PinInputRoot
+        v-else-if="component === 'pin-input'"
+        :key="pinDemoKey"
+        v-bind="pinRootProps"
+        @update:model-value="pinValue = $event"
+        class="catalog-inline"
+      >
+        <PinInputInput
+          v-for="index in pinLength"
+          :key="index"
+          :index="index - 1"
+          :placeholder="pinOptions.placeholder || undefined"
+          class="catalog-pin"
+        />
       </PinInputRoot>
 
       <div v-else-if="component === 'tags-input'" class="catalog-tags-demo">
@@ -385,7 +425,17 @@ const recordAction = (value: string): void => {
         <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-time-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimeRangePickerContent>
       </DateTimeRangePickerRoot>
 
-      <QuantityFieldRoot v-else-if="component === 'quantity-field'" :policies="quantityPolicies" :default-value="{ value: isScenario('calculator', 'controlled') ? '2.5' : '1.25', unit: 'metre' }" :default-display-unit="isScenario('length') ? 'centimetre' : 'metre'" class="catalog-inline"><QuantityFieldInput class="catalog-input" /><QuantityFieldUnitSelect class="catalog-select" /><QuantityFieldValue /></QuantityFieldRoot>
+      <QuantityFieldRoot
+        v-else-if="component === 'quantity-field'"
+        :policies="quantityPolicies"
+        :default-value="{ value: isScenario('calculator', 'controlled') ? '2.5' : '1.25', unit: 'metre' }"
+        :default-display-unit="isScenario('length') ? 'centimetre' : 'metre'"
+        class="catalog-inline"
+      >
+        <QuantityFieldInput class="catalog-input" />
+        <QuantityFieldUnitSelect class="catalog-select" />
+        <QuantityFieldValue />
+      </QuantityFieldRoot>
 
       <DialogRoot v-else-if="component === 'dialog'" :default-open="true" :modal="!isScenario('non-modal')">
         <DialogTrigger>Open details</DialogTrigger>
@@ -510,7 +560,43 @@ const recordAction = (value: string): void => {
 
       <CalendarExample v-else-if="component === 'calendar'" :scenario="scenario" />
 
-      <div v-else-if="component === 'combobox'" class="catalog-field-shell"><span class="catalog-field-label">Add an environment</span><ComboboxRoot :items="environments" :default-input-value="isScenario('contains') ? 'age' : 'pro'" :default-open="!isScenario('ime')" class="catalog-stack"><ComboboxInput class="catalog-input catalog-search-input" aria-label="Search environments" placeholder="Search environments…" /><ComboboxContent class="catalog-popup catalog-combobox-popup"><ComboboxItem v-for="item in environments" :key="item.id" :value="item.id" class="catalog-option"><span class="catalog-option-copy"><strong>{{ item.label }}</strong><small>{{ item.detail }}</small></span></ComboboxItem><ComboboxEmpty class="catalog-empty">No environments match this search.</ComboboxEmpty></ComboboxContent></ComboboxRoot></div>
+      <div v-else-if="component === 'combobox'" class="catalog-field-shell">
+        <span class="catalog-field-label">Add an environment</span>
+        <ComboboxRoot
+          :items="environments"
+          :default-input-value="isScenario('contains') ? 'age' : 'pro'"
+          :default-open="!isScenario('ime')"
+          class="demo-collection-root"
+        >
+          <ComboboxInput
+            class="demo-collection-field"
+            aria-label="Search environments"
+            placeholder="Search environments…"
+          />
+          <ComboboxContent class="demo-collection-surface">
+            <ComboboxItem
+              v-for="item in environments"
+              :key="item.id"
+              v-slot="{ selected }"
+              :value="item.id"
+              class="demo-collection-option demo-collection-option--detailed"
+            >
+              <span class="demo-collection-copy">
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.detail }}</small>
+              </span>
+              <Check
+                v-if="selected"
+                class="demo-collection-indicator"
+                :size="15"
+                :stroke-width="2.4"
+                aria-hidden="true"
+              />
+            </ComboboxItem>
+            <ComboboxEmpty class="demo-collection-empty">No environments match this search.</ComboboxEmpty>
+          </ComboboxContent>
+        </ComboboxRoot>
+      </div>
 
     </div>
   </DemoCard>

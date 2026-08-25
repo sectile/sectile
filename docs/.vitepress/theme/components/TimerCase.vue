@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CheckCircle2, Pause, Play, RotateCcw } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { NumberField } from '@sectile/vue/number-field';
 import {
   TimerActionTrigger,
   TimerArea,
@@ -30,8 +31,8 @@ type TimerMode = 'stopwatch' | 'countdown' | 'target';
 const mode = computed<TimerMode>(() => props.countdown ? 'countdown' : props.targetMs === undefined ? 'stopwatch' : 'target');
 const initialDurationMs = computed(() => mode.value === 'countdown' ? props.startMs : props.targetMs ?? 0);
 const activeDurationMs = ref(initialDurationMs.value);
-const draftMinutes = ref(Math.floor(initialDurationMs.value / 60_000));
-const draftSeconds = ref(Math.floor(initialDurationMs.value / 1_000) % 60);
+const draftMinutes = ref(String(Math.floor(initialDurationMs.value / 60_000)));
+const draftSeconds = ref(String(Math.floor(initialDurationMs.value / 1_000) % 60));
 const autoStartOnMount = ref(props.autoStart);
 const timerKey = ref(0);
 const revision = ref(0);
@@ -56,11 +57,13 @@ function formatDuration(durationMs: number): string {
 }
 
 function normalizeDuration(): number {
-  const minutes = Number.isFinite(draftMinutes.value) ? Math.max(0, Math.floor(draftMinutes.value)) : 0;
-  const seconds = Number.isFinite(draftSeconds.value) ? Math.max(0, Math.floor(draftSeconds.value)) : 0;
+  const parsedMinutes = Number(draftMinutes.value);
+  const parsedSeconds = Number(draftSeconds.value);
+  const minutes = Number.isFinite(parsedMinutes) ? Math.max(0, Math.floor(parsedMinutes)) : 0;
+  const seconds = Number.isFinite(parsedSeconds) ? Math.max(0, Math.floor(parsedSeconds)) : 0;
   const totalSeconds = Math.min(5_999, Math.max(1, (minutes * 60) + seconds));
-  draftMinutes.value = Math.floor(totalSeconds / 60);
-  draftSeconds.value = totalSeconds % 60;
+  draftMinutes.value = String(Math.floor(totalSeconds / 60));
+  draftSeconds.value = String(totalSeconds % 60);
   return totalSeconds * 1_000;
 }
 
@@ -151,12 +154,12 @@ function isPristine(liveValueMs: number): boolean {
           <legend>{{ mode === 'countdown' ? 'Session length' : 'Target time' }}</legend>
           <label>
             <span>Minutes</span>
-            <input v-model.number="draftMinutes" type="number" min="0" max="99" inputmode="numeric">
+            <NumberField v-model="draftMinutes" :policies="{ min: '0', max: '99' }" label="Minutes" />
           </label>
           <span aria-hidden="true">:</span>
           <label>
             <span>Seconds</span>
-            <input v-model.number="draftSeconds" type="number" min="0" max="59" inputmode="numeric">
+            <NumberField v-model="draftSeconds" :policies="{ min: '0', max: '59' }" label="Seconds" />
           </label>
         </fieldset>
         <button type="submit" class="secondary">

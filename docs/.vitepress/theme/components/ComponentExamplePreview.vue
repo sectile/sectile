@@ -2,6 +2,7 @@
 import { computed, markRaw, type Component } from 'vue';
 import { createCalculatorExpression, type NumberFieldPolicies } from '@sectile/core/number-field';
 import { numberFieldExampleConfig } from '../number-field-examples.js';
+import type { PinInputExampleOptions } from '../pin-input-example-options.js';
 import AccordionCase from './AccordionCase.vue';
 import CascadeSelectCase from './CascadeSelectCase.vue';
 import CatalogCase from './CatalogCase.vue';
@@ -36,6 +37,7 @@ const props = withDefaults(defineProps<{
   readonly title: string;
   readonly description: string;
   readonly index?: number;
+  readonly pinInputOptions?: PinInputExampleOptions | undefined;
 }>(), { index: 0 });
 
 interface ResolvedExample {
@@ -113,7 +115,11 @@ function resolveExample(): ResolvedExample {
     case 'time-range-field': return specialized(TimeRangeFieldCase, { initialValue: timeRange, stepped: props.scenario === 'stepped', controlled });
     case 'window-splitter': return specialized(WindowSplitterCase, { scenario: props.scenario });
     case 'pagination': return specialized(PaginationCase, paginationProps(controlled));
-    default: return specialized(CatalogCase, { component: props.component, scenario: props.scenario });
+    default: return specialized(CatalogCase, {
+      component: props.component,
+      scenario: props.scenario,
+      ...(props.component === 'pin-input' ? { pinInputOptions: props.pinInputOptions } : {}),
+    });
   }
 }
 

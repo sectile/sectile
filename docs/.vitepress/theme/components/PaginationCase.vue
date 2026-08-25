@@ -7,6 +7,7 @@ import {
   ChevronsRight,
   Ellipsis,
 } from '@lucide/vue';
+import { ToggleButton } from '@sectile/vue/toggle-button';
 import {
   PaginationFirst,
   PaginationItem,
@@ -16,6 +17,7 @@ import {
   PaginationRoot,
 } from '@sectile/vue/pagination';
 import DemoCard from './DemoCard.vue';
+import DemoSelect from './DemoSelect.vue';
 import type { EventEntry } from '../types.js';
 
 type PaginationVariant =
@@ -78,16 +80,19 @@ const state = computed(() => ({
 }));
 const interaction = computed(() => props.disabled ? 'disabled' : props.readonly ? 'readonly' : 'enabled');
 const pageSizes = [10, 25, 50] as const;
+const pageSizeIDs = pageSizes.map(String);
+const pageSizeOptions = pageSizeIDs.map((id) => ({ id, label: id }));
 
 const code = computed(() => {
   if (props.adjustable) {
     return `<script setup lang="ts">
 import { ref } from 'vue';
 import { PaginationRoot, PaginationPrevious, PaginationItem, PaginationNext } from '@sectile/vue/pagination';
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValue } from '@sectile/vue/select';
 
 const page = ref(${props.initialPage});
 const itemsPerPage = ref(${props.initialItemsPerPage});
-const pageSizes = [10, 25, 50];
+const pageSizes = ['10', '25', '50'];
 <\/script>
 
 <template>
@@ -98,9 +103,18 @@ const pageSizes = [10, 25, 50];
     v-slot="{ items, range }"
   >
     <span>{{ range.start }}–{{ range.end }} of {{ range.total }}</span>
-    <select v-model.number="itemsPerPage" @change="page = 1">
-      <option v-for="size in pageSizes" :key="size" :value="size">{{ size }} per page</option>
-    </select>
+    <SelectRoot
+      :items="pageSizes"
+      :model-value="String(itemsPerPage)"
+      @update:model-value="itemsPerPage = Number($event); page = 1"
+    >
+      <SelectTrigger><SelectValue /> per page</SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="size in pageSizes" :key="size" :value="size">
+          {{ size }} per page
+        </SelectItem>
+      </SelectContent>
+    </SelectRoot>
     <PaginationPrevious>Previous</PaginationPrevious>
     <template v-for="item in items.filter(item => item.type !== 'control')" :key="JSON.stringify(item)">
       <span v-if="item.type === 'ellipsis'">…</span>
@@ -160,10 +174,9 @@ function updateItemsPerPage(next: number): void {
   addEntry('update:itemsPerPage', `set-items-per-page value=${next}`);
 }
 
-function changePageSize(event: Event): void {
-  const target = event.currentTarget;
-  if (!(target instanceof HTMLSelectElement)) return;
-  const next = Number(target.value);
+function changePageSize(value: string | null): void {
+  if (value === null) return;
+  const next = Number(value);
   page.value = 1;
   itemsPerPage.value = next;
   addEntry('change-page-size', `set-items-per-page value=${next}, set-page page=1`);
@@ -172,6 +185,10 @@ function changePageSize(event: Event): void {
 function goToPage(next: number): void {
   page.value = next;
   addEntry('external-page-change', `sync-page page=${next}`);
+}
+
+function togglePage(next: number, pressed: boolean): void {
+  if (pressed) goToPage(next);
 }
 </script>
 
@@ -209,30 +226,28 @@ function goToPage(next: number): void {
         </div>
 
         <div v-if="adjustable" class="pagination-size-row">
-          <label for="pagination-page-size">Rows per page</label>
-          <select
-            id="pagination-page-size"
-            :value="itemsPerPage"
-            class="pagination-size-select"
+          <span>Rows per page</span>
+          <DemoSelect
+            :options="pageSizeOptions"
+            :model-value="String(itemsPerPage)"
             :disabled="disabled"
-            @change="changePageSize"
-          >
-            <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}</option>
-          </select>
+            label="Rows per page"
+            compact
+            @update:model-value="changePageSize"
+          />
         </div>
 
         <div v-if="controlled" class="pagination-jump" aria-label="External page controls">
           <span>Parent state</span>
-          <button
+          <ToggleButton
             v-for="target in [1, Math.ceil(currentPageCount / 2), currentPageCount]"
             :key="target"
-            type="button"
             class="secondary"
-            :aria-pressed="currentPage === target"
-            @click="goToPage(target)"
+            :model-value="currentPage === target"
+            @update:model-value="togglePage(target, $event)"
           >
             {{ target }}
-          </button>
+          </ToggleButton>
         </div>
 
         <div v-if="variant === 'compact'" class="pagination-compact">

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { CheckCircle2, FileCode2, Folder, Search, SquareTerminal } from '@lucide/vue';
 import {
   WindowSplitterHandle,
   WindowSplitterPane,
   WindowSplitterRoot,
 } from '@sectile/vue/window-splitter';
+import HighlightedCode from './HighlightedCode.vue';
 
 const props = defineProps<{
   readonly scenario: string;
@@ -15,6 +16,21 @@ const horizontalSize = ref('34');
 const verticalSize = ref('56');
 const mixedSidebarSize = ref('28');
 const mixedEditorSize = ref('68');
+const horizontalEditorSource = `<script setup lang="ts">
+const release = 'stable'
+<\/script>
+
+<template>
+  <ReleaseCard :channel="release" />
+</template>`;
+const verticalEditorSource = `import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount('#app')`;
+const nestedEditorSource = computed(() => `const layout = {
+  sidebar: '${mixedSidebarSize.value}%',
+  editor: '${mixedEditorSize.value}%'
+}`);
 </script>
 
 <template>
@@ -41,12 +57,11 @@ const mixedEditorSize = ref('68');
     <WindowSplitterHandle class="window-splitter-handle" aria-label="Resize project and editor panes" />
     <WindowSplitterPane side="after" class="window-splitter-pane window-splitter-pane--editor">
       <header class="window-splitter-pane__header"><strong>App.vue</strong><span>Saved</span></header>
-      <pre class="window-splitter-code"><code><span>&lt;script setup&gt;</span>
-const release = 'stable'
-
-<span>&lt;template&gt;</span>
-  &lt;ReleaseCard :channel="release" /&gt;
-<span>&lt;/template&gt;</span></code></pre>
+      <HighlightedCode
+        class="window-splitter-code"
+        :source="horizontalEditorSource"
+        language="vue"
+      />
     </WindowSplitterPane>
   </WindowSplitterRoot>
 
@@ -61,10 +76,11 @@ const release = 'stable'
   >
     <WindowSplitterPane side="before" class="window-splitter-pane window-splitter-pane--editor">
       <header class="window-splitter-pane__header"><strong>Editor</strong><span>main.ts</span></header>
-      <pre class="window-splitter-code window-splitter-code--compact"><code>import { createApp } from 'vue'
-import App from './App.vue'
-
-createApp(App).mount('#app')</code></pre>
+      <HighlightedCode
+        class="window-splitter-code window-splitter-code--compact"
+        :source="verticalEditorSource"
+        language="ts"
+      />
     </WindowSplitterPane>
     <WindowSplitterHandle class="window-splitter-handle" aria-label="Resize editor and terminal panes" />
     <WindowSplitterPane side="after" class="window-splitter-pane window-splitter-pane--terminal">
@@ -102,10 +118,11 @@ createApp(App).mount('#app')</code></pre>
       >
         <WindowSplitterPane side="before" class="window-splitter-pane window-splitter-pane--editor">
           <header class="window-splitter-pane__header"><strong>SplitPane.vue</strong><span>TypeScript</span></header>
-          <pre class="window-splitter-code window-splitter-code--compact"><code>const layout = {
-  sidebar: {{ mixedSidebarSize }}%,
-  editor: {{ mixedEditorSize }}%
-}</code></pre>
+          <HighlightedCode
+            class="window-splitter-code window-splitter-code--compact"
+            :source="nestedEditorSource"
+            language="ts"
+          />
         </WindowSplitterPane>
         <WindowSplitterHandle class="window-splitter-handle" aria-label="Resize editor and preview panes" />
         <WindowSplitterPane side="after" class="window-splitter-pane window-splitter-pane--preview">

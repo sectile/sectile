@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover';
+import { TextField } from '@sectile/vue/text';
 import type { ComputePositionReturn } from '@sectile/dom/popover';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
@@ -13,6 +14,7 @@ const entries = ref<EventEntry[]>([]);
 const source = computed(() => `<script setup lang="ts">
 import { ref } from 'vue'
 import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover'
+import { TextField } from '@sectile/vue/text'
 
 const open = ref(true)
 <\/script>
@@ -24,7 +26,7 @@ const open = ref(true)
       <PopoverArrow />
       <PopoverTitle>Profile details</PopoverTitle>
       <PopoverDescription>Change the public display name.</PopoverDescription>
-      <label>Display name <input value="Sectile" /></label>
+      <label>Display name <TextField default-value="Sectile" /></label>
       <PopoverClose>Save changes</PopoverClose>
     </PopoverContent>
   </PopoverRoot>
@@ -48,7 +50,7 @@ function updatePosition(position: ComputePositionReturn): void {
           <PopoverArrow class="popover-arrow" />
           <PopoverTitle class="popover-title">Profile details</PopoverTitle>
           <PopoverDescription class="popover-description">Change the public display name.</PopoverDescription>
-          <label class="popover-field"><span>Display name</span><input class="catalog-input" aria-label="Display name" value="Sectile" /></label>
+          <label class="popover-field"><span>Display name</span><TextField class="catalog-input" aria-label="Display name" default-value="Sectile" /></label>
           <div class="popover-actions"><PopoverClose>Save changes</PopoverClose></div>
         </PopoverContent>
       </PopoverRoot>

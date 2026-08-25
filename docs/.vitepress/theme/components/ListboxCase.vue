@@ -95,7 +95,7 @@ function updateHighlight(next: string | null): void {
         :disabled-items="['archive']"
         :disabled="disabled"
         :readonly="readonly"
-        class="listbox-control"
+        class="demo-collection-surface"
         name="release-channel"
         @update:model-value="updateValue"
         @highlight="updateHighlight"
@@ -103,21 +103,17 @@ function updateHighlight(next: string | null): void {
         <ListboxItem
           v-for="channel in channels"
           :key="channel.value"
-          v-slot="{ selected, highlighted: active, disabled: unavailable }"
           :value="channel.value"
           :disabled="'disabled' in channel && channel.disabled"
-          class="listbox-option"
+          class="demo-collection-option demo-collection-option--detailed"
         >
-          <span class="listbox-copy">
+          <span class="demo-collection-copy">
             <ListboxItemText as="strong">{{ channel.label }}</ListboxItemText>
             <small>{{ channel.copy }}</small>
           </span>
-          <ListboxItemIndicator class="listbox-indicator">
+          <ListboxItemIndicator class="demo-collection-indicator">
             <Check :size="16" aria-hidden="true" />
-            <span>Selected</span>
           </ListboxItemIndicator>
-          <span v-if="unavailable" class="listbox-meta">Unavailable</span>
-          <span v-else-if="active && !selected" class="listbox-meta">Focused</span>
         </ListboxItem>
       </ListboxRoot>
     </div>
