@@ -697,6 +697,7 @@ export type {
   MultiThumbSliderValueFormatter,
 } from './multi-thumb-slider.js';
 export type {
+  PrimitiveElementExpose,
   PrimitiveElementRefHandler,
 } from './primitive.js';
 export type {
