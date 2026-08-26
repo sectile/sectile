@@ -30,6 +30,8 @@ Vue 컬렉션의 domain이 바뀌면 Sectile은 host 연결을 다시 만들기 
 
 이 계약은 Accordion, Calendar, Carousel, Combobox, Grid, Listbox, Radio Group, Select, Tabs, Toggle Group, Toolbar, Tree Grid, Tree View에 적용됩니다. Pagination은 별도의 수치 계약을 사용합니다. `total`이나 `itemsPerPage`가 바뀌면 외부 관리 page를 새 page count 범위로 제한합니다.
 
+Domain 항목 수를 `n`, 선택 identity 수를 `s`, 비활성 identity 수를 `d`라고 할 때 보정의 시간·보조 공간 복잡도는 `O(n + s + d)`입니다. Sectile은 Vue render 사이에 cache를 유지하지 않고 현재 prop에서 membership data를 다시 만듭니다.
+
 ## 비활성 상태와 읽기 전용 상태
 
 비활성 상태에서는 입력과 포커스를 받지 않습니다. 읽기 전용 상태에서는 포커스를 옮기고 현재 값을 확인할 수 있지만 값을 바꿀 수 없습니다. 각 실행 환경은 이 차이를 해당 환경의 기본 관례에 맞춰 표현합니다.

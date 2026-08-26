@@ -345,6 +345,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "benchmark:collections": "pnpm --silent run build && node benchmarks/collection-reconciliation.mjs",
     "check:controlled-reconciliation": "node scripts/check-controlled-reconciliation.mjs",
     "check:hydration-contract": "node scripts/check-hydration-contract.mjs",
     "typecheck": "tsc --project tsconfig.json --pretty false",

@@ -30,6 +30,8 @@ For controlled state, reconciliation emits the corresponding `update:*` proposal
 
 This contract covers Accordion, Calendar, Carousel, Combobox, Grid, Listbox, Radio Group, Select, Tabs, Toggle Group, Toolbar, Tree Grid, and Tree View. Pagination has a separate numeric contract: a controlled page is clamped to the new page count when `total` or `itemsPerPage` changes.
 
+For a domain of `n` items, `s` selected identities, and `d` disabled identities, reconciliation takes `O(n + s + d)` time and auxiliary space. Sectile intentionally rebuilds membership data from current props instead of retaining a cache across Vue renders.
+
 ## Disabled and readonly
 
 Disabled components leave the interaction sequence and reject user mutation. Readonly components remain available for focus and reading while rejecting value changes. Host packages project those distinctions through their native conventions.

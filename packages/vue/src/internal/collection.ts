@@ -11,6 +11,10 @@ export interface ReconcileCollectionOptions {
   readonly preserveNullCurrent?: boolean;
 }
 
+/**
+ * Reconciles a collection in O(n + s + d) time and O(n + s + d) auxiliary
+ * space, where n is items, s is selected identities, and d is disabled items.
+ */
 export function reconcileCollectionState(
   items: readonly string[],
   selected: readonly string[],

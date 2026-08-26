@@ -7,4 +7,10 @@
 | grid | `O(rows × columns)` dense input | `cellAt O(1)`, `positionOf expected O(1)` | `O(axis length)` |
 | tree | `O(n)` | parent/children/depth expected `O(1)` | visible projection `O(n)` worst case |
 
+## Dynamic collection reconciliation
+
+Vue collection reconciliation is `O(n + s + d)` time and `O(n + s + d)` auxiliary space, where `n` is the new domain size, `s` is the selected identity count, and `d` is the disabled identity count. It builds membership sets, projects selection in domain order, and scans for an eligible current identity. It does not retain a cross-render index or cache.
+
+Run `pnpm --filter @sectile/vue benchmark:collections` to measure 1,000, 10,000, and 100,000 item domains. The benchmark reports observations, not a portable pass/fail threshold. Performance budgets require a controlled runner before they can become a release gate.
+
 Constructors expose ceilings for item count, dimensions, rectangle cell count, depth, ID length, decimal scale, and range count. Movement exposes `maxScan`. A ceiling is part of the semantic result: reaching it produces a typed resource rejection and never a guessed target.
