@@ -37,6 +37,8 @@ export interface TrackGridLayoutState<ID extends StableID = StableID> {
 }
 
 export interface TrackGridLayoutSnapshot<ID extends StableID = StableID> {
+  readonly schemaVersion: 1;
+  readonly kind: 'track-grid';
   readonly rows: readonly Extent[];
   readonly rowMaxItems: number;
   readonly columns: readonly Extent[];
@@ -133,6 +135,8 @@ export function snapshotTrackGridLayout<ID extends StableID>(
   if (rows === null || columns === null)
     throw new Error('Internal invariant breach: grid track range is invalid.');
   return Object.freeze({
+    schemaVersion: 1,
+    kind: 'track-grid',
     rows,
     rowMaxItems: state.rows.maxItems,
     columns,
@@ -392,6 +396,8 @@ function getInternals<ID extends StableID>(state: TrackGridLayoutState<ID>): Vir
 function validSnapshotHeader<ID extends StableID>(snapshot: TrackGridLayoutSnapshot<ID>): boolean {
   return snapshot !== null
     && typeof snapshot === 'object'
+    && snapshot.schemaVersion === 1
+    && snapshot.kind === 'track-grid'
     && Array.isArray(snapshot.rows)
     && Array.isArray(snapshot.columns)
     && Array.isArray(snapshot.regions)

@@ -11,9 +11,17 @@ import { freezeArray, normalizeMaxScan, resourceError } from '../../kernel/found
 /** Deliberately linear executable specification for differential verification. */
 export class ReferenceSequence<ID extends StableID> implements Sequence<ID> {
   public readonly ids: readonly ID[];
+  public readonly maxItems: number;
+  public readonly maxIDCodeUnits: number;
 
-  public constructor(ids: readonly ID[]) {
+  public constructor(
+    ids: readonly ID[],
+    maxItems = 100_000,
+    maxIDCodeUnits = 1_024,
+  ) {
     this.ids = freezeArray(ids);
+    this.maxItems = maxItems;
+    this.maxIDCodeUnits = maxIDCodeUnits;
     Object.freeze(this);
   }
 
@@ -49,7 +57,11 @@ export class ReferenceSequence<ID extends StableID> implements Sequence<ID> {
       const id = this.ids[index];
       if (id !== undefined && predicate(id, index)) result.push(id);
     }
-    return new ReferenceSequence(result);
+    return new ReferenceSequence(
+      result,
+      this.maxItems,
+      this.maxIDCodeUnits,
+    );
   }
 
   public move(

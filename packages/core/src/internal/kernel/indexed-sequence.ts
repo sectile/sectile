@@ -12,6 +12,8 @@ import { freezeArray, normalizeMaxScan, ok, resourceError } from './foundation.j
 export interface SequenceView<ID extends StableID> {
   readonly size: number;
   readonly ids: readonly ID[];
+  readonly maxItems: number;
+  readonly maxIDCodeUnits: number;
   at(index: number): ID | null;
   indexOf(id: ID): number | null;
   contains(id: ID): boolean;
@@ -27,10 +29,18 @@ export interface SequenceView<ID extends StableID> {
 
 export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   public readonly ids: readonly ID[];
+  public readonly maxItems: number;
+  public readonly maxIDCodeUnits: number;
   readonly #index: ReadonlyMap<ID, number>;
 
-  public constructor(ids: readonly ID[]) {
+  public constructor(
+    ids: readonly ID[],
+    maxItems = 100_000,
+    maxIDCodeUnits = 1_024,
+  ) {
     this.ids = freezeArray(ids);
+    this.maxItems = maxItems;
+    this.maxIDCodeUnits = maxIDCodeUnits;
     this.#index = new Map(this.ids.map((id, index) => [id, index]));
     Object.freeze(this);
   }
@@ -61,7 +71,11 @@ export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   }
 
   public project(predicate: (id: ID, index: number) => boolean): IndexedSequence<ID> {
-    return new IndexedSequence(this.ids.filter(predicate));
+    return new IndexedSequence(
+      this.ids.filter(predicate),
+      this.maxItems,
+      this.maxIDCodeUnits,
+    );
   }
 
   public move(

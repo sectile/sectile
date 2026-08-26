@@ -27,6 +27,8 @@ export interface SpatialLayoutState<ID extends StableID = StableID> {
 }
 
 export interface SpatialLayoutSnapshot<ID extends StableID = StableID> {
+  readonly schemaVersion: 1;
+  readonly kind: 'spatial';
   readonly items: readonly SpatialItem<ID>[];
   readonly maxItems: number;
   readonly generation: number;
@@ -87,6 +89,8 @@ export function snapshotSpatialLayout<ID extends StableID>(
   state: SpatialLayoutState<ID>,
 ): SpatialLayoutSnapshot<ID> {
   return Object.freeze({
+    schemaVersion: 1,
+    kind: 'spatial',
     items: Object.freeze(state.items.map((item) => Object.freeze({
       id: item.id,
       rect: Object.freeze({ ...item.rect }),
@@ -317,6 +321,8 @@ function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): Virtu
 function validSnapshotHeader<ID extends StableID>(snapshot: SpatialLayoutSnapshot<ID>): boolean {
   return snapshot !== null
     && typeof snapshot === 'object'
+    && snapshot.schemaVersion === 1
+    && snapshot.kind === 'spatial'
     && Array.isArray(snapshot.items)
     && Number.isSafeInteger(snapshot.maxItems)
     && snapshot.maxItems >= snapshot.items.length

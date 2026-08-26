@@ -30,7 +30,11 @@ export interface LinearLayoutState<ID extends StableID = StableID> {
   readonly generation: number;
 }
 export interface LinearLayoutSnapshot<ID extends StableID = StableID> {
+  readonly schemaVersion: 1;
+  readonly kind: 'linear';
   readonly ids: readonly ID[];
+  readonly sequenceMaxItems: number;
+  readonly sequenceMaxIDCodeUnits: number;
   readonly extents: readonly Extent[];
   readonly extentMaxItems: number;
   readonly axis: LinearAxis;
@@ -87,7 +91,11 @@ export function snapshotLinearLayout<ID extends StableID>(
   if (extents === null)
     throw new Error('Internal invariant breach: linear extent range is invalid.');
   return Object.freeze({
+    schemaVersion: 1,
+    kind: 'linear',
     ids: Object.freeze([...state.domain.ids]),
+    sequenceMaxItems: state.domain.maxItems,
+    sequenceMaxIDCodeUnits: state.domain.maxIDCodeUnits,
     extents,
     extentMaxItems: state.extents.maxItems,
     axis: state.axis,
@@ -110,7 +118,8 @@ export function tryRestoreLinearLayout<ID extends StableID>(
 ): VirtualResult<LinearLayoutState<ID>> {
   if (!validSnapshotHeader(snapshot)) return snapshotFailure();
   const domain = tryCreateSequence(snapshot.ids, {
-    maxItems: Math.max(1, snapshot.ids.length),
+    maxItems: snapshot.sequenceMaxItems,
+    maxIDCodeUnits: snapshot.sequenceMaxIDCodeUnits,
   });
   if (!domain.ok) return domain;
   const extents = tryCreateExtentIndex(snapshot.extents, {
@@ -200,7 +209,7 @@ export function tryApplyLinearPatch<ID extends StableID>(state: LinearLayoutStat
   const inserted = input.insertedExtents ?? [];
   if (input.patch.type === 'splice' && inserted.length !== input.patch.inserted.length) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Every inserted identity requires one extent.');
   if (input.patch.type === 'move' && inserted.length !== 0) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Move patches cannot insert extents.');
-  const domain = tryApplySequencePatch(state.domain, input.patch, { maxItems: Math.max(1, state.domain.size - (input.patch.type === 'splice' ? input.patch.deleteCount : 0) + inserted.length) });
+  const domain = tryApplySequencePatch(state.domain, input.patch);
   if (!domain.ok) return domain;
   const extents = input.patch.type === 'splice'
     ? state.extents.splice(input.patch.index, input.patch.deleteCount, inserted)
@@ -285,8 +294,14 @@ function freezeState<ID extends StableID>(state: Omit<LinearLayoutState<ID>, typ
 function validSnapshotHeader<ID extends StableID>(snapshot: LinearLayoutSnapshot<ID>): boolean {
   return snapshot !== null
     && typeof snapshot === 'object'
+    && snapshot.schemaVersion === 1
+    && snapshot.kind === 'linear'
     && Array.isArray(snapshot.ids)
     && Array.isArray(snapshot.extents)
+    && Number.isSafeInteger(snapshot.sequenceMaxItems)
+    && snapshot.sequenceMaxItems >= snapshot.ids.length
+    && Number.isSafeInteger(snapshot.sequenceMaxIDCodeUnits)
+    && snapshot.sequenceMaxIDCodeUnits > 0
     && Number.isSafeInteger(snapshot.generation)
     && snapshot.generation >= 0
     && Number.isSafeInteger(snapshot.extentMaxItems)

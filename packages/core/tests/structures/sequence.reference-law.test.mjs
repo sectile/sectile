@@ -118,3 +118,36 @@ test('sequence construction and scan ceilings use explicit failure classes', () 
   assert.equal(invalidScan.kind, 'resource-rejected');
   assert.equal(invalidScan.error.code, 'invalid-scan-ceiling');
 });
+
+test('sequence projections and patches preserve their resource contract', () => {
+  const sequence = createSequence(['alpha', 'beta'], {
+    maxItems: 4,
+    maxIDCodeUnits: 12,
+  });
+  const projected = sequence.project((id) => id === 'alpha');
+  const patched = applySequencePatch(sequence, {
+    type: 'splice',
+    index: 2,
+    deleteCount: 0,
+    inserted: ['gamma'],
+  });
+
+  assert.deepEqual(
+    [sequence.maxItems, sequence.maxIDCodeUnits],
+    [4, 12],
+  );
+  assert.deepEqual(
+    [projected.maxItems, projected.maxIDCodeUnits],
+    [4, 12],
+  );
+  assert.deepEqual(
+    [patched.maxItems, patched.maxIDCodeUnits],
+    [4, 12],
+  );
+  assert.equal(tryApplySequencePatch(patched, {
+    type: 'splice',
+    index: 3,
+    deleteCount: 0,
+    inserted: ['delta', 'epsilon'],
+  }).error.code, 'item-ceiling-exceeded');
+});

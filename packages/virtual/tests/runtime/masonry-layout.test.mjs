@@ -15,7 +15,7 @@ import {
 const exact = (value) => ({ kind: 'exact', value });
 const domain = (size) => createSequence(
   Array.from({ length: size }, (_, index) => `item-${index}`),
-  { maxItems: Math.max(1, size) },
+  { maxItems: Math.max(1, size + 16) },
 );
 
 function intersects(left, right) {

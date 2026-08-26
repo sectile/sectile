@@ -35,6 +35,8 @@ export type SequenceProjectionPredicate<ID extends StableID = StableID> = (id: I
 export interface Sequence<ID extends StableID = StableID> {
   readonly size: number;
   readonly ids: readonly ID[];
+  readonly maxItems: number;
+  readonly maxIDCodeUnits: number;
   at(index: number): ID | null;
   indexOf(id: ID): number | null;
   contains(id: ID): boolean;
@@ -73,7 +75,13 @@ export function tryCreateSequence<ID extends StableID>(
   }
   const validated = validateUniqueIDs(ids, maxIDCodeUnits);
   if (!validated.ok) return validated;
-  return ok(new IndexedSequence(validated.value) as SequenceView<ID>);
+  return ok(
+    new IndexedSequence(
+      validated.value,
+      maxItems,
+      maxIDCodeUnits,
+    ) as SequenceView<ID>,
+  );
 }
 
 export function applySequencePatch<ID extends StableID>(
@@ -116,7 +124,10 @@ export function tryApplySequencePatch<ID extends StableID>(
     const moved = ids.splice(patch.from, patch.count);
     ids.splice(patch.to, 0, ...moved);
   }
-  const result = tryCreateSequence(ids, options);
+  const result = tryCreateSequence(ids, {
+    maxItems: options.maxItems ?? sequence.maxItems,
+    maxIDCodeUnits: options.maxIDCodeUnits ?? sequence.maxIDCodeUnits,
+  });
   if (result.ok) return result;
   return fail('transition-rejection', result.error.code, result.error.message, result.error.details);
 }

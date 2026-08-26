@@ -48,7 +48,7 @@ const estimated = (value) => ({ kind: 'estimated', value });
 const exact = (value) => ({ kind: 'exact', value });
 const domain = (size, prefix = 'item') => createSequence(
   Array.from({ length: size }, (_, index) => `${prefix}-${index}`),
-  { maxItems: Math.max(size, 1) },
+  { maxItems: Math.max(size + 16, 1) },
 );
 
 const viewport = { x: 0, y: 0, width: 500, height: 500 };
@@ -115,7 +115,27 @@ test('VRT-07: serializable snapshots restore every strategy with identical obser
     (state) => queryTrackGridLayout(state, { viewport }),
   );
 
-  const invalid = tryRestoreSpatialLayout({ items: [], maxItems: 0, generation: -1 });
+  const longID = 'x'.repeat(1_100);
+  const resourceAware = createLinearLayout(
+    createSequence([longID], { maxItems: 9, maxIDCodeUnits: 1_200 }),
+    createExtentIndex([exact(20)]),
+    { crossExtent: 100 },
+  );
+  const resourceSnapshot = snapshotLinearLayout(resourceAware);
+  const resourceRestored = restoreLinearLayout(structuredClone(resourceSnapshot));
+  assert.equal(resourceSnapshot.schemaVersion, 1);
+  assert.equal(resourceSnapshot.kind, 'linear');
+  assert.equal(resourceRestored.domain.maxItems, 9);
+  assert.equal(resourceRestored.domain.maxIDCodeUnits, 1_200);
+  assert.equal(resourceRestored.domain.at(0), longID);
+
+  const invalid = tryRestoreSpatialLayout({
+    schemaVersion: 1,
+    kind: 'spatial',
+    items: [],
+    maxItems: 0,
+    generation: -1,
+  });
   assert.equal(invalid.ok, false);
   assert.equal(invalid.error.code, 'virtual-layout-snapshot-invalid');
 });

@@ -20,7 +20,12 @@ The package never reads DOM geometry. Use `@sectile/dom/virtual` for frame-batch
 
 Layout states are opaque runtime handles. Do not clone them with object spread or
 send them through `structuredClone()`. Every strategy instead exports a matching
-`snapshot*Layout()` and `restore*Layout()` pair. Snapshots contain only IDs,
-extents, geometry, policies, and the active generation, so they can cross a worker
-or SSR serialization boundary. Restoration validates the snapshot and rebuilds
+`snapshot*Layout()` and `restore*Layout()` pair. Snapshots contain only schema
+metadata, IDs, extents, geometry, policies, and the active generation, so they can
+cross a worker or SSR serialization boundary. Restoration validates the snapshot and rebuilds
 the strategy's search indexes before it can be queried.
+
+Every snapshot carries `schemaVersion: 1` and its strategy `kind`. Linear and
+masonry snapshots also preserve the source Sequence item and ID ceilings, so a
+JSON or worker round trip restores the same resource contract. Restoration
+rejects a snapshot from another strategy or an unsupported schema version.

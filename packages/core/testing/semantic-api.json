@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "d4cb32cd4075aa4cf854e0af11f4c1497fe0f5e82dc8aa5831708df2bc6d0eb3",
+    "publicSignatureFingerprint": "8e7ac9ffd6245ca9d7d19ed70d06aa36e121782df7c86161724c244ddb829e5d",
     "subpaths": [
       ".",
       "./accordion",
@@ -523,6 +523,6 @@
   ],
   "acceptance": {
     "classification": "breaking",
-    "reason": "Move temporal and virtual failures to package-owned error unions"
+    "reason": "Sequence-resource-ceilings-are-now-observable-and-preserved-across-patches-and-virtual-layout-snapshots"
   }
 }

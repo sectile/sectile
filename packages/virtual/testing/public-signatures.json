@@ -31,7 +31,7 @@
       "types": "dist/track-grid-layout.d.ts"
     }
   ],
-  "fingerprint": "68aa3fd726ffb1e7c93dae3ceec1f801ceaced44a6a6f5bb0c370b602cdf0a73",
+  "fingerprint": "4d2ff178bb8a73d42f0997281e23fb8655f959a241cf0552bac50b6868fb1484",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -55,19 +55,19 @@
     },
     {
       "path": "dist/linear-layout.d.ts",
-      "sha256": "7c2d354cf6b1e29aef7369c8a513d41ae7c7a6c42f5583d32d548c10a26f116e"
+      "sha256": "9704403be6e6fca7e669ac13832332a73da9014fe01ba3a131b1d92772e5da58"
     },
     {
       "path": "dist/masonry-layout.d.ts",
-      "sha256": "691f75b133e7d946d60fbad2b0f28620e8650d5cebeb38526137ad014386963a"
+      "sha256": "e76fcbaf7b1aec24584325e49c6a50ddff8395670b68be4aca2c37db943f7610"
     },
     {
       "path": "dist/spatial-layout.d.ts",
-      "sha256": "bd182edf4353ea7e3ddcb6fbd6d31e251d8a0a2ca8055ffcc93fb7848e907dd5"
+      "sha256": "d3983ee27905f2c4e718d38247434d9527cccca7435deb2888a46cceaaebef2a"
     },
     {
       "path": "dist/track-grid-layout.d.ts",
-      "sha256": "5b7951658e2f7da01e0f2e7533c96238704d0c32fd6f2844b24721727ea8ddbb"
+      "sha256": "8f3fb3ec6c18ae7cb9eb554c6c198404070a3b95683792970d8245b816fe740d"
     }
   ]
 }

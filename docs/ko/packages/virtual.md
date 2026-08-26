@@ -20,7 +20,12 @@ ID와 순서는 `@sectile/core/sequence`, 데이터 적재는 `@sectile/core/col
 
 Layout state는 불투명한 runtime handle입니다. 객체 spread나
 `structuredClone()`으로 state 자체를 복사하지 않습니다. 각 strategy가 제공하는
-`snapshot*Layout()`과 `restore*Layout()`을 사용합니다. Snapshot에는 ID, extent,
-geometry, policy, 현재 generation만 들어가므로 worker나 SSR 직렬화 경계를 건널 수
+`snapshot*Layout()`과 `restore*Layout()`을 사용합니다. Snapshot에는 schema metadata,
+ID, extent, geometry, policy, 현재 generation만 들어가므로 worker나 SSR 직렬화 경계를 건널 수
 있습니다. 복원 과정은 snapshot을 검증하고 query 전에 strategy별 검색 index를 다시
 만듭니다.
+
+모든 snapshot에는 `schemaVersion: 1`과 해당 strategy `kind`가 들어갑니다. Linear와
+masonry snapshot은 원본 Sequence의 item 및 ID ceiling도 보존하므로 JSON이나 worker
+왕복 뒤에도 같은 resource contract로 복원합니다. 다른 strategy의 snapshot이나
+지원하지 않는 schema version은 복원을 거부합니다.

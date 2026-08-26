@@ -33,7 +33,11 @@ export interface MasonryLayoutState<ID extends StableID = StableID> {
 }
 
 export interface MasonryLayoutSnapshot<ID extends StableID = StableID> {
+  readonly schemaVersion: 1;
+  readonly kind: 'masonry';
   readonly ids: readonly ID[];
+  readonly sequenceMaxItems: number;
+  readonly sequenceMaxIDCodeUnits: number;
   readonly extents: readonly Extent[];
   readonly extentMaxItems: number;
   readonly axis: LinearAxis;
@@ -115,7 +119,11 @@ export function snapshotMasonryLayout<ID extends StableID>(
   if (extents === null)
     throw new Error('Internal invariant breach: masonry extent range is invalid.');
   return Object.freeze({
+    schemaVersion: 1,
+    kind: 'masonry',
     ids: Object.freeze([...state.domain.ids]),
+    sequenceMaxItems: state.domain.maxItems,
+    sequenceMaxIDCodeUnits: state.domain.maxIDCodeUnits,
     extents,
     extentMaxItems: state.extents.maxItems,
     axis: state.axis,
@@ -141,7 +149,8 @@ export function tryRestoreMasonryLayout<ID extends StableID>(
 ): VirtualResult<MasonryLayoutState<ID>> {
   if (!validSnapshotHeader(snapshot)) return snapshotFailure();
   const domain = tryCreateSequence(snapshot.ids, {
-    maxItems: Math.max(1, snapshot.ids.length),
+    maxItems: snapshot.sequenceMaxItems,
+    maxIDCodeUnits: snapshot.sequenceMaxIDCodeUnits,
   });
   if (!domain.ok) return domain;
   const extents = tryCreateExtentIndex(snapshot.extents, {
@@ -215,8 +224,7 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
     const inserted = mutation.insertedExtents ?? [];
     if (mutation.patch.type === 'splice' && inserted.length !== mutation.patch.inserted.length) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Every inserted identity requires one extent.');
     if (mutation.patch.type === 'move' && inserted.length !== 0) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Move patches cannot insert extents.');
-    const size = state.domain.size - (mutation.patch.type === 'splice' ? mutation.patch.deleteCount : 0) + inserted.length;
-    const domain = tryApplySequencePatch(state.domain, mutation.patch, { maxItems: Math.max(1, size) });
+    const domain = tryApplySequencePatch(state.domain, mutation.patch);
     if (!domain.ok) return domain;
     const extents = mutation.patch.type === 'splice'
       ? state.extents.splice(mutation.patch.index, mutation.patch.deleteCount, inserted)
@@ -393,8 +401,14 @@ function getInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Virtu
 function validSnapshotHeader<ID extends StableID>(snapshot: MasonryLayoutSnapshot<ID>): boolean {
   return snapshot !== null
     && typeof snapshot === 'object'
+    && snapshot.schemaVersion === 1
+    && snapshot.kind === 'masonry'
     && Array.isArray(snapshot.ids)
     && Array.isArray(snapshot.extents)
+    && Number.isSafeInteger(snapshot.sequenceMaxItems)
+    && snapshot.sequenceMaxItems >= snapshot.ids.length
+    && Number.isSafeInteger(snapshot.sequenceMaxIDCodeUnits)
+    && snapshot.sequenceMaxIDCodeUnits > 0
     && Number.isSafeInteger(snapshot.generation)
     && snapshot.generation >= 0
     && Number.isSafeInteger(snapshot.extentMaxItems)

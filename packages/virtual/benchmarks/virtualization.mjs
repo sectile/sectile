@@ -187,7 +187,7 @@ const gridInsertTrackMs = measureColdMilliseconds(() => applyTrackGridMutation(g
   type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(28)],
 }).state.generation);
 
-const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize });
+const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize + 1 });
 const strategyExtents = createExtentIndex(Array.from({ length: strategySize }, (_, index) => estimated(24 + (index % 73))));
 const masonryState = createMasonryLayout(strategyDomain, strategyExtents, { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 });
 const masonryQueryUs = measure(20_000, (iteration) => {
