@@ -68,7 +68,30 @@ export function renderPrimitive(
 ): VNodeChild {
   const children = slots['default']?.() ?? [];
   if (!props.asChild) return h(props.as, attributes, children);
-  return adoptSingleElement(children, attributes);
+  return adoptSingleElement(children, guardAdoptedEventHandlers(attributes));
+}
+
+function guardAdoptedEventHandlers(
+  attributes: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  let guarded: Record<string, unknown> | undefined;
+  for (const [key, value] of Object.entries(attributes)) {
+    if (!/^on[^a-z]/u.test(key) || (typeof value !== 'function' && !Array.isArray(value))) continue;
+    guarded ??= { ...attributes };
+    guarded[key] = guardAdoptedEventHandler(value);
+  }
+  return guarded ?? attributes;
+}
+
+function guardAdoptedEventHandler(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(guardAdoptedEventHandler);
+  if (typeof value !== 'function') return value;
+  return (...args: unknown[]): unknown => {
+    const event = args[0];
+    if (typeof event === 'object' && event !== null
+      && 'defaultPrevented' in event && event.defaultPrevented === true) return undefined;
+    return Reflect.apply(value, undefined, args);
+  };
 }
 
 interface AdoptionState {

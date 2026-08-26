@@ -138,7 +138,27 @@ import {
 </template>
 ```
 
-The default slot must resolve to exactly one element, including after fragments and conditional branches are flattened. Text, comments, zero elements, and multiple elements are rejected. Sectile merges its listeners, ARIA attributes, and data attributes with the child's existing props.
+The default slot must contain exactly one native element or supported component after transparent fragments and nested arrays are inspected. Comments and whitespace-only text are ignored as candidates but remain in the VNode tree. Visible text, zero elements, and multiple elements are rejected. Sectile path-copies only the fragments leading to the adopted element, preserving keys, scoped-slot metadata, and hydration structure.
+
+Vue performs the child-prop merge once. Existing and Sectile classes and styles compose, both refs remain active, and Sectile owns conflicting roles, ARIA attributes, data attributes, and internal IDs. Child listeners run first. Calling `preventDefault()` prevents the corresponding Sectile listener from applying its semantic action.
+
+A component child may rely on `$el` when it renders one element root. A fragment or multi-root component must forward `$attrs` to the intended element and expose that element explicitly. Otherwise Sectile throws instead of mounting visually correct markup with broken focus, positioning, or collection registration.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { PrimitiveElementExpose } from '@sectile/vue/primitive'
+
+defineOptions({ inheritAttrs: false })
+const element = ref<PrimitiveElementExpose['element']>(null)
+defineExpose({ element })
+</script>
+
+<template>
+  <span aria-hidden="true">→</span>
+  <button ref="element" v-bind="$attrs"><slot /></button>
+</template>
+```
 
 ## Slot state
 

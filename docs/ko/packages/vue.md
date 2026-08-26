@@ -138,7 +138,27 @@ import {
 </template>
 ```
 
-기본 슬롯은 fragment와 조건 분기를 펼친 뒤에도 정확히 하나의 요소로 렌더링되어야 합니다. 텍스트, 주석, 요소 없음, 여러 요소는 허용하지 않습니다. Sectile은 자체 이벤트 리스너, ARIA 속성, 데이터 속성을 자식의 기존 속성과 합칩니다.
+기본 슬롯은 투명한 fragment와 중첩 배열을 탐색한 뒤 정확히 하나의 네이티브 요소 또는 지원 가능한 컴포넌트를 포함해야 합니다. 주석과 공백뿐인 텍스트는 후보에서 제외하되 VNode 트리에는 그대로 남깁니다. 화면에 보이는 텍스트, 요소 없음, 여러 요소는 허용하지 않습니다. Sectile은 채택한 요소까지 이어지는 fragment 경로만 복제하여 key, scoped slot 메타데이터, hydration 구조를 보존합니다.
+
+자식 속성은 Vue가 한 번만 병합합니다. 기존 class·style과 Sectile 값은 합성되고 두 ref가 모두 유지되며, 충돌하는 role, ARIA 속성, 데이터 속성, 내부 ID는 Sectile 값이 우선합니다. 자식 listener가 먼저 실행되며 `preventDefault()`를 호출하면 해당 Sectile listener는 의미 동작을 적용하지 않습니다.
+
+컴포넌트 자식이 요소 root 하나를 렌더링하면 `$el`을 사용할 수 있습니다. Fragment 또는 multi-root 컴포넌트는 대상 요소에 `$attrs`를 전달하고 그 요소를 명시적으로 expose해야 합니다. 이 계약을 지키지 않으면 겉보기 마크업만 맞고 focus, positioning, collection registration이 끊긴 상태로 마운트하지 않고 오류를 냅니다.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { PrimitiveElementExpose } from '@sectile/vue/primitive'
+
+defineOptions({ inheritAttrs: false })
+const element = ref<PrimitiveElementExpose['element']>(null)
+defineExpose({ element })
+</script>
+
+<template>
+  <span aria-hidden="true">→</span>
+  <button ref="element" v-bind="$attrs"><slot /></button>
+</template>
+```
 
 ## 슬롯 상태
 

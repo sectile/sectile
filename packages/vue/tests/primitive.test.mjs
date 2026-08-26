@@ -116,9 +116,7 @@ test('Primitive composes props, listeners, and both refs exactly once', () => {
       class: 'sectile',
       style: { display: 'block' },
       elementRef: (element) => { sectileRefs.push(element); },
-      onClick: (event) => {
-        if (!event.defaultPrevented) sectileClicks += 1;
-      },
+      onClick: () => { sectileClicks += 1; },
     }, {
       default: () => h('button', {
         ref: (element) => { childRefs.push(element); },
