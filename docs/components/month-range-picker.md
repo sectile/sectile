@@ -118,6 +118,13 @@ Vue package: `@sectile/vue/month-range-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>referenceDate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Deterministic civil date used when a calendar has no selected or highlighted value.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>required</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>

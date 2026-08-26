@@ -133,6 +133,13 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>referenceDate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>달력에 선택값이나 강조값이 없을 때 사용할 시간대 없는 기준 날짜입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>required</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
