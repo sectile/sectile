@@ -1,4 +1,4 @@
-/* Law evidence: VRT-01 VRT-02 VRT-03 VRT-04 VRT-05 VRT-06 */
+/* Law evidence: VRT-01 VRT-02 VRT-03 VRT-04 VRT-05 VRT-06 VRT-07 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createCollectionWindowState } from '@sectile/core/collection-window';
@@ -11,6 +11,8 @@ import {
   createLinearLayout,
   linearScrollTarget,
   queryLinearLayout,
+  restoreLinearLayout,
+  snapshotLinearLayout,
   tryApplyLinearMeasurements,
 } from '../../.verification-dist/linear-layout.js';
 import {
@@ -18,6 +20,8 @@ import {
   applyTrackGridMutation,
   createTrackGridLayout,
   queryTrackGridLayout,
+  restoreTrackGridLayout,
+  snapshotTrackGridLayout,
   trackGridRegionRect,
 } from '../../.verification-dist/track-grid-layout.js';
 import {
@@ -26,13 +30,18 @@ import {
   createMasonryLayout,
   masonryRectAt,
   queryMasonryLayout,
+  restoreMasonryLayout,
+  snapshotMasonryLayout,
 } from '../../.verification-dist/masonry-layout.js';
 import {
   applySpatialMeasurements,
   applySpatialMutation,
   createSpatialLayout,
   querySpatialLayout,
+  restoreSpatialLayout,
+  snapshotSpatialLayout,
   spatialRectAt,
+  tryRestoreSpatialLayout,
 } from '../../.verification-dist/spatial-layout.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -41,6 +50,13 @@ const domain = (size, prefix = 'item') => createSequence(
   Array.from({ length: size }, (_, index) => `${prefix}-${index}`),
   { maxItems: Math.max(size, 1) },
 );
+
+const viewport = { x: 0, y: 0, width: 500, height: 500 };
+
+function roundTrip(snapshot, restore, query) {
+  const transferred = structuredClone(snapshot);
+  assert.deepEqual(query(restore(transferred)), query(restore(snapshot)));
+}
 
 test('VRT-01: render placements contain visible placements across axes and flows', () => {
   const state = createLinearLayout(domain(100), createExtentIndex(Array(100).fill(estimated(10))), { crossExtent: 100 });
@@ -52,6 +68,56 @@ test('VRT-01: render placements contain visible placements across axes and flows
     axis: 'horizontal', flow: 'reverse', gap: 2, crossExtent: 40,
   });
   assert.deepEqual(queryLinearLayout(horizontalReverse, { viewport: { x: 0, y: 0, width: 64, height: 40 } }).placements.map(({ index, rect }) => [index, rect.x]), [[0, 54], [1, 32], [2, 0]]);
+});
+
+test('VRT-07: serializable snapshots restore every strategy with identical observations', () => {
+  const linear = createLinearLayout(
+    domain(4, 'linear'),
+    createExtentIndex([exact(10), estimated(20), exact(30), exact(40)], { maxItems: 17 }),
+    { gap: 2, crossExtent: 100, flow: 'reverse' },
+  );
+  roundTrip(
+    snapshotLinearLayout(linear),
+    restoreLinearLayout,
+    (state) => queryLinearLayout(state, { viewport }),
+  );
+
+  const masonry = createMasonryLayout(
+    domain(5, 'masonry'),
+    createExtentIndex([exact(20), exact(10), exact(40), exact(30), exact(15)], { maxItems: 19 }),
+    { laneCount: 2, laneExtent: 80, laneGap: 5, itemGap: 3 },
+  );
+  roundTrip(
+    snapshotMasonryLayout(masonry),
+    restoreMasonryLayout,
+    (state) => queryMasonryLayout(state, { viewport }),
+  );
+
+  const spatial = createSpatialLayout([
+    { id: 'back', rect: { x: 10, y: 5, width: 50, height: 20 }, zIndex: -1 },
+    { id: 'front', rect: { x: 20, y: 10, width: 15, height: 30 }, zIndex: 2 },
+  ], { maxItems: 11 });
+  roundTrip(
+    snapshotSpatialLayout(spatial),
+    restoreSpatialLayout,
+    (state) => querySpatialLayout(state, { viewport }),
+  );
+
+  const grid = createTrackGridLayout(
+    createExtentIndex([exact(20), exact(30)], { maxItems: 7 }),
+    createExtentIndex([exact(40), exact(50), exact(60)], { maxItems: 9 }),
+    [{ id: 'merged', row: 0, column: 1, rowSpan: 2, columnSpan: 2 }],
+    { rowGap: 2, columnGap: 3, rowFlow: 'reverse', maxRegions: 8 },
+  );
+  roundTrip(
+    snapshotTrackGridLayout(grid),
+    restoreTrackGridLayout,
+    (state) => queryTrackGridLayout(state, { viewport }),
+  );
+
+  const invalid = tryRestoreSpatialLayout({ items: [], maxItems: 0, generation: -1 });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.error.code, 'virtual-layout-snapshot-invalid');
 });
 
 test('VRT-02, VRT-03: measurements preserve the anchor and reject stale generations', () => {

@@ -16,6 +16,7 @@ export type VirtualOwnErrorCode =
   | 'virtual-layout-region-invalid'
   | 'virtual-layout-region-overlap'
   | 'virtual-layout-scroll-target-invalid'
+  | 'virtual-layout-snapshot-invalid'
   | 'virtual-layout-window-mismatch';
 
 export type VirtualErrorCode = CoreErrorCode | VirtualOwnErrorCode;

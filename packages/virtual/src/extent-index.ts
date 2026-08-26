@@ -26,6 +26,7 @@ export interface ExtentIndexOptions {
 export interface ExtentIndex {
   readonly size: number;
   readonly totalExtent: number;
+  readonly maxItems: number;
   extentAt(index: number): Extent | null;
   slice(start: number, end: number): readonly Extent[] | null;
   offsetAt(index: number): number | null;
@@ -84,6 +85,7 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
   return Object.freeze({
     size: root?.size ?? 0,
     totalExtent: root?.sum ?? 0,
+    maxItems,
     extentAt: (index: number): Extent | null => extentAt(root, index),
     slice: (start: number, end: number): readonly Extent[] | null => sliceExtents(root, start, end),
     offsetAt: (index: number): number | null => offsetAt(root, index),

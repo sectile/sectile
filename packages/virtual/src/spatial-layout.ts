@@ -16,8 +16,17 @@ export interface SpatialItem<ID extends StableID = StableID> {
   readonly zIndex?: number;
 }
 
+const spatialLayoutStateBrand: unique symbol = Symbol('SectileSpatialLayoutState');
+
 export interface SpatialLayoutState<ID extends StableID = StableID> {
+  readonly [spatialLayoutStateBrand]: true;
   readonly domain: Sequence<ID>;
+  readonly items: readonly SpatialItem<ID>[];
+  readonly maxItems: number;
+  readonly generation: number;
+}
+
+export interface SpatialLayoutSnapshot<ID extends StableID = StableID> {
   readonly items: readonly SpatialItem<ID>[];
   readonly maxItems: number;
   readonly generation: number;
@@ -72,6 +81,42 @@ export function tryCreateSpatialLayout<ID extends StableID>(items: readonly Spat
   const validated = validateItems(items, maxItems);
   if (!validated.ok) return validated;
   return ok(createState(validated.value.domain, validated.value.items, maxItems, 0));
+}
+
+export function snapshotSpatialLayout<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+): SpatialLayoutSnapshot<ID> {
+  return Object.freeze({
+    items: Object.freeze(state.items.map((item) => Object.freeze({
+      id: item.id,
+      rect: Object.freeze({ ...item.rect }),
+      ...(item.zIndex === undefined ? {} : { zIndex: item.zIndex }),
+    }))),
+    maxItems: state.maxItems,
+    generation: state.generation,
+  });
+}
+
+export function restoreSpatialLayout<ID extends StableID>(
+  snapshot: SpatialLayoutSnapshot<ID>,
+): SpatialLayoutState<ID> {
+  return unwrap(tryRestoreSpatialLayout(snapshot));
+}
+
+export function tryRestoreSpatialLayout<ID extends StableID>(
+  snapshot: SpatialLayoutSnapshot<ID>,
+): VirtualResult<SpatialLayoutState<ID>> {
+  if (!validSnapshotHeader(snapshot)) return snapshotFailure();
+  const restored = tryCreateSpatialLayout(snapshot.items, {
+    maxItems: snapshot.maxItems,
+  });
+  if (!restored.ok) return restored;
+  return ok(createState(
+    restored.value.domain,
+    restored.value.items,
+    restored.value.maxItems,
+    snapshot.generation,
+  ));
 }
 
 export function querySpatialLayout<ID extends StableID>(state: SpatialLayoutState<ID>, input: VirtualQueryInput): SpatialLayoutPlan<ID> {
@@ -184,7 +229,9 @@ export function spatialRectAt<ID extends StableID>(state: SpatialLayoutState<ID>
 }
 
 function createState<ID extends StableID>(domain: Sequence<ID>, items: readonly SpatialItem<ID>[], maxItems: number, generation: number): SpatialLayoutState<ID> {
-  const state = Object.freeze({ domain, items: Object.freeze([...items]), maxItems, generation });
+  const mutable = { domain, items: Object.freeze([...items]), maxItems, generation };
+  Object.defineProperty(mutable, spatialLayoutStateBrand, { value: true });
+  const state = Object.freeze(mutable) as SpatialLayoutState<ID>;
   const indexed = state.items.map((value, index) => Object.freeze({ value, index, zIndex: value.zIndex ?? 0 }));
   let width = 0;
   let height = 0;
@@ -267,6 +314,16 @@ function validRect(rect: VirtualRect): boolean { return rect !== null && typeof 
 function freezeRect(rect: VirtualRect): VirtualRect { return Object.freeze({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }); }
 function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
 function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): VirtualResult<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
+function validSnapshotHeader<ID extends StableID>(snapshot: SpatialLayoutSnapshot<ID>): boolean {
+  return snapshot !== null
+    && typeof snapshot === 'object'
+    && Array.isArray(snapshot.items)
+    && Number.isSafeInteger(snapshot.maxItems)
+    && snapshot.maxItems >= snapshot.items.length
+    && Number.isSafeInteger(snapshot.generation)
+    && snapshot.generation >= 0;
+}
+function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'virtual-layout-snapshot-invalid', 'Spatial layout snapshot is invalid.'); }
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
 function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }

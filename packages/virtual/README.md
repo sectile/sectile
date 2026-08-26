@@ -9,3 +9,8 @@ Import runtime APIs from explicit subpaths such as `@sectile/virtual/extent-inde
 Browser scheduling, `ResizeObserver`, scroll anchoring, and Vue rendering live in
 `@sectile/dom/virtual` and `@sectile/vue/virtual`. This package never reads or
 writes host elements.
+
+Layout states are opaque runtime handles. Use each strategy's
+`snapshot*Layout()` and `restore*Layout()` functions for worker transfer, SSR,
+persistence, or replay; restoration validates the serializable snapshot and
+rebuilds hidden search indexes.

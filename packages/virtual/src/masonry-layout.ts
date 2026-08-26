@@ -1,8 +1,8 @@
 import type { StableID } from '@sectile/core';
 import type { VirtualResult } from './error.js';
-import { tryApplySequencePatch, type Sequence, type SequencePatch } from '@sectile/core/sequence';
+import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
-import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 import { extentValue } from './internal/track.js';
 import type { LinearAxis, LinearFlow } from './linear-layout.js';
@@ -15,7 +15,10 @@ import {
 
 export type MasonryPlacementPolicy = 'shortest' | 'round-robin';
 
+const masonryLayoutStateBrand: unique symbol = Symbol('SectileMasonryLayoutState');
+
 export interface MasonryLayoutState<ID extends StableID = StableID> {
+  readonly [masonryLayoutStateBrand]: true;
   readonly domain: Sequence<ID>;
   readonly extents: ExtentIndex;
   readonly axis: LinearAxis;
@@ -28,6 +31,26 @@ export interface MasonryLayoutState<ID extends StableID = StableID> {
   readonly maxLanes: number;
   readonly generation: number;
 }
+
+export interface MasonryLayoutSnapshot<ID extends StableID = StableID> {
+  readonly ids: readonly ID[];
+  readonly extents: readonly Extent[];
+  readonly extentMaxItems: number;
+  readonly axis: LinearAxis;
+  readonly flow: LinearFlow;
+  readonly laneCount: number;
+  readonly laneExtent: number;
+  readonly laneGap: number;
+  readonly itemGap: number;
+  readonly placementPolicy: MasonryPlacementPolicy;
+  readonly maxLanes: number;
+  readonly generation: number;
+}
+
+type MasonryLayoutStateData<ID extends StableID = StableID> = Omit<
+  MasonryLayoutState<ID>,
+  typeof masonryLayoutStateBrand
+>;
 
 export interface MasonryLayoutInput {
   readonly axis?: LinearAxis;
@@ -83,6 +106,51 @@ export function tryCreateMasonryLayout<ID extends StableID>(domain: Sequence<ID>
   const geometry = normalizeGeometry(input);
   if (!geometry.ok) return geometry;
   return ok(createState({ domain, extents, ...geometry.value, generation: 0 }));
+}
+
+export function snapshotMasonryLayout<ID extends StableID>(
+  state: MasonryLayoutState<ID>,
+): MasonryLayoutSnapshot<ID> {
+  const extents = state.extents.slice(0, state.extents.size);
+  if (extents === null)
+    throw new Error('Internal invariant breach: masonry extent range is invalid.');
+  return Object.freeze({
+    ids: Object.freeze([...state.domain.ids]),
+    extents,
+    extentMaxItems: state.extents.maxItems,
+    axis: state.axis,
+    flow: state.flow,
+    laneCount: state.laneCount,
+    laneExtent: state.laneExtent,
+    laneGap: state.laneGap,
+    itemGap: state.itemGap,
+    placementPolicy: state.placementPolicy,
+    maxLanes: state.maxLanes,
+    generation: state.generation,
+  });
+}
+
+export function restoreMasonryLayout<ID extends StableID>(
+  snapshot: MasonryLayoutSnapshot<ID>,
+): MasonryLayoutState<ID> {
+  return unwrap(tryRestoreMasonryLayout(snapshot));
+}
+
+export function tryRestoreMasonryLayout<ID extends StableID>(
+  snapshot: MasonryLayoutSnapshot<ID>,
+): VirtualResult<MasonryLayoutState<ID>> {
+  if (!validSnapshotHeader(snapshot)) return snapshotFailure();
+  const domain = tryCreateSequence(snapshot.ids, {
+    maxItems: Math.max(1, snapshot.ids.length),
+  });
+  if (!domain.ok) return domain;
+  const extents = tryCreateExtentIndex(snapshot.extents, {
+    maxItems: snapshot.extentMaxItems,
+  });
+  if (!extents.ok) return extents;
+  const restored = tryCreateMasonryLayout(domain.value, extents.value, snapshot);
+  if (!restored.ok) return restored;
+  return ok(createState({ ...restored.value, generation: snapshot.generation }));
 }
 
 export function queryMasonryLayout<ID extends StableID>(state: MasonryLayoutState<ID>, input: VirtualQueryInput): MasonryLayoutPlan<ID> {
@@ -142,7 +210,7 @@ export function applyMasonryMutation<ID extends StableID>(state: MasonryLayoutSt
 export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayoutState<ID>, mutation: MasonryMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (mutation.type !== 'items' && mutation.type !== 'geometry') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Masonry mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
-  let partial: Omit<MasonryLayoutState<ID>, 'generation'>;
+  let partial: Omit<MasonryLayoutStateData<ID>, 'generation'>;
   if (mutation.type === 'items') {
     const inserted = mutation.insertedExtents ?? [];
     if (mutation.patch.type === 'splice' && inserted.length !== mutation.patch.inserted.length) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Every inserted identity requires one extent.');
@@ -197,8 +265,9 @@ export function masonryRectAt<ID extends StableID>(state: MasonryLayoutState<ID>
   return logical === undefined || data === undefined ? null : placementRect(state, data.contentMain, logical as LogicalPlacement<ID>);
 }
 
-function createState<ID extends StableID>(state: MasonryLayoutState<ID>): MasonryLayoutState<ID> {
-  const frozen = Object.freeze(state);
+function createState<ID extends StableID>(state: MasonryLayoutStateData<ID>): MasonryLayoutState<ID> {
+  Object.defineProperty(state, masonryLayoutStateBrand, { value: true });
+  const frozen = Object.freeze(state) as MasonryLayoutState<ID>;
   internals.set(frozen, buildInternals(frozen) as MasonryInternals<StableID>);
   return frozen;
 }
@@ -233,7 +302,7 @@ function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Mas
   return Object.freeze({ placements: Object.freeze(placements), lanes: Object.freeze(lanes.map((lane) => Object.freeze(lane))), byID, contentMain });
 }
 
-function normalizeGeometry(input: MasonryLayoutInput): VirtualResult<Omit<MasonryLayoutState, 'domain' | 'extents' | 'generation'>> {
+function normalizeGeometry(input: MasonryLayoutInput): VirtualResult<Omit<MasonryLayoutStateData, 'domain' | 'extents' | 'generation'>> {
   const axis = input.axis ?? 'vertical';
   const flow = input.flow ?? 'forward';
   const laneGap = input.laneGap ?? 0;
@@ -320,6 +389,18 @@ function getInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Virtu
   const value = internals.get(state as MasonryLayoutState);
   return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Masonry state must be created by createMasonryLayout().') : ok(value as MasonryInternals<ID>);
 }
+
+function validSnapshotHeader<ID extends StableID>(snapshot: MasonryLayoutSnapshot<ID>): boolean {
+  return snapshot !== null
+    && typeof snapshot === 'object'
+    && Array.isArray(snapshot.ids)
+    && Array.isArray(snapshot.extents)
+    && Number.isSafeInteger(snapshot.generation)
+    && snapshot.generation >= 0
+    && Number.isSafeInteger(snapshot.extentMaxItems)
+    && snapshot.extentMaxItems >= snapshot.extents.length;
+}
+function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'virtual-layout-snapshot-invalid', 'Masonry layout snapshot is invalid.'); }
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
 function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }

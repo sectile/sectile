@@ -13,6 +13,7 @@
     { "id": "VRT-04", "theory": "virtual-layout", "statement": "sequence patches preserve surviving viewport anchors" },
     { "id": "VRT-05", "theory": "virtual-layout", "statement": "target scrolling is an explicit host command" },
     { "id": "VRT-06", "theory": "virtual-layout", "statement": "data loading remains a collection-window request" },
+    { "id": "VRT-07", "theory": "virtual-layout", "statement": "serializable snapshots restore identical layout observations" },
     { "id": "MRY-01", "theory": "masonry-layout", "statement": "every identity is assigned exactly once and shortest-lane placement matches the reference scan" },
     { "id": "MRY-02", "theory": "masonry-layout", "statement": "viewport queries equal a full geometry scan and reverse flow reflects forward geometry" },
     { "id": "MRY-03", "theory": "masonry-layout", "statement": "round-robin lane ownership is stable across measurement changes" },

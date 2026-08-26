@@ -2,7 +2,7 @@ import type { StableID } from '@sectile/core';
 import type { VirtualResult } from './error.js';
 import { unwrap } from '@sectile/core/result';
 import { tryCreateSequence } from '@sectile/core/sequence';
-import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 import { trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
 import type { LinearFlow } from './linear-layout.js';
@@ -21,9 +21,26 @@ export interface GridRegion<ID extends StableID = StableID> {
   readonly columnSpan?: number;
 }
 
+const trackGridLayoutStateBrand: unique symbol = Symbol('SectileTrackGridLayoutState');
+
 export interface TrackGridLayoutState<ID extends StableID = StableID> {
+  readonly [trackGridLayoutStateBrand]: true;
   readonly rows: ExtentIndex;
   readonly columns: ExtentIndex;
+  readonly regions: readonly GridRegion<ID>[];
+  readonly rowGap: number;
+  readonly columnGap: number;
+  readonly rowFlow: LinearFlow;
+  readonly columnFlow: LinearFlow;
+  readonly maxRegions: number;
+  readonly generation: number;
+}
+
+export interface TrackGridLayoutSnapshot<ID extends StableID = StableID> {
+  readonly rows: readonly Extent[];
+  readonly rowMaxItems: number;
+  readonly columns: readonly Extent[];
+  readonly columnMaxItems: number;
   readonly regions: readonly GridRegion<ID>[];
   readonly rowGap: number;
   readonly columnGap: number;
@@ -106,6 +123,62 @@ export function tryCreateTrackGridLayout<ID extends StableID>(
   const indexed = validateRegions(rows.size, columns.size, regions, maxRegions);
   if (!indexed.ok) return indexed;
   return ok(createState({ rows, columns, regions: indexed.value.map(({ value }) => value), rowGap, columnGap, rowFlow, columnFlow, maxRegions, generation: 0 }, indexed.value));
+}
+
+export function snapshotTrackGridLayout<ID extends StableID>(
+  state: TrackGridLayoutState<ID>,
+): TrackGridLayoutSnapshot<ID> {
+  const rows = state.rows.slice(0, state.rows.size);
+  const columns = state.columns.slice(0, state.columns.size);
+  if (rows === null || columns === null)
+    throw new Error('Internal invariant breach: grid track range is invalid.');
+  return Object.freeze({
+    rows,
+    rowMaxItems: state.rows.maxItems,
+    columns,
+    columnMaxItems: state.columns.maxItems,
+    regions: Object.freeze(state.regions.map((region) => Object.freeze({ ...region }))),
+    rowGap: state.rowGap,
+    columnGap: state.columnGap,
+    rowFlow: state.rowFlow,
+    columnFlow: state.columnFlow,
+    maxRegions: state.maxRegions,
+    generation: state.generation,
+  });
+}
+
+export function restoreTrackGridLayout<ID extends StableID>(
+  snapshot: TrackGridLayoutSnapshot<ID>,
+): TrackGridLayoutState<ID> {
+  return unwrap(tryRestoreTrackGridLayout(snapshot));
+}
+
+export function tryRestoreTrackGridLayout<ID extends StableID>(
+  snapshot: TrackGridLayoutSnapshot<ID>,
+): VirtualResult<TrackGridLayoutState<ID>> {
+  if (!validSnapshotHeader(snapshot)) return snapshotFailure();
+  const rows = tryCreateExtentIndex(snapshot.rows, {
+    maxItems: snapshot.rowMaxItems,
+  });
+  if (!rows.ok) return rows;
+  const columns = tryCreateExtentIndex(snapshot.columns, {
+    maxItems: snapshot.columnMaxItems,
+  });
+  if (!columns.ok) return columns;
+  const restored = tryCreateTrackGridLayout(
+    rows.value,
+    columns.value,
+    snapshot.regions,
+    snapshot,
+  );
+  if (!restored.ok) return restored;
+  const grid = getInternals(restored.value);
+  if (!grid.ok) return grid;
+  return ok(createState(
+    { ...restored.value, generation: snapshot.generation },
+    null,
+    grid.value,
+  ));
 }
 
 export function queryTrackGridLayout<ID extends StableID>(state: TrackGridLayoutState<ID>, input: VirtualQueryInput): TrackGridLayoutPlan<ID> {
@@ -222,8 +295,10 @@ export function trackGridRegionRect<ID extends StableID>(state: TrackGridLayoutS
   return region === undefined ? null : regionRect(state, region.value as GridRegion<ID>);
 }
 
-function createState<ID extends StableID>(state: TrackGridLayoutState<ID>, indexed: readonly IndexedRegion<ID>[] | null, reusable?: GridInternals<ID>): TrackGridLayoutState<ID> {
-  const frozen = Object.freeze({ ...state, regions: reusable === undefined ? Object.freeze([...state.regions]) : state.regions });
+function createState<ID extends StableID>(state: Omit<TrackGridLayoutState<ID>, typeof trackGridLayoutStateBrand>, indexed: readonly IndexedRegion<ID>[] | null, reusable?: GridInternals<ID>): TrackGridLayoutState<ID> {
+  const mutable = { ...state, regions: reusable === undefined ? Object.freeze([...state.regions]) : state.regions };
+  Object.defineProperty(mutable, trackGridLayoutStateBrand, { value: true });
+  const frozen = Object.freeze(mutable) as TrackGridLayoutState<ID>;
   if (reusable !== undefined) {
     internals.set(frozen, reusable as GridInternals<StableID>);
     return frozen;
@@ -313,6 +388,23 @@ function getInternals<ID extends StableID>(state: TrackGridLayoutState<ID>): Vir
   const value = internals.get(state as TrackGridLayoutState);
   return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Grid layout state must be created by createTrackGridLayout().') : ok(value as GridInternals<ID>);
 }
+
+function validSnapshotHeader<ID extends StableID>(snapshot: TrackGridLayoutSnapshot<ID>): boolean {
+  return snapshot !== null
+    && typeof snapshot === 'object'
+    && Array.isArray(snapshot.rows)
+    && Array.isArray(snapshot.columns)
+    && Array.isArray(snapshot.regions)
+    && Number.isSafeInteger(snapshot.rowMaxItems)
+    && snapshot.rowMaxItems >= snapshot.rows.length
+    && Number.isSafeInteger(snapshot.columnMaxItems)
+    && snapshot.columnMaxItems >= snapshot.columns.length
+    && Number.isSafeInteger(snapshot.maxRegions)
+    && snapshot.maxRegions >= snapshot.regions.length
+    && Number.isSafeInteger(snapshot.generation)
+    && snapshot.generation >= 0;
+}
+function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'virtual-layout-snapshot-invalid', 'Track-grid layout snapshot is invalid.'); }
 
 function compareRegions<ID extends StableID>(left: IndexedRegion<ID>, right: IndexedRegion<ID>): number {
   return left.value.row - right.value.row || left.value.column - right.value.column || left.index - right.index;

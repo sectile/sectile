@@ -1,9 +1,9 @@
 import type { StableID } from '@sectile/core';
 import type { VirtualResult } from './error.js';
 import { canRequestCollectionWindow, type CollectionWindowEvent, type CollectionWindowState } from '@sectile/core/collection-window';
-import { tryApplySequencePatch, type Sequence, type SequencePatch } from '@sectile/core/sequence';
+import { tryApplySequencePatch, tryCreateSequence, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
-import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
+import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 import { trackContentExtent, trackRange, trackSpan } from './internal/track.js';
 import {
@@ -16,9 +16,23 @@ import {
 export type LinearAxis = 'vertical' | 'horizontal';
 export type LinearFlow = 'forward' | 'reverse';
 
+const linearLayoutStateBrand: unique symbol = Symbol('SectileLinearLayoutState');
+
 export interface LinearLayoutState<ID extends StableID = StableID> {
+  readonly [linearLayoutStateBrand]: true;
   readonly domain: Sequence<ID>;
   readonly extents: ExtentIndex;
+  readonly axis: LinearAxis;
+  readonly flow: LinearFlow;
+  readonly gap: number;
+  readonly crossOffset: number;
+  readonly crossExtent: number;
+  readonly generation: number;
+}
+export interface LinearLayoutSnapshot<ID extends StableID = StableID> {
+  readonly ids: readonly ID[];
+  readonly extents: readonly Extent[];
+  readonly extentMaxItems: number;
   readonly axis: LinearAxis;
   readonly flow: LinearFlow;
   readonly gap: number;
@@ -64,6 +78,48 @@ export function tryCreateLinearLayout<ID extends StableID>(domain: Sequence<ID>,
     return geometryFailure('Linear axis, flow, gap, and cross geometry are invalid.');
   }
   return ok(freezeState({ domain, extents, axis, flow, gap, crossOffset, crossExtent, generation: 0 }));
+}
+
+export function snapshotLinearLayout<ID extends StableID>(
+  state: LinearLayoutState<ID>,
+): LinearLayoutSnapshot<ID> {
+  const extents = state.extents.slice(0, state.extents.size);
+  if (extents === null)
+    throw new Error('Internal invariant breach: linear extent range is invalid.');
+  return Object.freeze({
+    ids: Object.freeze([...state.domain.ids]),
+    extents,
+    extentMaxItems: state.extents.maxItems,
+    axis: state.axis,
+    flow: state.flow,
+    gap: state.gap,
+    crossOffset: state.crossOffset,
+    crossExtent: state.crossExtent,
+    generation: state.generation,
+  });
+}
+
+export function restoreLinearLayout<ID extends StableID>(
+  snapshot: LinearLayoutSnapshot<ID>,
+): LinearLayoutState<ID> {
+  return unwrap(tryRestoreLinearLayout(snapshot));
+}
+
+export function tryRestoreLinearLayout<ID extends StableID>(
+  snapshot: LinearLayoutSnapshot<ID>,
+): VirtualResult<LinearLayoutState<ID>> {
+  if (!validSnapshotHeader(snapshot)) return snapshotFailure();
+  const domain = tryCreateSequence(snapshot.ids, {
+    maxItems: Math.max(1, snapshot.ids.length),
+  });
+  if (!domain.ok) return domain;
+  const extents = tryCreateExtentIndex(snapshot.extents, {
+    maxItems: snapshot.extentMaxItems,
+  });
+  if (!extents.ok) return extents;
+  const restored = tryCreateLinearLayout(domain.value, extents.value, snapshot);
+  if (!restored.ok) return restored;
+  return ok(freezeState({ ...restored.value, generation: snapshot.generation }));
 }
 
 export function queryLinearLayout<ID extends StableID>(state: LinearLayoutState<ID>, input: VirtualQueryInput): VirtualLayoutPlan<ID> {
@@ -222,6 +278,20 @@ function sizeOf<ID extends StableID>(state: LinearLayoutState<ID>): { readonly w
 function mainStart(axis: LinearAxis, rect: VirtualRect): number { return axis === 'vertical' ? rect.y : rect.x; }
 function mainExtent(axis: LinearAxis, rect: VirtualRect): number { return axis === 'vertical' ? rect.height : rect.width; }
 function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
-function freezeState<ID extends StableID>(state: LinearLayoutState<ID>): LinearLayoutState<ID> { return Object.freeze(state); }
+function freezeState<ID extends StableID>(state: Omit<LinearLayoutState<ID>, typeof linearLayoutStateBrand>): LinearLayoutState<ID> {
+  Object.defineProperty(state, linearLayoutStateBrand, { value: true });
+  return Object.freeze(state) as LinearLayoutState<ID>;
+}
+function validSnapshotHeader<ID extends StableID>(snapshot: LinearLayoutSnapshot<ID>): boolean {
+  return snapshot !== null
+    && typeof snapshot === 'object'
+    && Array.isArray(snapshot.ids)
+    && Array.isArray(snapshot.extents)
+    && Number.isSafeInteger(snapshot.generation)
+    && snapshot.generation >= 0
+    && Number.isSafeInteger(snapshot.extentMaxItems)
+    && snapshot.extentMaxItems >= snapshot.extents.length;
+}
+function snapshotFailure<T>(): VirtualResult<T> { return fail('construction', 'virtual-layout-snapshot-invalid', 'Linear layout snapshot is invalid.'); }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
 function geometryFailure<T>(message: string): VirtualResult<T> { return fail('construction', 'virtual-layout-geometry-invalid', message); }

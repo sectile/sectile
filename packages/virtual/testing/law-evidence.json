@@ -13,6 +13,7 @@
     "VRT-04": "tests/runtime/linear-layout.test.mjs",
     "VRT-05": "tests/runtime/linear-layout.test.mjs",
     "VRT-06": "tests/runtime/linear-layout.test.mjs",
+    "VRT-07": "tests/runtime/linear-layout.test.mjs",
     "MRY-01": "tests/runtime/masonry-layout.test.mjs",
     "MRY-02": "tests/runtime/masonry-layout.test.mjs",
     "MRY-03": "tests/runtime/masonry-layout.test.mjs",
