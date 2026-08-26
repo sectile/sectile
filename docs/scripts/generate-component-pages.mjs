@@ -206,12 +206,23 @@ function formDetailsSection(component, korean = false) {
 | \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
 | \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
 
-제출 콜백은 \`event\`, 구조화된 \`values\`, 원본 \`formData\`, \`submitter\`, 현재 폼 \`state\`를 함께 받습니다. 애플리케이션은 \`values\`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 \`formData\`를 활용할 수 있습니다.
+\`onSubmit\`은 Vue emit이 아니라 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 \`event\`, 구조화된 \`values\`, 원본 \`formData\`, \`submitter\`, 현재 폼 \`state\`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 \`:on-submit="save"\`로 전달합니다. 애플리케이션은 \`values\`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 \`formData\`를 활용할 수 있습니다.
+
+서버 이슈는 내부 필드 ID 대신 \`path\`로 연결할 수 있습니다. 예: \`{ message: 'Already registered', path: 'email' }\` 또는 \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. \`id\`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 내부 오류 메시지를 노출하지 않고 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 \`mapSubmitError\`에서 명시적으로 변환합니다.
+
+### 타입이 지정된 폼
+
+\`createTypedForm<Values>()\`는 같은 값 타입으로 고정된 \`Root\`와 \`Field\`를 반환합니다. \`Field.name\`은 중첩 배열과 배열 인덱스를 포함한 실제 값 경로만 허용합니다. 스키마가 입력을 출력으로 변환하면 \`createTypedForm<Input, Output>()\`을 사용합니다.
+
+### 사용자 정의 컨트롤
+
+단일 네이티브 입력에는 \`useNativeInputFormControl\`, 여러 DOM 요소가 한 값을 구성하는 컨트롤에는 \`useCompositeFormControl\`을 사용합니다. 저수준 조정이 필요하면 \`useFormControl\`과 공개 capability preset을 조합합니다. 하나의 필드에 독립적인 활성 컨트롤을 여러 개 등록하지 말고 복합 컨트롤 하나로 등록합니다.
 
 ### 상태와 검증
 
 - 브라우저 제약 조건과 각 참여 입력의 검증 결과를 하나의 이슈 목록으로 합칩니다.
 - \`FormSummary\`는 폼 전체 이슈를, \`FormMessage\`는 현재 필드 이슈를 표시합니다.
+- \`issues\`, \`schema\`, \`validateOn\` 같은 동적 설정이 바뀌어도 dirty, touched, 제출 상태는 유지합니다.
 - 루트 슬롯의 \`submitStarted\`, \`submitSucceeded\`, \`submitFailed\`, \`replaceIssues\`로 비동기 및 서버 검증 상태를 반영할 수 있습니다.
 - \`TextField\`는 \`v-model.trim\`, \`v-model.number\`, \`v-model.lazy\`를 지원합니다. 다른 입력은 각 컴포넌트의 값 타입과 모델 계약을 유지합니다.`;
 
@@ -237,12 +248,23 @@ A string name becomes a top-level key. A string/number path builds nested object
 | \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
 | \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
 
-The submit callback receives \`event\`, structured \`values\`, original \`formData\`, the \`submitter\`, and current form \`state\`. Application code can use \`values\` as its primary submission object and \`formData\` for file values or native encoding.
+\`onSubmit\` is a lifecycle prop that consumes a validated submission, not a Vue emitted submit event. It receives \`event\`, structured \`values\`, original \`formData\`, the \`submitter\`, and current form \`state\`, then returns a result or Promise. Bind it as \`:on-submit="save"\` in templates. Application code can use \`values\` as its primary submission object and \`formData\` for file values or native encoding.
+
+Server issues can target a field by \`path\` instead of an internal field ID, for example \`{ message: 'Already registered', path: 'email' }\` or \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. Sectile generates a form issue ID when \`id\` is omitted. A thrown or rejected submit callback uses a fixed safe message instead of exposing the original error. Use \`mapSubmitError\` when an application-facing message should be derived explicitly.
+
+### Typed forms
+
+\`createTypedForm<Values>()\` returns \`Root\` and \`Field\` components fixed to one value shape. \`Field.name\` accepts only valid paths, including nested tuples and array indexes. Use \`createTypedForm<Input, Output>()\` when a schema transforms input values.
+
+### Custom controls
+
+Use \`useNativeInputFormControl\` for one native input and \`useCompositeFormControl\` when several DOM elements represent one value. For lower-level coordination, combine \`useFormControl\` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field.
 
 ### State and validation
 
 - Browser constraints and participant validation results are merged into one issue collection.
 - \`FormSummary\` presents form-wide issues while \`FormMessage\` presents the current field's issues.
+- Dynamic configuration such as \`issues\`, \`schema\`, and \`validateOn\` updates without resetting dirty, touched, or submission state.
 - Root slot actions \`submitStarted\`, \`submitSucceeded\`, \`submitFailed\`, and \`replaceIssues\` integrate asynchronous and server validation.
 - \`TextField\` supports \`v-model.trim\`, \`v-model.number\`, and \`v-model.lazy\`. Other inputs retain their component-specific value types and model contracts.`;
 }

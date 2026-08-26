@@ -816,7 +816,7 @@ const loadWindow = (direction: 'before' | 'after') => {
   ),
   form: sfc(
     'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormReset, FormSubmit',
-    `  <FormRoot @submit.prevent="saveAccount">
+    `  <FormRoot :on-submit="saveAccount">
     <FormSummary v-slot="{ state }">
       {{ state.issues.map(issue => issue.message).join(' ') }}
     </FormSummary>
@@ -1420,7 +1420,7 @@ const saveProfile: FormSubmitHandler<ProfileFormValues> = ({ values }) => {
 <\/script>
 
 <template>
-  <FormRoot @submit.prevent="saveProfile">
+  <FormRoot :on-submit="saveProfile">
     <FormSummary />
     <FormField
       id="display-name"
@@ -1471,7 +1471,7 @@ const saveNotifications: FormSubmitHandler<NotificationsFormValues> = ({ values 
 <\/script>
 
 <template>
-  <FormRoot @submit.prevent="saveNotifications">
+  <FormRoot :on-submit="saveNotifications">
     <FormField :name="['notifications', 'channel']" required>
       <FormLabel>Activity emails</FormLabel>
       <SelectRoot :items="channels" default-value="mentions">
@@ -1530,7 +1530,7 @@ const inviteMember: FormSubmitHandler<InvitationFormValues> = ({ values }) => {
 <\/script>
 
 <template>
-  <FormRoot @submit.prevent="inviteMember">
+  <FormRoot :on-submit="inviteMember">
     <FormField id="invite-email" :name="['invitation', 'email']" required>
       <FormLabel>Email address</FormLabel>
       <TextField type="email" autocomplete="email" />

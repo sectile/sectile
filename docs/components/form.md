@@ -48,12 +48,23 @@ A string name becomes a top-level key. A string/number path builds nested object
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-The submit callback receives `event`, structured `values`, original `formData`, the `submitter`, and current form `state`. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
+`onSubmit` is a lifecycle prop that consumes a validated submission, not a Vue emitted submit event. It receives `event`, structured `values`, original `formData`, the `submitter`, and current form `state`, then returns a result or Promise. Bind it as `:on-submit="save"` in templates. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
+
+Server issues can target a field by `path` instead of an internal field ID, for example `{ message: 'Already registered', path: 'email' }` or `{ message: 'Invalid', path: ['members', 0, 'email'] }`. Sectile generates a form issue ID when `id` is omitted. A thrown or rejected submit callback uses a fixed safe message instead of exposing the original error. Use `mapSubmitError` when an application-facing message should be derived explicitly.
+
+### Typed forms
+
+`createTypedForm<Values>()` returns `Root` and `Field` components fixed to one value shape. `Field.name` accepts only valid paths, including nested tuples and array indexes. Use `createTypedForm<Input, Output>()` when a schema transforms input values.
+
+### Custom controls
+
+Use `useNativeInputFormControl` for one native input and `useCompositeFormControl` when several DOM elements represent one value. For lower-level coordination, combine `useFormControl` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field.
 
 ### State and validation
 
 - Browser constraints and participant validation results are merged into one issue collection.
 - `FormSummary` presents form-wide issues while `FormMessage` presents the current field's issues.
+- Dynamic configuration such as `issues`, `schema`, and `validateOn` updates without resetting dirty, touched, or submission state.
 - Root slot actions `submitStarted`, `submitSucceeded`, `submitFailed`, and `replaceIssues` integrate asynchronous and server validation.
 - `TextField` supports `v-model.trim`, `v-model.number`, and `v-model.lazy`. Other inputs retain their component-specific value types and model contracts.
 
@@ -86,6 +97,11 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormReset</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
+  <li><code class="component-api-token">nativeInputControlCapabilities</code></li>
+  <li><code class="component-api-token">compositeControlCapabilities</code></li>
+  <li><code class="component-api-token">hiddenInputSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenSelectSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenValueSubmissionCapabilities</code></li>
 </ul>
 </div>
 
@@ -97,10 +113,33 @@ Vue package: `@sectile/vue/form`
 function useFormControl(registration: FormControlRegistration): FormControlParticipation
 ```
 
+#### `useNativeInputFormControl`
+
+```ts
+function useNativeInputFormControl(element: Ref<HTMLInputElement | HTMLTextAreaElement | null | undefined>): FormControlParticipation
+```
+
+#### `useCompositeFormControl`
+
+```ts
+function useCompositeFormControl(options: {
+  readonly root: FormElementSource;
+  readonly focusTarget?: FormElementSource;
+  readonly submissions?: FormSubmissionSource;
+  readonly labelMode?: FormLabelMode;
+}): FormControlParticipation
+```
+
 #### `provideFormControlOwner`
 
 ```ts
 function provideFormControlOwner(): void
+```
+
+#### `createTypedForm`
+
+```ts
+function createTypedForm<Input extends object, Output extends object = Input>(): TypedFormComponents<Input, Output>
 ```
 
 ### Props
@@ -111,42 +150,49 @@ function provideFormControlOwner(): void
 <div class="component-api-definition">
 <dt><code>issues</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssue[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormIssueInput[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
 <p>Validation issues supplied by the application.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>mapSubmitError</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitErrorMapper</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Maps a thrown or rejected submission error to safe application-facing issues.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>onSubmit</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSubmitHandler&lt;Output&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Handles a validated native submission and may report asynchronous success or server issues.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>revalidateOn</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>['input']</code></span></div>
 <p>Interaction events that rerun the active validation intent after validation fails.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>schema</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Schema</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormSchema&lt;Input, Output&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Standard Schema used for authoritative submission validation and output transformation.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>validate</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormValidateHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormValidateHandler&lt;Input&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Validates the current field and returns application issues.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>validateOn</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
 <p>Interaction events that run validation before the first submission attempt.</p>
 </dd>
 </div>
@@ -193,7 +239,7 @@ function provideFormControlOwner(): void
 <div class="component-api-definition">
 <dt><code>name</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldPath</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldPathOf&lt;Values&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Name used for native form submission.</p>
 </dd>
 </div>
@@ -424,9 +470,9 @@ function provideFormControlOwner(): void
 #### `FormSubmitEvent`
 
 ```ts
-type FormSubmitEvent<Schema extends FormSchema = FormSchema> =
+type FormSubmitEvent<Values extends object = Record<string, unknown>> =
 Omit<
-  DOMFormSubmitPayload<string, FormSchemaOutput<Schema>>,
+  DOMFormSubmitPayload<string, FormValues<Values>>,
   'event'
 > & {
   readonly nativeEvent: SubmitEvent;
@@ -481,10 +527,18 @@ type FormSchemaInput<Schema extends FormSchema> = Schema extends DOMFormSchema<i
 type FormSchemaOutput<Schema extends FormSchema> = Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never
 ```
 
+#### `FormIssueInput`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `id` | `string` | — |
+| `message` | `string` | Yes |
+| `path` | `FormFieldPath` | — |
+
 #### `FormSubmitIssue`
 
 ```ts
-type FormSubmitIssue = Omit<FormIssue, 'source'>
+type FormSubmitIssue = FormIssueInput
 ```
 
 #### `FormSubmitResult`
@@ -499,7 +553,16 @@ type FormSubmitResult =
 #### `FormSubmitHandler`
 
 ```ts
-type FormSubmitHandler<Schema extends FormSchema = FormSchema> = (event: FormSubmitEvent<Schema>) => FormSubmitResult | PromiseLike<FormSubmitResult>
+type FormSubmitHandler<Values extends object = Record<string, unknown>> = (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>
+```
+
+#### `FormSubmitErrorMapper`
+
+```ts
+type FormSubmitErrorMapper =
+(
+  reason: unknown,
+) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined
 ```
 
 #### `FormResetHandler`
@@ -535,7 +598,7 @@ type FormValidationResult = DOMFormValidationResult
 #### `FormValidateHandler`
 
 ```ts
-type FormValidateHandler<Schema extends FormSchema = FormSchema> = DOMFormValidateHandler<string, FormSchemaInput<Schema>>
+type FormValidateHandler<Values extends object = Record<string, unknown>> = DOMFormValidateHandler<string, FormValues<Values>>
 ```
 
 #### `FormSubmitStartedAction`
@@ -577,6 +640,19 @@ type FormResetAction = () => void
 ```
 
 #### `FormRootComponent`
+
+#### `FormFieldPathOf`
+
+```ts
+type FormFieldPathOf<Values extends object> =
+string extends keyof Values
+  ? FormFieldPath
+  : (keyof Values & string) | FormFieldPathSegments<Values>
+```
+
+#### `TypedFormRootComponent`
+
+#### `TypedFormFieldComponent`
 
 #### `FormLabelMode`
 
@@ -668,6 +744,19 @@ type FormSubmissionSource =
 | --- | --- | --- |
 | `participating` | `boolean` | Yes |
 | `controlProps` | `ComputedRef<Readonly<Record<string, unknown>>>` | Yes |
+
+#### `TypedFormComponents`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `Root` | `TypedFormRootComponent<Input, Output>` | Yes |
+| `Field` | `TypedFormFieldComponent<Input>` | Yes |
+| `Label` | `typeof FormLabel` | Yes |
+| `Description` | `typeof FormDescription` | Yes |
+| `Message` | `typeof FormMessage` | Yes |
+| `Summary` | `typeof FormSummary` | Yes |
+| `Reset` | `typeof FormReset` | Yes |
+| `Submit` | `typeof FormSubmit` | Yes |
 
 ## Parts
 

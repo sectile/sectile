@@ -48,12 +48,23 @@ Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-제출 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받습니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
+`onSubmit`은 Vue emit이 아니라 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 `:on-submit="save"`로 전달합니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
+
+서버 이슈는 내부 필드 ID 대신 `path`로 연결할 수 있습니다. 예: `{ message: 'Already registered', path: 'email' }` 또는 `{ message: 'Invalid', path: ['members', 0, 'email'] }`. `id`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 내부 오류 메시지를 노출하지 않고 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 `mapSubmitError`에서 명시적으로 변환합니다.
+
+### 타입이 지정된 폼
+
+`createTypedForm<Values>()`는 같은 값 타입으로 고정된 `Root`와 `Field`를 반환합니다. `Field.name`은 중첩 배열과 배열 인덱스를 포함한 실제 값 경로만 허용합니다. 스키마가 입력을 출력으로 변환하면 `createTypedForm<Input, Output>()`을 사용합니다.
+
+### 사용자 정의 컨트롤
+
+단일 네이티브 입력에는 `useNativeInputFormControl`, 여러 DOM 요소가 한 값을 구성하는 컨트롤에는 `useCompositeFormControl`을 사용합니다. 저수준 조정이 필요하면 `useFormControl`과 공개 capability preset을 조합합니다. 하나의 필드에 독립적인 활성 컨트롤을 여러 개 등록하지 말고 복합 컨트롤 하나로 등록합니다.
 
 ### 상태와 검증
 
 - 브라우저 제약 조건과 각 참여 입력의 검증 결과를 하나의 이슈 목록으로 합칩니다.
 - `FormSummary`는 폼 전체 이슈를, `FormMessage`는 현재 필드 이슈를 표시합니다.
+- `issues`, `schema`, `validateOn` 같은 동적 설정이 바뀌어도 dirty, touched, 제출 상태는 유지합니다.
 - 루트 슬롯의 `submitStarted`, `submitSucceeded`, `submitFailed`, `replaceIssues`로 비동기 및 서버 검증 상태를 반영할 수 있습니다.
 - `TextField`는 `v-model.trim`, `v-model.number`, `v-model.lazy`를 지원합니다. 다른 입력은 각 컴포넌트의 값 타입과 모델 계약을 유지합니다.
 
@@ -86,6 +97,11 @@ Vue 패키지: `@sectile/vue/form`
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormReset</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
+  <li><code class="component-api-token">nativeInputControlCapabilities</code></li>
+  <li><code class="component-api-token">compositeControlCapabilities</code></li>
+  <li><code class="component-api-token">hiddenInputSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenSelectSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenValueSubmissionCapabilities</code></li>
 </ul>
 </div>
 
@@ -97,10 +113,33 @@ Vue 패키지: `@sectile/vue/form`
 function useFormControl(registration: FormControlRegistration): FormControlParticipation
 ```
 
+#### `useNativeInputFormControl`
+
+```ts
+function useNativeInputFormControl(element: Ref<HTMLInputElement | HTMLTextAreaElement | null | undefined>): FormControlParticipation
+```
+
+#### `useCompositeFormControl`
+
+```ts
+function useCompositeFormControl(options: {
+  readonly root: FormElementSource;
+  readonly focusTarget?: FormElementSource;
+  readonly submissions?: FormSubmissionSource;
+  readonly labelMode?: FormLabelMode;
+}): FormControlParticipation
+```
+
 #### `provideFormControlOwner`
 
 ```ts
 function provideFormControlOwner(): void
+```
+
+#### `createTypedForm`
+
+```ts
+function createTypedForm<Input extends object, Output extends object = Input>(): TypedFormComponents<Input, Output>
 ```
 
 ### Props
@@ -111,42 +150,49 @@ function provideFormControlOwner(): void
 <div class="component-api-definition">
 <dt><code>issues</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssue[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormIssueInput[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
 <p>애플리케이션이 제공하는 검증 이슈입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>mapSubmitError</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitErrorMapper</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>제출 중 throw 또는 reject된 오류를 사용자에게 노출해도 되는 이슈로 변환하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>onSubmit</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSubmitHandler&lt;Output&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>revalidateOn</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>['input']</code></span></div>
 <p>검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>schema</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Schema</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormSchema&lt;Input, Output&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>최종 제출 검증과 출력 변환에 사용할 Standard Schema입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>validate</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormValidateHandler&lt;Schema&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormValidateHandler&lt;Input&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>validateOn</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly FormInteractionValidationTrigger[]</code></span><span><span class="component-api-definition__label">기본값</span><code>[]</code></span></div>
 <p>첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다.</p>
 </dd>
 </div>
@@ -193,7 +239,7 @@ function provideFormControlOwner(): void
 <div class="component-api-definition">
 <dt><code>name</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormFieldPath</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormFieldPathOf&lt;Values&gt;</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>네이티브 폼 제출에 사용할 이름입니다.</p>
 </dd>
 </div>
@@ -424,9 +470,9 @@ function provideFormControlOwner(): void
 #### `FormSubmitEvent`
 
 ```ts
-type FormSubmitEvent<Schema extends FormSchema = FormSchema> =
+type FormSubmitEvent<Values extends object = Record<string, unknown>> =
 Omit<
-  DOMFormSubmitPayload<string, FormSchemaOutput<Schema>>,
+  DOMFormSubmitPayload<string, FormValues<Values>>,
   'event'
 > & {
   readonly nativeEvent: SubmitEvent;
@@ -481,10 +527,18 @@ type FormSchemaInput<Schema extends FormSchema> = Schema extends DOMFormSchema<i
 type FormSchemaOutput<Schema extends FormSchema> = Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never
 ```
 
+#### `FormIssueInput`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `id` | `string` | — |
+| `message` | `string` | 필수 |
+| `path` | `FormFieldPath` | — |
+
 #### `FormSubmitIssue`
 
 ```ts
-type FormSubmitIssue = Omit<FormIssue, 'source'>
+type FormSubmitIssue = FormIssueInput
 ```
 
 #### `FormSubmitResult`
@@ -499,7 +553,16 @@ type FormSubmitResult =
 #### `FormSubmitHandler`
 
 ```ts
-type FormSubmitHandler<Schema extends FormSchema = FormSchema> = (event: FormSubmitEvent<Schema>) => FormSubmitResult | PromiseLike<FormSubmitResult>
+type FormSubmitHandler<Values extends object = Record<string, unknown>> = (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>
+```
+
+#### `FormSubmitErrorMapper`
+
+```ts
+type FormSubmitErrorMapper =
+(
+  reason: unknown,
+) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined
 ```
 
 #### `FormResetHandler`
@@ -535,7 +598,7 @@ type FormValidationResult = DOMFormValidationResult
 #### `FormValidateHandler`
 
 ```ts
-type FormValidateHandler<Schema extends FormSchema = FormSchema> = DOMFormValidateHandler<string, FormSchemaInput<Schema>>
+type FormValidateHandler<Values extends object = Record<string, unknown>> = DOMFormValidateHandler<string, FormValues<Values>>
 ```
 
 #### `FormSubmitStartedAction`
@@ -577,6 +640,19 @@ type FormResetAction = () => void
 ```
 
 #### `FormRootComponent`
+
+#### `FormFieldPathOf`
+
+```ts
+type FormFieldPathOf<Values extends object> =
+string extends keyof Values
+  ? FormFieldPath
+  : (keyof Values & string) | FormFieldPathSegments<Values>
+```
+
+#### `TypedFormRootComponent`
+
+#### `TypedFormFieldComponent`
 
 #### `FormLabelMode`
 
@@ -668,6 +744,19 @@ type FormSubmissionSource =
 | --- | --- | --- |
 | `participating` | `boolean` | 필수 |
 | `controlProps` | `ComputedRef<Readonly<Record<string, unknown>>>` | 필수 |
+
+#### `TypedFormComponents`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `Root` | `TypedFormRootComponent<Input, Output>` | 필수 |
+| `Field` | `TypedFormFieldComponent<Input>` | 필수 |
+| `Label` | `typeof FormLabel` | 필수 |
+| `Description` | `typeof FormDescription` | 필수 |
+| `Message` | `typeof FormMessage` | 필수 |
+| `Summary` | `typeof FormSummary` | 필수 |
+| `Reset` | `typeof FormReset` | 필수 |
+| `Submit` | `typeof FormSubmit` | 필수 |
 
 ## 파트
 

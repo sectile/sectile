@@ -125,10 +125,21 @@ export interface FormOptions<
   readonly onUpdate?: FormUpdateHandler;
 }
 
-export interface FormConnection<ID extends StableID = StableID> {
+export type FormReconfigureOptions<
+  ID extends StableID = StableID,
+  Input extends object = FormValues,
+  Output extends object = Input,
+> = Omit<FormOptions<ID, Input, Output>, 'form' | 'participants' | 'issues'>;
+
+export interface FormConnection<
+  ID extends StableID = StableID,
+  Input extends object = FormValues,
+  Output extends object = Input,
+> {
   readonly state: FormState<ID>;
   getSnapshot(): FormSnapshot<ID>;
   getFormData(submitter?: HTMLElement | null): FormData;
+  reconfigure(options: FormReconfigureOptions<ID, Input, Output>): void;
   registerParticipant(participant: FormParticipant<ID>): () => void;
   refreshParticipant(id: ID): boolean;
   replaceIssues(source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;
@@ -146,7 +157,7 @@ export function createForm<
   Output extends object = Input,
 >(
   options: FormOptions<ID, Input, Output>,
-): FormConnection<ID> {
+): FormConnection<ID, Input, Output> {
   return unwrap(tryCreateForm(options));
 }
 
@@ -156,7 +167,7 @@ export function tryCreateForm<
   Output extends object = Input,
 >(
   options: FormOptions<ID, Input, Output>,
-): Result<FormConnection<ID>> {
+): Result<FormConnection<ID, Input, Output>> {
   const initial = tryCreateFormState<ID>({ issues: options.issues ?? [] });
   if (!initial.ok) return initial;
 
@@ -168,26 +179,68 @@ export function tryCreateForm<
   let invalidBatchPending = false;
   let validationSequence = 0;
   let validationController: AbortController | null = null;
-  const validateOn = new Set(options.validateOn ?? []);
-  const revalidateOn = new Set(options.revalidateOn ?? ['input']);
+  let summary: HTMLElement | undefined = options.summary;
+  let schemaOption: FormSchema<Input, Output> | undefined = options.schema;
+  let validateOption: FormValidateHandler<ID, Input> | undefined = options.validate;
+  let validateOn = new Set<FormInteractionValidationTrigger>(options.validateOn ?? []);
+  let revalidateOn = new Set<FormInteractionValidationTrigger>(options.revalidateOn ?? ['input']);
+  let submitHandler: FormSubmitHandler<ID, Output> | undefined = options.onSubmit;
+  let resetHandler: FormResetHandler | undefined = options.onReset;
+  let announceSummaryHandler: FormAnnounceSummaryHandler<ID> | undefined = options.onAnnounceSummary;
+  let stateChangeHandler: FormStateChangeHandler<ID> | undefined = options.onStateChange;
+  let updateHandler: FormUpdateHandler | undefined = options.onUpdate;
 
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
-  if (options.summary !== undefined) {
-    options.summary.dataset['scope'] = 'form';
-    options.summary.dataset['part'] = 'summary';
-    options.summary.setAttribute('role', 'alert');
-    options.summary.setAttribute('aria-live', 'polite');
-    options.summary.tabIndex = -1;
-    options.summary.hidden = true;
-  }
+  const configureSummary = (element: HTMLElement | undefined): void => {
+    summary = element;
+    if (element === undefined) return;
+    element.dataset['scope'] = 'form';
+    element.dataset['part'] = 'summary';
+    element.setAttribute('role', 'alert');
+    element.setAttribute('aria-live', 'polite');
+    element.tabIndex = -1;
+    element.hidden = state.valid;
+  };
+  configureSummary(summary);
+
+  const sameTriggers = (
+    left: ReadonlySet<FormInteractionValidationTrigger>,
+    right: readonly FormInteractionValidationTrigger[],
+  ): boolean => left.size === right.length && right.every((trigger) => left.has(trigger));
+  const reconfigure = (next: FormReconfigureOptions<ID, Input, Output>): void => {
+    if (!active) return;
+    const nextValidateOn = next.validateOn ?? [];
+    const nextRevalidateOn = next.revalidateOn ?? ['input'];
+    const validationChanged = schemaOption !== next.schema
+      || validateOption !== next.validate
+      || !sameTriggers(validateOn, nextValidateOn)
+      || !sameTriggers(revalidateOn, nextRevalidateOn);
+    configureSummary(next.summary);
+    schemaOption = next.schema;
+    validateOption = next.validate;
+    validateOn = new Set<FormInteractionValidationTrigger>(nextValidateOn);
+    revalidateOn = new Set<FormInteractionValidationTrigger>(nextRevalidateOn);
+    submitHandler = next.onSubmit;
+    resetHandler = next.onReset;
+    announceSummaryHandler = next.onAnnounceSummary;
+    stateChangeHandler = next.onStateChange;
+    updateHandler = next.onUpdate;
+    if (!validationChanged) return;
+    validationController?.abort();
+    validationController = null;
+    validationSequence += 1;
+    transition({ type: 'validation-invalidated' });
+    transition({ type: 'replace-issues', source: 'validate', issues: [] });
+    transition({ type: 'replace-issues', source: 'schema', issues: [] });
+  };
 
   const snapshot = (): FormSnapshot<ID> => Object.freeze({ revision, state });
   const notify = (): void => {
     revision += 1;
     const next = snapshot();
-    options.onStateChange?.(state);
-    options.onUpdate?.();
+    stateChangeHandler?.(state);
+    updateHandler?.();
     for (const subscriber of subscribers) subscriber(next);
   };
   const transition = (event: FormEvent<ID>): readonly FormCommand<ID>[] | null => {
@@ -237,11 +290,11 @@ export function tryCreateForm<
   };
   const announce = (issueIds: readonly StableID[]): void => {
     const issues = orderedIssues(state).filter((issue) => issueIds.includes(issue.id));
-    if (options.summary !== undefined) {
-      options.summary.textContent = issues.map((issue) => issue.message).join(' ');
-      options.summary.hidden = issues.length === 0;
+    if (summary !== undefined) {
+      summary.textContent = issues.map((issue) => issue.message).join(' ');
+      summary.hidden = issues.length === 0;
     }
-    options.onAnnounceSummary?.(issues);
+    announceSummaryHandler?.(issues);
   };
   const execute = (commands: readonly FormCommand<ID>[]): void => {
     for (const command of commands) {
@@ -338,7 +391,7 @@ export function tryCreateForm<
       return;
     }
     if (event === null) return;
-    options.onSubmit?.({
+    submitHandler?.({
       event,
       formData,
       values: schema !== null && schema.issues === undefined ? schema.value : input as unknown as Output,
@@ -379,13 +432,13 @@ export function tryCreateForm<
     let custom: FormValidationResult | PromiseLike<FormValidationResult> = {};
     let schema: StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>> | null = null;
     try {
-      custom = options.validate?.(input, context) ?? {};
+      custom = validateOption?.(input, context) ?? {};
     } catch (error) {
       custom = validationException(error);
     }
-    if (intent === 'submission' && options.schema !== undefined) {
+    if (intent === 'submission' && schemaOption !== undefined) {
       try {
-        schema = options.schema['~standard'].validate(input);
+        schema = schemaOption['~standard'].validate(input);
       } catch (error) {
         schema = schemaException(error);
       }
@@ -480,11 +533,11 @@ export function tryCreateForm<
     validationSequence += 1;
     const commands = transition('reset');
     if (commands !== null) execute(commands);
-    if (options.summary !== undefined) {
-      options.summary.textContent = '';
-      options.summary.hidden = true;
+    if (summary !== undefined) {
+      summary.textContent = '';
+      summary.hidden = true;
     }
-    options.onReset?.();
+    resetHandler?.();
   };
 
   options.form.addEventListener('input', onInput, true);
@@ -515,10 +568,11 @@ export function tryCreateForm<
 
   for (const participant of options.participants ?? []) registerParticipant(participant);
 
-  const connection: FormConnection<ID> = {
+  const connection: FormConnection<ID, Input, Output> = {
     get state() { return state; },
     getSnapshot: snapshot,
     getFormData: (submitter = null) => createNativeFormData(options.form, submitter),
+    reconfigure,
     registerParticipant,
     refreshParticipant: (id) => {
       const participant = participants.get(id);
@@ -632,22 +686,16 @@ function isPromiseLike<T>(value: T | PromiseLike<T> | null): value is PromiseLik
     && typeof value.then === 'function';
 }
 
-function validationException(reason: unknown): FormValidationResult {
+function validationException(_reason: unknown): FormValidationResult {
   return Object.freeze({
-    issues: Object.freeze([{ message: errorMessage(reason, 'Form validation failed.') }]),
+    issues: Object.freeze([{ message: 'Form validation failed.' }]),
   });
 }
 
-function schemaException<Output>(reason: unknown): StandardSchemaV1.FailureResult {
+function schemaException<Output>(_reason: unknown): StandardSchemaV1.FailureResult {
   return Object.freeze({
-    issues: Object.freeze([{ message: errorMessage(reason, 'Schema validation failed.') }]),
+    issues: Object.freeze([{ message: 'Schema validation failed.' }]),
   });
-}
-
-function errorMessage(reason: unknown, fallback: string): string {
-  return reason instanceof Error && reason.message.trim().length > 0
-    ? reason.message.trim()
-    : fallback;
 }
 
 function standardSchemaPath(

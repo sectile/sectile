@@ -49,6 +49,11 @@ const popupRootDefaults = Object.freeze({
 });
 
 export function vueApiDefault(locale, component, typeName, property, extracted) {
+  if (component === 'form' && typeName === 'FormRootProps') {
+    if (property === 'issues' || property === 'validateOn') return { code: '[]' };
+    if (property === 'revalidateOn') return { code: "['input']" };
+  }
+
   if (component === 'listbox' && typeName === 'ListboxRootProps' && property === 'selectionMode') {
     return { code: "'single'" };
   }

@@ -213,7 +213,7 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
     if (mode === 'field-error') {
       return {
         ok: false,
-        issues: [{ id: 'email-taken', fieldId: 'email', message: 'Email already in use.' }],
+        issues: [{ path: 'email', message: 'Email already in use.' }],
       };
     }
     return Promise.reject(new Error('Network unavailable.'));
@@ -267,7 +267,7 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   await Promise.resolve();
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'failed');
-  assert.match(summary.textContent ?? '', /Network unavailable/);
+  assert.match(summary.textContent ?? '', /Form submission failed/);
 
   app.unmount();
   host.remove();

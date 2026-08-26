@@ -32,6 +32,7 @@ import {
   type FormOptions,
   type FormParticipant,
   type FormRelativePath,
+  type FormPathSegment,
   type FormSchema as DOMFormSchema,
   type FormSubmissionElement,
   type FormSubmitPayload as DOMFormSubmitPayload,
@@ -56,8 +57,8 @@ export type FormSchemaInput<Schema extends FormSchema> =
   Schema extends DOMFormSchema<infer Input extends object, object> ? Input : never;
 export type FormSchemaOutput<Schema extends FormSchema> =
   Schema extends DOMFormSchema<object, infer Output extends object> ? Output : never;
-export type FormSubmitEvent<Schema extends FormSchema = FormSchema> = Omit<
-  DOMFormSubmitPayload<string, FormSchemaOutput<Schema>>,
+export type FormSubmitEvent<Values extends object = Record<string, unknown>> = Omit<
+  DOMFormSubmitPayload<string, FormValues<Values>>,
   'event'
 > & {
   readonly nativeEvent: SubmitEvent;
@@ -66,20 +67,28 @@ export type FormSubmitEvent<Schema extends FormSchema = FormSchema> = Omit<
   stopPropagation(): void;
   stopImmediatePropagation(): void;
 };
-export type FormSubmitIssue = Omit<FormIssue, 'source'>;
+export interface FormIssueInput {
+  readonly id?: string;
+  readonly message: string;
+  readonly path?: FormFieldPath;
+}
+export type FormSubmitIssue = FormIssueInput;
 export type FormSubmitResult =
   | void
   | { readonly ok: true }
   | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] };
-export type FormSubmitHandler<Schema extends FormSchema = FormSchema> =
-  (event: FormSubmitEvent<Schema>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
+export type FormSubmitHandler<Values extends object = Record<string, unknown>> =
+  (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
+export type FormSubmitErrorMapper = (
+  reason: unknown,
+) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined;
 export type FormResetHandler = () => void;
 export type FormStateChangeHandler = (state: FormState) => void;
 export type FormValidateContext = DOMFormValidateContext<string>;
 export type FormValidationIssue = DOMFormValidationIssue;
 export type FormValidationResult = DOMFormValidationResult;
-export type FormValidateHandler<Schema extends FormSchema = FormSchema> =
-  DOMFormValidateHandler<string, FormSchemaInput<Schema>>;
+export type FormValidateHandler<Values extends object = Record<string, unknown>> =
+  DOMFormValidateHandler<string, FormValues<Values>>;
 export type FormSubmitStartedAction = () => number | null;
 export type FormSubmitSucceededAction = (generation: number) => boolean;
 export type FormSubmitFailedAction = (
@@ -92,13 +101,17 @@ export type FormReplaceIssuesAction = (
 ) => boolean;
 export type FormResetAction = () => void;
 
-export interface FormRootProps<Schema extends FormSchema = FormSchema> {
-  readonly issues?: readonly FormIssue[];
-  readonly schema?: Schema;
-  readonly validate?: FormValidateHandler<Schema>;
+export interface FormRootProps<
+  Input extends object = Record<string, unknown>,
+  Output extends object = Input,
+> {
+  readonly issues?: readonly FormIssueInput[];
+  readonly schema?: FormSchema<Input, Output>;
+  readonly validate?: FormValidateHandler<Input>;
   readonly validateOn?: readonly FormInteractionValidationTrigger[];
   readonly revalidateOn?: readonly FormInteractionValidationTrigger[];
-  readonly onSubmit?: FormSubmitHandler<Schema>;
+  readonly onSubmit?: FormSubmitHandler<Output>;
+  readonly mapSubmitError?: FormSubmitErrorMapper;
 }
 
 export interface FormRootSlotProps {
@@ -119,8 +132,10 @@ export interface FormRootSlotProps {
   readonly reset: FormResetAction;
 }
 
-export type FormRootPublicProps<Schema extends FormSchema = FormSchema> =
-  FormRootProps<Schema>
+export type FormRootPublicProps<
+  Input extends object = Record<string, unknown>,
+  Output extends object = Input,
+> = FormRootProps<Input, Output>
   & VNodeProps
   & AllowedComponentProps
   & ComponentCustomProps
@@ -130,23 +145,64 @@ export type FormRootPublicProps<Schema extends FormSchema = FormSchema> =
   };
 
 export interface FormRootComponent {
-  new <Schema extends FormSchema = FormSchema>(props: FormRootPublicProps<Schema>): {
-    $props: FormRootPublicProps<Schema>;
+  new <Input extends object = Record<string, unknown>, Output extends object = Input>(props: FormRootPublicProps<Input, Output>): {
+    $props: FormRootPublicProps<Input, Output>;
     $slots: {
       default?: (props: FormRootSlotProps) => VNodeChild;
     };
   };
 }
 
-export interface FormFieldProps {
+type FormFieldLeaf = string | number | boolean | bigint | symbol | null | undefined | Date | Blob | File;
+type FormFieldPathSegments<
+  Value,
+  Depth extends readonly unknown[] = [],
+> = Depth['length'] extends 8
+  ? never
+  : NonNullable<Value> extends FormFieldLeaf
+    ? never
+    : NonNullable<Value> extends readonly (infer Item)[]
+      ? readonly [number] | readonly [number, ...FormFieldPathSegments<Item, readonly [...Depth, unknown]>]
+      : NonNullable<Value> extends object
+        ? {
+            [Key in keyof NonNullable<Value> & string]:
+              | readonly [Key]
+              | readonly [Key, ...FormFieldPathSegments<NonNullable<Value>[Key], readonly [...Depth, unknown]>]
+          }[keyof NonNullable<Value> & string]
+        : never;
+export type FormFieldPathOf<Values extends object> = string extends keyof Values
+  ? FormFieldPath
+  : (keyof Values & string) | FormFieldPathSegments<Values>;
+
+export interface FormFieldProps<Values extends object = Record<string, unknown>> {
   readonly id?: string;
-  readonly name?: FormFieldPath;
+  readonly name?: FormFieldPathOf<Values>;
   readonly form?: string;
   readonly required?: boolean;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
+}
+
+export type FormFieldPublicProps<Values extends object = Record<string, unknown>> =
+  FormFieldProps<Values>
+  & VNodeProps
+  & AllowedComponentProps
+  & ComponentCustomProps;
+
+export interface TypedFormRootComponent<Input extends object, Output extends object = Input> {
+  new (props: FormRootPublicProps<Input, Output>): {
+    $props: FormRootPublicProps<Input, Output>;
+    $slots: { default?: (props: FormRootSlotProps) => VNodeChild };
+  };
+}
+
+export interface TypedFormFieldComponent<Values extends object> {
+  new (props: FormFieldPublicProps<Values>): {
+    $props: FormFieldPublicProps<Values>;
+    $slots: { default?: (props: FormFieldSlotProps) => VNodeChild };
+  };
 }
 
 export interface FormFieldSlotProps {
@@ -279,7 +335,7 @@ const FormRootImpl = defineComponent({
   name: 'SectileFormRoot',
   inheritAttrs: false,
   props: {
-    issues: { type: Array as PropType<readonly FormIssue[]>, default: () => [] },
+    issues: { type: Array as PropType<readonly FormIssueInput[]>, default: () => [] },
     schema: { type: Object as PropType<FormSchema>, default: undefined },
     validate: { type: Function as PropType<FormValidateHandler>, default: undefined },
     validateOn: {
@@ -291,6 +347,7 @@ const FormRootImpl = defineComponent({
       default: () => ['input'],
     },
     onSubmit: { type: Function as PropType<FormSubmitHandler>, default: undefined },
+    mapSubmitError: { type: Function as PropType<FormSubmitErrorMapper>, default: undefined },
   },
   emits: {
     reset: (): boolean => true,
@@ -303,6 +360,7 @@ const FormRootImpl = defineComponent({
     const state = shallowRef<FormState>(emptyState);
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
+    let syncConfiguredIssues = (): void => {};
 
     const sync = (): void => {
       if (connection.value !== null) state.value = connection.value.getSnapshot().state;
@@ -313,11 +371,13 @@ const FormRootImpl = defineComponent({
       const registered: RegisteredParticipant = { participant };
       participants.set(participant.id, registered);
       if (connection.value !== null) registered.unregister = connection.value.registerParticipant(participant);
+      void nextTick(() => syncConfiguredIssues());
       return (): void => {
         if (participants.get(participant.id) !== registered) return;
         registered.unregister?.();
         participants.delete(participant.id);
         sync();
+        void nextTick(syncConfiguredIssues);
       };
     };
     const settleSubmission = (
@@ -327,7 +387,7 @@ const FormRootImpl = defineComponent({
     ): void => {
       if (connection.value !== target) return;
       if (typeof result === 'object' && result !== null && result.ok === false) {
-        target.submitFailed(generation, toServerIssues(result.issues));
+        target.submitFailed(generation, resolveIssueInputs(target, 'server', result.issues ?? [submissionErrorIssue()]));
         return;
       }
       target.submitSucceeded(generation);
@@ -338,7 +398,7 @@ const FormRootImpl = defineComponent({
       reason: unknown,
     ): void => {
       if (connection.value !== target) return;
-      target.submitFailed(generation, [submissionErrorIssue(reason)]);
+      target.submitFailed(generation, resolveIssueInputs(target, 'server', mapSubmissionError(props.mapSubmitError, reason)));
     };
     const submit = (payload: DOMFormSubmitPayload<string>): void => {
       const handler = props.onSubmit;
@@ -367,38 +427,50 @@ const FormRootImpl = defineComponent({
       }
       settleSubmission(target, generation, result);
     };
+    const configuration = () => ({
+      ...(summary.value === null ? {} : { summary: summary.value }),
+      ...(props.schema === undefined ? {} : { schema: props.schema }),
+      ...(props.validate === undefined ? {} : { validate: props.validate }),
+      validateOn: props.validateOn,
+      revalidateOn: props.revalidateOn,
+      onSubmit: submit,
+      onReset: () => emit('reset'),
+      onStateChange: (next: FormState) => {
+        state.value = next;
+        emit('stateChange', next);
+      },
+    });
+    syncConfiguredIssues = (): void => {
+      const target = connection.value;
+      if (target === null) return;
+      target.replaceIssues('form', resolveIssueInputs(target, 'form', props.issues));
+    };
     const mount = (): void => {
       if (root.value === null) return;
       connection.value?.destroy();
       connection.value = createForm({
         form: root.value,
-        ...(summary.value === null ? {} : { summary: summary.value }),
-        issues: props.issues,
-        ...(props.schema === undefined ? {} : { schema: props.schema }),
-        ...(props.validate === undefined ? {} : { validate: props.validate }),
-        validateOn: props.validateOn,
-        revalidateOn: props.revalidateOn,
-        onSubmit: submit,
-        onReset: () => emit('reset'),
-        onStateChange: (next) => {
-          state.value = next;
-          emit('stateChange', next);
-        },
+        ...configuration(),
       });
       for (const registered of participants.values()) {
         registered.unregister = connection.value.registerParticipant(registered.participant);
       }
+      syncConfiguredIssues();
       sync();
     };
 
     onMounted(() => { void nextTick(mount); });
     onBeforeUnmount(() => connection.value?.destroy());
     watch([
+      summary,
       () => props.schema,
       () => props.validate,
-      () => props.validateOn,
-      () => props.revalidateOn,
-    ], () => { void nextTick(mount); });
+      () => [...props.validateOn],
+      () => [...props.revalidateOn],
+    ], () => {
+      void nextTick(() => connection.value?.reconfigure(configuration()));
+    });
+    watch(() => props.issues, () => { void nextTick(syncConfiguredIssues); }, { deep: true });
 
     const actions = {
       submitStarted: (): number | null => connection.value?.submitStarted() ?? null,
@@ -458,19 +530,48 @@ function isPromiseLike(value: unknown): value is PromiseLike<FormSubmitResult> {
     && typeof value.then === 'function';
 }
 
-function toServerIssues(input: readonly FormSubmitIssue[] | undefined): readonly FormIssue[] {
-  if (input === undefined || input.length === 0) return [submissionErrorIssue()];
-  return Object.freeze(input.map((issue) => Object.freeze({ ...issue, source: 'server' as const })));
+function resolveIssueInputs(
+  target: FormConnection<string>,
+  source: 'form' | 'server',
+  input: readonly FormIssueInput[],
+): readonly FormIssue[] {
+  const fields = target.getSnapshot().state.fields;
+  return Object.freeze(input.map((issue, index) => {
+    const name = issue.path === undefined ? undefined : encodeFormFieldPath(issue.path);
+    const owner = name === undefined
+      ? undefined
+      : fields.find((field) => field.name === name);
+    return Object.freeze({
+      id: issue.id ?? `form-${source}-issue-${index + 1}`,
+      message: issue.message,
+      source,
+      ...(owner === undefined ? {} : { fieldId: owner.id }),
+    });
+  }));
 }
 
-function submissionErrorIssue(reason?: unknown): FormIssue {
-  const message = reason instanceof Error
-    ? reason.message.trim()
-    : typeof reason === 'string' ? reason.trim() : '';
+function mapSubmissionError(
+  mapper: FormSubmitErrorMapper | undefined,
+  reason: unknown,
+): readonly FormSubmitIssue[] {
+  if (mapper !== undefined) {
+    try {
+      const mapped = mapper(reason);
+      if (mapped !== undefined) {
+        const issues = Array.isArray(mapped) ? mapped : [mapped as FormSubmitIssue];
+        if (issues.length > 0) return Object.freeze([...issues]);
+      }
+    } catch {
+      // Mapping failures are intentionally replaced by the safe fallback below.
+    }
+  }
+  return Object.freeze([submissionErrorIssue()]);
+}
+
+function submissionErrorIssue(): FormSubmitIssue {
   return Object.freeze({
     id: 'form-submit-error',
-    message: message || 'Form submission failed.',
-    source: 'server',
+    message: 'Form submission failed.',
   });
 }
 
@@ -500,6 +601,7 @@ export const FormField = defineComponent({
     const appliedAttributes = new Map<HTMLElement, Map<string, string | null>>();
     let observer: MutationObserver | undefined;
     let unregister: (() => void) | undefined;
+    let warnedMultipleControls = false;
 
     const activeControl = computed(() => (
       controls.value.find((registration) => resolveElement(registration.element) !== null)
@@ -630,7 +732,18 @@ export const FormField = defineComponent({
     const registerControl = (registration: FormControlRegistration): (() => void) => {
       controls.value = [...controls.value, registration];
       fallback.value = null;
-      void nextTick(applyControlAttributes);
+      void nextTick(() => {
+        const activeRegistrations = controls.value.filter(
+          (candidate) => resolveElement(candidate.element) !== null,
+        );
+        if (!warnedMultipleControls && activeRegistrations.length > 1) {
+          warnedMultipleControls = true;
+          console.warn(
+            '[Sectile] FormField received multiple active control registrations. Register one composite control with explicit semantic, focus, and submission targets.',
+          );
+        }
+        applyControlAttributes();
+      });
       return (): void => {
         controls.value = controls.value.filter((candidate) => candidate !== registration);
         discoverNativeFallback();
@@ -890,8 +1003,94 @@ export function useFormControl(
   return Object.freeze({ participating: field !== null && !owned, controlProps });
 }
 
+export const nativeInputControlCapabilities = Object.freeze({
+  id: true,
+  describedBy: true,
+  invalid: true,
+  required: true,
+  disabled: true,
+  readonly: true,
+}) satisfies FormControlCapabilities;
+
+export const compositeControlCapabilities = Object.freeze({
+  id: true,
+  describedBy: true,
+  invalid: true,
+  labelledBy: true,
+}) satisfies FormControlCapabilities;
+
+export const hiddenInputSubmissionCapabilities = Object.freeze({
+  name: true,
+  form: true,
+  required: true,
+  disabled: true,
+}) satisfies FormSubmissionCapabilities;
+
+export const hiddenSelectSubmissionCapabilities = hiddenInputSubmissionCapabilities;
+
+export const hiddenValueSubmissionCapabilities = Object.freeze({
+  name: true,
+  form: true,
+  disabled: true,
+}) satisfies FormSubmissionCapabilities;
+
+export function useNativeInputFormControl(
+  element: Ref<HTMLInputElement | HTMLTextAreaElement | null | undefined>,
+): FormControlParticipation {
+  return useFormControl({
+    element: element as FormElementSource<HTMLInputElement>,
+    semanticControl: element as FormElementSource<HTMLInputElement>,
+    focusTarget: element as FormElementSource<HTMLInputElement>,
+    labelMode: 'for',
+    capabilities: nativeInputControlCapabilities,
+  });
+}
+
+export function useCompositeFormControl(options: {
+  readonly root: FormElementSource;
+  readonly focusTarget?: FormElementSource;
+  readonly submissions?: FormSubmissionSource;
+  readonly labelMode?: FormLabelMode;
+}): FormControlParticipation {
+  return useFormControl({
+    element: options.root,
+    semanticControl: options.root,
+    focusTarget: options.focusTarget ?? options.root,
+    labelMode: options.labelMode ?? 'labelledby',
+    capabilities: compositeControlCapabilities,
+    ...(options.submissions === undefined ? {} : { submissions: options.submissions }),
+  });
+}
+
 export function provideFormControlOwner(): void {
   provide(formControlOwnerKey, true);
+}
+
+export interface TypedFormComponents<Input extends object, Output extends object = Input> {
+  readonly Root: TypedFormRootComponent<Input, Output>;
+  readonly Field: TypedFormFieldComponent<Input>;
+  readonly Label: typeof FormLabel;
+  readonly Description: typeof FormDescription;
+  readonly Message: typeof FormMessage;
+  readonly Summary: typeof FormSummary;
+  readonly Reset: typeof FormReset;
+  readonly Submit: typeof FormSubmit;
+}
+
+export function createTypedForm<
+  Input extends object,
+  Output extends object = Input,
+>(): TypedFormComponents<Input, Output> {
+  return Object.freeze({
+    Root: FormRoot as unknown as TypedFormRootComponent<Input, Output>,
+    Field: FormField as unknown as TypedFormFieldComponent<Input>,
+    Label: FormLabel,
+    Description: FormDescription,
+    Message: FormMessage,
+    Summary: FormSummary,
+    Reset: FormReset,
+    Submit: FormSubmit,
+  });
 }
 
 function useFormContext(part: string): FormContext {

@@ -87,7 +87,7 @@ const submit: FormSubmitHandler = ({ values }) => {
     interaction="enabled"
     code=""
   >
-    <FormRoot v-slot="{ state }" class="form-demo" @submit.prevent="submit">
+    <FormRoot v-slot="{ state }" class="form-demo" :on-submit="submit">
       <header class="form-demo__header">
         <div>
           <strong>{{ panelCopy.title }}</strong>
