@@ -1,5 +1,11 @@
 # @sectile/core
 
+## 0.7.0
+
+### Changes
+
+- feat(virtual)!: version portable layout snapshots (cda114b)
+
 ## 0.6.0
 
 ### Changes

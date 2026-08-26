@@ -1,5 +1,11 @@
 # @sectile/terminal
 
+## 0.7.0
+
+### Changes
+
+- No package-specific changes.
+
 ## 0.6.0
 
 ### Changes

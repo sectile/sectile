@@ -662,6 +662,7 @@ sectile/
 │   │   │   ├── toast.test.mjs
 │   │   │   ├── tree-grid.test.mjs
 │   │   │   ├── tree-view.test.mjs
+│   │   │   ├── virtual.test.mjs
 │   │   │   └── window-splitter.test.mjs
 │   │   ├── CHANGELOG.md
 │   │   ├── LICENSE
@@ -884,7 +885,8 @@ sectile/
 │       │   ├── build.mjs
 │       │   ├── check-controlled-reconciliation.mjs
 │       │   ├── check-hydration-contract.mjs
-│       │   └── serve-browser-verification.mjs
+│       │   ├── serve-browser-verification.mjs
+│       │   └── typecheck-public-sfc.mjs
 │       ├── src/
 │       │   ├── internal/
 │       │   │   ├── collection.ts
@@ -1017,7 +1019,14 @@ sectile/
 │       │   ├── time-range-field.test.mjs
 │       │   ├── timer.test.mjs
 │       │   ├── toast.test.mjs
-│       │   └── tree-view.dom.test.mjs
+│       │   ├── tree-view.dom.test.mjs
+│       │   └── virtual.dom.test.mjs
+│       ├── type-tests/
+│       │   ├── fixtures/
+│       │   │   └── nullable-props.vue
+│       │   ├── component-contracts.ts
+│       │   ├── tsconfig.json
+│       │   └── tsconfig.vue.json
 │       ├── CHANGELOG.md
 │       ├── LICENSE
 │       ├── package.json

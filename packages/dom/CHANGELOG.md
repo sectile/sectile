@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.7.0
+
+### Changes
+
+- fix(dom): preserve virtual measurement failures (13d3cec)
+
 ## 0.6.0
 
 ### Changes

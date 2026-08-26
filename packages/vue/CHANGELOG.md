@@ -1,5 +1,12 @@
 # @sectile/vue
 
+## 0.7.0
+
+### Changes
+
+- fix(vue)!: align public prop contracts (233ce2a)
+- fix(vue)!: clarify virtual layout ownership (71336e5)
+
 ## 0.6.0
 
 ### Changes
