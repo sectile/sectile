@@ -8,6 +8,7 @@ import {
   classifyReleaseBranch,
   formatReleaseNotes,
   parseGitLog,
+  parseReleaseArguments,
   parseReleaseBumpChoice,
   prependChangelog,
   recommendBump,
@@ -66,6 +67,14 @@ test('offers every bump while keeping the recommendation optional', () => {
   assert.equal(parseReleaseBumpChoice('1', 'minor'), 'patch');
   assert.equal(parseReleaseBumpChoice('major', 'minor'), 'major');
   assert.throws(() => parseReleaseBumpChoice('automatic', 'minor'), /select patch, minor, major/u);
+});
+
+test('parses an optional dirty-worktree release guard override', () => {
+  assert.deepEqual(parseReleaseArguments(['patch']), { allowDirty: false, requestedBump: 'patch' });
+  assert.deepEqual(parseReleaseArguments(['--allow-dirty', 'minor']), { allowDirty: true, requestedBump: 'minor' });
+  assert.deepEqual(parseReleaseArguments(['major', '--', '--allow-dirty']), { allowDirty: true, requestedBump: 'major' });
+  assert.throws(() => parseReleaseArguments(['--force']), /unexpected release argument/u);
+  assert.throws(() => parseReleaseArguments(['patch', 'minor']), /multiple release bumps/u);
 });
 
 test('parses git records and renders commit-based notes', () => {

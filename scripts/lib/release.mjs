@@ -6,6 +6,21 @@ const featureSubjectPattern = /^feat(?:\([^)]*\))?:/;
 const breakingBodyPattern = /(^|\s)BREAKING CHANGE:/;
 export const releaseBumps = Object.freeze(['patch', 'minor', 'major']);
 
+export function parseReleaseArguments(args) {
+  let allowDirty = false;
+  let requestedBump;
+  for (const argument of args.filter((candidate) => candidate !== '--')) {
+    if (argument === '--allow-dirty') {
+      allowDirty = true;
+      continue;
+    }
+    assert.equal(releaseBumps.includes(argument), true, `unexpected release argument: ${argument}`);
+    assert.equal(requestedBump, undefined, `multiple release bumps: ${requestedBump}, ${argument}`);
+    requestedBump = argument;
+  }
+  return Object.freeze({ allowDirty, requestedBump });
+}
+
 export function parseStableVersion(version) {
   const match = stableVersionPattern.exec(version);
   assert.notEqual(match, null, `invalid stable version: ${version}`);
