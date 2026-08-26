@@ -11,8 +11,8 @@ import {
   type DateTimeFieldState,
   type DateTimeValue,
 } from '@sectile/core/date-time-field';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { toTerminalTextInput } from './internal/text-input.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTextEvent } from './text.js';

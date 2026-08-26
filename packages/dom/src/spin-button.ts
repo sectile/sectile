@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { tryCreateBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
@@ -11,7 +11,7 @@ import {
   type SpinButtonPolicies,
   type SpinButtonState,
 } from '@sectile/core/spin-button';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface SpinButtonOptions extends BoundedRangeInput {
   readonly input: HTMLInputElement;

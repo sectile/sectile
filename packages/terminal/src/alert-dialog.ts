@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyAlertDialogEvent, tryCreateAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';

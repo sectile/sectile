@@ -1,7 +1,7 @@
 import type { Result } from '@sectile/core';
 import type { InteractionStateInput } from '@sectile/core/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
-import { createSemanticController, type SemanticController } from './semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction.js';
 import {
   createDOMLayerID,

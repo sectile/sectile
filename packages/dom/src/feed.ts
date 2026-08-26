@@ -11,9 +11,9 @@ import {
 import { unwrap } from '@sectile/core/result';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export type { FeedDirection } from '@sectile/core/feed';
 

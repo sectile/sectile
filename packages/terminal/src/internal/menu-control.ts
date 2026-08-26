@@ -14,7 +14,7 @@ import type { TerminalKeyboardInput } from '../keyboard.js';
 import {
   createSemanticController,
   type SemanticController,
-} from './semantic-controller.js';
+} from '@sectile/core/adapter-runtime';
 
 export type MenuKind = 'menu' | 'menubar' | 'menu-button' | 'navigation-menu';
 

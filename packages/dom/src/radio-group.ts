@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
@@ -13,7 +13,7 @@ import {
 } from '@sectile/core/radio-group';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { KeyboardInput } from './tabs.js';
 import { horizontalArrow, type ReadingDirection } from './internal/direction.js';
 

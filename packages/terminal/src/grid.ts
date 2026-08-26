@@ -1,10 +1,10 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { applyGridEvent, tryCreateGrid, tryCreateGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface GridOptions<ID extends StableID = StableID> extends StructureGridOptions { readonly rows: readonly (readonly (ID | null)[])[]; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly editMode?: GridEditMode; readonly defaultEditMode?: GridEditMode; readonly policies?: GridPolicies<ID>; readonly disabledItems?: readonly ID[]; readonly disabled?: boolean; readonly readOnly?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onEditModeChange?: (mode: GridEditMode) => void; readonly onEditStart?: (id: ID) => void; readonly onEditCommit?: (id: ID) => void; readonly onEditCancel?: (id: ID) => void; readonly onUpdate?: () => void }
 

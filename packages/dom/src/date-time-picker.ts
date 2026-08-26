@@ -14,8 +14,8 @@ import {
 } from '@sectile/core/date-time-picker';
 export type { DateTimePickerPolicies } from '@sectile/core/date-time-picker';
 import type { TimeValue } from '@sectile/core/time-field';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';

@@ -2,7 +2,7 @@ import type { Result, StableID } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { Tree, TreeNodeInput } from '@sectile/core/tree';
 import { applyMenuEvent, tryCreateMenuModel, tryCreateMenuState, type MenuCommand, type MenuEvent, type MenuPolicies, type MenuState } from '@sectile/core/menu';
-import { createSemanticController, type SemanticController } from './semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';

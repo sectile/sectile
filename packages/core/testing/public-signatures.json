@@ -1,10 +1,14 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "cc8b19b33012bcd65c7493bf84161a4d34523016c3edf988f045bb0fe8422238",
+  "fingerprint": "2e8b82ffea8af69df097b4106a8b9ec95c88801a3177f72c7138b63e0d860aec",
   "files": [
     {
       "path": "dist/accordion.d.ts",
       "sha256": "2d5dcedede21cd503867da0266cff1130b34e8999f0a16627fccdb87c82b39ee"
+    },
+    {
+      "path": "dist/adapter-runtime.d.ts",
+      "sha256": "6639d8ef55a19164b5e7ea899232c895aeb83d3ba707bc348339d16f08ad7f4c"
     },
     {
       "path": "dist/alert-dialog.d.ts",
@@ -120,7 +124,7 @@
     },
     {
       "path": "dist/internal/composites/listbox.d.ts",
-      "sha256": "f0240b0bb966d354325ac5d7d7bfe9707f908eb6aeffebcf0f28a666d89648e0"
+      "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
     },
     {
       "path": "dist/internal/composites/menu.d.ts",
@@ -144,7 +148,7 @@
     },
     {
       "path": "dist/internal/editing/text.d.ts",
-      "sha256": "0be41e52e4bdb34fb64999ca2eef6bfd5d4dda193bdb19be67592a0e575e74be"
+      "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
     },
     {
       "path": "dist/internal/kernel/decimal.d.ts",
@@ -184,7 +188,7 @@
     },
     {
       "path": "dist/listbox.d.ts",
-      "sha256": "2d21ff587ca60bda130e40220b99de94ff0fe17383ee949a56dfa19f03c98152"
+      "sha256": "1f25cca622f7d24c60fd3bad9aaa6028de8b2e46db8a33c1e672e76269c99531"
     },
     {
       "path": "dist/menu-button.d.ts",
@@ -308,7 +312,7 @@
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "61b15b68bc96b9e359984db6d1a088fded009876b0f9595dd1794f291a061a6c"
+      "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
     },
     {
       "path": "dist/time-field.d.ts",

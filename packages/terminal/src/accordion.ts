@@ -1,11 +1,11 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyAccordionEvent, tryCreateAccordionState, type AccordionCommand, type AccordionEvent, type AccordionPolicies, type AccordionState } from '@sectile/core/accordion';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { createDisabledItems } from './internal/disabled-items.js';
 
 export interface AccordionOptions<ID extends StableID = StableID> {

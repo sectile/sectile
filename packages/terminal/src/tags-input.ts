@@ -1,10 +1,10 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyTagsInputEvent, tryCreateTagsInputState, type TagsInputCommand, type TagsInputEvent, type TagsInputPolicies, type TagsInputState } from '@sectile/core/tags-input';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 export interface TagsInputOptions { readonly policies?: TagsInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: readonly string[]; readonly defaultValue?: readonly string[]; readonly inputValue?: string; readonly defaultInputValue?: string; readonly onValueChange?: (value: readonly string[]) => void; readonly onInputValueChange?: (value: string) => void; readonly onUpdate?: () => void }
 
 export type TagsInputValueChangeHandler = NonNullable<TagsInputOptions['onValueChange']>;

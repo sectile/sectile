@@ -8,7 +8,7 @@ import {
   type DrawerState,
 } from '@sectile/core/drawer';
 import { unwrap } from '@sectile/core/result';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createTerminalPopup, type TerminalPopupConnection } from './internal/popup-control.js';
 
 export type { DrawerSide } from '@sectile/core/drawer';

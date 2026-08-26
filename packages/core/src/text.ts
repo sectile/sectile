@@ -9,6 +9,7 @@ export {
   normalizeTextEditingState,
   replacePlainText,
   replaceTextState,
+  sameTextEditingState,
   slicePlainText,
   startTextComposition,
   updateTextComposition,

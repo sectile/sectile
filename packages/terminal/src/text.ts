@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
@@ -12,6 +12,7 @@ import {
   applyTextEvent,
   createTextEditingState,
   normalizeTextEditingState,
+  sameTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
@@ -19,9 +20,8 @@ import {
 } from '@sectile/core/text';
 import {
   applyControllerEvent,
-  sameControllerState,
   synchronizeControllerState,
-} from './internal/controller.js';
+} from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTerminalTextInput } from './internal/text-input.js';
 
@@ -236,7 +236,7 @@ class TerminalTextController implements TextController {
         this.#controlled ? previous : proposed,
       ),
       (previous, proposed) => {
-        if (!sameControllerState(previous, proposed)) {
+        if (!sameTextEditingState(previous, proposed)) {
           this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: previous }));
         }
       },

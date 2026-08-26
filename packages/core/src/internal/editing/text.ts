@@ -33,6 +33,22 @@ export interface TextEditingState {
   readonly composition: TextComposition | null;
 }
 
+export function sameTextEditingState(
+  left: TextEditingState,
+  right: TextEditingState,
+): boolean {
+  if (!sameSnapshot(left.snapshot, right.snapshot)) return false;
+  if (left.composition === null || right.composition === null) {
+    return left.composition === right.composition;
+  }
+  return (
+    sameSnapshot(left.composition.baseline, right.composition.baseline) &&
+    left.composition.startCodeUnitOffset === right.composition.startCodeUnitOffset &&
+    left.composition.endCodeUnitOffset === right.composition.endCodeUnitOffset &&
+    left.composition.composingText === right.composition.composingText
+  );
+}
+
 export type TextEvent =
   | {
       readonly type: 'replace';

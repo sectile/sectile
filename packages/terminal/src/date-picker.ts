@@ -3,8 +3,8 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/core/date-field';
 import { applyDatePickerEvent, createDatePickerMonth, tryCreateDatePickerState, type DatePickerCommand, type DatePickerEvent, type DatePickerPolicies, type DatePickerState } from '@sectile/core/date-picker';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface DatePickerOptions { readonly policies?: DatePickerPolicies; readonly value?: DateValue | null; readonly defaultValue?: DateValue | null; readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly onValueChange?: (value: DateValue | null) => void; readonly onHighlightedValueChange?: (value: DateValue) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void; }

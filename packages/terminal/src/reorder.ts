@@ -15,7 +15,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface TerminalSequenceReorderOptions<ID extends StableID = StableID> {
   readonly ids: readonly ID[];

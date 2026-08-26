@@ -2,8 +2,8 @@ import type { Result, StableID } from '@sectile/core';
 import { applyToastEvent, tryCreateToastState, type ToastCommand, type ToastEvent, type ToastInput, type ToastItem, type ToastPolicies, type ToastState } from '@sectile/core/toast';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface ToastOptions<ID extends StableID = StableID> extends ToastPolicies { readonly initialToasts?: readonly ToastInput<ID>[]; readonly onItemsChange?: (items: readonly ToastItem<ID>[]) => void; readonly onAnnounce?: (item: ToastItem<ID>) => void; readonly onDismiss?: (id: ID, reason: 'manual' | 'timeout' | 'overflow') => void; readonly onUpdate?: () => void }

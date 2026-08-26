@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
@@ -8,7 +8,7 @@ export type { SelectPolicies } from '@sectile/core/select';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { createFloatingPosition, type FloatingPositionConnection, type FloatingSide, type FloatingAlign } from './internal/floating-position.js';
 import type { AutoUpdateOptions, Boundary, ComputePositionReturn, Middleware, Padding, Strategy } from '@floating-ui/dom';

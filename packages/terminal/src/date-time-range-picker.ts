@@ -13,8 +13,8 @@ import {
   type DateTimeRangePickerPolicies,
   type DateTimeRangePickerState,
 } from '@sectile/core/date-time-range-picker';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toDatePickerEvent } from './date-picker.js';
 

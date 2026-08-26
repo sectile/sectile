@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
 import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
@@ -10,7 +10,7 @@ import {
 } from '@sectile/core/cascade-select';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 
 export type { TreeNodeInput as CascadeSelectItemDefinition } from '@sectile/core/tree';

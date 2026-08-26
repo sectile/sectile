@@ -2,8 +2,8 @@ import type { Result } from '@sectile/core';
 import { applyTimerEvent, tryCreateTimerState, getTimerParts, getTimerProgress, type TimerCommand, type TimerEvent, type TimerParts, type TimerPolicies, type TimerState } from '@sectile/core/timer';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface TimerOptions extends TimerPolicies { readonly autoStart?: boolean; readonly onTick?: (valueMs: number, parts: TimerParts) => void; readonly onComplete?: (valueMs: number) => void; readonly onUpdate?: () => void }

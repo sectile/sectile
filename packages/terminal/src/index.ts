@@ -1,4 +1,4 @@
-export type { FacadeConnection } from './internal/facade.js';
+export type { FacadeConnection } from '@sectile/core/adapter-runtime';
 export {
   createLayerStack,
   tryCreateLayerStack,
@@ -522,4 +522,4 @@ export type {
   TreeViewControllerHighlightedValueChangeHandler,
   TreeViewControllerValueChangeHandler,
 } from './tree-view.js';
-export type { FacadeSnapshotListener } from './internal/facade.js';
+export type { FacadeSnapshotListener } from '@sectile/core/adapter-runtime';

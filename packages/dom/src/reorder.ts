@@ -12,7 +12,7 @@ import {
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 
 export type ReorderOrientation = 'horizontal' | 'vertical';

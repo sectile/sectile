@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
@@ -18,14 +18,14 @@ import {
 } from '@sectile/core/revision';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import {
+  sameTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
 } from '@sectile/core/text';
 import {
   applyControllerEvent,
-  sameControllerState,
   synchronizeControllerState,
-} from './internal/controller.js';
+} from '@sectile/core/adapter-runtime';
 import { toTextEvent, type TextInput } from './text.js';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toTerminalTextInput } from './internal/text-input.js';
@@ -431,7 +431,7 @@ class TerminalComboboxController<ID extends StableID> implements ComboboxControl
     const previousValue = selectedValue(previous);
     const value = selectedValue(proposed);
     if (previousValue !== value) this.#onValueChange?.(Object.freeze({ value, previousValue }));
-    if (!sameControllerState(previous.text, proposed.text)) {
+    if (!sameTextEditingState(previous.text, proposed.text)) {
       this.#onInputStateChange?.(Object.freeze({
         value: proposed.text,
         previousValue: previous.text,

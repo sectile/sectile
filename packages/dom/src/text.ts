@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
@@ -12,6 +12,7 @@ import {
   applyTextEvent,
   createTextEditingState,
   normalizeTextEditingState,
+  sameTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
@@ -19,9 +20,8 @@ import {
 } from '@sectile/core/text';
 import {
   applyControllerEvent,
-  sameControllerState,
   synchronizeControllerState,
-} from './internal/controller.js';
+} from '@sectile/core/adapter-runtime';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
@@ -336,7 +336,7 @@ class DOMTextController implements TextController {
         return normalizeTextEditingState(this.#controlled ? current.state : proposed);
       },
       (_previous, proposed) => {
-        if (!sameControllerState(current.state, proposed)) {
+        if (!sameTextEditingState(current.state, proposed)) {
           this.#onValueChange?.(Object.freeze({ value: proposed, previousValue: current.state }));
         }
       },

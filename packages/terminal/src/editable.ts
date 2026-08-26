@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
@@ -10,7 +10,7 @@ import {
   type EditablePolicies,
   type EditableState,
 } from '@sectile/core/editable';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { applyTerminalTextInput, type TerminalKeyboardInput } from './keyboard.js';
 
 export interface EditableOptions {

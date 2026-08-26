@@ -53,6 +53,11 @@
       "import": "./dist/interaction.js",
       "default": "./dist/interaction.js"
     },
+    "./adapter-runtime": {
+      "types": "./dist/adapter-runtime.d.ts",
+      "import": "./dist/adapter-runtime.js",
+      "default": "./dist/adapter-runtime.js"
+    },
     "./collection-window": {
       "types": "./dist/collection-window.d.ts",
       "import": "./dist/collection-window.js",

@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
@@ -18,7 +18,7 @@ import {
 } from '@sectile/core/pagination';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from './keyboard.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface PaginationOptions extends Omit<PaginationModelOptions, 'itemsPerPage'> {
   readonly page?: number;

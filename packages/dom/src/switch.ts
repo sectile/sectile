@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core'; import { applySwitchEvent, tryCreateSwitchState, type SwitchCommand, type SwitchEvent, type SwitchState } from '@sectile/core/switch';
 import {

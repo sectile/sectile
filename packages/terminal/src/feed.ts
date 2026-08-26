@@ -11,8 +11,8 @@ import {
 import { unwrap } from '@sectile/core/result';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
 export interface FeedOptions<ID extends StableID = StableID> {

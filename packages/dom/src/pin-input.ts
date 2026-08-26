@@ -1,11 +1,11 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { applyPinInputEvent, tryCreatePinInputState, type PinInputCommand, type PinInputEvent, type PinInputPolicies, type PinInputState } from '@sectile/core/pin-input';
 export type { PinInputPolicies } from '@sectile/core/pin-input';
 import { setInteractionAttributes } from './internal/interaction.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface PinInputOptions { readonly root: HTMLElement; readonly inputs: readonly HTMLInputElement[]; readonly policies?: PinInputPolicies; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: string; readonly defaultValue?: string; readonly label?: string; readonly onValueChange?: (value: string) => void; readonly onComplete?: (value: string) => void; readonly onUpdate?: () => void }
 

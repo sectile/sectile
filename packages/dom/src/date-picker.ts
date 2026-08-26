@@ -6,8 +6,8 @@ import { applyDatePickerEvent, createDatePickerMonth, tryCreateDatePickerState, 
 export { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable } from '@sectile/core/date-picker';
 export type { DatePickerMonthValue, DatePickerViewMode } from '@sectile/core/date-picker';
 export type { DatePickerPolicies } from '@sectile/core/date-picker';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
-import { createSemanticController, type SemanticController } from './internal/semantic-controller.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';

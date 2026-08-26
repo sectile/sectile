@@ -2,7 +2,7 @@ import type { Result } from '@sectile/core';
 import type { InteractionStateInput } from '@sectile/core/interaction';
 import type { MachineUpdate, RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from '../keyboard.js';
-import { createSemanticController, type SemanticController } from './semantic-controller.js';
+import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 
 export interface TerminalPopupConnection<State, Event> { getSnapshot(): RevisionSnapshot<State>; syncControlledValue(open: boolean): Result<RevisionSnapshot<State>>; handleEvent(event: Event): boolean; handleKeyboardInput(input: TerminalKeyboardInput): boolean }
 export interface Options<State, Event, Command> { readonly controlled: boolean; readonly initial: Result<State>; readonly reducer: (state: State, event: Event) => Result<MachineUpdate<State, Command>>; readonly create: (open: boolean, state: State) => Result<State>; readonly read: (state: State) => boolean; readonly close: Event; readonly onOpenChange?: ((open: boolean) => void) | undefined; readonly command?: ((command: Command) => void) | undefined; readonly onUpdate?: (() => void) | undefined; readonly interaction?: InteractionStateInput }

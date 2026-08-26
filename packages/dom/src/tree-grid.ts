@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
@@ -24,7 +24,7 @@ import {
   type TreeGridRowInput,
   type TreeGridState,
 } from '@sectile/core/tree-grid';
-import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 

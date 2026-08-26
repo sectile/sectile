@@ -1,4 +1,4 @@
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
@@ -21,7 +21,7 @@ import {
   type RevisionResult,
   type RevisionSnapshot,
 } from '@sectile/core/revision';
-import { applyControllerEvent, synchronizeControllerState } from './internal/controller.js';
+import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
 import { findDelegatedID } from './internal/delegated-event.js';
 import { createDisabledItems } from './internal/disabled-items.js';
 import { setInteractionAttributes } from './internal/interaction.js';

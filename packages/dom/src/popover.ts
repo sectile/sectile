@@ -10,7 +10,7 @@ import {
   type ReferenceElement,
   type Strategy,
 } from '@floating-ui/dom';
-import { createFacadeConnection, type FacadeConnection } from './internal/facade.js';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createFloatingPosition, type FloatingPositionConnection } from './internal/floating-position.js';
 import { createDOMPopup, type DOMPopupConnection } from './internal/popup-control.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
