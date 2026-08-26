@@ -31,10 +31,15 @@
       "import": "./dist/extent-index.js",
       "default": "./dist/extent-index.js"
     },
-    "./virtual-layout": {
-      "types": "./dist/virtual-layout.d.ts",
-      "import": "./dist/virtual-layout.js",
-      "default": "./dist/virtual-layout.js"
+    "./layout": {
+      "types": "./dist/layout.d.ts",
+      "import": "./dist/layout.js",
+      "default": "./dist/layout.js"
+    },
+    "./linear-layout": {
+      "types": "./dist/linear-layout.d.ts",
+      "import": "./dist/linear-layout.js",
+      "default": "./dist/linear-layout.js"
     },
     "./package.json": "./package.json"
   },

@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { createSequence } from '@sectile/core/sequence';
 import { createExtentIndex } from '@sectile/virtual/extent-index';
-import { applyVirtualLayoutEvent, createVirtualLayoutState } from '@sectile/virtual/virtual-layout';
+import { applyLinearMeasurements, createLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
 
 globalThis.OffscreenCanvas ??= class OffscreenCanvas {
   getContext() {
@@ -73,47 +73,44 @@ const virtualDomain = createSequence(
   Array.from({ length: 100_000 }, (_, index) => `item-${index}`),
   { maxItems: 100_000 },
 );
-let viewportState = createVirtualLayoutState(
+const viewportState = createLinearLayout(
   virtualDomain,
   createExtentIndex(Array(100_000).fill(estimated(44))),
-  { viewportExtent: 800, overscanBefore: 800, overscanAfter: 800 },
+  { crossExtent: 320 },
 );
 const viewportUpdateUs = measure(100_000, (iteration) => {
-  viewportState = applyVirtualLayoutEvent(viewportState, {
-    type: 'viewport-changed', offset: (iteration * 97) % 4_300_000,
-  }).value.state;
-  sink += viewportState.renderRange.start;
+  const window = queryLinearWindow(viewportState, {
+    viewport: { x: 0, y: (iteration * 97) % 4_300_000, width: 320, height: 800 },
+    overscan: { top: 800, bottom: 800 },
+  });
+  sink += window.renderStart;
 });
 
-let measuredState = createVirtualLayoutState(
+let measuredState = createLinearLayout(
   virtualDomain,
   createExtentIndex(Array(100_000).fill(estimated(44))),
-  { viewportOffset: 2_200_000, viewportExtent: 800, overscanBefore: 800, overscanAfter: 800 },
+  { crossExtent: 320 },
 );
 const measurementVariants = [40, 41].map((value) => (
   Array.from({ length: 32 }, (_, item) => ({ index: 50_000 + item, extent: exact(value) }))
 ));
 const virtualMeasurement32Us = measure(2_000, (iteration) => {
-  measuredState = applyVirtualLayoutEvent(measuredState, {
-    type: 'measurements-reported',
-    generation: measuredState.measurementGeneration,
-    updates: measurementVariants[iteration & 1],
-  }).value.state;
+  measuredState = applyLinearMeasurements(measuredState, {
+    generation: measuredState.generation,
+    measurements: measurementVariants[iteration & 1],
+  }).state;
   sink += measuredState.extents.totalExtent;
 });
-let idempotentState = applyVirtualLayoutEvent(createVirtualLayoutState(
+let idempotentState = applyLinearMeasurements(createLinearLayout(
   virtualDomain,
   createExtentIndex(Array(100_000).fill(estimated(44))),
-  { viewportOffset: 2_200_000, viewportExtent: 800, overscanBefore: 800, overscanAfter: 800 },
-), {
-  type: 'measurements-reported', generation: 1, updates: measurementVariants[0],
-}).value.state;
+  { crossExtent: 320 },
+), { generation: 0, measurements: measurementVariants[0] }).state;
 const idempotentMeasurement32Us = measure(20_000, () => {
-  idempotentState = applyVirtualLayoutEvent(idempotentState, {
-    type: 'measurements-reported',
-    generation: idempotentState.measurementGeneration,
-    updates: measurementVariants[0],
-  }).value.state;
+  idempotentState = applyLinearMeasurements(idempotentState, {
+    generation: idempotentState.generation,
+    measurements: measurementVariants[0],
+  }).state;
   sink += idempotentState.extents.totalExtent;
 });
 const pretextBatch32Us = measure(20_000, (iteration) => {
@@ -121,21 +118,20 @@ const pretextBatch32Us = measure(20_000, (iteration) => {
 });
 const combinedBatch32Us = measure(2_000, (iteration) => {
   for (let item = 0; item < 32; item += 1) sink += layout(prepared[item], 240 + (iteration & 15), 20).height;
-  measuredState = applyVirtualLayoutEvent(measuredState, {
-    type: 'measurements-reported',
-    generation: measuredState.measurementGeneration,
-    updates: measurementVariants[iteration & 1],
-  }).value.state;
+  measuredState = applyLinearMeasurements(measuredState, {
+    generation: measuredState.generation,
+    measurements: measurementVariants[iteration & 1],
+  }).state;
   sink += measuredState.extents.totalExtent;
 });
 
 const result = {
-  benchmark: 'core-virtualization-vs-pretext',
+  benchmark: 'sectile-virtualization-vs-pretext',
   units: 'microseconds-per-operation',
   environment: { node: process.version, platform: `${process.platform}-${process.arch}` },
   pretext: { version: '0.0.8', layoutUs: pretextLayoutUs, batch32Us: pretextBatch32Us },
   extentIndex: measurements,
-  virtualLayout: {
+  linearLayout: {
     viewportUpdateUs,
     changedMeasurement32Us: virtualMeasurement32Us,
     idempotentMeasurement32Us,

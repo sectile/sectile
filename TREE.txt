@@ -838,13 +838,14 @@ sectile/
 │   │   │   │   └── machine.ts
 │   │   │   ├── extent-index.ts
 │   │   │   ├── index.ts
-│   │   │   └── virtual-layout.ts
+│   │   │   ├── layout.ts
+│   │   │   └── linear-layout.ts
 │   │   ├── testing/
 │   │   │   ├── law-evidence.json
 │   │   │   └── law-registry.json
 │   │   ├── tests/
 │   │   │   ├── runtime/
-│   │   │   │   └── virtual-layout.test.mjs
+│   │   │   │   └── linear-layout.test.mjs
 │   │   │   └── structures/
 │   │   │       └── extent-index.test.mjs
 │   │   ├── CHANGELOG.md

@@ -7,11 +7,11 @@
     "EXT-04": "tests/structures/extent-index.test.mjs",
     "EXT-05": "tests/structures/extent-index.test.mjs",
     "EXT-06": "tests/structures/extent-index.test.mjs",
-    "VRT-01": "tests/runtime/virtual-layout.test.mjs",
-    "VRT-02": "tests/runtime/virtual-layout.test.mjs",
-    "VRT-03": "tests/runtime/virtual-layout.test.mjs",
-    "VRT-04": "tests/runtime/virtual-layout.test.mjs",
-    "VRT-05": "tests/runtime/virtual-layout.test.mjs",
-    "VRT-06": "tests/runtime/virtual-layout.test.mjs"
+    "VRT-01": "tests/runtime/linear-layout.test.mjs",
+    "VRT-02": "tests/runtime/linear-layout.test.mjs",
+    "VRT-03": "tests/runtime/linear-layout.test.mjs",
+    "VRT-04": "tests/runtime/linear-layout.test.mjs",
+    "VRT-05": "tests/runtime/linear-layout.test.mjs",
+    "VRT-06": "tests/runtime/linear-layout.test.mjs"
   }
 }
