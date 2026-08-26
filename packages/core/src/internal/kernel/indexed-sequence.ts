@@ -164,7 +164,9 @@ function scanRejected<ID extends StableID>(scanned: number, maxScan: number): Mo
   };
 }
 
-function invalidMovement<ID extends StableID>(code: string): MoveResult<ID> {
+function invalidMovement<ID extends StableID>(
+  code: 'invalid-boundary' | 'invalid-direction',
+): MoveResult<ID> {
   const error: SectileError = {
     class: 'internal-invariant',
     code,

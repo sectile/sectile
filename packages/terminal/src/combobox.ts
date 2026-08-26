@@ -1,4 +1,5 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
@@ -499,20 +500,4 @@ function controlledInputError<ID extends StableID>(
       'highlighted-value',
       'combobox highlight',
     );
-}
-
-function fieldError(
-  controlled: boolean,
-  provided: boolean,
-  codeName: string,
-  label: string,
-): SectileError | null {
-  if (controlled === provided) return null;
-  return {
-    class: 'construction',
-    code: controlled ? `controlled-${codeName}-required` : `uncontrolled-${codeName}-update`,
-    message: controlled
-      ? `Controlled ${label} sync requires its external value.`
-      : `Uncontrolled ${label} cannot be synchronized externally.`,
-  };
 }

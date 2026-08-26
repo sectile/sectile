@@ -1,11 +1,13 @@
 import type { ErrorClass, Result, SectileError } from './shared.js';
+import type { SectileErrorCode } from './error-code.js';
 
-export class SectileResultError extends Error implements SectileError {
+export class SectileResultError<Code extends SectileErrorCode = SectileErrorCode>
+  extends Error implements SectileError<Code> {
   public readonly class: ErrorClass;
-  public readonly code: string;
+  public readonly code: Code;
   public readonly details?: Readonly<Record<string, unknown>>;
 
-  public constructor(error: SectileError) {
+  public constructor(error: SectileError<Code>) {
     super(error.message, { cause: error });
     this.name = 'SectileResultError';
     this.class = error.class;
@@ -14,9 +16,10 @@ export class SectileResultError extends Error implements SectileError {
   }
 }
 
-export function unwrap<T>(result: Result<T>): T {
+export function unwrap<T, Code extends SectileErrorCode>(result: Result<T, Code>): T {
   if (result.ok) return result.value;
   throw new SectileResultError(result.error);
 }
 
 export type { ErrorClass, Result, SectileError } from './shared.js';
+export type { SectileErrorCode } from './error-code.js';

@@ -1,4 +1,5 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import {
@@ -761,22 +762,6 @@ function controlledInputError<RowID extends StableID, CellID extends StableID>(
       'edit-mode',
       'tree-grid edit mode',
     );
-}
-
-function fieldError(
-  controlled: boolean,
-  provided: boolean,
-  codeName: string,
-  label: string,
-): SectileError | null {
-  if (controlled === provided) return null;
-  return {
-    class: 'construction',
-    code: controlled ? `controlled-${codeName}-required` : `uncontrolled-${codeName}-update`,
-    message: controlled
-      ? `Controlled ${label} sync requires its external value.`
-      : `Uncontrolled ${label} cannot be synchronized externally.`,
-  };
 }
 
 function sameIDs<ID extends StableID>(left: readonly ID[], right: readonly ID[]): boolean {

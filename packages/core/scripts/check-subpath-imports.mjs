@@ -33,6 +33,7 @@ try {
   const runtime = spawnSync(process.execPath, ['consumer.mjs'], { cwd: directory, encoding: 'utf8' });
   assert.equal(runtime.status, 0, runtime.stderr);
   await writeFile(join(directory, 'consumer.ts'), `
+    import type { Result, SectileErrorCode } from '@sectile/core';
     import { createSequence, type Sequence } from '@sectile/core/sequence';
     import { createRange, type QuantizedRange } from '@sectile/core/range';
     import { createGrid, type Grid } from '@sectile/core/grid';
@@ -61,7 +62,14 @@ try {
     const rows: readonly TreeGridRowInput<string, string>[] = [{ id: 'a', parentID: null, cells: ['a'] }];
     const m: TreeGridModel<string, string> = createTreeGridModelFromRows(rows);
     const n: FormState = createFormState({ fields: [] });
-    void [a, b, c, d, e, f, g, h, i, j, k, l, m, n];
+    declare const failure: Result<number, 'no-cursor'>;
+    if (!failure.ok) {
+      const code: 'no-cursor' = failure.error.code;
+      void code;
+    }
+    // @ts-expect-error error codes are a closed contract
+    const unknownCode: SectileErrorCode = 'consumer-invented-error';
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, n, unknownCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {

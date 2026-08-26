@@ -4,17 +4,61 @@ import {
   type SectileError,
   type StableID,
 } from '../../shared.js';
+import type { SectileErrorCode } from '../../error-code.js';
+
+type SafeCeilingName =
+  | 'columnCount'
+  | 'count'
+  | 'itemsPerPage'
+  | 'maxCells'
+  | 'maxCodeUnits'
+  | 'maxColumns'
+  | 'maxCount'
+  | 'maxDecimalCodeUnits'
+  | 'maxDepth'
+  | 'maxExponent'
+  | 'maxIDCodeUnits'
+  | 'maxItems'
+  | 'maxOperations'
+  | 'maxRows'
+  | 'maxScale'
+  | 'maxTokens'
+  | 'precision'
+  | 'siblingCount'
+  | 'total';
+
+const safeCeilingErrorCodes: Readonly<Record<SafeCeilingName, SectileErrorCode>> = Object.freeze({
+  columnCount: 'invalid-column-count',
+  count: 'invalid-count',
+  itemsPerPage: 'invalid-items-per-page',
+  maxCells: 'invalid-max-cells',
+  maxCodeUnits: 'invalid-max-code-units',
+  maxColumns: 'invalid-max-columns',
+  maxCount: 'invalid-max-count',
+  maxDecimalCodeUnits: 'invalid-max-decimal-code-units',
+  maxDepth: 'invalid-max-depth',
+  maxExponent: 'invalid-max-exponent',
+  maxIDCodeUnits: 'invalid-max-id-code-units',
+  maxItems: 'invalid-max-items',
+  maxOperations: 'invalid-max-operations',
+  maxRows: 'invalid-max-rows',
+  maxScale: 'invalid-max-scale',
+  maxTokens: 'invalid-max-tokens',
+  precision: 'invalid-precision',
+  siblingCount: 'invalid-sibling-count',
+  total: 'invalid-total',
+});
 
 export function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }
 
-export function fail<T = never>(
+export function fail<T = never, Code extends SectileErrorCode = SectileErrorCode>(
   errorClass: SectileError['class'],
-  code: string,
+  code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,
-): Result<T> {
+): Result<T, Code> {
   return {
     ok: false,
     error: {
@@ -26,11 +70,11 @@ export function fail<T = never>(
   };
 }
 
-export function resourceError(
-  code: string,
+export function resourceError<Code extends SectileErrorCode>(
+  code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,
-): SectileError {
+): SectileError<Code> {
   return {
     class: 'resource-rejection',
     code,
@@ -101,13 +145,13 @@ export function validateStableID(
 
 export function validateSafeCeiling(
   value: number,
-  name: string,
+  name: SafeCeilingName,
   minimum = 0,
 ): SectileError | null {
   if (!Number.isSafeInteger(value) || value < minimum) {
     return {
       class: 'construction',
-      code: `invalid-${toKebabCase(name)}`,
+      code: safeCeilingErrorCodes[name],
       message: `${name} must be a safe integer greater than or equal to ${minimum}.`,
       details: { [name]: value },
     };
@@ -133,13 +177,6 @@ export function freezeArray<T>(values: readonly T[]): readonly T[] {
 
 export function assertNever(value: never): never {
   throw new Error(`Internal invariant breach: unexpected value ${String(value)}`);
-}
-
-function toKebabCase(value: string): string {
-  return value
-    .replace(/([a-z0-9])([A-Z])/gu, '$1-$2')
-    .replace(/([A-Z]+)([A-Z][a-z])/gu, '$1-$2')
-    .toLowerCase();
 }
 
 export function validateUniqueIDs<ID extends StableID>(

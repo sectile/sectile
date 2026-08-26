@@ -1,4 +1,5 @@
-import type { Result } from './shared.js';
+import type { Result, SectileError } from './shared.js';
+import type { SectileErrorCode } from './error-code.js';
 import {
   tryCreateInteractionState,
   requireInteraction,
@@ -57,11 +58,43 @@ export function synchronizeControllerState<State>(
   return tryCreateRevisionSnapshot(state.value, current.revision + 1);
 }
 
+export type ControlledFieldCodeName =
+  | 'edit-mode'
+  | 'expanded-value'
+  | 'expanded-values'
+  | 'highlighted-value'
+  | 'input-state'
+  | 'open'
+  | 'value';
+
+type ControlledFieldErrorCode =
+  | `controlled-${ControlledFieldCodeName}-required`
+  | `uncontrolled-${ControlledFieldCodeName}-update`;
+
+export function controlledFieldError(
+  controlled: boolean,
+  provided: boolean,
+  codeName: ControlledFieldCodeName,
+  label: string,
+): SectileError<ControlledFieldErrorCode> | null {
+  if (controlled === provided) return null;
+  const code: ControlledFieldErrorCode = controlled
+    ? `controlled-${codeName}-required`
+    : `uncontrolled-${codeName}-update`;
+  return {
+    class: 'construction',
+    code,
+    message: controlled
+      ? `Controlled ${label} sync requires its external value.`
+      : `Uncontrolled ${label} cannot be synchronized externally.`,
+  };
+}
+
 export interface SemanticController<State, Event, Effect> {
   getSnapshot(): RevisionSnapshot<State>;
   replace(state: Result<State>): Result<RevisionSnapshot<State>>;
   handle(event: Event, expectedRevision?: number): RevisionResult<State, Effect>;
-  reject(code: string, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect>;
+  reject(code: SectileErrorCode, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect>;
 }
 
 export interface SemanticControllerOptions<State, Event, Command, Effect> {
@@ -114,7 +147,7 @@ export function createSemanticController<State, Event, Command, Effect>(
         return result;
       },
       reject: (
-        code: string,
+        code: SectileErrorCode,
         message: string,
         details?: Readonly<Record<string, unknown>>,
       ): RevisionResult<State, Effect> => rejectRevisionInput(current, {

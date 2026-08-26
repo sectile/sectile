@@ -1,6 +1,12 @@
 import { unwrap } from './result.js';
 import type { Result } from './shared.js';
 
+type InteractionErrorCode =
+  | 'interaction-disabled'
+  | 'interaction-read-only'
+  | 'invalid-disabled-state'
+  | 'invalid-read-only-state';
+
 export type InteractionIntent = 'navigate' | 'mutate';
 
 export interface InteractionStateInput {
@@ -67,7 +73,7 @@ export function requireInteraction(
 
 function failure(
   errorClass: 'construction' | 'transition-rejection',
-  code: string,
+  code: InteractionErrorCode,
   message: string,
 ): Result<never> {
   return {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "2e8b82ffea8af69df097b4106a8b9ec95c88801a3177f72c7138b63e0d860aec",
+  "fingerprint": "b2a23f08d3389190202fa299e0b5f202aef93cf5c129c179547a131dc53455fb",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -8,7 +8,7 @@
     },
     {
       "path": "dist/adapter-runtime.d.ts",
-      "sha256": "6639d8ef55a19164b5e7ea899232c895aeb83d3ba707bc348339d16f08ad7f4c"
+      "sha256": "3ca6dc14043d1a22586d5d94f60e18bf6de6dc7a4735c9ea4541b3eee8935f5c"
     },
     {
       "path": "dist/alert-dialog.d.ts",
@@ -87,6 +87,10 @@
       "sha256": "99371a1d211e702be6f7ab231a3ec27302743da77a9716c8e1e47741c7eeb96e"
     },
     {
+      "path": "dist/error-code.d.ts",
+      "sha256": "bdcd4da328d7808b19adb06205e9eca2fd3d72a0e5f0cd62dd2de5a9d1da9c58"
+    },
+    {
       "path": "dist/feed.d.ts",
       "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
     },
@@ -96,7 +100,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "fe957b279220cbad8f077e5177edd3a3fb977a8ada17727a08dca766ff0a8ea3"
+      "sha256": "f7df3012c736fd9b41c1e0487cc3bf2705671b753585e8f8ed6164e427afdaed"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -256,7 +260,7 @@
     },
     {
       "path": "dist/result.d.ts",
-      "sha256": "6f0e77bee44b541c9aa29c2607d5c2bf0e3b7e7a2093a1c4f200f5fdcf0844d1"
+      "sha256": "3b9d817f041678525ddf6cfa2445977c019cefd24a5b3ed9e611095e2d1d4a51"
     },
     {
       "path": "dist/revision.d.ts",
@@ -268,7 +272,7 @@
     },
     {
       "path": "dist/shared.d.ts",
-      "sha256": "8ca8fe2311f54c7d66b5d4c43e177abbef8cf202136883126d5af6d88dbbab79"
+      "sha256": "3b075022c3e8bfdc53029b5ae798bc95aa02d93aa952bcc488cd58dea90c7b48"
     },
     {
       "path": "dist/slider.d.ts",

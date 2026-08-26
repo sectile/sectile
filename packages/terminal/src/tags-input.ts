@@ -48,7 +48,7 @@ class TerminalTagsInputConnection implements TagsInputConnection {
         ok: false as const,
         error: {
           class: 'construction' as const,
-          code: 'controlled-shape-mismatch',
+          code: 'controlled-shape-mismatch' as const,
           message: 'Controlled tags input values must preserve their construction-time shape.',
         },
       };
