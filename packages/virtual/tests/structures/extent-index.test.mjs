@@ -10,6 +10,7 @@ test('EXT-01, EXT-02: extent offsets are searchable prefix sums', () => {
   assert.deepEqual([0, 1, 2, 3].map((item) => index.offsetAt(item)), [0, 10, 30, 60]);
   assert.deepEqual([0, 9, 10, 29, 30, 59].map((offset) => index.indexAtOffset(offset)), [0, 0, 1, 1, 2, 2]);
   assert.deepEqual(index.locateOffset(29), { index: 1, itemOffset: 10, offsetWithin: 19, extent: exact(20) });
+  assert.deepEqual(index.slice(1, 3), [exact(20), exact(30)]);
   assert.equal(index.indexAtOffset(60), null);
 });
 

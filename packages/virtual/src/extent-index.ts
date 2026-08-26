@@ -27,6 +27,7 @@ export interface ExtentIndex {
   readonly size: number;
   readonly totalExtent: number;
   extentAt(index: number): Extent | null;
+  slice(start: number, end: number): readonly Extent[] | null;
   offsetAt(index: number): number | null;
   indexAtOffset(offset: number): number | null;
   locateOffset(offset: number): ExtentLocation | null;
@@ -84,6 +85,7 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
     size: root?.size ?? 0,
     totalExtent: root?.sum ?? 0,
     extentAt: (index: number): Extent | null => extentAt(root, index),
+    slice: (start: number, end: number): readonly Extent[] | null => sliceExtents(root, start, end),
     offsetAt: (index: number): number | null => offsetAt(root, index),
     indexAtOffset: (offset: number): number | null => locateOffset(root, offset)?.index ?? null,
     locateOffset: (offset: number): ExtentLocation | null => locateOffset(root, offset),
@@ -224,6 +226,26 @@ function extentAt(root: Node | null, index: number): Extent | null {
     }
   }
   return node.entries[local] ?? null;
+}
+
+function sliceExtents(root: Node | null, start: number, end: number): readonly Extent[] | null {
+  const size = root?.size ?? 0;
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > size) return null;
+  if (start === end || root === null) return Object.freeze([]);
+  const output: Extent[] = [];
+  collectExtents(root, 0, start, end, output);
+  return Object.freeze(output);
+}
+
+function collectExtents(node: Node, nodeStart: number, start: number, end: number, output: Extent[]): void {
+  const nodeEnd = nodeStart + node.size;
+  if (end <= nodeStart || start >= nodeEnd) return;
+  if (node.kind === 'leaf') {
+    output.push(...node.entries.slice(Math.max(0, start - nodeStart), Math.min(node.size, end - nodeStart)));
+    return;
+  }
+  collectExtents(node.left, nodeStart, start, end, output);
+  collectExtents(node.right, nodeStart + node.left.size, start, end, output);
 }
 
 function offsetAt(root: Node | null, index: number): number | null {

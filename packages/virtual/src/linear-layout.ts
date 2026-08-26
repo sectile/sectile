@@ -74,10 +74,20 @@ export function tryQueryLinearLayout<ID extends StableID>(state: LinearLayoutSta
   if (!window.ok) return window;
   const { viewport, renderBounds } = window.value;
   const placements: VirtualPlacement<ID>[] = [];
-  for (let index = window.value.renderStart; index < window.value.renderEnd; index += 1) {
+  const extents = state.extents.slice(window.value.renderStart, window.value.renderEnd);
+  if (extents === null) return fail('construction', 'virtual-layout-domain-mismatch', 'Linear render range must belong to the extent domain.');
+  let logicalStart = (state.extents.offsetAt(window.value.renderStart) ?? 0) + state.gap * window.value.renderStart;
+  for (let local = 0; local < extents.length; local += 1) {
+    const index = window.value.renderStart + local;
     const id = state.domain.at(index);
-    const rect = rectAt(state, index);
-    if (id === null || rect === null || !rectanglesIntersect(rect, renderBounds)) continue;
+    const extent = extents[local]!;
+    const value = extent.kind === 'unknown' ? extent.fallback : extent.value;
+    const visualStart = state.flow === 'forward' ? logicalStart : mainContentExtent(state) - logicalStart - value;
+    const rect = state.axis === 'vertical'
+      ? Object.freeze({ x: state.crossOffset, y: visualStart, width: state.crossExtent, height: value })
+      : Object.freeze({ x: visualStart, y: state.crossOffset, width: value, height: state.crossExtent });
+    logicalStart += value + state.gap;
+    if (id === null || !rectanglesIntersect(rect, renderBounds)) continue;
     placements.push(Object.freeze({ id, index, rect, visible: rectanglesIntersect(rect, viewport) }));
   }
   const frozen = Object.freeze(placements);
