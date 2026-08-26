@@ -4,6 +4,7 @@ import {
   applyTreeReorderEvent,
   tryCreateSequenceReorderState,
   tryCreateTreeReorderState,
+  type SequenceReorderCommand,
   type SequenceReorderEvent,
   type SequenceReorderState,
   type TreeReorderEvent,
@@ -88,8 +89,8 @@ function tryCreateSequenceReorder<ID extends StableID>(
   const runtime = createSemanticController<
     SequenceReorderState<ID>,
     SequenceReorderEvent<ID>,
-    { readonly type: 'sequence-order-changed'; readonly ids: readonly ID[] },
-    { readonly type: 'sequence-order-changed'; readonly ids: readonly ID[] }
+    SequenceReorderCommand<ID>,
+    SequenceReorderCommand<ID>
   >({
     initial: tryCreateSequenceReorderState(options.ids),
     reducer: applySequenceReorderEvent,

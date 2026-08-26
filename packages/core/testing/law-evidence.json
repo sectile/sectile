@@ -15,6 +15,7 @@
     "SEQ-07": "tests/structures/sequence.reference-law.test.mjs",
     "SEQ-08": "tests/structures/sequence.reference-law.test.mjs",
     "SEQ-09": "tests/structures/sequence.reference-law.test.mjs",
+    "SEQ-10": "tests/structures/sequence.reference-law.test.mjs",
     "RNG-01": "tests/structures/range.reference-law.test.mjs",
     "RNG-02": "tests/structures/range.reference-law.test.mjs",
     "RNG-03": "tests/structures/range.reference-law.test.mjs",

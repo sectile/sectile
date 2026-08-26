@@ -10,6 +10,7 @@
     { "id": "SEQ-07", "theory": "sequence", "statement": "stop never crosses boundary" },
     { "id": "SEQ-08", "theory": "sequence", "statement": "wrap never returns current as its own successor" },
     { "id": "SEQ-09", "theory": "sequence", "statement": "identity renaming commutes with observations" },
+    { "id": "SEQ-10", "theory": "sequence", "statement": "patches preserve array splice and post-removal move semantics" },
     { "id": "EXT-01", "theory": "extent-index", "statement": "offsets are prefix sums of effective extents" },
     { "id": "EXT-02", "theory": "extent-index", "statement": "positive extents roundtrip between index and offset" },
     { "id": "EXT-03", "theory": "extent-index", "statement": "measurement updates preserve untouched extents" },

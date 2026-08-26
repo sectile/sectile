@@ -1,7 +1,12 @@
-/* Law evidence: SEQ-01 SEQ-02 SEQ-03 SEQ-04 SEQ-05 SEQ-06 SEQ-07 SEQ-08 SEQ-09 */
+/* Law evidence: SEQ-01 SEQ-02 SEQ-03 SEQ-04 SEQ-05 SEQ-06 SEQ-07 SEQ-08 SEQ-09 SEQ-10 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createSequence, tryCreateSequence } from '../../.verification-dist/structures/sequence.js';
+import {
+  applySequencePatch,
+  createSequence,
+  tryApplySequencePatch,
+  tryCreateSequence,
+} from '../../.verification-dist/structures/sequence.js';
 import { ReferenceSequence } from '../../.verification-dist/internal/reference/structures/sequence.js';
 import { canonicalIDs, permutations, powerset, unwrap } from '../support.mjs';
 
@@ -80,6 +85,20 @@ test('SEQ-09: identity renaming commutes with every observation', () => {
     mapping.get(source.move('b', 1, 'wrap').id),
     renamed.move(mapping.get('b'), 1, 'wrap').id,
   );
+});
+
+test('SEQ-10: patches match array splice and post-removal move semantics', () => {
+  const sequence = createSequence(['a', 'b', 'c', 'd', 'e']);
+  const spliced = applySequencePatch(sequence, {
+    type: 'splice', index: 1, deleteCount: 2, inserted: ['x', 'y'],
+  });
+  assert.deepEqual(spliced.ids, ['a', 'x', 'y', 'd', 'e']);
+  assert.deepEqual(applySequencePatch(spliced, {
+    type: 'move', from: 1, to: 3, count: 2,
+  }).ids, ['a', 'd', 'e', 'x', 'y']);
+  assert.equal(tryApplySequencePatch(sequence, {
+    type: 'move', from: 4, to: 2, count: 2,
+  }).error.code, 'sequence-patch-invalid');
 });
 
 test('sequence construction and scan ceilings use explicit failure classes', () => {

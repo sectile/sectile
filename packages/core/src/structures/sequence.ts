@@ -16,6 +16,20 @@ export interface SequenceOptions extends ResourceCeilings {
   readonly maxItems?: number;
 }
 
+export type SequencePatch<ID extends StableID = StableID> =
+  | {
+      readonly type: 'splice';
+      readonly index: number;
+      readonly deleteCount: number;
+      readonly inserted: readonly ID[];
+    }
+  | {
+      readonly type: 'move';
+      readonly from: number;
+      readonly to: number;
+      readonly count: number;
+    };
+
 export type SequenceProjectionPredicate<ID extends StableID = StableID> = (id: ID, index: number) => boolean;
 
 export interface Sequence<ID extends StableID = StableID> {
@@ -60,6 +74,63 @@ export function tryCreateSequence<ID extends StableID>(
   const validated = validateUniqueIDs(ids, maxIDCodeUnits);
   if (!validated.ok) return validated;
   return ok(new IndexedSequence(validated.value) as SequenceView<ID>);
+}
+
+export function applySequencePatch<ID extends StableID>(
+  sequence: Sequence<ID>,
+  patch: SequencePatch<ID>,
+  options: SequenceOptions = {},
+): Sequence<ID> {
+  return unwrap(tryApplySequencePatch(sequence, patch, options));
+}
+
+export function tryApplySequencePatch<ID extends StableID>(
+  sequence: Sequence<ID>,
+  patch: SequencePatch<ID>,
+  options: SequenceOptions = {},
+): Result<Sequence<ID>> {
+  const ids = [...sequence.ids];
+  if (patch.type === 'splice') {
+    if (
+      !Number.isSafeInteger(patch.index)
+      || !Number.isSafeInteger(patch.deleteCount)
+      || patch.index < 0
+      || patch.deleteCount < 0
+      || patch.index > ids.length
+      || patch.deleteCount > ids.length - patch.index
+    ) return invalidPatch(patch, ids.length);
+    ids.splice(patch.index, patch.deleteCount, ...patch.inserted);
+  } else {
+    if (
+      !Number.isSafeInteger(patch.from)
+      || !Number.isSafeInteger(patch.to)
+      || !Number.isSafeInteger(patch.count)
+      || patch.from < 0
+      || patch.count < 0
+      || patch.from > ids.length
+      || patch.count > ids.length - patch.from
+      || patch.to < 0
+      || patch.to > ids.length - patch.count
+    ) return invalidPatch(patch, ids.length);
+    if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
+    const moved = ids.splice(patch.from, patch.count);
+    ids.splice(patch.to, 0, ...moved);
+  }
+  const result = tryCreateSequence(ids, options);
+  if (result.ok) return result;
+  return fail('transition-rejection', result.error.code, result.error.message, result.error.details);
+}
+
+function invalidPatch<ID extends StableID>(
+  patch: SequencePatch<ID>,
+  size: number,
+): Result<never> {
+  return fail(
+    'transition-rejection',
+    'sequence-patch-invalid',
+    'Sequence patch must identify a valid post-removal destination and source range.',
+    { patch, size },
+  );
 }
 
 export type {

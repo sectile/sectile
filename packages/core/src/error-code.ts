@@ -427,6 +427,7 @@ export type SectileErrorCode =
   | 'scan-ceiling-reached'
   | 'selected-id-outside-domain'
   | 'selection-anchor-outside-domain'
+  | 'sequence-patch-invalid'
   | 'self-parent'
   | 'slider-tick-outside-range'
   | 'slider-value-off-range'

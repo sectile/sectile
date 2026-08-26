@@ -23,6 +23,7 @@ export type {
   ExtentIndexOptions,
   ExtentUpdate,
 } from './structures/extent-index.js';
+export type { SequencePatch } from './structures/sequence.js';
 export type {
   InteractionIntent,
   InteractionState,

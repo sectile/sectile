@@ -1,7 +1,7 @@
 import { createMachineUpdate, type MachineUpdate } from './internal/kernel/machine.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 import { unwrap } from './result.js';
-import { tryCreateSequence } from './structures/sequence.js';
+import { tryCreateSequence, type SequencePatch } from './structures/sequence.js';
 import { tryCreateTree, type TreeNodeInput } from './structures/tree.js';
 import type { Result, StableID } from './shared.js';
 
@@ -17,7 +17,7 @@ export type SequenceReorderEvent<ID extends StableID = StableID> =
 
 export type SequenceReorderCommand<ID extends StableID = StableID> = {
   readonly type: 'sequence-order-changed';
-  readonly ids: readonly ID[];
+  readonly patch: SequencePatch<ID>;
 };
 
 export type SequenceReorderUpdate<ID extends StableID = StableID> =
@@ -80,7 +80,10 @@ export function applySequenceReorderEvent<ID extends StableID>(
   ids.splice(destination, 0, event.id);
   if (ids.every((id, index) => id === state.ids[index])) return createMachineUpdate(state);
   const next = Object.freeze({ ids: Object.freeze(ids) });
-  return createMachineUpdate(next, [{ type: 'sequence-order-changed', ids: next.ids }]);
+  return createMachineUpdate(next, [{
+    type: 'sequence-order-changed',
+    patch: Object.freeze({ type: 'move', from: sourceIndex, to: destination, count: 1 }),
+  }]);
 }
 
 export function createTreeReorderState<ID extends StableID>(

@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "8fc6c6ccf72725b8435ae9ccc46f9f0926606b7b952ae33a9cbb229f606a879a",
+    "publicSignatureFingerprint": "f43d4a351568912fb14e01d970d90cf32ff2dafc232eaa978309065531b467f0",
     "subpaths": [
       ".",
       "./accordion",
@@ -517,6 +517,7 @@
       "selected-id-outside-domain",
       "selection-anchor-outside-domain",
       "self-parent",
+      "sequence-patch-invalid",
       "slider-tick-outside-range",
       "slider-value-off-range",
       "spin-button-draft-invalid",
@@ -640,7 +641,7 @@
     }
   ],
   "acceptance": {
-    "classification": "contract-impact-reviewed",
-    "reason": "add-persistent-extent-index"
+    "classification": "breaking",
+    "reason": "replace-reorder-array-command-with-sequence-patch"
   }
 }
