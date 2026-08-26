@@ -17,7 +17,8 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick, ref } = await import('vue');
+const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
+const { renderToString } = await import('@vue/server-renderer');
 const { NumberField } = await import('../dist/number-field.js');
 const { QuantityFieldRoot } = await import('../dist/quantity-field.js');
 const { TextField } = await import('../dist/text.js');
@@ -105,10 +106,10 @@ test('Vue TextField lazy modifier emits only after the native change boundary', 
   host.remove();
 });
 
-test('controlled Vue TextField preserves Hangul composition metadata between model updates', async () => {
+test('controlled Vue TextField leaves consecutive Hangul composition under native input ownership', async () => {
   const host = document.createElement('div');
   document.body.append(host);
-  const value = ref('Mina Kim');
+  const value = ref('');
   const app = createApp({
     render: () => h(TextField, {
       modelValue: value.value,
@@ -121,27 +122,101 @@ test('controlled Vue TextField preserves Hangul composition metadata between mod
   const input = host.querySelector('input');
   assert.ok(input instanceof HTMLInputElement);
   const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.get, 'function');
   assert.equal(typeof valueDescriptor?.set, 'function');
+  let composing = false;
+  const writes = [];
+  Object.defineProperty(input, 'value', {
+    configurable: true,
+    get() { return valueDescriptor.get.call(this); },
+    set(nextValue) {
+      writes.push({ composing, value: nextValue });
+      valueDescriptor.set.call(this, nextValue);
+    },
+  });
 
-  input.setSelectionRange(input.value.length, input.value.length);
+  composing = true;
   input.dispatchEvent(compositionEvent('compositionstart', ''));
-
-  valueDescriptor.set.call(input, 'Mina Kimㅎ');
+  input.dispatchEvent(compositionEvent('compositionupdate', 'ㅎ'));
+  await nextTick();
+  valueDescriptor.set.call(input, 'ㅎ');
   input.setSelectionRange(input.value.length, input.value.length);
   input.dispatchEvent(compositionEvent('compositionupdate', '한'));
-
-  valueDescriptor.set.call(input, 'Mina Kim한');
+  await nextTick();
+  valueDescriptor.set.call(input, '한');
   input.setSelectionRange(input.value.length, input.value.length);
   input.dispatchEvent(compositionEvent('compositionend', '한'));
-  valueDescriptor.set.call(input, 'Mina Kim한한');
+  composing = false;
+  valueDescriptor.set.call(input, '한한');
   input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
   await nextTick();
 
-  assert.equal(value.value, 'Mina Kim한');
-  assert.equal(input.value, 'Mina Kim한');
+  composing = true;
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  input.dispatchEvent(compositionEvent('compositionupdate', 'ㄱ'));
+  await nextTick();
+  valueDescriptor.set.call(input, '한ㄱ');
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionupdate', '글'));
+  await nextTick();
+  valueDescriptor.set.call(input, '한글');
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(compositionEvent('compositionend', '글'));
+  composing = false;
+  valueDescriptor.set.call(input, '한글글');
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertCompositionText' }));
+  await nextTick();
+
+  assert.deepEqual(writes.filter((write) => write.composing), []);
+  assert.equal(value.value, '한글');
+  assert.equal(input.value, '한글');
 
   app.unmount();
   host.remove();
+});
+
+test('controlled Vue TextField hydrates its initial value and syncs later values through the DOM connection', async () => {
+  const value = ref('초기값');
+  const component = {
+    render: () => h(TextField, {
+      modelValue: value.value,
+      'onUpdate:modelValue': (nextValue) => { value.value = nextValue; },
+    }),
+  };
+  const clientWindow = globalThis.window;
+  Reflect.deleteProperty(globalThis, 'window');
+  let html;
+  try {
+    html = await renderToString(createSSRApp(component));
+  } finally {
+    globalThis.window = clientWindow;
+  }
+  assert.match(html, /value="초기값"/);
+
+  const host = document.createElement('div');
+  host.innerHTML = html;
+  document.body.append(host);
+  const warnings = [];
+  const app = createSSRApp(component);
+  app.config.warnHandler = (message) => { warnings.push(message); };
+  app.mount(host);
+  try {
+    await nextTick();
+    const input = host.querySelector('input');
+    assert.ok(input instanceof HTMLInputElement);
+    assert.deepEqual(warnings, []);
+    assert.equal(input.value, '초기값');
+
+    value.value = '외부 변경';
+    await nextTick();
+    assert.equal(input.value, '외부 변경');
+    assert.equal(input.selectionStart, '외부 변경'.length);
+    assert.equal(input.selectionEnd, '외부 변경'.length);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
 });
 
 test('domain-parsed value controls do not advertise text model modifiers', () => {

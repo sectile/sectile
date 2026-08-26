@@ -70,6 +70,7 @@ export const TextField = defineComponent({
     const participation = useNativeInputFormControl(element);
     const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
     const initialValue = String(controlled ? props.modelValue : props.defaultValue);
+    const renderServerValue = typeof window === 'undefined';
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;
     let proposedState: TextState | null = null;
@@ -144,9 +145,7 @@ export const TextField = defineComponent({
       {
         ref: element,
         ...(!props.multiline ? { type: props.type } : {}),
-        value: controlled && !props.modelModifiers.lazy
-          ? props.modelValue
-          : controller?.getSnapshot().state.snapshot.text ?? initialValue,
+        ...(renderServerValue ? { value: initialValue } : {}),
         disabled: props.disabled,
         readonly: props.readonly,
         required: props.required,
