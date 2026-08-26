@@ -22,6 +22,8 @@ export interface TTYKeyboard {
   close(): void;
 }
 
+const ownedTTYInputs = new WeakSet<ReadStream>();
+
 export type TTYKeyboardInputHandler = (input: TerminalKeyboardInput) => void;
 
 export interface NodeTerminalOutput {
@@ -94,18 +96,51 @@ export function createTTYKeyboard(
       },
     };
   }
+  if (ownedTTYInputs.has(input)) {
+    return {
+      ok: false,
+      error: {
+        class: 'construction',
+        code: 'tty-input-already-owned',
+        message: 'Terminal keyboard input allows one active owner per TTY stream.',
+      },
+    };
+  }
 
   const wasRaw = input.isRaw;
+  const wasFlowing = input.readableFlowing === true;
   let closed = false;
   const handleKeypress = (value: string | undefined, keypress: NodeKeypress): void => {
     const normalized = toTerminalKeyboardInput(value, keypress);
     if (normalized !== null) listener(normalized);
   };
 
-  emitKeypressEvents(input);
-  input.setRawMode(true);
-  input.resume();
-  input.on('keypress', handleKeypress);
+  ownedTTYInputs.add(input);
+  try {
+    emitKeypressEvents(input);
+    input.setRawMode(true);
+    input.resume();
+    input.on('keypress', handleKeypress);
+  } catch (cause) {
+    ownedTTYInputs.delete(input);
+    try {
+      input.off('keypress', handleKeypress);
+      input.setRawMode(wasRaw);
+      if (wasFlowing) input.resume();
+      else input.pause();
+    } catch {
+      // The original setup failure remains the actionable error.
+    }
+    return {
+      ok: false,
+      error: {
+        class: 'construction',
+        code: 'tty-input-setup-failed',
+        message: 'Terminal keyboard input could not acquire the TTY stream.',
+        details: { cause: cause instanceof Error ? cause.message : String(cause) },
+      },
+    };
+  }
 
   return {
     ok: true,
@@ -114,8 +149,16 @@ export function createTTYKeyboard(
         if (closed) return;
         closed = true;
         input.off('keypress', handleKeypress);
-        input.setRawMode(wasRaw);
-        input.pause();
+        try {
+          input.setRawMode(wasRaw);
+        } finally {
+          try {
+            if (wasFlowing) input.resume();
+            else input.pause();
+          } finally {
+            ownedTTYInputs.delete(input);
+          }
+        }
       },
     }),
   };

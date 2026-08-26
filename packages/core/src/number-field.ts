@@ -18,6 +18,7 @@ import {
   applyTextEvent,
   createTextEditingState,
   normalizeTextEditingState,
+  sameTextEditingState,
   type TextEditingState,
   type TextEvent,
   tryCreateTextEditingState,
@@ -161,7 +162,7 @@ export function applyNumberFieldEvent(
   if (event === 'cancel') {
     const restored = createCommittedInput(valid.value.value);
     if (!restored.ok) return restored;
-    if (sameTextState(restored.value, valid.value.inputState)) return createMachineUpdate(valid.value);
+    if (sameTextEditingState(restored.value, valid.value.inputState)) return createMachineUpdate(valid.value);
     return createMachineUpdate(
       Object.freeze({ value: valid.value.value, inputState: restored.value }),
       [{ type: 'input-state-changed', value: restored.value }],
@@ -218,10 +219,6 @@ function createCommittedInput(value: string | null): Result<TextEditingState> {
     anchorCodeUnitOffset: text.length,
     focusCodeUnitOffset: text.length,
   });
-}
-
-function sameTextState(left: TextEditingState, right: TextEditingState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 const literalEvaluator: NumericExpressionEvaluator = Object.freeze({

@@ -469,6 +469,8 @@ export type SectileErrorCode =
   | 'tree-view-target-hidden'
   | 'tree-view-target-ineligible'
   | 'tree-view-target-outside-tree'
+  | 'tty-input-already-owned'
+  | 'tty-input-setup-failed'
   | 'typeahead-no-match'
   | 'uncontrolled-controller-sync'
   | 'uncontrolled-edit-mode-update'

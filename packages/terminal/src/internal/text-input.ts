@@ -1,6 +1,7 @@
 import type { TextEditingState, TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from '../keyboard.js';
 import type { TextInput } from '../text.js';
+import { nextGraphemeOffset, previousGraphemeOffset } from './grapheme.js';
 
 export function toTerminalTextInput(
   state: TextEditingState,
@@ -35,20 +36,4 @@ export function toTerminalTextInput(
 
 function collapsedSelection(offset: number): TextSelectionInput {
   return Object.freeze({ anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset });
-}
-
-function previousGraphemeOffset(text: string, offset: number): number {
-  let previous = 0;
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index >= offset) break;
-    previous = segment.index;
-  }
-  return previous;
-}
-
-function nextGraphemeOffset(text: string, offset: number): number {
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index > offset) return segment.index;
-  }
-  return text.length;
 }

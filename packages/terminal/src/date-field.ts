@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
 import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/core/date-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
@@ -20,7 +20,7 @@ export function createDateField(options: DateFieldOptions = {}): FacadeConnectio
 export function tryCreateDateField(options: DateFieldOptions = {}): Result<FacadeConnection<DateFieldConnection>> { return createFacadeConnection(options, construct); }
 function construct(options: DateFieldOptions): Result<DateFieldConnection> {
   const valueControlled = options.value !== undefined; const inputControlled = options.inputState !== undefined; const policies = Object.freeze({ ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) });
-  const runtime = createSemanticController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({ initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState), reducer: (state, event) => applyDateFieldEvent(state, event, policies), reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState), notify: (previous, proposed) => { if (JSON.stringify(previous.inputState) !== JSON.stringify(proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); }, toEffect: (command) => command, interaction: options });
+  const runtime = createSemanticController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({ initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState), reducer: (state, event) => applyDateFieldEvent(state, event, policies), reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState), notify: (previous, proposed) => { if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); }, toEffect: (command) => command, interaction: options });
   return runtime.ok ? { ok: true, value: new TerminalDateField(options, runtime.value, valueControlled, inputControlled) } : runtime;
 }
 class TerminalDateField implements DateFieldConnection {

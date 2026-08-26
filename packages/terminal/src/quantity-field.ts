@@ -11,10 +11,11 @@ import {
   type QuantityValue,
 } from '@sectile/core/quantity-field';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { toTerminalTextInput } from './internal/text-input.js';
+import { nextGraphemeOffset, previousGraphemeOffset } from './internal/grapheme.js';
 import { toTextEvent } from './text.js';
 
 export interface QuantityFieldValueChangeDetails {
@@ -89,8 +90,8 @@ function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result
       inputControlled ? previous.inputState : proposed.inputState,
     ),
     notify: (previous, proposed) => {
-      if (!sameValue(previous.displayUnit, proposed.displayUnit)) options.onDisplayUnitChange?.(proposed.displayUnit);
-      if (!sameValue(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
+      if (previous.displayUnit !== proposed.displayUnit) options.onDisplayUnitChange?.(proposed.displayUnit);
+      if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
     },
     toEffect: (command) => command,
     interaction: options,
@@ -221,24 +222,4 @@ class TerminalQuantityField implements QuantityFieldConnection {
     });
     return this.handleEvent({ type: 'text', event });
   }
-}
-
-function previousGraphemeOffset(text: string, offset: number): number {
-  let previous = 0;
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index >= offset) break;
-    previous = segment.index;
-  }
-  return previous;
-}
-
-function nextGraphemeOffset(text: string, offset: number): number {
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index > offset) return segment.index;
-  }
-  return text.length;
-}
-
-function sameValue(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }

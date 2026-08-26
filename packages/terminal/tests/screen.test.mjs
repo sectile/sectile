@@ -135,3 +135,23 @@ test('screen writer updates changed rows without clearing the entire screen agai
   assert.match(update, /\u001b\[4 q/);
   assert.match(chunks.at(-1), /\u001b\[\?1049l/);
 });
+
+test('screen writer clears stale rows after resize and restores the terminal once', () => {
+  const chunks = [];
+  const output = {
+    isTTY: true,
+    write(chunk) { chunks.push(chunk); },
+    getColorDepth: () => 4,
+  };
+  const writer = createTerminalScreenWriter(output, { alternateScreen: true });
+  writer.render(renderTerminalScreen(terminalText('한글\n👨‍👩‍👧‍👦'), { columns: 8, rows: 2 }));
+  writer.render(renderTerminalScreen(terminalText('A'), { columns: 4, rows: 1 }));
+  writer.close();
+  writer.close();
+
+  const outputText = chunks.join('');
+  assert.match(outputText, /\u001b\[2;1H\u001b\[K/);
+  assert.equal(outputText.match(/\u001b\[\?1049h/g)?.length, 1);
+  assert.equal(outputText.match(/\u001b\[\?1049l/g)?.length, 1);
+  assert.match(chunks.at(-1), /\u001b\[\?25h\u001b\[\?1049l/);
+});

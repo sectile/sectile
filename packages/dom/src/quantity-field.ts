@@ -12,7 +12,7 @@ import {
 } from '@sectile/core/quantity-field';
 export type { QuantityFieldPolicies, QuantityValue } from '@sectile/core/quantity-field';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
@@ -116,8 +116,8 @@ function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result
       inputControlled ? previous.inputState : proposed.inputState,
     ),
     notify: (previous, proposed) => {
-      if (!sameValue(previous.displayUnit, proposed.displayUnit)) options.onDisplayUnitChange?.(proposed.displayUnit);
-      if (!sameValue(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
+      if (previous.displayUnit !== proposed.displayUnit) options.onDisplayUnitChange?.(proposed.displayUnit);
+      if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState);
     },
     toEffect: (command) => command,
     interaction: options,
@@ -267,8 +267,4 @@ class DOMQuantityField implements QuantityFieldConnection {
         .map((unit) => unit.id);
     return Object.freeze([...new Set([...compatible, this.getDisplayUnit()])]);
   }
-}
-
-function sameValue(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }

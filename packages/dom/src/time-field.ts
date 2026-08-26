@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { applyTimeFieldEvent, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/core/time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
@@ -25,7 +25,7 @@ export function tryCreateTimeField(options: TimeFieldOptions): Result<FacadeConn
 function construct(options: TimeFieldOptions): Result<TimeFieldConnection> {
   const valueControlled = options.value !== undefined; const inputControlled = options.inputState !== undefined;
   const policies = Object.freeze({ ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) });
-  const runtime = createSemanticController<TimeFieldState, TimeFieldEvent, TimeFieldCommand, TimeFieldCommand>({ initial: tryCreateTimeFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState), reducer: (state, event) => applyTimeFieldEvent(state, event, policies), reconcile: (previous, proposed) => tryCreateTimeFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState), notify: (previous, proposed) => { if (JSON.stringify(previous.inputState) !== JSON.stringify(proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); }, toEffect: (command) => command, interaction: options });
+  const runtime = createSemanticController<TimeFieldState, TimeFieldEvent, TimeFieldCommand, TimeFieldCommand>({ initial: tryCreateTimeFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState), reducer: (state, event) => applyTimeFieldEvent(state, event, policies), reconcile: (previous, proposed) => tryCreateTimeFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState), notify: (previous, proposed) => { if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); }, toEffect: (command) => command, interaction: options });
   return runtime.ok ? { ok: true, value: new DOMTimeField(options, runtime.value, valueControlled, inputControlled) } : runtime;
 }
 class DOMTimeField implements TimeFieldConnection {

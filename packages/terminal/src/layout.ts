@@ -1,4 +1,5 @@
 import stringWidth from 'string-width';
+import { graphemeSegments } from './internal/grapheme.js';
 
 export function fitTerminalText(value: string, width: number): string {
   if (!Number.isSafeInteger(width) || width < 0) {
@@ -12,7 +13,7 @@ export function fitTerminalText(value: string, width: number): string {
   const contentWidth = width - stringWidth(ellipsis);
   let rendered = '';
   let renderedWidth = 0;
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)) {
+  for (const segment of graphemeSegments(value)) {
     const segmentWidth = stringWidth(segment.segment);
     if (renderedWidth + segmentWidth > contentWidth) break;
     rendered += segment.segment;

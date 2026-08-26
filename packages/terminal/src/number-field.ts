@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState, TextEvent, TextSelectionInput } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
 import {
   applyNumberFieldEvent,
   tryCreateNumberFieldState,
@@ -14,6 +14,7 @@ import {
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { toTerminalTextInput } from './internal/text-input.js';
+import { nextGraphemeOffset, previousGraphemeOffset } from './internal/grapheme.js';
 import { toTextEvent } from './text.js';
 
 export interface NumberFieldValueChangeDetails {
@@ -87,7 +88,7 @@ function tryCreateNumberFieldConnection(options: NumberFieldOptions = {}): Resul
       inputControlled ? previous.inputState : proposed.inputState,
     ),
     notify: (previous, proposed) => {
-      if (!sameInputState(previous.inputState, proposed.inputState)) {
+      if (!sameTextEditingState(previous.inputState, proposed.inputState)) {
         options.onInputStateChange?.(Object.freeze({
           value: proposed.inputState,
           previousValue: previous.inputState,
@@ -208,24 +209,4 @@ class TerminalNumberField implements NumberFieldConnection {
     });
     return this.handleEvent({ type: 'text', event });
   }
-}
-
-function previousGraphemeOffset(text: string, offset: number): number {
-  let previous = 0;
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index >= offset) break;
-    previous = segment.index;
-  }
-  return previous;
-}
-
-function nextGraphemeOffset(text: string, offset: number): number {
-  for (const segment of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(text)) {
-    if (segment.index > offset) return segment.index;
-  }
-  return text.length;
-}
-
-function sameInputState(left: TextEditingState, right: TextEditingState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }

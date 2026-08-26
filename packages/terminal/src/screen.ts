@@ -4,6 +4,7 @@ import type {
   TerminalStyleReference,
 } from './appearance.js';
 import { createTerminalAppearance } from './appearance.js';
+import { graphemeSegments } from './internal/grapheme.js';
 
 export type TerminalDimension = number | 'auto' | 'fill';
 export type TerminalAlignment = 'start' | 'center' | 'end' | 'stretch';
@@ -160,8 +161,6 @@ interface BorderCharacters {
   readonly bottomRight: string;
 }
 
-const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-
 export function terminalText(value: string, options: TerminalTextOptions = {}): TerminalTextNode {
   return Object.freeze({ type: 'text', value, ...options });
 }
@@ -264,7 +263,7 @@ function renderText(frame: MutableFrame, node: TerminalTextNode, rectangle: Rect
     throw new RangeError('Terminal cursor offset must be a non-negative safe integer.');
   }
 
-  for (const part of segmenter.segment(node.value)) {
+  for (const part of graphemeSegments(node.value)) {
     if (cursorOffset !== undefined && frame.cursor === null && cursorOffset <= codeUnitOffset) {
       frame.cursor = createFrameCursor(node.cursor, x, y, frame, rectangle, wrap);
     }

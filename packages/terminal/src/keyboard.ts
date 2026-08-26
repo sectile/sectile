@@ -1,3 +1,5 @@
+import { previousGraphemeOffset } from './internal/grapheme.js';
+
 export interface TerminalKeyboardInput {
   readonly key: string;
   readonly text?: string;
@@ -17,7 +19,5 @@ export function applyTerminalTextInput(
 }
 
 export function removeLastGrapheme(value: string): string {
-  const segments = Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value));
-  if (segments.length === 0) return value;
-  return value.slice(0, segments.at(-1)?.index ?? value.length);
+  return value.slice(0, previousGraphemeOffset(value, value.length));
 }

@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   applyNumberFieldEvent,
   tryCreateNumberFieldState,
@@ -89,7 +89,7 @@ function tryCreateNumberFieldConnection(options: NumberFieldOptions): Result<Num
       inputControlled ? previous.inputState : proposed.inputState,
     ),
     notify: (previous, proposed) => {
-      if (!sameInputState(previous.inputState, proposed.inputState)) {
+      if (!sameTextEditingState(previous.inputState, proposed.inputState)) {
         options.onInputStateChange?.(Object.freeze({
           value: proposed.inputState,
           previousValue: previous.inputState,
@@ -209,8 +209,4 @@ class DOMNumberField implements NumberFieldConnection {
     const event = toTextEvent(input);
     return event !== null && this.handleEvent({ type: 'text', event });
   }
-}
-
-function sameInputState(left: TextEditingState, right: TextEditingState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }

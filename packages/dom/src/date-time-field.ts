@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TextEditingState } from '@sectile/core/text';
+import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   applyDateTimeFieldEvent,
   tryCreateDateTimeFieldState,
@@ -91,7 +91,7 @@ function construct(options: DateTimeFieldOptions): Result<DateTimeFieldConnectio
       inputControlled ? previous.inputState : proposed.inputState,
     ),
     notify: (previous, proposed) => {
-      if (JSON.stringify(previous.inputState) !== JSON.stringify(proposed.inputState)) {
+      if (!sameTextEditingState(previous.inputState, proposed.inputState)) {
         options.onInputStateChange?.(proposed.inputState, previous.inputState);
       }
     },
