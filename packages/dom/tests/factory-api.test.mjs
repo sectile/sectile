@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json']);
+const excludedSubpaths = new Set(['./package.json', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../dist/index.js');

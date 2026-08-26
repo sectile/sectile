@@ -126,6 +126,46 @@ Every trigger-owned popup also joins one layer stack per document. Mixed nesting
 
 `@sectile/dom/reorder` maps sequence and tree reorder semantics onto Alt-modified movement keys and pointer placement. Pointer capture and hit-testing stay in the DOM adapter; Core receives only stable identities and semantic before/after or parent placement.
 
+## Virtualization host
+
+`@sectile/dom/virtual` connects any `@sectile/virtual` layout strategy to a scroll element. The connection owns browser scheduling, not the logical collection or application markup.
+
+```sh
+pnpm add @sectile/core @sectile/virtual @sectile/dom
+```
+
+```ts
+import {
+  createAxisMeasurementResolver,
+  createVirtualizer,
+  virtualContentStyle,
+  virtualItemStyle,
+} from '@sectile/dom/virtual'
+import { linearLayoutStrategy } from '@sectile/virtual/linear-layout'
+
+const virtualizer = createVirtualizer({
+  root: scrollElement,
+  state: linearState,
+  strategy: linearLayoutStrategy,
+  overscan: 240,
+  measure: createAxisMeasurementResolver('vertical'),
+  onStateChange(state) {
+    linearState = state
+  },
+  onPlanChange(plan, connection) {
+    Object.assign(contentElement.style, virtualContentStyle(plan))
+    reconcileItems(plan.placements, (element, placement) => {
+      Object.assign(element.style, virtualItemStyle(placement, { width: true }))
+      return connection.registerItem(element, placement.id)
+    })
+  },
+})
+```
+
+Scroll and resize notifications are coalesced into one animation frame. Item rectangles are read as one batch, the strategy applies one measurement generation, anchor correction is written, and the next plan is then published. `measure()` accepts explicit strategy measurements for track grids and other layouts whose geometry is not one rectangle per item. `mutate()` applies domain or geometry changes through the same anchor-preserving path, while `scrollTo()` requests an identity even when it is currently outside the render window.
+
+The default viewport uses non-negative physical `scrollLeft` and `scrollTop`. Pass `readViewport` and `writeScroll` when an RTL scroller or custom surface uses another coordinate model.
+
 ## Styling hooks
 
 DOM connections provide behavior, not a theme. Style the element through your own classes and the projected state attributes.

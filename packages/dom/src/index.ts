@@ -2,6 +2,32 @@ export type { FacadeConnection } from '@sectile/core/adapter-runtime';
 export type { ReadingDirection } from './internal/direction.js';
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
 export {
+  createAxisMeasurementResolver,
+  createVirtualizer,
+  virtualContentStyle,
+  virtualItemStyle,
+  type ExtentUpdate,
+  type VirtualInsets,
+  type VirtualItemStyleOptions,
+  type VirtualLayoutMutation,
+  type VirtualLayoutPlan,
+  type VirtualLayoutStrategy,
+  type VirtualMeasurementContext,
+  type VirtualMeasurementResolver,
+  type VirtualPlacement,
+  type VirtualPoint,
+  type VirtualRect,
+  type VirtualScrollAlignment,
+  type VirtualScrollWriter,
+  type VirtualViewportReader,
+  type VirtualizerConnection,
+  type VirtualizerEnvironment,
+  type VirtualizerErrorHandler,
+  type VirtualizerOptions,
+  type VirtualizerPlanChangeHandler,
+  type VirtualizerStateChangeHandler,
+} from './virtual.js';
+export {
   createReorder,
   tryCreateReorder,
   type ReorderOrientation,

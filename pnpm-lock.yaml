@@ -106,6 +106,9 @@ importers:
       '@sectile/temporal':
         specifier: workspace:*
         version: link:../temporal
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:../virtual
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
