@@ -20,6 +20,13 @@ import {
   queryTrackGridLayout,
   trackGridRegionRect,
 } from '../../.verification-dist/track-grid-layout.js';
+import {
+  applyMasonryMeasurements,
+  applyMasonryMutation,
+  createMasonryLayout,
+  masonryRectAt,
+  queryMasonryLayout,
+} from '../../.verification-dist/masonry-layout.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
 const exact = (value) => ({ kind: 'exact', value });
@@ -108,4 +115,33 @@ test('VRT-02, VRT-03, VRT-04: grid measurements and track splices preserve expli
   }, { id: 'anchor', viewportOffset: { x: 0, y: 0 } });
   assert.deepEqual(trackGridRegionRect(inserted.state, 'anchor'), { x: 0, y: 55, width: 50, height: 20 });
   assert.deepEqual(inserted.scrollDelta, { x: 0, y: 5 });
+});
+
+test('VRT-01, VRT-05: masonry queries balanced lanes across axes and reverse flow', () => {
+  const masonry = createMasonryLayout(
+    domain(4),
+    createExtentIndex([exact(40), exact(20), exact(30), exact(50)]),
+    { laneCount: 2, laneExtent: 100, laneGap: 10, itemGap: 5, flow: 'reverse' },
+  );
+  assert.deepEqual(masonryRectAt(masonry, 'item-0'), { x: 0, y: 55, width: 100, height: 40 });
+  assert.deepEqual(masonryRectAt(masonry, 'item-3'), { x: 0, y: 0, width: 100, height: 50 });
+  assert.deepEqual(queryMasonryLayout(masonry, { viewport: { x: 105, y: 0, width: 105, height: 60 } }).placements.map(({ id }) => id), ['item-2']);
+});
+
+test('VRT-02, VRT-03, VRT-04: masonry measurements and responsive geometry preserve anchors', () => {
+  const masonry = createMasonryLayout(
+    domain(4),
+    createExtentIndex([exact(40), estimated(20), exact(30), exact(50)]),
+    { laneCount: 2, laneExtent: 100, itemGap: 5 },
+  );
+  const measured = applyMasonryMeasurements(masonry, {
+    generation: 0,
+    anchor: { id: 'item-3', viewportOffset: { x: 0, y: 0 } },
+    measurements: [{ index: 1, extent: exact(60) }],
+  });
+  assert.deepEqual(measured.scrollDelta, { x: 100, y: 20 });
+  const responsive = applyMasonryMutation(measured.state, {
+    type: 'geometry', laneCount: 1, laneExtent: 200,
+  }, { id: 'item-3', viewportOffset: { x: 0, y: 0 } });
+  assert.deepEqual(masonryRectAt(responsive.state, 'item-3'), { x: 0, y: 145, width: 200, height: 50 });
 });

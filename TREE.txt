@@ -841,6 +841,7 @@ sectile/
 │   │   │   ├── index.ts
 │   │   │   ├── layout.ts
 │   │   │   ├── linear-layout.ts
+│   │   │   ├── masonry-layout.ts
 │   │   │   └── track-grid-layout.ts
 │   │   ├── testing/
 │   │   │   ├── law-evidence.json
