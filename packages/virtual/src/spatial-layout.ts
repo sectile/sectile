@@ -41,8 +41,7 @@ interface IndexedSpatialItem<ID extends StableID> {
 interface SpatialNode<ID extends StableID> {
   readonly bounds: VirtualRect;
   readonly items: readonly IndexedSpatialItem<ID>[] | null;
-  readonly left: SpatialNode<ID> | null;
-  readonly right: SpatialNode<ID> | null;
+  readonly children: readonly SpatialNode<ID>[] | null;
 }
 
 interface SpatialInternals<ID extends StableID> {
@@ -192,7 +191,7 @@ function createState<ID extends StableID>(domain: Sequence<ID>, items: readonly 
     width = Math.max(width, item.rect.x + item.rect.width);
     height = Math.max(height, item.rect.y + item.rect.height);
   }
-  internals.set(state, { root: buildNode(indexed), byID: new Map(indexed.map((item) => [item.value.id, item])), contentSize: Object.freeze({ width, height }) } as SpatialInternals<StableID>);
+  internals.set(state, { root: buildPackedTree(indexed), byID: new Map(indexed.map((item) => [item.value.id, item])), contentSize: Object.freeze({ width, height }) } as SpatialInternals<StableID>);
   return state;
 }
 
@@ -208,14 +207,21 @@ function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], m
   return ok(Object.freeze({ domain: domain.value, items: Object.freeze(frozen) }));
 }
 
-function buildNode<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): SpatialNode<ID> | null {
+function buildPackedTree<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): SpatialNode<ID> | null {
   if (items.length === 0) return null;
-  const bounds = boundsOf(items);
-  if (items.length <= LEAF_SIZE) return Object.freeze({ bounds, items: Object.freeze([...items]), left: null, right: null });
-  const axis = bounds.width >= bounds.height ? 'x' : 'y';
-  const sorted = [...items].sort((left, right) => center(left.value.rect, axis) - center(right.value.rect, axis) || left.index - right.index);
-  const middle = sorted.length >>> 1;
-  return Object.freeze({ bounds, items: null, left: buildNode(sorted.slice(0, middle)), right: buildNode(sorted.slice(middle)) });
+  let level = packedGroups(items, (item) => item.value.rect).map((group): SpatialNode<ID> => Object.freeze({
+    bounds: boundsOfRects(group.map((item) => item.value.rect)),
+    items: Object.freeze(group),
+    children: null,
+  }));
+  while (level.length > 1) {
+    level = packedGroups(level, (node) => node.bounds).map((children): SpatialNode<ID> => Object.freeze({
+      bounds: boundsOfRects(children.map((node) => node.bounds)),
+      items: null,
+      children: Object.freeze(children),
+    }));
+  }
+  return level[0]!;
 }
 
 function queryNode<ID extends StableID>(node: SpatialNode<ID> | null, bounds: VirtualRect, output: IndexedSpatialItem<ID>[]): void {
@@ -224,20 +230,33 @@ function queryNode<ID extends StableID>(node: SpatialNode<ID> | null, bounds: Vi
     for (const item of node.items) if (rectanglesIntersect(item.value.rect, bounds)) output.push(item);
     return;
   }
-  queryNode(node.left, bounds, output);
-  queryNode(node.right, bounds, output);
+  for (const child of node.children ?? []) queryNode(child, bounds, output);
 }
 
-function boundsOf<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): VirtualRect {
+function packedGroups<T>(values: readonly T[], rectOf: (value: T) => VirtualRect): T[][] {
+  if (values.length <= LEAF_SIZE) return [[...values]];
+  const groupCount = Math.ceil(values.length / LEAF_SIZE);
+  const slabCount = Math.ceil(Math.sqrt(groupCount));
+  const slabSize = Math.ceil(values.length / slabCount);
+  const sorted = [...values].sort((left, right) => center(rectOf(left), 'x') - center(rectOf(right), 'x'));
+  const groups: T[][] = [];
+  for (let slabStart = 0; slabStart < sorted.length; slabStart += slabSize) {
+    const slab = sorted.slice(slabStart, slabStart + slabSize).sort((left, right) => center(rectOf(left), 'y') - center(rectOf(right), 'y'));
+    for (let start = 0; start < slab.length; start += LEAF_SIZE) groups.push(slab.slice(start, start + LEAF_SIZE));
+  }
+  return groups;
+}
+
+function boundsOfRects(rects: readonly VirtualRect[]): VirtualRect {
   let minX = Number.POSITIVE_INFINITY;
   let minY = Number.POSITIVE_INFINITY;
   let maxX = 0;
   let maxY = 0;
-  for (const item of items) {
-    minX = Math.min(minX, item.value.rect.x);
-    minY = Math.min(minY, item.value.rect.y);
-    maxX = Math.max(maxX, item.value.rect.x + item.value.rect.width);
-    maxY = Math.max(maxY, item.value.rect.y + item.value.rect.height);
+  for (const rect of rects) {
+    minX = Math.min(minX, rect.x);
+    minY = Math.min(minY, rect.y);
+    maxX = Math.max(maxX, rect.x + rect.width);
+    maxY = Math.max(maxY, rect.y + rect.height);
   }
   return Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
 }
