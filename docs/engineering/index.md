@@ -17,3 +17,5 @@ For later releases, run `pnpm release`. It reads commits since the latest publis
 
 See [package boundary](package-boundary.md), [component completeness](component-completeness.md),
 and [naming](naming.md).
+
+When a Core public contract intentionally changes, first update its declaration signature, then run `pnpm --filter @sectile/core update:semantic-api -- --classification=<classification> --reason=<reason>`. The accepted classification is stored with the semantic baseline; the regular `verify` command rejects an unclassified type, subpath, error-code, or tracked-default change.

@@ -31,6 +31,8 @@ The check is additive: it verifies that these required entries exist and resolve
 
 The root runtime must remain empty. Consumer import checks execute the required canonical subpaths through Node package resolution and compile a separate strict TypeScript project against the emitted declarations.
 
+Public compatibility has two gates. Declaration fingerprints detect any type-surface change. The semantic API gate then classifies subpath additions as minor, export or error-code removal as breaking, new error codes as contract-impact review, and changed declarations as widening/addition versus narrowing/removal analysis. High-impact defaults are tied to exact source evidence; changing one is semantic breaking even when its TypeScript signature is unchanged. Updating the semantic baseline requires an explicit classification and reason.
+
 The core package footprint gate rejects reference files and applies separate byte ceilings to JavaScript, declarations, source maps, and the complete package. This keeps runtime growth visible without treating optional debugging metadata as runtime code. DOM and terminal code are emitted only by their own packages.
 
 `@sectile/core/adapter-runtime` owns host-independent controller revision, reconciliation, notification, command projection, facade, and destruction behavior. Its public `createHostAdapter` contract connects deterministic host decoding to semantic reduction and projected effects without executing platform work. DOM and terminal packages retain host input decoding, listener lifecycle, and effect execution. Host state equality is semantic and component-specific; adapter runtime code must not serialize arbitrary state to compare it.
