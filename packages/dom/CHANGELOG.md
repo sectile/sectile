@@ -1,5 +1,27 @@
 # @sectile/dom
 
+## 0.4.0
+
+### Changes
+
+- feat(form)!: harden Vue form contracts (7828c74)
+- feat(vue): support unmounting closed popups (5e3ee14)
+- fix(verification): suppress successful stage logs (350a390)
+- fix(vue): expose camelCase event listeners (eb95454)
+- feat(vue): support deferred portal targets (d07571b)
+- docs(vue): define adopted element contract (9582873)
+- fix(vue): preserve adopted slot element structure (e3ca4ba)
+- docs: define runtime host and verification contracts (8adf47e)
+- test(property): shrink cross-host parity failures (67f0bd4)
+- refactor(runtime): harden text and terminal lifecycles (8031b73)
+- test(verification): require vue projection evidence (77cca90)
+- fix(vue): reconcile dynamic collection domains (ef33ef3)
+- feat(errors): close public failure codes (952e8cb)
+- refactor(runtime): centralize host controller lifecycle (1c5dafe)
+- fix(vue): enforce focus and ownership contracts (05bb0fc)
+- fix(selection): reconcile collection policy across hosts (be137fb)
+- fix(release): make verification clean and interactive (bc4fe61)
+
 ## 0.3.0
 
 ### Changes

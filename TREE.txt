@@ -302,6 +302,7 @@ sectile/
 │   │   ├── check-content.mjs
 │   │   └── generate-component-pages.mjs
 │   ├── testing/
+│   │   ├── browser-accessibility.md
 │   │   ├── index.md
 │   │   └── verification-pipeline.md
 │   ├── theory/
@@ -406,6 +407,7 @@ sectile/
 │   │   │   │   ├── sequence.ts
 │   │   │   │   └── tree.ts
 │   │   │   ├── accordion.ts
+│   │   │   ├── adapter-runtime.ts
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
@@ -426,6 +428,7 @@ sectile/
 │   │   │   ├── disclosure.ts
 │   │   │   ├── drawer.ts
 │   │   │   ├── editable.ts
+│   │   │   ├── error-code.ts
 │   │   │   ├── feed.ts
 │   │   │   ├── form.ts
 │   │   │   ├── index.ts
@@ -518,6 +521,7 @@ sectile/
 │   │   │   │   ├── text.reference-law.test.mjs
 │   │   │   │   └── time-range-field.test.mjs
 │   │   │   ├── runtime/
+│   │   │   │   ├── adapter-runtime.test.mjs
 │   │   │   │   ├── collection-window.test.mjs
 │   │   │   │   ├── interaction.test.mjs
 │   │   │   │   ├── layer-stack.test.mjs
@@ -554,12 +558,10 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   ├── checked-control.ts
-│   │   │   │   ├── controller.ts
 │   │   │   │   ├── date-picker-cell.ts
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── direction.ts
 │   │   │   │   ├── disabled-items.ts
-│   │   │   │   ├── facade.ts
 │   │   │   │   ├── floating-position.ts
 │   │   │   │   ├── interaction.ts
 │   │   │   │   ├── layer-binding.ts
@@ -567,7 +569,6 @@ sectile/
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── modal-effects.ts
 │   │   │   │   ├── popup-control.ts
-│   │   │   │   ├── semantic-controller.ts
 │   │   │   │   └── text-element.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
@@ -679,12 +680,10 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   ├── checked-control.ts
-│   │   │   │   ├── controller.ts
 │   │   │   │   ├── disabled-items.ts
-│   │   │   │   ├── facade.ts
+│   │   │   │   ├── grapheme.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
-│   │   │   │   ├── semantic-controller.ts
 │   │   │   │   └── text-input.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
@@ -798,6 +797,8 @@ sectile/
 │       │   └── build.mjs
 │       ├── src/
 │       │   ├── internal/
+│       │   │   ├── collection.ts
+│       │   │   ├── controlled-state.ts
 │       │   │   ├── date-picker.ts
 │       │   │   ├── form-control-inventory.ts
 │       │   │   ├── form-control.ts
@@ -880,6 +881,7 @@ sectile/
 │       │   ├── checked-controls.test.mjs
 │       │   ├── client-part-contracts.test.mjs
 │       │   ├── collection-popup.test.mjs
+│       │   ├── collection-reconciliation.test.mjs
 │       │   ├── color-picker.test.mjs
 │       │   ├── combobox.dom.test.mjs
 │       │   ├── date-pickers.dom.test.mjs
@@ -888,6 +890,7 @@ sectile/
 │       │   ├── derived-selection.test.mjs
 │       │   ├── disclosure.test.mjs
 │       │   ├── drawer.dom.test.mjs
+│       │   ├── dynamic-collections.dom.test.mjs
 │       │   ├── editable.test.mjs
 │       │   ├── extended-controls.test.mjs
 │       │   ├── form.dom.test.mjs
@@ -901,6 +904,8 @@ sectile/
 │       │   ├── pin-input.dom.test.mjs
 │       │   ├── popup.test.mjs
 │       │   ├── presence.dom.test.mjs
+│       │   ├── primitive.dom.test.mjs
+│       │   ├── primitive.test.mjs
 │       │   ├── public-parity.test.mjs
 │       │   ├── renderer.mjs
 │       │   ├── slider.test.mjs
@@ -933,7 +938,8 @@ sectile/
 │   ├── release.mjs
 │   ├── release.test.mjs
 │   ├── tree.test.mjs
-│   └── update-tree.mjs
+│   ├── update-tree.mjs
+│   └── verify.mjs
 ├── verification/
 │   ├── cross-host/
 │   │   ├── calendar.test.mjs
@@ -946,11 +952,14 @@ sectile/
 │   │   ├── listbox.test.mjs
 │   │   ├── menu-controls.test.mjs
 │   │   ├── popup-controls.test.mjs
+│   │   ├── property-harness.test.mjs
 │   │   ├── range-controls.test.mjs
 │   │   ├── slider.test.mjs
 │   │   ├── text.test.mjs
 │   │   ├── tree-grid.test.mjs
 │   │   └── tree-view.test.mjs
+│   ├── support/
+│   │   └── property.mjs
 │   ├── component-completeness.json
 │   └── component-evidence.json
 ├── .gitignore
