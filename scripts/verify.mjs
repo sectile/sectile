@@ -17,6 +17,8 @@ if (quietRequested && verbose) throw new Error('verification cannot be both quie
 const generatedOutputs = [
   join(root, 'packages', 'core', 'dist'),
   join(root, 'packages', 'core', '.verification-dist'),
+  join(root, 'packages', 'temporal', 'dist'),
+  join(root, 'packages', 'temporal', '.verification-dist'),
   join(root, 'packages', 'dom', 'dist'),
   join(root, 'packages', 'terminal', 'dist'),
   join(root, 'packages', 'vue', 'dist'),
@@ -32,6 +34,7 @@ const packageStep = (label, packageName, script) => Object.freeze({
 const fullSteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core verification', '@sectile/core', 'verify'),
+  packageStep('temporal verification', '@sectile/temporal', 'verify'),
   packageStep('DOM verification', '@sectile/dom', 'verify'),
   packageStep('terminal verification', '@sectile/terminal', 'verify'),
   packageStep('Vue verification', '@sectile/vue', 'verify'),
@@ -56,6 +59,7 @@ const fullSteps = [
 const compatibilitySteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core runtime tests', '@sectile/core', 'test'),
+  packageStep('temporal runtime tests', '@sectile/temporal', 'test'),
   packageStep('DOM runtime tests', '@sectile/dom', 'test'),
   packageStep('terminal runtime tests', '@sectile/terminal', 'test'),
   packageStep('Vue runtime tests', '@sectile/vue', 'test'),

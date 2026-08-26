@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "pnpm --filter @sectile/core --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue build",
+    "predev": "pnpm --filter @sectile/core --filter @sectile/temporal --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue build",
     "dev": "vitepress dev --host 127.0.0.1",
     "build": "vitepress build",
     "preview": "vitepress preview --host 127.0.0.1",
@@ -22,7 +22,8 @@
     "@sectile/vue": "workspace:*",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
-    "vue": "^3.5.22"
+    "vue": "^3.5.22",
+    "@sectile/temporal": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.2.0",

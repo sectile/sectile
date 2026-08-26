@@ -1,10 +1,10 @@
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { compareDateValues, type DateValue } from '@sectile/core/date-field';
-import { compareDateTimeValues, type DateTimeValue } from '@sectile/core/date-time-field';
-import { createDatePickerMonth } from '@sectile/core/date-picker';
-import { addTimeMilliseconds } from '@sectile/core/time-field';
+import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
+import { compareDateTimeValues, type DateTimeValue } from '@sectile/temporal/date-time-field';
+import { createDatePickerMonth } from '@sectile/temporal/date-picker';
+import { addTimeMilliseconds } from '@sectile/temporal/time-field';
 import {
   applyDateTimePickerEvent,
   tryCreateDateTimePickerState,
@@ -12,7 +12,7 @@ import {
   type DateTimePickerEvent,
   type DateTimePickerPolicies,
   type DateTimePickerState,
-} from '@sectile/core/date-time-picker';
+} from '@sectile/temporal/date-time-picker';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';

@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "0ea881acb6ae49096da7f093027f5fa01b04f8f389c665b6213e76076cbb30a9",
+    "publicSignatureFingerprint": "15a5710012d193ae364e77a56ca794743a346b43e3a9c6a8887dffb559829c77",
     "subpaths": [
       ".",
       "./accordion",
@@ -24,13 +24,6 @@
       "./collection-window",
       "./color-picker",
       "./combobox",
-      "./date-field",
-      "./date-picker",
-      "./date-range-field",
-      "./date-range-picker",
-      "./date-time-field",
-      "./date-time-picker",
-      "./date-time-range-picker",
       "./dialog",
       "./disclosure",
       "./drawer",
@@ -45,8 +38,6 @@
       "./menu",
       "./menu-button",
       "./menubar",
-      "./month-picker",
-      "./month-range-picker",
       "./multi-thumb-slider",
       "./navigation-menu",
       "./number-field",
@@ -57,7 +48,6 @@
       "./quantity-field",
       "./radio-group",
       "./range",
-      "./range-calendar",
       "./rating",
       "./reorder",
       "./result",
@@ -71,8 +61,6 @@
       "./tabs",
       "./tags-input",
       "./text",
-      "./time-field",
-      "./time-range-field",
       "./timer",
       "./toast",
       "./toggle-button",
@@ -84,9 +72,7 @@
       "./tree-view",
       "./units",
       "./virtual-layout",
-      "./window-splitter",
-      "./year-picker",
-      "./year-range-picker"
+      "./window-splitter"
     ],
     "errorCodes": [
       "accordion-collapse-forbidden",
@@ -650,7 +636,7 @@
     }
   ],
   "acceptance": {
-    "classification": "contract-impact-reviewed",
-    "reason": "add-dynamic-virtual-layout-contract"
+    "classification": "breaking",
+    "reason": "move-temporal-semantics-to-dedicated-package"
   }
 }

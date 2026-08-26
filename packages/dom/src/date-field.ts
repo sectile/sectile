@@ -2,15 +2,15 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/core/date-field';
+import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
-export { formatDateValue, parseDateValue } from '@sectile/core/date-field';
-export type { DateRange, DateValue } from '@sectile/core/date-field';
+export { formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
+export type { DateRange, DateValue } from '@sectile/temporal/date-field';
 
 export interface DateFieldOptions {
   readonly input: HTMLInputElement;

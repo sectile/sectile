@@ -2,15 +2,15 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyTimeFieldEvent, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/core/time-field';
+import { applyTimeFieldEvent, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
-export { formatTimeValue } from '@sectile/core/time-field';
-export type { TimeValue } from '@sectile/core/time-field';
+export { formatTimeValue } from '@sectile/temporal/time-field';
+export type { TimeValue } from '@sectile/temporal/time-field';
 
 export interface TimeFieldOptions { readonly input: HTMLInputElement; readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly native?: boolean; readonly onValueChange?: (value: TimeValue | null) => void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
 

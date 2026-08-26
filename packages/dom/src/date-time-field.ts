@@ -10,15 +10,15 @@ import {
   type DateTimeFieldPolicies,
   type DateTimeFieldState,
   type DateTimeValue,
-} from '@sectile/core/date-time-field';
+} from '@sectile/temporal/date-time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
-export { formatDateTimeRange, formatDateTimeValue } from '@sectile/core/date-time-field';
-export type { DateTimeRange, DateTimeValue } from '@sectile/core/date-time-field';
+export { formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
+export type { DateTimeRange, DateTimeValue } from '@sectile/temporal/date-time-field';
 
 export interface DateTimeFieldOptions {
   readonly input: HTMLInputElement;

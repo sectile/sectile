@@ -5,15 +5,18 @@ import {
   isStandaloneDocumentationScenario,
 } from '../docs/data/component-documentation.mjs';
 
-const packagePaths = [
+const semanticPackagePaths = [
   'packages/core/package.json',
+  'packages/temporal/package.json',
+];
+const hostPackagePaths = [
   'packages/dom/package.json',
   'packages/terminal/package.json',
 ];
 const vuePackagePath = 'packages/vue/package.json';
 const supportSubpaths = new Set([
-  'package.json', 'adapter-runtime', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
-  'collection-window', 'layer-stack', 'reorder',
+  'package.json', 'adapter-runtime', 'sequence', 'extent-index', 'range', 'tree', 'result', 'revision', 'interaction',
+  'collection-window', 'virtual-layout', 'layer-stack', 'reorder',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
 ]);
 const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
@@ -39,21 +42,22 @@ const requirementSet = new Set(manifest.requirements);
 assert.equal(requirementSet.size, manifest.requirements.length,
   'Completeness requirements must be unique.');
 
-const packageComponents = [];
-for (const path of packagePaths) {
+const componentsFor = async (path) => {
   const pkg = JSON.parse(await readFile(path, 'utf8'));
-  const components = Object.keys(pkg.exports)
+  return Object.keys(pkg.exports)
     .filter((subpath) => subpath.startsWith('./'))
     .map((subpath) => subpath.slice(2))
     .filter((subpath) => !supportSubpaths.has(subpath))
     .sort();
-  packageComponents.push({ path, components });
-}
+};
 
-const canonical = packageComponents[0].components;
-for (const { path, components } of packageComponents.slice(1)) {
+const canonical = [...new Set((await Promise.all(
+  semanticPackagePaths.map((path) => componentsFor(path)),
+)).flat())].sort();
+for (const path of hostPackagePaths) {
+  const components = await componentsFor(path);
   assert.deepEqual(components, canonical,
-    `${path} must expose the same component subpaths as @sectile/core.`);
+    `${path} must expose every renderer-neutral semantic component subpath.`);
 }
 
 const vuePackage = JSON.parse(await readFile(vuePackagePath, 'utf8'));

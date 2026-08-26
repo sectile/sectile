@@ -1,8 +1,8 @@
-import { unwrap } from './result.js';
-import type { ErrorClass, Result } from './shared.js';
-import { fail, ok } from './internal/kernel/foundation.js';
-import { createMachineUpdate } from './internal/kernel/machine.js';
-import type { TextEditingState } from './text.js';
+import { unwrap } from '@sectile/core/result';
+import type { ErrorClass, Result } from '@sectile/core';
+import { fail, ok } from './internal/foundation.js';
+import { createMachineUpdate } from './internal/machine.js';
+import type { TextEditingState } from '@sectile/core/text';
 import { applyTimeFieldEvent, compareTimeValues, createTimeFieldState, createTimeValue, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue,tryCreateTimeFieldState,tryCreateTimeValue } from './time-field.js';
 
 export interface TimeRange { readonly start: TimeValue; readonly end: TimeValue }

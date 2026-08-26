@@ -10,7 +10,7 @@ import {
   type DateTimeFieldPolicies,
   type DateTimeFieldState,
   type DateTimeValue,
-} from '@sectile/core/date-time-field';
+} from '@sectile/temporal/date-time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { toTerminalTextInput } from './internal/text-input.js';

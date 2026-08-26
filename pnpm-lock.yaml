@@ -14,6 +14,9 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:packages/dom
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:packages/temporal
       '@sectile/terminal':
         specifier: workspace:*
         version: link:packages/terminal
@@ -35,6 +38,9 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:../packages/dom
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:../packages/temporal
       '@sectile/terminal':
         specifier: workspace:*
         version: link:../packages/terminal
@@ -94,6 +100,9 @@ importers:
       '@sectile/core':
         specifier: workspace:*
         version: link:../core
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:../temporal
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
@@ -105,11 +114,24 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  packages/temporal:
+    dependencies:
+      '@sectile/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
   packages/terminal:
     dependencies:
       '@sectile/core':
         specifier: workspace:*
         version: link:../core
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:../temporal
       string-width:
         specifier: 8.1.0
         version: 8.1.0

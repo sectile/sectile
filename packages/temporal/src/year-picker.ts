@@ -1,6 +1,6 @@
-import { unwrap } from './result.js';
-import type { Result } from './shared.js';
-import { fail, freezeArray, ok } from './internal/kernel/foundation.js';
+import { unwrap } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
+import { fail, freezeArray, ok } from './internal/foundation.js';
 
 export interface YearPickerValue { readonly year: number }
 

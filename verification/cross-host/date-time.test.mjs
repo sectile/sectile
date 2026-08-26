@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDateValue } from '@sectile/core/date-field';
-import { createTimeValue } from '@sectile/core/time-field';
-import { createDateTimeRange, createDateTimeValue } from '@sectile/core/date-time-field';
+import { createDateValue } from '@sectile/temporal/date-field';
+import { createTimeValue } from '@sectile/temporal/time-field';
+import { createDateTimeRange, createDateTimeValue } from '@sectile/temporal/date-time-field';
 import { createDateField as createDOMDateField } from '@sectile/dom/date-field';
 import { createDateTimeField as createDOMDateTimeField } from '@sectile/dom/date-time-field';
 import { createTimeField as createDOMTimeField } from '@sectile/dom/time-field';

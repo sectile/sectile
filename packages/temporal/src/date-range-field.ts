@@ -1,8 +1,8 @@
-import { unwrap } from './result.js';
-import type { ErrorClass, Result } from './shared.js';
-import { fail, ok } from './internal/kernel/foundation.js';
-import { createMachineUpdate } from './internal/kernel/machine.js';
-import type { TextEditingState } from './text.js';
+import { unwrap } from '@sectile/core/result';
+import type { ErrorClass, Result } from '@sectile/core';
+import { fail, ok } from './internal/foundation.js';
+import { createMachineUpdate } from './internal/machine.js';
+import type { TextEditingState } from '@sectile/core/text';
 import { applyDateFieldEvent, compareDateValues, createDateFieldState, createDateRange, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateRange, type DateValue,tryCreateDateFieldState,tryCreateDateRange } from './date-field.js';
 
 export type DateRangeFieldEndpoint = 'start' | 'end';

@@ -2,7 +2,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState, type TextEvent, type TextSelectionInput } from '@sectile/core/text';
-import { applyTimeFieldEvent, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/core/time-field';
+import { applyTimeFieldEvent, tryCreateTimeFieldState, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { toTerminalTextInput } from './internal/text-input.js';

@@ -283,7 +283,7 @@ function datePickerExample(component: string, prefix: string, scenario: string):
   const imports = disabled
     ? `createDateValue, dateDayOfWeek`
     : `createDateValue`;
-  return `import { ${imports} } from '@sectile/core/date-field'
+  return `import { ${imports} } from '@sectile/temporal/date-field'
 import { apply${prefix}Event, create${prefix}State } from '@sectile/core/${component}'
 
 ${dateValuePrelude()}
@@ -303,7 +303,7 @@ function dateRangePickerExample(component: string, prefix: string, scenario: str
   const bounded = scenario === 'bounded';
   const endDay = scenario.includes('period') ? 30 : 25;
   const policies = bounded ? `, { min: date(2026, 8, 1), max: date(2026, 9, 30) }` : '';
-  return `import { createDateRange, createDateValue } from '@sectile/core/date-field'
+  return `import { createDateRange, createDateValue } from '@sectile/temporal/date-field'
 import { apply${prefix}Event, create${prefix}State } from '@sectile/core/${component}'
 
 ${dateValuePrelude()}
@@ -430,7 +430,7 @@ console.log(update.state.text.snapshot.text, update.state.selection.selected)`;
     }
     case 'date-field': {
       const bounded = scenario === 'bounded';
-      return `import { applyDateFieldEvent, createDateFieldState, createDateValue, formatDateValue } from '@sectile/core/date-field'
+      return `import { applyDateFieldEvent, createDateFieldState, createDateValue, formatDateValue } from '@sectile/temporal/date-field'
 
 ${dateValuePrelude()}
 const state = createDateFieldState(date(2026, 8, 22))
@@ -440,8 +440,8 @@ console.log(update.state.value && formatDateValue(update.state.value), update.co
     }
     case 'date-range-field': {
       const bounded = scenario === 'bounded';
-      return `import { applyDateRangeFieldEvent, createDateRangeFieldState } from '@sectile/core/date-range-field'
-import { createDateRange, createDateValue } from '@sectile/core/date-field'
+      return `import { applyDateRangeFieldEvent, createDateRangeFieldState } from '@sectile/temporal/date-range-field'
+import { createDateRange, createDateValue } from '@sectile/temporal/date-field'
 
 ${dateValuePrelude()}
 const range = createDateRange(date(2026, 8, 22), date(2026, 8, 25))
@@ -453,9 +453,9 @@ const update = applyDateRangeFieldEvent(state, {
 console.log(update.state.value, update.commands)`;
     }
     case 'date-time-field': {
-      return `import { applyDateTimeFieldEvent, createDateTimeFieldState, createDateTimeValue, formatDateTimeValue } from '@sectile/core/date-time-field'
-import { createDateValue } from '@sectile/core/date-field'
-import { createTimeValue } from '@sectile/core/time-field'
+      return `import { applyDateTimeFieldEvent, createDateTimeFieldState, createDateTimeValue, formatDateTimeValue } from '@sectile/temporal/date-time-field'
+import { createDateValue } from '@sectile/temporal/date-field'
+import { createTimeValue } from '@sectile/temporal/time-field'
 
 const value = createDateTimeValue(
   createDateValue(2026, 8, 22),
@@ -468,10 +468,10 @@ console.log(update.state.value && formatDateTimeValue(update.state.value))`;
     }
     case 'date-time-picker': {
       const morning = scenario === 'morning';
-      return `import { applyDateTimePickerEvent, createDateTimePickerState } from '@sectile/core/date-time-picker'
-import { createDateTimeValue } from '@sectile/core/date-time-field'
-import { createDateValue } from '@sectile/core/date-field'
-import { createTimeValue } from '@sectile/core/time-field'
+      return `import { applyDateTimePickerEvent, createDateTimePickerState } from '@sectile/temporal/date-time-picker'
+import { createDateTimeValue } from '@sectile/temporal/date-time-field'
+import { createDateValue } from '@sectile/temporal/date-field'
+import { createTimeValue } from '@sectile/temporal/time-field'
 
 const date = createDateValue(2026, 8, 22)
 const time = createTimeValue(${morning ? 9 : 13}, 30)
@@ -483,10 +483,10 @@ console.log(update.state.value, update.commands)`;
     }
     case 'date-time-range-picker': {
       const office = scenario === 'office-hours';
-      return `import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '@sectile/core/date-time-range-picker'
-import { createDateTimeRange, createDateTimeValue } from '@sectile/core/date-time-field'
-import { createDateValue } from '@sectile/core/date-field'
-import { createTimeValue } from '@sectile/core/time-field'
+      return `import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker'
+import { createDateTimeRange, createDateTimeValue } from '@sectile/temporal/date-time-field'
+import { createDateValue } from '@sectile/temporal/date-field'
+import { createTimeValue } from '@sectile/temporal/time-field'
 
 const startDate = createDateValue(2026, 8, 22)
 const endDate = createDateValue(2026, 8, ${office ? 22 : 25})
@@ -512,8 +512,8 @@ console.log(update.state.value, update.commands)`;
     case 'month-range-picker':
       return dateRangePickerExample(component, 'MonthRangePicker', scenario);
     case 'year-picker': {
-      return `import { applyYearPickerEvent, createYearPickerPage, createYearPickerState } from '@sectile/core/year-picker'
-import { createDateValue } from '@sectile/core/date-field'
+      return `import { applyYearPickerEvent, createYearPickerPage, createYearPickerState } from '@sectile/temporal/year-picker'
+import { createDateValue } from '@sectile/temporal/date-field'
 
 const selected = createDateValue(${scenario === 'planning-window' ? 2028 : 2026}, 1, 1)
 const page = createYearPickerPage(selected.year, 12)
@@ -824,7 +824,7 @@ console.log(update.state.snapshot.text, update.state.snapshot.selection)`;
     }
     case 'time-field': {
       const stepped = scenario === 'stepped';
-      return `import { applyTimeFieldEvent, createTimeFieldState, createTimeValue, formatTimeValue } from '@sectile/core/time-field'
+      return `import { applyTimeFieldEvent, createTimeFieldState, createTimeValue, formatTimeValue } from '@sectile/temporal/time-field'
 
 const state = createTimeFieldState(createTimeValue(9, 30))
 const update = applyTimeFieldEvent(state, '${scenario === 'controlled' ? 'decrement-segment' : 'increment-segment'}'${stepped ? ", { step: { minute: 15 } }" : ''}).value
@@ -833,8 +833,8 @@ console.log(update.state.value && formatTimeValue(update.state.value), update.co
     }
     case 'time-range-field': {
       const stepped = scenario === 'stepped';
-      return `import { applyTimeRangeFieldEvent, createTimeRange, createTimeRangeFieldState } from '@sectile/core/time-range-field'
-import { createTimeValue } from '@sectile/core/time-field'
+      return `import { applyTimeRangeFieldEvent, createTimeRange, createTimeRangeFieldState } from '@sectile/temporal/time-range-field'
+import { createTimeValue } from '@sectile/temporal/time-field'
 
 const range = createTimeRange(createTimeValue(9, 30), createTimeValue(17, 30))
 const state = createTimeRangeFieldState({ value: range, active: 'end' })

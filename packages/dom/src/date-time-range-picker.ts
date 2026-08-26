@@ -1,9 +1,9 @@
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { compareDateValues, type DateValue } from '@sectile/core/date-field';
-import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/core/date-time-field';
-import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/core/date-picker';
+import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
+import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/temporal/date-time-field';
+import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/temporal/date-picker';
 import {
   applyDateTimeRangePickerEvent,
   tryCreateDateTimeRangePickerState,
@@ -11,9 +11,9 @@ import {
   type DateTimeRangePickerEvent,
   type DateTimeRangePickerPolicies,
   type DateTimeRangePickerState,
-} from '@sectile/core/date-time-range-picker';
-export type { DateTimeRangePickerPolicies } from '@sectile/core/date-time-range-picker';
-import type { TimeValue } from '@sectile/core/time-field';
+} from '@sectile/temporal/date-time-range-picker';
+export type { DateTimeRangePickerPolicies } from '@sectile/temporal/date-time-range-picker';
+import type { TimeValue } from '@sectile/temporal/time-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';

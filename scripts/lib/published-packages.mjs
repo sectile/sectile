@@ -1,1 +1,7 @@
-export const publishedPackageDirectories = Object.freeze(['core', 'dom', 'terminal', 'vue']);
+export const publishedPackageDirectories = Object.freeze([
+  'core',
+  'temporal',
+  'dom',
+  'terminal',
+  'vue',
+]);

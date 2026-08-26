@@ -2,14 +2,14 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/core/time-range-field';
+import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
 
-export type { TimeRange } from '@sectile/core/time-range-field';
+export type { TimeRange } from '@sectile/temporal/time-range-field';
 export interface TimeRangeFieldOptions { readonly startInput: HTMLInputElement; readonly endInput: HTMLInputElement; readonly policies?: TimeRangeFieldPolicies; readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }
 
 export type TimeRangeFieldValueChangeHandler = NonNullable<TimeRangeFieldOptions['onValueChange']>;
@@ -53,5 +53,5 @@ class DOMTimeRangeField implements TimeRangeFieldConnection {
 }
 function optionalInputState<Key extends 'startInputState' | 'endInputState'>(key: Key, value: TextEditingState | undefined): { readonly [Property in Key]?: TextEditingState } { return value === undefined ? {} : { [key]: value } as { readonly [Property in Key]?: TextEditingState }; }
 
-export { tryCreateTimeRangeFieldState } from '@sectile/core/time-range-field';
-export type { TimeRangeFieldPolicies, TimeRangeFieldState } from '@sectile/core/time-range-field';
+export { tryCreateTimeRangeFieldState } from '@sectile/temporal/time-range-field';
+export type { TimeRangeFieldPolicies, TimeRangeFieldState } from '@sectile/temporal/time-range-field';

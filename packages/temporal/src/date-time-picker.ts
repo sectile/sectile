@@ -1,7 +1,7 @@
-import { unwrap } from './result.js';
-import type { Result } from './shared.js';
-import { fail, ok } from './internal/kernel/foundation.js';
-import { createMachineUpdate } from './internal/kernel/machine.js';
+import { unwrap } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
+import { fail, ok } from './internal/foundation.js';
+import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
 import {
   compareDateTimeValues,

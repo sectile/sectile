@@ -1,8 +1,8 @@
-import { unwrap } from './result.js';
-import type { Result } from './shared.js';
-import { fail, ok } from './internal/kernel/foundation.js';
-import { createMachineUpdate } from './internal/kernel/machine.js';
-import { applyTextEvent, createTextEditingState, normalizeTextEditingState, type TextEditingState, type TextEvent,tryCreateTextEditingState } from './text.js';
+import { unwrap } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
+import { fail, ok } from './internal/foundation.js';
+import { createMachineUpdate } from './internal/machine.js';
+import { applyTextEvent, createTextEditingState, normalizeTextEditingState, type TextEditingState, type TextEvent,tryCreateTextEditingState } from '@sectile/core/text';
 
 export interface TimeValue {
   readonly hour: number;

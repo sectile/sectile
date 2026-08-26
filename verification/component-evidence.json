@@ -41,14 +41,14 @@
     },
     "date-time": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "text"], "terminal": ["keyboard", "text"] },
-      "core": ["packages/core/tests/composites/date-picker.test.mjs"],
+      "core": ["packages/temporal/tests/composites/date-picker.test.mjs"],
       "dom": ["packages/dom/tests/date-time.test.mjs"],
       "terminal": ["packages/terminal/tests/date-time.test.mjs"],
       "vue": ["packages/vue/tests/date-pickers.test.mjs", "packages/vue/tests/date-pickers.dom.test.mjs"]
     },
     "editing": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "text"], "terminal": ["keyboard", "text"] },
-      "core": ["packages/core/tests/composites/color-picker.test.mjs", "packages/core/tests/editing/date-time-field.test.mjs", "packages/core/tests/editing/editable.test.mjs", "packages/core/tests/editing/number-field.test.mjs", "packages/core/tests/editing/quantity-field.test.mjs", "packages/core/tests/editing/text.reference-law.test.mjs"],
+      "core": ["packages/core/tests/composites/color-picker.test.mjs", "packages/temporal/tests/editing/date-time-field.test.mjs", "packages/core/tests/editing/editable.test.mjs", "packages/core/tests/editing/number-field.test.mjs", "packages/core/tests/editing/quantity-field.test.mjs", "packages/core/tests/editing/text.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/color-picker.test.mjs", "packages/dom/tests/date-time.test.mjs", "packages/dom/tests/extended-components.test.mjs", "packages/dom/tests/number-field.test.mjs", "packages/dom/tests/quantity-field.test.mjs", "packages/dom/tests/text.test.mjs"],
       "terminal": ["packages/terminal/tests/color-picker.test.mjs", "packages/terminal/tests/date-time.test.mjs", "packages/terminal/tests/extended-components.test.mjs", "packages/terminal/tests/number-field.test.mjs", "packages/terminal/tests/quantity-field.test.mjs", "packages/terminal/tests/text.test.mjs"],
       "vue": ["packages/vue/tests/color-picker.test.mjs", "packages/vue/tests/editable.test.mjs", "packages/vue/tests/native-fields.test.mjs", "packages/vue/tests/native-fields.dom.test.mjs", "packages/vue/tests/pin-input.dom.test.mjs", "packages/vue/tests/text.test.mjs", "packages/vue/tests/text.dom.test.mjs"]
