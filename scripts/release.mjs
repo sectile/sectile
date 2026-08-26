@@ -168,4 +168,5 @@ run('git', ['commit', '-m', `chore(release): ${tag}`]);
 const notes = `Sectile ${tag}\n\n${formatReleaseNotes(baseTag, commits)}`;
 run('git', ['tag', '-a', tag, '-F', '-'], { input: notes });
 run('git', ['push', '--atomic', 'origin', 'main', `refs/tags/${tag}`]);
-console.log(`released ${tag} from ${repository}; npm publication continues in GitHub Actions through OIDC`);
+run('gh', ['workflow', 'run', 'release.yml', '--repo', repository, '--ref', 'main', '--field', `tag=${tag}`]);
+console.log(`released ${tag} from ${repository}; dispatched npm publication through GitHub Actions OIDC`);

@@ -9,9 +9,14 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const packageDirectories = publishedPackageDirectories;
 const registry = 'https://registry.npmjs.org';
 const packOnly = process.argv.includes('--pack-only');
-const unexpectedArguments = process.argv.slice(2).filter((argument) => argument !== '--pack-only' && argument !== '--');
+const bootstrapOnly = process.argv.includes('--bootstrap-only');
+const unexpectedArguments = process.argv.slice(2).filter((argument) => (
+  argument !== '--pack-only' && argument !== '--bootstrap-only' && argument !== '--'
+));
 
 assert.deepEqual(unexpectedArguments, [], `unexpected arguments: ${unexpectedArguments.join(', ')}`);
+assert.equal(packOnly && bootstrapOnly, false, 'pack-only and bootstrap-only cannot be combined');
+if (bootstrapOnly) assert.notEqual(process.env.CI, 'true', 'first package publication requires local npm authentication');
 assert.equal(
   process.env.CI && (process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN) ? true : false,
   false,
@@ -23,6 +28,7 @@ function run(command, args, options = {}) {
     cwd: options.cwd ?? root,
     encoding: 'utf8',
     stdio: options.capture ? 'pipe' : 'inherit',
+    env: options.env ?? process.env,
   })?.trim();
 }
 
@@ -44,16 +50,17 @@ function assertPackedDistribution(name, tarball) {
     `${name} tarball contains development sources`);
 }
 
-function isPublished(name, version) {
-  const result = spawnSync('npm', ['view', `${name}@${version}`, 'version', '--json', '--registry', registry], {
+function registryContains(specifier, environment) {
+  const result = spawnSync('npm', ['view', specifier, 'name', '--json', '--registry', registry], {
     cwd: root,
     encoding: 'utf8',
+    env: environment,
   });
   if (result.status === 0) return true;
 
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   if (/\bE404\b|404 Not Found/i.test(output)) return false;
-  throw new Error(`failed to query ${name}@${version}:\n${output.trim()}`);
+  throw new Error(`failed to query ${specifier}:\n${output.trim()}`);
 }
 
 assertSupportedNpm();
@@ -92,15 +99,34 @@ try {
     packed.push({ ...entry, tarball });
   }
 
+  const npmEnvironment = {
+    ...process.env,
+    npm_config_cache: join(packRoot, 'npm-cache'),
+  };
+  const unregistered = packOnly
+    ? []
+    : packed.filter(({ manifest }) => !registryContains(manifest.name, npmEnvironment));
+
   if (packOnly) {
     console.log(`validated ${packed.length} package tarballs for ${version}`);
+  } else if (bootstrapOnly) {
+    for (const { manifest, tarball } of unregistered) {
+      run('npm', ['publish', tarball, '--access', 'public', '--registry', registry], { env: npmEnvironment });
+      console.log(`bootstrapped ${manifest.name}@${manifest.version}`);
+    }
+    if (unregistered.length === 0) console.log('all public package names are already registered');
   } else {
+    assert.deepEqual(
+      unregistered.map(({ manifest }) => manifest.name),
+      [],
+      'unregistered packages require local `pnpm publish:packages -- --bootstrap-only` before release publication',
+    );
     for (const { manifest, tarball } of packed) {
-      if (isPublished(manifest.name, manifest.version)) {
+      if (registryContains(`${manifest.name}@${manifest.version}`, npmEnvironment)) {
         console.log(`skipped ${manifest.name}@${manifest.version}; already published`);
         continue;
       }
-      run('npm', ['publish', tarball, '--access', 'public', '--registry', registry]);
+      run('npm', ['publish', tarball, '--access', 'public', '--registry', registry], { env: npmEnvironment });
     }
   }
 } finally {
