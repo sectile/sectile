@@ -3,6 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { tryCreateInteractionState, requireInteraction, type InteractionState } from '@sectile/core/interaction';
 import {
+  DEFAULT_LISTBOX_SELECTION_MODE,
   applyListboxEvent,
   tryCreateListboxState,
   findListboxTypeaheadMatch,
@@ -140,7 +141,7 @@ export function createListboxController<ID extends StableID>(
     current: options.highlightedValue !== undefined
       ? options.highlightedValue
       : options.defaultHighlightedValue ?? null,
-  }, options.selectionMode ?? options.policies?.selectionMode ?? 'multiple');
+  }, options.selectionMode ?? options.policies?.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE);
   if (!initial.ok) return initial;
   const snapshot = tryCreateRevisionSnapshot(initial.value);
   if (!snapshot.ok) return snapshot;
@@ -286,7 +287,7 @@ class TerminalListboxController<ID extends StableID> implements ListboxControlle
     this.#domain = options.domain;
     this.#policies = policies;
     this.#interaction = interaction;
-    this.#selectionMode = policies.selectionMode ?? 'multiple';
+    this.#selectionMode = policies.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE;
     this.#orientation = options.orientation ?? 'vertical';
     this.#activationMode = options.activationMode ?? 'activate';
     this.#clearOnEscape = options.clearOnEscape ?? true;
@@ -458,7 +459,7 @@ function listboxPolicies<ID extends StableID>(
   return { ok: true, value: Object.freeze({
     ...options.policies,
     selectionFollowsFocus: options.readOnly ? false : options.policies?.selectionFollowsFocus ?? false,
-    selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? 'multiple',
+    selectionMode: options.selectionMode ?? options.policies?.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE,
     eligible: (id: ID) => !disabled.value.has(id) && (eligible?.(id) ?? true),
   }) };
 }

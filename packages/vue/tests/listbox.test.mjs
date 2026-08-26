@@ -77,3 +77,57 @@ test('Vue listbox keeps disabled items out of interaction', async () => {
   await nextTick();
   assert.equal(root.children[0].props['aria-selected'], 'true');
 });
+
+test('Vue listbox reconciles uncontrolled selection when items disappear', async () => {
+  const renderer = createTestRenderer();
+  const currentItems = ref(['alpha', 'beta']);
+  let slotValue;
+  let highlightedValue;
+  const app = renderer.createApp({
+    render: () => h(ListboxRoot, {
+      items: currentItems.value,
+      defaultValue: 'beta',
+    }, {
+      default: (slot) => {
+        slotValue = slot.value;
+        highlightedValue = slot.highlightedValue;
+        return currentItems.value.map((value) => h(ListboxItem, { value }, () => value));
+      },
+    }),
+  });
+  const container = createHostNode('root');
+  app.mount(container);
+  assert.equal(slotValue, 'beta');
+
+  currentItems.value = ['alpha'];
+  await nextTick();
+  assert.equal(slotValue, '');
+  assert.equal(highlightedValue, 'alpha');
+});
+
+test('Vue listbox proposes a valid controlled value when its domain changes', async () => {
+  const renderer = createTestRenderer();
+  const currentItems = ref(['alpha', 'beta']);
+  const value = ref('beta');
+  const updates = [];
+  const app = renderer.createApp({
+    render: () => h(ListboxRoot, {
+      items: currentItems.value,
+      modelValue: value.value,
+      'onUpdate:modelValue': (next) => {
+        updates.push(next);
+        value.value = next;
+      },
+    }, {
+      default: () => currentItems.value.map((item) => h(ListboxItem, { value: item }, () => item)),
+    }),
+  });
+  const container = createHostNode('root');
+  app.mount(container);
+
+  currentItems.value = ['alpha'];
+  await nextTick();
+  await nextTick();
+  assert.deepEqual(updates, ['']);
+  assert.equal(value.value, '');
+});

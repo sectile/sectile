@@ -14,6 +14,7 @@ import { usePartContract, type PartContract } from './internal/part-contract.js'
 import { provideFormControlOwner } from './form.js';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { useHostDirection } from './host-provider.js';
+import { reconcileCollectionState } from './internal/collection.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];
@@ -81,7 +82,7 @@ export const RadioGroupRoot = defineComponent({
     });
     provideFormControlOwner();
     const controlled = props.modelValue !== undefined;
-    const makeController = (value: string): ListboxController<string> => {
+    const makeController = (value: string, highlightedValue = value || null): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
       const result = createListboxControllerFromItems({
         items: props.items,
@@ -93,7 +94,7 @@ export const RadioGroupRoot = defineComponent({
         direction: direction.value,
         policies: { selectionFollowsFocus: true },
         ...(controlled ? { value: selected } : { defaultValue: selected }),
-        defaultHighlightedValue: value || props.items.find((id) => !props.disabledItems.includes(id)) || null,
+        defaultHighlightedValue: highlightedValue ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
         onValueChange: ({ value: next }) => emit('update:modelValue', next[0] ?? ''),
         onHighlightedValueChange: ({ value: next }) => emit('highlight', next),
       });
@@ -103,9 +104,18 @@ export const RadioGroupRoot = defineComponent({
     const controller = shallowRef(makeController(controlled ? props.modelValue as string : props.defaultValue));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
-      const current = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
-      controller.value = makeController(current);
+      const requested = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
+      const reconciled = reconcileCollectionState(
+        props.items,
+        requested === '' ? [] : [requested],
+        snapshot.value.state.cursor.current,
+        props.disabledItems,
+        'single',
+      );
+      const current = reconciled.selected[0] ?? '';
+      controller.value = makeController(current, reconciled.current);
       snapshot.value = controller.value.getSnapshot();
+      if (controlled && current !== requested) emit('update:modelValue', current);
     };
     watch(() => props.modelValue, (next) => {
       if (!controlled || next === undefined) return;

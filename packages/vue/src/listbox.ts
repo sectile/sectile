@@ -15,6 +15,7 @@ import {
   type VNodeChild,
 } from 'vue';
 import {
+  DEFAULT_LISTBOX_SELECTION_MODE,
   createListboxControllerFromItems,
   getListboxItemAttributes,
   getListboxRootAttributes,
@@ -25,6 +26,7 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { useHostDirection, type HostDirection } from './host-provider.js';
+import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];
@@ -116,7 +118,7 @@ export const ListboxRoot = defineComponent({
   inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true },
-    selectionMode: { type: String as PropType<ListboxSelectionMode>, default: 'single' },
+    selectionMode: { type: String as PropType<ListboxSelectionMode>, default: DEFAULT_LISTBOX_SELECTION_MODE },
     modelValue: { type: [String, Array] as PropType<ListboxValue>, default: undefined },
     defaultValue: { type: [String, Array] as PropType<ListboxValue>, default: undefined },
     disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] },
@@ -145,19 +147,37 @@ export const ListboxRoot = defineComponent({
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
     });
     const controlled = props.modelValue !== undefined;
+    const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);
     const controller = shallowRef(createController(
       controlled,
-      toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode),
+      initialValue,
+      initialValue[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
       { ...props, direction: direction.value },
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
-      const value = controlled
+      const requested = controlled
         ? toIDs(props.modelValue, props.selectionMode)
         : snapshot.value.state.selection.selected;
-      controller.value = createController(controlled, value, { ...props, direction: direction.value }, emit);
+      const reconciled = reconcileCollectionState(
+        props.items,
+        requested,
+        snapshot.value.state.cursor.current,
+        props.disabledItems,
+        props.selectionMode,
+      );
+      controller.value = createController(
+        controlled,
+        reconciled.selected,
+        reconciled.current,
+        { ...props, direction: direction.value },
+        emit,
+      );
       snapshot.value = controller.value.getSnapshot();
+      if (controlled && !sameIDs(requested, reconciled.selected)) {
+        emit('update:modelValue', fromIDs(reconciled.selected, props.selectionMode));
+      }
     };
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined) return;
@@ -344,6 +364,7 @@ function useListboxItemContext(part: string): ListboxItemContext {
 function createController(
   controlled: boolean,
   value: readonly string[],
+  highlightedValue: string | null,
   props: ListboxControllerProps,
   emit: ListboxEmit,
 ): ListboxController<string> {
@@ -357,7 +378,7 @@ function createController(
     direction: props.direction,
     typeahead: { textValue: props.textValue ?? ((id) => id) },
     ...(controlled ? { value } : { defaultValue: value }),
-    defaultHighlightedValue: value[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
+    defaultHighlightedValue: highlightedValue,
     onValueChange: (change) => emit('update:modelValue', fromIDs(change.value, props.selectionMode)),
     onHighlightedValueChange: (change) => emit('highlight', change.value),
   });

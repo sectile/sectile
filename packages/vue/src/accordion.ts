@@ -22,6 +22,7 @@ import {
 } from '@sectile/dom/accordion';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
+import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 
 export type AccordionType = 'single' | 'multiple';
 export type AccordionValue = string | readonly string[];
@@ -130,11 +131,21 @@ export const AccordionRoot = defineComponent({
     const snapshot = shallowRef(controller.value.getSnapshot());
     const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
     const rebuild = (): void => {
-      const value = controlled
+      const requested = controlled
         ? toIDs(props.modelValue, props.type)
         : snapshot.value.state.openIDs;
-      controller.value = createController(controlled, value, props, emit);
+      const reconciled = reconcileCollectionState(
+        props.items,
+        requested,
+        snapshot.value.state.cursor.current,
+        props.disabledItems,
+        props.type,
+      );
+      controller.value = createController(controlled, reconciled.selected, props, emit);
       refresh();
+      if (controlled && !sameIDs(requested, reconciled.selected)) {
+        emit('update:modelValue', fromIDs(reconciled.selected, props.type));
+      }
     };
 
     watch(() => props.modelValue, (value) => {

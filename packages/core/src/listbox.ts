@@ -1,4 +1,5 @@
 export {
+  DEFAULT_LISTBOX_SELECTION_MODE,
   applyListboxEvent,
   createListboxState,
   findListboxTypeaheadMatch,

@@ -1,13 +1,14 @@
 import type { BoundaryPolicy, StableID } from '../../../shared.js';
 import type { Sequence } from '../../../structures/sequence.js';
-import type {
-  ListboxCommand,
-  ListboxEvent,
-  ListboxPolicies,
-  ListboxState,
-  ListboxStateInput,
-  ListboxTypeaheadOptions,
-  ListboxUpdate,
+import {
+  DEFAULT_LISTBOX_SELECTION_MODE,
+  type ListboxCommand,
+  type ListboxEvent,
+  type ListboxPolicies,
+  type ListboxState,
+  type ListboxStateInput,
+  type ListboxTypeaheadOptions,
+  type ListboxUpdate,
 } from '../../composites/listbox.js';
 import { ReferenceSelectionState, referenceClearSelection, referenceSelectOne, referenceToggleMultipleSelection } from '../state/selection.js';
 import type { SelectionMode } from '../../state/selection.js';
@@ -29,7 +30,7 @@ type ReferenceTargetResult<ID extends StableID> =
 export function createReferenceListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
-  selectionMode: SelectionMode = 'multiple',
+  selectionMode: SelectionMode = DEFAULT_LISTBOX_SELECTION_MODE,
 ): ListboxState<ID> {
   const current = input.current ?? null;
   if (current !== null && referenceIndexOf(domain, current) === null) {
@@ -59,7 +60,7 @@ export function applyReferenceListboxEvent<ID extends StableID>(
 ): ReferenceListboxResult<ID> {
   const boundary = policies.boundary ?? 'stop';
   const selectionFollowsFocus = policies.selectionFollowsFocus ?? false;
-  const selectionMode = policies.selectionMode ?? 'multiple';
+  const selectionMode = policies.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE;
   const eligible = policies.eligible ?? (() => true);
 
   if (typeof event === 'object') {

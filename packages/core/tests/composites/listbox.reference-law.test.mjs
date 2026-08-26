@@ -33,6 +33,13 @@ test('listbox direct events target an eligible identity atomically', () => {
   );
 });
 
+test('listbox uses one canonical single-selection default', () => {
+  const domain = createSequence(['a', 'b']);
+  const state = createListboxState(domain, { current: 'b', selected: ['a'] });
+  const toggled = unwrap(applyListboxEvent(domain, state, 'toggle'));
+  assert.deepEqual(toggled.state.selection.selected, ['b']);
+});
+
 test('listbox composition is deterministic, failure-atomic, and preserves cursor/selection authority', () => {
   let states = 0;
   let transitions = 0;
@@ -49,9 +56,10 @@ test('listbox composition is deterministic, failure-atomic, and preserves cursor
             eligible: (id) => eligible.has(id),
             selectionFollowsFocus,
             boundary,
+            selectionMode: 'multiple',
           };
-          const starts = [createListboxState(domain)];
-          if (size > 0) starts.push(createListboxState(domain, { current: ids[0] }));
+          const starts = [createListboxState(domain, {}, 'multiple')];
+          if (size > 0) starts.push(createListboxState(domain, { current: ids[0] }, 'multiple'));
 
           for (const start of starts) {
             const queue = [{ state: start, depth: 0 }];

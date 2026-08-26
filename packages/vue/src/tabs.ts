@@ -18,6 +18,7 @@ import {
   type TabsRootContext,
 } from './internal/tabs-context.js';
 import { useHostDirection, useHostId } from './host-provider.js';
+import { reconcileCollectionState } from './internal/collection.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -75,7 +76,7 @@ export const TabsRoot = defineComponent({
       idMap.set(value, created);
       return created;
     };
-    const makeController = (value: string): ListboxController<string> => {
+    const makeController = (value: string, highlightedValue = value || null): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
       const result = createListboxControllerFromItems({
         items: props.items,
@@ -87,7 +88,7 @@ export const TabsRoot = defineComponent({
         direction: direction.value,
         policies: { selectionFollowsFocus: props.activationMode === 'automatic' },
         ...(controlled ? { value: selected } : { defaultValue: selected }),
-        defaultHighlightedValue: value || props.items.find((id) => !props.disabledItems.includes(id)) || null,
+        defaultHighlightedValue: highlightedValue ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
         onValueChange: ({ value: next }) => emit('update:modelValue', next[0] ?? ''),
         onHighlightedValueChange: ({ value: next }) => emit('highlight', next),
       });
@@ -98,9 +99,18 @@ export const TabsRoot = defineComponent({
     const controller = shallowRef(makeController(initial));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
-      const current = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
-      controller.value = makeController(current);
+      const requested = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
+      const reconciled = reconcileCollectionState(
+        props.items,
+        requested === '' ? [] : [requested],
+        snapshot.value.state.cursor.current,
+        props.disabledItems,
+        'single',
+      );
+      const current = reconciled.selected[0] ?? reconciled.current ?? '';
+      controller.value = makeController(current, reconciled.current);
       snapshot.value = controller.value.getSnapshot();
+      if (controlled && current !== requested) emit('update:modelValue', current);
     };
     watch(() => props.modelValue, (next) => {
       if (!controlled || next === undefined) return;

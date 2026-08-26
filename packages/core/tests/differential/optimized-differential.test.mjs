@@ -476,13 +476,14 @@ function verifyListbox(rng, iteration) {
     selected: ids.filter(() => rng.bool()),
     anchor: rng.pick([null, ...ids]),
   };
-  let optimized = createListboxState(domain, input);
-  let reference = createReferenceListboxState(domain, input);
+  let optimized = createListboxState(domain, input, 'multiple');
+  let reference = createReferenceListboxState(domain, input, 'multiple');
   const policies = {
     eligible: (id) => eligible.has(id),
     selectionFollowsFocus: rng.bool(),
     boundary: rng.pick(['stop', 'wrap']),
     maxScan: rng.int(0, ids.length + 1),
+    selectionMode: 'multiple',
   };
   for (let step = 0; step < 10; step += 1) {
     const event = rng.pick(['next', 'previous', 'toggle', 'activate', 'clear']);

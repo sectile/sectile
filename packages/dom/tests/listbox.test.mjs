@@ -191,6 +191,7 @@ test('controlled DOM values emit proposals and change only after sync', () => {
     domain,
     value: ['a'],
     highlightedValue: 'a',
+    policies: { deselectable: true },
     onValueChange(change) {
       values.push(change);
     },

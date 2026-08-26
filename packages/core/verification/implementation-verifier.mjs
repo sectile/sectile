@@ -606,13 +606,14 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     selected: ids.filter(() => listboxRng.bool()),
     anchor: listboxRng.pick([null, ...ids]),
   };
-  let optimized = createListboxState(domain, input);
-  let reference = createReferenceListboxState(domain, input);
+  let optimized = createListboxState(domain, input, 'multiple');
+  let reference = createReferenceListboxState(domain, input, 'multiple');
   const policies = {
     eligible: (id) => eligible.has(id),
     selectionFollowsFocus: listboxRng.bool(),
     boundary: listboxRng.pick(['stop', 'wrap']),
     maxScan: listboxRng.int(0, ids.length + 1),
+    selectionMode: 'multiple',
   };
   for (let step = 0; step < 10; step += 1) {
     const target = listboxRng.pick([...ids, `missing-${iteration}`]);

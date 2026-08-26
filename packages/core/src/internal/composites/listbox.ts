@@ -17,6 +17,8 @@ import {
 
 export type ListboxSelectionMode = SelectionMode;
 
+export const DEFAULT_LISTBOX_SELECTION_MODE = 'single' as const;
+
 export type ListboxEvent<ID extends StableID = StableID> =
   | 'next'
   | 'previous'
@@ -60,7 +62,7 @@ export interface ListboxUpdate<ID extends StableID = StableID> {
 export function createListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
-  selectionMode: SelectionMode = 'multiple',
+  selectionMode: SelectionMode = DEFAULT_LISTBOX_SELECTION_MODE,
 ): ListboxState<ID> {
   return unwrap(tryCreateListboxState(domain, input, selectionMode));
 }
@@ -68,7 +70,7 @@ export function createListboxState<ID extends StableID>(
 export function tryCreateListboxState<ID extends StableID>(
   domain: Sequence<ID>,
   input: ListboxStateInput<ID> = {},
-  selectionMode: SelectionMode = 'multiple',
+  selectionMode: SelectionMode = DEFAULT_LISTBOX_SELECTION_MODE,
 ): Result<ListboxState<ID>> {
   const current = input.current ?? null;
   if (current !== null && !domain.contains(current)) {
@@ -134,7 +136,7 @@ export function applyListboxEvent<ID extends StableID>(
       'Listbox eligibility policy must be a function.',
     );
   }
-  const selectionMode = policies.selectionMode ?? 'multiple';
+  const selectionMode = policies.selectionMode ?? DEFAULT_LISTBOX_SELECTION_MODE;
   if (selectionMode !== 'single' && selectionMode !== 'multiple') {
     return fail(
       'transition-rejection',
