@@ -1,4 +1,8 @@
-import type { CalendarOptions } from '@sectile/dom/calendar';
+import type {
+  CalendarMonthValue,
+  CalendarPolicies,
+  CalendarViewMode,
+} from '@sectile/dom/calendar';
 import type { DateValue } from '@sectile/dom/date-field';
 import {
   defineComponent,
@@ -12,33 +16,40 @@ import {
   PickerCell,
   PickerContent,
   PickerGrid,
+  PickerMonthCell,
   createPickerInput,
   createPickerMove,
   createPickerRoot,
   createPickerViewTrigger,
   type PickerCellSlotProps,
+  type PickerMonthCellSlotProps,
   type PickerPartProps,
   type PickerRootSlotProps,
 } from './internal/date-picker.js';
-import type { PrimitiveAs } from './primitive.js';
 
 export interface CalendarRootProps {
   readonly modelValue?: DateValue | null;
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
-  readonly defaultView?: PickerRootSlotProps['viewMode'];
+  readonly defaultView?: CalendarViewMode;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
-  readonly policies?: CalendarOptions['policies'];
-  readonly as?: PrimitiveAs;
-  readonly asChild?: boolean;
+  readonly policies?: CalendarPolicies;
 }
 
-export interface CalendarRootSlotProps extends Omit<PickerRootSlotProps, 'value' | 'open'> {
+export interface CalendarRootSlotProps extends Omit<PickerRootSlotProps, 'value' | 'open' | 'years'> {
   readonly value: DateValue | null;
+}
+
+export interface CalendarCellProps extends PickerPartProps {
+  readonly value: DateValue;
+}
+
+export interface CalendarMonthCellProps extends PickerPartProps {
+  readonly value: CalendarMonthValue;
 }
 
 const CalendarProviderRoot = createPickerRoot('calendar', 'SectileCalendarProviderRoot', {
@@ -56,14 +67,12 @@ export const CalendarRoot = defineComponent({
     defaultValue: { type: Object as PropType<DateValue | null>, default: null },
     highlightedValue: { type: Object as PropType<DateValue>, default: undefined },
     defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
-    defaultView: { type: String as PropType<PickerRootSlotProps['viewMode']>, default: 'month' },
+    defaultView: { type: String as PropType<CalendarViewMode>, default: 'month' },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     label: { type: String, default: undefined },
-    policies: { type: Object as PropType<CalendarOptions['policies']>, default: undefined },
-    as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
-    asChild: { type: Boolean, default: false },
+    policies: { type: Object as PropType<CalendarPolicies>, default: undefined },
   },
   emits: {
     'update:modelValue': (_value: DateValue | null): boolean => true,
@@ -82,6 +91,7 @@ export type CalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typ
 export const CalendarContent = PickerContent;
 export const CalendarGrid = PickerGrid;
 export const CalendarCell = PickerCell;
+export const CalendarMonthCell = PickerMonthCell;
 export const CalendarInput = createPickerInput('input', 'SectileCalendarInput', 'hidden');
 export const CalendarPreviousWeek = createPickerMove('week', -1, 'SectileCalendarPreviousWeek');
 export const CalendarNextWeek = createPickerMove('week', 1, 'SectileCalendarNextWeek');
@@ -94,7 +104,11 @@ export const CalendarMonthViewTrigger = createPickerViewTrigger('month', 'Sectil
 export const CalendarYearViewTrigger = createPickerViewTrigger('year', 'SectileCalendarYearViewTrigger');
 
 export type {
+  CalendarMonthValue,
+  CalendarPolicies,
+  CalendarViewMode,
   DateValue,
   PickerCellSlotProps as CalendarCellSlotProps,
+  PickerMonthCellSlotProps as CalendarMonthCellSlotProps,
   PickerPartProps as CalendarPartProps,
 };

@@ -17,7 +17,15 @@ import {
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
-export type { CalendarPolicies } from '@sectile/temporal/calendar';
+export type {
+  CalendarCommand,
+  CalendarEvent,
+  CalendarMonthValue,
+  CalendarPolicies,
+  CalendarState,
+  CalendarView,
+  CalendarViewMode,
+} from '@sectile/temporal/calendar';
 export type { DateValue } from '@sectile/temporal/date-field';
 
 export interface CalendarOptions {

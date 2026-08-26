@@ -223,22 +223,23 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
           moveBy(unit, direction * repetitions);
         },
         handleGridKey: (event) => {
-          if (granularity === 'day' || event.altKey || event.ctrlKey || event.metaKey) return;
-          const columns = granularity === 'month' ? 3 : 4;
+          if ((granularity === 'day' && state.value.viewMode !== 'year') || event.altKey || event.ctrlKey || event.metaKey) return;
+          const navigationGranularity = granularity === 'day' ? 'month' : granularity;
+          const columns = navigationGranularity === 'month' ? 3 : 4;
           const highlighted = state.value.highlightedValue;
           let movement: { readonly unit: PickerNavigationUnit; readonly delta: number } | undefined;
-          if (event.key === 'ArrowLeft') movement = { unit: granularity, delta: -1 };
-          else if (event.key === 'ArrowRight') movement = { unit: granularity, delta: 1 };
-          else if (event.key === 'ArrowUp') movement = { unit: granularity, delta: -columns };
-          else if (event.key === 'ArrowDown') movement = { unit: granularity, delta: columns };
-          else if (event.key === 'PageUp') movement = { unit: 'year', delta: granularity === 'year' ? -yearPageSize : -1 };
-          else if (event.key === 'PageDown') movement = { unit: 'year', delta: granularity === 'year' ? yearPageSize : 1 };
-          else if (event.key === 'Home') movement = { unit: granularity, delta: granularity === 'month' ? 1 - highlighted.month : -((highlighted.year - years.value[0]![0]!.year) % columns) };
-          else if (event.key === 'End') movement = { unit: granularity, delta: granularity === 'month' ? 12 - highlighted.month : columns - 1 - ((highlighted.year - years.value[0]![0]!.year) % columns) };
+          if (event.key === 'ArrowLeft') movement = { unit: navigationGranularity, delta: -1 };
+          else if (event.key === 'ArrowRight') movement = { unit: navigationGranularity, delta: 1 };
+          else if (event.key === 'ArrowUp') movement = { unit: navigationGranularity, delta: -columns };
+          else if (event.key === 'ArrowDown') movement = { unit: navigationGranularity, delta: columns };
+          else if (event.key === 'PageUp') movement = { unit: 'year', delta: navigationGranularity === 'year' ? -yearPageSize : -1 };
+          else if (event.key === 'PageDown') movement = { unit: 'year', delta: navigationGranularity === 'year' ? yearPageSize : 1 };
+          else if (event.key === 'Home') movement = { unit: navigationGranularity, delta: navigationGranularity === 'month' ? 1 - highlighted.month : -((highlighted.year - years.value[0]![0]!.year) % columns) };
+          else if (event.key === 'End') movement = { unit: navigationGranularity, delta: navigationGranularity === 'month' ? 12 - highlighted.month : columns - 1 - ((highlighted.year - years.value[0]![0]!.year) % columns) };
           else if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             event.stopImmediatePropagation();
-            if (granularity === 'month') selectMonth({ year: highlighted.year, month: highlighted.month });
+            if (navigationGranularity === 'month') selectMonth({ year: highlighted.year, month: highlighted.month });
             else selectYear({ year: highlighted.year });
             return;
           } else return;

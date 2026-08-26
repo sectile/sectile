@@ -468,6 +468,7 @@ export {
   CalendarContent,
   CalendarGrid,
   CalendarInput,
+  CalendarMonthCell,
   CalendarMonthViewTrigger,
   CalendarNextMonth,
   CalendarNextWeek,
@@ -479,9 +480,15 @@ export {
   CalendarWeekViewTrigger,
   CalendarYearViewTrigger,
   type CalendarCellSlotProps,
+  type CalendarCellProps,
+  type CalendarMonthCellProps,
+  type CalendarMonthCellSlotProps,
+  type CalendarMonthValue,
   type CalendarPartProps,
+  type CalendarPolicies,
   type CalendarRootProps,
   type CalendarRootSlotProps,
+  type CalendarViewMode,
 } from './calendar.js';
 export {
   DatePickerCell,

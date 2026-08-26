@@ -20,7 +20,15 @@ import { compareDateValues, parseDateValue, type DateValue } from '@sectile/temp
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { setInteractionAttributes } from './internal/interaction.js';
 
-export type { CalendarPolicies } from '@sectile/temporal/calendar';
+export type {
+  CalendarCommand,
+  CalendarEvent,
+  CalendarMonthValue,
+  CalendarPolicies,
+  CalendarState,
+  CalendarView,
+  CalendarViewMode,
+} from '@sectile/temporal/calendar';
 export type { DateValue } from '@sectile/temporal/date-field';
 
 export interface CalendarOptions {
