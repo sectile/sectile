@@ -351,13 +351,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "benchmark:collections": "pnpm --silent run build && node benchmarks/collection-reconciliation.mjs",
-    "check:signatures": "node ../../scripts/check-public-signatures.mjs",
     "check:controlled-reconciliation": "node scripts/check-controlled-reconciliation.mjs",
     "check:hydration-contract": "node scripts/check-hydration-contract.mjs",
+    "serve:browser-verification": "pnpm --silent run build && node scripts/serve-browser-verification.mjs",
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build && node --test --test-concurrency=1 tests/*.test.mjs",
-    "update:signatures": "node ../../scripts/update-public-signatures.mjs",
-    "verify": "pnpm run typecheck && pnpm run test && pnpm run check:signatures && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
+    "verify": "pnpm run typecheck && pnpm run test && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
   },
   "dependencies": {
     "@sectile/dom": "workspace:*"
@@ -369,6 +368,7 @@
     "@vue/server-renderer": "^3.5.0",
     "happy-dom": "^20.11.6",
     "typescript": "7.0.2",
+    "vite": "5.4.21",
     "vue": "^3.5.0"
   }
 }

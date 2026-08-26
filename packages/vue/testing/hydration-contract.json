@@ -10,20 +10,22 @@
       "id": "HYD-02",
       "contract": "deferred Select and Toast Teleports hydrate into an existing target without mismatch warnings",
       "evidence": "tests/presence.dom.test.mjs"
+    },
+    {
+      "id": "HYD-03",
+      "contract": "host-generated IDs preserve server-to-client identity and relationships",
+      "evidence": "tests/hydration.dom.test.mjs"
+    },
+    {
+      "id": "HYD-04",
+      "contract": "conditional popup presence hydrates both initially open and closed variants",
+      "evidence": "tests/hydration.dom.test.mjs"
+    },
+    {
+      "id": "HYD-05",
+      "contract": "hidden form controls preserve SSR hydration and native submission state",
+      "evidence": "tests/hydration.dom.test.mjs"
     }
   ],
-  "unverified": [
-    {
-      "area": "host-generated IDs",
-      "reason": "SSR output is covered, but an explicit server-to-client identity assertion is not present"
-    },
-    {
-      "area": "conditional presence",
-      "reason": "client presence behavior is covered, but its open and closed SSR hydration variants are not"
-    },
-    {
-      "area": "hidden form controls",
-      "reason": "native submission behavior is covered, but SSR hydration parity is not"
-    }
-  ]
+  "unverified": []
 }

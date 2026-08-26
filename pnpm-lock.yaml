@@ -177,6 +177,9 @@ importers:
       typescript:
         specifier: 7.0.2
         version: 7.0.2
+      vite:
+        specifier: 5.4.21
+        version: 5.4.21(@types/node@26.2.0)(lightningcss@1.33.0)
       vue:
         specifier: ^3.5.0
         version: 3.5.41(typescript@7.0.2)

@@ -147,7 +147,9 @@ export const PinInputInput = defineComponent({
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
       'aria-label': `${root.label.value} digit ${props.index + 1} of ${root.length.value}`,
       'data-scope': 'pin-input', 'data-part': 'input', 'data-index': props.index,
-    }), { default: () => slots['default']?.(slot.value) });
+    }), slots['default'] === undefined
+      ? undefined
+      : { default: () => slots['default']?.(slot.value) });
   },
 });
 

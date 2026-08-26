@@ -19,3 +19,9 @@ See [package boundary](package-boundary.md), [component completeness](component-
 and [naming](naming.md).
 
 When a Core public contract intentionally changes, first update its declaration signature, then run `pnpm --filter @sectile/core update:semantic-api -- --classification=<classification> --reason=<reason>`. The accepted classification is stored with the semantic baseline; the regular `verify` command rejects an unclassified type, subpath, error-code, or tracked-default change.
+
+Vue hydration has a fast package-local contract suite and an actual-browser
+fixture. Run `pnpm --filter @sectile/vue serve:browser-verification`, open the
+reported local URL in each target browser, and require
+`data-sectile-verification="passed"` on the document element. This manual matrix
+does not add a pull-request or main-branch workflow trigger.
