@@ -164,6 +164,8 @@ const virtualizer = createVirtualizer({
 
 Scroll and resize notifications are coalesced into one animation frame. Item rectangles are read as one batch, the strategy applies one measurement generation, anchor correction is written, and the next plan is then published. `measure()` accepts explicit strategy measurements for track grids and other layouts whose geometry is not one rectangle per item. `mutate()` applies domain or geometry changes through the same anchor-preserving path, while `scrollTo()` requests an identity even when it is currently outside the render window.
 
+`createAxisMeasurementResolver()` reads the physical border-box rectangle with `getBoundingClientRect()`, matching the physical coordinates in a layout plan. A custom resolver receives the originating `ResizeObserverEntry` when content-box, device-pixel, or writing-mode-aware measurements are required. Reassigning a recycled element to another identity discards any observation queued for its previous identity.
+
 The default viewport uses non-negative physical `scrollLeft` and `scrollTop`. Pass `readViewport` and `writeScroll` when an RTL scroller or custom surface uses another coordinate model.
 
 ## Styling hooks

@@ -164,6 +164,8 @@ const virtualizer = createVirtualizer({
 
 Scroll과 resize 알림은 한 animation frame으로 합칩니다. Item rect를 한꺼번에 읽고 strategy에 한 세대의 measurement batch로 적용한 뒤 anchor를 보정하고 다음 plan을 공개합니다. `measure()`는 item 하나가 rect 하나로 대응하지 않는 track grid 등에 명시적인 strategy measurement를 전달합니다. `mutate()`는 domain이나 geometry 변경에도 같은 anchor 보정 경로를 적용하며, `scrollTo()`는 현재 render window 밖에 있는 ID도 요청할 수 있습니다.
 
+`createAxisMeasurementResolver()`는 layout plan의 물리 좌표와 일치하도록 `getBoundingClientRect()`로 물리 border-box rect를 읽습니다. Content-box, device-pixel, writing-mode 기반 측정이 필요하면 custom resolver에 전달되는 원래 `ResizeObserverEntry`를 사용합니다. 재활용한 element를 다른 identity에 할당하면 이전 identity에서 대기하던 observation은 폐기합니다.
+
 기본 viewport는 음수가 아닌 물리 `scrollLeft`와 `scrollTop`을 사용합니다. RTL scroller나 사용자 정의 surface의 좌표 모델이 다르면 `readViewport`와 `writeScroll`을 전달합니다.
 
 ## 스타일 선택자

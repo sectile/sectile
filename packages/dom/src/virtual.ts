@@ -270,8 +270,11 @@ class DOMVirtualizer<
       this.#pendingEntries.delete(previous);
     }
     const previousID = this.#itemIDs.get(element);
-    if (previousID !== undefined && previousID !== id)
+    if (previousID !== undefined && previousID !== id) {
       this.#items.delete(previousID);
+      this.#pendingEntries.delete(element);
+      if (this.#measure !== undefined) this.#itemObserver.unobserve(element);
+    }
     this.#items.set(id, element);
     this.#itemIDs.set(element, id);
     if (this.#measure !== undefined) this.#itemObserver.observe(element);
@@ -380,8 +383,8 @@ class DOMVirtualizer<
           measurements,
           anchor: before.value.anchor,
         });
-        if (!measured.ok) this.#report(measured);
-        else this.#applyMutation(measured.value);
+        if (!measured.ok) return this.#reportFailure(measured);
+        this.#applyMutation(measured.value);
       }
     }
     return this.#publishCurrent();
