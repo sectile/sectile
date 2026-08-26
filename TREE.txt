@@ -835,11 +835,13 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   ├── foundation.ts
-│   │   │   │   └── machine.ts
+│   │   │   │   ├── machine.ts
+│   │   │   │   └── track.ts
 │   │   │   ├── extent-index.ts
 │   │   │   ├── index.ts
 │   │   │   ├── layout.ts
-│   │   │   └── linear-layout.ts
+│   │   │   ├── linear-layout.ts
+│   │   │   └── track-grid-layout.ts
 │   │   ├── testing/
 │   │   │   ├── law-evidence.json
 │   │   │   └── law-registry.json

@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "8bb97ab510f517ce955b7c59c35ae4dab753543e7e641ec150c1b7615025e742",
+    "publicSignatureFingerprint": "63d7c626d0ee005071795ff544f4ff768f798406686dee17204ebe7a331b8c29",
     "subpaths": [
       ".",
       "./accordion",
@@ -584,7 +584,11 @@
       "virtual-layout-generation-exhausted",
       "virtual-layout-geometry-invalid",
       "virtual-layout-inserted-extents-mismatch",
+      "virtual-layout-measurement-invalid",
       "virtual-layout-measurement-stale",
+      "virtual-layout-mutation-invalid",
+      "virtual-layout-region-invalid",
+      "virtual-layout-region-overlap",
       "virtual-layout-scroll-target-invalid",
       "virtual-layout-window-mismatch"
     ]
@@ -634,7 +638,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "move-virtualization-semantics-to-dedicated-package"
+    "classification": "contract-impact-reviewed",
+    "reason": "Add_explicit_virtual_layout_validation_failures"
   }
 }

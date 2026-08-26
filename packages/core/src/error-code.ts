@@ -511,5 +511,9 @@ export type SectileErrorCode =
   | 'virtual-layout-geometry-invalid'
   | 'virtual-layout-inserted-extents-mismatch'
   | 'virtual-layout-measurement-stale'
+  | 'virtual-layout-measurement-invalid'
+  | 'virtual-layout-mutation-invalid'
+  | 'virtual-layout-region-invalid'
+  | 'virtual-layout-region-overlap'
   | 'virtual-layout-scroll-target-invalid'
   | 'virtual-layout-window-mismatch';

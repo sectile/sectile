@@ -13,6 +13,13 @@ import {
   queryLinearLayout,
   tryApplyLinearMeasurements,
 } from '../../.verification-dist/linear-layout.js';
+import {
+  applyGridMeasurements,
+  applyTrackGridMutation,
+  createTrackGridLayout,
+  queryTrackGridLayout,
+  trackGridRegionRect,
+} from '../../.verification-dist/track-grid-layout.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
 const exact = (value) => ({ kind: 'exact', value });
@@ -66,4 +73,39 @@ test('VRT-06: data loading remains a generation-bound collection-window concern'
   const plan = queryLinearLayout(state, { viewport: { x: 0, y: 500, width: 100, height: 50 }, overscan: 20 });
   const collection = createCollectionWindowState({ start: 50, size: 5, total: 100 });
   assert.deepEqual(collectionWindowEventForLinearPlan(plan, collection, domain(5, 'loaded')), { ok: true, value: { type: 'request-window', direction: 'after', anchor: 'loaded-4' } });
+});
+
+test('VRT-01, VRT-05: sparse track grids project merged, reversed, two-dimensional regions', () => {
+  const grid = createTrackGridLayout(
+    createExtentIndex([exact(20), exact(30), exact(40)]),
+    createExtentIndex([exact(50), exact(60), exact(70)]),
+    [
+      { id: 'title', row: 0, column: 0, columnSpan: 2 },
+      { id: 'value', row: 2, column: 2 },
+    ],
+    { rowGap: 2, columnGap: 3, rowFlow: 'reverse' },
+  );
+  assert.deepEqual(trackGridRegionRect(grid, 'title'), { x: 0, y: 74, width: 113, height: 20 });
+  const plan = queryTrackGridLayout(grid, { viewport: { x: 40, y: 0, width: 100, height: 100 } });
+  assert.deepEqual(plan.rowRange, { start: 0, end: 3 });
+  assert.deepEqual(plan.placements.map(({ id }) => id), ['title', 'value']);
+});
+
+test('VRT-02, VRT-03, VRT-04: grid measurements and track splices preserve explicit anchors', () => {
+  const grid = createTrackGridLayout(
+    createExtentIndex([exact(20), estimated(20), exact(20)]),
+    createExtentIndex([exact(50)]),
+    [{ id: 'anchor', row: 2, column: 0 }],
+  );
+  const measured = applyGridMeasurements(grid, {
+    generation: 0,
+    anchor: { id: 'anchor', viewportOffset: { x: 0, y: 0 } },
+    measurements: [{ axis: 'row', index: 0, extent: exact(30) }],
+  });
+  assert.deepEqual(measured.scrollDelta, { x: 0, y: 10 });
+  const inserted = applyTrackGridMutation(measured.state, {
+    type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(5)],
+  }, { id: 'anchor', viewportOffset: { x: 0, y: 0 } });
+  assert.deepEqual(trackGridRegionRect(inserted.state, 'anchor'), { x: 0, y: 55, width: 50, height: 20 });
+  assert.deepEqual(inserted.scrollDelta, { x: 0, y: 5 });
 });

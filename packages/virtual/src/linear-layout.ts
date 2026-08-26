@@ -4,6 +4,7 @@ import { tryApplySequencePatch, type Sequence, type SequencePatch } from '@secti
 import { unwrap } from '@sectile/core/result';
 import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
+import { trackContentExtent, trackRange, trackSpan } from './internal/track.js';
 import {
   alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
   type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
@@ -92,8 +93,7 @@ export function tryQueryLinearWindow<ID extends StableID>(state: LinearLayoutSta
   if (!normalized.ok) return normalized;
   const range = (bounds: VirtualRect): { readonly start: number; readonly end: number } => {
     const start = mainStart(state.axis, bounds);
-    const logical = logicalBounds(state, start, start + mainExtent(state.axis, bounds));
-    return linearRange(state, logical.start, logical.end);
+    return trackRange(state.extents, state.gap, state.flow, start, start + mainExtent(state.axis, bounds));
   };
   const render = range(normalized.value.renderBounds);
   const visible = range(normalized.value.viewport);
@@ -107,15 +107,6 @@ export function tryQueryLinearWindow<ID extends StableID>(state: LinearLayoutSta
     visibleStart: visible.start,
     visibleEnd: visible.end,
   }));
-}
-
-function linearRange<ID extends StableID>(state: LinearLayoutState<ID>, start: number, end: number): { readonly start: number; readonly end: number } {
-  if (state.gap !== 0) return { start: firstIntersectingIndex(state, start), end: firstStartingAtOrAfter(state, end) };
-  const size = state.domain.size;
-  const total = state.extents.totalExtent;
-  const rangeStart = start <= 0 ? 0 : start >= total ? size : state.extents.indexAtOffset(start) ?? size;
-  const rangeEnd = end <= 0 ? 0 : end >= total ? size : state.extents.indexAtOffset(end) ?? size;
-  return { start: rangeStart, end: Math.max(rangeStart, rangeEnd) };
 }
 
 export function applyLinearMeasurements<ID extends StableID>(state: LinearLayoutState<ID>, batch: VirtualMeasurementBatch<LinearMeasurement, ID>): VirtualLayoutMutation<LinearLayoutState<ID>> {
@@ -198,46 +189,11 @@ export function collectionWindowEventForLinearPlan<ID extends StableID>(
 }
 
 function rectAt<ID extends StableID>(state: LinearLayoutState<ID>, index: number): VirtualRect | null {
-  const offset = state.extents.offsetAt(index);
-  const extent = state.extents.extentAt(index);
-  if (offset === null || extent === null) return null;
-  const value = extent.kind === 'unknown' ? extent.fallback : extent.value;
-  const logicalStart = offset + state.gap * index;
-  const visualStart = state.flow === 'forward' ? logicalStart : mainContentExtent(state) - logicalStart - value;
+  const span = trackSpan(state.extents, state.gap, state.flow, index, 1);
+  if (span === null) return null;
   return state.axis === 'vertical'
-    ? Object.freeze({ x: state.crossOffset, y: visualStart, width: state.crossExtent, height: value })
-    : Object.freeze({ x: visualStart, y: state.crossOffset, width: value, height: state.crossExtent });
-}
-
-function logicalBounds<ID extends StableID>(state: LinearLayoutState<ID>, visualStart: number, visualEnd: number): { readonly start: number; readonly end: number } {
-  const total = mainContentExtent(state);
-  return state.flow === 'forward' ? { start: visualStart, end: visualEnd } : { start: Math.max(0, total - visualEnd), end: Math.max(0, total - visualStart) };
-}
-
-function firstIntersectingIndex<ID extends StableID>(state: LinearLayoutState<ID>, offset: number): number {
-  let low = 0;
-  let high = state.domain.size;
-  while (low < high) {
-    const middle = (low + high) >>> 1;
-    const start = (state.extents.offsetAt(middle) ?? 0) + state.gap * middle;
-    const extent = state.extents.extentAt(middle);
-    const value = extent === null ? 0 : extent.kind === 'unknown' ? extent.fallback : extent.value;
-    if (start + value <= offset) low = middle + 1;
-    else high = middle;
-  }
-  return low;
-}
-
-function firstStartingAtOrAfter<ID extends StableID>(state: LinearLayoutState<ID>, offset: number): number {
-  let low = 0;
-  let high = state.domain.size;
-  while (low < high) {
-    const middle = (low + high) >>> 1;
-    const start = (state.extents.offsetAt(middle) ?? 0) + state.gap * middle;
-    if (start < offset) low = middle + 1;
-    else high = middle;
-  }
-  return low;
+    ? Object.freeze({ x: state.crossOffset, y: span.start, width: state.crossExtent, height: span.extent })
+    : Object.freeze({ x: span.start, y: state.crossOffset, width: span.extent, height: state.crossExtent });
 }
 
 function anchorRect<ID extends StableID>(state: LinearLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null {
@@ -247,7 +203,7 @@ function anchorRect<ID extends StableID>(state: LinearLayoutState<ID>, anchor: V
 }
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
-function mainContentExtent<ID extends StableID>(state: LinearLayoutState<ID>): number { return state.extents.totalExtent + state.gap * Math.max(0, state.domain.size - 1); }
+function mainContentExtent<ID extends StableID>(state: LinearLayoutState<ID>): number { return trackContentExtent(state.extents, state.gap); }
 function sizeOf<ID extends StableID>(state: LinearLayoutState<ID>): { readonly width: number; readonly height: number } {
   const main = mainContentExtent(state);
   return Object.freeze(state.axis === 'vertical' ? { width: state.crossOffset + state.crossExtent, height: main } : { width: main, height: state.crossOffset + state.crossExtent });

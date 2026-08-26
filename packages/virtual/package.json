@@ -41,6 +41,11 @@
       "import": "./dist/linear-layout.js",
       "default": "./dist/linear-layout.js"
     },
+    "./track-grid-layout": {
+      "types": "./dist/track-grid-layout.d.ts",
+      "import": "./dist/track-grid-layout.js",
+      "default": "./dist/track-grid-layout.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
