@@ -56,6 +56,7 @@ const fullSteps = [
   }),
   Object.freeze({ label: 'tooling verification', ...pnpm('test:tooling') }),
   Object.freeze({ label: 'workspace boundaries', ...pnpm('check:boundaries') }),
+  Object.freeze({ label: 'public signatures', ...pnpm('check:signatures') }),
   Object.freeze({ label: 'component completeness', ...pnpm('check:components') }),
 ];
 

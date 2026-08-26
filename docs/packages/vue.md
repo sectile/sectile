@@ -245,9 +245,7 @@ Use `useVirtualizer` directly when generic types, manual grid-track measurements
 
 ## SSR and hydration contract
 
-SSR support is evidence-scoped. The verified server-to-client hydration matrix currently covers nested `asChild` Fragment adoption and deferred Select/Toast Teleports. Both must hydrate without Vue mismatch warnings and preserve the intended target structure.
-
-Host-generated ID identity, open and closed conditional presence variants, and hidden form controls are not yet part of the verified hydration contract. They must not be presented as hydration guarantees until executable evidence is added to `packages/vue/testing/hydration-contract.json`.
+SSR support is evidence-scoped. The verified server-to-client hydration matrix covers nested `asChild` Fragment adoption, deferred Select/Toast Teleports, host-generated ID relationships, open and closed conditional presence, and hidden form controls. These scenarios must hydrate without Vue mismatch warnings and preserve their intended identity, target structure, presence state, and native submission value. The canonical inventory and evidence paths live in `packages/vue/testing/hydration-contract.json`.
 
 Dialog, Alert Dialog, Drawer, Popover, Tooltip, and Select roots keep their Content and, where applicable, Overlay DOM mounted while closed by default. Set `unmountOnExit` to remove those presence-managed parts after their CSS exit animation or transition completes. Root and Trigger stay mounted so the popup can reopen. Remounting also resets DOM-local state such as uncontrolled form input values.
 

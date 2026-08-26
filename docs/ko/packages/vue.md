@@ -245,9 +245,7 @@ Generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry 
 
 ## SSR과 hydration 계약
 
-SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택과 deferred Select/Toast Teleport를 검증합니다. 두 경우 모두 Vue mismatch 경고 없이 hydration되고 의도한 대상 구조를 유지해야 합니다.
-
-host가 생성한 ID의 동일성, 열린 상태와 닫힌 상태의 conditional presence, 숨겨진 form control은 아직 검증된 hydration 계약에 포함되지 않습니다. 실행 가능한 증거를 `packages/vue/testing/hydration-contract.json`에 추가하기 전에는 hydration 보장으로 안내하지 않습니다.
+SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택, deferred Select/Toast Teleport, host가 생성한 ID 관계, 열린 상태와 닫힌 상태의 conditional presence, 숨겨진 form control을 검증합니다. 이 시나리오는 Vue mismatch 경고 없이 hydration되고 의도한 동일성, 대상 구조, presence 상태, 네이티브 제출 값을 유지해야 합니다. 기준 목록과 증거 경로는 `packages/vue/testing/hydration-contract.json`에 있습니다.
 
 Dialog, Alert Dialog, Drawer, Popover, Tooltip, Select root는 기본적으로 닫힌 동안에도 Content와, 해당하는 경우 Overlay DOM을 유지합니다. `unmountOnExit`을 지정하면 CSS 닫힘 animation 또는 transition이 끝난 뒤 presence 관리 파트를 제거합니다. Root와 Trigger는 유지되므로 다시 열 수 있습니다. DOM을 다시 만들기 때문에 비제어 form 입력값 같은 DOM 내부 상태도 초기화됩니다.
 
