@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks';
-import { createExtentIndex } from '../dist/structures/extent-index.js';
-import { createSequence } from '../dist/structures/sequence.js';
-import { applyVirtualLayoutEvent, createVirtualLayoutState } from '../dist/virtual-layout.js';
+import { createExtentIndex } from '@sectile/core/extent-index';
+import { createSequence } from '@sectile/core/sequence';
+import { applyVirtualLayoutEvent, createVirtualLayoutState } from '@sectile/core/virtual-layout';
 
 globalThis.OffscreenCanvas ??= class OffscreenCanvas {
   getContext() {
