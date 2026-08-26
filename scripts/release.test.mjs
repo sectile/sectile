@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
   classifyReleaseBranch,
+  filterPackageCommits,
   formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
@@ -88,5 +89,26 @@ test('prepends the same commit list to a package changelog', () => {
   assert.equal(
     prependChangelog(changelog, '@sectile/core', '0.2.0', [commit('feat: add field')]),
     '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- feat: add field (abcdef1)\n\n## 0.1.0\n\n- Initial release.\n',
+  );
+});
+
+test('filters package changelogs by changed package paths', () => {
+  const coreCommit = commit('feat(core): add field');
+  const vueCommit = { ...commit('fix(vue): project field'), hash: 'bbbbbb123456', shortHash: 'bbbbbb1' };
+  const metadataCommit = { ...commit('docs: repair changelog'), hash: 'cccccc123456', shortHash: 'cccccc1' };
+  const paths = new Map([
+    [coreCommit.hash, ['packages/core/src/field.ts', 'packages/core/CHANGELOG.md']],
+    [vueCommit.hash, ['packages/vue/src/field.ts']],
+    [metadataCommit.hash, ['packages/core/CHANGELOG.md']],
+  ]);
+  assert.deepEqual(filterPackageCommits([coreCommit, vueCommit, metadataCommit], 'core', paths), [coreCommit]);
+  assert.deepEqual(filterPackageCommits([coreCommit, vueCommit, metadataCommit], 'vue', paths), [vueCommit]);
+});
+
+test('writes an explicit empty package release entry', () => {
+  const changelog = '# @sectile/core\n\n## 0.1.0\n\n- Initial release.\n';
+  assert.equal(
+    prependChangelog(changelog, '@sectile/core', '0.2.0', []),
+    '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- No package-specific changes.\n\n## 0.1.0\n\n- Initial release.\n',
   );
 });

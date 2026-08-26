@@ -53,6 +53,16 @@ jobs:
       - if: matrix.node == '24.x'
         run: pnpm release:check "$RELEASE_TAG"
       - if: matrix.node == '24.x'
+        name: Pack verified npm artifacts
+        run: pnpm publish:packages -- --pack-only --pack-destination=.release-artifacts
+      - if: matrix.node == '24.x'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: npm-packages-${{ inputs.tag }}
+          path: .release-artifacts/*.tgz
+          if-no-files-found: error
+          retention-days: 7
+      - if: matrix.node == '24.x'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - if: matrix.node == '24.x'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -73,14 +83,16 @@ jobs:
           node-version: 24.x
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: npm-packages-${{ inputs.tag }}
+          path: .release-artifacts
       - name: Load current publication tooling
         run: |
           git fetch origin main
           git restore --source=origin/main -- scripts/publish-packages.mjs
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm release:check "$RELEASE_TAG"
       - name: Publish npm packages with OIDC
-        run: pnpm publish:packages
+        run: node scripts/publish-packages.mjs --tarball-directory=.release-artifacts
       - name: Ensure GitHub release
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then

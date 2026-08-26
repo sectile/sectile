@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
   classifyReleaseBranch,
+  filterPackageCommits,
   formatCommitList,
   formatReleaseNotes,
   parseGitLog,
@@ -88,13 +89,25 @@ function latestPublishedTag(root, repository, packages) {
   return tag;
 }
 
-function updatePackages(packages, version, commits) {
+function updatePackages(root, packages, version, commits) {
+  const changedPathsByHash = new Map(commits.map(({ hash }) => [
+    hash,
+    run(root, 'git', ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-M', hash], { capture: true })
+      .split('\n')
+      .filter(Boolean),
+  ]));
   for (const { manifestPath, changelogPath } of packages) {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
     manifest.version = version;
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     const changelog = readFileSync(changelogPath, 'utf8');
-    writeFileSync(changelogPath, prependChangelog(changelog, manifest.name, version, commits));
+    const directory = basename(dirname(manifestPath));
+    writeFileSync(changelogPath, prependChangelog(
+      changelog,
+      manifest.name,
+      version,
+      filterPackageCommits(commits, directory, changedPathsByHash),
+    ));
   }
 }
 
@@ -166,7 +179,7 @@ async function prepareRelease(root, requestedBump, installDependencies) {
 
   assert.equal(run(root, 'git', ['tag', '--list', tag], { capture: true }), '', `${tag} already exists locally`);
   assert.equal(run(root, 'git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true }), '', `${tag} already exists on origin`);
-  updatePackages(packages, version, commits);
+  updatePackages(root, packages, version, commits);
   run(root, 'pnpm', ['install', '--lockfile-only']);
   if (installDependencies) run(root, 'pnpm', ['install', '--frozen-lockfile']);
   run(root, 'pnpm', ['update:tree']);

@@ -92,10 +92,21 @@ export function formatReleaseNotes(baseTag, commits) {
   return `## Changes since ${baseTag}\n\n${formatCommitList(commits)}\n`;
 }
 
+export function filterPackageCommits(commits, directory, changedPathsByHash) {
+  const packagePrefix = `packages/${directory}/`;
+  const changelogPath = `${packagePrefix}CHANGELOG.md`;
+  return commits.filter(({ hash }) => {
+    const changedPaths = changedPathsByHash.get(hash);
+    assert.notEqual(changedPaths, undefined, `missing changed paths for commit ${hash}`);
+    return changedPaths.some((path) => path.startsWith(packagePrefix) && path !== changelogPath);
+  });
+}
+
 export function prependChangelog(document, packageName, version, commits) {
   const heading = `# ${packageName}`;
   assert.equal(document.startsWith(heading), true, `changelog must start with ${heading}`);
   const rest = document.slice(heading.length).trimStart();
-  const entry = `## ${version}\n\n### Changes\n\n${formatCommitList(commits)}`;
+  const changes = commits.length === 0 ? '- No package-specific changes.' : formatCommitList(commits);
+  const entry = `## ${version}\n\n### Changes\n\n${changes}`;
   return `${heading}\n\n${entry}\n\n${rest.trimEnd()}\n`;
 }

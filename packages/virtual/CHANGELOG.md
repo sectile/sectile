@@ -4,15 +4,6 @@
 
 ### Changes
 
-- fix(vue): preserve native IME ownership (1d7b6be)
-- fix(vue): suppress fragment fallthrough warnings (b1300e7)
-- docs(calendar): document temporal composition contract (5d97828)
-- feat(calendar): expose complete year-view composition (acd820f)
-- refactor(vue)!: expose inline temporal calendar (58b410f)
-- refactor(calendar)!: project temporal dates across hosts (905447b)
-- refactor(calendar)!: move date semantics to temporal (fa9cf3d)
-- docs(virtual): define flexible layout contracts (7e3fe6e)
-- fix(vue): prevent portalled popup scroll jumps (cf196fd)
 - perf(virtual): bound masonry lane selection (77c97ec)
 - perf(virtual): bulk-load the spatial index (9ef9dd5)
 - perf(virtual): stream linear render extents (e09ada6)
@@ -22,24 +13,3 @@
 - feat(virtual): add sparse track-grid layout (db77688)
 - feat(virtual)!: generalize linear layout semantics (262e9a4)
 - refactor(core)!: extract virtualization engine (01b759f)
-- refactor(core)!: extract temporal semantics (f89c3e4)
-- perf(core): optimize virtual measurement batches (0bf0550)
-- build(core): use package exports in virtualization benchmark (374b4eb)
-- feat(core): add dynamic virtual layout semantics (2c23413)
-- feat(core)!: publish incremental sequence patches (572b68b)
-- feat(core): add persistent extent index (72473fb)
-- build(core): classify semantic API changes (88bf4a7)
-- perf(vue): define collection reconciliation costs (4423665)
-- feat(core): publish host adapter authoring contract (ac66f5a)
-- build(core): enforce internal import boundaries (9351b2c)
-- docs(vue): define hydration evidence contract (b232fda)
-- docs(vue): define controlled reconciliation contract (33cffee)
-
-changelog
-
-## Unreleased
-
-- Extract dynamic virtualization semantics from `@sectile/core`.
-- Add shared two-dimensional layout plans and linear, sparse track-grid, masonry, and spatial strategies.
-- Preserve dynamic anchors across measurements and mutations without requiring fixed item sizes.
-- Publish runtime APIs only through package subpaths with JavaScript and declaration source maps.
