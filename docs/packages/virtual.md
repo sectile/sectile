@@ -10,6 +10,7 @@ pnpm add @sectile/core @sectile/virtual
 import { createExtentIndex } from '@sectile/virtual/extent-index'
 import { createLinearLayout } from '@sectile/virtual/linear-layout'
 import { createMasonryLayout } from '@sectile/virtual/masonry-layout'
+import { createSpatialLayout } from '@sectile/virtual/spatial-layout'
 import { createTrackGridLayout } from '@sectile/virtual/track-grid-layout'
 ```
 

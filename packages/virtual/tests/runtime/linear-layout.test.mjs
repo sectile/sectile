@@ -27,6 +27,13 @@ import {
   masonryRectAt,
   queryMasonryLayout,
 } from '../../.verification-dist/masonry-layout.js';
+import {
+  applySpatialMeasurements,
+  applySpatialMutation,
+  createSpatialLayout,
+  querySpatialLayout,
+  spatialRectAt,
+} from '../../.verification-dist/spatial-layout.js';
 
 const estimated = (value) => ({ kind: 'estimated', value });
 const exact = (value) => ({ kind: 'exact', value });
@@ -144,4 +151,35 @@ test('VRT-02, VRT-03, VRT-04: masonry measurements and responsive geometry prese
     type: 'geometry', laneCount: 1, laneExtent: 200,
   }, { id: 'item-3', viewportOffset: { x: 0, y: 0 } });
   assert.deepEqual(masonryRectAt(responsive.state, 'item-3'), { x: 0, y: 145, width: 200, height: 50 });
+});
+
+test('VRT-01, VRT-05: spatial BVH queries overlapping regions in deterministic paint order', () => {
+  const spatial = createSpatialLayout([
+    { id: 'back', rect: { x: 0, y: 0, width: 100, height: 100 }, zIndex: 2 },
+    { id: 'front', rect: { x: 50, y: 50, width: 20, height: 20 }, zIndex: 1 },
+    { id: 'far', rect: { x: 1_000, y: 1_000, width: 50, height: 50 } },
+  ]);
+  const plan = querySpatialLayout(spatial, { viewport: { x: 40, y: 40, width: 40, height: 40 } });
+  assert.deepEqual(plan.placements.map(({ id }) => id), ['front', 'back']);
+  assert.deepEqual(plan.contentSize, { width: 1_050, height: 1_050 });
+});
+
+test('VRT-02, VRT-03, VRT-04: spatial measurement and updates preserve identity anchors', () => {
+  const spatial = createSpatialLayout([
+    { id: 'anchor', rect: { x: 10, y: 20, width: 40, height: 40 } },
+    { id: 'remove', rect: { x: 100, y: 100, width: 20, height: 20 } },
+  ]);
+  const measured = applySpatialMeasurements(spatial, {
+    generation: 0,
+    anchor: { id: 'anchor', viewportOffset: { x: 0, y: 0 } },
+    measurements: [{ id: 'anchor', rect: { x: 15, y: 30, width: 50, height: 60 } }],
+  });
+  assert.deepEqual(measured.scrollDelta, { x: 5, y: 10 });
+  const updated = applySpatialMutation(measured.state, {
+    type: 'update',
+    remove: ['remove'],
+    upsert: [{ id: 'added', rect: { x: 200, y: 300, width: 10, height: 10 } }],
+  });
+  assert.deepEqual(updated.state.domain.ids, ['anchor', 'added']);
+  assert.deepEqual(spatialRectAt(updated.state, 'added'), { x: 200, y: 300, width: 10, height: 10 });
 });

@@ -1,0 +1,252 @@
+import type { Result, StableID } from '@sectile/core';
+import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
+import { unwrap } from '@sectile/core/result';
+import { fail, ok } from './internal/foundation.js';
+import {
+  alignedScrollOffset, anchorForPlan, normalizeQuery, pointDelta, rectanglesIntersect, ZERO_POINT,
+  type VirtualAnchor, type VirtualLayoutMutation, type VirtualLayoutPlan, type VirtualLayoutStrategy,
+  type VirtualMeasurementBatch, type VirtualPlacement, type VirtualPoint, type VirtualQueryInput,
+  type VirtualRect, type VirtualScrollAlignment,
+} from './layout.js';
+
+export interface SpatialItem<ID extends StableID = StableID> {
+  readonly id: ID;
+  readonly rect: VirtualRect;
+  readonly zIndex?: number;
+}
+
+export interface SpatialLayoutState<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>;
+  readonly items: readonly SpatialItem<ID>[];
+  readonly maxItems: number;
+  readonly generation: number;
+}
+
+export interface SpatialLayoutInput { readonly maxItems?: number; }
+export interface SpatialMeasurement<ID extends StableID = StableID> { readonly id: ID; readonly rect: VirtualRect; }
+
+export type SpatialMutation<ID extends StableID = StableID> =
+  | { readonly type: 'replace'; readonly items: readonly SpatialItem<ID>[] }
+  | { readonly type: 'update'; readonly upsert?: readonly SpatialItem<ID>[]; readonly remove?: readonly ID[] };
+
+export interface SpatialPlacement<ID extends StableID = StableID> extends VirtualPlacement<ID> { readonly zIndex: number; }
+export interface SpatialLayoutPlan<ID extends StableID = StableID> extends VirtualLayoutPlan<ID> { readonly placements: readonly SpatialPlacement<ID>[]; }
+
+interface IndexedSpatialItem<ID extends StableID> {
+  readonly value: SpatialItem<ID>;
+  readonly index: number;
+  readonly zIndex: number;
+}
+
+interface SpatialNode<ID extends StableID> {
+  readonly bounds: VirtualRect;
+  readonly items: readonly IndexedSpatialItem<ID>[] | null;
+  readonly left: SpatialNode<ID> | null;
+  readonly right: SpatialNode<ID> | null;
+}
+
+interface SpatialInternals<ID extends StableID> {
+  readonly root: SpatialNode<ID> | null;
+  readonly byID: ReadonlyMap<ID, IndexedSpatialItem<ID>>;
+  readonly contentSize: { readonly width: number; readonly height: number };
+}
+
+const LEAF_SIZE = 16;
+const internals = new WeakMap<SpatialLayoutState, SpatialInternals<StableID>>();
+
+export const spatialLayoutStrategy: VirtualLayoutStrategy<SpatialLayoutState, StableID, SpatialMeasurement, SpatialMutation> = Object.freeze({
+  kind: 'spatial',
+  tryQuery: (state: SpatialLayoutState, input: VirtualQueryInput) => tryQuerySpatialLayout(state, input),
+  tryMeasure: (state: SpatialLayoutState, batch: VirtualMeasurementBatch<SpatialMeasurement>) => tryApplySpatialMeasurements(state, batch),
+  tryMutate: (state: SpatialLayoutState, input: { readonly mutation: SpatialMutation; readonly anchor?: VirtualAnchor | null }) => tryApplySpatialMutation(state, input.mutation, input.anchor),
+  tryScrollTarget: (state: SpatialLayoutState, id: StableID, viewport: VirtualRect, alignment?: VirtualScrollAlignment) => trySpatialScrollTarget(state, id, viewport, alignment),
+});
+
+export function createSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput = {}): SpatialLayoutState<ID> {
+  return unwrap(tryCreateSpatialLayout(items, input));
+}
+
+export function tryCreateSpatialLayout<ID extends StableID>(items: readonly SpatialItem<ID>[], input: SpatialLayoutInput = {}): Result<SpatialLayoutState<ID>> {
+  const maxItems = input.maxItems ?? 1_000_000;
+  if (!Number.isSafeInteger(maxItems) || maxItems < 0) return fail('construction', 'invalid-max-items', 'maxItems must be a non-negative safe integer.', { maxItems });
+  const validated = validateItems(items, maxItems);
+  if (!validated.ok) return validated;
+  return ok(createState(validated.value.domain, validated.value.items, maxItems, 0));
+}
+
+export function querySpatialLayout<ID extends StableID>(state: SpatialLayoutState<ID>, input: VirtualQueryInput): SpatialLayoutPlan<ID> {
+  return unwrap(tryQuerySpatialLayout(state, input));
+}
+
+export function tryQuerySpatialLayout<ID extends StableID>(state: SpatialLayoutState<ID>, input: VirtualQueryInput): Result<SpatialLayoutPlan<ID>> {
+  const normalized = normalizeQuery(input);
+  if (!normalized.ok) return normalized;
+  const data = getInternals(state);
+  if (!data.ok) return data;
+  const candidates: IndexedSpatialItem<ID>[] = [];
+  queryNode(data.value.root, normalized.value.renderBounds, candidates);
+  candidates.sort((left, right) => left.zIndex - right.zIndex || left.index - right.index);
+  const placements = Object.freeze(candidates.map((candidate): SpatialPlacement<ID> => Object.freeze({
+    id: candidate.value.id,
+    index: candidate.index,
+    zIndex: candidate.zIndex,
+    rect: candidate.value.rect,
+    visible: rectanglesIntersect(candidate.value.rect, normalized.value.viewport),
+  })));
+  return ok(Object.freeze({
+    generation: state.generation,
+    contentSize: data.value.contentSize,
+    viewport: normalized.value.viewport,
+    renderBounds: normalized.value.renderBounds,
+    placements,
+    anchor: anchorForPlan(normalized.value.viewport, placements),
+  }));
+}
+
+export function applySpatialMeasurements<ID extends StableID>(state: SpatialLayoutState<ID>, batch: VirtualMeasurementBatch<SpatialMeasurement<ID>, ID>): VirtualLayoutMutation<SpatialLayoutState<ID>> {
+  return unwrap(tryApplySpatialMeasurements(state, batch));
+}
+
+export function tryApplySpatialMeasurements<ID extends StableID>(state: SpatialLayoutState<ID>, batch: VirtualMeasurementBatch<SpatialMeasurement<ID>, ID>): Result<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
+  if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
+  if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
+  const data = getInternals(state);
+  if (!data.ok) return data;
+  const replacements = new Map<ID, VirtualRect>();
+  for (const measurement of batch.measurements) {
+    if (replacements.has(measurement.id) || !data.value.byID.has(measurement.id) || !validRect(measurement.rect)) return fail('transition-rejection', 'virtual-layout-measurement-invalid', 'Spatial measurements require unique existing IDs and valid rectangles.', { measurement });
+    replacements.set(measurement.id, freezeRect(measurement.rect));
+  }
+  const before = anchorRect(state, batch.anchor);
+  const items = state.items.map((item) => replacements.has(item.id) ? Object.freeze({ ...item, rect: replacements.get(item.id)! }) : item);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  const next = createState(state.domain, items, state.maxItems, generation.value);
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
+}
+
+export function applySpatialMutation<ID extends StableID>(state: SpatialLayoutState<ID>, mutation: SpatialMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualLayoutMutation<SpatialLayoutState<ID>> {
+  return unwrap(tryApplySpatialMutation(state, mutation, anchor));
+}
+
+export function tryApplySpatialMutation<ID extends StableID>(state: SpatialLayoutState<ID>, mutation: SpatialMutation<ID>, anchor: VirtualAnchor<ID> | null = null): Result<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
+  if (mutation.type !== 'replace' && mutation.type !== 'update') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial mutation type is unsupported.', { mutation });
+  let items: readonly SpatialItem<ID>[];
+  if (mutation.type === 'replace') items = mutation.items;
+  else {
+    const upsert = mutation.upsert ?? [];
+    const remove = mutation.remove ?? [];
+    const removed = new Set(remove);
+    const updated = new Map<ID, SpatialItem<ID>>();
+    if (removed.size !== remove.length) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial removal IDs must be unique.');
+    for (const id of removed) if (!state.domain.contains(id)) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial removals must reference existing IDs.', { id });
+    for (const item of upsert) {
+      if (updated.has(item.id) || removed.has(item.id)) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial upserts must be unique and disjoint from removals.', { id: item.id });
+      updated.set(item.id, item);
+    }
+    const next: SpatialItem<ID>[] = [];
+    for (const item of state.items) {
+      if (removed.has(item.id)) continue;
+      next.push(updated.get(item.id) ?? item);
+      updated.delete(item.id);
+    }
+    for (const item of upsert) if (updated.has(item.id)) next.push(item);
+    items = next;
+  }
+  const validated = validateItems(items, state.maxItems);
+  if (!validated.ok) return validated.error.class === 'construction'
+    ? { ok: false, error: { ...validated.error, class: 'transition-rejection' } }
+    : validated;
+  const before = anchorRect(state, anchor);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  const next = createState(validated.value.domain, validated.value.items, state.maxItems, generation.value);
+  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+}
+
+export function spatialScrollTarget<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualPoint {
+  return unwrap(trySpatialScrollTarget(state, id, viewport, alignment));
+}
+
+export function trySpatialScrollTarget<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): Result<VirtualPoint> {
+  const data = getInternals(state);
+  if (!data.ok) return data;
+  const item = data.value.byID.get(id);
+  if (item === undefined) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the spatial domain.', { id });
+  return ok(Object.freeze({
+    x: alignedScrollOffset(item.value.rect.x, item.value.rect.width, viewport.x, viewport.width, data.value.contentSize.width, alignment),
+    y: alignedScrollOffset(item.value.rect.y, item.value.rect.height, viewport.y, viewport.height, data.value.contentSize.height, alignment),
+  }));
+}
+
+export function spatialRectAt<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID): VirtualRect | null {
+  return internals.get(state as SpatialLayoutState)?.byID.get(id)?.value.rect ?? null;
+}
+
+function createState<ID extends StableID>(domain: Sequence<ID>, items: readonly SpatialItem<ID>[], maxItems: number, generation: number): SpatialLayoutState<ID> {
+  const state = Object.freeze({ domain, items: Object.freeze([...items]), maxItems, generation });
+  const indexed = state.items.map((value, index) => Object.freeze({ value, index, zIndex: value.zIndex ?? 0 }));
+  let width = 0;
+  let height = 0;
+  for (const item of state.items) {
+    width = Math.max(width, item.rect.x + item.rect.width);
+    height = Math.max(height, item.rect.y + item.rect.height);
+  }
+  internals.set(state, { root: buildNode(indexed), byID: new Map(indexed.map((item) => [item.value.id, item])), contentSize: Object.freeze({ width, height }) } as SpatialInternals<StableID>);
+  return state;
+}
+
+function validateItems<ID extends StableID>(items: readonly SpatialItem<ID>[], maxItems: number): Result<{ readonly domain: Sequence<ID>; readonly items: readonly SpatialItem<ID>[] }> {
+  if (items.length > maxItems) return fail('resource-rejection', 'item-ceiling-exceeded', 'Spatial items exceed maxItems.', { size: items.length, maxItems });
+  const domain = tryCreateSequence(items.map(({ id }) => id), { maxItems: Math.max(1, maxItems) });
+  if (!domain.ok) return domain;
+  const frozen: SpatialItem<ID>[] = [];
+  for (const item of items) {
+    if (!validRect(item.rect) || (item.zIndex !== undefined && (!Number.isSafeInteger(item.zIndex)))) return fail('construction', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
+    frozen.push(Object.freeze({ id: item.id, rect: freezeRect(item.rect), ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }) }));
+  }
+  return ok(Object.freeze({ domain: domain.value, items: Object.freeze(frozen) }));
+}
+
+function buildNode<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): SpatialNode<ID> | null {
+  if (items.length === 0) return null;
+  const bounds = boundsOf(items);
+  if (items.length <= LEAF_SIZE) return Object.freeze({ bounds, items: Object.freeze([...items]), left: null, right: null });
+  const axis = bounds.width >= bounds.height ? 'x' : 'y';
+  const sorted = [...items].sort((left, right) => center(left.value.rect, axis) - center(right.value.rect, axis) || left.index - right.index);
+  const middle = sorted.length >>> 1;
+  return Object.freeze({ bounds, items: null, left: buildNode(sorted.slice(0, middle)), right: buildNode(sorted.slice(middle)) });
+}
+
+function queryNode<ID extends StableID>(node: SpatialNode<ID> | null, bounds: VirtualRect, output: IndexedSpatialItem<ID>[]): void {
+  if (node === null || !rectanglesIntersect(node.bounds, bounds)) return;
+  if (node.items !== null) {
+    for (const item of node.items) if (rectanglesIntersect(item.value.rect, bounds)) output.push(item);
+    return;
+  }
+  queryNode(node.left, bounds, output);
+  queryNode(node.right, bounds, output);
+}
+
+function boundsOf<ID extends StableID>(items: readonly IndexedSpatialItem<ID>[]): VirtualRect {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = 0;
+  let maxY = 0;
+  for (const item of items) {
+    minX = Math.min(minX, item.value.rect.x);
+    minY = Math.min(minY, item.value.rect.y);
+    maxX = Math.max(maxX, item.value.rect.x + item.value.rect.width);
+    maxY = Math.max(maxY, item.value.rect.y + item.value.rect.height);
+  }
+  return Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY });
+}
+
+function center(rect: VirtualRect, axis: 'x' | 'y'): number { return axis === 'x' ? rect.x + rect.width / 2 : rect.y + rect.height / 2; }
+function validRect(rect: VirtualRect): boolean { return rect !== null && typeof rect === 'object' && finiteNonNegative(rect.x) && finiteNonNegative(rect.y) && finiteNonNegative(rect.width) && finiteNonNegative(rect.height); }
+function freezeRect(rect: VirtualRect): VirtualRect { return Object.freeze({ x: rect.x, y: rect.y, width: rect.width, height: rect.height }); }
+function anchorRect<ID extends StableID>(state: SpatialLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null { return anchor === null || anchor === undefined ? null : spatialRectAt(state, anchor.id); }
+function getInternals<ID extends StableID>(state: SpatialLayoutState<ID>): Result<SpatialInternals<ID>> { const value = internals.get(state as SpatialLayoutState); return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Spatial state must be created by createSpatialLayout().') : ok(value as SpatialInternals<ID>); }
+function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
+function nextGeneration(generation: number): Result<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
+function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
