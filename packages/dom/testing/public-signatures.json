@@ -1,0 +1,537 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/dom",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./accordion",
+      "types": "dist/accordion.d.ts"
+    },
+    {
+      "subpath": "./alert-dialog",
+      "types": "dist/alert-dialog.d.ts"
+    },
+    {
+      "subpath": "./calendar",
+      "types": "dist/calendar.d.ts"
+    },
+    {
+      "subpath": "./carousel",
+      "types": "dist/carousel.d.ts"
+    },
+    {
+      "subpath": "./cascade-select",
+      "types": "dist/cascade-select.d.ts"
+    },
+    {
+      "subpath": "./checkbox",
+      "types": "dist/checkbox.d.ts"
+    },
+    {
+      "subpath": "./checkbox-group",
+      "types": "dist/checkbox-group.d.ts"
+    },
+    {
+      "subpath": "./color-picker",
+      "types": "dist/color-picker.d.ts"
+    },
+    {
+      "subpath": "./combobox",
+      "types": "dist/combobox.d.ts"
+    },
+    {
+      "subpath": "./date-field",
+      "types": "dist/date-field.d.ts"
+    },
+    {
+      "subpath": "./date-picker",
+      "types": "dist/date-picker.d.ts"
+    },
+    {
+      "subpath": "./date-range-field",
+      "types": "dist/date-range-field.d.ts"
+    },
+    {
+      "subpath": "./date-range-picker",
+      "types": "dist/date-range-picker.d.ts"
+    },
+    {
+      "subpath": "./date-time-field",
+      "types": "dist/date-time-field.d.ts"
+    },
+    {
+      "subpath": "./date-time-picker",
+      "types": "dist/date-time-picker.d.ts"
+    },
+    {
+      "subpath": "./date-time-range-picker",
+      "types": "dist/date-time-range-picker.d.ts"
+    },
+    {
+      "subpath": "./dialog",
+      "types": "dist/dialog.d.ts"
+    },
+    {
+      "subpath": "./disclosure",
+      "types": "dist/disclosure.d.ts"
+    },
+    {
+      "subpath": "./drawer",
+      "types": "dist/drawer.d.ts"
+    },
+    {
+      "subpath": "./editable",
+      "types": "dist/editable.d.ts"
+    },
+    {
+      "subpath": "./feed",
+      "types": "dist/feed.d.ts"
+    },
+    {
+      "subpath": "./form",
+      "types": "dist/form.d.ts"
+    },
+    {
+      "subpath": "./grid",
+      "types": "dist/grid.d.ts"
+    },
+    {
+      "subpath": "./listbox",
+      "types": "dist/listbox.d.ts"
+    },
+    {
+      "subpath": "./menu",
+      "types": "dist/menu.d.ts"
+    },
+    {
+      "subpath": "./menu-button",
+      "types": "dist/menu-button.d.ts"
+    },
+    {
+      "subpath": "./menubar",
+      "types": "dist/menubar.d.ts"
+    },
+    {
+      "subpath": "./month-picker",
+      "types": "dist/month-picker.d.ts"
+    },
+    {
+      "subpath": "./month-range-picker",
+      "types": "dist/month-range-picker.d.ts"
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "types": "dist/multi-thumb-slider.d.ts"
+    },
+    {
+      "subpath": "./navigation-menu",
+      "types": "dist/navigation-menu.d.ts"
+    },
+    {
+      "subpath": "./number-field",
+      "types": "dist/number-field.d.ts"
+    },
+    {
+      "subpath": "./pagination",
+      "types": "dist/pagination.d.ts"
+    },
+    {
+      "subpath": "./pin-input",
+      "types": "dist/pin-input.d.ts"
+    },
+    {
+      "subpath": "./popover",
+      "types": "dist/popover.d.ts"
+    },
+    {
+      "subpath": "./quantity-field",
+      "types": "dist/quantity-field.d.ts"
+    },
+    {
+      "subpath": "./radio-group",
+      "types": "dist/radio-group.d.ts"
+    },
+    {
+      "subpath": "./range-calendar",
+      "types": "dist/range-calendar.d.ts"
+    },
+    {
+      "subpath": "./rating",
+      "types": "dist/rating.d.ts"
+    },
+    {
+      "subpath": "./reorder",
+      "types": "dist/reorder.d.ts"
+    },
+    {
+      "subpath": "./select",
+      "types": "dist/select.d.ts"
+    },
+    {
+      "subpath": "./slider",
+      "types": "dist/slider.d.ts"
+    },
+    {
+      "subpath": "./spin-button",
+      "types": "dist/spin-button.d.ts"
+    },
+    {
+      "subpath": "./stepper",
+      "types": "dist/stepper.d.ts"
+    },
+    {
+      "subpath": "./switch",
+      "types": "dist/switch.d.ts"
+    },
+    {
+      "subpath": "./tabs",
+      "types": "dist/tabs.d.ts"
+    },
+    {
+      "subpath": "./tags-input",
+      "types": "dist/tags-input.d.ts"
+    },
+    {
+      "subpath": "./text",
+      "types": "dist/text.d.ts"
+    },
+    {
+      "subpath": "./time-field",
+      "types": "dist/time-field.d.ts"
+    },
+    {
+      "subpath": "./time-range-field",
+      "types": "dist/time-range-field.d.ts"
+    },
+    {
+      "subpath": "./timer",
+      "types": "dist/timer.d.ts"
+    },
+    {
+      "subpath": "./toast",
+      "types": "dist/toast.d.ts"
+    },
+    {
+      "subpath": "./toggle-button",
+      "types": "dist/toggle-button.d.ts"
+    },
+    {
+      "subpath": "./toggle-group",
+      "types": "dist/toggle-group.d.ts"
+    },
+    {
+      "subpath": "./toolbar",
+      "types": "dist/toolbar.d.ts"
+    },
+    {
+      "subpath": "./tooltip",
+      "types": "dist/tooltip.d.ts"
+    },
+    {
+      "subpath": "./tree-grid",
+      "types": "dist/tree-grid.d.ts"
+    },
+    {
+      "subpath": "./tree-view",
+      "types": "dist/tree-view.d.ts"
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts"
+    },
+    {
+      "subpath": "./window-splitter",
+      "types": "dist/window-splitter.d.ts"
+    },
+    {
+      "subpath": "./year-picker",
+      "types": "dist/year-picker.d.ts"
+    },
+    {
+      "subpath": "./year-range-picker",
+      "types": "dist/year-range-picker.d.ts"
+    }
+  ],
+  "fingerprint": "73a821ab9a3522d8bb964e4bc439e4ff798477168a4e86444226dd7dbfceb224",
+  "files": [
+    {
+      "path": "dist/accordion.d.ts",
+      "sha256": "59379e3741affc9379b8a0c195ea2ee846279d2ca2addffd942bf5cb381a5d86"
+    },
+    {
+      "path": "dist/alert-dialog.d.ts",
+      "sha256": "d2ef8e5ab9ab242aeaf4ab1d67850f49e3236c3fff9d82a5e276e45f5e4f90fb"
+    },
+    {
+      "path": "dist/calendar.d.ts",
+      "sha256": "ea9dc538915a8c699719b762e4bdc24c1c7b11d537792b16f22f0d4f358b9263"
+    },
+    {
+      "path": "dist/carousel.d.ts",
+      "sha256": "94c34aef704ffdafb8dbd0199746968dfc8f959166a98393c5fe470c42c791e6"
+    },
+    {
+      "path": "dist/cascade-select.d.ts",
+      "sha256": "e86462939c03298384d91b7b8f079cd6266c6a489df67ae74b3d484c5b804c60"
+    },
+    {
+      "path": "dist/checkbox-group.d.ts",
+      "sha256": "13a28dd3f7998156c75bcc4eb53ccb54eb9798c8523ef441d618ea0bf554c368"
+    },
+    {
+      "path": "dist/checkbox.d.ts",
+      "sha256": "de3d77078affeeea90bcc4722992b16dc51ed2956d9b5e1554c07305a09007e8"
+    },
+    {
+      "path": "dist/color-picker.d.ts",
+      "sha256": "791391c7406572f94a768b113485e68d04769703ac43f09849398ffe5b002703"
+    },
+    {
+      "path": "dist/combobox.d.ts",
+      "sha256": "566c215b386ddea0d295205778e94e450b39448c4bd9faca6e52ca82e049c450"
+    },
+    {
+      "path": "dist/date-field.d.ts",
+      "sha256": "c767a6bbd518eff74b806812caea55db1ea8bc71728b3d425d999862621d14a5"
+    },
+    {
+      "path": "dist/date-picker.d.ts",
+      "sha256": "1e7c7fc9069e31a26860a18f5d26fcdf0bba30c7c4acfac74575a4b1e6ecead8"
+    },
+    {
+      "path": "dist/date-range-field.d.ts",
+      "sha256": "69db1e0d5bcf39b0e70eb597d8c963420ed487fd32fe40100280b375c0ea009a"
+    },
+    {
+      "path": "dist/date-range-picker.d.ts",
+      "sha256": "c15cc33402fed9b57b6bce0ec2f568020701483409f7a0a937ac76c2b65bf362"
+    },
+    {
+      "path": "dist/date-time-field.d.ts",
+      "sha256": "37c23ac022c41bb86c9516bd5c3f5286ad1498bf1ee97f8f56c3935539d687c8"
+    },
+    {
+      "path": "dist/date-time-picker.d.ts",
+      "sha256": "6906210dfb78aa0e08a73b4091a5a1fdbd237288516f97e5211bc54bdd754cc0"
+    },
+    {
+      "path": "dist/date-time-range-picker.d.ts",
+      "sha256": "7d65be64142541a858661087730934dd26c2fd483d2a69edec3758c8a171ac73"
+    },
+    {
+      "path": "dist/dialog.d.ts",
+      "sha256": "1c31b2c608181270ec7978c39303d10fa6381a78715a6efc7f9b2f9736f31634"
+    },
+    {
+      "path": "dist/disclosure.d.ts",
+      "sha256": "40385473d7da1f2dd0be738cca450f9b730b126b874438dcc0abdadc0838881b"
+    },
+    {
+      "path": "dist/drawer.d.ts",
+      "sha256": "9916a8a2b7c1ad3a985db50391f104ef5eff91863987048113afa3924dc09c3c"
+    },
+    {
+      "path": "dist/editable.d.ts",
+      "sha256": "bbaca2becd7926ff6525b741adaf88b72dba3abb490b2ff00f2e713eb5531dc3"
+    },
+    {
+      "path": "dist/feed.d.ts",
+      "sha256": "8b28f5d82f86a309421af1881d07c713003e683de0e4e5930e36362e57ebbbad"
+    },
+    {
+      "path": "dist/form.d.ts",
+      "sha256": "6337ac4ead7b9adf889321c830c205e8bc558a14fa814b3871b6714b871257a2"
+    },
+    {
+      "path": "dist/grid.d.ts",
+      "sha256": "c15b61f75f65061e3485354e229adeaea774c61f582ee81385968e29e4a891f3"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "29beaa9cd1049e0f984b6a3cb075e934d31d122171996bfa72541c6cb300e2aa"
+    },
+    {
+      "path": "dist/interact-outside.d.ts",
+      "sha256": "de3e7df840d640d3c099d45fd5f0e7c9462264b46b4d3092ad1e123123835095"
+    },
+    {
+      "path": "dist/internal/checked-control.d.ts",
+      "sha256": "a27486ce6b704b3b62c7f2010601ac2ac6b81be1572cc4f9b352fbbae37e6fe7"
+    },
+    {
+      "path": "dist/internal/direction.d.ts",
+      "sha256": "525026c46f24b7f5497e55ef451e086014cf8d5545c4e988b57861f5849ccf6a"
+    },
+    {
+      "path": "dist/internal/floating-position.d.ts",
+      "sha256": "4dc693a44ccbe8185ad6ca01062453e6a91d7f349cdf0aa78736ea233dd52e00"
+    },
+    {
+      "path": "dist/internal/menu-control.d.ts",
+      "sha256": "cc7a57ddf8b00cbd69431d2eb8fa34441e82f57dfe49f898f0c69878cf363562"
+    },
+    {
+      "path": "dist/internal/popup-control.d.ts",
+      "sha256": "144bfc7784b3da02340080d9537ba08c4233f0cf86f205424df6521c5bf2888d"
+    },
+    {
+      "path": "dist/listbox.d.ts",
+      "sha256": "7fb8a0589e06adbb13b8ecee4a8189e68ba63bee24ccbfd5c59b85a3f9c20ab1"
+    },
+    {
+      "path": "dist/menu-button.d.ts",
+      "sha256": "76ffc6af1cf727d07505299c020ab8b38c29659a4ff48cfec48693837d7a9220"
+    },
+    {
+      "path": "dist/menu.d.ts",
+      "sha256": "61e3eeda2773ebb26b1563f074446958f9e9d1c7b81d74b88774e5a7d98314ad"
+    },
+    {
+      "path": "dist/menubar.d.ts",
+      "sha256": "4149695bc2286c361533a4e5116d57d6c1b6ce2b7589e795d7b8e236387a2809"
+    },
+    {
+      "path": "dist/month-picker.d.ts",
+      "sha256": "5d1afa6664b7107544a3eec031243db3c0785937967a9c374e901ac73bcf9d49"
+    },
+    {
+      "path": "dist/month-range-picker.d.ts",
+      "sha256": "bd2ba4fa8d7731aabe13ba2202bb5bb958fd2252ccf4c23cd019cd0320b3053b"
+    },
+    {
+      "path": "dist/multi-thumb-slider.d.ts",
+      "sha256": "faa8b1becc8b9691f3f5219af2cd31247534f2c1cdaadfc9a96fdb091d360e57"
+    },
+    {
+      "path": "dist/navigation-menu.d.ts",
+      "sha256": "27eeb12cb6d2873e5ebeb9cd68780c69ea43c753b586abd8dffbe4d12f0415b0"
+    },
+    {
+      "path": "dist/number-field.d.ts",
+      "sha256": "30470945dddce3e2e8924fcc64031cf475f90740c18360d94bd28eb04de3d6b1"
+    },
+    {
+      "path": "dist/pagination.d.ts",
+      "sha256": "e27aff91601792f8872b6cf3536e235dd54a6f9594f9be3d77f93358b4acac76"
+    },
+    {
+      "path": "dist/pin-input.d.ts",
+      "sha256": "6f3f879ac2ed149499c218e59ca0e6a27aec9ed4050f0f1f474148764caf7a8e"
+    },
+    {
+      "path": "dist/popover.d.ts",
+      "sha256": "8c5324fd6e69a6c02467a99caedabb0a21079b93c5257c30a9ad59326068017d"
+    },
+    {
+      "path": "dist/quantity-field.d.ts",
+      "sha256": "47bfb346577cd033be781edcd2b93e96fec7a786bdf10386039ff9fc06ebc2b7"
+    },
+    {
+      "path": "dist/radio-group.d.ts",
+      "sha256": "3a75990655762a1ecd9e9bb8fc9275c76c41aa42f251d1ddebea42ede41a6016"
+    },
+    {
+      "path": "dist/range-calendar.d.ts",
+      "sha256": "3cfcb8ebc98842fbecd9908e43436142cebcb401fe4cea180066c858a659fb30"
+    },
+    {
+      "path": "dist/rating.d.ts",
+      "sha256": "32ec958a92cc9fec67604f05a373d6f7a977b6a9772d88ffa9e109f88fbd66d2"
+    },
+    {
+      "path": "dist/reorder.d.ts",
+      "sha256": "9987d3633235a77c36db29ae69a7d7985d8c0e22f5d2fb5bbd1687ecd53b43ad"
+    },
+    {
+      "path": "dist/select.d.ts",
+      "sha256": "33c38f0196aabf1a5e0bea953db81ce157d084709dd7adeff445502d0d50f76e"
+    },
+    {
+      "path": "dist/slider.d.ts",
+      "sha256": "0b60b3dccf3a0acaf25e9937d5de84322a0ed8f981ef6fca193d7cd7152f70f3"
+    },
+    {
+      "path": "dist/spin-button.d.ts",
+      "sha256": "260adf7c7e14eab526a541d315cd8ea6c86e73dde72a61ffc3514f88bd3cf7b2"
+    },
+    {
+      "path": "dist/stepper.d.ts",
+      "sha256": "4d7e43a55ce9c5f141700d8b8998f1add75e565cbf18151c6342affbe50bf387"
+    },
+    {
+      "path": "dist/switch.d.ts",
+      "sha256": "51f50c537b5a02fa2376c402a2e71395e0fe28133787338d6951c44321823611"
+    },
+    {
+      "path": "dist/tabs.d.ts",
+      "sha256": "4edc9f58dfd7e8bc8f0f9c51eae5911651a93ebfd70e65f063b5674dd8be3846"
+    },
+    {
+      "path": "dist/tags-input.d.ts",
+      "sha256": "a28b0c98f56500d89fe8337c185228a86a28abd558bf560bc5c0a4eb7f3abc67"
+    },
+    {
+      "path": "dist/text.d.ts",
+      "sha256": "8062cd6496dd34b3cfcd3cbcb84e9dba7efedb33a45fd505033695e5af7cba2d"
+    },
+    {
+      "path": "dist/time-field.d.ts",
+      "sha256": "346496c1b6e9fa99a2b0ecc49598627ae8507268abf0a38746c00404aeb63661"
+    },
+    {
+      "path": "dist/time-range-field.d.ts",
+      "sha256": "6e82f6712349e79d9cc2cf13926c48b40517cb1541cdc35e3cedc8bf61290502"
+    },
+    {
+      "path": "dist/timer.d.ts",
+      "sha256": "22e972d92bacc07b6f3e364090d3b6e9eee55d9bf38b62bc09e17be9df27d742"
+    },
+    {
+      "path": "dist/toast.d.ts",
+      "sha256": "898fd55d11de25069a2de674b5fa3dd421c277b410c0138e26ef60b65117faa0"
+    },
+    {
+      "path": "dist/toggle-button.d.ts",
+      "sha256": "8f033828f3de7c0950c4975e47e7538744b9bb3637b14a505d4e08f865a55c16"
+    },
+    {
+      "path": "dist/toggle-group.d.ts",
+      "sha256": "5187987520da987e3db7e4ebf156d970b568edd9f317b854d42aac4ad9302599"
+    },
+    {
+      "path": "dist/toolbar.d.ts",
+      "sha256": "f21cc07240921c216db37aaf5289ac6cb6fbe7be709615eb65bb0f18656b80a0"
+    },
+    {
+      "path": "dist/tooltip.d.ts",
+      "sha256": "cc1215c1dc2b89af8892f66ea7e67bee9ce81bfb7e717ac89be0afcbf6d2d1f9"
+    },
+    {
+      "path": "dist/tree-grid.d.ts",
+      "sha256": "6cf276213f62741ba945b48dc1e2a501482e8349bb225dd9d1fc0c14b2ec67ba"
+    },
+    {
+      "path": "dist/tree-view.d.ts",
+      "sha256": "49505af794aac5c28227e80923458a916e389eeedddb12612557e3aeb3b06ee2"
+    },
+    {
+      "path": "dist/virtual.d.ts",
+      "sha256": "7a6cb3d99d0df97b99a5e08239bb466cb3259e3a0bd3ea465bc9ff5392bf4444"
+    },
+    {
+      "path": "dist/window-splitter.d.ts",
+      "sha256": "1d425c7839e8e0b25b99770dad335c848f708631600bd25a3a3034273d48eaf7"
+    },
+    {
+      "path": "dist/year-picker.d.ts",
+      "sha256": "c3cc2a575ceea4bdc6cd48ae08e0bd709984f8945a098cfb7ad52994075e0862"
+    },
+    {
+      "path": "dist/year-range-picker.d.ts",
+      "sha256": "4c9159b809bf90730aff5348ed05d12a58a6d63b131986e9f48b3ee2f4a24882"
+    }
+  ]
+}

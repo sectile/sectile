@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/virtual",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./extent-index",
+      "types": "dist/extent-index.d.ts"
+    },
+    {
+      "subpath": "./layout",
+      "types": "dist/layout.d.ts"
+    },
+    {
+      "subpath": "./linear-layout",
+      "types": "dist/linear-layout.d.ts"
+    },
+    {
+      "subpath": "./masonry-layout",
+      "types": "dist/masonry-layout.d.ts"
+    },
+    {
+      "subpath": "./spatial-layout",
+      "types": "dist/spatial-layout.d.ts"
+    },
+    {
+      "subpath": "./track-grid-layout",
+      "types": "dist/track-grid-layout.d.ts"
+    }
+  ],
+  "fingerprint": "473fec0a7fea68c8d60aa28d0b2c75a2334d15d0558dc3a414983b3dc6856c02",
+  "files": [
+    {
+      "path": "dist/extent-index.d.ts",
+      "sha256": "1fabc395b17288792fd9f141945595434a56628ff07bd05d9d5303dc4f3ee13a"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "dc6c511485e63d5f3fd19907e6a410c891954bcffce1992b5f7081f34b410a3d"
+    },
+    {
+      "path": "dist/internal/track.d.ts",
+      "sha256": "a20617e0982602c7f6b470caeb7a75f901ed7524d3f4dd97ff1e7857d1497581"
+    },
+    {
+      "path": "dist/layout.d.ts",
+      "sha256": "dc7538a810260d3736f60d3a6a294b674caa5df7dca2589243b1ffa544c1e075"
+    },
+    {
+      "path": "dist/linear-layout.d.ts",
+      "sha256": "6fa6f5b57c6c00a05c7ab82e585a286dce50227305a4db4e964b32cb31e3d4b4"
+    },
+    {
+      "path": "dist/masonry-layout.d.ts",
+      "sha256": "1f6d8f322be9fe205643beabfe283be352fd3de9ca6a767ea9dd2c5808cf687b"
+    },
+    {
+      "path": "dist/spatial-layout.d.ts",
+      "sha256": "5a3beef29df4da834a825e846aac3a0b8146337aa427f31cf30a661c237e482d"
+    },
+    {
+      "path": "dist/track-grid-layout.d.ts",
+      "sha256": "900af32f5cf556ea862818da5015ddcec7e75d74bbdba72f40961e618d792416"
+    }
+  ]
+}

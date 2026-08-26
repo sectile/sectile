@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/temporal",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./calendar",
+      "types": "dist/calendar.d.ts"
+    },
+    {
+      "subpath": "./date-field",
+      "types": "dist/date-field.d.ts"
+    },
+    {
+      "subpath": "./date-picker",
+      "types": "dist/date-picker.d.ts"
+    },
+    {
+      "subpath": "./date-range-field",
+      "types": "dist/date-range-field.d.ts"
+    },
+    {
+      "subpath": "./date-range-picker",
+      "types": "dist/date-range-picker.d.ts"
+    },
+    {
+      "subpath": "./date-time-field",
+      "types": "dist/date-time-field.d.ts"
+    },
+    {
+      "subpath": "./date-time-picker",
+      "types": "dist/date-time-picker.d.ts"
+    },
+    {
+      "subpath": "./date-time-range-picker",
+      "types": "dist/date-time-range-picker.d.ts"
+    },
+    {
+      "subpath": "./month-picker",
+      "types": "dist/month-picker.d.ts"
+    },
+    {
+      "subpath": "./month-range-picker",
+      "types": "dist/month-range-picker.d.ts"
+    },
+    {
+      "subpath": "./range-calendar",
+      "types": "dist/range-calendar.d.ts"
+    },
+    {
+      "subpath": "./time-field",
+      "types": "dist/time-field.d.ts"
+    },
+    {
+      "subpath": "./time-range-field",
+      "types": "dist/time-range-field.d.ts"
+    },
+    {
+      "subpath": "./year-picker",
+      "types": "dist/year-picker.d.ts"
+    },
+    {
+      "subpath": "./year-range-picker",
+      "types": "dist/year-range-picker.d.ts"
+    }
+  ],
+  "fingerprint": "c4a06e91c2880e5b9b00ad47994df14a3c44857c0995d3a5f2423b17e4fc4746",
+  "files": [
+    {
+      "path": "dist/calendar.d.ts",
+      "sha256": "1f0b7a8a428f97edfd633b9b3a7b3e9af5f72814ab09c3b9fd46fc0e604383a8"
+    },
+    {
+      "path": "dist/date-field.d.ts",
+      "sha256": "12c7731dba74d52000933ac2bbf9c5652de88a6d766a592c2ddf57cd65861a0f"
+    },
+    {
+      "path": "dist/date-picker.d.ts",
+      "sha256": "a211178fad8bcc4a5a775ec3a77111120d2e367763703fe0ffd8e9cc9a7c8833"
+    },
+    {
+      "path": "dist/date-range-field.d.ts",
+      "sha256": "212daccf826dbd9b13659c33c5cec1987d6a799763e393019d65fc2a664a0176"
+    },
+    {
+      "path": "dist/date-range-picker.d.ts",
+      "sha256": "d2d1312a59bc0c95514f854d6802ab0b6a29d5fdb91e712bee51aa3e8502293c"
+    },
+    {
+      "path": "dist/date-time-field.d.ts",
+      "sha256": "801cf6dedcc64d843f38e54837b876c4f50f8326da834ed7be0c95f1107f8e47"
+    },
+    {
+      "path": "dist/date-time-picker.d.ts",
+      "sha256": "f1f8b321cbbf51ef341c0f37438f380521c29b9d9d5debb71d7396b6ee1d4b16"
+    },
+    {
+      "path": "dist/date-time-range-picker.d.ts",
+      "sha256": "2e13880015f8f4294ac9600a53363e4ccc9d24b808f49c2ed6ad30adfb3b57f3"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "3fca265009d57ea3ab1773954607a63131c318ee50da3c7bfeab0555332b6528"
+    },
+    {
+      "path": "dist/month-picker.d.ts",
+      "sha256": "f19b27f1067e1c3bcde4a5de0860ae022eebce70c110d70e189b745b69191c13"
+    },
+    {
+      "path": "dist/month-range-picker.d.ts",
+      "sha256": "7731e3ef2873edb2c09d5776e6144ce7bb75fcda6c4235f694c6c63ed51f46ed"
+    },
+    {
+      "path": "dist/range-calendar.d.ts",
+      "sha256": "8b68362c019a46b405f414a8199420f039b451525dc52c18dcc39c33828c025c"
+    },
+    {
+      "path": "dist/time-field.d.ts",
+      "sha256": "a8aeca9afc1ea921cc5afc28288a121cbc1440916bc8758242f95109954d64a2"
+    },
+    {
+      "path": "dist/time-range-field.d.ts",
+      "sha256": "085a0d27ffa6691516fe2d7bb1e99de4f4c15c48c4f3d8f61e81c1a8ff7a638b"
+    },
+    {
+      "path": "dist/year-picker.d.ts",
+      "sha256": "788ba15b5dd06a87465d2c97f6c8433ef1a119d81b52ea535df8b6aa850671e1"
+    },
+    {
+      "path": "dist/year-range-picker.d.ts",
+      "sha256": "916f9aae1e51102815dec2433b1aa8642d5310ea688cd6b8c911872674d1319c"
+    }
+  ]
+}

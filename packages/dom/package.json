@@ -342,7 +342,9 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build && node --test --test-concurrency=1 tests/*.test.mjs",
-    "verify": "pnpm run typecheck && pnpm run test",
+    "check:signatures": "node ../../scripts/check-public-signatures.mjs",
+    "update:signatures": "node ../../scripts/update-public-signatures.mjs",
+    "verify": "pnpm run typecheck && pnpm run test && pnpm run check:signatures",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs"
   },
   "dependencies": {

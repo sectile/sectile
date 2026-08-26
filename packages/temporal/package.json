@@ -108,8 +108,10 @@
     "build:verification": "node scripts/build.mjs verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=1 tests/*/*.test.mjs",
+    "check:signatures": "node ../../scripts/check-public-signatures.mjs",
     "check:package": "node scripts/check-package.mjs",
-    "verify": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:package"
+    "update:signatures": "node ../../scripts/update-public-signatures.mjs",
+    "verify": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:signatures && pnpm run check:package"
   },
   "dependencies": {
     "@sectile/core": "workspace:*"
