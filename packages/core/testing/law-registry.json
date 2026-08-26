@@ -1,71 +1,275 @@
 {
   "schemaVersion": 1,
   "laws": [
-    { "id": "SEQ-01", "theory": "sequence", "statement": "indexOf(at(i)) = i" },
-    { "id": "SEQ-02", "theory": "sequence", "statement": "at(indexOf(x)) = x for existing x" },
-    { "id": "SEQ-03", "theory": "sequence", "statement": "at is injective" },
-    { "id": "SEQ-04", "theory": "sequence", "statement": "filter identity" },
-    { "id": "SEQ-05", "theory": "sequence", "statement": "filter composition" },
-    { "id": "SEQ-06", "theory": "sequence", "statement": "movement returns first eligible directional candidate" },
-    { "id": "SEQ-07", "theory": "sequence", "statement": "stop never crosses boundary" },
-    { "id": "SEQ-08", "theory": "sequence", "statement": "wrap never returns current as its own successor" },
-    { "id": "SEQ-09", "theory": "sequence", "statement": "identity renaming commutes with observations" },
-    { "id": "SEQ-10", "theory": "sequence", "statement": "patches preserve array splice and post-removal move semantics" },
-    { "id": "EXT-01", "theory": "extent-index", "statement": "offsets are prefix sums of effective extents" },
-    { "id": "EXT-02", "theory": "extent-index", "statement": "positive extents roundtrip between index and offset" },
-    { "id": "EXT-03", "theory": "extent-index", "statement": "measurement updates preserve untouched extents" },
-    { "id": "EXT-04", "theory": "extent-index", "statement": "splice preserves ordered extent concatenation" },
-    { "id": "EXT-05", "theory": "extent-index", "statement": "extent knowledge kind does not change effective geometry" },
-    { "id": "EXT-06", "theory": "extent-index", "statement": "move preserves extents under post-removal destination semantics" },
-    { "id": "VRT-01", "theory": "virtual-layout", "statement": "render range contains the visible range" },
-    { "id": "VRT-02", "theory": "virtual-layout", "statement": "measurement changes preserve the visible anchor coordinate" },
-    { "id": "VRT-03", "theory": "virtual-layout", "statement": "stale measurement generations cannot mutate layout" },
-    { "id": "VRT-04", "theory": "virtual-layout", "statement": "sequence patches preserve surviving viewport anchors" },
-    { "id": "VRT-05", "theory": "virtual-layout", "statement": "target scrolling is an explicit host command" },
-    { "id": "VRT-06", "theory": "virtual-layout", "statement": "data loading remains a collection-window request" },
-    { "id": "RNG-01", "theory": "range", "statement": "tick/value inverse" },
-    { "id": "RNG-02", "theory": "range", "statement": "clamp idempotence" },
-    { "id": "RNG-03", "theory": "range", "statement": "snap idempotence" },
-    { "id": "RNG-04", "theory": "range", "statement": "snap closure" },
-    { "id": "RNG-05", "theory": "range", "statement": "clamp monotonicity" },
-    { "id": "RNG-06", "theory": "range", "statement": "snap monotonicity under a fixed tie policy" },
-    { "id": "RNG-07", "theory": "range", "statement": "endpoint ratio" },
-    { "id": "RNG-08", "theory": "range", "statement": "ratio/tick roundtrip" },
-    { "id": "RNG-09", "theory": "range", "statement": "O(1) intensional representation" },
-    { "id": "GRD-01", "theory": "grid", "statement": "cell/position inverse" },
-    { "id": "GRD-02", "theory": "grid", "statement": "coordinate injectivity" },
-    { "id": "GRD-03", "theory": "grid", "statement": "row projection order" },
-    { "id": "GRD-04", "theory": "grid", "statement": "column projection order" },
-    { "id": "GRD-05", "theory": "grid", "statement": "axis-only direction" },
-    { "id": "GRD-06", "theory": "grid", "statement": "nearest eligible coordinate" },
-    { "id": "GRD-07", "theory": "grid", "statement": "explicit boundary policy" },
-    { "id": "GRD-08", "theory": "grid", "statement": "no geometry dependence" },
-    { "id": "GRD-09", "theory": "grid", "statement": "identity renaming invariance" },
-    { "id": "TRE-01", "theory": "tree", "statement": "single parent" },
-    { "id": "TRE-02", "theory": "tree", "statement": "acyclic" },
-    { "id": "TRE-03", "theory": "tree", "statement": "total reachability from virtual root" },
-    { "id": "TRE-04", "theory": "tree", "statement": "ordered roots and siblings" },
-    { "id": "TRE-05", "theory": "tree", "statement": "identity uniqueness" },
-    { "id": "TRE-06", "theory": "tree", "statement": "parent/children consistency" },
-    { "id": "TRE-07", "theory": "tree", "statement": "visible uniqueness" },
-    { "id": "TRE-08", "theory": "tree", "statement": "visible preorder subsequence" },
-    { "id": "TRE-09", "theory": "tree", "statement": "ancestor-based visibility" },
-    { "id": "TRE-10", "theory": "tree", "statement": "expansion reconciliation" },
-    { "id": "FRM-01", "theory": "form", "statement": "validation generations increase and reject stale completion" },
-    { "id": "FRM-02", "theory": "form", "statement": "submission results identify the active submission generation" },
-    { "id": "LAY-01", "theory": "layer-stack", "statement": "open layer identities are unique" },
-    { "id": "LAY-02", "theory": "layer-stack", "statement": "nested layers form a contiguous topmost chain" },
-    { "id": "LAY-03", "theory": "layer-stack", "statement": "only the topmost dismissible layer handles dismissal" },
-    { "id": "LAY-04", "theory": "layer-stack", "statement": "ancestor close emits descendant closes in reverse stack order" },
-    { "id": "LAY-05", "theory": "layer-stack", "statement": "the topmost modal defines the interactive stack suffix" },
-    { "id": "WIN-01", "theory": "collection-window", "statement": "at most one generation-bound request is pending" },
-    { "id": "WIN-02", "theory": "collection-window", "statement": "replacement revisions increase strictly" },
-    { "id": "WIN-03", "theory": "collection-window", "statement": "replacement generation matches the pending request" },
-    { "id": "WIN-04", "theory": "collection-window", "statement": "loaded ranges remain inside known totals" },
-    { "id": "WIN-05", "theory": "collection-window", "statement": "a pending request can be resolved only by an explicitly identified generation" },
-    { "id": "ORD-01", "theory": "reorder", "statement": "sequence reorder preserves the identity permutation" },
-    { "id": "ORD-02", "theory": "reorder", "statement": "sequence destinations identify an existing item" },
-    { "id": "ORD-03", "theory": "reorder", "statement": "tree reparenting preserves acyclicity" },
-    { "id": "ORD-04", "theory": "reorder", "statement": "tree placement targets a sibling under the new parent" }
+    {
+      "id": "SEQ-01",
+      "theory": "sequence",
+      "statement": "indexOf(at(i)) = i"
+    },
+    {
+      "id": "SEQ-02",
+      "theory": "sequence",
+      "statement": "at(indexOf(x)) = x for existing x"
+    },
+    {
+      "id": "SEQ-03",
+      "theory": "sequence",
+      "statement": "at is injective"
+    },
+    {
+      "id": "SEQ-04",
+      "theory": "sequence",
+      "statement": "filter identity"
+    },
+    {
+      "id": "SEQ-05",
+      "theory": "sequence",
+      "statement": "filter composition"
+    },
+    {
+      "id": "SEQ-06",
+      "theory": "sequence",
+      "statement": "movement returns first eligible directional candidate"
+    },
+    {
+      "id": "SEQ-07",
+      "theory": "sequence",
+      "statement": "stop never crosses boundary"
+    },
+    {
+      "id": "SEQ-08",
+      "theory": "sequence",
+      "statement": "wrap never returns current as its own successor"
+    },
+    {
+      "id": "SEQ-09",
+      "theory": "sequence",
+      "statement": "identity renaming commutes with observations"
+    },
+    {
+      "id": "SEQ-10",
+      "theory": "sequence",
+      "statement": "patches preserve array splice and post-removal move semantics"
+    },
+    {
+      "id": "RNG-01",
+      "theory": "range",
+      "statement": "tick/value inverse"
+    },
+    {
+      "id": "RNG-02",
+      "theory": "range",
+      "statement": "clamp idempotence"
+    },
+    {
+      "id": "RNG-03",
+      "theory": "range",
+      "statement": "snap idempotence"
+    },
+    {
+      "id": "RNG-04",
+      "theory": "range",
+      "statement": "snap closure"
+    },
+    {
+      "id": "RNG-05",
+      "theory": "range",
+      "statement": "clamp monotonicity"
+    },
+    {
+      "id": "RNG-06",
+      "theory": "range",
+      "statement": "snap monotonicity under a fixed tie policy"
+    },
+    {
+      "id": "RNG-07",
+      "theory": "range",
+      "statement": "endpoint ratio"
+    },
+    {
+      "id": "RNG-08",
+      "theory": "range",
+      "statement": "ratio/tick roundtrip"
+    },
+    {
+      "id": "RNG-09",
+      "theory": "range",
+      "statement": "O(1) intensional representation"
+    },
+    {
+      "id": "GRD-01",
+      "theory": "grid",
+      "statement": "cell/position inverse"
+    },
+    {
+      "id": "GRD-02",
+      "theory": "grid",
+      "statement": "coordinate injectivity"
+    },
+    {
+      "id": "GRD-03",
+      "theory": "grid",
+      "statement": "row projection order"
+    },
+    {
+      "id": "GRD-04",
+      "theory": "grid",
+      "statement": "column projection order"
+    },
+    {
+      "id": "GRD-05",
+      "theory": "grid",
+      "statement": "axis-only direction"
+    },
+    {
+      "id": "GRD-06",
+      "theory": "grid",
+      "statement": "nearest eligible coordinate"
+    },
+    {
+      "id": "GRD-07",
+      "theory": "grid",
+      "statement": "explicit boundary policy"
+    },
+    {
+      "id": "GRD-08",
+      "theory": "grid",
+      "statement": "no geometry dependence"
+    },
+    {
+      "id": "GRD-09",
+      "theory": "grid",
+      "statement": "identity renaming invariance"
+    },
+    {
+      "id": "TRE-01",
+      "theory": "tree",
+      "statement": "single parent"
+    },
+    {
+      "id": "TRE-02",
+      "theory": "tree",
+      "statement": "acyclic"
+    },
+    {
+      "id": "TRE-03",
+      "theory": "tree",
+      "statement": "total reachability from virtual root"
+    },
+    {
+      "id": "TRE-04",
+      "theory": "tree",
+      "statement": "ordered roots and siblings"
+    },
+    {
+      "id": "TRE-05",
+      "theory": "tree",
+      "statement": "identity uniqueness"
+    },
+    {
+      "id": "TRE-06",
+      "theory": "tree",
+      "statement": "parent/children consistency"
+    },
+    {
+      "id": "TRE-07",
+      "theory": "tree",
+      "statement": "visible uniqueness"
+    },
+    {
+      "id": "TRE-08",
+      "theory": "tree",
+      "statement": "visible preorder subsequence"
+    },
+    {
+      "id": "TRE-09",
+      "theory": "tree",
+      "statement": "ancestor-based visibility"
+    },
+    {
+      "id": "TRE-10",
+      "theory": "tree",
+      "statement": "expansion reconciliation"
+    },
+    {
+      "id": "FRM-01",
+      "theory": "form",
+      "statement": "validation generations increase and reject stale completion"
+    },
+    {
+      "id": "FRM-02",
+      "theory": "form",
+      "statement": "submission results identify the active submission generation"
+    },
+    {
+      "id": "LAY-01",
+      "theory": "layer-stack",
+      "statement": "open layer identities are unique"
+    },
+    {
+      "id": "LAY-02",
+      "theory": "layer-stack",
+      "statement": "nested layers form a contiguous topmost chain"
+    },
+    {
+      "id": "LAY-03",
+      "theory": "layer-stack",
+      "statement": "only the topmost dismissible layer handles dismissal"
+    },
+    {
+      "id": "LAY-04",
+      "theory": "layer-stack",
+      "statement": "ancestor close emits descendant closes in reverse stack order"
+    },
+    {
+      "id": "LAY-05",
+      "theory": "layer-stack",
+      "statement": "the topmost modal defines the interactive stack suffix"
+    },
+    {
+      "id": "WIN-01",
+      "theory": "collection-window",
+      "statement": "at most one generation-bound request is pending"
+    },
+    {
+      "id": "WIN-02",
+      "theory": "collection-window",
+      "statement": "replacement revisions increase strictly"
+    },
+    {
+      "id": "WIN-03",
+      "theory": "collection-window",
+      "statement": "replacement generation matches the pending request"
+    },
+    {
+      "id": "WIN-04",
+      "theory": "collection-window",
+      "statement": "loaded ranges remain inside known totals"
+    },
+    {
+      "id": "WIN-05",
+      "theory": "collection-window",
+      "statement": "a pending request can be resolved only by an explicitly identified generation"
+    },
+    {
+      "id": "ORD-01",
+      "theory": "reorder",
+      "statement": "sequence reorder preserves the identity permutation"
+    },
+    {
+      "id": "ORD-02",
+      "theory": "reorder",
+      "statement": "sequence destinations identify an existing item"
+    },
+    {
+      "id": "ORD-03",
+      "theory": "reorder",
+      "statement": "tree reparenting preserves acyclicity"
+    },
+    {
+      "id": "ORD-04",
+      "theory": "reorder",
+      "statement": "tree placement targets a sibling under the new parent"
+    }
   ]
 }

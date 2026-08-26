@@ -1,10 +1,10 @@
 # Package boundary
 
-The pnpm workspace contains the published libraries `@sectile/core`, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`, plus the documentation site. Every workspace project owns its source, build, tests, package contract, and project-specific verification. The repository root only orchestrates recursive project commands, validates workspace boundaries, checks repository documentation, and runs cross-package tests.
+The pnpm workspace contains the published libraries `@sectile/core`, `@sectile/temporal`, `@sectile/virtual`, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`, plus the documentation site. Every workspace project owns its source, build, tests, package contract, and project-specific verification. The repository root only orchestrates recursive project commands, validates workspace boundaries, checks repository documentation, and runs cross-package tests.
 
 Workspace projects may depend on another package only through a declared `workspace:*` dependency and an exported package-name subpath. Relative imports that escape a project, direct imports from another package's `src`, `dist`, or `.verification-dist`, and project scripts that reach into another project are rejected by the workspace boundary gate. This applies equally to libraries under `packages/*` and the documentation site.
 
-For `@sectile/core`, production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public structures live under `src/structures`; promoted composites, text, and revision use public facade files under `src`; state utilities, the editing implementation behind the text facade, reference models, and kernel mechanisms remain non-exported. Verification build input includes mirrored reference models and emits to `.verification-dist`, which is never packaged.
+For `@sectile/core`, production build input is `src/**/*.ts` excluding `src/internal/reference/**/*.ts`. Public structures live under `src/structures`; promoted composites, text, and revision use public facade files under `src`; state utilities, the editing implementation behind the text facade, reference models, and kernel mechanisms remain non-exported. Verification build input includes mirrored reference models and emits to `.verification-dist`, which is never packaged. `@sectile/temporal` owns civil date and wall-clock semantics. `@sectile/virtual` owns extent indexing and layout engines. Both depend only on exported Core subpaths and package only their own `dist` output.
 
 Recurring verification requires these canonical exports:
 

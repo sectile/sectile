@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "evidence": {
+    "EXT-01": "tests/structures/extent-index.test.mjs",
+    "EXT-02": "tests/structures/extent-index.test.mjs",
+    "EXT-03": "tests/structures/extent-index.test.mjs",
+    "EXT-04": "tests/structures/extent-index.test.mjs",
+    "EXT-05": "tests/structures/extent-index.test.mjs",
+    "EXT-06": "tests/structures/extent-index.test.mjs",
+    "VRT-01": "tests/runtime/virtual-layout.test.mjs",
+    "VRT-02": "tests/runtime/virtual-layout.test.mjs",
+    "VRT-03": "tests/runtime/virtual-layout.test.mjs",
+    "VRT-04": "tests/runtime/virtual-layout.test.mjs",
+    "VRT-05": "tests/runtime/virtual-layout.test.mjs",
+    "VRT-06": "tests/runtime/virtual-layout.test.mjs"
+  }
+}

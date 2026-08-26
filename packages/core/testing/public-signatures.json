@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "15a5710012d193ae364e77a56ca794743a346b43e3a9c6a8887dffb559829c77",
+  "fingerprint": "8bb97ab510f517ce955b7c59c35ae4dab753543e7e641ec150c1b7615025e742",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -72,7 +72,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "3c4e65b560be0b69535ef9cf9f2c5c43432ffab96bda8d7429ffbe8cdff3e10f"
+      "sha256": "d01b4b9cdfcf0296e258b3aac4ddf3f5df49666ba9819faa17a0421e793c86dc"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -247,10 +247,6 @@
       "sha256": "dc192cccf0d7d709c117266d3ac1d1db63ef1369299a02a23ce835faf7f346af"
     },
     {
-      "path": "dist/structures/extent-index.d.ts",
-      "sha256": "6d5da6adcaa54d35a5b28255d8ae94611bb3514cf3ee256b8aee4a1294532afd"
-    },
-    {
       "path": "dist/structures/grid.d.ts",
       "sha256": "3e9fdd75823107b774639a5cded3a2ed5957d153c8b734ba40ced33613a67db3"
     },
@@ -317,10 +313,6 @@
     {
       "path": "dist/units.d.ts",
       "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
-    },
-    {
-      "path": "dist/virtual-layout.d.ts",
-      "sha256": "b313821c379824ff0f31a4f94c0966e4bf3f0dfb81032926d05fdae6b50cbb27"
     },
     {
       "path": "dist/window-splitter.d.ts",

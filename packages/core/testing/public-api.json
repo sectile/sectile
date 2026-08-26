@@ -5,7 +5,6 @@
   "requiredSubpaths": [
     ".",
     "./sequence",
-    "./extent-index",
     "./range",
     "./grid",
     "./tree",
@@ -13,7 +12,6 @@
     "./interaction",
     "./adapter-runtime",
     "./collection-window",
-    "./virtual-layout",
     "./layer-stack",
     "./reorder",
     "./form",
@@ -66,7 +64,6 @@
   ],
   "requiredRuntimeSubpaths": [
     "./sequence",
-    "./extent-index",
     "./range",
     "./grid",
     "./tree",
@@ -74,7 +71,6 @@
     "./interaction",
     "./adapter-runtime",
     "./collection-window",
-    "./virtual-layout",
     "./layer-stack",
     "./reorder",
     "./form",
@@ -126,7 +122,6 @@
   ],
   "runtimeTargets": {
     "./sequence": "structures/sequence",
-    "./extent-index": "structures/extent-index",
     "./range": "structures/range",
     "./grid": "structures/grid",
     "./tree": "structures/tree",
@@ -134,7 +129,6 @@
     "./interaction": "interaction",
     "./adapter-runtime": "adapter-runtime",
     "./collection-window": "collection-window",
-    "./virtual-layout": "virtual-layout",
     "./layer-stack": "layer-stack",
     "./reorder": "reorder",
     "./form": "form",

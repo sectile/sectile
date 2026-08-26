@@ -17,12 +17,6 @@ export type {
   TiePolicy,
 } from './shared.js';
 export type { SectileErrorCode } from './error-code.js';
-export type {
-  Extent,
-  ExtentIndex,
-  ExtentIndexOptions,
-  ExtentUpdate,
-} from './structures/extent-index.js';
 export type { SequencePatch } from './structures/sequence.js';
 export type {
   InteractionIntent,
@@ -39,15 +33,6 @@ export type {
   CollectionWindowStateInput,
   CollectionWindowUpdate,
 } from './collection-window.js';
-export type {
-  VirtualLayoutCommand,
-  VirtualLayoutEvent,
-  VirtualLayoutRange,
-  VirtualLayoutState,
-  VirtualLayoutStateInput,
-  VirtualLayoutUpdate,
-  VirtualScrollAlignment,
-} from './virtual-layout.js';
 export type {
   Layer,
   LayerCloseReason,

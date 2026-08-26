@@ -20,6 +20,9 @@ importers:
       '@sectile/terminal':
         specifier: workspace:*
         version: link:packages/terminal
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:packages/virtual
       '@sectile/vue':
         specifier: workspace:*
         version: link:packages/vue
@@ -44,6 +47,9 @@ importers:
       '@sectile/terminal':
         specifier: workspace:*
         version: link:../packages/terminal
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:../packages/virtual
       '@sectile/vue':
         specifier: workspace:*
         version: link:../packages/vue
@@ -85,9 +91,6 @@ importers:
         specifier: ^2.10.0
         version: 2.10.0
     devDependencies:
-      '@chenglou/pretext':
-        specifier: 0.0.8
-        version: 0.0.8
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -139,6 +142,19 @@ importers:
       '@types/node':
         specifier: 26.2.0
         version: 26.2.0
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/virtual:
+    dependencies:
+      '@sectile/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@chenglou/pretext':
+        specifier: 0.0.8
+        version: 0.0.8
       typescript:
         specifier: 7.0.2
         version: 7.0.2

@@ -1,9 +1,9 @@
 /* Law evidence: VRT-01 VRT-02 VRT-03 VRT-04 VRT-05 VRT-06 */
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCollectionWindowState } from '../../.verification-dist/collection-window.js';
-import { createExtentIndex } from '../../.verification-dist/structures/extent-index.js';
-import { createSequence } from '../../.verification-dist/structures/sequence.js';
+import { createCollectionWindowState } from '@sectile/core/collection-window';
+import { createSequence } from '@sectile/core/sequence';
+import { createExtentIndex } from '../../.verification-dist/extent-index.js';
 import {
   applyVirtualLayoutEvent,
   collectionWindowEventForVirtualLayout,

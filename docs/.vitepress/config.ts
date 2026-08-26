@@ -184,6 +184,8 @@ const rootLocaleTheme: DefaultTheme.Config = {
     '/packages/': [
       { text: 'Packages', link: '/packages/' },
       { text: 'Core', link: '/packages/core' },
+      { text: 'Temporal', link: '/packages/temporal' },
+      { text: 'Virtual', link: '/packages/virtual' },
       { text: 'DOM', link: '/packages/dom' },
       { text: 'Terminal', link: '/packages/terminal' },
       { text: 'Vue', link: '/packages/vue' },
@@ -215,6 +217,8 @@ const koLocaleTheme: DefaultTheme.Config = {
     '/ko/packages/': [
       { text: '패키지', link: '/ko/packages/' },
       { text: '코어', link: '/ko/packages/core' },
+      { text: '날짜와 시간', link: '/ko/packages/temporal' },
+      { text: '가상화', link: '/ko/packages/virtual' },
       { text: '브라우저', link: '/ko/packages/dom' },
       { text: '터미널', link: '/ko/packages/terminal' },
       { text: 'Vue', link: '/ko/packages/vue' },

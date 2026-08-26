@@ -38,6 +38,10 @@ function assertPackedDistribution(name, tarball) {
   const contains = (extension) => entries.some((entry) => /^(?:package\/)?dist\//.test(entry) && entry.endsWith(extension));
   assert.equal(contains('.js'), true, `${name} tarball does not contain built JavaScript`);
   assert.equal(contains('.d.ts'), true, `${name} tarball does not contain declarations`);
+  assert.equal(contains('.js.map'), true, `${name} tarball does not contain JavaScript source maps`);
+  assert.equal(contains('.d.ts.map'), true, `${name} tarball does not contain declaration source maps`);
+  assert.equal(entries.some((entry) => /^(?:package\/)?(?:src|tests|benchmarks)\//u.test(entry)), false,
+    `${name} tarball contains development sources`);
 }
 
 function isPublished(name, version) {

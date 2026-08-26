@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "15a5710012d193ae364e77a56ca794743a346b43e3a9c6a8887dffb559829c77",
+    "publicSignatureFingerprint": "8bb97ab510f517ce955b7c59c35ae4dab753543e7e641ec150c1b7615025e742",
     "subpaths": [
       ".",
       "./accordion",
@@ -28,7 +28,6 @@
       "./disclosure",
       "./drawer",
       "./editable",
-      "./extent-index",
       "./feed",
       "./form",
       "./grid",
@@ -71,7 +70,6 @@
       "./tree-grid",
       "./tree-view",
       "./units",
-      "./virtual-layout",
       "./window-splitter"
     ],
     "errorCodes": [
@@ -637,6 +635,6 @@
   ],
   "acceptance": {
     "classification": "breaking",
-    "reason": "move-temporal-semantics-to-dedicated-package"
+    "reason": "move-virtualization-semantics-to-dedicated-package"
   }
 }

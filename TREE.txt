@@ -186,6 +186,7 @@ sectile/
 │   │   ├── consumer-usage.md
 │   │   └── index.md
 │   ├── guide/
+│   │   ├── adapter-authoring.md
 │   │   ├── getting-started.md
 │   │   ├── host-model.md
 │   │   ├── introduction.md
@@ -257,6 +258,7 @@ sectile/
 │   │   │   ├── year-picker.md
 │   │   │   └── year-range-picker.md
 │   │   ├── guide/
+│   │   │   ├── adapter-authoring.md
 │   │   │   ├── getting-started.md
 │   │   │   ├── host-model.md
 │   │   │   ├── introduction.md
@@ -266,7 +268,9 @@ sectile/
 │   │   │   ├── core.md
 │   │   │   ├── dom.md
 │   │   │   ├── index.md
+│   │   │   ├── temporal.md
 │   │   │   ├── terminal.md
+│   │   │   ├── virtual.md
 │   │   │   └── vue.md
 │   │   ├── theory/
 │   │   │   ├── composition.md
@@ -274,17 +278,21 @@ sectile/
 │   │   │   ├── scope.md
 │   │   │   ├── state-and-text.md
 │   │   │   ├── structures.md
-│   │   │   └── transitions.md
+│   │   │   ├── transitions.md
+│   │   │   └── virtualization.md
 │   │   └── index.md
 │   ├── packages/
 │   │   ├── core.md
 │   │   ├── dom.md
 │   │   ├── index.md
+│   │   ├── temporal.md
 │   │   ├── terminal.md
+│   │   ├── virtual.md
 │   │   └── vue.md
 │   ├── performance/
 │   │   ├── complexity.md
-│   │   └── index.md
+│   │   ├── index.md
+│   │   └── virtualization.md
 │   ├── primitives/
 │   │   ├── grid.md
 │   │   ├── index.md
@@ -311,7 +319,8 @@ sectile/
 │   │   ├── scope.md
 │   │   ├── state-and-text.md
 │   │   ├── structures.md
-│   │   └── transitions.md
+│   │   ├── transitions.md
+│   │   └── virtualization.md
 │   ├── env.d.ts
 │   ├── implementation-checklist.md
 │   ├── index.md
@@ -325,22 +334,26 @@ sectile/
 │   │   ├── scripts/
 │   │   │   ├── lib/
 │   │   │   │   ├── public-signatures.mjs
-│   │   │   │   └── repository.mjs
+│   │   │   │   ├── repository.mjs
+│   │   │   │   └── semantic-api.mjs
 │   │   │   ├── build.mjs
 │   │   │   ├── check-acronym-casing.mjs
 │   │   │   ├── check-api-stability.mjs
 │   │   │   ├── check-contracts.mjs
 │   │   │   ├── check-dist-platform-boundary.mjs
+│   │   │   ├── check-import-boundaries.mjs
 │   │   │   ├── check-law-coverage.mjs
 │   │   │   ├── check-layout.mjs
 │   │   │   ├── check-package-footprint.mjs
 │   │   │   ├── check-public-api.mjs
 │   │   │   ├── check-public-signatures.mjs
 │   │   │   ├── check-reproducible-build.mjs
+│   │   │   ├── check-semantic-api.mjs
 │   │   │   ├── check-subpath-imports.mjs
 │   │   │   ├── check-verification.mjs
 │   │   │   ├── update-api-stability.mjs
 │   │   │   ├── update-public-signatures.mjs
+│   │   │   ├── update-semantic-api.mjs
 │   │   │   └── verify-theory.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
@@ -417,13 +430,6 @@ sectile/
 │   │   │   ├── collection-window.ts
 │   │   │   ├── color-picker.ts
 │   │   │   ├── combobox.ts
-│   │   │   ├── date-field.ts
-│   │   │   ├── date-picker.ts
-│   │   │   ├── date-range-field.ts
-│   │   │   ├── date-range-picker.ts
-│   │   │   ├── date-time-field.ts
-│   │   │   ├── date-time-picker.ts
-│   │   │   ├── date-time-range-picker.ts
 │   │   │   ├── dialog.ts
 │   │   │   ├── disclosure.ts
 │   │   │   ├── drawer.ts
@@ -438,8 +444,6 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
-│   │   │   ├── month-picker.ts
-│   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── navigation-menu.ts
 │   │   │   ├── number-field.ts
@@ -448,7 +452,6 @@ sectile/
 │   │   │   ├── popover.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
-│   │   │   ├── range-calendar.ts
 │   │   │   ├── rating.ts
 │   │   │   ├── reorder.ts
 │   │   │   ├── result.ts
@@ -462,8 +465,6 @@ sectile/
 │   │   │   ├── tabs.ts
 │   │   │   ├── tags-input.ts
 │   │   │   ├── text.ts
-│   │   │   ├── time-field.ts
-│   │   │   ├── time-range-field.ts
 │   │   │   ├── timer.ts
 │   │   │   ├── toast.ts
 │   │   │   ├── toggle-button.ts
@@ -473,15 +474,14 @@ sectile/
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
 │   │   │   ├── units.ts
-│   │   │   ├── window-splitter.ts
-│   │   │   ├── year-picker.ts
-│   │   │   └── year-range-picker.ts
+│   │   │   └── window-splitter.ts
 │   │   ├── testing/
 │   │   │   ├── api-stability.json
 │   │   │   ├── law-evidence.json
 │   │   │   ├── law-registry.json
 │   │   │   ├── public-api.json
-│   │   │   └── public-signatures.json
+│   │   │   ├── public-signatures.json
+│   │   │   └── semantic-api.json
 │   │   ├── tests/
 │   │   │   ├── composites/
 │   │   │   │   ├── calendar.reference-law.test.mjs
@@ -490,7 +490,6 @@ sectile/
 │   │   │   │   ├── checked-controls.reference-law.test.mjs
 │   │   │   │   ├── color-picker.test.mjs
 │   │   │   │   ├── combobox.reference-law.test.mjs
-│   │   │   │   ├── date-picker.test.mjs
 │   │   │   │   ├── drawer.reference-law.test.mjs
 │   │   │   │   ├── expansion-controls.reference-law.test.mjs
 │   │   │   │   ├── extended-components.test.mjs
@@ -513,13 +512,10 @@ sectile/
 │   │   │   ├── differential/
 │   │   │   │   └── optimized-differential.test.mjs
 │   │   │   ├── editing/
-│   │   │   │   ├── date-range-field.test.mjs
-│   │   │   │   ├── date-time-field.test.mjs
 │   │   │   │   ├── editable.test.mjs
 │   │   │   │   ├── number-field.test.mjs
 │   │   │   │   ├── quantity-field.test.mjs
-│   │   │   │   ├── text.reference-law.test.mjs
-│   │   │   │   └── time-range-field.test.mjs
+│   │   │   │   └── text.reference-law.test.mjs
 │   │   │   ├── runtime/
 │   │   │   │   ├── adapter-runtime.test.mjs
 │   │   │   │   ├── collection-window.test.mjs
@@ -673,6 +669,43 @@ sectile/
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
 │   │   └── tsconfig.json
+│   ├── temporal/
+│   │   ├── scripts/
+│   │   │   ├── build.mjs
+│   │   │   └── check-package.mjs
+│   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   ├── foundation.ts
+│   │   │   │   └── machine.ts
+│   │   │   ├── date-field.ts
+│   │   │   ├── date-picker.ts
+│   │   │   ├── date-range-field.ts
+│   │   │   ├── date-range-picker.ts
+│   │   │   ├── date-time-field.ts
+│   │   │   ├── date-time-picker.ts
+│   │   │   ├── date-time-range-picker.ts
+│   │   │   ├── index.ts
+│   │   │   ├── month-picker.ts
+│   │   │   ├── month-range-picker.ts
+│   │   │   ├── range-calendar.ts
+│   │   │   ├── time-field.ts
+│   │   │   ├── time-range-field.ts
+│   │   │   ├── year-picker.ts
+│   │   │   └── year-range-picker.ts
+│   │   ├── tests/
+│   │   │   ├── composites/
+│   │   │   │   └── date-picker.test.mjs
+│   │   │   └── editing/
+│   │   │       ├── date-range-field.test.mjs
+│   │   │       ├── date-time-field.test.mjs
+│   │   │       └── time-range-field.test.mjs
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.verify-build.json
 │   ├── terminal/
 │   │   ├── scripts/
 │   │   │   ├── build.mjs
@@ -792,9 +825,42 @@ sectile/
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
 │   │   └── tsconfig.json
+│   ├── virtual/
+│   │   ├── benchmarks/
+│   │   │   └── virtualization.mjs
+│   │   ├── scripts/
+│   │   │   ├── build.mjs
+│   │   │   ├── check-laws.mjs
+│   │   │   └── check-package.mjs
+│   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   ├── foundation.ts
+│   │   │   │   └── machine.ts
+│   │   │   ├── extent-index.ts
+│   │   │   ├── index.ts
+│   │   │   └── virtual-layout.ts
+│   │   ├── testing/
+│   │   │   ├── law-evidence.json
+│   │   │   └── law-registry.json
+│   │   ├── tests/
+│   │   │   ├── runtime/
+│   │   │   │   └── virtual-layout.test.mjs
+│   │   │   └── structures/
+│   │   │       └── extent-index.test.mjs
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.verify-build.json
 │   └── vue/
+│       ├── benchmarks/
+│       │   └── collection-reconciliation.mjs
 │       ├── scripts/
-│       │   └── build.mjs
+│       │   ├── build.mjs
+│       │   ├── check-controlled-reconciliation.mjs
+│       │   └── check-hydration-contract.mjs
 │       ├── src/
 │       │   ├── internal/
 │       │   │   ├── collection.ts
@@ -872,6 +938,9 @@ sectile/
 │       │   ├── window-splitter.ts
 │       │   ├── year-picker.ts
 │       │   └── year-range-picker.ts
+│       ├── testing/
+│       │   ├── controlled-reconciliation.json
+│       │   └── hydration-contract.json
 │       ├── tests/
 │       │   ├── fixtures/
 │       │   │   └── form-nested-mount.mjs

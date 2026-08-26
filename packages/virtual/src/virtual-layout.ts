@@ -1,11 +1,12 @@
-import { createMachineUpdate, type MachineUpdate } from './internal/kernel/machine.js';
-import { fail, ok } from './internal/kernel/foundation.js';
-import { unwrap } from './result.js';
-import type { CollectionWindowEvent, CollectionWindowState } from './collection-window.js';
-import { canRequestCollectionWindow } from './collection-window.js';
-import type { Extent, ExtentIndex, ExtentUpdate } from './structures/extent-index.js';
-import type { Sequence, SequencePatch } from './structures/sequence.js';
-import type { Result, StableID } from './shared.js';
+import { unwrap } from '@sectile/core/result';
+import type { CollectionWindowEvent, CollectionWindowState } from '@sectile/core/collection-window';
+import { canRequestCollectionWindow } from '@sectile/core/collection-window';
+import type { Sequence, SequencePatch } from '@sectile/core/sequence';
+import type { Result, StableID } from '@sectile/core';
+import type { MachineUpdate } from '@sectile/core/revision';
+import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
+import { fail, ok } from './internal/foundation.js';
+import { createMachineUpdate } from './internal/machine.js';
 
 export interface VirtualLayoutRange {
   readonly start: number;
@@ -462,4 +463,4 @@ function transitionFailure<T>(result: Result<T>): Result<never> {
   return fail('transition-rejection', result.error.code, result.error.message, result.error.details);
 }
 
-export type { Result } from './shared.js';
+export type { Result } from '@sectile/core';

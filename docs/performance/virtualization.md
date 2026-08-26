@@ -3,7 +3,7 @@
 Run:
 
 ```sh
-pnpm --filter @sectile/core benchmark:virtualization
+pnpm --filter @sectile/virtual benchmark
 ```
 
 The benchmark uses Pretext 0.0.8 as a same-process arithmetic-layout reference. It prepares text before timing, then measures `layout()` only. Sectile measurements cover a persistent extent index at 100,000 and 1,000,000 items, viewport reduction, a 32-item visible measurement batch, and the combined Pretext-plus-VirtualLayout path. These operations are not identical work, so absolute time and added bookkeeping are more useful than a raw ratio.

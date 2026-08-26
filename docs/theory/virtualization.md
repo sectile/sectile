@@ -31,7 +31,7 @@ When a measurement or sequence patch changes geometry before the first visible i
 4. Apply `set-scroll-offset` before the next paint.
 5. Ignore no commands; reject and discard stale measurement generations.
 
-DOM reads and writes remain outside Core. A host should batch observers, avoid alternating measurement and mutation per item, and coalesce scroll observations to its frame scheduler.
+DOM reads and writes remain outside `@sectile/virtual`. A host should batch observers, avoid alternating measurement and mutation per item, and coalesce scroll observations to its frame scheduler.
 
 ## Domain changes
 

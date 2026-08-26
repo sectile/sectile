@@ -31,7 +31,7 @@ CollectionWindow ── 비동기 데이터 적재만 담당
 4. 다음 paint 전에 `set-scroll-offset` 적용.
 5. 오래된 측정 generation은 폐기.
 
-DOM 읽기와 쓰기는 Core 밖에 둡니다. Host는 observer 결과를 모으고 항목별 읽기·쓰기를 번갈아 하지 않으며, 스크롤 관측을 frame scheduler에서 합칩니다.
+DOM 읽기와 쓰기는 `@sectile/virtual` 밖에 둡니다. Host는 observer 결과를 모으고 항목별 읽기·쓰기를 번갈아 하지 않으며, 스크롤 관측을 frame scheduler에서 합칩니다.
 
 ## Domain 변경
 

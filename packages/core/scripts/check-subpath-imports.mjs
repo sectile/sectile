@@ -12,8 +12,6 @@ try {
   await writeFile(join(directory, 'consumer.mjs'), `
     import * as root from '@sectile/core';
     import { createSequence } from '@sectile/core/sequence';
-    import { createExtentIndex } from '@sectile/core/extent-index';
-    import { createVirtualLayoutState } from '@sectile/core/virtual-layout';
     import { createRange } from '@sectile/core/range';
     import { createGrid } from '@sectile/core/grid';
     import { createTree } from '@sectile/core/tree';
@@ -28,7 +26,7 @@ try {
     import { createTextEditingState } from '@sectile/core/text';
     import { createFormState } from '@sectile/core/form';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createExtentIndex, createVirtualLayoutState, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -37,8 +35,6 @@ try {
   await writeFile(join(directory, 'consumer.ts'), `
     import type { Result, SectileErrorCode } from '@sectile/core';
     import { createSequence, type Sequence } from '@sectile/core/sequence';
-    import { createExtentIndex, type ExtentIndex } from '@sectile/core/extent-index';
-    import { createVirtualLayoutState, type VirtualLayoutState } from '@sectile/core/virtual-layout';
     import { createRange, type QuantizedRange } from '@sectile/core/range';
     import { createGrid, type Grid } from '@sectile/core/grid';
     import { createTree, type Tree } from '@sectile/core/tree';
@@ -52,8 +48,6 @@ try {
     import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
     import { createFormState, type FormState } from '@sectile/core/form';
     const a: Sequence<string> = createSequence(['a']);
-    const extentIndex: ExtentIndex = createExtentIndex([{ kind: 'estimated', value: 20 }]);
-    const virtualLayout: VirtualLayoutState = createVirtualLayoutState(a, extentIndex);
     const b: QuantizedRange = createRange({ origin: '0', step: '1', count: 1 });
     const c: Grid<string> = createGrid([['a']]);
     const d: Tree<string> = createTree([{ id: 'a', parentID: null }]);
@@ -75,7 +69,7 @@ try {
     }
     // @ts-expect-error error codes are a closed contract
     const unknownCode: SectileErrorCode = 'consumer-invented-error';
-    void [a, extentIndex, virtualLayout, b, c, d, e, f, g, h, i, j, k, l, m, n, unknownCode];
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, n, unknownCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -89,7 +83,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 17, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 15, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

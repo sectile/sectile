@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createExtentIndex } from '../../.verification-dist/structures/extent-index.js';
+import { createExtentIndex } from '../../.verification-dist/extent-index.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });

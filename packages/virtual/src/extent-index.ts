@@ -1,6 +1,6 @@
-import { fail, ok, validateSafeCeiling } from '../internal/kernel/foundation.js';
-import { unwrap } from '../result.js';
-import type { Result } from '../shared.js';
+import { unwrap } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
+import { fail, ok, validateMaxItems } from './internal/foundation.js';
 
 export type Extent =
   | { readonly kind: 'exact'; readonly value: number }
@@ -58,7 +58,7 @@ export function tryCreateExtentIndex(
   options: ExtentIndexOptions = {},
 ): Result<ExtentIndex> {
   const maxItems = options.maxItems ?? 1_000_000;
-  const ceilingError = validateSafeCeiling(maxItems, 'maxItems');
+  const ceilingError = validateMaxItems(maxItems);
   if (ceilingError !== null) return { ok: false, error: ceilingError };
   if (extents.length > maxItems) {
     return fail('resource-rejection', 'extent-index-ceiling-exceeded', 'Extent index exceeds maxItems.', {
@@ -452,4 +452,4 @@ function valueOf(extent: Extent): number {
   return extent.kind === 'unknown' ? extent.fallback : extent.value;
 }
 
-export type { Result } from '../shared.js';
+export type { Result } from '@sectile/core';

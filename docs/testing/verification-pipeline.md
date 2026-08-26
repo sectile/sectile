@@ -15,12 +15,12 @@ The runner buffers each stage and prints only the final summary when verificatio
 
 `pnpm verify:theory` delegates to the package that owns the Python theory model. `pnpm verify:reproducible-build` delegates reproducibility checks to every package that declares one. The DOM and terminal packages test their host mappings independently; the root cross-host suite compares more than 160,000 operations through exported package subpaths. Property checks record their seed and run and deterministically shrink a failing trace before reporting its counterexample.
 
-The law registry contains all 37 currently public structure laws. Each law has an evidence file, and the optimized implementation has a separate differential evidence file.
+The Core and Virtual law registries contain 54 interaction laws and 12 virtualization laws. Each law has an evidence file, and the optimized Core implementation has a separate differential evidence file.
 
 Migration-only facts, such as the one-time removal of historical subpaths, are not encoded as permanent negative regression checks.
 
 The component-completeness check is a ratchet. It requires component export parity across
-`@sectile/core`, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`, plus one audited
+the combined Core and Temporal semantic packages, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`, plus one audited
 entry and Core, DOM, terminal, and Vue witness for every semantic family. Existing incomplete
 areas are listed as migration gaps; new public components cannot add such gaps.
 

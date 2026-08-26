@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    { "id": "EXT-01", "theory": "extent-index", "statement": "offsets are prefix sums of effective extents" },
+    { "id": "EXT-02", "theory": "extent-index", "statement": "positive extents roundtrip between index and offset" },
+    { "id": "EXT-03", "theory": "extent-index", "statement": "measurement updates preserve untouched extents" },
+    { "id": "EXT-04", "theory": "extent-index", "statement": "splice preserves ordered extent concatenation" },
+    { "id": "EXT-05", "theory": "extent-index", "statement": "extent knowledge kind does not change effective geometry" },
+    { "id": "EXT-06", "theory": "extent-index", "statement": "move preserves extents under post-removal destination semantics" },
+    { "id": "VRT-01", "theory": "virtual-layout", "statement": "render range contains the visible range" },
+    { "id": "VRT-02", "theory": "virtual-layout", "statement": "measurement changes preserve the visible anchor coordinate" },
+    { "id": "VRT-03", "theory": "virtual-layout", "statement": "stale measurement generations cannot mutate layout" },
+    { "id": "VRT-04", "theory": "virtual-layout", "statement": "sequence patches preserve surviving viewport anchors" },
+    { "id": "VRT-05", "theory": "virtual-layout", "statement": "target scrolling is an explicit host command" },
+    { "id": "VRT-06", "theory": "virtual-layout", "statement": "data loading remains a collection-window request" }
+  ]
+}
