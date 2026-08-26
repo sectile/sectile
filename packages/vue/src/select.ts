@@ -315,6 +315,7 @@ export const SelectItemText = defineComponent({
 
 export const SelectPortal = defineComponent({
   name: 'SectileSelectPortal',
+  inheritAttrs: false,
   props: {
     to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
     disabled: { type: Boolean, default: false },

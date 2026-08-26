@@ -192,6 +192,25 @@ test('deferred portals resolve targets rendered later in the same mount tick', a
   }
 });
 
+test('provider and portal roots ignore scoped-style fallthrough attributes without warnings', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({
+    render: () => h('div', null, [
+      h(DialogRoot, { modal: false }, { default: () => h(DialogPortal, { disabled: true, 'data-v-popup': '' }, { default: () => h('span', null, 'Dialog') }) }),
+      h(SelectRoot, { items: [] }, { default: () => h(SelectPortal, { disabled: true, 'data-v-select': '' }, { default: () => h('span', null, 'Select') }) }),
+      h(ToastProvider, { 'data-v-toast-provider': '' }, { default: () => h(ToastPortal, { disabled: true, 'data-v-toast-portal': '' }, { default: () => h('span', null, 'Toast') }) }),
+    ]),
+  });
+  const warnings = [];
+  app.config.warnHandler = (message) => { warnings.push(message); };
+  app.mount(host); await nextTick();
+  try {
+    assert.deepEqual(warnings, []);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
 test('[HYD-02] SSR teleports hydrate Select and Toast without mismatch warnings', async () => {
   const component = {
     render: () => h('div', null, [

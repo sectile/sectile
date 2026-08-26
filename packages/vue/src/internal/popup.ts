@@ -175,6 +175,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
 
   const Root = defineComponent({
     name: `Sectile${pascal(config.scope)}Root`,
+    inheritAttrs: false,
     props: {
       open: { type: Boolean, default: undefined },
       defaultOpen: { type: Boolean, default: false },
@@ -466,6 +467,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   });
   const Portal = defineComponent({
     name: `Sectile${pascal(config.scope)}Portal`,
+    inheritAttrs: false,
     props: {
       to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
       disabled: { type: Boolean, default: false },

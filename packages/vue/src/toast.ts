@@ -44,6 +44,7 @@ const key = Symbol('SectileToastProvider');
 
 export const ToastProvider = defineComponent({
   name: 'SectileToastProvider',
+  inheritAttrs: false,
   props: {
     toasts: { type: Array as PropType<readonly ToastInput<string>[]>, default: undefined },
     initialToasts: { type: Array as PropType<readonly ToastInput<string>[]>, default: () => [] },
@@ -136,6 +137,7 @@ export const ToastProvider = defineComponent({
 
 export const ToastPortal = defineComponent({
   name: 'SectileToastPortal',
+  inheritAttrs: false,
   props: {
     to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
     disabled: { type: Boolean, default: false },

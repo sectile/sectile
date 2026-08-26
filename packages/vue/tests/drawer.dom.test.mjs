@@ -106,3 +106,26 @@ test('Vue drawer trigger opens uncontrolled content', async () => {
     host.remove();
   }
 });
+
+test('Vue drawer root ignores scoped-style fallthrough attributes without fragment warnings', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const warnings = [];
+  const app = createApp({
+    render: () => h(DrawerRoot, { 'data-v-uidrawer': '' }, {
+      default: () => [
+        h(DrawerTrigger, null, { default: () => 'Open filters' }),
+        h(DrawerContent, null, { default: () => 'Filters' }),
+      ],
+    }),
+  });
+  app.config.warnHandler = (message) => { warnings.push(message); };
+  app.mount(host);
+  try {
+    await nextTick();
+    assert.deepEqual(warnings, []);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
