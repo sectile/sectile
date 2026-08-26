@@ -204,19 +204,28 @@ function createState<ID extends StableID>(state: MasonryLayoutState<ID>): Masonr
 
 function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>): MasonryInternals<ID> {
   const laneEnds = Array<number>(state.laneCount).fill(0);
+  const heap = state.placementPolicy === 'shortest' && state.laneCount > 16
+    ? Array.from({ length: state.laneCount }, (_, lane) => ({ lane, end: 0 }))
+    : null;
   const lanes = Array.from({ length: state.laneCount }, () => [] as LogicalPlacement<ID>[]);
   const placements: LogicalPlacement<ID>[] = [];
   const byID = new Map<ID, LogicalPlacement<ID>>();
+  const extents = state.extents.slice(0, state.extents.size);
+  if (extents === null) throw new Error('Internal invariant breach: masonry extent range is invalid.');
   for (let index = 0; index < state.domain.size; index += 1) {
     const id = state.domain.at(index)!;
-    const extent = extentValue(state.extents.extentAt(index)!);
-    const lane = state.placementPolicy === 'round-robin' ? index % state.laneCount : shortestLane(laneEnds);
+    const extent = extentValue(extents[index]!);
+    const lane = state.placementPolicy === 'round-robin' ? index % state.laneCount : heap === null ? shortestLane(laneEnds) : heap[0]!.lane;
     const start = laneEnds[lane]!;
     const placement = Object.freeze({ id, index, lane, start, extent });
     placements.push(placement);
     lanes[lane]!.push(placement);
     byID.set(id, placement);
     laneEnds[lane] = start + extent + state.itemGap;
+    if (heap !== null) {
+      heap[0] = { lane, end: laneEnds[lane]! };
+      restoreHeap(heap);
+    }
   }
   let contentMain = 0;
   for (const end of laneEnds) contentMain = Math.max(contentMain, end === 0 ? 0 : end - state.itemGap);
@@ -281,6 +290,21 @@ function shortestLane(laneEnds: readonly number[]): number {
   for (let lane = 1; lane < laneEnds.length; lane += 1) if (laneEnds[lane]! < laneEnds[selected]!) selected = lane;
   return selected;
 }
+
+function restoreHeap(heap: { lane: number; end: number }[]): void {
+  let index = 0;
+  while (true) {
+    const left = index * 2 + 1;
+    if (left >= heap.length) return;
+    const right = left + 1;
+    let child = right < heap.length && compareLane(heap[right]!, heap[left]!) < 0 ? right : left;
+    if (compareLane(heap[index]!, heap[child]!) <= 0) return;
+    [heap[index], heap[child]] = [heap[child]!, heap[index]!];
+    index = child;
+  }
+}
+
+function compareLane(left: { lane: number; end: number }, right: { lane: number; end: number }): number { return left.end - right.end || left.lane - right.lane; }
 
 function anchorRect<ID extends StableID>(state: MasonryLayoutState<ID>, anchor: VirtualAnchor<ID> | null | undefined): VirtualRect | null {
   return anchor === null || anchor === undefined ? null : masonryRectAt(state, anchor.id);
