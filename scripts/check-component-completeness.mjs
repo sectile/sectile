@@ -10,11 +10,13 @@ const packagePaths = [
   'packages/dom/package.json',
   'packages/terminal/package.json',
 ];
+const vuePackagePath = 'packages/vue/package.json';
 const supportSubpaths = new Set([
-  'package.json', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
+  'package.json', 'adapter-runtime', 'sequence', 'range', 'tree', 'result', 'revision', 'interaction',
   'collection-window', 'layer-stack', 'reorder',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
 ]);
+const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
 const migrationBaselineIDs = new Set([
   'accordion', 'alert-dialog', 'calendar', 'carousel', 'checkbox', 'combobox',
   'dialog', 'disclosure', 'feed', 'grid', 'listbox', 'menu', 'menu-button',
@@ -54,6 +56,15 @@ for (const { path, components } of packageComponents.slice(1)) {
     `${path} must expose the same component subpaths as @sectile/core.`);
 }
 
+const vuePackage = JSON.parse(await readFile(vuePackagePath, 'utf8'));
+const vueComponents = Object.keys(vuePackage.exports)
+  .filter((subpath) => subpath.startsWith('./'))
+  .map((subpath) => subpath.slice(2))
+  .filter((subpath) => !supportSubpaths.has(subpath) && !vueOnlySubpaths.has(subpath))
+  .sort();
+assert.deepEqual(vueComponents, canonical,
+  `${vuePackagePath} must project every public component subpath from @sectile/core.`);
+
 const entries = manifest.components;
 assert.ok(Array.isArray(entries), 'Component completeness entries must be an array.');
 const ids = entries.map((entry) => entry.id);
@@ -61,7 +72,7 @@ assert.equal(new Set(ids).size, ids.length, 'Component completeness IDs must be 
 assert.deepEqual([...ids].sort(), canonical,
   'Every public component subpath must have exactly one completeness entry.');
 
-assert.equal(evidence.schemaVersion, 1, 'Unsupported component evidence schema.');
+assert.equal(evidence.schemaVersion, 2, 'Unsupported component evidence schema.');
 const declaredFamilies = [...new Set(entries.map((entry) => entry.family))].sort();
 assert.deepEqual(Object.keys(evidence.families).sort(), declaredFamilies,
   'Every semantic component family must have exactly one evidence entry.');
@@ -78,7 +89,7 @@ for (const family of declaredFamilies) {
         `${family}: unsupported ${host} host input ${input}.`);
     }
   }
-  for (const witness of ['core', 'dom', 'terminal']) {
+  for (const witness of ['core', 'dom', 'terminal', 'vue']) {
     const paths = familyEvidence[witness];
     assert.ok(Array.isArray(paths) && paths.length > 0,
       `${family}: ${witness} evidence must name at least one test file.`);
@@ -94,7 +105,7 @@ for (const family of declaredFamilies) {
 for (const support of ['layer-stack', 'reorder']) {
   const supportEvidence = evidence.support?.[support];
   assert.ok(supportEvidence !== undefined, `${support} host evidence must be declared.`);
-  for (const host of ['core', 'dom', 'terminal']) {
+  for (const host of ['core', 'dom', 'terminal', 'vue']) {
     const paths = supportEvidence[host];
     assert.ok(Array.isArray(paths) && paths.length > 0,
       `${support}: ${host} evidence must name at least one test file.`);
