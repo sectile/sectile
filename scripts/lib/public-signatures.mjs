@@ -51,7 +51,7 @@ async function collectDeclarationClosure(packageRoot, entries) {
     for (const match of content.matchAll(/(?:from\s+|import\s*\()\s*['"](\.[^'"]+)['"]/gu)) {
       const specifier = match[1];
       if (specifier === undefined) continue;
-      const dependency = declarationPath(path, specifier);
+      const dependency = declarationPath(packageRoot, path, specifier);
       if (!visited.has(dependency)) pending.push(dependency);
     }
   }
@@ -66,13 +66,13 @@ function normalizeDeclarationTarget(target) {
   return normalized;
 }
 
-function declarationPath(importer, specifier) {
+function declarationPath(packageRoot, importer, specifier) {
   const target = specifier.endsWith('.js')
     ? `${specifier.slice(0, -3)}.d.ts`
     : specifier.endsWith('.d.ts')
       ? specifier
       : `${specifier}.d.ts`;
-  const path = relative(process.cwd(), resolve(process.cwd(), dirname(importer), target))
+  const path = relative(packageRoot, resolve(packageRoot, dirname(importer), target))
     .split(sep)
     .join('/');
   if (!path.startsWith('dist/')) throw new Error(`Public declaration escapes dist: ${importer} -> ${specifier}`);
