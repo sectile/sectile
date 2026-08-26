@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "selection": "prune-to-domain-order",
+    "current": "retain-eligible-else-selected-else-first-eligible",
+    "disabledSelection": "preserve",
+    "controlledNotification": "emit-update-proposal",
+    "ownership": "owner-must-apply"
+  },
+  "evidence": [
+    "tests/collection-reconciliation.test.mjs",
+    "tests/dynamic-collections.dom.test.mjs",
+    "tests/listbox.test.mjs",
+    "tests/tree-view.dom.test.mjs",
+    "tests/date-pickers.dom.test.mjs",
+    "tests/combobox.dom.test.mjs"
+  ],
+  "excluded": [
+    { "source": "src/menu.ts", "reason": "collection highlight is internal; controlled state only owns popup open state" }
+  ],
+  "components": [
+    { "id": "accordion", "source": "src/accordion.ts", "models": ["modelValue"] },
+    { "id": "calendar", "source": "src/calendar.ts", "models": ["modelValue", "highlightedValue"] },
+    { "id": "carousel", "source": "src/carousel.ts", "models": ["modelValue"] },
+    { "id": "combobox", "source": "src/combobox.ts", "models": ["modelValue"] },
+    { "id": "grid", "source": "src/grid.ts", "models": ["modelValue", "highlightedValue"], "dependentResets": ["editMode"] },
+    { "id": "listbox", "source": "src/listbox.ts", "models": ["modelValue"] },
+    { "id": "radio-group", "source": "src/radio-group.ts", "models": ["modelValue"] },
+    { "id": "select", "source": "src/select.ts", "models": ["modelValue"] },
+    { "id": "tabs", "source": "src/tabs.ts", "models": ["modelValue"] },
+    { "id": "toggle-group", "source": "src/toggle-group.ts", "models": ["modelValue"] },
+    { "id": "toolbar", "source": "src/toolbar.ts", "models": ["modelValue"] },
+    { "id": "tree-grid", "source": "src/tree-grid.ts", "models": ["modelValue", "expandedValue", "highlightedValue"], "dependentResets": ["editMode"] },
+    { "id": "tree-view", "source": "src/tree-view.ts", "models": ["modelValue", "expandedValues", "highlightedValue"] }
+  ]
+}
