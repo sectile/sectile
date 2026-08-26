@@ -1,4 +1,8 @@
 export type SectileErrorCode =
+  | 'extent-index-ceiling-exceeded'
+  | 'extent-index-splice-invalid'
+  | 'extent-index-update-invalid'
+  | 'extent-invalid'
   | 'accordion-collapse-forbidden'
   | 'accordion-cursor-outside-domain'
   | 'accordion-open-item-required'

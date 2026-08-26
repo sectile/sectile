@@ -31,6 +31,11 @@
       "import": "./dist/structures/sequence.js",
       "default": "./dist/structures/sequence.js"
     },
+    "./extent-index": {
+      "types": "./dist/structures/extent-index.d.ts",
+      "import": "./dist/structures/extent-index.js",
+      "default": "./dist/structures/extent-index.js"
+    },
     "./range": {
       "types": "./dist/structures/range.d.ts",
       "import": "./dist/structures/range.js",
@@ -389,6 +394,7 @@
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=1 tests/*/*.test.mjs",
     "benchmark": "pnpm run build && node benchmarks/structures.mjs",
+    "benchmark:virtualization": "pnpm --silent run build && node benchmarks/virtualization.mjs",
     "verify:theory": "node scripts/verify-theory.mjs",
     "verify:reproducible-build": "node scripts/check-reproducible-build.mjs",
     "check:contracts": "node scripts/check-contracts.mjs",
@@ -410,6 +416,7 @@
     "verify": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:contracts && pnpm run check:public-api && pnpm run check:api-stability && pnpm run check:signatures && pnpm run check:semantic-api && pnpm run check:laws && pnpm run check:naming && pnpm run check:layout && pnpm run check:import-boundaries && pnpm run check:dist-boundary && pnpm run check:subpaths && pnpm run check:package && pnpm run check:verification"
   },
   "devDependencies": {
+    "@chenglou/pretext": "0.0.8",
     "typescript": "7.0.2"
   },
   "dependencies": {

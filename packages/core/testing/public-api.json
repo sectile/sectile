@@ -5,6 +5,7 @@
   "requiredSubpaths": [
     ".",
     "./sequence",
+    "./extent-index",
     "./range",
     "./grid",
     "./tree",
@@ -66,6 +67,7 @@
   ],
   "requiredRuntimeSubpaths": [
     "./sequence",
+    "./extent-index",
     "./range",
     "./grid",
     "./tree",
@@ -126,6 +128,7 @@
   ],
   "runtimeTargets": {
     "./sequence": "structures/sequence",
+    "./extent-index": "structures/extent-index",
     "./range": "structures/range",
     "./grid": "structures/grid",
     "./tree": "structures/tree",

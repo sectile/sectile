@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "evidence": {
+    "EXT-01": "tests/structures/extent-index.test.mjs",
+    "EXT-02": "tests/structures/extent-index.test.mjs",
+    "EXT-03": "tests/structures/extent-index.test.mjs",
+    "EXT-04": "tests/structures/extent-index.test.mjs",
+    "EXT-05": "tests/structures/extent-index.test.mjs",
     "SEQ-01": "tests/structures/sequence.reference-law.test.mjs",
     "SEQ-02": "tests/structures/sequence.reference-law.test.mjs",
     "SEQ-03": "tests/structures/sequence.reference-law.test.mjs",

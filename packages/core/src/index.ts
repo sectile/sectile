@@ -18,6 +18,12 @@ export type {
 } from './shared.js';
 export type { SectileErrorCode } from './error-code.js';
 export type {
+  Extent,
+  ExtentIndex,
+  ExtentIndexOptions,
+  ExtentUpdate,
+} from './structures/extent-index.js';
+export type {
   InteractionIntent,
   InteractionState,
   InteractionStateInput,

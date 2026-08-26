@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "865b1e1f665646191e1ee227503c2fd7d3cb313a3d02ec8b87370c8d6e38fa9f",
+  "fingerprint": "8fc6c6ccf72725b8435ae9ccc46f9f0926606b7b952ae33a9cbb229f606a879a",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -88,7 +88,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "43e4d811879f203fefac9627f120edefae4fcf7a751fffb3c0edf8f2a6c67185"
+      "sha256": "98ed0bd99dfad75947b7695060aa719c15cfd6de3ea3aeda3ce82ec9c84ad12a"
     },
     {
       "path": "dist/feed.d.ts",
@@ -100,7 +100,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "f7df3012c736fd9b41c1e0487cc3bf2705671b753585e8f8ed6164e427afdaed"
+      "sha256": "9814398fba359f11d970697d613148cebb10d17dc7c4805b5279af5aceb6be02"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -285,6 +285,10 @@
     {
       "path": "dist/stepper.d.ts",
       "sha256": "dc192cccf0d7d709c117266d3ac1d1db63ef1369299a02a23ce835faf7f346af"
+    },
+    {
+      "path": "dist/structures/extent-index.d.ts",
+      "sha256": "b9f94956407401c356f4d11b4f996af979fe6fdf9ca227d66a4ab9a720b7f16d"
     },
     {
       "path": "dist/structures/grid.d.ts",
