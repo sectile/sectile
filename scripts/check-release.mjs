@@ -3,11 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
+import { resolveExpectedReleaseTag } from './lib/release.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const packageDirectories = publishedPackageDirectories;
 const expectedNames = packageDirectories.map((directory) => `@sectile/${directory}`);
-const expectedTag = process.argv[2] ?? process.env.GITHUB_REF_NAME;
+const expectedTag = resolveExpectedReleaseTag(process.argv[2], process.env);
 const expectedRepository = process.env.GITHUB_REPOSITORY;
 const semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const rootLicense = await readFile(join(root, 'LICENSE'), 'utf8');

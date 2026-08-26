@@ -42,12 +42,12 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
-      - name: Require a main-branch release commit
+      - name: Load current release tooling from a main-branch release commit
         run: |
           git fetch origin main --tags
           git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}"
           git merge-base --is-ancestor "refs/tags/${RELEASE_TAG}^{commit}" origin/main
-          git restore --source=origin/main -- scripts/verify.mjs
+          git restore --source=origin/main -- scripts/verify.mjs scripts/publish-packages.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm ${{ matrix.verification }}
       - if: matrix.node == '24.x'

@@ -93,7 +93,7 @@ const versions = new Set(packages.map(({ manifest }) => manifest.version));
 assert.equal(versions.size, 1, 'package versions must be synchronized');
 const version = packages[0].manifest.version;
 if (!packOnly) assert.notEqual(version, '0.0.0', 'prepare the initial package version before publishing');
-run('node', packOnly ? ['scripts/check-release.mjs'] : ['scripts/check-release.mjs', `v${version}`]);
+run('node', ['scripts/check-release.mjs', `v${version}`]);
 if (tarballDirectory === undefined) {
   run('pnpm', [
     '--recursive',

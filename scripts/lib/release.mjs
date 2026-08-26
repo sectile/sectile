@@ -27,6 +27,21 @@ export function parseStableVersion(version) {
   return match.slice(1).map(Number);
 }
 
+export function resolveExpectedReleaseTag(explicitTag, environment) {
+  if (typeof explicitTag === 'string' && explicitTag !== '') return explicitTag;
+  if (typeof environment.RELEASE_TAG === 'string' && environment.RELEASE_TAG !== '') {
+    return environment.RELEASE_TAG;
+  }
+  if (
+    environment.GITHUB_REF_TYPE === 'tag'
+    && typeof environment.GITHUB_REF_NAME === 'string'
+    && environment.GITHUB_REF_NAME !== ''
+  ) {
+    return environment.GITHUB_REF_NAME;
+  }
+  return undefined;
+}
+
 export function bumpVersion(version, bump) {
   const [major, minor, patch] = parseStableVersion(version);
   if (bump === 'major') return `${major + 1}.0.0`;

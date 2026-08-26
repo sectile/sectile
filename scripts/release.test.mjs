@@ -14,6 +14,7 @@ import {
   prependChangelog,
   recommendBump,
   releaseBumpChoices,
+  resolveExpectedReleaseTag,
 } from './lib/release.mjs';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 
@@ -32,10 +33,39 @@ test('includes every public workspace package in releases', () => {
   assert.deepEqual([...publishedPackageDirectories].sort(), publicDirectories);
 });
 
+test('release retries load current verification and packaging tooling', () => {
+  const workflow = readFileSync(join(root, '.github/workflows/release.yml'), 'utf8');
+  assert.match(
+    workflow,
+    /git restore --source=origin\/main -- scripts\/verify\.mjs scripts\/publish-packages\.mjs/u,
+  );
+});
+
 test('allows synchronized and fast-forwardable local release branches', () => {
   assert.equal(classifyReleaseBranch('same', 'same', true), 'synchronized');
   assert.equal(classifyReleaseBranch('local-ahead', 'remote', true), 'ahead');
   assert.equal(classifyReleaseBranch('local-diverged', 'remote', false), 'blocked');
+});
+
+test('does not mistake a workflow dispatch branch for a release tag', () => {
+  assert.equal(resolveExpectedReleaseTag(undefined, {
+    GITHUB_REF_NAME: 'main',
+    GITHUB_REF_TYPE: 'branch',
+    RELEASE_TAG: 'v0.6.0',
+  }), 'v0.6.0');
+  assert.equal(resolveExpectedReleaseTag(undefined, {
+    GITHUB_REF_NAME: 'main',
+    GITHUB_REF_TYPE: 'branch',
+  }), undefined);
+  assert.equal(resolveExpectedReleaseTag(undefined, {
+    GITHUB_REF_NAME: 'v0.6.0',
+    GITHUB_REF_TYPE: 'tag',
+  }), 'v0.6.0');
+  assert.equal(resolveExpectedReleaseTag('v0.7.0', {
+    GITHUB_REF_NAME: 'main',
+    GITHUB_REF_TYPE: 'branch',
+    RELEASE_TAG: 'v0.6.0',
+  }), 'v0.7.0');
 });
 
 test('recommends major for a breaking subject or body', () => {
