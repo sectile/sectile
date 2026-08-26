@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "f43d4a351568912fb14e01d970d90cf32ff2dafc232eaa978309065531b467f0",
+  "fingerprint": "0ea881acb6ae49096da7f093027f5fa01b04f8f389c665b6213e76076cbb30a9",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -88,7 +88,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "f0e77bc83a07fe6dfe4967e3bda49754c03873d28c860a463652458311e40442"
+      "sha256": "368b153343391c1353db07128f4737b39b5abbc16df9b51dd3b7bfeacbb7c6f2"
     },
     {
       "path": "dist/feed.d.ts",
@@ -100,7 +100,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "ea18e59ed31772c83675aac591daadd3989bcd8a65d317a69cdf239dedfac063"
+      "sha256": "f283b357c28087a80d6d40cad37b041b1e774ab9a7634e379d703a2e58a2ec3d"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -288,7 +288,7 @@
     },
     {
       "path": "dist/structures/extent-index.d.ts",
-      "sha256": "b9f94956407401c356f4d11b4f996af979fe6fdf9ca227d66a4ab9a720b7f16d"
+      "sha256": "6d5da6adcaa54d35a5b28255d8ae94611bb3514cf3ee256b8aee4a1294532afd"
     },
     {
       "path": "dist/structures/grid.d.ts",
@@ -365,6 +365,10 @@
     {
       "path": "dist/units.d.ts",
       "sha256": "5373966eca43a488d75709e525518d1e73c9622713ccd1e95b62b0f98b24c452"
+    },
+    {
+      "path": "dist/virtual-layout.d.ts",
+      "sha256": "b313821c379824ff0f31a4f94c0966e4bf3f0dfb81032926d05fdae6b50cbb27"
     },
     {
       "path": "dist/window-splitter.d.ts",

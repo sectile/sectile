@@ -71,6 +71,11 @@
       "import": "./dist/collection-window.js",
       "default": "./dist/collection-window.js"
     },
+    "./virtual-layout": {
+      "types": "./dist/virtual-layout.d.ts",
+      "import": "./dist/virtual-layout.js",
+      "default": "./dist/virtual-layout.js"
+    },
     "./layer-stack": {
       "types": "./dist/layer-stack.d.ts",
       "import": "./dist/layer-stack.js",

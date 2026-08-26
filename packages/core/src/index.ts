@@ -40,6 +40,15 @@ export type {
   CollectionWindowUpdate,
 } from './collection-window.js';
 export type {
+  VirtualLayoutCommand,
+  VirtualLayoutEvent,
+  VirtualLayoutRange,
+  VirtualLayoutState,
+  VirtualLayoutStateInput,
+  VirtualLayoutUpdate,
+  VirtualScrollAlignment,
+} from './virtual-layout.js';
+export type {
   Layer,
   LayerCloseReason,
   LayerDismissReason,

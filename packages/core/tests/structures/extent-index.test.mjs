@@ -32,6 +32,13 @@ test('EXT-04: extent splice matches ordered array semantics across chunk boundar
   assert.deepEqual(reference.map((_value, item) => index.extentAt(item).value), reference);
 });
 
+test('EXT-06: extent moves use post-removal destinations without changing geometry', () => {
+  const before = createExtentIndex([1, 2, 3, 4, 5].map(exact));
+  const after = before.move(1, 3, 2).value;
+  assert.deepEqual(Array.from({ length: 5 }, (_, item) => after.extentAt(item).value), [1, 4, 5, 2, 3]);
+  assert.equal(after.totalExtent, before.totalExtent);
+});
+
 test('extent index remains equivalent to a flat model through deterministic edits', () => {
   let values = Array.from({ length: 500 }, (_, index) => (index % 31) + 1);
   let index = createExtentIndex(values.map(exact));

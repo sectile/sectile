@@ -150,6 +150,7 @@ const theorySidebar: DefaultTheme.SidebarItem[] = [
   { text: 'State and text', link: '/theory/state-and-text' },
   { text: 'Transitions', link: '/theory/transitions' },
   { text: 'Composition', link: '/theory/composition' },
+  { text: 'Virtualization', link: '/theory/virtualization' },
   { text: 'Scope and guarantees', link: '/theory/scope' },
 ];
 
@@ -159,6 +160,7 @@ const koTheorySidebar: DefaultTheme.SidebarItem[] = [
   { text: '상태와 텍스트', link: '/ko/theory/state-and-text' },
   { text: '상태 전이', link: '/ko/theory/transitions' },
   { text: '조합 원리', link: '/ko/theory/composition' },
+  { text: '가상화', link: '/ko/theory/virtualization' },
   { text: '보장 범위', link: '/ko/theory/scope' },
 ];
 

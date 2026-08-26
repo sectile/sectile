@@ -24,6 +24,7 @@ export interface ExtentIndex {
   indexAtOffset(offset: number): number | null;
   update(updates: readonly ExtentUpdate[]): Result<ExtentIndex>;
   splice(start: number, deleteCount: number, inserted?: readonly Extent[]): Result<ExtentIndex>;
+  move(from: number, to: number, count?: number): Result<ExtentIndex>;
 }
 
 type Node = Leaf | Branch;
@@ -83,6 +84,9 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
       deleteCount: number,
       inserted: readonly Extent[] = [],
     ): Result<ExtentIndex> => spliceIndex(root, maxItems, start, deleteCount, inserted),
+    move: (from: number, to: number, count = 1): Result<ExtentIndex> => (
+      moveIndex(root, maxItems, from, to, count)
+    ),
   });
 }
 
@@ -142,6 +146,40 @@ function spliceIndex(
   const [before, remainder] = split(root, start);
   const [, after] = split(remainder, deleteCount);
   return ok(createIndex(join(join(before, build(validated.value)), after), maxItems));
+}
+
+function moveIndex(
+  root: Node | null,
+  maxItems: number,
+  from: number,
+  to: number,
+  count: number,
+): Result<ExtentIndex> {
+  const size = root?.size ?? 0;
+  if (
+    !Number.isSafeInteger(from)
+    || !Number.isSafeInteger(to)
+    || !Number.isSafeInteger(count)
+    || from < 0
+    || count < 0
+    || from > size
+    || count > size - from
+    || to < 0
+    || to > size - count
+  ) {
+    return fail(
+      'transition-rejection',
+      'extent-index-move-invalid',
+      'Extent move must identify a valid source and post-removal destination.',
+      { from, to, count, size },
+    );
+  }
+  if (root === null || count === 0 || from === to) return ok(createIndex(root, maxItems));
+  const [before, remainder] = split(root, from);
+  const [moved, after] = split(remainder, count);
+  const withoutMoved = join(before, after);
+  const [destinationBefore, destinationAfter] = split(withoutMoved, to);
+  return ok(createIndex(join(join(destinationBefore, moved), destinationAfter), maxItems));
 }
 
 function extentAt(root: Node | null, index: number): Extent | null {

@@ -1,6 +1,6 @@
 # 코어
 
-`@sectile/core`에는 실행 환경과 무관한 컴포넌트 규칙과 순서, 범위, 격자, 계층, 선택, 펼침, 현재 위치, 텍스트 편집의 기본 구조가 들어 있습니다.
+`@sectile/core`에는 실행 환경과 무관한 컴포넌트 규칙과 순서, 범위, 격자, 계층, 선택, 펼침, 현재 위치, 텍스트 편집, 동적 크기 가상화의 기본 구조가 들어 있습니다.
 
 <HostInstall />
 
@@ -9,6 +9,8 @@
 ```ts
 import * as listbox from '@sectile/core/listbox'
 ```
+
+가상화는 `Sequence`, `ExtentIndex`, `SequencePatch`, `CollectionWindow`를 조합하며 host 렌더링을 직접 소유하지 않습니다. 자세한 내용은 [가상화 계약](../theory/virtualization.md)을 참고합니다.
 
 코어는 브라우저, 터미널, Vue, 스타일에 의존하지 않습니다.
 

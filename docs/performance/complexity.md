@@ -6,6 +6,11 @@
 | range | `O(1)` storage | exact tick/value/ratio `O(1)` arithmetic | `O(1)` |
 | grid | `O(rows × columns)` dense input | `cellAt O(1)`, `positionOf expected O(1)` | `O(axis length)` |
 | tree | `O(n)` | parent/children/depth expected `O(1)` | visible projection `O(n)` worst case |
+| extent index | `O(n)` | offset/index lookup `O(log n)` | batch update `O(m log n)`, persistent splice/move `O(log n + m)` |
+
+VirtualLayout reduces viewport changes in `O(log n)` and reports ranges without scanning the logical domain. A measurement batch touching `m` items costs `O(m log n)` and path-copies only affected tree paths. `SequencePatch` lets geometry consume splice and move changes incrementally; applying the same patch to the public `Sequence` identity owner still materializes and validates its `O(n)` snapshot.
+
+See the [virtualization benchmark](virtualization.md) for same-runner Pretext comparison and 100k/1m observations.
 
 ## Dynamic collection reconciliation
 

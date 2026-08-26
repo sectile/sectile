@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "f43d4a351568912fb14e01d970d90cf32ff2dafc232eaa978309065531b467f0",
+    "publicSignatureFingerprint": "0ea881acb6ae49096da7f093027f5fa01b04f8f389c665b6213e76076cbb30a9",
     "subpaths": [
       ".",
       "./accordion",
@@ -83,6 +83,7 @@
       "./tree-grid",
       "./tree-view",
       "./units",
+      "./virtual-layout",
       "./window-splitter",
       "./year-picker",
       "./year-range-picker"
@@ -222,6 +223,7 @@
       "empty-unit-registry",
       "endpoint-off-lattice",
       "extent-index-ceiling-exceeded",
+      "extent-index-move-invalid",
       "extent-index-splice-invalid",
       "extent-index-update-invalid",
       "extent-invalid",
@@ -593,7 +595,14 @@
       "unsupported-number-field-event",
       "unsupported-terminal-key",
       "unsupported-terminal-text-input",
-      "unsupported-time-field-event"
+      "unsupported-time-field-event",
+      "virtual-layout-domain-mismatch",
+      "virtual-layout-generation-exhausted",
+      "virtual-layout-geometry-invalid",
+      "virtual-layout-inserted-extents-mismatch",
+      "virtual-layout-measurement-stale",
+      "virtual-layout-scroll-target-invalid",
+      "virtual-layout-window-mismatch"
     ]
   },
   "defaults": [
@@ -641,7 +650,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "replace-reorder-array-command-with-sequence-patch"
+    "classification": "contract-impact-reviewed",
+    "reason": "add-dynamic-virtual-layout-contract"
   }
 }

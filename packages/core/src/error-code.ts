@@ -1,5 +1,6 @@
 export type SectileErrorCode =
   | 'extent-index-ceiling-exceeded'
+  | 'extent-index-move-invalid'
   | 'extent-index-splice-invalid'
   | 'extent-index-update-invalid'
   | 'extent-invalid'
@@ -504,4 +505,11 @@ export type SectileErrorCode =
   | 'unsupported-number-field-event'
   | 'unsupported-terminal-key'
   | 'unsupported-terminal-text-input'
-  | 'unsupported-time-field-event';
+  | 'unsupported-time-field-event'
+  | 'virtual-layout-domain-mismatch'
+  | 'virtual-layout-generation-exhausted'
+  | 'virtual-layout-geometry-invalid'
+  | 'virtual-layout-inserted-extents-mismatch'
+  | 'virtual-layout-measurement-stale'
+  | 'virtual-layout-scroll-target-invalid'
+  | 'virtual-layout-window-mismatch';
