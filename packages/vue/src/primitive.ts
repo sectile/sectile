@@ -67,7 +67,11 @@ export function renderPrimitive(
   slots: Slots,
 ): VNodeChild {
   const children = slots['default']?.() ?? [];
-  if (!props.asChild) return h(props.as, attributes, children);
+  if (!props.asChild) {
+    return typeof props.as === 'string'
+      ? h(props.as, attributes, children)
+      : h(props.as, attributes, slots);
+  }
   return adoptSingleElement(children, guardAdoptedEventHandlers(attributes));
 }
 

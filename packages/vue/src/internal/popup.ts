@@ -15,7 +15,6 @@ import {
   type Component,
   type ComputedRef,
   type PropType,
-  type ShallowRef,
   type SlotsType,
   type VNodeChild,
 } from 'vue';
@@ -117,6 +116,8 @@ export interface PopupRootProps {
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
+type PopupElementPart = 'trigger' | 'anchor' | 'arrow' | 'overlay' | 'handle' | 'content';
+
 interface PopupContext {
   readonly open: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
@@ -127,18 +128,9 @@ interface PopupContext {
   readonly contentID: string;
   readonly titleID: string;
   readonly descriptionID: string;
-  readonly trigger: ShallowRef<HTMLElement | undefined>;
-  readonly anchor: ShallowRef<HTMLElement | undefined>;
-  readonly arrow: ShallowRef<HTMLElement | undefined>;
-  readonly overlay: ShallowRef<HTMLElement | undefined>;
-  readonly handle: ShallowRef<HTMLElement | undefined>;
-  readonly content: ShallowRef<HTMLElement | undefined>;
   readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
   readonly strategy: ComputedRef<Strategy>;
-  registerContent(element?: HTMLElement): void;
-  connect(): void;
-  scheduleConnect(): void;
-  disconnect(): void;
+  registerElement(part: PopupElementPart, element?: HTMLElement): void;
   activateTrigger(event?: Event): void;
   deactivateTrigger(event?: Event): void;
   close(): void;
@@ -298,6 +290,15 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           if (!destroyed) connect();
         });
       };
+      const elements = { trigger, anchor, arrow, overlay, handle, content };
+      const registerElement = (part: PopupElementPart, element?: HTMLElement): void => {
+        const target = elements[part];
+        if (target.value === element) return;
+        target.value = element;
+        if (part === 'content') positioned.value = config.positioned !== true;
+        if (content.value === undefined) disconnect();
+        else scheduleConnect();
+      };
       const activateTrigger = (event?: Event): void => {
         if (event?.defaultPrevented === true || connection.value !== undefined || props.disabled || localOpen.value) return;
         if (!controlled) localOpen.value = true;
@@ -331,12 +332,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         disconnect();
       });
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, unmountOnExit, positioned: computed(() => positioned.value), label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side, strategy,
-        registerContent: (element) => {
-          if (element !== content.value) positioned.value = config.positioned !== true;
-          content.value = element;
-        },
-        connect, scheduleConnect, disconnect, activateTrigger, deactivateTrigger,
+        open, disabled, modal, unmountOnExit, positioned: computed(() => positioned.value), label, contentID, titleID, descriptionID, side, strategy,
+        registerElement, activateTrigger, deactivateTrigger,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
       });
@@ -350,7 +347,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Trigger');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.trigger.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
+        elementRef: (element: unknown) => { root.registerElement('trigger', element instanceof HTMLElement ? element : undefined); },
         ...(config.triggerMode === 'click'
           ? { onClick: root.activateTrigger }
           : { onFocus: root.activateTrigger, onBlur: root.deactivateTrigger, onMouseenter: root.activateTrigger, onMouseleave: root.deactivateTrigger }),
@@ -380,9 +377,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           elementRef: (candidate: unknown) => {
             const node = candidate instanceof HTMLElement ? candidate : undefined;
             element.value = node;
-            root.registerContent(node);
-            if (node === undefined) root.disconnect();
-            else root.scheduleConnect();
+            root.registerElement('content', node);
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
           style: config.positioned === true ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
@@ -402,7 +397,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Anchor');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.anchor.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
+        elementRef: (element: unknown) => { root.registerElement('anchor', element instanceof HTMLElement ? element : undefined); },
         'data-scope': config.scope, 'data-part': 'anchor',
       }), slots);
     },
@@ -414,7 +409,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Arrow');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.arrow.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
+        elementRef: (element: unknown) => { root.registerElement('arrow', element instanceof HTMLElement ? element : undefined); },
         'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'arrow',
       }), slots);
     },
@@ -429,7 +424,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       return (): VNodeChild => {
         if (root.unmountOnExit.value && !present.value) return null;
         return h(Primitive, mergeProps(attrs, {
-          as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.overlay.value = node; root.scheduleConnect(); }, hidden: !present.value, 'aria-hidden': 'true',
+          as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.registerElement('overlay', node); }, hidden: !present.value, 'aria-hidden': 'true',
           'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
           'data-side': config.directional === true ? root.side.value : undefined,
           'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
@@ -444,7 +439,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Handle');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (candidate: unknown) => { root.handle.value = candidate instanceof HTMLElement ? candidate : undefined; root.scheduleConnect(); },
+        elementRef: (candidate: unknown) => { root.registerElement('handle', candidate instanceof HTMLElement ? candidate : undefined); },
         'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'handle',
         'data-state': root.open.value ? 'open' : 'closed',
         'data-side': config.directional === true ? root.side.value : undefined,

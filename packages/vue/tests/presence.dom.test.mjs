@@ -6,12 +6,13 @@ const browserWindow = new Window({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow, document: browserWindow.document, Node: browserWindow.Node,
   Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement,
-  HTMLButtonElement: browserWindow.HTMLButtonElement, SVGElement: browserWindow.SVGElement,
+  HTMLButtonElement: browserWindow.HTMLButtonElement, HTMLInputElement: browserWindow.HTMLInputElement,
+  SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event, MutationObserver: browserWindow.MutationObserver,
   getComputedStyle: browserWindow.getComputedStyle.bind(browserWindow),
 });
 
-const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
+const { createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
@@ -19,6 +20,16 @@ const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, Sel
 const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../dist/popover.js');
 const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../dist/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
+
+const PopupSurface = defineComponent({
+  name: 'PopupSurface',
+  inheritAttrs: false,
+  setup(_props, { attrs, expose, slots }) {
+    const element = shallowRef(null);
+    expose({ element });
+    return () => h('div', { ...attrs, ref: element }, slots.default?.());
+  },
+});
 
 test('dialog keeps closed content present until its exit motion completes', async () => {
   const host = document.createElement('div'); document.body.append(host); const open = ref(false);
@@ -75,6 +86,37 @@ test('dialog emits a cancellable interact-outside event for its overlay', async 
     assert.equal(outsideCalls, 1); assert.equal(open.value, true);
     overlay.dispatchEvent(new browserWindow.PointerEvent('pointerdown', { bubbles: true, composed: true })); await nextTick();
     assert.equal(outsideCalls, 2); assert.equal(open.value, false);
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
+test('component-backed popup parts keep their connection and focus across reactive slot updates', async () => {
+  const host = document.createElement('div'); document.body.append(host); const query = ref(''); const surfaceKey = ref(0);
+  const app = createApp({ render: () => h(DialogRoot, { defaultOpen: true, modal: false }, { default: () => h(DialogContent, { as: PopupSurface, key: surfaceKey.value }, {
+    default: () => [
+      h(DialogClose, null, { default: () => 'Close' }),
+      h('input', { value: query.value }),
+    ],
+  }) }) });
+  const warnings = [];
+  app.config.warnHandler = (message) => { warnings.push(message); };
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const input = host.querySelector('input'); const content = host.querySelector('[data-part="content"]');
+    assert.ok(input instanceof HTMLInputElement); assert.ok(content instanceof HTMLElement);
+    input.focus(); assert.equal(document.activeElement, input);
+    query.value = 'a'; await nextTick(); await nextTick();
+    assert.equal(host.querySelector('[data-part="content"]'), content);
+    assert.equal(document.activeElement, input);
+    assert.deepEqual(warnings, []);
+
+    surfaceKey.value += 1; await nextTick(); await nextTick();
+    const replacement = host.querySelector('[data-part="content"]'); const close = host.querySelector('[data-part="close"]');
+    assert.ok(replacement instanceof HTMLElement); assert.ok(close instanceof HTMLButtonElement);
+    assert.notEqual(replacement, content);
+    assert.equal(document.activeElement, close);
   } finally {
     app.unmount(); host.remove();
   }
