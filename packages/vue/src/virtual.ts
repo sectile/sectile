@@ -98,7 +98,7 @@ export interface UseVirtualizerReturn<
 export type VirtualizerItemSize = 'none' | 'width' | 'height' | 'both';
 
 export interface VirtualizerRootProps {
-  readonly state: object;
+  readonly defaultState: object;
   readonly strategy: VirtualLayoutStrategy<object, string, unknown, unknown>;
   readonly overscan?: number | Partial<VirtualInsets>;
   readonly initialViewport?: VirtualRect;
@@ -292,7 +292,7 @@ export const VirtualizerRoot = defineComponent({
   name: 'SectileVirtualizerRoot',
   inheritAttrs: false,
   props: {
-    state: { type: Object as PropType<object>, required: true },
+    defaultState: { type: Object as PropType<object>, required: true },
     strategy: {
       type: Object as PropType<
         VirtualLayoutStrategy<object, string, unknown, unknown>
@@ -320,7 +320,7 @@ export const VirtualizerRoot = defineComponent({
     asChild: { type: Boolean, default: false },
   },
   emits: {
-    'update:state': (_state: object): boolean => true,
+    stateChange: (_state: object): boolean => true,
     planChange: (_plan: VirtualLayoutPlan<string>): boolean => true,
     error: (_error: Parameters<VirtualizerErrorHandler>[0]): boolean => true,
   },
@@ -328,7 +328,7 @@ export const VirtualizerRoot = defineComponent({
     default: (props: VirtualizerRootSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, expose, slots }) {
-    const state = shallowRef(props.state);
+    const state = shallowRef(props.defaultState);
     const virtualizer = useVirtualizer({
       state,
       strategy: props.strategy,
@@ -338,7 +338,7 @@ export const VirtualizerRoot = defineComponent({
         : { initialViewport: props.initialViewport }),
       ...(props.measure === undefined ? {} : { measure: props.measure }),
       onStateChange: (value) => {
-        emit('update:state', value);
+        emit('stateChange', value);
       },
       onPlanChange: (value) => {
         emit('planChange', value);
@@ -347,10 +347,18 @@ export const VirtualizerRoot = defineComponent({
         emit('error', error);
       },
     });
+    let constructionWarningShown = false;
     watch(
-      () => props.state,
-      (value) => {
-        state.value = value;
+      () => [props.strategy, props.measure, props.initialViewport] as const,
+      (value, previous) => {
+        if (
+          constructionWarningShown
+          || value.every((item, index) => Object.is(item, previous[index]))
+        ) return;
+        constructionWarningShown = true;
+        console.warn(
+          '[Sectile] VirtualizerRoot strategy, measure, and initialViewport are construction-time options. Remount the root to change them.',
+        );
       },
       { flush: 'sync' },
     );

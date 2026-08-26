@@ -202,11 +202,12 @@ const measure = createAxisMeasurementResolver('vertical')
 
 <template>
   <VirtualizerRoot
-    v-model:state="layout"
+    :default-state="layout"
     class="virtual-listbox"
     :strategy="linearLayoutStrategy"
     :measure="measure"
     :overscan="240"
+    @state-change="layout = $event"
     v-slot="{ placements, scrollTo }"
   >
     <ListboxRoot
@@ -241,7 +242,9 @@ const measure = createAxisMeasurementResolver('vertical')
 
 `size="width"`는 cross axis 너비만 고정하므로 item 높이는 content에 따라 달라지고 측정할 수 있습니다. 가로 layout은 보통 `size="height"`를 사용합니다. 크기가 고정된 2차원 region은 `both`, 응용 프로그램이 크기를 소유하면 기본값 `none`을 사용합니다.
 
-Generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. SSR plan이 필요하면 결정적인 `initialViewport`를 전달합니다. 생략할 경우 서버 viewport를 추측하지 않고 mount 뒤에 초기 window를 렌더링합니다.
+`VirtualizerRoot`는 `defaultState`로 초기화한 뒤 현재 layout state를 소유하고, 확정된 state마다 `stateChange`를 보냅니다. Frame 내부 측정 제안을 부모가 먼저 수락하지 않아도 anchor 보정을 끝낼 수 있습니다. Mount된 layout은 슬롯 method로 변경하고, layout 자체를 교체하려면 root를 다시 mount합니다.
+
+`strategy`, `measure`, `initialViewport`는 생성 시점 option입니다. Mount된 root에서 바꾸면 경고를 내고 활성 connection은 교체하지 않습니다. `overscan`은 반응형으로 유지됩니다. 완전한 generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. Composable의 `state` ref와 `overscan` source는 반응형이고 strategy와 host integration callback은 connection마다 고정됩니다. SSR plan이 필요하면 결정적인 `initialViewport`를 전달합니다. 생략할 경우 서버 viewport를 추측하지 않고 mount 뒤에 초기 window를 렌더링합니다.
 
 ## SSR과 hydration 계약
 

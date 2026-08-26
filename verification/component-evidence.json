@@ -14,6 +14,16 @@
       "dom": ["packages/dom/tests/reorder.test.mjs"],
       "terminal": ["packages/terminal/tests/reorder.test.mjs"],
       "vue": ["packages/vue/tests/structural-controls.test.mjs"]
+    },
+    "virtual": {
+      "virtual": [
+        "packages/virtual/tests/runtime/linear-layout.test.mjs",
+        "packages/virtual/tests/runtime/masonry-layout.test.mjs",
+        "packages/virtual/tests/runtime/spatial-layout.test.mjs",
+        "packages/virtual/tests/runtime/track-grid-layout.test.mjs"
+      ],
+      "dom": ["packages/dom/tests/virtual.test.mjs"],
+      "vue": ["packages/vue/tests/virtual.dom.test.mjs"]
     }
   },
   "families": {

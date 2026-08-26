@@ -106,10 +106,15 @@ for (const family of declaredFamilies) {
   }
 }
 
-for (const support of ['layer-stack', 'reorder']) {
+const supportHosts = {
+  'layer-stack': ['core', 'dom', 'terminal', 'vue'],
+  reorder: ['core', 'dom', 'terminal', 'vue'],
+  virtual: ['virtual', 'dom', 'vue'],
+};
+for (const [support, hosts] of Object.entries(supportHosts)) {
   const supportEvidence = evidence.support?.[support];
   assert.ok(supportEvidence !== undefined, `${support} host evidence must be declared.`);
-  for (const host of ['core', 'dom', 'terminal', 'vue']) {
+  for (const host of hosts) {
     const paths = supportEvidence[host];
     assert.ok(Array.isArray(paths) && paths.length > 0,
       `${support}: ${host} evidence must name at least one test file.`);
@@ -118,6 +123,7 @@ for (const support of ['layer-stack', 'reorder']) {
         `${support}: missing ${host} evidence ${path}.`);
     }
   }
+  if (support === 'virtual') continue;
   for (const host of ['dom', 'terminal']) {
     const inputs = supportEvidence.hostInputs?.[host];
     assert.ok(Array.isArray(inputs) && inputs.length > 0,

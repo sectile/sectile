@@ -202,11 +202,12 @@ const measure = createAxisMeasurementResolver('vertical')
 
 <template>
   <VirtualizerRoot
-    v-model:state="layout"
+    :default-state="layout"
     class="virtual-listbox"
     :strategy="linearLayoutStrategy"
     :measure="measure"
     :overscan="240"
+    @state-change="layout = $event"
     v-slot="{ placements, scrollTo }"
   >
     <ListboxRoot
@@ -241,7 +242,9 @@ const measure = createAxisMeasurementResolver('vertical')
 
 `size="width"` fixes only the cross-axis width; the item height remains content-driven and observable. Horizontal layouts normally use `size="height"`. Fixed two-dimensional regions may use `both`, while application-owned sizing uses the default `none`.
 
-Use `useVirtualizer` directly when generic types, manual grid-track measurements, custom RTL coordinates, or geometry mutations must stay available to application code. Pass a deterministic `initialViewport` to produce an SSR plan. If it is omitted, the initial window renders after mount instead of guessing a server viewport.
+`VirtualizerRoot` owns its current layout state after `defaultState` initializes it and reports each committed state through `stateChange`. The parent does not have to accept a frame-local measurement proposal before anchor correction can finish. Use the slot methods to mutate the mounted layout, or remount the root to replace it.
+
+`strategy`, `measure`, and `initialViewport` are construction-time options; changing them on a mounted root produces a warning and does not replace the active connection. `overscan` remains reactive. Use `useVirtualizer` directly when full generic types, manual grid-track measurements, custom RTL coordinates, or geometry mutations must stay available to application code. Its `state` ref and `overscan` source are reactive; strategy and host integration callbacks are fixed for each connection. Pass a deterministic `initialViewport` to produce an SSR plan. If it is omitted, the initial window renders after mount instead of guessing a server viewport.
 
 ## SSR and hydration contract
 
