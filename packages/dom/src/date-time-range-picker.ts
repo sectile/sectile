@@ -3,7 +3,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/temporal/date-time-field';
-import { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerMonthValue } from '@sectile/temporal/date-picker';
+import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
 import {
   applyDateTimeRangePickerEvent,
   tryCreateDateTimeRangePickerState,
@@ -64,7 +64,7 @@ export interface DateTimeRangePickerConnection {
   getSnapshot(): RevisionSnapshot<DateTimeRangePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
-  getYear(): readonly (readonly DatePickerMonthValue[])[];
+  getYear(): readonly (readonly CalendarMonthValue[])[];
   syncControlledValues(values: DateTimeRangePickerControlledValues): Result<RevisionSnapshot<DateTimeRangePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DateTimeRangePickerEvent): boolean;
@@ -245,16 +245,16 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
-    return createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn);
+    return createCalendarMonth(state.view, this.options.policies?.date?.weekStartsOn);
   }
 
   public getWeek(): readonly DateValue[] {
     const state = this.getSnapshot().state.calendar;
-    return createDatePickerWeek(state.highlighted, this.options.policies?.date?.weekStartsOn);
+    return createCalendarWeek(state.highlighted, this.options.policies?.date?.weekStartsOn);
   }
 
-  public getYear(): readonly (readonly DatePickerMonthValue[])[] {
-    return createDatePickerYear(this.getSnapshot().state.calendar.view.year);
+  public getYear(): readonly (readonly CalendarMonthValue[])[] {
+    return createCalendarYear(this.getSnapshot().state.calendar.view.year);
   }
 
   public syncControlledValues(
@@ -292,12 +292,12 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public setCellAttributes(element: HTMLElement, value: DateValue): void {
     const state = this.getSnapshot().state;
-    element.dataset['datePickerId'] = datePickerID(value);
+    element.dataset['datePickerId'] = calendarID(value);
     element.setAttribute('role', 'gridcell');
     element.setAttribute('aria-selected', String(isSelected(state, value)));
     setDatePickerCellAvailability(
       element,
-      isDatePickerValueAvailable(value, this.options.policies?.date),
+      isCalendarValueAvailable(value, this.options.policies?.date),
     );
     element.tabIndex = compareDateValues(state.calendar.highlighted, value) === 0 ? 0 : -1;
   }

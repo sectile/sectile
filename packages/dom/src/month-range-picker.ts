@@ -7,4 +7,4 @@ export type {
   DateRangePickerControlledValues as MonthRangePickerControlledValues,
   DateRangePickerOptions as MonthRangePickerOptions,
 } from './date-range-picker.js';
-export { createDatePickerYear as createMonthRangePickerYear } from './date-picker.js';
+export { createCalendarYear as createMonthRangePickerYear } from './date-picker.js';

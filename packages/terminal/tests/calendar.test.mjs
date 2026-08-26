@@ -1,87 +1,46 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
-import { createGrid } from '@sectile/core/grid';
-import {
-  createCalendar,
-  tryCreateCalendar,
-  createCalendarController,
-  toCalendarEffect,
-  toCalendarEvent,
-} from '../dist/calendar.js';
+import { formatDateValue } from '@sectile/temporal/date-field';
+import { createCalendar, toCalendarEvent } from '../dist/calendar.js';
 
-test('terminal calendar facade constructs the grid and owns page requests', () => {
-  const pages = [];
+test('terminal calendar navigates and selects across month boundaries', () => {
   let updates = 0;
   const connection = createCalendar({
-    rows: [['a', 'b'], ['c', 'd']],
-    defaultHighlightedValue: 'a',
-    onPageRequest: (request) => pages.push(request),
+    defaultHighlightedValue: date(2024, 1, 31),
     onUpdate: () => { updates += 1; },
   });
-  assert.equal(connection.grid.columnCount, 2);
-  assert.equal(connection.handleKeyboardInput({ key: 'page-down' }), true);
-  assert.equal(connection.handleKeyboardInput({ key: 'tab' }), false);
-  assert.deepEqual(pages, [{ direction: 1, from: 'a' }]);
-  assert.equal(updates, 1);
-
-  const invalid = tryCreateCalendar({ rows: [['a'], ['a']] });
-  assert.equal(invalid.ok, false);
+  assert.equal(connection.getMonth().length, 6);
+  assert.equal(connection.handleKeyboardInput({ key: 'right' }), true);
+  assert.equal(formatDateValue(connection.getSnapshot().state.highlighted), '2024-02-01');
+  assert.equal(connection.handleKeyboardInput({ key: 'enter' }), true);
+  assert.equal(formatDateValue(connection.getSnapshot().state.value), '2024-02-01');
+  assert.equal(updates, 2);
 });
 
-test('terminal keys map onto calendar semantic events', () => {
-  assert.equal(toCalendarEvent({ key: 'left' }), 'left');
-  assert.equal(toCalendarEvent({ key: 'down' }), 'down');
-  assert.equal(toCalendarEvent({ key: 'space' }), 'select');
-  assert.equal(toCalendarEvent({ key: 'page-up' }), 'previous-page');
-  assert.equal(toCalendarEvent({ key: 'page-down' }), 'next-page');
+test('terminal keys map to calendar units including week edges and shifted years', () => {
+  assert.equal(toCalendarEvent({ key: 'left' }), 'previous-day');
+  assert.equal(toCalendarEvent({ key: 'down' }), 'next-week');
+  assert.equal(toCalendarEvent({ key: 'home' }), 'start-of-week');
+  assert.equal(toCalendarEvent({ key: 'end' }), 'end-of-week');
+  assert.equal(toCalendarEvent({ key: 'page-up' }), 'previous-month');
+  assert.equal(toCalendarEvent({ key: 'page-down', shiftKey: true }), 'next-year');
   assert.equal(toCalendarEvent({ key: 'tab' }), null);
-});
-
-test('terminal calendar commands project into highlight and page effects', () => {
-  assert.deepEqual(toCalendarEffect({ type: 'focus', id: 'a' }), {
-    type: 'move-highlight',
-    id: 'a',
-  });
-  assert.deepEqual(toCalendarEffect({ type: 'request-page', direction: -1, from: null }), {
-    type: 'request-page',
-    direction: -1,
-    from: null,
-  });
 });
 
 test('terminal calendar supports mixed controlled state', () => {
   const values = [];
-  const controller = unwrap(createCalendarController({
-    grid: grid(),
+  const connection = createCalendar({
     value: null,
-    defaultHighlightedValue: 'a',
-    onValueChange(change) {
-      values.push(change);
-    },
-  }));
-  const moved = controller.handleKeyboardInput({ key: 'right' });
-  assert.equal(moved.ok, true);
-  assert.equal(moved.snapshot.state.cursor.current, 'b');
-  const selected = controller.handleKeyboardInput({ key: 'enter' });
-  assert.equal(selected.ok, true);
-  assert.deepEqual(selected.snapshot.state.selection.selected, []);
-  assert.deepEqual(values, [{ value: 'b', previousValue: null }]);
-  assert.deepEqual(
-    unwrap(controller.syncControlledValues({ value: 'b' })).state.selection.selected,
-    ['b'],
-  );
+    defaultHighlightedValue: date(2024, 1, 31),
+    onValueChange: (value) => values.push(value === null ? null : formatDateValue(value)),
+  });
+  connection.handleKeyboardInput({ key: 'right' });
+  assert.equal(formatDateValue(connection.getSnapshot().state.highlighted), '2024-02-01');
+  connection.handleKeyboardInput({ key: 'enter' });
+  assert.equal(connection.getSnapshot().state.value, null);
+  assert.deepEqual(values, ['2024-02-01']);
+  connection.update({ value: date(2024, 2, 1) });
+  assert.equal(formatDateValue(connection.getSnapshot().state.value), '2024-02-01');
 });
 
-test('unsupported terminal calendar input is failure-atomic', () => {
-  const controller = unwrap(createCalendarController({ grid: grid() }));
-  const initial = controller.getSnapshot();
-  const result = controller.handleKeyboardInput({ key: 'tab' });
-  assert.equal(result.ok, false);
-  assert.equal(result.snapshot, initial);
-  assert.deepEqual(result.commands, []);
-});
-
-function grid() {
-  return createGrid([['a', 'b'], ['c', 'd']]);
-}
+function date(year, month, day) { return Object.freeze({ year, month, day }); }

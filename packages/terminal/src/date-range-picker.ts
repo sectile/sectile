@@ -2,7 +2,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, formatDateValue, type DateRange, type DateValue } from '@sectile/temporal/date-field';
-import { createDatePickerMonth, type DatePickerEvent, type DatePickerPolicies } from '@sectile/temporal/date-picker';
+import { createCalendarMonth } from '@sectile/temporal/calendar';
+import type { DatePickerEvent, DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { applyDateRangePickerEvent, tryCreateDateRangePickerState, type DateRangePickerCommand, type DateRangePickerEvent, type DateRangePickerState } from '@sectile/temporal/date-range-picker';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
@@ -23,7 +24,7 @@ function construct(options: DateRangePickerOptions): Result<DateRangePickerConne
 class TerminalDateRangePicker implements DateRangePickerConnection {
   readonly options: DateRangePickerOptions; readonly runtime: SemanticController<DateRangePickerState, DateRangePickerEvent, DateRangePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   public constructor(options: DateRangePickerOptions, runtime: SemanticController<DateRangePickerState, DateRangePickerEvent, DateRangePickerCommand>, controls: { value: boolean; highlighted: boolean; open: boolean }) { this.options = options; this.runtime = runtime; this.controls = controls; }
-  public getSnapshot(): RevisionSnapshot<DateRangePickerState> { return this.runtime.getSnapshot(); } public getMonth(): readonly (readonly DateValue[])[] { const state = this.getSnapshot().state.calendar; return createDatePickerMonth(state.view, this.options.policies?.weekStartsOn); }
+  public getSnapshot(): RevisionSnapshot<DateRangePickerState> { return this.runtime.getSnapshot(); } public getMonth(): readonly (readonly DateValue[])[] { const state = this.getSnapshot().state.calendar; return createCalendarMonth(state.view, this.options.policies?.weekStartsOn); }
   public syncControlledValues(values: DateRangePickerControlledValues): Result<RevisionSnapshot<DateRangePickerState>> { if (this.controls.value !== (values.value !== undefined) || this.controls.highlighted !== (values.highlightedValue !== undefined) || this.controls.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date range picker values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const highlighted = this.controls.highlighted ? values.highlightedValue as DateValue : state.calendar.highlighted; const result = this.runtime.replace(tryCreateDateRangePickerState({ value: this.controls.value ? values.value as DateRange | null : state.value, anchor: state.anchor, calendar: { highlighted, view: { year: highlighted.year, month: highlighted.month }, viewMode: state.calendar.viewMode, open: this.controls.open ? values.open as boolean : state.calendar.open } })); if (result.ok) this.options.onUpdate?.(); return result; }
   public handleEvent(event: DateRangePickerEvent): boolean { const result = this.runtime.handle(event); if (result.ok) this.options.onUpdate?.(); return result.ok; }
   public handleKeyboardInput(input: TerminalKeyboardInput): boolean { const event: DatePickerEvent | null = toDatePickerEvent(input); return event !== null && this.handleEvent(event); }

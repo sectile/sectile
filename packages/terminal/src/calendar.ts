@@ -1,379 +1,178 @@
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
-import type { Result, SectileError, StableID } from '@sectile/core';
-import {
-  tryCreateInteractionState,
-  requireInteraction,
-  type InteractionState,
-} from '@sectile/core/interaction';
+import type { Result } from '@sectile/core';
+import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyCalendarEvent,
+  createCalendarMonth,
+  createCalendarWeek,
+  createCalendarYear,
   tryCreateCalendarState,
   type CalendarCommand,
   type CalendarEvent,
+  type CalendarMonthValue,
   type CalendarPolicies,
   type CalendarState,
-} from '@sectile/core/calendar';
-import { tryCreateGrid, type Grid } from '@sectile/core/grid';
-import {
-  tryCreateRevisionSnapshot,
-  rejectRevisionInput,
-  type RevisionResult,
-  type RevisionSnapshot,
-} from '@sectile/core/revision';
-import { applyControllerEvent, synchronizeControllerState } from '@sectile/core/adapter-runtime';
+} from '@sectile/temporal/calendar';
+import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import type { TerminalKeyboardInput } from './keyboard.js';
 
-export type KeyboardInput = TerminalKeyboardInput;
+export type { CalendarPolicies } from '@sectile/temporal/calendar';
+export type { DateValue } from '@sectile/temporal/date-field';
 
-export type CalendarEffect<ID extends StableID = StableID> =
-  | { readonly type: 'move-highlight'; readonly id: ID }
-  | { readonly type: 'request-page'; readonly direction: -1 | 1; readonly from: ID | null };
-
-export interface CalendarValueChangeDetails<ID extends StableID = StableID> {
-  readonly value: ID | null;
-  readonly previousValue: ID | null;
-}
-
-export interface CalendarHighlightChangeDetails<ID extends StableID = StableID> {
-  readonly value: ID | null;
-  readonly previousValue: ID | null;
-}
-
-export interface CalendarControllerOptions<ID extends StableID = StableID> {
-  readonly grid: Grid<ID>;
+export interface CalendarOptions {
+  readonly policies?: CalendarPolicies;
+  readonly value?: DateValue | null;
+  readonly defaultValue?: DateValue | null;
+  readonly highlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue;
   readonly disabled?: boolean;
-  readonly policies?: CalendarPolicies<ID>;
-  readonly value?: ID | null;
-  readonly defaultValue?: ID | null;
-  readonly highlightedValue?: ID | null;
-  readonly defaultHighlightedValue?: ID | null;
-  readonly onValueChange?: (change: CalendarValueChangeDetails<ID>) => void;
-  readonly onHighlightedValueChange?: (change: CalendarHighlightChangeDetails<ID>) => void;
-}
-
-export type CalendarControllerValueChangeHandler<ID extends StableID = StableID> = NonNullable<CalendarControllerOptions<ID>['onValueChange']>;
-export type CalendarControllerHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<CalendarControllerOptions<ID>['onHighlightedValueChange']>;
-
-export interface CalendarControlledValues<ID extends StableID = StableID> {
-  readonly value?: ID | null;
-  readonly highlightedValue?: ID | null;
-}
-
-export interface CalendarController<ID extends StableID = StableID> {
-  readonly grid: Grid<ID>;
-  getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
-  syncControlledValues(
-    values: CalendarControlledValues<ID>,
-  ): Result<RevisionSnapshot<CalendarState<ID>>>;
-  handleKeyboardInput(
-    input: KeyboardInput,
-    expectedRevision?: number,
-  ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
-}
-
-export interface CalendarPageRequestDetails<ID extends StableID = StableID> {
-  readonly direction: -1 | 1;
-  readonly from: ID | null;
-}
-
-export interface CalendarTransitionDetails<ID extends StableID = StableID> {
-  readonly event: CalendarEvent<ID>;
-  readonly result: RevisionResult<CalendarState<ID>, CalendarEffect<ID>>;
-}
-
-export interface CalendarConnectionOptions<ID extends StableID = StableID> {
-  readonly controller: CalendarController<ID>;
-  readonly disabled?: boolean;
-  readonly onPageRequest?: (details: CalendarPageRequestDetails<ID>) => void;
-  readonly onTransition?: (details: CalendarTransitionDetails<ID>) => void;
+  readonly readOnly?: boolean;
+  readonly required?: boolean;
+  readonly onValueChange?: (value: DateValue | null) => void;
+  readonly onHighlightedValueChange?: (value: DateValue) => void;
   readonly onUpdate?: () => void;
 }
 
-export type CalendarConnectionPageRequestHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onPageRequest']>;
-export type CalendarConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onTransition']>;
-export type CalendarConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<CalendarConnectionOptions<ID>['onUpdate']>;
+export type CalendarValueChangeHandler = NonNullable<CalendarOptions['onValueChange']>;
+export type CalendarHighlightedValueChangeHandler = NonNullable<CalendarOptions['onHighlightedValueChange']>;
+export type CalendarUpdateHandler = NonNullable<CalendarOptions['onUpdate']>;
 
-export interface CalendarConnection<ID extends StableID = StableID> {
-  readonly grid: Grid<ID>;
-  getSnapshot(): RevisionSnapshot<CalendarState<ID>>;
-  syncControlledValues(
-    values: CalendarControlledValues<ID>,
-  ): Result<RevisionSnapshot<CalendarState<ID>>>;
-  handleKeyboardInput(input: KeyboardInput): boolean;
+export interface CalendarControlledValues {
+  readonly value?: DateValue | null;
+  readonly highlightedValue?: DateValue;
 }
 
-export type CalendarOptions<ID extends StableID = StableID> =
-  Omit<CalendarControllerOptions<ID>, 'grid'>
-  & Omit<CalendarConnectionOptions<ID>, 'controller'>
-  & { readonly rows: readonly (readonly ID[])[] };
-
-export function createCalendarController<ID extends StableID>(
-  options: CalendarControllerOptions<ID>,
-): Result<CalendarController<ID>> {
-  const value = options.value !== undefined ? options.value : options.defaultValue ?? null;
-  const current = options.highlightedValue !== undefined
-    ? options.highlightedValue
-    : options.defaultHighlightedValue ?? null;
-  const initial = tryCreateCalendarState(options.grid, {
-    selected: value === null ? [] : [value],
-    anchor: value,
-    current,
-  });
-  if (!initial.ok) return initial;
-  const snapshot = tryCreateRevisionSnapshot(initial.value);
-  if (!snapshot.ok) return snapshot;
-  const interaction = tryCreateInteractionState(options);
-  if (!interaction.ok) return interaction;
-  return { ok: true, value: new TerminalCalendarController(options, snapshot.value, interaction.value) };
+export interface CalendarConnection {
+  getSnapshot(): RevisionSnapshot<CalendarState>;
+  getMonth(): readonly (readonly DateValue[])[];
+  getWeek(): readonly DateValue[];
+  getYear(): readonly (readonly CalendarMonthValue[])[];
+  syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>>;
+  handleEvent(event: CalendarEvent): boolean;
+  handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
 
-export function createCalendar<ID extends StableID>(
-  options: CalendarOptions<ID>,
-): FacadeConnection<CalendarConnection<ID>> {
+export function createCalendar(options: CalendarOptions = {}): FacadeConnection<CalendarConnection> {
   return unwrap(tryCreateCalendar(options));
 }
 
-export function tryCreateCalendar<ID extends StableID>(
-  options: CalendarOptions<ID>,
-): Result<FacadeConnection<CalendarConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateCalendarConnection(options));
+export function tryCreateCalendar(options: CalendarOptions = {}): Result<FacadeConnection<CalendarConnection>> {
+  return createFacadeConnection(options, constructCalendar);
 }
 
-function tryCreateCalendarConnection<ID extends StableID>(
-  options: CalendarOptions<ID>,
-): Result<CalendarConnection<ID>> {
-  const grid = tryCreateGrid(options.rows);
-  if (!grid.ok) return grid;
-  const controller = createCalendarController({ ...options, grid: grid.value });
-  if (!controller.ok) return controller;
-  return { ok: true, value: connectCalendar({ ...options, controller: controller.value }) };
+function constructCalendar(options: CalendarOptions): Result<CalendarConnection> {
+  const controls = {
+    value: options.value !== undefined,
+    highlighted: options.highlightedValue !== undefined,
+  };
+  const requestedValue = controls.value ? options.value : options.defaultValue;
+  const requestedHighlight = controls.highlighted ? options.highlightedValue : options.defaultHighlightedValue;
+  const initial = tryCreateCalendarState({
+    ...(requestedValue === undefined ? {} : { value: requestedValue }),
+    ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
+  });
+  const runtime = createSemanticController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
+    initial,
+    reducer: (state, event) => applyCalendarEvent(state, event, {
+      ...options.policies,
+      ...(options.required === undefined ? {} : { required: options.required }),
+    }),
+    reconcile: (previous, proposed) => tryCreateCalendarState({
+      value: controls.value ? previous.value : proposed.value,
+      highlighted: controls.highlighted ? previous.highlighted : proposed.highlighted,
+      view: controls.highlighted ? previous.view : proposed.view,
+      viewMode: proposed.viewMode,
+    }),
+    notify: (previous, proposed) => {
+      if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value);
+      if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted);
+    },
+    toEffect: (command) => command,
+    interaction: options,
+    interactionIntent: calendarInteractionIntent,
+  });
+  return runtime.ok
+    ? { ok: true, value: new TerminalCalendar(options, runtime.value, controls) }
+    : runtime;
 }
 
-export function connectCalendar<ID extends StableID>(
-  options: CalendarConnectionOptions<ID>,
-): CalendarConnection<ID> {
-  return new TerminalCalendarConnection(options);
-}
-
-export function toCalendarEvent<ID extends StableID = StableID>(
-  input: KeyboardInput,
-): CalendarEvent<ID> | null {
-  if (input.key === 'left') return 'left';
-  if (input.key === 'right') return 'right';
-  if (input.key === 'up') return 'up';
-  if (input.key === 'down') return 'down';
-  if (input.key === 'space' || input.key === 'enter') return 'select';
-  if (input.key === 'page-up') return 'previous-page';
-  if (input.key === 'page-down') return 'next-page';
-  return null;
-}
-
-export function toCalendarEffect<ID extends StableID>(
-  command: CalendarCommand<ID>,
-): CalendarEffect<ID> {
-  return Object.freeze(command.type === 'focus'
-    ? { type: 'move-highlight', id: command.id }
-    : { type: 'request-page', direction: command.direction, from: command.from });
-}
-
-class TerminalCalendarConnection<ID extends StableID> implements CalendarConnection<ID> {
-  public readonly grid: Grid<ID>;
-  readonly #controller: CalendarController<ID>;
-  readonly #onPageRequest: ((details: CalendarPageRequestDetails<ID>) => void) | undefined;
-  readonly #onTransition: ((details: CalendarTransitionDetails<ID>) => void) | undefined;
-  readonly #onUpdate: (() => void) | undefined;
-
-  public constructor(options: CalendarConnectionOptions<ID>) {
-    this.#controller = options.controller;
-    this.grid = options.controller.grid;
-    this.#onPageRequest = options.onPageRequest;
-    this.#onTransition = options.onTransition;
-    this.#onUpdate = options.onUpdate;
-  }
-
-  public getSnapshot(): RevisionSnapshot<CalendarState<ID>> {
-    return this.#controller.getSnapshot();
-  }
-
-  public syncControlledValues(
-    values: CalendarControlledValues<ID>,
-  ): Result<RevisionSnapshot<CalendarState<ID>>> {
-    const result = this.#controller.syncControlledValues(values);
-    if (result.ok) this.#onUpdate?.();
-    return result;
-  }
-
-  public handleKeyboardInput(input: KeyboardInput): boolean {
-    const event = toCalendarEvent<ID>(input);
-    if (event === null) return false;
-    const result = this.#controller.handleKeyboardInput(input);
-    if (result.ok) {
-      for (const effect of result.commands) {
-        if (effect.type !== 'request-page') continue;
-        this.#onPageRequest?.(Object.freeze({ direction: effect.direction, from: effect.from }));
-      }
-    }
-    this.#onTransition?.(Object.freeze({ event, result }));
-    if (result.ok) this.#onUpdate?.();
-    return result.ok;
-  }
-}
-
-class TerminalCalendarController<ID extends StableID> implements CalendarController<ID> {
-  public readonly grid: Grid<ID>;
-  readonly #grid: Grid<ID>;
-  readonly #policies: CalendarPolicies<ID>;
-  readonly #valueControlled: boolean;
-  readonly #highlightControlled: boolean;
-  readonly #onValueChange: ((change: CalendarValueChangeDetails<ID>) => void) | undefined;
-  readonly #onHighlightedValueChange:
-    | ((change: CalendarHighlightChangeDetails<ID>) => void)
-    | undefined;
-  readonly #interaction: InteractionState;
-  #snapshot: RevisionSnapshot<CalendarState<ID>>;
+class TerminalCalendar implements CalendarConnection {
+  readonly #options: CalendarOptions;
+  readonly #runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>;
+  readonly #controls: { readonly value: boolean; readonly highlighted: boolean };
 
   public constructor(
-    options: CalendarControllerOptions<ID>,
-    snapshot: RevisionSnapshot<CalendarState<ID>>,
-    interaction: InteractionState,
+    options: CalendarOptions,
+    runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>,
+    controls: { readonly value: boolean; readonly highlighted: boolean },
   ) {
-    this.grid = options.grid;
-    this.#grid = options.grid;
-    this.#policies = options.policies ?? {};
-    this.#valueControlled = options.value !== undefined;
-    this.#highlightControlled = options.highlightedValue !== undefined;
-    this.#onValueChange = options.onValueChange;
-    this.#onHighlightedValueChange = options.onHighlightedValueChange;
-    this.#interaction = interaction;
-    this.#snapshot = snapshot;
+    this.#options = options;
+    this.#runtime = runtime;
+    this.#controls = controls;
   }
 
-  public getSnapshot(): RevisionSnapshot<CalendarState<ID>> {
-    return this.#snapshot;
+  public getSnapshot(): RevisionSnapshot<CalendarState> { return this.#runtime.getSnapshot(); }
+  public getMonth(): readonly (readonly DateValue[])[] {
+    return createCalendarMonth(this.getSnapshot().state.view, this.#options.policies?.weekStartsOn);
   }
-
-  public syncControlledValues(
-    values: CalendarControlledValues<ID>,
-  ): Result<RevisionSnapshot<CalendarState<ID>>> {
-    const error = controlledInputError(
-      this.#valueControlled,
-      this.#highlightControlled,
-      values,
-    );
-    if (error !== null) return { ok: false, error };
-    const selected = this.#valueControlled
-      ? (values.value as ID | null)
-      : selectedValue(this.#snapshot.state);
-    const state = tryCreateCalendarState(this.#grid, {
-      selected: selected === null ? [] : [selected],
-      anchor: this.#valueControlled ? selected : this.#snapshot.state.selection.anchor,
-      current: this.#highlightControlled
-        ? (values.highlightedValue as ID | null)
-        : this.#snapshot.state.cursor.current,
-    });
-    const snapshot = synchronizeControllerState(this.#snapshot, state);
-    if (!snapshot.ok) return snapshot;
-    this.#snapshot = snapshot.value;
-    return snapshot;
+  public getWeek(): readonly DateValue[] {
+    return createCalendarWeek(this.getSnapshot().state.highlighted, this.#options.policies?.weekStartsOn);
   }
-
-  public handleKeyboardInput(
-    input: KeyboardInput,
-    expectedRevision = this.#snapshot.revision,
-  ): RevisionResult<CalendarState<ID>, CalendarEffect<ID>> {
-    const event = toCalendarEvent<ID>(input);
-    if (event === null) {
-      return rejectRevisionInput(this.#snapshot, {
-        class: 'transition-rejection',
-        code: 'unsupported-terminal-key',
-        message: 'Terminal keyboard input does not map to a calendar semantic event.',
-        details: { key: input.key },
-      });
+  public getYear(): readonly (readonly CalendarMonthValue[])[] {
+    return createCalendarYear(this.getSnapshot().state.view.year);
+  }
+  public syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>> {
+    if (this.#controls.value !== (values.value !== undefined) || this.#controls.highlighted !== (values.highlightedValue !== undefined)) {
+      return {
+        ok: false,
+        error: {
+          class: 'construction',
+          code: 'controlled-shape-mismatch',
+          message: 'Controlled calendar values must preserve their construction-time shape.',
+        },
+      };
     }
-    const permitted = requireInteraction(this.#interaction, 'navigate');
-    if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
-    const result = applyControllerEvent(
-      this.#snapshot,
-      expectedRevision,
-      event,
-      (state, semanticEvent) => applyCalendarEvent(
-        this.#grid,
-        state,
-        semanticEvent,
-        this.#policies,
-      ),
-      (previous, proposed) => controlledState(
-        this.#grid,
-        previous,
-        proposed,
-        this.#valueControlled,
-        this.#highlightControlled,
-      ),
-      (previous, proposed) => this.#notify(previous, proposed),
-      toCalendarEffect,
-    );
-    if (result.ok) this.#snapshot = result.snapshot;
+    const state = this.getSnapshot().state;
+    const highlighted = this.#controls.highlighted ? values.highlightedValue as DateValue : state.highlighted;
+    const result = this.#runtime.replace(tryCreateCalendarState({
+      value: this.#controls.value ? values.value as DateValue | null : state.value,
+      highlighted,
+      view: { year: highlighted.year, month: highlighted.month },
+      viewMode: state.viewMode,
+    }));
+    if (result.ok) this.#options.onUpdate?.();
     return result;
   }
-
-  #notify(previous: CalendarState<ID>, proposed: CalendarState<ID>): void {
-    const previousValue = selectedValue(previous);
-    const value = selectedValue(proposed);
-    if (previousValue !== value) {
-      this.#onValueChange?.(Object.freeze({ value, previousValue }));
-    }
-    if (previous.cursor.current !== proposed.cursor.current) {
-      this.#onHighlightedValueChange?.(Object.freeze({
-        value: proposed.cursor.current,
-        previousValue: previous.cursor.current,
-      }));
-    }
+  public handleEvent(event: CalendarEvent): boolean {
+    const result = this.#runtime.handle(event);
+    if (result.ok) this.#options.onUpdate?.();
+    return result.ok;
+  }
+  public handleKeyboardInput(input: TerminalKeyboardInput): boolean {
+    const event = toCalendarEvent(input);
+    return event !== null && this.handleEvent(event);
   }
 }
 
-function controlledState<ID extends StableID>(
-  grid: Grid<ID>,
-  previous: CalendarState<ID>,
-  proposed: CalendarState<ID>,
-  valueControlled: boolean,
-  highlightControlled: boolean,
-): Result<CalendarState<ID>> {
-  return tryCreateCalendarState(grid, {
-    selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
-    anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
-    current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
-  });
-}
-
-function selectedValue<ID extends StableID>(state: CalendarState<ID>): ID | null {
-  return state.selection.selected[0] ?? null;
-}
-
-function controlledInputError<ID extends StableID>(
-  valueControlled: boolean,
-  highlightControlled: boolean,
-  values: CalendarControlledValues<ID>,
-): SectileError | null {
-  if (valueControlled !== (values.value !== undefined)) {
-    return {
-      class: 'construction',
-      code: valueControlled ? 'controlled-value-required' : 'uncontrolled-value-update',
-      message: valueControlled
-        ? 'Controlled calendar selection sync requires value.'
-        : 'Uncontrolled calendar selection cannot be synchronized externally.',
-    };
-  }
-  if (highlightControlled !== (values.highlightedValue !== undefined)) {
-    return {
-      class: 'construction',
-      code: highlightControlled
-        ? 'controlled-highlighted-value-required'
-        : 'uncontrolled-highlighted-value-update',
-      message: highlightControlled
-        ? 'Controlled calendar highlight sync requires highlightedValue.'
-        : 'Uncontrolled calendar highlight cannot be synchronized externally.',
-    };
-  }
+export function toCalendarEvent(input: TerminalKeyboardInput): CalendarEvent | null {
+  if (input.ctrlKey || input.altKey) return null;
+  if (input.key === 'left') return 'previous-day';
+  if (input.key === 'right') return 'next-day';
+  if (input.key === 'up') return 'previous-week';
+  if (input.key === 'down') return 'next-week';
+  if (input.key === 'home') return 'start-of-week';
+  if (input.key === 'end') return 'end-of-week';
+  if (input.key === 'page-up') return input.shiftKey ? 'previous-year' : 'previous-month';
+  if (input.key === 'page-down') return input.shiftKey ? 'next-year' : 'next-month';
+  if (input.key === 'enter' || input.key === 'space') return 'select-highlighted';
   return null;
+}
+
+function calendarInteractionIntent(event: CalendarEvent): 'navigate' | 'mutate' {
+  if (event === 'select-highlighted') return 'mutate';
+  return typeof event === 'object' && (event.type === 'select' || event.type === 'set-value') ? 'mutate' : 'navigate';
+}
+function compareNullable(left: DateValue | null, right: DateValue | null): number {
+  return left === null ? right === null ? 0 : -1 : right === null ? 1 : compareDateValues(left, right);
 }

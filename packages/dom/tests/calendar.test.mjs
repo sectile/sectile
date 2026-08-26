@@ -1,119 +1,63 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '@sectile/core/result';
-import { createGrid } from '@sectile/core/grid';
-import {
-  createCalendar,
-  tryCreateCalendar,
-  createCalendarController,
-  toCalendarEffect,
-  toCalendarEvent,
-} from '../dist/calendar.js';
+import { formatDateValue } from '@sectile/temporal/date-field';
+import { createCalendar, toCalendarEvent } from '../dist/calendar.js';
 
-test('DOM calendar facade constructs the grid and owns ARIA, focus, and page requests', () => {
+test('DOM calendar owns date navigation, selection, and ARIA projection', () => {
   const root = new FakeElement();
-  const pages = [];
   const connection = createCalendar({
-    rows: [['a', 'b'], ['c', 'd']],
     root,
-    defaultHighlightedValue: 'a',
-    onPageRequest: (request) => pages.push(request),
+    defaultHighlightedValue: date(2024, 1, 31),
+    label: 'Dates',
   });
-  connection.setCalendarAttributes('Dates');
-  assert.equal(connection.grid.rowCount, 2);
   assert.equal(root.attributes.get('role'), 'grid');
-  assert.equal(root.attributes.get('aria-colcount'), '2');
+  assert.equal(root.attributes.get('aria-label'), 'Dates');
+  assert.equal(connection.getMonth().length, 6);
+
   const cell = new FakeElement();
-  connection.setCellAttributes(cell, { id: 'a', rowIndex: 1, columnIndex: 1 });
+  connection.setCellAttributes(cell, date(2024, 2, 1));
   assert.equal(cell.attributes.get('role'), 'gridcell');
-  assert.equal(cell.tabIndex, 0);
-  assert.equal(connection.handleKeyboardEvent(keyboardEvent('PageDown')), true);
-  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Tab')), false);
-  assert.deepEqual(pages, [{ direction: 1, from: 'a' }]);
+  assert.equal(cell.attributes.get('aria-selected'), 'false');
+
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowRight')), true);
+  assert.equal(formatDateValue(connection.getSnapshot().state.highlighted), '2024-02-01');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
+  assert.equal(formatDateValue(connection.getSnapshot().state.value), '2024-02-01');
   connection.disconnect();
-
-  const invalid = tryCreateCalendar({ rows: [['a'], ['a']], root: new FakeElement() });
-  assert.equal(invalid.ok, false);
 });
 
-test('DOM keys map onto calendar semantic events', () => {
-  assert.equal(toCalendarEvent({ key: 'ArrowLeft' }), 'left');
-  assert.equal(toCalendarEvent({ key: 'ArrowDown' }), 'down');
-  assert.equal(toCalendarEvent({ key: 'Enter' }), 'select');
-  assert.equal(toCalendarEvent({ key: 'PageUp' }), 'previous-page');
-  assert.equal(toCalendarEvent({ key: 'PageDown' }), 'next-page');
-  assert.equal(toCalendarEvent({ key: 'ArrowRight', ctrlKey: true }), null);
-});
-
-test('DOM calendar delegates cell clicks into direct selection', () => {
-  const root = new FakeElement();
-  const connection = createCalendar({ rows: [['a', 'b']], root });
-  const cell = new FakeElement();
-  connection.setCellAttributes(cell, { id: 'b', rowIndex: 1, columnIndex: 2 });
-  root.emit('click', { target: cell });
-  assert.equal(connection.getSnapshot().state.cursor.current, 'b');
-  assert.deepEqual(connection.getSnapshot().state.selection.selected, ['b']);
-});
-
-test('DOM calendar commands project into focus and page effects', () => {
-  assert.deepEqual(toCalendarEffect({ type: 'focus', id: 'a' }), {
-    type: 'focus-element',
-    id: 'a',
-  });
-  assert.deepEqual(toCalendarEffect({ type: 'request-page', direction: 1, from: 'a' }), {
-    type: 'request-page',
-    direction: 1,
-    from: 'a',
-  });
-});
-
-test('uncontrolled DOM calendar owns highlight and selection', () => {
-  const controller = unwrap(createCalendarController({
-    grid: grid(),
-    defaultHighlightedValue: 'a',
-  }));
-  const moved = controller.handleKeyboardInput({ key: 'ArrowRight' });
-  assert.equal(moved.ok, true);
-  assert.equal(moved.snapshot.state.cursor.current, 'b');
-  const selected = controller.handleKeyboardInput({ key: 'Enter' });
-  assert.equal(selected.ok, true);
-  assert.deepEqual(selected.snapshot.state.selection.selected, ['b']);
-  const paged = controller.handleKeyboardInput({ key: 'PageDown' });
-  assert.equal(paged.ok, true);
-  assert.deepEqual(paged.commands, [{ type: 'request-page', direction: 1, from: 'b' }]);
+test('DOM keys map to calendar units including week edges and shifted years', () => {
+  assert.equal(toCalendarEvent(keyboardEvent('ArrowLeft')), 'previous-day');
+  assert.equal(toCalendarEvent(keyboardEvent('ArrowDown')), 'next-week');
+  assert.equal(toCalendarEvent(keyboardEvent('Home')), 'start-of-week');
+  assert.equal(toCalendarEvent(keyboardEvent('End')), 'end-of-week');
+  assert.equal(toCalendarEvent(keyboardEvent('PageUp')), 'previous-month');
+  assert.equal(toCalendarEvent(keyboardEvent('PageDown', true)), 'next-year');
+  assert.equal(toCalendarEvent(keyboardEvent('ArrowRight', false, true)), null);
 });
 
 test('controlled DOM calendar emits proposals until synchronized', () => {
   const values = [];
   const highlights = [];
-  const controller = unwrap(createCalendarController({
-    grid: grid(),
-    value: 'a',
-    highlightedValue: 'a',
-    onValueChange(change) {
-      values.push(change);
-    },
-    onHighlightedValueChange(change) {
-      highlights.push(change);
-    },
-  }));
-  const moved = controller.handleKeyboardInput({ key: 'ArrowRight' });
-  assert.equal(moved.ok, true);
-  assert.equal(moved.snapshot.state.cursor.current, 'a');
-  assert.deepEqual(highlights, [{ value: 'b', previousValue: 'a' }]);
-  unwrap(controller.syncControlledValues({ value: 'a', highlightedValue: 'b' }));
-  const selected = controller.handleKeyboardInput({ key: 'Enter' });
-  assert.equal(selected.ok, true);
-  assert.deepEqual(selected.snapshot.state.selection.selected, ['a']);
-  assert.deepEqual(values, [{ value: 'b', previousValue: 'a' }]);
+  const connection = createCalendar({
+    root: new FakeElement(),
+    value: date(2024, 1, 31),
+    highlightedValue: date(2024, 1, 31),
+    onValueChange: (value) => values.push(value === null ? null : formatDateValue(value)),
+    onHighlightedValueChange: (value) => highlights.push(formatDateValue(value)),
+  });
+  connection.handleKeyboardEvent(keyboardEvent('ArrowRight'));
+  assert.equal(formatDateValue(connection.getSnapshot().state.highlighted), '2024-01-31');
+  assert.deepEqual(highlights, ['2024-02-01']);
+  connection.update({ value: date(2024, 1, 31), highlightedValue: date(2024, 2, 1) });
+  connection.handleKeyboardEvent(keyboardEvent('Enter'));
+  assert.equal(formatDateValue(connection.getSnapshot().state.value), '2024-01-31');
+  assert.deepEqual(values, ['2024-02-01']);
 });
 
-function grid() {
-  return createGrid([['a', 'b'], ['c', 'd']]);
-}
-
-function keyboardEvent(key) {
-  return { key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} };
+function date(year, month, day) { return Object.freeze({ year, month, day }); }
+function keyboardEvent(key, shiftKey = false, ctrlKey = false) {
+  return { key, shiftKey, altKey: false, ctrlKey, metaKey: false, preventDefault() {} };
 }
 
 class FakeElement {
@@ -127,26 +71,11 @@ class FakeElement {
     listeners.add(listener);
     this.listeners.set(type, listeners);
   }
-
-  removeEventListener(type, listener) {
-    this.listeners.get(type)?.delete(listener);
-  }
-
-  emit(type, event = {}) {
-    for (const listener of this.listeners.get(type) ?? []) listener(event);
-  }
-
-  setAttribute(name, value) {
-    this.attributes.set(name, value);
-  }
-
-  removeAttribute(name) {
-    this.attributes.delete(name);
-  }
-
-  querySelectorAll() {
-    return [];
-  }
-
+  removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  setAttribute(name, value) { this.attributes.set(name, value); }
+  removeAttribute(name) { this.attributes.delete(name); }
+  querySelectorAll() { return []; }
+  querySelector() { return null; }
+  contains() { return true; }
   focus() {}
 }

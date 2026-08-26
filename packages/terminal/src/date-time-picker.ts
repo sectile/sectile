@@ -3,7 +3,7 @@ import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { compareDateTimeValues, type DateTimeValue } from '@sectile/temporal/date-time-field';
-import { createDatePickerMonth } from '@sectile/temporal/date-picker';
+import { createCalendarMonth } from '@sectile/temporal/calendar';
 import { addTimeMilliseconds } from '@sectile/temporal/time-field';
 import {
   applyDateTimePickerEvent,
@@ -144,7 +144,7 @@ class TerminalDateTimePicker implements DateTimePickerConnection {
 
   public getMonth(): readonly (readonly DateValue[])[] {
     const state = this.getSnapshot().state.calendar;
-    return createDatePickerMonth(state.view, this.options.policies?.date?.weekStartsOn);
+    return createCalendarMonth(state.view, this.options.policies?.date?.weekStartsOn);
   }
 
   public syncControlledValues(

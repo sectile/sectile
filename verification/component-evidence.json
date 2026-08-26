@@ -27,7 +27,6 @@
     "collection": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "timer"], "terminal": ["keyboard", "timer"] },
       "core": [
-        "packages/core/tests/composites/calendar.reference-law.test.mjs",
         "packages/core/tests/composites/carousel.reference-law.test.mjs",
         "packages/core/tests/composites/combobox.reference-law.test.mjs",
         "packages/core/tests/composites/feed.reference-law.test.mjs",
@@ -35,15 +34,15 @@
         "packages/core/tests/composites/tree-grid.reference-law.test.mjs",
         "packages/core/tests/composites/tree-view.reference-law.test.mjs"
       ],
-      "dom": ["packages/dom/tests/calendar.test.mjs", "packages/dom/tests/carousel.test.mjs", "packages/dom/tests/combobox.test.mjs", "packages/dom/tests/feed.test.mjs", "packages/dom/tests/grid.test.mjs", "packages/dom/tests/tree-grid.test.mjs", "packages/dom/tests/tree-view.test.mjs"],
-      "terminal": ["packages/terminal/tests/calendar.test.mjs", "packages/terminal/tests/carousel.test.mjs", "packages/terminal/tests/combobox.test.mjs", "packages/terminal/tests/feed.test.mjs", "packages/terminal/tests/grid.test.mjs", "packages/terminal/tests/tree-grid.test.mjs", "packages/terminal/tests/tree-view.test.mjs"],
+      "dom": ["packages/dom/tests/carousel.test.mjs", "packages/dom/tests/combobox.test.mjs", "packages/dom/tests/feed.test.mjs", "packages/dom/tests/grid.test.mjs", "packages/dom/tests/tree-grid.test.mjs", "packages/dom/tests/tree-view.test.mjs"],
+      "terminal": ["packages/terminal/tests/carousel.test.mjs", "packages/terminal/tests/combobox.test.mjs", "packages/terminal/tests/feed.test.mjs", "packages/terminal/tests/grid.test.mjs", "packages/terminal/tests/tree-grid.test.mjs", "packages/terminal/tests/tree-view.test.mjs"],
       "vue": ["packages/vue/tests/collection-popup.test.mjs", "packages/vue/tests/structural-controls.test.mjs", "packages/vue/tests/dynamic-collections.dom.test.mjs", "packages/vue/tests/tree-view.dom.test.mjs"]
     },
     "date-time": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus", "text"], "terminal": ["keyboard", "text"] },
       "core": ["packages/temporal/tests/composites/date-picker.test.mjs"],
-      "dom": ["packages/dom/tests/date-time.test.mjs"],
-      "terminal": ["packages/terminal/tests/date-time.test.mjs"],
+      "dom": ["packages/dom/tests/calendar.test.mjs", "packages/dom/tests/date-time.test.mjs"],
+      "terminal": ["packages/terminal/tests/calendar.test.mjs", "packages/terminal/tests/date-time.test.mjs"],
       "vue": ["packages/vue/tests/date-pickers.test.mjs", "packages/vue/tests/date-pickers.dom.test.mjs"]
     },
     "editing": {

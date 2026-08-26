@@ -2,9 +2,10 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
-import { applyDatePickerEvent, createDatePickerMonth, tryCreateDatePickerState, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable, type DatePickerCommand, type DatePickerEvent, type DatePickerMonthValue, type DatePickerPolicies, type DatePickerState } from '@sectile/temporal/date-picker';
-export { createDatePickerMonth, createDatePickerWeek, createDatePickerYear, datePickerID, isDatePickerValueAvailable } from '@sectile/temporal/date-picker';
-export type { DatePickerMonthValue, DatePickerViewMode } from '@sectile/temporal/date-picker';
+import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
+import { applyDatePickerEvent, tryCreateDatePickerState, type DatePickerCommand, type DatePickerEvent, type DatePickerPolicies, type DatePickerState } from '@sectile/temporal/date-picker';
+export { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
+export type { CalendarMonthValue, CalendarViewMode } from '@sectile/temporal/calendar';
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
@@ -44,7 +45,7 @@ export interface DatePickerConnection {
   getSnapshot(): RevisionSnapshot<DatePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
-  getYear(): readonly (readonly DatePickerMonthValue[])[];
+  getYear(): readonly (readonly CalendarMonthValue[])[];
   syncControlledValues(values: DatePickerControlledValues): Result<RevisionSnapshot<DatePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DatePickerEvent): boolean;
@@ -102,11 +103,11 @@ class DOMDatePicker implements DatePickerConnection {
     this.refresh();
   }
   public getSnapshot(): RevisionSnapshot<DatePickerState> { return this.runtime.getSnapshot(); }
-  public getMonth(): readonly (readonly DateValue[])[] { return createDatePickerMonth(this.getSnapshot().state.view, this.options.policies?.weekStartsOn); }
-  public getWeek(): readonly DateValue[] { return createDatePickerWeek(this.getSnapshot().state.highlighted, this.options.policies?.weekStartsOn); }
-  public getYear(): readonly (readonly DatePickerMonthValue[])[] { return createDatePickerYear(this.getSnapshot().state.view.year); }
+  public getMonth(): readonly (readonly DateValue[])[] { return createCalendarMonth(this.getSnapshot().state.view, this.options.policies?.weekStartsOn); }
+  public getWeek(): readonly DateValue[] { return createCalendarWeek(this.getSnapshot().state.highlighted, this.options.policies?.weekStartsOn); }
+  public getYear(): readonly (readonly CalendarMonthValue[])[] { return createCalendarYear(this.getSnapshot().state.view.year); }
   public syncControlledValues(values: DatePickerControlledValues): Result<RevisionSnapshot<DatePickerState>> { if (this.controls.value !== (values.value !== undefined) || this.controls.highlighted !== (values.highlightedValue !== undefined) || this.controls.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date picker values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const highlighted = this.controls.highlighted ? values.highlightedValue as DateValue : state.highlighted; const result = this.runtime.replace(tryCreateDatePickerState({ value: this.controls.value ? values.value as DateValue | null : state.value, highlighted, view: { year: highlighted.year, month: highlighted.month }, viewMode: state.viewMode, open: this.controls.open ? values.open as boolean : state.open })); if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result; }
-  public setCellAttributes(element: HTMLElement, value: DateValue): void { const state = this.getSnapshot().state; const available = isDatePickerValueAvailable(value, this.options.policies); element.dataset['datePickerId'] = datePickerID(value); element.setAttribute('role', 'gridcell'); element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0)); setDatePickerCellAvailability(element, available); element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1; }
+  public setCellAttributes(element: HTMLElement, value: DateValue): void { const state = this.getSnapshot().state; const available = isCalendarValueAvailable(value, this.options.policies); element.dataset['datePickerId'] = calendarID(value); element.setAttribute('role', 'gridcell'); element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0)); setDatePickerCellAvailability(element, available); element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1; }
   public handleEvent(event: DatePickerEvent): boolean { const result = this.runtime.handle(event); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus()); } return result.ok; }
   public refresh(): void {
     const state = this.getSnapshot().state;

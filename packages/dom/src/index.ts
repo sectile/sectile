@@ -210,24 +210,13 @@ export {
 } from './form.js';
 export { createGridControl, tryCreateGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {
-  connectCalendar,
   createCalendar, tryCreateCalendar,
-  createCalendarController,
-  toCalendarEffect,
   toCalendarEvent,
   type CalendarControlledValues,
-  type CalendarCellAttributes,
   type CalendarConnection,
-  type CalendarConnectionOptions,
-  type CalendarController,
-  type CalendarControllerOptions,
-  type CalendarEffect,
-  type CalendarHighlightChangeDetails,
   type CalendarOptions,
-  type CalendarPageRequestDetails,
-  type CalendarTransitionDetails,
-  type CalendarValueChangeDetails,
-  type KeyboardInput as CalendarKeyboardInput,
+  type CalendarPolicies,
+  type DateValue as CalendarValue,
 } from './calendar.js';
 export {
   connectCombobox,
@@ -373,11 +362,9 @@ export type {
   AlertDialogUpdateHandler,
 } from './alert-dialog.js';
 export type {
-  CalendarConnectionPageRequestHandler,
-  CalendarConnectionTransitionHandler,
-  CalendarConnectionUpdateHandler,
-  CalendarControllerHighlightedValueChangeHandler,
-  CalendarControllerValueChangeHandler,
+  CalendarHighlightedValueChangeHandler,
+  CalendarUpdateHandler,
+  CalendarValueChangeHandler,
 } from './calendar.js';
 export type {
   CarouselAnnounceHandler,
