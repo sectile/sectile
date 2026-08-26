@@ -114,7 +114,7 @@ export interface PopupRootProps {
   readonly autoUpdate?: boolean | AutoUpdateOptions;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
+export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
 interface PopupContext {
   readonly open: ComputedRef<boolean>;
@@ -409,12 +409,17 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   });
   const Portal = defineComponent({
     name: `Sectile${pascal(config.scope)}Portal`,
-    props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined }, disabled: { type: Boolean, default: false } },
+    props: {
+      to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
+      disabled: { type: Boolean, default: false },
+      defer: { type: Boolean, default: false },
+    },
     setup(props, { slots }) {
       const portalTarget = useHostPortalTarget();
       return (): VNodeChild => h(Teleport as Component, {
         to: props.to ?? portalTarget.value ?? 'body',
         disabled: props.disabled,
+        defer: props.defer,
       }, slots['default']?.());
     },
   });

@@ -13,7 +13,7 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DialogClose, DialogContent, DialogOverlay, DialogRoot } = await import('../dist/dialog.js');
+const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../dist/select.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
@@ -104,14 +104,39 @@ test('portalled Select keeps typeahead, selection, and positioning connected', a
   }
 });
 
+test('deferred portals resolve targets rendered later in the same mount tick', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({
+    render: () => h('div', null, [
+      h(DialogRoot, { modal: false }, { default: () => h(DialogPortal, { to: '#late-popup', defer: true }, { default: () => h('span', { id: 'deferred-popup' }, 'Popup') }) }),
+      h(SelectRoot, { items: [] }, { default: () => h(SelectPortal, { to: '#late-select', defer: true }, { default: () => h('span', { id: 'deferred-select' }, 'Select') }) }),
+      h(ToastProvider, null, { default: () => h(ToastPortal, { to: '#late-toast', defer: true }, { default: () => h('span', { id: 'deferred-toast' }, 'Toast') }) }),
+      h('div', { id: 'late-popup' }),
+      h('div', { id: 'late-select' }),
+      h('div', { id: 'late-toast' }),
+    ]),
+  });
+  const warnings = [];
+  app.config.warnHandler = (message) => { warnings.push(message); };
+  app.mount(host); await nextTick();
+  try {
+    assert.deepEqual(warnings, []);
+    assert.equal(host.querySelector('#late-popup')?.querySelector('#deferred-popup')?.textContent, 'Popup');
+    assert.equal(host.querySelector('#late-select')?.querySelector('#deferred-select')?.textContent, 'Select');
+    assert.equal(host.querySelector('#late-toast')?.querySelector('#deferred-toast')?.textContent, 'Toast');
+  } finally {
+    app.unmount(); host.remove();
+  }
+});
+
 test('SSR teleports hydrate Select and Toast without mismatch warnings', async () => {
   const component = {
     render: () => h('div', null, [
       h(SelectRoot, { items: ['alpha', 'beta'], defaultOpen: true, position: false }, { default: () => [
         h(SelectTrigger, null, { default: () => 'Choose' }),
-        h(SelectPortal, { to: '#overlays' }, { default: () => h(SelectContent, null, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta'].map((value) => h(SelectItem, { value }, { default: () => value })) }) }) }),
+        h(SelectPortal, { to: '#overlays', defer: true }, { default: () => h(SelectContent, null, { default: () => h(SelectViewport, null, { default: () => ['alpha', 'beta'].map((value) => h(SelectItem, { value }, { default: () => value })) }) }) }),
       ] }),
-      h(ToastProvider, { toasts: [{ id: 'saved', title: 'Saved', durationMs: null }] }, { default: ({ toasts }) => h(ToastPortal, { to: '#overlays' }, { default: () => h(ToastViewport, null, { default: () => toasts.map((toast) => h(ToastRoot, { value: toast.id }, { default: () => [h(ToastTitle), h(ToastClose)] })) }) }) }),
+      h(ToastProvider, { toasts: [{ id: 'saved', title: 'Saved', durationMs: null }] }, { default: ({ toasts }) => h(ToastPortal, { to: '#overlays', defer: true }, { default: () => h(ToastViewport, null, { default: () => toasts.map((toast) => h(ToastRoot, { value: toast.id }, { default: () => [h(ToastTitle), h(ToastClose)] })) }) }) }),
     ]),
   };
   const context = {};

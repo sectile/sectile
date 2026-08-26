@@ -89,7 +89,7 @@ export function vueApiDefault(locale, component, typeName, property, extracted) 
 
   if (portalComponents.has(component) && typeName.endsWith('PortalProps')) {
     if (property === 'to') return { code: "'body'" };
-    if (property === 'disabled') return { code: 'false' };
+    if (property === 'disabled' || property === 'defer') return { code: 'false' };
   }
 
   if (extracted !== undefined) return { code: extracted };

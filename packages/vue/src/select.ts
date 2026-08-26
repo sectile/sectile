@@ -48,7 +48,7 @@ export interface SelectRootSlotProps { readonly value: string | null; readonly h
 export interface SelectItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface SelectItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface SelectPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
+export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
 interface RootContext {
   readonly state: ComputedRef<SelectRootSlotProps>;
@@ -268,8 +268,13 @@ export const SelectItemText = defineComponent({
 });
 
 export const SelectPortal = defineComponent({
-  name: 'SectileSelectPortal', props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined }, disabled: { type: Boolean, default: false } },
-  setup(props, { slots }) { useRoot('SelectPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled }, slots['default']?.()); },
+  name: 'SectileSelectPortal',
+  props: {
+    to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
+    disabled: { type: Boolean, default: false },
+    defer: { type: Boolean, default: false },
+  },
+  setup(props, { slots }) { useRoot('SelectPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled, defer: props.defer }, slots['default']?.()); },
 });
 
 function useRoot(part: string): RootContext { const root = inject<RootContext>(rootKey); if (root === undefined) throw new TypeError(`${part} must be used inside SelectRoot.`); return root; }

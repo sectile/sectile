@@ -22,7 +22,7 @@ export interface ToastProviderProps {
 }
 export interface ToastProviderSlotProps { readonly toasts: readonly ToastItem<string>[]; readonly paused: boolean; toast(input: ToastInput<string>): void; dismiss(id: string): void; dismissAll(): void }
 export interface ToastPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface ToastPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean }
+export interface ToastPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 export interface ToastRootProps extends ToastPartProps { readonly value: string }
 export interface ToastRootSlotProps { readonly toast: ToastItem<string> | null; readonly open: boolean }
 
@@ -136,8 +136,12 @@ export const ToastProvider = defineComponent({
 
 export const ToastPortal = defineComponent({
   name: 'SectileToastPortal',
-  props: { to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined }, disabled: { type: Boolean, default: false } },
-  setup(props, { slots }) { useProvider('ToastPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled }, slots['default']?.()); },
+  props: {
+    to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
+    disabled: { type: Boolean, default: false },
+    defer: { type: Boolean, default: false },
+  },
+  setup(props, { slots }) { useProvider('ToastPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled, defer: props.defer }, slots['default']?.()); },
 });
 
 export const ToastViewport = defineComponent({
