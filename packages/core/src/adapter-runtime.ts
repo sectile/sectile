@@ -107,6 +107,22 @@ export interface SemanticControllerOptions<State, Event, Command, Effect> {
   readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
 }
 
+export type HostInputDecoder<HostInput, Event> = (input: HostInput) => Event | null;
+export type HostEffectProjector<Command, HostEffect> = (command: Command) => HostEffect;
+
+export interface HostAdapter<State, HostInput, HostEffect> {
+  getSnapshot(): RevisionSnapshot<State>;
+  replace(state: Result<State>): Result<RevisionSnapshot<State>>;
+  handleInput(input: HostInput, expectedRevision?: number): RevisionResult<State, HostEffect> | null;
+  reject(code: SectileErrorCode, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, HostEffect>;
+}
+
+export interface HostAdapterOptions<State, HostInput, Event, Command, HostEffect>
+  extends Omit<SemanticControllerOptions<State, Event, Command, HostEffect>, 'toEffect'> {
+  readonly decode: HostInputDecoder<HostInput, Event>;
+  readonly project: HostEffectProjector<Command, HostEffect>;
+}
+
 export function createSemanticController<State, Event, Command, Effect>(
   options: SemanticControllerOptions<State, Event, Command, Effect>,
 ): Result<SemanticController<State, Event, Effect>> {
@@ -156,6 +172,41 @@ export function createSemanticController<State, Event, Command, Effect>(
         message,
         ...(details === undefined ? {} : { details }),
       }),
+    }),
+  };
+}
+
+export function createHostAdapter<State, HostInput, Event, Command, HostEffect>(
+  options: HostAdapterOptions<State, HostInput, Event, Command, HostEffect>,
+): Result<HostAdapter<State, HostInput, HostEffect>> {
+  const controller = createSemanticController({
+    initial: options.initial,
+    reducer: options.reducer,
+    toEffect: options.project,
+    ...(options.reconcile === undefined ? {} : { reconcile: options.reconcile }),
+    ...(options.notify === undefined ? {} : { notify: options.notify }),
+    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
+    ...(options.interactionIntent === undefined ? {} : { interactionIntent: options.interactionIntent }),
+  });
+  if (!controller.ok) return controller;
+  return {
+    ok: true,
+    value: Object.freeze({
+      getSnapshot: (): RevisionSnapshot<State> => controller.value.getSnapshot(),
+      replace: (state: Result<State>): Result<RevisionSnapshot<State>> => controller.value.replace(state),
+      handleInput: (
+        input: HostInput,
+        expectedRevision?: number,
+      ): RevisionResult<State, HostEffect> | null => {
+        const event = options.decode(input);
+        if (event === null) return null;
+        return controller.value.handle(event, expectedRevision);
+      },
+      reject: (
+        code: SectileErrorCode,
+        message: string,
+        details?: Readonly<Record<string, unknown>>,
+      ): RevisionResult<State, HostEffect> => controller.value.reject(code, message, details),
     }),
   };
 }

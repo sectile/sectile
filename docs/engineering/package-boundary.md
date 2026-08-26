@@ -33,7 +33,7 @@ The root runtime must remain empty. Consumer import checks execute the required 
 
 The core package footprint gate rejects reference files and applies separate byte ceilings to JavaScript, declarations, source maps, and the complete package. This keeps runtime growth visible without treating optional debugging metadata as runtime code. DOM and terminal code are emitted only by their own packages.
 
-`@sectile/core/adapter-runtime` owns host-independent controller revision, reconciliation, notification, facade, and destruction behavior. DOM and terminal packages retain only host input decoding and effect execution. Host state equality is semantic and component-specific; adapter runtime code must not serialize arbitrary state to compare it.
+`@sectile/core/adapter-runtime` owns host-independent controller revision, reconciliation, notification, command projection, facade, and destruction behavior. Its public `createHostAdapter` contract connects deterministic host decoding to semantic reduction and projected effects without executing platform work. DOM and terminal packages retain host input decoding, listener lifecycle, and effect execution. Host state equality is semantic and component-specific; adapter runtime code must not serialize arbitrary state to compare it.
 
 Node-specific terminal integration is isolated behind `@sectile/terminal/node`; importing the terminal package root or another terminal subpath does not load `node:*` modules. Portable terminal keyboard and layout helpers remain separate exported subpaths so browser terminals can provide their own byte source while sharing normalized adapter input.
 

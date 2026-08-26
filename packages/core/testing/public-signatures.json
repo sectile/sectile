@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "365785500bf03be3d902d6f023dfe8e73241fed9eb1931af9a441b8a430a33ff",
+  "fingerprint": "865b1e1f665646191e1ee227503c2fd7d3cb313a3d02ec8b87370c8d6e38fa9f",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -8,7 +8,7 @@
     },
     {
       "path": "dist/adapter-runtime.d.ts",
-      "sha256": "3ca6dc14043d1a22586d5d94f60e18bf6de6dc7a4735c9ea4541b3eee8935f5c"
+      "sha256": "902bd3e39e2ed83a3ed2442ef99eca98a81761442a330e6061f037deafa70b19"
     },
     {
       "path": "dist/alert-dialog.d.ts",
