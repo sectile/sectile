@@ -16,6 +16,8 @@ const { renderToString } = await import('@vue/server-renderer');
 const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../dist/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
 const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../dist/select.js');
+const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../dist/popover.js');
+const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../dist/tooltip.js');
 const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
 
 test('dialog keeps closed content present until its exit motion completes', async () => {
@@ -80,9 +82,11 @@ test('dialog emits a cancellable interact-outside event for its overlay', async 
 
 test('portalled Select keeps typeahead, selection, and positioning connected', async () => {
   const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal);
+  const inserted = capturePositionedContentInsertions(portal);
   const selected = ref(null); const open = ref(false); const highlighted = ref(null);
   const app = createApp({ render: () => h(SelectRoot, {
     items: ['alpha', 'beta', 'gamma'], modelValue: selected.value, open: open.value,
+    unmountOnExit: true, hideWhenDetached: false,
     textValue: (id) => ({ alpha: 'Apple', beta: 'Banana', gamma: 'Grape' })[id],
     'onUpdate:modelValue': (value) => { selected.value = value; }, 'onUpdate:open': (value) => { open.value = value; },
     onHighlight: (value) => { highlighted.value = value; },
@@ -95,12 +99,71 @@ test('portalled Select keeps typeahead, selection, and positioning connected', a
     await nextTick(); const trigger = host.querySelector('[data-part="trigger"]'); assert.ok(trigger instanceof HTMLButtonElement);
     trigger.click(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
     const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, 'fixed');
+    assert.deepEqual(inserted, [{ scope: 'select', position: 'fixed', visibility: 'hidden' }]);
+    assert.equal(content.style.visibility, '');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(highlighted.value, 'beta');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(selected.value, 'beta'); assert.equal(open.value, false);
   } finally {
     app.unmount(); host.remove(); portal.remove();
+  }
+});
+
+test('portalled Popover and Tooltip leave document flow before insertion', async () => {
+  const host = document.createElement('div'); const portal = document.createElement('div'); document.body.append(host, portal);
+  const inserted = capturePositionedContentInsertions(portal);
+  const popoverText = ref('Popover');
+  const app = createApp({ render: () => [
+    h(PopoverRoot, { unmountOnExit: true, hideWhenDetached: false }, { default: () => [
+      h(PopoverTrigger, null, { default: () => 'Open' }),
+      h(PopoverPortal, { to: portal }, { default: () => h(PopoverContent, null, { default: () => popoverText.value }) }),
+    ] }),
+    h(TooltipRoot, { unmountOnExit: true, hideWhenDetached: false }, { default: () => [
+      h(TooltipTrigger, null, { default: () => 'Info' }),
+      h(TooltipPortal, { to: portal }, { default: () => h(TooltipContent, null, { default: () => 'Tooltip' }) }),
+    ] }),
+  ] });
+  app.mount(host);
+  try {
+    await nextTick();
+    const triggers = host.querySelectorAll('[data-part="trigger"]');
+    assert.equal(triggers.length, 2);
+    triggers[0].dispatchEvent(new Event('click', { bubbles: true }));
+    triggers[1].dispatchEvent(new Event('mouseenter', { bubbles: true }));
+    await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.deepEqual(inserted, [
+      { scope: 'popover', position: 'fixed', visibility: 'hidden' },
+      { scope: 'tooltip', position: 'fixed', visibility: 'hidden' },
+    ]);
+    const contents = portal.querySelectorAll('[data-part="content"]');
+    assert.equal(contents.length, 2);
+    for (const content of contents) {
+      assert.equal(content.style.position, 'fixed');
+      assert.equal(content.style.visibility, '');
+    }
+    popoverText.value = 'Updated'; await nextTick();
+    assert.equal(contents[0].textContent, 'Updated');
+    assert.equal(contents[0].style.visibility, '');
+  } finally {
+    app.unmount(); host.remove(); portal.remove();
+  }
+});
+
+test('positioned popup without a reference remains available for manual layout', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(PopoverRoot, { defaultOpen: true, unmountOnExit: true }, {
+    default: () => h(PopoverContent, null, { default: () => 'Manual' }),
+  }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const content = host.querySelector('[data-part="content"]');
+    assert.ok(content instanceof HTMLElement);
+    assert.equal(content.style.visibility, '');
+  } finally {
+    app.unmount(); host.remove();
   }
 });
 
@@ -156,3 +219,15 @@ test('[HYD-02] SSR teleports hydrate Select and Toast without mismatch warnings'
     app.unmount(); host.remove(); overlays.remove();
   }
 });
+
+function capturePositionedContentInsertions(target) {
+  const inserted = [];
+  const insertBefore = target.insertBefore;
+  target.insertBefore = function (node, anchor) {
+    if (node instanceof HTMLElement && node.dataset.part === 'content') {
+      inserted.push({ scope: node.dataset.scope, position: node.style.position, visibility: node.style.visibility });
+    }
+    return insertBefore.call(this, node, anchor);
+  };
+  return inserted;
+}

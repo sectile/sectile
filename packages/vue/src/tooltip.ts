@@ -9,7 +9,7 @@ import {
 } from './internal/popup.js';
 
 const parts = createPopupComponents({
-  scope: 'tooltip', role: 'tooltip', modal: false, triggerMode: 'focus-hover',
+  scope: 'tooltip', role: 'tooltip', modal: false, triggerMode: 'focus-hover', positioned: true,
   create: (options: PopupFactoryOptions): TooltipConnection => {
     const {
       modal: _modal,

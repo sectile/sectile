@@ -54,6 +54,9 @@ export interface SelectPortalProps { readonly to?: string | HTMLElement; readonl
 interface RootContext {
   readonly state: ComputedRef<SelectRootSlotProps>;
   readonly unmountOnExit: ComputedRef<boolean>;
+  readonly position: ComputedRef<boolean>;
+  readonly positioned: ComputedRef<boolean>;
+  readonly strategy: ComputedRef<Strategy>;
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
@@ -101,6 +104,7 @@ export const SelectRoot = defineComponent({
     const root = shallowRef<HTMLElement>();
     const trigger = shallowRef<HTMLButtonElement>();
     const popup = shallowRef<HTMLElement>();
+    const positioned = shallowRef(!props.position);
     const submissionElement = ref<HTMLSelectElement | null>(null);
     const participation = useCompositeFormControl({
       root: () => root.value ?? null,
@@ -114,6 +118,8 @@ export const SelectRoot = defineComponent({
     const valueControlled = useControlledStateInvariant('SelectRoot', 'modelValue', () => props.modelValue);
     const openControlled = useControlledStateInvariant('SelectRoot', 'open', () => props.open);
     const unmountOnExit = computed(() => props.unmountOnExit);
+    const position = computed(() => props.position);
+    const strategy = computed(() => props.strategy);
     const state = computed<SelectRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
@@ -161,7 +167,7 @@ export const SelectRoot = defineComponent({
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
-        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (position) => { emit('positionChange', position); }, onUpdate: refresh,
+        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (nextPosition) => { positioned.value = true; emit('positionChange', nextPosition); }, onUpdate: refresh,
       });
       refreshItems(); refresh();
     };
@@ -176,7 +182,7 @@ export const SelectRoot = defineComponent({
       });
     };
     provide<RootContext>(rootKey, {
-      state, unmountOnExit, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
+      state, unmountOnExit, position, positioned: computed(() => positioned.value), strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: computed(() => new Set(props.disabledItems)),
       registerTrigger: (element) => {
         trigger.value = element;
@@ -186,6 +192,7 @@ export const SelectRoot = defineComponent({
         } else scheduleConnect();
       },
       registerPopup: (element) => {
+        if (element !== popup.value) positioned.value = !props.position;
         popup.value = element;
         if (element === undefined) {
           connection.value?.disconnect();
@@ -261,6 +268,7 @@ export const SelectContent = defineComponent({
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
       id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
+      style: root.position.value ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
       'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
       'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
     }), { default: () => slots['default']?.(root.state.value) });

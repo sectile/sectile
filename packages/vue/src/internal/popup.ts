@@ -80,6 +80,7 @@ export interface PopupComponentConfig {
   readonly modal: boolean;
   readonly triggerMode: 'click' | 'focus-hover';
   readonly closeOnInteractOutside?: boolean;
+  readonly positioned?: boolean;
   readonly directional?: boolean;
   readonly defaultSide?: 'top' | 'right' | 'bottom' | 'left';
   create(options: PopupFactoryOptions): PopupConnection;
@@ -121,6 +122,7 @@ interface PopupContext {
   readonly disabled: ComputedRef<boolean>;
   readonly modal: ComputedRef<boolean>;
   readonly unmountOnExit: ComputedRef<boolean>;
+  readonly positioned: ComputedRef<boolean>;
   readonly label: ComputedRef<string | undefined>;
   readonly contentID: string;
   readonly titleID: string;
@@ -132,6 +134,8 @@ interface PopupContext {
   readonly handle: ShallowRef<HTMLElement | undefined>;
   readonly content: ShallowRef<HTMLElement | undefined>;
   readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
+  readonly strategy: ComputedRef<Strategy>;
+  registerContent(element?: HTMLElement): void;
   connect(): void;
   scheduleConnect(): void;
   disconnect(): void;
@@ -213,6 +217,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const overlay = shallowRef<HTMLElement>();
       const handle = shallowRef<HTMLElement>();
       const content = shallowRef<HTMLElement>();
+      const positioned = shallowRef(config.positioned !== true);
       const connection = shallowRef<PopupConnection>();
       const id = useHostId();
       const contentID = `sectile-${config.scope}-${id}-content`;
@@ -224,6 +229,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const unmountOnExit = computed(() => props.unmountOnExit);
       const label = computed(() => props.label);
       const side = computed(() => props.side);
+      const strategy = computed(() => props.strategy);
       const update = (): void => {
         if (connection.value === undefined) return;
         void connection.value.getSnapshot().revision;
@@ -271,10 +277,14 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
           },
-          onPositionChange: (position) => { emit('positionChange', position); },
+          onPositionChange: (position) => { positioned.value = true; emit('positionChange', position); },
           onInteractOutside: (event) => { emit('interactOutside', event); },
           onUpdate: update,
         });
+        if (config.positioned === true && trigger.value === undefined && anchor.value === undefined) {
+          content.value.style.visibility = '';
+          positioned.value = true;
+        }
         update();
       };
       let connectScheduled = false;
@@ -320,7 +330,11 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         disconnect();
       });
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, unmountOnExit, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side,
+        open, disabled, modal, unmountOnExit, positioned: computed(() => positioned.value), label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side, strategy,
+        registerContent: (element) => {
+          if (element !== content.value) positioned.value = config.positioned !== true;
+          content.value = element;
+        },
         connect, scheduleConnect, disconnect, activateTrigger, deactivateTrigger,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
@@ -365,11 +379,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           elementRef: (candidate: unknown) => {
             const node = candidate instanceof HTMLElement ? candidate : undefined;
             element.value = node;
-            root.content.value = node;
+            root.registerContent(node);
             if (node === undefined) root.disconnect();
             else root.scheduleConnect();
           },
           id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
+          style: config.positioned === true ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
           'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
           'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
           'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',

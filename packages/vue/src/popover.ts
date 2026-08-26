@@ -9,7 +9,7 @@ import {
 } from './internal/popup.js';
 
 const parts = createPopupComponents({
-  scope: 'popover', role: 'dialog', modal: false, triggerMode: 'click', closeOnInteractOutside: true,
+  scope: 'popover', role: 'dialog', modal: false, triggerMode: 'click', closeOnInteractOutside: true, positioned: true,
   create: (options: PopupFactoryOptions): PopoverConnection => createPopover(options as PopoverOptions),
 });
 

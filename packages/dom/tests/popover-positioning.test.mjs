@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { Window } from 'happy-dom';
 import {
   arrow,
   autoPlacement,
@@ -22,6 +23,21 @@ import {
   shift as tooltipShift,
   size as tooltipSize,
 } from '../dist/tooltip.js';
+import { createPopover } from '../dist/popover.js';
+
+test('DOM floating positioning reserves layout synchronously before measuring', () => {
+  const window = new Window({ url: 'https://sectile.dev/' });
+  const root = window.document.createElement('div');
+  const trigger = window.document.createElement('button');
+  window.document.body.append(trigger, root);
+
+  const popover = createPopover({ root, trigger, strategy: 'absolute' });
+
+  assert.equal(root.style.position, 'absolute');
+  assert.equal(root.style.visibility, 'hidden');
+  popover.disconnect();
+  window.close();
+});
 
 test('DOM popover exposes the Floating UI middleware surface', () => {
   assert.deepEqual([

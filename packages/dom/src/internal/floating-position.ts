@@ -47,6 +47,12 @@ export interface FloatingPositionConnection {
 export function createFloatingPosition(options: FloatingPositionOptions): FloatingPositionConnection {
   let cleanupAutoUpdate: (() => void) | undefined;
   let positionRequest = 0;
+  const strategy = options.strategy ?? 'fixed';
+
+  if (options.reference !== undefined && options.root.style !== undefined) {
+    options.root.style.position = strategy;
+    if (options.root.style.left === '' && options.root.style.top === '') options.root.style.visibility = 'hidden';
+  }
 
   const stopAutoUpdate = (): void => {
     cleanupAutoUpdate?.();
@@ -56,8 +62,6 @@ export function createFloatingPosition(options: FloatingPositionOptions): Floati
     const { reference, root } = options;
     if (root.hidden || reference === undefined || !canPosition(root)) return;
     const request = ++positionRequest;
-    const strategy = options.strategy ?? 'fixed';
-    root.style.position = strategy;
     let position: ComputePositionReturn;
     try {
       position = await computePosition(reference, root, {
