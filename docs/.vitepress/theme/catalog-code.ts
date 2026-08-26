@@ -853,16 +853,17 @@ const saveAccount: FormSubmitHandler<AccountFormValues> = ({ values }) => {
 }`,
   ),
   calendar: sfc(
-    'CalendarRoot, CalendarCell',
-    `  <CalendarRoot :rows="weeks" default-value="2026-08-22">
-    <CalendarCell v-for="day in weeks.flat()" :key="day" :value="day">
-      {{ day.slice(-2) }}
-    </CalendarCell>
+    'CalendarRoot, CalendarContent, CalendarGrid, CalendarCell',
+    `  <CalendarRoot :default-value="selected" v-slot="{ dates }">
+    <CalendarContent>
+      <CalendarGrid>
+        <CalendarCell v-for="day in dates.flat()" :key="\`${'${day.year}-${day.month}-${day.day}'}\`" :value="day">
+          {{ day.day }}
+        </CalendarCell>
+      </CalendarGrid>
+    </CalendarContent>
   </CalendarRoot>`,
-    `const weeks = [[
-  '2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20',
-  '2026-08-21', '2026-08-22', '2026-08-23',
-]]`,
+    `const selected = { year: 2026, month: 8, day: 22 }`,
   ),
   combobox: sfc(
     'ComboboxRoot, ComboboxInput, ComboboxContent, ComboboxItem, ComboboxEmpty',

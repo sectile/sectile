@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
 import { createCalculatorExpression } from '@sectile/core/number-field';
-import { compareDateValues, createDateValue, createDateRange, formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
+import { compareDateValues, createDateValue, createDateRange, dateDayOfWeek, formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
 import { compareTimeValues, createTimeValue, formatTimeValue, parseTimeValue } from '@sectile/temporal/time-field';
 import { compareDateTimeValues, createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue, parseDateTimeValue } from '@sectile/temporal/date-time-field';
 import {
@@ -2480,106 +2480,50 @@ function createCalendarDemo(host) {
     { title: 'Weekday booking', disabledWeekends: true, controlled: false },
     { title: 'Controlled date picker', disabledWeekends: false, controlled: true },
   ], (scenario) => {
-    const today = new Date(); const todayID = calendarDateID(today); let page = createCalendarMonth(today); let selectedDate = todayID; let highlightedDate = todayID; let connection = connect(todayID);
-    function connect(highlightedValue) {
-      const visibleValue = page.ids.has(selectedDate) ? selectedDate : null;
+    const today = new Date(); const initial = createDateValue(today.getFullYear(), today.getMonth() + 1, today.getDate()); let selectedDate = initial; let highlightedDate = initial; const connection = connect();
+    function connect() {
       return createCalendar({
         ...scenario.interaction,
-        rows: page.rows, policies: { eligible: (id) => !scenario.disabledWeekends || !isTerminalWeekend(id) },
-        ...(scenario.controlled ? { value: visibleValue, highlightedValue } : { defaultValue: visibleValue, defaultHighlightedValue: highlightedValue }),
-        onValueChange: ({ value }) => { selectedDate = value; if (scenario.controlled) queueMicrotask(sync); },
-        onHighlightedValueChange: ({ value }) => { highlightedDate = value; if (scenario.controlled) queueMicrotask(sync); },
-        onPageRequest: ({ direction, from }) => { const target = shiftCalendarMonth(page.date, direction, from); page = createCalendarMonth(target); highlightedDate = calendarDateID(target); connection = connect(highlightedDate); },
+        policies: { unavailable: (value) => scenario.disabledWeekends && isTerminalWeekend(value) },
+        ...(scenario.controlled ? { value: selectedDate, highlightedValue: highlightedDate } : { defaultValue: selectedDate, defaultHighlightedValue: highlightedDate }),
+        onValueChange: (value) => { selectedDate = value; if (scenario.controlled) queueMicrotask(sync); },
+        onHighlightedValueChange: (value) => { highlightedDate = value; if (scenario.controlled) queueMicrotask(sync); },
         onTransition: host.record, onUpdate: host.render,
       });
     }
-    function sync() { connection.syncControlledValues({ value: selectedDate !== null && page.ids.has(selectedDate) ? selectedDate : null, highlightedValue: highlightedDate !== null && page.ids.has(highlightedDate) ? highlightedDate : null }); }
+    function sync() { connection.syncControlledValues({ value: selectedDate, highlightedValue: highlightedDate }); }
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
-        const { state } = connection.getSnapshot(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
+        const { state } = connection.getSnapshot(); const month = connection.getMonth(); const cellWidth = Math.max(5, Math.min(8, Math.floor((width - 6) / 7)));
         return [
-          `${ansi.bold}${scenario.title} · ${page.label}${ansi.reset}`, '',
+          `${ansi.bold}${scenario.title} · ${terminalMonthLabel(state.view)}${ansi.reset}`, '',
           ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => plain(`  ${day}`, cellWidth)).join(' '),
-          ...page.rows.map((week) => week.map((id) => {
-            if (isTerminalWeekend(id) && scenario.disabledWeekends) {
-              return terminalCalendarStatusCell(id, cellWidth, ansi.disabled);
+          ...month.map((week) => week.map((value) => {
+            if (isTerminalWeekend(value) && scenario.disabledWeekends) {
+              return terminalCalendarStatusCell(value, cellWidth, ansi.disabled);
             }
-            if (!isTerminalCalendarMonth(id, page)) {
-              return terminalCalendarStatusCell(id, cellWidth, ansi.dim);
+            if (value.year !== state.view.year || value.month !== state.view.month) {
+              return terminalCalendarStatusCell(value, cellWidth, ansi.dim);
             }
-            return terminalCell(calendarCellLabel(id), cellWidth, {
-              current: state.cursor.current === id,
-              selected: state.selection.has(id),
+            return terminalCell(String(value.day), cellWidth, {
+              current: sameTerminalDate(state.highlighted, value),
+              selected: state.value !== null && sameTerminalDate(state.value, value),
             });
           }).join(' ')),
-          '', `view=${page.key}  current=${state.cursor.current ?? '−'}`, `selected=${selectedDate ?? '−'}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
+          '', `view=${state.view.year}-${String(state.view.month).padStart(2, '0')}  current=${formatDateValue(state.highlighted)}`, `selected=${state.value === null ? '−' : formatDateValue(state.value)}  ownership=${scenario.controlled ? 'controlled' : 'uncontrolled'}`,
         ];
       },
     };
   });
 }
 
-function createCalendarMonth(date) {
-  const month = new Date(date.getFullYear(), date.getMonth(), 1);
-  const mondayOffset = (month.getDay() + 6) % 7;
-  const firstCell = new Date(month.getFullYear(), month.getMonth(), 1 - mondayOffset);
-  const rows = Array.from({ length: 6 }, (_, row) => Array.from(
-    { length: 7 },
-    (_, column) => calendarDateID(addCalendarDays(firstCell, row * 7 + column)),
-  ));
-  return Object.freeze({
-    date: month,
-    key: `${month.getFullYear()}-${calendarPad(month.getMonth() + 1)}`,
-    label: terminalCalendarMonthFormatter.format(month),
-    rows: Object.freeze(rows.map((row) => Object.freeze(row))),
-    ids: new Set(rows.flat()),
-  });
-}
-
-function shiftCalendarMonth(view, direction, from) {
-  const source = from === null ? view : calendarDateFromID(from);
-  const first = new Date(view.getFullYear(), view.getMonth() + direction, 1);
-  const lastDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-  return new Date(first.getFullYear(), first.getMonth(), Math.min(source.getDate(), lastDay));
-}
-
-function calendarCellLabel(id) {
-  return String(calendarDateFromID(id).getDate());
-}
-
-function terminalCalendarStatusCell(id, width, style) {
-  const label = calendarCellLabel(id);
+function terminalCalendarStatusCell(value, width, style) {
+  const label = String(value.day);
   return `  ${style}${label}${ansi.reset}${' '.repeat(Math.max(0, width - 2 - label.length))}`;
 }
 
-function isTerminalCalendarMonth(id, page) {
-  const date = calendarDateFromID(id);
-  return date.getFullYear() === page.date.getFullYear()
-    && date.getMonth() === page.date.getMonth();
-}
-
-function addCalendarDays(date, amount) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
-}
-
-function calendarDateID(date) {
-  return `${date.getFullYear()}-${calendarPad(date.getMonth() + 1)}-${calendarPad(date.getDate())}`;
-}
-
-function calendarDateFromID(id) {
-  const [year, month, day] = id.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function isTerminalWeekend(id) {
-  const day = calendarDateFromID(id).getDay();
-  return day === 0 || day === 6;
-}
-
-function calendarPad(value) {
-  return String(value).padStart(2, '0');
-}
+function isTerminalWeekend(value) { return dateDayOfWeek(value) >= 6; }
 
 function createTreeViewDemo(host) {
   const nodes = [

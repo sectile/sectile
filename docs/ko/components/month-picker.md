@@ -180,7 +180,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DatePickerMonthValue</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarMonthValue</code></span></div>
 <p>이 계약이 노출하는 현재 값입니다.</p>
 </dd>
 </div>
@@ -213,7 +213,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <div class="component-api-definition">
 <dt><code>months</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly DatePickerMonthValue[])[]</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
 <p>현재 보기에 표시할 달입니다.</p>
 </dd>
 </div>
@@ -248,7 +248,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <div class="component-api-definition">
 <dt><code>viewMode</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DatePickerViewMode</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarViewMode</code></span></div>
 <p>현재 달력 보기 방식입니다.</p>
 </dd>
 </div>

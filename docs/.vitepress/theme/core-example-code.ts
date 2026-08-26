@@ -336,17 +336,15 @@ function rawCoreExampleCodeFor(component: string, scenario: string): string {
       return openExample(component, 'createAlertDialogState', 'applyAlertDialogEvent', scenario);
     case 'calendar': {
       const disabled = scenario === 'disabled-weekends';
-      return `import { applyCalendarEvent, createCalendarState } from '@sectile/core/calendar'
-import { createGrid } from '@sectile/core/grid'
+      return `import { applyCalendarEvent, createCalendarState } from '@sectile/temporal/calendar'
 
-const month = createGrid([
-  ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09'],
-  ['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14', '2026-08-15', '2026-08-16'],
-])
-const state = createCalendarState(month, { current: '2026-08-07', selected: ['2026-08-07'] })
-const update = applyCalendarEvent(month, state, '${scenario === 'week' ? 'right' : 'down'}'${disabled ? ", { eligible: (id) => !id.endsWith('08') && !id.endsWith('09') }" : ''}).value
+const state = createCalendarState({
+  value: { year: 2026, month: 8, day: 7 },
+  highlighted: { year: 2026, month: 8, day: 7 },
+})
+const update = applyCalendarEvent(state, '${scenario === 'week' ? 'next-day' : 'next-week'}'${disabled ? ", { unavailable: (date) => date.day === 8 || date.day === 9 }" : ''}).value
 
-console.log(update.state.cursor.current, update.commands)`;
+console.log(update.state.highlighted, update.commands)`;
     }
     case 'carousel': {
       const paused = scenario === 'paused';

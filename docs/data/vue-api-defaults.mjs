@@ -1,4 +1,5 @@
 const pickerComponents = new Set([
+  'calendar',
   'date-picker',
   'date-range-picker',
   'date-time-picker',
@@ -49,6 +50,10 @@ const popupRootDefaults = Object.freeze({
 });
 
 export function vueApiDefault(locale, component, typeName, property, extracted) {
+  if (component === 'calendar' && (typeName === 'CalendarCellProps' || typeName === 'CalendarMonthCellProps')) {
+    if (property === 'as') return { code: "'button'" };
+    if (property === 'asChild') return { code: 'false' };
+  }
   if (component === 'form' && typeName === 'FormRootProps') {
     if (property === 'issues' || property === 'validateOn') return { code: '[]' };
     if (property === 'revalidateOn') return { code: "['input']" };

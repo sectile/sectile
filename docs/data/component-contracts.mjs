@@ -58,6 +58,7 @@ const profiles = Object.freeze({
     row('Arrow Left / Arrow Right', 'Move by one day.', '하루 전 또는 다음 날로 이동합니다.'),
     row('Arrow Up / Arrow Down', 'Move by one week.', '일주일 전 또는 다음 주로 이동합니다.'),
     row('Home / End', 'Move to the start or end of the week.', '한 주의 시작 또는 끝으로 이동합니다.'),
+    row('Page Up / Page Down', 'Move by one month; hold Shift to move by one year.', '한 달 단위로 이동하고, Shift와 함께 누르면 일 년 단위로 이동합니다.'),
     row('Enter / Space', 'Select the highlighted date.', '현재 강조된 날짜를 선택합니다.'),
   ],
   datePicker: [
@@ -194,7 +195,7 @@ const profileByComponent = Object.freeze({
 const accessibilityByComponent = Object.freeze({
   accordion: ['Section triggers expose expanded state and control their content regions.', '절 실행 요소가 펼침 상태와 연결된 내용 영역을 노출합니다.'],
   'alert-dialog': ['The alert dialog names its title and description, keeps modal focus inside, and restores focus on close.', '확인 대화상자는 제목과 설명을 연결하고 모달 포커스를 내부에 유지한 뒤 닫힐 때 복원합니다.'],
-  calendar: ['The root is a labeled grid; cells expose row, column, selected, highlighted, and disabled state.', '루트는 이름이 있는 격자이며 각 칸은 행·열·선택·강조·비활성 상태를 노출합니다.'],
+  calendar: ['The inline content owns a labeled grid whose cells expose selected, highlighted, unavailable, and outside-month state.', '인라인 콘텐츠가 이름 있는 격자를 소유하며 각 칸은 선택·강조·선택 불가·현재 달 외부 상태를 노출합니다.'],
   carousel: ['Slides, navigation controls, pause control, and indicators remain individually named and operable.', '슬라이드, 이동 버튼, 일시 정지 버튼, 표시 항목을 각각 이름이 있고 조작 가능한 요소로 유지합니다.'],
   'cascade-select': ['Each visible column is a labeled listbox; options expose selection, branch, and disabled state.', '각 열은 이름이 있는 목록 상자이며 항목은 선택·하위 가지·비활성 상태를 노출합니다.'],
   'color-picker': ['Text inputs and sliders expose labels, ranges, current values, and channel purpose without relying on color alone.', '텍스트 입력과 슬라이더가 이름, 범위, 현재 값, 색상 채널 역할을 노출해 색만으로 정보를 전달하지 않습니다.'],

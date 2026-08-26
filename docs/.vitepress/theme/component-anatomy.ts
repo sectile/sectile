@@ -177,7 +177,11 @@ const pickerParts = [
 export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDefinition>>({
   accordion: anatomy('accordion', ['root', 'item', 'header', 'trigger', 'content']),
   'alert-dialog': anatomy('alert-dialog', popupParts),
-  calendar: anatomy('calendar', ['root', 'cell']),
+  calendar: anatomy('calendar', ['content', 'input', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell'], {
+    input: {
+      purpose: copy('Keeps the selected date available for native form submission.', '선택한 날짜를 네이티브 폼 제출 값으로 유지합니다.'),
+    },
+  }),
   carousel: anatomy('carousel', ['root', 'viewport', 'track', 'slide', 'previous', 'next', 'pause', 'indicator-group', 'indicator']),
   'cascade-select': anatomy('cascade-select', ['root', 'trigger', 'value', 'content', 'column', 'item', 'item-indicator', 'item-chevron']),
   'checkbox-group': anatomy('checkbox-group', ['root', 'item', 'indicator']),

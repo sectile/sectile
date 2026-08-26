@@ -213,7 +213,7 @@ Vue package: `@sectile/vue/range-calendar`
 <div class="component-api-definition">
 <dt><code>months</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly DatePickerMonthValue[])[]</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
 <p>Months projected by the active view.</p>
 </dd>
 </div>
@@ -248,7 +248,7 @@ Vue package: `@sectile/vue/range-calendar`
 <div class="component-api-definition">
 <dt><code>viewMode</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DatePickerViewMode</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarViewMode</code></span></div>
 <p>Active calendar view mode.</p>
 </dd>
 </div>

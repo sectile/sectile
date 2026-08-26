@@ -37,7 +37,20 @@ Vue package: `@sectile/vue/calendar`
 <strong class="component-api-label">Components</strong>
 <ul class="component-api-list">
   <li><code class="component-api-token">CalendarRoot</code></li>
+  <li><code class="component-api-token">CalendarContent</code></li>
+  <li><code class="component-api-token">CalendarGrid</code></li>
   <li><code class="component-api-token">CalendarCell</code></li>
+  <li><code class="component-api-token">CalendarMonthCell</code></li>
+  <li><code class="component-api-token">CalendarInput</code></li>
+  <li><code class="component-api-token">CalendarPreviousWeek</code></li>
+  <li><code class="component-api-token">CalendarNextWeek</code></li>
+  <li><code class="component-api-token">CalendarPreviousMonth</code></li>
+  <li><code class="component-api-token">CalendarNextMonth</code></li>
+  <li><code class="component-api-token">CalendarPreviousYear</code></li>
+  <li><code class="component-api-token">CalendarNextYear</code></li>
+  <li><code class="component-api-token">CalendarWeekViewTrigger</code></li>
+  <li><code class="component-api-token">CalendarMonthViewTrigger</code></li>
+  <li><code class="component-api-token">CalendarYearViewTrigger</code></li>
 </ul>
 </div>
 
@@ -47,31 +60,24 @@ Vue package: `@sectile/vue/calendar`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
-<dt><code>as</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'div'</code></span></div>
-<p>Element or component rendered for this part.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>asChild</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
-<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Initially highlighted value for uncontrolled state.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>defaultValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
 <p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultView</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarViewMode</code></span><span><span class="component-api-definition__label">Default</span><code>'month'</code></span></div>
+<p>Initial calendar or picker view.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -82,23 +88,9 @@ Vue package: `@sectile/vue/calendar`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>disabledValues</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly string[]</code></span><span><span class="component-api-definition__label">Default</span><code>[]</code></span></div>
-<p>Values displayed but unavailable for selection.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>form</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>ID of the native form associated with the control.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>highlightedValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Value currently highlighted for keyboard interaction.</p>
 </dd>
 </div>
@@ -112,22 +104,22 @@ Vue package: `@sectile/vue/calendar`
 <div class="component-api-definition">
 <dt><code>modelValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Current value when state is controlled by the parent.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>name</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
-<p>Name used for native form submission.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>policies</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarPolicies&lt;string&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarPolicies</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Behavior policies that customize validation, movement, or selection.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -135,13 +127,6 @@ Vue package: `@sectile/vue/calendar`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether the control must contain a valid value before submission.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>rows</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly string[])[]</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
-<p>Two-dimensional item structure managed by the component.</p>
 </dd>
 </div>
 </dl>
@@ -164,17 +149,55 @@ Vue package: `@sectile/vue/calendar`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>disabled</code></dt>
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
+
+#### `CalendarMonthCellProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>'button'</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
-<p>Whether interaction is unavailable.</p>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarMonthValue</code></span><span><span class="component-api-definition__label">Default</span>Required</span></div>
 <p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
+
+#### `CalendarPartProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span>Varies by part</span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
 </dd>
 </div>
 </dl>
@@ -185,6 +208,13 @@ Vue package: `@sectile/vue/calendar`
 
 <dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
+<dt><code>dates</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly DateValue[])[]</code></span></div>
+<p>Dates projected by the active view.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>disabled</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
@@ -194,22 +224,43 @@ Vue package: `@sectile/vue/calendar`
 <div class="component-api-definition">
 <dt><code>highlightedValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
 <p>Value currently highlighted for interaction.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>rows</code></dt>
+<dt><code>months</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly string[])[]</code></span></div>
-<p>Rows projected by the active view.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
+<p>Months projected by the active view.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue | null</code></span></div>
 <p>Current value exposed by this contract.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>view</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>{ readonly year: number; readonly month: number }</code></span></div>
+<p>Current calendar anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>viewMode</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarViewMode</code></span></div>
+<p>Active calendar view mode.</p>
 </dd>
 </div>
 </dl>
@@ -217,13 +268,6 @@ Vue package: `@sectile/vue/calendar`
 #### `CalendarCellSlotProps`
 
 <dl class="component-api-definitions component-api-definitions--slots">
-<div class="component-api-definition">
-<dt><code>columnIndex</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
-<p>Zero-based column position.</p>
-</dd>
-</div>
 <div class="component-api-definition">
 <dt><code>disabled</code></dt>
 <dd>
@@ -239,10 +283,17 @@ Vue package: `@sectile/vue/calendar`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>rowIndex</code></dt>
+<dt><code>inRange</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span></div>
-<p>Zero-based row position.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this value lies inside the selected range.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>outsideMonth</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this date belongs to an adjacent month.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -255,7 +306,47 @@ Vue package: `@sectile/vue/calendar`
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+</dl>
+
+#### `CalendarMonthCellSlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlighted</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>inRange</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this value lies inside the selected range.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarMonthValue</code></span></div>
 <p>Current value exposed by this contract.</p>
 </dd>
 </div>
@@ -267,23 +358,16 @@ Vue package: `@sectile/vue/calendar`
 
 <dl class="component-api-definitions component-api-definitions--events">
 <div class="component-api-definition">
-<dt><code>page</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>{ direction: -1 | 1; from: string | null; }</code></span></div>
-<p>Emitted when the requested page changes.</p>
-</dd>
-</div>
-<div class="component-api-definition">
 <dt><code>update:highlightedValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>DateValue</code></span></div>
 <p>Emitted when the requested highlighted value changes.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>update:modelValue</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string | null</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>DateValue | null</code></span></div>
 <p>Emitted when the component requests a new controlled value.</p>
 </dd>
 </div>
@@ -294,20 +378,46 @@ Vue package: `@sectile/vue/calendar`
 #### `CalendarValueChangeHandler`
 
 ```ts
-type CalendarValueChangeHandler = (value: string | null) => void
+type CalendarValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:modelValue']>
 ```
 
 #### `CalendarHighlightedValueChangeHandler`
 
 ```ts
-type CalendarHighlightedValueChangeHandler = (value: string | null) => void
+type CalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:highlightedValue']>
 ```
 
-#### `CalendarPageHandler`
+#### `CalendarMonthValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+
+#### `CalendarPolicies`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `min` | `DateValue` | — |
+| `max` | `DateValue` | — |
+| `required` | `boolean` | — |
+| `unavailable` | `(value: DateValue) => boolean` | — |
+| `weekStartsOn` | `1 \| 2 \| 3 \| 4 \| 5 \| 6 \| 7` | — |
+| `maxScan` | `number` | — |
+
+#### `CalendarViewMode`
 
 ```ts
-type CalendarPageHandler = (details: { direction: -1 | 1; from: string | null }) => void
+type CalendarViewMode = 'week' | 'month' | 'year'
 ```
+
+#### `DateValue`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `year` | `number` | Yes |
+| `month` | `number` | Yes |
+| `day` | `number` | Yes |
 
 ## Parts
 
@@ -320,15 +430,87 @@ Shared scope: <code class="component-scope-token">[data-scope="calendar"]</code>
 </thead>
 <tbody>
 <tr>
-  <td><code class="component-part-token">root</code></td>
-  <td><code>[data-part="root"]</code></td>
-  <td>Defines the component boundary and owns its composed parts.</td>
+  <td><code class="component-part-token">content</code></td>
+  <td><code>[data-part="content"]</code></td>
+  <td>Contains the component content shown for the active state.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">input</code></td>
+  <td><code>[data-part="input"]</code></td>
+  <td>Keeps the selected date available for native form submission.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">week-view-trigger</code></td>
+  <td><code>[data-part="week-view-trigger"]</code></td>
+  <td>Switches the calendar to the week view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">month-view-trigger</code></td>
+  <td><code>[data-part="month-view-trigger"]</code></td>
+  <td>Switches the calendar to the month view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">year-view-trigger</code></td>
+  <td><code>[data-part="year-view-trigger"]</code></td>
+  <td>Switches the calendar to the year view.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-week</code></td>
+  <td><code>[data-part="previous-week"]</code></td>
+  <td>Moves to the previous week.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-week</code></td>
+  <td><code>[data-part="next-week"]</code></td>
+  <td>Moves to the next week.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-month</code></td>
+  <td><code>[data-part="previous-month"]</code></td>
+  <td>Moves to the previous month.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-month</code></td>
+  <td><code>[data-part="next-month"]</code></td>
+  <td>Moves to the next month.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">previous-year</code></td>
+  <td><code>[data-part="previous-year"]</code></td>
+  <td>Moves to the previous year.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">next-year</code></td>
+  <td><code>[data-part="next-year"]</code></td>
+  <td>Moves to the next year.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">grid</code></td>
+  <td><code>[data-part="grid"]</code></td>
+  <td>Groups cells into a navigable two-dimensional structure.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>
   <td><code class="component-part-token">cell</code></td>
   <td><code>[data-part="cell"]</code></td>
   <td>Represents one navigable or selectable grid value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">month-cell</code></td>
+  <td><code>[data-part="month-cell"]</code></td>
+  <td>Represents one selectable month.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>
@@ -342,8 +524,11 @@ Shared scope: <code class="component-scope-token">[data-scope="calendar"]</code>
 | <kbd>Arrow Left</kbd> / <kbd>Arrow Right</kbd> | Move by one day. |
 | <kbd>Arrow Up</kbd> / <kbd>Arrow Down</kbd> | Move by one week. |
 | <kbd>Home</kbd> / <kbd>End</kbd> | Move to the start or end of the week. |
+| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Move by one month; hold Shift to move by one year. |
 | <kbd>Enter</kbd> / <kbd>Space</kbd> | Select the highlighted date. |
 
 ## Accessibility
 
-The root is a labeled grid; cells expose row, column, selected, highlighted, and disabled state.
+The inline content owns a labeled grid whose cells expose selected, highlighted, unavailable, and outside-month state.
+
+See the [corresponding WAI-ARIA pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/) for the host accessibility contract.

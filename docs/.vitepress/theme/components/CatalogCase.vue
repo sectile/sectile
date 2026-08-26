@@ -156,7 +156,7 @@ const parts: Record<string, readonly string[]> = {
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
-  feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarCell'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
+  feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarContent', 'CalendarGrid', 'CalendarCell', 'CalendarMonthCell', 'CalendarInput', 'CalendarWeekViewTrigger', 'CalendarMonthViewTrigger', 'CalendarYearViewTrigger', 'CalendarPreviousWeek', 'CalendarNextWeek', 'CalendarPreviousMonth', 'CalendarNextMonth', 'CalendarPreviousYear', 'CalendarNextYear'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
 };
 const code = computed(() => {
   const source = componentExampleSources(props.component, props.scenario).vue;
@@ -229,7 +229,7 @@ const recordAction = (value: string): void => {
     :entries="[]"
     interaction="enabled"
     :code="code"
-    :class="{ 'temporal-picker-card': ['date-picker', 'date-range-picker', 'range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(component) }"
+    :class="{ 'temporal-picker-card': ['calendar', 'date-picker', 'date-range-picker', 'range-calendar', 'month-picker', 'month-range-picker', 'year-picker', 'year-range-picker', 'date-time-picker', 'date-time-range-picker'].includes(component) }"
   >
     <div class="catalog-demo">
       <p class="catalog-description">{{ description }}</p>

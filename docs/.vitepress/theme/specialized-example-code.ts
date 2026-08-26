@@ -355,43 +355,37 @@ const release = 'stable'
 function calendarSource(scenario: string): string {
   const week = scenario === 'week';
   const disabled = scenario === 'disabled-weekends';
-  const unit = week ? 'week' : 'month';
-  const rowsExpression = week ? '[weekDates(anchor.value)]' : 'monthRows(anchor.value)';
   return `<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { CalendarCell, CalendarRoot } from '@sectile/vue/calendar'
-import { monthRows, shiftDate, weekDates } from './calendar-model'
+import { ref } from 'vue'
+import {
+  CalendarCell, CalendarContent, CalendarGrid,
+  CalendarNext${week ? 'Week' : 'Month'}, CalendarPrevious${week ? 'Week' : 'Month'}, CalendarRoot,
+  type DateValue,
+} from '@sectile/vue/calendar'
 
-const anchor = ref('2026-08-24')
-const selected = ref<string | null>(null)
-const rows = computed(() => ${rowsExpression})${disabled ? `
-const disabledDates = computed(() => rows.value.flat().filter((value) => {
-  const day = new Date(\`${'${value}'}T00:00:00Z\`).getUTCDay()
+const selected = ref<DateValue | null>(null)
+const initial = { year: 2026, month: 8, day: 24 }${disabled ? `
+const policies = { unavailable: (value: DateValue) => {
+  const day = new Date(Date.UTC(value.year, value.month - 1, value.day)).getUTCDay()
   return day === 0 || day === 6
-}))` : ''}
-
-function page(direction: -1 | 1) {
-  anchor.value = shiftDate(anchor.value, '${unit}', direction)
-}
+} }` : ''}
 <\/script>
 
 <template>
-  <section aria-label="Release calendar">
-    <header>
-      <button type="button" @click="page(-1)">Previous ${unit}</button>
-      <strong>{{ anchor }}</strong>
-      <button type="button" @click="page(1)">Next ${unit}</button>
-    </header>
-    <CalendarRoot
-      v-model="selected"
-      :rows="rows"${disabled ? '\n      :disabled-values="disabledDates"' : ''}
-      @page="page($event.direction)"
-    >
-      <CalendarCell v-for="day in rows.flat()" :key="day" :value="day">
-        {{ Number(day.slice(-2)) }}
-      </CalendarCell>
-    </CalendarRoot>
-  </section>
+  <CalendarRoot v-model="selected" :default-highlighted-value="initial" default-view="${week ? 'week' : 'month'}"${disabled ? ' :policies="policies"' : ''} v-slot="{ dates, view }" label="Release calendar">
+    <CalendarContent>
+      <header>
+        <CalendarPrevious${week ? 'Week' : 'Month'}>Previous</CalendarPrevious${week ? 'Week' : 'Month'}>
+        <strong>{{ view.year }}-{{ view.month }}</strong>
+        <CalendarNext${week ? 'Week' : 'Month'}>Next</CalendarNext${week ? 'Week' : 'Month'}>
+      </header>
+      <CalendarGrid>
+        <CalendarCell v-for="day in dates.flat()" :key="\`${'${day.year}-${day.month}-${day.day}'}\`" :value="day">
+          {{ day.day }}
+        </CalendarCell>
+      </CalendarGrid>
+    </CalendarContent>
+  </CalendarRoot>
 </template>`;
 }
 
