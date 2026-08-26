@@ -52,6 +52,12 @@ Spatial layout은 겹침을 허용하고 `zIndex`, 선언 순서로 placement를
 
 Host는 scroll observation을 frame마다 합치고 read를 모두 끝낸 뒤 write를 처리해야 합니다. 항목마다 read와 write를 번갈아 실행하는 방식은 계약 밖이며 브라우저 layout batching을 깨뜨립니다.
 
+## 브라우저와 Vue 투영
+
+`@sectile/dom/virtual`은 브라우저 scroll element에서 이 scheduling 계약을 구현합니다. 한 animation frame 안에서 root와 item의 resize 알림을 모으고, 모든 측정값을 계산해 한 번의 semantic measurement batch로 적용한 다음, 반환된 anchor 보정을 기록하고 새 plan을 공개합니다. 사용자 정의 viewport reader와 scroll writer를 전달하면 RTL이나 일반적이지 않은 scroll surface도 정규화된 좌표로 연결할 수 있습니다. 하나의 item rect만으로 행과 열을 추론할 수 없는 병합 track grid를 위해 수동 measurement도 공개합니다.
+
+`@sectile/vue/virtual`은 논리 collection을 소유하지 않은 채 DOM connection을 Vue로 투영합니다. `VirtualizerRoot`는 viewport connection, `VirtualizerContent`는 전체 content extent, `VirtualizerItem`은 plan이 반환한 placement 하나의 배치와 측정을 맡습니다. `asChild`로 Listbox, Combobox, Feed, Grid 또는 응용 프로그램 요소와 합성해도 해당 의미 컴포넌트에는 전체 ID domain이 계속 전달됩니다. 결정적인 `initialViewport`를 지정하면 SSR과 hydration에서 같은 초기 plan을 만들며, 생략하면 mount 뒤에 render window를 그립니다.
+
 ## Domain 변경과 데이터 적재
 
 Linear와 masonry item mutation은 collection/reorder semantics와 같은 public `SequencePatch`를 소비합니다. Splice는 새 ID마다 초기 extent 하나를 전달하고 move는 기존 extent를 유지하며 source 제거 이후 destination index를 사용합니다. Track grid는 영향받지 않은 sparse region을 자동 이동하고 병합 region을 가르는 track splice는 거부합니다. 새 span이 필요하면 region을 원자적으로 교체합니다. Spatial update는 기존 선언 위치를 유지하고 새 ID를 뒤에 추가합니다.

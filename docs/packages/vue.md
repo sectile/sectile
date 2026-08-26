@@ -162,6 +162,87 @@ defineExpose({ element })
 
 Portal parts accept `defer` when their target is rendered by Vue later in the same mount or update tick. It does not wait for a target created in a later tick. Leave it `false` for `body` or an already-mounted target. See Vue's [deferred Teleport documentation](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport).
 
+## Virtualized collections
+
+`@sectile/vue/virtual` provides a typed `useVirtualizer` composable and three headless parts. `VirtualizerRoot` connects the scroll viewport, `VirtualizerContent` projects the full content size, and `VirtualizerItem` positions and measures a placement. The logical Listbox, Combobox, Feed, or Grid still receives every identity; only its rendered item parts are windowed.
+
+```sh
+pnpm add @sectile/core @sectile/virtual @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import { shallowRef } from 'vue'
+import { createSequence } from '@sectile/core/sequence'
+import { createExtentIndex } from '@sectile/virtual/extent-index'
+import {
+  createLinearLayout,
+  linearLayoutStrategy,
+} from '@sectile/virtual/linear-layout'
+import {
+  createAxisMeasurementResolver,
+  VirtualizerContent,
+  VirtualizerItem,
+  VirtualizerRoot,
+} from '@sectile/vue/virtual'
+import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
+
+const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)
+const extents = createExtentIndex(items.map(() => ({
+  kind: 'unknown' as const,
+  fallback: 36,
+})))
+const layout = shallowRef(createLinearLayout(
+  createSequence(items),
+  extents,
+  { crossExtent: 320 },
+))
+const measure = createAxisMeasurementResolver('vertical')
+</script>
+
+<template>
+  <VirtualizerRoot
+    v-model:state="layout"
+    class="virtual-listbox"
+    :strategy="linearLayoutStrategy"
+    :measure="measure"
+    :overscan="240"
+    v-slot="{ placements, scrollTo }"
+  >
+    <ListboxRoot
+      :items="items"
+      @highlight="id => id && scrollTo(id)"
+    >
+      <VirtualizerContent>
+        <VirtualizerItem
+          v-for="placement in placements"
+          :key="placement.id"
+          :placement="placement"
+          size="width"
+          as-child
+        >
+          <ListboxItem :value="placement.id">
+            {{ placement.id }}
+          </ListboxItem>
+        </VirtualizerItem>
+      </VirtualizerContent>
+    </ListboxRoot>
+  </VirtualizerRoot>
+</template>
+
+<style scoped>
+.virtual-listbox {
+  width: 20rem;
+  height: 24rem;
+  overflow: auto;
+}
+</style>
+```
+
+`size="width"` fixes only the cross-axis width; the item height remains content-driven and observable. Horizontal layouts normally use `size="height"`. Fixed two-dimensional regions may use `both`, while application-owned sizing uses the default `none`.
+
+Use `useVirtualizer` directly when generic types, manual grid-track measurements, custom RTL coordinates, or geometry mutations must stay available to application code. Pass a deterministic `initialViewport` to produce an SSR plan. If it is omitted, the initial window renders after mount instead of guessing a server viewport.
+
 ## SSR and hydration contract
 
 SSR support is evidence-scoped. The verified server-to-client hydration matrix currently covers nested `asChild` Fragment adoption and deferred Select/Toast Teleports. Both must hydrate without Vue mismatch warnings and preserve the intended target structure.

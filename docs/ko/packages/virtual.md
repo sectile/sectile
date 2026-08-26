@@ -15,3 +15,5 @@ import { createTrackGridLayout } from '@sectile/virtual/track-grid-layout'
 ```
 
 ID와 순서는 `@sectile/core/sequence`, 데이터 적재는 `@sectile/core/collection-window`가 계속 소유합니다. 자세한 내용은 [가상화 계약](../theory/virtualization.md)을 참고합니다.
+
+이 패키지는 DOM geometry를 읽지 않습니다. 브라우저의 frame 단위 측정과 scroll anchor 보정은 `@sectile/dom/virtual`, Vue composable과 headless 렌더링 파트는 `@sectile/vue/virtual`을 사용합니다.

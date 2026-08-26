@@ -162,6 +162,87 @@ defineExpose({ element })
 
 Portal 파트는 같은 mount 또는 update tick 안에서 뒤늦게 렌더링되는 대상을 위해 `defer`를 지원합니다. 다음 tick에 생성되는 대상까지 기다리지는 않습니다. `body`나 이미 마운트된 대상을 쓸 때는 `false`로 두면 됩니다. Vue의 [deferred Teleport 문서](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport)도 함께 참고하세요.
 
+## 가상화 collection
+
+`@sectile/vue/virtual`은 타입이 보존되는 `useVirtualizer` composable과 세 가지 headless 파트를 제공합니다. `VirtualizerRoot`는 scroll viewport, `VirtualizerContent`는 전체 content 크기, `VirtualizerItem`은 placement 하나의 배치와 측정을 맡습니다. 논리 Listbox, Combobox, Feed, Grid에는 모든 ID를 계속 전달하고 실제 item part만 windowing합니다.
+
+```sh
+pnpm add @sectile/core @sectile/virtual @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import { shallowRef } from 'vue'
+import { createSequence } from '@sectile/core/sequence'
+import { createExtentIndex } from '@sectile/virtual/extent-index'
+import {
+  createLinearLayout,
+  linearLayoutStrategy,
+} from '@sectile/virtual/linear-layout'
+import {
+  createAxisMeasurementResolver,
+  VirtualizerContent,
+  VirtualizerItem,
+  VirtualizerRoot,
+} from '@sectile/vue/virtual'
+import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
+
+const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)
+const extents = createExtentIndex(items.map(() => ({
+  kind: 'unknown' as const,
+  fallback: 36,
+})))
+const layout = shallowRef(createLinearLayout(
+  createSequence(items),
+  extents,
+  { crossExtent: 320 },
+))
+const measure = createAxisMeasurementResolver('vertical')
+</script>
+
+<template>
+  <VirtualizerRoot
+    v-model:state="layout"
+    class="virtual-listbox"
+    :strategy="linearLayoutStrategy"
+    :measure="measure"
+    :overscan="240"
+    v-slot="{ placements, scrollTo }"
+  >
+    <ListboxRoot
+      :items="items"
+      @highlight="id => id && scrollTo(id)"
+    >
+      <VirtualizerContent>
+        <VirtualizerItem
+          v-for="placement in placements"
+          :key="placement.id"
+          :placement="placement"
+          size="width"
+          as-child
+        >
+          <ListboxItem :value="placement.id">
+            {{ placement.id }}
+          </ListboxItem>
+        </VirtualizerItem>
+      </VirtualizerContent>
+    </ListboxRoot>
+  </VirtualizerRoot>
+</template>
+
+<style scoped>
+.virtual-listbox {
+  width: 20rem;
+  height: 24rem;
+  overflow: auto;
+}
+</style>
+```
+
+`size="width"`는 cross axis 너비만 고정하므로 item 높이는 content에 따라 달라지고 측정할 수 있습니다. 가로 layout은 보통 `size="height"`를 사용합니다. 크기가 고정된 2차원 region은 `both`, 응용 프로그램이 크기를 소유하면 기본값 `none`을 사용합니다.
+
+Generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. SSR plan이 필요하면 결정적인 `initialViewport`를 전달합니다. 생략할 경우 서버 viewport를 추측하지 않고 mount 뒤에 초기 window를 렌더링합니다.
+
 ## SSR과 hydration 계약
 
 SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택과 deferred Select/Toast Teleport를 검증합니다. 두 경우 모두 Vue mismatch 경고 없이 hydration되고 의도한 대상 구조를 유지해야 합니다.

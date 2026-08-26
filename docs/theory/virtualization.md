@@ -52,6 +52,12 @@ When geometry before or around the visible anchor changes, the strategy compares
 
 Hosts should coalesce scroll observations per frame, batch all reads before writes, and report measurements together. Per-item read/write alternation is outside the contract and defeats browser layout batching.
 
+## Browser and Vue projection
+
+`@sectile/dom/virtual` implements that scheduling contract for browser scroll elements. One animation frame collects root and item resize notifications, resolves all measurements, applies one semantic measurement batch, writes the returned anchor correction, and only then publishes the next plan. A custom viewport reader and scroll writer keep normalized coordinates available for RTL or non-standard scroll surfaces. Manual measurement remains public for merged track grids whose row and column evidence cannot be inferred from one item rectangle.
+
+`@sectile/vue/virtual` projects the DOM connection without taking ownership of the logical collection. `VirtualizerRoot` owns the viewport connection, `VirtualizerContent` projects content extent, and `VirtualizerItem` places and measures one returned placement. Its `asChild` mode composes with Listbox, Combobox, Feed, Grid, and application-owned elements while those components continue to receive the complete semantic identity domain. An optional deterministic `initialViewport` produces the same initial plan during SSR and hydration; without it, Vue renders the window after mount.
+
 ## Domain changes and loading
 
 Linear and masonry item mutations consume the same public `SequencePatch` used by collection and reorder semantics. Splices provide one initial extent per inserted identity; moves retain their extents and use post-removal destination indices. Track-grid mutations transform unaffected sparse regions and reject track splices that cut through a merged region; replace regions atomically when a new span is required. Spatial updates preserve existing declaration positions and append new identities.
