@@ -12,6 +12,12 @@ import * as checkbox from '@sectile/terminal/checkbox'
 
 Terminal adapters own host input and projection, not application styling or persistence.
 
+## Product boundary
+
+The package is primarily a semantic host adapter: it normalizes terminal input and projects Core effects so an application or an existing TUI renderer can share DOM interaction semantics. The `screen`, `layout`, `appearance`, and `node` subpaths form a small reference renderer for examples and compact applications. They are not a complete TUI framework and do not own application reconciliation, scrolling, routing, persistence, or process lifecycle.
+
+Integrations for larger applications should keep their renderer in charge of layout and I/O, translate its input into `TerminalKeyboardInput`, and use component connections as the semantic boundary.
+
 ## Build a complete screen
 
 The optional screen layer turns a layout tree into a fixed terminal frame. Rows, columns, boxes, padding, gaps, clipping, and fill sizing are composed the same way across components. Application code still decides the visual structure.
@@ -73,6 +79,37 @@ terminalText(input, {
 ```
 
 The Node writer updates only changed rows after the first frame. It positions the real TTY cursor at the projected cell, applies its shape and visibility, and restores terminal state when closed. This avoids clearing and repainting the entire screen on every keypress.
+
+## TTY ownership and cleanup
+
+`createTTYKeyboard` acquires exclusive keyboard ownership of one stdin stream. A second active owner fails with `tty-input-already-owned`. Existing external `keypress` listeners remain installed, and `close()` removes only Sectile's listener, restores the stream's prior raw mode, and restores whether it was flowing or paused. Closing is idempotent; after it closes, another controller may acquire the stream.
+
+The application owns process signals and must close both input and output resources. The screen writer restores cursor visibility and leaves the alternate screen exactly once when `close()` is called after rendering.
+
+```ts
+import { createTTYKeyboard, createTerminalScreenWriter } from '@sectile/terminal/node'
+
+const keyboardResult = createTTYKeyboard(process.stdin, handleKeyboardInput)
+if (!keyboardResult.ok) throw new Error(keyboardResult.error.message)
+
+const keyboard = keyboardResult.value
+const writer = createTerminalScreenWriter(process.stdout, { alternateScreen: true })
+let closed = false
+
+function close(): void {
+  if (closed) return
+  closed = true
+  keyboard.close()
+  writer.close()
+}
+
+process.once('SIGINT', () => { close(); process.exitCode = 130 })
+process.once('SIGTERM', () => { close(); process.exitCode = 143 })
+process.once('exit', close)
+process.stdout.on('resize', render)
+```
+
+Remove application-owned signal and resize listeners as part of the same lifecycle when the terminal view can unmount without ending the process.
 
 ## Keyboard conventions
 

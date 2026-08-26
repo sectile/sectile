@@ -1,8 +1,8 @@
 # Component completeness
 
 A public Sectile component is a cross-package contract, not only a primitive export.
-The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
-`@sectile/terminal`, and it must satisfy every requirement below before release.
+The same component ID must exist in `@sectile/core`, `@sectile/dom`,
+`@sectile/terminal`, and `@sectile/vue`, and it must satisfy every requirement below before release.
 
 1. **Theory** — authoritative state is decomposed into existing structures and state
    theories, or a new invariant is proved before promotion.
@@ -20,19 +20,19 @@ The same component ID must exist in `@sectile/core`, `@sectile/dom`, and
    edge or dynamic state with real interactive markup.
 8. **Terminal scenarios** — the documentation terminal preview demonstrates the same semantic
    variants plus terminal-specific input behavior.
-9. **Cross-host parity** — both adapters witness the same renderer-neutral transitions.
-10. **Framework ergonomics** — framework packages expose the conventions of their
-    host (`v-model`, HTML form props, native focus and keyboard behavior) and keep
-    core policies and host wiring behind the component boundary.
+9. **Cross-host parity** — DOM and terminal adapters witness the same renderer-neutral transitions.
+10. **Vue projection** — Vue witnesses prop-to-controller mapping, model proposals,
+    dynamic-domain reconciliation, native forms, SSR/hydration, Teleport, and exact
+    one-element `asChild` composition where applicable.
 
 `verification/component-completeness.json` is the machine-readable inventory, and
 `verification/component-evidence.json` binds every semantic family to concrete Core, DOM,
-and Terminal test files. Each family also declares the host-input channels exercised by
+Terminal, and Vue test files. Each family also declares the host-input channels exercised by
 those witnesses: keyboard, pointer, focus, IME, text, timers, or native form behavior as
 applicable. Coordination support such as layer ownership and reorder has the same
 cross-host evidence contract. Existing gaps are an explicit migration baseline. The checker
 rejects an unlisted public subpath, package export drift, an invalid capability entry,
-missing host evidence, or a newly introduced component with an unaudited gap. Migration
+missing host or Vue evidence, or a newly introduced component with an unaudited gap. Migration
 entries are deleted as implementation and evidence land; the target is an empty
 `migrationGaps` object.
 

@@ -24,9 +24,17 @@ Collection replacements and Form validation/submission results are generation-bo
 
 Core has no DOM, terminal, Vue, or styling dependency.
 
+## Identity and revisions
+
+Public component identities use `StableID`, which is a string contract. String IDs pass directly through serialization, DOM attributes, terminal effects, and framework keys. Applications whose source identity is numeric or object-based must map it to a stable, collision-free string before constructing a Sectile domain; keep the reverse lookup in application state.
+
+`RevisionSnapshot.revision` is an accepted-event sequence, not a count of visible state changes. Every accepted event advances it exactly once, including an accepted boundary no-op whose state remains equal. Use revisions to reject stale controlled updates and preserve event order; do not use them as a render or dirty-state counter.
+
 ## Failure handling
 
 Core constructors and transitions return `Result`. Narrow the result when failure is recoverable, or use `unwrap` only when converting a typed failure into an exception is the intended application boundary.
+
+`SectileErrorCode` is a closed union. Match known codes exhaustively and keep application-specific failures in an application-owned error type instead of casting new strings into the Sectile namespace.
 
 ```ts
 const result = sequence.createSequence(['alpha', 'beta'])

@@ -17,8 +17,7 @@ Library authors and application engineers who need predictable interaction behav
 
 ## Package status
 
-- `@sectile/core`, `@sectile/dom`, and `@sectile/terminal`: published packages.
-- `@sectile/vue`: workspace preview until its public API and documentation stabilize.
+- `@sectile/core`, `@sectile/dom`, `@sectile/terminal`, and `@sectile/vue`: published packages.
 - Playgrounds: development witnesses, not end-user documentation.
 - Documentation: end-user learning and API reference surface.
 

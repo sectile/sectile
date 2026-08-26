@@ -12,7 +12,7 @@ Keyboard, pointer, focus, composition, form, and accessibility projection. Nativ
 
 ## Terminal
 
-Normalized key input, cursor movement, Unicode display width, and rendering projection for terminal applications.
+Normalized key input, cursor movement, Unicode display width, and rendering projection for terminal applications. Component connections are the product boundary. The optional screen layer is a compact reference renderer, not a general TUI framework.
 
 ## Frameworks
 

@@ -48,6 +48,10 @@ const popupRootDefaults = Object.freeze({
 });
 
 export function vueApiDefault(locale, component, typeName, property, extracted) {
+  if (component === 'listbox' && typeName === 'ListboxRootProps' && property === 'selectionMode') {
+    return { code: "'single'" };
+  }
+
   if (component === 'stepper' && typeName === 'StepperActionProps') {
     if (property === 'disabled' || property === 'asChild') return { code: 'false' };
     if (property === 'as') return { code: "'button'" };

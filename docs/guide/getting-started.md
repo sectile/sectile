@@ -6,6 +6,8 @@ Choose the environment in the site header. Installation, imports, explanations, 
 
 <HostInstall />
 
+Sectile packages require Node.js 24 or newer for development, SSR, and Node terminal integration. Browser-only bundles still follow the browser support contract of the application that ships them.
+
 ## Import one component
 
 Every component has a public subpath. Importing the subpath keeps the dependency and bundle boundary visible.

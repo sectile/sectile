@@ -111,6 +111,8 @@ Use `default-value` when the component should own subsequent changes:
 
 Do not pass both ownership modes. Controlled components emit their proposed value through `update:modelValue`; the parent decides whether to accept it.
 
+Ownership is fixed for a mounted root. Changing a model prop from `undefined` to a value, or removing a previously supplied model prop, is an error. Remount the root when the application intentionally changes ownership.
+
 ## Render ownership
 
 Most public parts accept `as` and `as-child`. `as` chooses the rendered element. `as-child` merges behavior and attributes into the single child so the application can own the element completely.
@@ -136,7 +138,7 @@ import {
 </template>
 ```
 
-The child must resolve to one element. Sectile merges its listeners, ARIA attributes, and data attributes with the child's existing props.
+The default slot must resolve to exactly one element, including after fragments and conditional branches are flattened. Text, comments, zero elements, and multiple elements are rejected. Sectile merges its listeners, ARIA attributes, and data attributes with the child's existing props.
 
 ## Slot state
 
@@ -179,6 +181,8 @@ Prefer these selectors over generated component names or internal DOM depth. See
 ## DOM semantics and lifecycle
 
 Vue components reuse `@sectile/dom` for ARIA projection, normalized input, focus effects, popup positioning, and native-element behavior. Components create their connection during setup, synchronize controlled props through watchers, and release listeners when their rendered ownership ends.
+
+Vue is a complete public host projection, not an optional example wrapper. Repository completeness checks require every public Core component subpath to have a Vue projection witness. The Vue suite separately covers prop-to-controller mapping, emitted model proposals, dynamic collection reconciliation, native form serialization, SSR-stable IDs, hydration, and Teleport ownership.
 
 Use `@sectile/vue` for Vue templates and compound composition. Use `@sectile/dom` directly when markup is created outside Vue or when a custom renderer must own the connection lifecycle.
 

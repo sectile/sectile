@@ -12,6 +12,12 @@ import * as checkbox from '@sectile/terminal/checkbox'
 
 터미널 연결 함수는 입력과 화면 반영을 맡으며 응용 프로그램의 스타일이나 저장 방식을 정하지 않습니다.
 
+## 제품 범위
+
+이 패키지의 본체는 의미 기반 실행 환경 어댑터입니다. 터미널 입력을 정규화하고 Core 효과를 투영하여 응용 프로그램이나 기존 TUI 렌더러가 DOM과 같은 상호작용 의미를 공유하게 합니다. `screen`, `layout`, `appearance`, `node` 경로는 예시와 작은 응용 프로그램을 위한 소형 참고 렌더러입니다. 완전한 TUI 프레임워크가 아니며 응용 프로그램의 reconciliation, 스크롤, 라우팅, 저장, 프로세스 생명주기를 소유하지 않습니다.
+
+큰 응용 프로그램에서는 기존 렌더러가 레이아웃과 입출력을 계속 소유하게 하고, 그 입력을 `TerminalKeyboardInput`으로 바꾼 뒤 컴포넌트 연결 객체를 의미 경계로 사용합니다.
+
 ## 화면 전체 구성하기
 
 선택 기능인 화면 계층을 사용하면 레이아웃 트리를 고정 크기의 터미널 화면으로 만들 수 있습니다. 행과 열, 테두리 상자, 안쪽 여백, 간격, 잘라내기, 남은 공간 채우기를 조합해 브라우저 화면처럼 전체 구조를 설계할 수 있습니다. 어떤 구조로 배치할지는 응용 프로그램이 결정합니다.
@@ -73,6 +79,37 @@ terminalText(input, {
 ```
 
 Node 화면 출력기는 첫 화면 이후 달라진 행만 다시 씁니다. 계산된 셀로 실제 터미널 커서를 옮기고 모양과 표시 여부를 적용하며, 종료할 때 터미널 상태를 복구합니다. 키를 누를 때마다 화면 전체가 지워지고 다시 그려지는 깜빡임을 피할 수 있습니다.
+
+## TTY 소유권과 정리
+
+`createTTYKeyboard`는 stdin 스트림 하나의 키보드 입력을 독점합니다. 활성 소유자가 있는데 다시 만들면 `tty-input-already-owned` 오류가 납니다. 외부에서 등록한 `keypress` listener는 그대로 두며, `close()`는 Sectile listener만 제거하고 기존 raw mode와 flowing/paused 상태를 복원합니다. 여러 번 닫아도 안전하며 닫은 뒤에는 다른 controller가 같은 스트림을 소유할 수 있습니다.
+
+프로세스 signal은 응용 프로그램이 소유하며 입력과 출력 자원을 모두 닫아야 합니다. 화면 출력기는 렌더링을 시작한 뒤 `close()`가 호출되면 커서 표시와 alternate screen을 정확히 한 번 복원합니다.
+
+```ts
+import { createTTYKeyboard, createTerminalScreenWriter } from '@sectile/terminal/node'
+
+const keyboardResult = createTTYKeyboard(process.stdin, handleKeyboardInput)
+if (!keyboardResult.ok) throw new Error(keyboardResult.error.message)
+
+const keyboard = keyboardResult.value
+const writer = createTerminalScreenWriter(process.stdout, { alternateScreen: true })
+let closed = false
+
+function close(): void {
+  if (closed) return
+  closed = true
+  keyboard.close()
+  writer.close()
+}
+
+process.once('SIGINT', () => { close(); process.exitCode = 130 })
+process.once('SIGTERM', () => { close(); process.exitCode = 143 })
+process.once('exit', close)
+process.stdout.on('resize', render)
+```
+
+프로세스를 끝내지 않고 터미널 화면만 내릴 수 있다면 응용 프로그램이 등록한 signal과 resize listener도 같은 생명주기에서 제거합니다.
 
 ## 키보드 사용 원칙
 
