@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createTerminalTemporalController, createTerminalTemporalFacadeConnection, type TerminalTemporalController, type TerminalTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { formatDateTimeRange, type DateTimeRange } from '@sectile/temporal/date-time-field';
@@ -13,8 +13,7 @@ import {
   type DateTimeRangePickerPolicies,
   type DateTimeRangePickerState,
 } from '@sectile/temporal/date-time-range-picker';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toDatePickerEvent } from './date-picker.js';
 
@@ -49,7 +48,7 @@ export interface DateTimeRangePickerControlledValues {
 export interface DateTimeRangePickerConnection {
   getSnapshot(): RevisionSnapshot<DateTimeRangePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
-  syncControlledValues(values: DateTimeRangePickerControlledValues): Result<RevisionSnapshot<DateTimeRangePickerState>>;
+  syncControlledValues(values: DateTimeRangePickerControlledValues): TerminalTemporalResult<RevisionSnapshot<DateTimeRangePickerState>>;
   handleEvent(event: DateTimeRangePickerEvent): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
@@ -62,11 +61,11 @@ export function createDateTimeRangePicker(
 
 export function tryCreateDateTimeRangePicker(
   options: DateTimeRangePickerOptions = {},
-): Result<FacadeConnection<DateTimeRangePickerConnection>> {
-  return createFacadeConnection(options, construct);
+): TerminalTemporalResult<FacadeConnection<DateTimeRangePickerConnection>> {
+  return createTerminalTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePickerConnection> {
+function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<DateTimeRangePickerConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -81,7 +80,7 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
   });
-  const runtime = createSemanticController<
+  const runtime = createTerminalTemporalController<
     DateTimeRangePickerState,
     DateTimeRangePickerEvent,
     DateTimeRangePickerCommand,
@@ -126,12 +125,12 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
 
 class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly options: DateTimeRangePickerOptions;
-  readonly runtime: SemanticController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>;
+  readonly runtime: TerminalTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
 
   public constructor(
     options: DateTimeRangePickerOptions,
-    runtime: SemanticController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>,
+    runtime: TerminalTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>,
     controls: { value: boolean; highlighted: boolean; open: boolean },
   ) {
     this.options = options;
@@ -148,7 +147,7 @@ class TerminalDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public syncControlledValues(
     values: DateTimeRangePickerControlledValues,
-  ): Result<RevisionSnapshot<DateTimeRangePickerState>> {
+  ): TerminalTemporalResult<RevisionSnapshot<DateTimeRangePickerState>> {
     if (
       this.controls.value !== (values.value !== undefined)
       || this.controls.highlighted !== (values.highlightedValue !== undefined)

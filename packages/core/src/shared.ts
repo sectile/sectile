@@ -1,6 +1,6 @@
 /** Shared public contracts for the canonical Sectile structures. */
 
-import type { SectileErrorCode } from './error-code.js';
+import type { CoreErrorCode } from './error-code.js';
 
 export type StableID = string;
 
@@ -10,14 +10,14 @@ export type ErrorClass =
   | 'resource-rejection'
   | 'internal-invariant';
 
-export interface SectileError<Code extends SectileErrorCode = SectileErrorCode> {
+export interface SectileError<Code extends string = CoreErrorCode> {
   readonly class: ErrorClass;
   readonly code: Code;
   readonly message: string;
   readonly details?: Readonly<Record<string, unknown>>;
 }
 
-export type Result<T, Code extends SectileErrorCode = SectileErrorCode> =
+export type Result<T, Code extends string = CoreErrorCode> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: SectileError<Code> };
 

@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
@@ -91,7 +91,7 @@ export function createDateTimePickerState(
 
 export function tryCreateDateTimePickerState(
   input: DateTimePickerStateInput = {},
-): Result<DateTimePickerState> {
+): TemporalResult<DateTimePickerState> {
   const value = input.value ?? null;
   const validValue = value === null ? ok(null) : tryCreateDateTimeValue(value.date, value.time);
   if (!validValue.ok) return validValue;
@@ -124,7 +124,7 @@ export function applyDateTimePickerEvent(
   state: DateTimePickerState,
   event: DateTimePickerEvent,
   policies: DateTimePickerPolicies = {},
-): Result<DateTimePickerUpdate> {
+): TemporalResult<DateTimePickerUpdate> {
   const valid = tryCreateDateTimePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
@@ -159,7 +159,7 @@ function selectDate(
   state: DateTimePickerState,
   requested: DateValue,
   policies: DateTimePickerPolicies,
-): Result<DateTimePickerUpdate> {
+): TemporalResult<DateTimePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   if (!isCalendarValueAvailable(date.value, policies.date)) {
@@ -177,7 +177,7 @@ function commitValue(
   state: DateTimePickerState,
   requested: DateTimeValue | null,
   policies: DateTimePickerPolicies,
-): Result<DateTimePickerUpdate> {
+): TemporalResult<DateTimePickerUpdate> {
   if (requested === null) {
     if (policies.required === true) {
       return fail(
@@ -218,7 +218,7 @@ function commitValue(
 function validateValue(
   requested: DateTimeValue,
   policies: DateTimePickerPolicies,
-): Result<DateTimeValue> {
+): TemporalResult<DateTimeValue> {
   const value = tryCreateDateTimeValue(requested.date, requested.time);
   if (!value.ok) return invalidTransition(value);
   if (!isCalendarValueAvailable(value.value.date, policies.date)) {
@@ -238,7 +238,7 @@ function validateValue(
   return value;
 }
 
-function validateTime(value: TimeValue, policies: TimeFieldPolicies = {}): Result<TimeValue> {
+function validateTime(value: TimeValue, policies: TimeFieldPolicies = {}): TemporalResult<TimeValue> {
   const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return invalidTransition(valid);
   if (policies.min !== undefined && compareTimeValues(valid.value, policies.min) < 0) {
@@ -250,7 +250,7 @@ function validateTime(value: TimeValue, policies: TimeFieldPolicies = {}): Resul
   return valid;
 }
 
-function validatePolicies(policies: DateTimePickerPolicies): Result<true> {
+function validatePolicies(policies: DateTimePickerPolicies): TemporalResult<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') {
     return fail('construction', 'invalid-date-time-picker-unavailable-policy', 'Date-time picker unavailable policy must be a function.');
   }
@@ -264,7 +264,7 @@ function validatePolicies(policies: DateTimePickerPolicies): Result<true> {
   return ok(true);
 }
 
-function invalidTransition<T>(result: Result<T>): Result<never> {
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
   return result.ok
     ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.')
     : { ok: false, error: { ...result.error, class: 'transition-rejection' } };

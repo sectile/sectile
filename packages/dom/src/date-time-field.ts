@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
@@ -11,8 +11,7 @@ import {
   type DateTimeFieldState,
   type DateTimeValue,
 } from '@sectile/temporal/date-time-field';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
@@ -50,7 +49,7 @@ export interface DateTimeFieldConnection {
   getSnapshot(): RevisionSnapshot<DateTimeFieldState>;
   getText(): string;
   getValue(): DateTimeValue | null;
-  syncControlledValues(values: DateTimeFieldControlledValues): Result<RevisionSnapshot<DateTimeFieldState>>;
+  syncControlledValues(values: DateTimeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateTimeFieldState>>;
   handleEvent(event: DateTimeFieldEvent): boolean;
   refresh(): void;
   disconnect(): void;
@@ -64,18 +63,18 @@ export function createDateTimeField(
 
 export function tryCreateDateTimeField(
   options: DateTimeFieldOptions,
-): Result<FacadeConnection<DateTimeFieldConnection>> {
-  return createFacadeConnection(options, construct);
+): DOMTemporalResult<FacadeConnection<DateTimeFieldConnection>> {
+  return createDOMTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimeFieldOptions): Result<DateTimeFieldConnection> {
+function construct(options: DateTimeFieldOptions): DOMTemporalResult<DateTimeFieldConnection> {
   const valueControlled = options.value !== undefined;
   const inputControlled = options.inputState !== undefined;
   const policies = Object.freeze({
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
   });
-  const runtime = createSemanticController<
+  const runtime = createDOMTemporalController<
     DateTimeFieldState,
     DateTimeFieldEvent,
     DateTimeFieldCommand,
@@ -105,7 +104,7 @@ function construct(options: DateTimeFieldOptions): Result<DateTimeFieldConnectio
 
 class DOMDateTimeField implements DateTimeFieldConnection {
   readonly options: DateTimeFieldOptions;
-  readonly runtime: SemanticController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>;
+  readonly runtime: DOMTemporalController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>;
   readonly valueControlled: boolean;
   readonly inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
@@ -136,7 +135,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
 
   public constructor(
     options: DateTimeFieldOptions,
-    runtime: SemanticController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>,
+    runtime: DOMTemporalController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>,
     valueControlled: boolean,
     inputControlled: boolean,
   ) {
@@ -168,7 +167,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
 
   public syncControlledValues(
     values: DateTimeFieldControlledValues,
-  ): Result<RevisionSnapshot<DateTimeFieldState>> {
+  ): DOMTemporalResult<RevisionSnapshot<DateTimeFieldState>> {
     if (
       this.valueControlled !== (values.value !== undefined)
       || this.inputControlled !== (values.inputState !== undefined)

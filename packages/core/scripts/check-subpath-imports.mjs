@@ -32,7 +32,8 @@ try {
   const runtime = spawnSync(process.execPath, ['consumer.mjs'], { cwd: directory, encoding: 'utf8' });
   assert.equal(runtime.status, 0, runtime.stderr);
   await writeFile(join(directory, 'consumer.ts'), `
-    import type { Result, SectileErrorCode } from '@sectile/core';
+    import type { CoreErrorCode, Result } from '@sectile/core';
+    import type { HostAdapter } from '@sectile/core/adapter-runtime';
     import { createSequence, type Sequence } from '@sectile/core/sequence';
     import { createRange, type QuantizedRange } from '@sectile/core/range';
     import { createGrid, type Grid } from '@sectile/core/grid';
@@ -64,9 +65,15 @@ try {
       const code: 'no-cursor' = failure.error.code;
       void code;
     }
-    // @ts-expect-error error codes are a closed contract
-    const unknownCode: SectileErrorCode = 'consumer-invented-error';
-    void [a, b, c, d, e, f, g, h, i, j, k, l, m, unknownCode];
+    declare const adapter: HostAdapter<string, string, string>;
+    const customFailure = adapter.reject('consumer-invented-error', 'consumer failure');
+    if (!customFailure.ok) {
+      const customCode: 'consumer-invented-error' = customFailure.error.code;
+      void customCode;
+    }
+    // @ts-expect-error Core codes remain a closed package-local contract
+    const unknownCoreCode: CoreErrorCode = 'consumer-invented-error';
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, unknownCoreCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {

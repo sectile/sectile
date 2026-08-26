@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateRange, createDateValue, type DateRange, type DateValue,tryCreateDateRange,tryCreateDateValue } from './date-field.js';
@@ -42,7 +42,7 @@ export function createDateRangePickerState(input: DateRangePickerStateInput = {}
   return unwrap(tryCreateDateRangePickerState(input));
 }
 
-export function tryCreateDateRangePickerState(input: DateRangePickerStateInput = {}): Result<DateRangePickerState> {
+export function tryCreateDateRangePickerState(input: DateRangePickerStateInput = {}): TemporalResult<DateRangePickerState> {
   let value: DateRange | null = null;
   if (input.value !== undefined && input.value !== null) {
     const valid = tryCreateDateRange(input.value.start, input.value.end);
@@ -69,7 +69,7 @@ export function applyDateRangePickerEvent(
   state: DateRangePickerState,
   event: DateRangePickerEvent,
   policies: DatePickerPolicies = {},
-): Result<DateRangePickerUpdate> {
+): TemporalResult<DateRangePickerUpdate> {
   const valid = tryCreateDateRangePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   if (event === 'clear') {
@@ -91,7 +91,7 @@ export function applyDateRangePickerEvent(
   return createMachineUpdate(Object.freeze({ value: state.value, anchor: state.anchor, calendar: update.value.state }), update.value.commands);
 }
 
-function selectDate(state: DateRangePickerState, requested: DateValue, policies: DatePickerPolicies): Result<DateRangePickerUpdate> {
+function selectDate(state: DateRangePickerState, requested: DateValue, policies: DatePickerPolicies): TemporalResult<DateRangePickerUpdate> {
   const valid = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!valid.ok) return invalidTransition(valid);
   if (!isCalendarValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
@@ -116,4 +116,4 @@ function selectDate(state: DateRangePickerState, requested: DateValue, policies:
   ]);
 }
 
-function invalidTransition<T>(result: Result<T>): Result<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

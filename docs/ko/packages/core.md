@@ -24,7 +24,7 @@ import * as listbox from '@sectile/core/listbox'
 
 코어의 생성 함수와 상태 전이는 `Result`를 반환합니다. 실패를 복구할 수 있다면 성공 여부를 나눠 처리합니다. 실패를 예외로 바꾸는 것이 의도된 경계에서만 `unwrap`을 사용합니다.
 
-`SectileErrorCode`는 닫힌 union입니다. 알려진 코드를 빠짐없이 처리하고, 응용 프로그램 전용 오류 문자열을 Sectile 타입으로 강제 변환하지 말고 별도 오류 타입에 둡니다.
+`CoreErrorCode`는 코어가 소유하는 닫힌 union입니다. `SectileError<Code>`와 `Result<Value, Code>`는 임의의 문자열 코드를 받을 수 있으므로 Temporal, Virtual, 응용 프로그램 adapter가 코어를 수정하지 않고 더 좁은 오류 vocabulary를 소유할 수 있습니다. 응용 프로그램 코드를 `CoreErrorCode`로 강제 변환하지 않습니다.
 
 ```ts
 const result = sequence.createSequence(['alpha', 'beta'])

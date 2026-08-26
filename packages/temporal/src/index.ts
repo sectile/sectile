@@ -1,4 +1,5 @@
 /** Type-only package facade. Runtime consumers import a specific subpath. */
+export type * from './error.js';
 export type * from './date-field.js';
 export type * from './date-range-field.js';
 export type * from './date-time-field.js';

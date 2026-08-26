@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/temporal/date-time-field';
@@ -14,8 +14,7 @@ import {
 } from '@sectile/temporal/date-time-range-picker';
 export type { DateTimeRangePickerPolicies } from '@sectile/temporal/date-time-range-picker';
 import type { TimeValue } from '@sectile/temporal/time-field';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
@@ -65,7 +64,7 @@ export interface DateTimeRangePickerConnection {
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: DateTimeRangePickerControlledValues): Result<RevisionSnapshot<DateTimeRangePickerState>>;
+  syncControlledValues(values: DateTimeRangePickerControlledValues): DOMTemporalResult<RevisionSnapshot<DateTimeRangePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DateTimeRangePickerEvent): boolean;
   refresh(): void;
@@ -80,11 +79,11 @@ export function createDateTimeRangePicker(
 
 export function tryCreateDateTimeRangePicker(
   options: DateTimeRangePickerOptions,
-): Result<FacadeConnection<DateTimeRangePickerConnection>> {
-  return createFacadeConnection(options, construct);
+): DOMTemporalResult<FacadeConnection<DateTimeRangePickerConnection>> {
+  return createDOMTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePickerConnection> {
+function construct(options: DateTimeRangePickerOptions): DOMTemporalResult<DateTimeRangePickerConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -106,7 +105,7 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
   });
-  const runtime = createSemanticController<
+  const runtime = createDOMTemporalController<
     DateTimeRangePickerState,
     DateTimeRangePickerEvent,
     DateTimeRangePickerCommand,
@@ -147,7 +146,7 @@ function construct(options: DateTimeRangePickerOptions): Result<DateTimeRangePic
 
 class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly options: DateTimeRangePickerOptions;
-  readonly runtime: SemanticController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>;
+  readonly runtime: DOMTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #startTimeField: FacadeConnection<TimeFieldConnection> | null;
   readonly #endTimeField: FacadeConnection<TimeFieldConnection> | null;
@@ -178,7 +177,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public constructor(
     options: DateTimeRangePickerOptions,
-    runtime: SemanticController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>,
+    runtime: DOMTemporalController<DateTimeRangePickerState, DateTimeRangePickerEvent, DateTimeRangePickerCommand>,
     controls: { value: boolean; highlighted: boolean; open: boolean },
   ) {
     this.options = options;
@@ -259,7 +258,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
 
   public syncControlledValues(
     values: DateTimeRangePickerControlledValues,
-  ): Result<RevisionSnapshot<DateTimeRangePickerState>> {
+  ): DOMTemporalResult<RevisionSnapshot<DateTimeRangePickerState>> {
     if (
       this.controls.value !== (values.value !== undefined)
       || this.controls.highlighted !== (values.highlightedValue !== undefined)

@@ -1,4 +1,5 @@
 import type { Result } from '../../shared.js';
+import type { CoreErrorCode } from '../../error-code.js';
 import { freezeArray, ok } from './foundation.js';
 
 export interface MachineUpdate<State, Command> {
@@ -6,10 +7,10 @@ export interface MachineUpdate<State, Command> {
   readonly commands: readonly Command[];
 }
 
-export type EventReducer<State, Event, Command> = (
+export type EventReducer<State, Event, Command, Code extends string = CoreErrorCode> = (
   state: State,
   event: Event,
-) => Result<MachineUpdate<State, Command>>;
+) => Result<MachineUpdate<State, Command>, Code>;
 
 export function createMachineUpdate<State, Command extends object>(
   state: State,

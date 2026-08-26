@@ -1,15 +1,16 @@
-import type { ErrorClass, Result, SectileError, SectileErrorCode } from '@sectile/core';
+import type { ErrorClass } from '@sectile/core';
+import type { VirtualError, VirtualErrorCode, VirtualResult } from '../error.js';
 
-export function ok<T>(value: T): Result<T> {
+export function ok<T>(value: T): VirtualResult<T> {
   return { ok: true, value };
 }
 
-export function fail<T = never, Code extends SectileErrorCode = SectileErrorCode>(
+export function fail<T = never, Code extends VirtualErrorCode = VirtualErrorCode>(
   errorClass: ErrorClass,
   code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,
-): Result<T, Code> {
+): VirtualResult<T, Code> {
   return {
     ok: false,
     error: {
@@ -25,7 +26,7 @@ export function freezeArray<T>(values: readonly T[]): readonly T[] {
   return Object.freeze([...values]);
 }
 
-export function validateMaxItems(value: number): SectileError | null {
+export function validateMaxItems(value: number): VirtualError | null {
   if (Number.isSafeInteger(value) && value >= 0) return null;
   return {
     class: 'construction',

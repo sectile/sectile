@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
@@ -7,8 +7,7 @@ import { applyDatePickerEvent, tryCreateDatePickerState, type DatePickerCommand,
 export { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 export type { CalendarMonthValue, CalendarViewMode } from '@sectile/temporal/calendar';
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
@@ -46,32 +45,32 @@ export interface DatePickerConnection {
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: DatePickerControlledValues): Result<RevisionSnapshot<DatePickerState>>;
+  syncControlledValues(values: DatePickerControlledValues): DOMTemporalResult<RevisionSnapshot<DatePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DatePickerEvent): boolean;
   refresh(): void;
   disconnect(): void;
 }
 export function createDatePicker(options: DatePickerOptions): FacadeConnection<DatePickerConnection> { return unwrap(tryCreateDatePicker(options)); }
-export function tryCreateDatePicker(options: DatePickerOptions): Result<FacadeConnection<DatePickerConnection>> { return createFacadeConnection(options, construct); }
-function construct(options: DatePickerOptions): Result<DatePickerConnection> {
+export function tryCreateDatePicker(options: DatePickerOptions): DOMTemporalResult<FacadeConnection<DatePickerConnection>> { return createDOMTemporalFacadeConnection(options, construct); }
+function construct(options: DatePickerOptions): DOMTemporalResult<DatePickerConnection> {
   const controls = { value: options.value !== undefined, highlighted: options.highlightedValue !== undefined, open: options.open !== undefined };
   const requestedValue = controls.value ? options.value : options.defaultValue;
   const requestedHighlight = controls.highlighted ? options.highlightedValue : options.defaultHighlightedValue;
   const requestedOpen = controls.open ? options.open : options.defaultOpen;
   const initial = tryCreateDatePickerState({ ...(requestedValue === undefined ? {} : { value: requestedValue }), ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }), ...(requestedOpen === undefined ? {} : { open: requestedOpen }) });
-  const runtime = createSemanticController<DatePickerState, DatePickerEvent, DatePickerCommand, DatePickerCommand>({ initial, reducer: (state, event) => applyDatePickerEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }), reconcile: (previous, proposed) => tryCreateDatePickerState({ value: controls.value ? previous.value : proposed.value, highlighted: controls.highlighted ? previous.highlighted : proposed.highlighted, open: controls.open ? previous.open : proposed.open, view: controls.highlighted ? previous.view : proposed.view, viewMode: proposed.viewMode }), notify: (previous, proposed) => { if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value); if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); }, toEffect: (command) => command, interaction: options });
+  const runtime = createDOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand, DatePickerCommand>({ initial, reducer: (state, event) => applyDatePickerEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }), reconcile: (previous, proposed) => tryCreateDatePickerState({ value: controls.value ? previous.value : proposed.value, highlighted: controls.highlighted ? previous.highlighted : proposed.highlighted, open: controls.open ? previous.open : proposed.open, view: controls.highlighted ? previous.view : proposed.view, viewMode: proposed.viewMode }), notify: (previous, proposed) => { if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value); if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); }, toEffect: (command) => command, interaction: options });
   return runtime.ok ? { ok: true, value: new DOMDatePicker(options, runtime.value, controls) } : runtime;
 }
 class DOMDatePicker implements DatePickerConnection {
-  readonly options: DatePickerOptions; readonly runtime: SemanticController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
+  readonly options: DatePickerOptions; readonly runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #field: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
   #syncingField = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => { const semantic = keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
   readonly #click = (event: MouseEvent): void => { const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-date-picker-id]') : null; if (target !== null && this.options.grid.contains(target)) { const parsed = target.dataset['datePickerId']?.split('-').map(Number); if (parsed?.length === 3) this.handleEvent({ type: 'select', value: { year: parsed[0] as number, month: parsed[1] as number, day: parsed[2] as number } }); } };
-  public constructor(options: DatePickerOptions, runtime: SemanticController<DatePickerState, DatePickerEvent, DatePickerCommand>, controls: { value: boolean; highlighted: boolean; open: boolean }) {
+  public constructor(options: DatePickerOptions, runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>, controls: { value: boolean; highlighted: boolean; open: boolean }) {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
@@ -106,7 +105,7 @@ class DOMDatePicker implements DatePickerConnection {
   public getMonth(): readonly (readonly DateValue[])[] { return createCalendarMonth(this.getSnapshot().state.view, this.options.policies?.weekStartsOn); }
   public getWeek(): readonly DateValue[] { return createCalendarWeek(this.getSnapshot().state.highlighted, this.options.policies?.weekStartsOn); }
   public getYear(): readonly (readonly CalendarMonthValue[])[] { return createCalendarYear(this.getSnapshot().state.view.year); }
-  public syncControlledValues(values: DatePickerControlledValues): Result<RevisionSnapshot<DatePickerState>> { if (this.controls.value !== (values.value !== undefined) || this.controls.highlighted !== (values.highlightedValue !== undefined) || this.controls.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date picker values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const highlighted = this.controls.highlighted ? values.highlightedValue as DateValue : state.highlighted; const result = this.runtime.replace(tryCreateDatePickerState({ value: this.controls.value ? values.value as DateValue | null : state.value, highlighted, view: { year: highlighted.year, month: highlighted.month }, viewMode: state.viewMode, open: this.controls.open ? values.open as boolean : state.open })); if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result; }
+  public syncControlledValues(values: DatePickerControlledValues): DOMTemporalResult<RevisionSnapshot<DatePickerState>> { if (this.controls.value !== (values.value !== undefined) || this.controls.highlighted !== (values.highlightedValue !== undefined) || this.controls.open !== (values.open !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date picker values must preserve their construction-time shape.' } }; const state = this.getSnapshot().state; const highlighted = this.controls.highlighted ? values.highlightedValue as DateValue : state.highlighted; const result = this.runtime.replace(tryCreateDatePickerState({ value: this.controls.value ? values.value as DateValue | null : state.value, highlighted, view: { year: highlighted.year, month: highlighted.month }, viewMode: state.viewMode, open: this.controls.open ? values.open as boolean : state.open })); if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result; }
   public setCellAttributes(element: HTMLElement, value: DateValue): void { const state = this.getSnapshot().state; const available = isCalendarValueAvailable(value, this.options.policies); element.dataset['datePickerId'] = calendarID(value); element.setAttribute('role', 'gridcell'); element.setAttribute('aria-selected', String(state.value !== null && compareDateValues(state.value, value) === 0)); setDatePickerCellAvailability(element, available); element.tabIndex = compareDateValues(state.highlighted, value) === 0 ? 0 : -1; }
   public handleEvent(event: DatePickerEvent): boolean { const result = this.runtime.handle(event); if (result.ok) { this.refresh(); this.options.onUpdate?.(); if (result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus(); else if (result.commands.some((command) => command.type === 'highlight-changed')) queueMicrotask(() => this.options.grid.querySelector<HTMLElement>('[tabindex="0"]')?.focus()); } return result.ok; }
   public refresh(): void {

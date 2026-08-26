@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import {
@@ -87,7 +87,7 @@ export function createDateTimeValue(date: DateValue, time: TimeValue): DateTimeV
   return unwrap(tryCreateDateTimeValue(date, time));
 }
 
-export function tryCreateDateTimeValue(date: DateValue, time: TimeValue): Result<DateTimeValue> {
+export function tryCreateDateTimeValue(date: DateValue, time: TimeValue): TemporalResult<DateTimeValue> {
   const validDate = tryCreateDateValue(date.year, date.month, date.day);
   if (!validDate.ok) return validDate;
   const validTime = tryCreateTimeValue(time.hour, time.minute, time.second, time.millisecond);
@@ -95,7 +95,7 @@ export function tryCreateDateTimeValue(date: DateValue, time: TimeValue): Result
   return ok(Object.freeze({ date: validDate.value, time: validTime.value }));
 }
 
-export function parseDateTimeValue(text: string): Result<DateTimeValue> {
+export function parseDateTimeValue(text: string): TemporalResult<DateTimeValue> {
   if (typeof text !== 'string') {
     return fail('construction', 'invalid-date-time-text', 'Date-time text must be a string.');
   }
@@ -136,7 +136,7 @@ export function createDateTimeRange(
 export function tryCreateDateTimeRange(
   start: DateTimeValue,
   end: DateTimeValue,
-): Result<DateTimeRange> {
+): TemporalResult<DateTimeRange> {
   const validStart = tryCreateDateTimeValue(start.date, start.time);
   if (!validStart.ok) return validStart;
   const validEnd = tryCreateDateTimeValue(end.date, end.time);
@@ -155,7 +155,7 @@ export function formatDateTimeRange(value: DateTimeRange): string {
   return `${formatDateTimeValue(value.start)}/${formatDateTimeValue(value.end)}`;
 }
 
-export function addDateTimeMilliseconds(value: DateTimeValue, amount: number): Result<DateTimeValue> {
+export function addDateTimeMilliseconds(value: DateTimeValue, amount: number): TemporalResult<DateTimeValue> {
   if (!Number.isSafeInteger(amount)) {
     return fail('transition-rejection', 'invalid-date-time-delta', 'Date-time delta must be a safe integer.');
   }
@@ -178,7 +178,7 @@ export function createDateTimeFieldState(
 export function tryCreateDateTimeFieldState(
   value: DateTimeValue | null = null,
   inputState?: TextEditingState,
-): Result<DateTimeFieldState> {
+): TemporalResult<DateTimeFieldState> {
   const valid = value === null ? ok(null) : tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return valid;
   const input = inputState === undefined
@@ -199,7 +199,7 @@ export function applyDateTimeFieldEvent(
   state: DateTimeFieldState,
   event: DateTimeFieldEvent,
   policies: DateTimeFieldPolicies = {},
-): Result<DateTimeFieldUpdate> {
+): TemporalResult<DateTimeFieldUpdate> {
   const valid = tryCreateDateTimeFieldState(state.value, state.inputState);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
@@ -285,7 +285,7 @@ function adjustSegment(
   value: DateTimeValue,
   segment: DateTimeSegment,
   amount: number,
-): Result<DateTimeValue> {
+): TemporalResult<DateTimeValue> {
   if (segment === 'year' || segment === 'month' || segment === 'day') {
     const date = segment === 'year'
       ? addDateYears(value.date, amount)
@@ -308,7 +308,7 @@ function commitValue(
   value: DateTimeValue | null,
   policies: DateTimeFieldPolicies,
   segment?: DateTimeSegment,
-): Result<DateTimeFieldUpdate> {
+): TemporalResult<DateTimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) {
       return fail('transition-rejection', 'date-time-field-value-required', 'Date-time field requires a value.');
@@ -350,7 +350,7 @@ function commitValue(
 function committedInput(
   value: DateTimeValue | null,
   segment?: DateTimeSegment,
-): Result<TextEditingState> {
+): TemporalResult<TextEditingState> {
   const text = value === null ? '' : formatDateTimeValue(value);
   const range = segment === 'year' ? [0, 4]
     : segment === 'month' ? [5, 7]
@@ -366,7 +366,7 @@ function committedInput(
   });
 }
 
-function validatePolicies(policies: DateTimeFieldPolicies): Result<true> {
+function validatePolicies(policies: DateTimeFieldPolicies): TemporalResult<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') {
     return fail(
       'construction',
@@ -411,14 +411,14 @@ function timeToMilliseconds(value: TimeValue): number {
   return ((value.hour * 60 + value.minute) * 60 + value.second) * 1_000 + value.millisecond;
 }
 
-function millisecondsToTime(value: number): Result<TimeValue> {
+function millisecondsToTime(value: number): TemporalResult<TimeValue> {
   const hour = Math.floor(value / 3_600_000);
   const minute = Math.floor((value % 3_600_000) / 60_000);
   const second = Math.floor((value % 60_000) / 1_000);
   return tryCreateTimeValue(hour, minute, second, value % 1_000);
 }
 
-function invalidTransition<T>(result: Result<T>): Result<never> {
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
   return result.ok
     ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.')
     : { ok: false, error: { ...result.error, class: 'transition-rejection' } };

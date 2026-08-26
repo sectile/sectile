@@ -1,4 +1,5 @@
-import type { Result, StableID } from '@sectile/core';
+import type { StableID } from '@sectile/core';
+import type { VirtualResult } from './error.js';
 import { unwrap } from '@sectile/core/result';
 import { tryCreateSequence } from '@sectile/core/sequence';
 import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
@@ -94,7 +95,7 @@ export function tryCreateTrackGridLayout<ID extends StableID>(
   columns: ExtentIndex,
   regions: readonly GridRegion<ID>[],
   input: TrackGridLayoutInput = {},
-): Result<TrackGridLayoutState<ID>> {
+): VirtualResult<TrackGridLayoutState<ID>> {
   const rowGap = input.rowGap ?? 0;
   const columnGap = input.columnGap ?? 0;
   const rowFlow = input.rowFlow ?? 'forward';
@@ -111,7 +112,7 @@ export function queryTrackGridLayout<ID extends StableID>(state: TrackGridLayout
   return unwrap(tryQueryTrackGridLayout(state, input));
 }
 
-export function tryQueryTrackGridLayout<ID extends StableID>(state: TrackGridLayoutState<ID>, input: VirtualQueryInput): Result<TrackGridLayoutPlan<ID>> {
+export function tryQueryTrackGridLayout<ID extends StableID>(state: TrackGridLayoutState<ID>, input: VirtualQueryInput): VirtualResult<TrackGridLayoutPlan<ID>> {
   const normalized = normalizeQuery(input);
   if (!normalized.ok) return normalized;
   const grid = getInternals(state);
@@ -145,7 +146,7 @@ export function applyGridMeasurements<ID extends StableID>(state: TrackGridLayou
   return unwrap(tryApplyGridMeasurements(state, batch));
 }
 
-export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLayoutState<ID>, batch: VirtualMeasurementBatch<GridTrackMeasurement, ID>): Result<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
+export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLayoutState<ID>, batch: VirtualMeasurementBatch<GridTrackMeasurement, ID>): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const rowUpdates: ExtentUpdate[] = [];
@@ -171,7 +172,7 @@ export function applyTrackGridMutation<ID extends StableID>(state: TrackGridLayo
   return unwrap(tryApplyTrackGridMutation(state, mutation, anchor));
 }
 
-export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): Result<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
+export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
   if (mutation.type !== 'replace-regions' && mutation.type !== 'splice-tracks') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
   let rows = state.rows;
@@ -202,7 +203,7 @@ export function trackGridScrollTarget<ID extends StableID>(state: TrackGridLayou
   return unwrap(tryTrackGridScrollTarget(state, id, viewport, alignment));
 }
 
-export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): Result<VirtualPoint> {
+export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const grid = getInternals(state);
   if (!grid.ok) return grid;
   const region = grid.value.byID.get(id);
@@ -233,7 +234,7 @@ function createState<ID extends StableID>(state: TrackGridLayoutState<ID>, index
   return frozen;
 }
 
-function validateRegions<ID extends StableID>(rowCount: number, columnCount: number, regions: readonly GridRegion<ID>[], maxRegions: number): Result<readonly IndexedRegion<ID>[]> {
+function validateRegions<ID extends StableID>(rowCount: number, columnCount: number, regions: readonly GridRegion<ID>[], maxRegions: number): VirtualResult<readonly IndexedRegion<ID>[]> {
   if (regions.length > maxRegions) return fail('resource-rejection', 'item-ceiling-exceeded', 'Grid regions exceed maxRegions.', { size: regions.length, maxRegions });
   const domain = tryCreateSequence(regions.map(({ id }) => id), { maxItems: Math.max(1, maxRegions) });
   if (!domain.ok) return domain;
@@ -261,7 +262,7 @@ function validateRegions<ID extends StableID>(rowCount: number, columnCount: num
   return ok(Object.freeze(indexed));
 }
 
-function transformRegions<ID extends StableID>(regions: readonly GridRegion<ID>[], axis: 'row' | 'column', index: number, deleteCount: number, insertedCount: number): Result<readonly GridRegion<ID>[]> {
+function transformRegions<ID extends StableID>(regions: readonly GridRegion<ID>[], axis: 'row' | 'column', index: number, deleteCount: number, insertedCount: number): VirtualResult<readonly GridRegion<ID>[]> {
   const removedEnd = index + deleteCount;
   const delta = insertedCount - deleteCount;
   const result: GridRegion<ID>[] = [];
@@ -308,7 +309,7 @@ function contentSize<ID extends StableID>(state: TrackGridLayoutState<ID>): { re
   return Object.freeze({ width: trackContentExtent(state.columns, state.columnGap), height: trackContentExtent(state.rows, state.rowGap) });
 }
 
-function getInternals<ID extends StableID>(state: TrackGridLayoutState<ID>): Result<GridInternals<ID>> {
+function getInternals<ID extends StableID>(state: TrackGridLayoutState<ID>): VirtualResult<GridInternals<ID>> {
   const value = internals.get(state as TrackGridLayoutState);
   return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Grid layout state must be created by createTrackGridLayout().') : ok(value as GridInternals<ID>);
 }
@@ -318,8 +319,8 @@ function compareRegions<ID extends StableID>(left: IndexedRegion<ID>, right: Ind
 }
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
-function nextGeneration(generation: number): Result<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
-function geometryFailure<T>(message: string): Result<T> { return fail('construction', 'virtual-layout-geometry-invalid', message); }
+function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
+function geometryFailure<T>(message: string): VirtualResult<T> { return fail('construction', 'virtual-layout-geometry-invalid', message); }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
 function positiveSafe(value: number): boolean { return Number.isSafeInteger(value) && value > 0; }
 function nonNegativeSafe(value: number): boolean { return Number.isSafeInteger(value) && value >= 0; }

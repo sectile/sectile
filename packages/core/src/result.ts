@@ -1,7 +1,7 @@
 import type { ErrorClass, Result, SectileError } from './shared.js';
-import type { SectileErrorCode } from './error-code.js';
+import type { CoreErrorCode } from './error-code.js';
 
-export class SectileResultError<Code extends SectileErrorCode = SectileErrorCode>
+export class SectileResultError<Code extends string = CoreErrorCode>
   extends Error implements SectileError<Code> {
   public readonly class: ErrorClass;
   public readonly code: Code;
@@ -16,10 +16,10 @@ export class SectileResultError<Code extends SectileErrorCode = SectileErrorCode
   }
 }
 
-export function unwrap<T, Code extends SectileErrorCode>(result: Result<T, Code>): T {
+export function unwrap<T, Code extends string>(result: Result<T, Code>): T {
   if (result.ok) return result.value;
   throw new SectileResultError(result.error);
 }
 
 export type { ErrorClass, Result, SectileError } from './shared.js';
-export type { SectileErrorCode } from './error-code.js';
+export type { CoreErrorCode } from './error-code.js';

@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { compareDateTimeValues, type DateTimeValue } from '@sectile/temporal/date-time-field';
@@ -14,8 +14,7 @@ import {
 } from '@sectile/temporal/date-time-picker';
 export type { DateTimePickerPolicies } from '@sectile/temporal/date-time-picker';
 import type { TimeValue } from '@sectile/temporal/time-field';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
@@ -63,7 +62,7 @@ export interface DateTimePickerConnection {
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: DateTimePickerControlledValues): Result<RevisionSnapshot<DateTimePickerState>>;
+  syncControlledValues(values: DateTimePickerControlledValues): DOMTemporalResult<RevisionSnapshot<DateTimePickerState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: DateTimePickerEvent): boolean;
   refresh(): void;
@@ -78,11 +77,11 @@ export function createDateTimePicker(
 
 export function tryCreateDateTimePicker(
   options: DateTimePickerOptions,
-): Result<FacadeConnection<DateTimePickerConnection>> {
-  return createFacadeConnection(options, construct);
+): DOMTemporalResult<FacadeConnection<DateTimePickerConnection>> {
+  return createDOMTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimePickerOptions): Result<DateTimePickerConnection> {
+function construct(options: DateTimePickerOptions): DOMTemporalResult<DateTimePickerConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -107,7 +106,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
   });
-  const runtime = createSemanticController<
+  const runtime = createDOMTemporalController<
     DateTimePickerState,
     DateTimePickerEvent,
     DateTimePickerCommand,
@@ -148,7 +147,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
 
 class DOMDateTimePicker implements DateTimePickerConnection {
   readonly options: DateTimePickerOptions;
-  readonly runtime: SemanticController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
+  readonly runtime: DOMTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #dateTimeField: FacadeConnection<DateTimeFieldConnection> | null;
   readonly #dateField: FacadeConnection<DateFieldConnection> | null;
@@ -178,7 +177,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
 
   public constructor(
     options: DateTimePickerOptions,
-    runtime: SemanticController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>,
+    runtime: DOMTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>,
     controls: { value: boolean; highlighted: boolean; open: boolean },
   ) {
     this.options = options;
@@ -255,7 +254,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
 
   public syncControlledValues(
     values: DateTimePickerControlledValues,
-  ): Result<RevisionSnapshot<DateTimePickerState>> {
+  ): DOMTemporalResult<RevisionSnapshot<DateTimePickerState>> {
     if (
       this.controls.value !== (values.value !== undefined)
       || this.controls.highlighted !== (values.highlightedValue !== undefined)

@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import {
   applyCalendarEvent,
   tryCreateCalendarState,
@@ -37,14 +37,14 @@ export function createDatePickerState(input: DatePickerStateInput = {}): DatePic
   return unwrap(tryCreateDatePickerState(input));
 }
 
-export function tryCreateDatePickerState(input: DatePickerStateInput = {}): Result<DatePickerState> {
+export function tryCreateDatePickerState(input: DatePickerStateInput = {}): TemporalResult<DatePickerState> {
   const calendar = tryCreateCalendarState(input);
   if (!calendar.ok) return calendar;
   if (typeof input.open !== 'undefined' && typeof input.open !== 'boolean') return fail('construction', 'invalid-date-picker-open', 'Date picker open state must be boolean.');
   return ok(pickerState(calendar.value, input.open ?? false));
 }
 
-export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies = {}): Result<DatePickerUpdate> {
+export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies = {}): TemporalResult<DatePickerUpdate> {
   const valid = tryCreateDatePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   if (event === 'open' || event === 'close' || event === 'toggle') {
@@ -70,6 +70,6 @@ function closesPicker(event: CalendarEvent): boolean {
 function openChanged(previous: boolean, next: boolean): DatePickerCommand[] {
   return previous === next ? [] : [{ type: 'open-changed', open: next }];
 }
-function invalidTransition<T>(result: Result<T>): Result<never> {
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
   return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
 }

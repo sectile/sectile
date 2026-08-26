@@ -1,5 +1,6 @@
 import { unwrap } from '@sectile/core/result';
-import type { ErrorClass, Result } from '@sectile/core';
+import type { ErrorClass } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import type { TextEditingState } from '@sectile/core/text';
@@ -18,7 +19,7 @@ export function createTimeRange(start: TimeValue, end: TimeValue): TimeRange {
   return unwrap(tryCreateTimeRange(start, end));
 }
 
-export function tryCreateTimeRange(start: TimeValue, end: TimeValue): Result<TimeRange> {
+export function tryCreateTimeRange(start: TimeValue, end: TimeValue): TemporalResult<TimeRange> {
   const validStart = tryCreateTimeValue(start.hour, start.minute, start.second, start.millisecond); if (!validStart.ok) return validStart;
   const validEnd = tryCreateTimeValue(end.hour, end.minute, end.second, end.millisecond); if (!validEnd.ok) return validEnd;
   return compareTimeValues(validStart.value, validEnd.value) <= 0 ? ok(Object.freeze({ start: validStart.value, end: validEnd.value })) : fail('construction', 'inverted-time-range', 'Time range start must not be after end.');
@@ -28,7 +29,7 @@ export function createTimeRangeFieldState(input: TimeRangeFieldStateInput = {}):
   return unwrap(tryCreateTimeRangeFieldState(input));
 }
 
-export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): Result<TimeRangeFieldState> {
+export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): TemporalResult<TimeRangeFieldState> {
   const range = input.value === undefined || input.value === null ? ok<TimeRange | null>(null) : completeRange(input.value.start, input.value.end, 'construction'); if (!range.ok) return range;
   const startValue = input.startValue !== undefined ? input.startValue : range.value?.start ?? null;
   const endValue = input.endValue !== undefined ? input.endValue : range.value?.end ?? null;
@@ -39,7 +40,7 @@ export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {
   return ok(Object.freeze({ value: value.value, start: start.value, end: end.value, active }));
 }
 
-export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: TimeRangeFieldEvent, policies: TimeRangeFieldPolicies = {}): Result<TimeRangeFieldUpdate> {
+export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: TimeRangeFieldEvent, policies: TimeRangeFieldPolicies = {}): TemporalResult<TimeRangeFieldUpdate> {
   const valid = tryCreateTimeRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active }); if (!valid.ok) return invalidTransition(valid);
   if (event === 'cancel') {
     const start = applyTimeFieldEvent(valid.value.start, 'cancel', endpointPolicies(policies)); if (!start.ok) return start;
@@ -55,8 +56,8 @@ export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: Time
   return composeState(start, end, active, commands);
 }
 
-function composeState(start: TimeFieldState, end: TimeFieldState, active: TimeRangeFieldEndpoint, commands: readonly TimeRangeFieldCommand[]): Result<TimeRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
-function completeRange(start: TimeValue | null, end: TimeValue | null, errorClass: ErrorClass = 'transition-rejection'): Result<TimeRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateTimeRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-time-range-field', 'Time range field start must not be after end.'); }
+function composeState(start: TimeFieldState, end: TimeFieldState, active: TimeRangeFieldEndpoint, commands: readonly TimeRangeFieldCommand[]): TemporalResult<TimeRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
+function completeRange(start: TimeValue | null, end: TimeValue | null, errorClass: ErrorClass = 'transition-rejection'): TemporalResult<TimeRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateTimeRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-time-range-field', 'Time range field start must not be after end.'); }
 function endpointPolicies(policies: TimeRangeFieldPolicies): TimeFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
 function sameRange(left: TimeRange | null, right: TimeRange | null): boolean { return left === null || right === null ? left === right : compareTimeValues(left.start, right.start) === 0 && compareTimeValues(left.end, right.end) === 0; }
-function invalidTransition<T>(result: Result<T>): Result<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

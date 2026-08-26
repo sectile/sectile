@@ -36,7 +36,7 @@ Public component identities use `StableID`, which is a string contract. String I
 
 Core constructors and transitions return `Result`. Narrow the result when failure is recoverable, or use `unwrap` only when converting a typed failure into an exception is the intended application boundary.
 
-`SectileErrorCode` is a closed union. Match known codes exhaustively and keep application-specific failures in an application-owned error type instead of casting new strings into the Sectile namespace.
+`CoreErrorCode` is Core's closed union. `SectileError<Code>` and `Result<Value, Code>` accept any string code, so Temporal, Virtual, and application adapters can own narrower failure vocabularies without changing Core. Match the package-local union exhaustively; do not cast application codes into `CoreErrorCode`.
 
 ```ts
 const result = sequence.createSequence(['alpha', 'beta'])

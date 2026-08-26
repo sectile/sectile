@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, freezeArray, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import {
@@ -81,7 +81,7 @@ export function createCalendarState(input: CalendarStateInput = {}): CalendarSta
   return unwrap(tryCreateCalendarState(input));
 }
 
-export function tryCreateCalendarState(input: CalendarStateInput = {}): Result<CalendarState> {
+export function tryCreateCalendarState(input: CalendarStateInput = {}): TemporalResult<CalendarState> {
   const value = input.value ?? null;
   if (value !== null) {
     const valid = tryCreateDateValue(value.year, value.month, value.day);
@@ -99,7 +99,7 @@ export function tryCreateCalendarState(input: CalendarStateInput = {}): Result<C
   return ok(calendarState(value, validHighlight.value, Object.freeze({ year: view.year, month: view.month }), viewMode));
 }
 
-export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, policies: CalendarPolicies = {}): Result<CalendarUpdate> {
+export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, policies: CalendarPolicies = {}): TemporalResult<CalendarUpdate> {
   const valid = tryCreateCalendarState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validateCalendarPolicies(policies);
@@ -128,7 +128,7 @@ export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, p
   if (typeof event === 'object' && event.type === 'select') return commit(event.value, state, policies);
   if (event === 'select-highlighted') return commit(state.highlighted, state, policies);
 
-  let moved: Result<DateValue>;
+  let moved: TemporalResult<DateValue>;
   if (event === 'previous-month' || event === 'next-month') moved = addDateMonths(state.highlighted, event === 'previous-month' ? -1 : 1);
   else if (event === 'previous-year' || event === 'next-year') moved = addDateYears(state.highlighted, event === 'previous-year' ? -1 : 1);
   else if (event === 'previous-day' || event === 'next-day') moved = addDateDays(state.highlighted, event === 'previous-day' ? -1 : 1);
@@ -151,7 +151,7 @@ export function createCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4
   return unwrap(tryCreateCalendarWeek(value, weekStartsOn));
 }
 
-export function tryCreateCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly DateValue[]> {
+export function tryCreateCalendarWeek(value: DateValue, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly DateValue[]> {
   const valid = tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return valid;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
@@ -171,7 +171,7 @@ export function createCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 
   return unwrap(tryCreateCalendarMonth(view, weekStartsOn));
 }
 
-export function tryCreateCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): Result<readonly (readonly DateValue[])[]> {
+export function tryCreateCalendarMonth(view: CalendarView, weekStartsOn: 1 | 2 | 3 | 4 | 5 | 6 | 7 = 1): TemporalResult<readonly (readonly DateValue[])[]> {
   const first = tryCreateDateValue(view.year, view.month, 1);
   if (!first.ok) return first;
   if (!Number.isSafeInteger(weekStartsOn) || weekStartsOn < 1 || weekStartsOn > 7) return fail('construction', 'invalid-week-start', 'Week start must be an ISO weekday from 1 through 7.');
@@ -195,7 +195,7 @@ export function createCalendarYear(year: number): readonly (readonly CalendarMon
   return unwrap(tryCreateCalendarYear(year));
 }
 
-export function tryCreateCalendarYear(year: number): Result<readonly (readonly CalendarMonthValue[])[]> {
+export function tryCreateCalendarYear(year: number): TemporalResult<readonly (readonly CalendarMonthValue[])[]> {
   const valid = tryCreateDateValue(year, 1, 1);
   if (!valid.ok) return valid;
   const rows: CalendarMonthValue[][] = [];
@@ -215,7 +215,7 @@ export function isCalendarValueAvailable(value: DateValue, policies: CalendarPol
 
 export function calendarID(value: DateValue): string { return formatDateValue(value); }
 
-function commit(value: DateValue | null, state: CalendarState, policies: CalendarPolicies): Result<CalendarUpdate> {
+function commit(value: DateValue | null, state: CalendarState, policies: CalendarPolicies): TemporalResult<CalendarUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'calendar-value-required', 'Calendar requires a value.');
     return createMachineUpdate(calendarState(null, state.highlighted, state.view, state.viewMode), [{ type: 'value-committed', value: null }]);
@@ -230,7 +230,7 @@ function commit(value: DateValue | null, state: CalendarState, policies: Calenda
   ]);
 }
 
-function findEligible(start: DateValue, direction: -1 | 1, policies: CalendarPolicies): Result<DateValue | null> {
+function findEligible(start: DateValue, direction: -1 | 1, policies: CalendarPolicies): TemporalResult<DateValue | null> {
   const limit = policies.maxScan ?? 366;
   if (!Number.isSafeInteger(limit) || limit < 1) return fail('construction', 'invalid-calendar-max-scan', 'Calendar max scan must be a positive safe integer.');
   let candidate = start;
@@ -243,7 +243,7 @@ function findEligible(start: DateValue, direction: -1 | 1, policies: CalendarPol
   return fail('resource-rejection', 'calendar-scan-exhausted', 'Calendar did not find an available date within maxScan.', { maxScan: limit });
 }
 
-function findEligibleInMonth(start: DateValue, month: CalendarMonthValue, policies: CalendarPolicies): Result<DateValue | null> {
+function findEligibleInMonth(start: DateValue, month: CalendarMonthValue, policies: CalendarPolicies): TemporalResult<DateValue | null> {
   const limit = policies.maxScan ?? 366;
   if (!Number.isSafeInteger(limit) || limit < 1) return fail('construction', 'invalid-calendar-max-scan', 'Calendar max scan must be a positive safe integer.');
   let scanned = 0;
@@ -266,7 +266,7 @@ function findEligibleInMonth(start: DateValue, month: CalendarMonthValue, polici
   return ok(null);
 }
 
-function validateCalendarPolicies(policies: CalendarPolicies): Result<true> {
+function validateCalendarPolicies(policies: CalendarPolicies): TemporalResult<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') return fail('construction', 'invalid-calendar-unavailable-policy', 'Calendar unavailable policy must be a function.');
   if (policies.min !== undefined) { const min = tryCreateDateValue(policies.min.year, policies.min.month, policies.min.day); if (!min.ok) return min; }
   if (policies.max !== undefined) { const max = tryCreateDateValue(policies.max.year, policies.max.month, policies.max.day); if (!max.ok) return max; }
@@ -278,4 +278,4 @@ function calendarState(value: DateValue | null, highlighted: DateValue, view: Ca
   return Object.freeze({ value, highlighted, view, viewMode });
 }
 function isCalendarViewMode(value: unknown): value is CalendarViewMode { return value === 'week' || value === 'month' || value === 'year'; }
-function invalidTransition<T>(result: Result<T>): Result<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

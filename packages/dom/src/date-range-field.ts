@@ -1,11 +1,10 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
 import { type DateRange, type DateValue } from '@sectile/temporal/date-field';
 import { applyDateRangeFieldEvent, tryCreateDateRangeFieldState, type DateRangeFieldCommand, type DateRangeFieldEndpoint, type DateRangeFieldEvent, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/temporal/date-range-field';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
@@ -23,14 +22,14 @@ export type DateRangeFieldStartInputStateChangeHandler = NonNullable<DateRangeFi
 export type DateRangeFieldEndInputStateChangeHandler = NonNullable<DateRangeFieldOptions['onEndInputStateChange']>;
 export type DateRangeFieldUpdateHandler = NonNullable<DateRangeFieldOptions['onUpdate']>;
 export interface DateRangeFieldControlledValues { readonly value?: DateRange | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState }
-export interface DateRangeFieldConnection { getSnapshot(): RevisionSnapshot<DateRangeFieldState>; getValue(): DateRange | null; syncControlledValues(values: DateRangeFieldControlledValues): Result<RevisionSnapshot<DateRangeFieldState>>; handleEvent(event: DateRangeFieldEvent): boolean; refresh(): void; disconnect(): void }
+export interface DateRangeFieldConnection { getSnapshot(): RevisionSnapshot<DateRangeFieldState>; getValue(): DateRange | null; syncControlledValues(values: DateRangeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateRangeFieldState>>; handleEvent(event: DateRangeFieldEvent): boolean; refresh(): void; disconnect(): void }
 
 export function createDateRangeField(options: DateRangeFieldOptions): FacadeConnection<DateRangeFieldConnection> { return unwrap(tryCreateDateRangeField(options)); }
-export function tryCreateDateRangeField(options: DateRangeFieldOptions): Result<FacadeConnection<DateRangeFieldConnection>> { return createFacadeConnection(options, construct); }
-function construct(options: DateRangeFieldOptions): Result<DateRangeFieldConnection> {
+export function tryCreateDateRangeField(options: DateRangeFieldOptions): DOMTemporalResult<FacadeConnection<DateRangeFieldConnection>> { return createDOMTemporalFacadeConnection(options, construct); }
+function construct(options: DateRangeFieldOptions): DOMTemporalResult<DateRangeFieldConnection> {
   const controlled = { value: options.value !== undefined, start: options.startInputState !== undefined, end: options.endInputState !== undefined };
   const initialValue = options.value !== undefined ? options.value : options.defaultValue ?? null;
-  const runtime = createSemanticController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand, DateRangeFieldCommand>({
+  const runtime = createDOMTemporalController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand, DateRangeFieldCommand>({
     initial: tryCreateDateRangeFieldState({ value: initialValue, ...optionalInputState('startInputState', options.startInputState ?? options.defaultStartInputState), ...optionalInputState('endInputState', options.endInputState ?? options.defaultEndInputState) }),
     reducer: (state, event) => applyDateRangeFieldEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }),
     reconcile: (previous, proposed) => tryCreateDateRangeFieldState({
@@ -46,10 +45,10 @@ function construct(options: DateRangeFieldOptions): Result<DateRangeFieldConnect
 function optionalInputState<Key extends 'startInputState' | 'endInputState'>(key: Key, value: TextEditingState | undefined): { readonly [Property in Key]?: TextEditingState } { return value === undefined ? {} : { [key]: value } as { readonly [Property in Key]?: TextEditingState }; }
 
 class DOMDateRangeField implements DateRangeFieldConnection {
-  readonly #options: DateRangeFieldOptions; readonly #runtime: SemanticController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand>; readonly #controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean };
+  readonly #options: DateRangeFieldOptions; readonly #runtime: DOMTemporalController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand>; readonly #controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean };
   readonly #bindings: Record<DateRangeFieldEndpoint, DOMTextElementBinding>;
   readonly #keydown: Record<DateRangeFieldEndpoint, (event: Event) => void>; readonly #blur: Record<DateRangeFieldEndpoint, () => void>; readonly #focus: Record<DateRangeFieldEndpoint, () => void>;
-  public constructor(options: DateRangeFieldOptions, runtime: SemanticController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand>, controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean }) {
+  public constructor(options: DateRangeFieldOptions, runtime: DOMTemporalController<DateRangeFieldState, DateRangeFieldEvent, DateRangeFieldCommand>, controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean }) {
     this.#options = options; this.#runtime = runtime; this.#controlled = controlled;
     this.#bindings = {
       start: new DOMTextElementBinding({ element: options.startInput, getState: () => this.getSnapshot().state.start.inputState, dispatch: (input) => this.#text('start', input) }),
@@ -63,7 +62,7 @@ class DOMDateRangeField implements DateRangeFieldConnection {
   }
   public getSnapshot(): RevisionSnapshot<DateRangeFieldState> { return this.#runtime.getSnapshot(); }
   public getValue(): DateRange | null { return this.getSnapshot().state.value; }
-  public syncControlledValues(values: DateRangeFieldControlledValues): Result<RevisionSnapshot<DateRangeFieldState>> {
+  public syncControlledValues(values: DateRangeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateRangeFieldState>> {
     if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.start !== (values.startInputState !== undefined) || this.#controlled.end !== (values.endInputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date range field values must preserve their construction-time shape.' } };
     const current = this.getSnapshot().state; const value = this.#controlled.value ? values.value as DateRange | null : current.value;
     const result = this.#runtime.replace(tryCreateDateRangeFieldState({ value, ...optionalInputState('startInputState', this.#controlled.start ? values.startInputState : current.start.inputState), ...optionalInputState('endInputState', this.#controlled.end ? values.endInputState : current.end.inputState), active: current.active }));

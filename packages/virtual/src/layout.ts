@@ -1,4 +1,5 @@
-import type { Result, StableID } from '@sectile/core';
+import type { StableID } from '@sectile/core';
+import type { VirtualResult } from './error.js';
 
 export interface VirtualPoint { readonly x: number; readonly y: number; }
 export interface VirtualSize { readonly width: number; readonly height: number; }
@@ -22,16 +23,16 @@ export type VirtualScrollAlignment = 'start' | 'center' | 'end' | 'nearest';
 
 export interface VirtualLayoutStrategy<State, ID extends StableID, Measurement, Mutation> {
   readonly kind: string;
-  tryQuery(state: State, input: VirtualQueryInput): Result<VirtualLayoutPlan<ID>>;
-  tryMeasure(state: State, batch: VirtualMeasurementBatch<Measurement, ID>): Result<VirtualLayoutMutation<State>>;
-  tryMutate(state: State, input: VirtualMutationInput<Mutation, ID>): Result<VirtualLayoutMutation<State>>;
-  tryScrollTarget(state: State, id: ID, viewport: VirtualRect, alignment?: VirtualScrollAlignment): Result<VirtualPoint>;
+  tryQuery(state: State, input: VirtualQueryInput): VirtualResult<VirtualLayoutPlan<ID>>;
+  tryMeasure(state: State, batch: VirtualMeasurementBatch<Measurement, ID>): VirtualResult<VirtualLayoutMutation<State>>;
+  tryMutate(state: State, input: VirtualMutationInput<Mutation, ID>): VirtualResult<VirtualLayoutMutation<State>>;
+  tryScrollTarget(state: State, id: ID, viewport: VirtualRect, alignment?: VirtualScrollAlignment): VirtualResult<VirtualPoint>;
 }
 
 export const ZERO_POINT: VirtualPoint = Object.freeze({ x: 0, y: 0 });
 export const ZERO_INSETS: VirtualInsets = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
 
-export function normalizeQuery(input: VirtualQueryInput): Result<{ readonly viewport: VirtualRect; readonly overscan: VirtualInsets; readonly renderBounds: VirtualRect }> {
+export function normalizeQuery(input: VirtualQueryInput): VirtualResult<{ readonly viewport: VirtualRect; readonly overscan: VirtualInsets; readonly renderBounds: VirtualRect }> {
   const viewport = freezeRect(input.viewport);
   if (viewport === null) return invalidGeometry('Viewport coordinates and extents must be finite and non-negative.', input.viewport);
   const overscan = normalizeInsets(input.overscan);
@@ -94,6 +95,6 @@ function normalizeInsets(value: number | Partial<VirtualInsets> | undefined): Vi
   return Object.values(result).every((item) => Number.isFinite(item) && item >= 0) ? Object.freeze(result) : null;
 }
 
-function invalidGeometry<T>(message: string, value: unknown): Result<T> {
+function invalidGeometry<T>(message: string, value: unknown): VirtualResult<T> {
   return { ok: false, error: { class: 'construction', code: 'virtual-layout-geometry-invalid', message, details: { value } } };
 }

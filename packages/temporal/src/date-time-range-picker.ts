@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
@@ -105,7 +105,7 @@ export function createDateTimeRangePickerState(
 
 export function tryCreateDateTimeRangePickerState(
   input: DateTimeRangePickerStateInput = {},
-): Result<DateTimeRangePickerState> {
+): TemporalResult<DateTimeRangePickerState> {
   const value = input.value === undefined || input.value === null
     ? ok(null)
     : tryCreateDateTimeRange(input.value.start, input.value.end);
@@ -152,7 +152,7 @@ export function applyDateTimeRangePickerEvent(
   state: DateTimeRangePickerState,
   event: DateTimeRangePickerEvent,
   policies: DateTimeRangePickerPolicies = {},
-): Result<DateTimeRangePickerUpdate> {
+): TemporalResult<DateTimeRangePickerUpdate> {
   const valid = tryCreateDateTimeRangePickerState(state);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
@@ -194,7 +194,7 @@ function selectDate(
   state: DateTimeRangePickerState,
   requested: DateValue,
   policies: DateTimeRangePickerPolicies,
-): Result<DateTimeRangePickerUpdate> {
+): TemporalResult<DateTimeRangePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   if (!isCalendarValueAvailable(date.value, policies.date)) {
@@ -234,7 +234,7 @@ function setEndpointTime(
   endpoint: 'start' | 'end',
   requested: TimeValue,
   policies: DateTimeRangePickerPolicies,
-): Result<DateTimeRangePickerUpdate> {
+): TemporalResult<DateTimeRangePickerUpdate> {
   const time = validateTime(requested, endpoint === 'start' ? policies.startTime : policies.endTime, endpoint);
   if (!time.ok) return time;
   if (state.value === null) {
@@ -263,7 +263,7 @@ function setEndpointDate(
   endpoint: 'start' | 'end',
   requested: DateValue,
   policies: DateTimeRangePickerPolicies,
-): Result<DateTimeRangePickerUpdate> {
+): TemporalResult<DateTimeRangePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
   const fallback = state.value === null ? date.value : endpoint === 'start' ? state.value.end.date : state.value.start.date;
@@ -280,7 +280,7 @@ function commitRange(
   requested: DateTimeRange | null,
   policies: DateTimeRangePickerPolicies,
   highlighted?: DateValue,
-): Result<DateTimeRangePickerUpdate> {
+): TemporalResult<DateTimeRangePickerUpdate> {
   if (requested === null) {
     if (policies.required === true) {
       return fail('transition-rejection', 'date-time-range-picker-value-required', 'Date-time range picker requires a range.');
@@ -336,7 +336,7 @@ function validateEndpoint(
   value: DateTimeValue,
   policies: DateTimeRangePickerPolicies,
   endpoint: 'start' | 'end',
-): Result<DateTimeValue> {
+): TemporalResult<DateTimeValue> {
   const valid = tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return invalidTransition(valid);
   if (!isCalendarValueAvailable(valid.value.date, policies.date)) {
@@ -364,7 +364,7 @@ function validateTime(
   value: TimeValue,
   policies: TimeFieldPolicies = {},
   endpoint: 'start' | 'end',
-): Result<TimeValue> {
+): TemporalResult<TimeValue> {
   const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return invalidTransition(valid);
   if (policies.min !== undefined && compareTimeValues(valid.value, policies.min) < 0) {
@@ -376,7 +376,7 @@ function validateTime(
   return valid;
 }
 
-function validatePolicies(policies: DateTimeRangePickerPolicies): Result<true> {
+function validatePolicies(policies: DateTimeRangePickerPolicies): TemporalResult<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') {
     return fail('construction', 'invalid-date-time-range-picker-unavailable-policy', 'Date-time range picker unavailable policy must be a function.');
   }
@@ -386,7 +386,7 @@ function validatePolicies(policies: DateTimeRangePickerPolicies): Result<true> {
   return ok(true);
 }
 
-function invalidTransition<T>(result: Result<T>): Result<never> {
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
   return result.ok
     ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.')
     : { ok: false, error: { ...result.error, class: 'transition-rejection' } };

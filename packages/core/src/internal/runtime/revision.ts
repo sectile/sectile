@@ -1,5 +1,6 @@
 import { unwrap } from '../../result.js';
 import type { Result, SectileError } from '../../shared.js';
+import type { CoreErrorCode } from '../../error-code.js';
 import { fail, freezeArray, ok } from '../kernel/foundation.js';
 import type { EventReducer } from '../kernel/machine.js';
 
@@ -10,7 +11,7 @@ export interface RevisionSnapshot<State> {
   readonly state: State;
 }
 
-export type RevisionResult<State, Command> =
+export type RevisionResult<State, Command, Code extends string = CoreErrorCode> =
   | {
       readonly ok: true;
       readonly snapshot: RevisionSnapshot<State>;
@@ -20,7 +21,7 @@ export type RevisionResult<State, Command> =
       readonly ok: false;
       readonly snapshot: RevisionSnapshot<State>;
       readonly commands: readonly [];
-      readonly error: SectileError;
+      readonly error: SectileError<Code>;
     };
 
 export function createRevisionSnapshot<State>(
@@ -45,12 +46,12 @@ export function tryCreateRevisionSnapshot<State>(
   return ok(snapshot(revision, state));
 }
 
-export function applyRevisionedEvent<State, Event, Command>(
+export function applyRevisionedEvent<State, Event, Command, Code extends string = CoreErrorCode>(
   current: RevisionSnapshot<State>,
   expectedRevision: number,
   event: Event,
-  reducer: EventReducer<State, Event, Command>,
-): RevisionResult<State, Command> {
+  reducer: EventReducer<State, Event, Command, Code>,
+): RevisionResult<State, Command, CoreErrorCode | Code> {
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
     return rejected(current, {
       class: 'transition-rejection',
@@ -92,10 +93,10 @@ export function applyRevisionedEvent<State, Event, Command>(
   });
 }
 
-export function mapRevisionCommands<State, Command, Effect>(
-  result: RevisionResult<State, Command>,
+export function mapRevisionCommands<State, Command, Effect, Code extends string>(
+  result: RevisionResult<State, Command, Code>,
   toEffect: (command: Command) => Effect,
-): RevisionResult<State, Effect> {
+): RevisionResult<State, Effect, Code> {
   if (!result.ok) return result;
   return Object.freeze({
     ok: true,
@@ -104,10 +105,10 @@ export function mapRevisionCommands<State, Command, Effect>(
   });
 }
 
-export function rejectRevisionInput<State, Command = never>(
+export function rejectRevisionInput<State, Command = never, Code extends string = CoreErrorCode>(
   current: RevisionSnapshot<State>,
-  error: SectileError,
-): RevisionResult<State, Command> {
+  error: SectileError<Code>,
+): RevisionResult<State, Command, Code> {
   return rejected(current, error);
 }
 
@@ -115,10 +116,10 @@ function snapshot<State>(revision: number, state: State): RevisionSnapshot<State
   return Object.freeze({ revision, state });
 }
 
-function rejected<State, Command>(
+function rejected<State, Command, Code extends string>(
   current: RevisionSnapshot<State>,
-  error: SectileError,
-): RevisionResult<State, Command> {
+  error: SectileError<Code>,
+): RevisionResult<State, Command, Code> {
   return Object.freeze({
     ok: false,
     snapshot: current,

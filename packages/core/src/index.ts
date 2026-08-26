@@ -16,7 +16,7 @@ export type {
   StableID,
   TiePolicy,
 } from './shared.js';
-export type { SectileErrorCode } from './error-code.js';
+export type { CoreErrorCode } from './error-code.js';
 export type { SequencePatch } from './structures/sequence.js';
 export type {
   InteractionIntent,

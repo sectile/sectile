@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import {
@@ -61,7 +61,7 @@ export function createDateValue(year: number, month: number, day: number): DateV
   return unwrap(tryCreateDateValue(year, month, day));
 }
 
-export function tryCreateDateValue(year: number, month: number, day: number): Result<DateValue> {
+export function tryCreateDateValue(year: number, month: number, day: number): TemporalResult<DateValue> {
   if (!Number.isSafeInteger(year) || year < 1 || year > 9_999) {
     return fail('construction', 'invalid-date-year', 'Date year must be an integer from 1 through 9999.', { year });
   }
@@ -75,7 +75,7 @@ export function tryCreateDateValue(year: number, month: number, day: number): Re
   return ok(Object.freeze({ year, month, day }));
 }
 
-export function parseDateValue(text: string): Result<DateValue> {
+export function parseDateValue(text: string): TemporalResult<DateValue> {
   if (typeof text !== 'string') return fail('construction', 'invalid-date-text', 'Date text must be a string.');
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
   return match === null
@@ -103,7 +103,7 @@ export function dateDayOfWeek(value: DateValue): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   return (((dateToOrdinal(value) - thursday + 3) % 7 + 7) % 7 + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 
-export function addDateDays(value: DateValue, amount: number): Result<DateValue> {
+export function addDateDays(value: DateValue, amount: number): TemporalResult<DateValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-date-day-delta', 'Date day delta must be a safe integer.');
   const result = ordinalToDate(dateToOrdinal(value) + amount);
   return result.year < 1 || result.year > 9_999
@@ -111,7 +111,7 @@ export function addDateDays(value: DateValue, amount: number): Result<DateValue>
     : ok(result);
 }
 
-export function addDateMonths(value: DateValue, amount: number): Result<DateValue> {
+export function addDateMonths(value: DateValue, amount: number): TemporalResult<DateValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-date-month-delta', 'Date month delta must be a safe integer.');
   const absolute = value.year * 12 + value.month - 1 + amount;
   const year = Math.floor(absolute / 12);
@@ -120,7 +120,7 @@ export function addDateMonths(value: DateValue, amount: number): Result<DateValu
   return tryCreateDateValue(year, month, Math.min(value.day, daysInMonth(year, month)));
 }
 
-export function addDateYears(value: DateValue, amount: number): Result<DateValue> {
+export function addDateYears(value: DateValue, amount: number): TemporalResult<DateValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-date-year-delta', 'Date year delta must be a safe integer.');
   const year = value.year + amount;
   if (year < 1 || year > 9_999) return fail('transition-rejection', 'date-outside-supported-range', 'Date arithmetic must remain between years 1 and 9999.');
@@ -131,7 +131,7 @@ export function createDateRange(start: DateValue, end: DateValue): DateRange {
   return unwrap(tryCreateDateRange(start, end));
 }
 
-export function tryCreateDateRange(start: DateValue, end: DateValue): Result<DateRange> {
+export function tryCreateDateRange(start: DateValue, end: DateValue): TemporalResult<DateRange> {
   const validStart = tryCreateDateValue(start.year, start.month, start.day);
   if (!validStart.ok) return validStart;
   const validEnd = tryCreateDateValue(end.year, end.month, end.day);
@@ -156,7 +156,7 @@ export function createDateFieldState(
 export function tryCreateDateFieldState(
   value: DateValue | null = null,
   inputState?: TextEditingState,
-): Result<DateFieldState> {
+): TemporalResult<DateFieldState> {
   const valid = value === null ? ok(null) : tryCreateDateValue(value.year, value.month, value.day);
   if (!valid.ok) return valid;
   const input = inputState === undefined
@@ -173,7 +173,7 @@ export function applyDateFieldEvent(
   state: DateFieldState,
   event: DateFieldEvent,
   policies: DateFieldPolicies = {},
-): Result<DateFieldUpdate> {
+): TemporalResult<DateFieldUpdate> {
   const valid = tryCreateDateFieldState(state.value, state.inputState);
   if (!valid.ok) return transitionFailure(valid);
   const bounds = validatePolicies(policies);
@@ -230,7 +230,7 @@ export function isLeapYear(year: number): boolean {
   return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 
-function commitValue(value: DateValue | null, policies: DateFieldPolicies, segment?: DateSegment): Result<DateFieldUpdate> {
+function commitValue(value: DateValue | null, policies: DateFieldPolicies, segment?: DateSegment): TemporalResult<DateFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'date-field-value-required', 'Date field requires a value.');
   } else {
@@ -249,7 +249,7 @@ function commitValue(value: DateValue | null, policies: DateFieldPolicies, segme
   ]);
 }
 
-function committedInput(value: DateValue | null, segment?: DateSegment): Result<TextEditingState> {
+function committedInput(value: DateValue | null, segment?: DateSegment): TemporalResult<TextEditingState> {
   const text = value === null ? '' : formatDateValue(value);
   const selection = segment === undefined ? { anchorCodeUnitOffset: text.length, focusCodeUnitOffset: text.length }
     : segment === 'year' ? { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 4 }
@@ -258,7 +258,7 @@ function committedInput(value: DateValue | null, segment?: DateSegment): Result<
   return tryCreateTextEditingState(text, selection);
 }
 
-function validatePolicies(policies: DateFieldPolicies): Result<true> {
+function validatePolicies(policies: DateFieldPolicies): TemporalResult<true> {
   if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') return fail('construction', 'invalid-date-unavailable-policy', 'Date unavailable policy must be a function.');
   if (policies.min !== undefined) {
     const min = tryCreateDateValue(policies.min.year, policies.min.month, policies.min.day);
@@ -272,7 +272,7 @@ function validatePolicies(policies: DateFieldPolicies): Result<true> {
   return ok(true);
 }
 
-function transitionFailure<T>(result: Result<T>): Result<never> {
+function transitionFailure<T>(result: TemporalResult<T>): TemporalResult<never> {
   return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
 }
 

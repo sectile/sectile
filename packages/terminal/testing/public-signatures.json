@@ -275,7 +275,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "5f09b51b420f50d32099ba0b4eb6e0ded3e65b386eb30f4e1224588bef17e791",
+  "fingerprint": "ab8ac7f3427dcccf21450cf3850025500032d86975c20dffec46f8b3c25652cf",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -291,7 +291,7 @@
     },
     {
       "path": "dist/calendar.d.ts",
-      "sha256": "06b925f9613e7fb7649ebd6bdbdf9753c76f489a69e29c3504716f3ae9c9de08"
+      "sha256": "b5a34621c87cf37677cb118540c0a7236b16cff76bf3d9bb333c6a9963bf1894"
     },
     {
       "path": "dist/carousel.d.ts",
@@ -319,31 +319,31 @@
     },
     {
       "path": "dist/date-field.d.ts",
-      "sha256": "64f9e1f71d792dd46569e046ddf8b105f5f28b01facebe5ca35d697e64ddbb0b"
+      "sha256": "0d32531a94368c26c488a652fad6ff5672edc4797a995da63a38ea47fac0de9a"
     },
     {
       "path": "dist/date-picker.d.ts",
-      "sha256": "24eac83140e821c97233b4880ebb3d5765d333dfc10b5f89cd86a863103be122"
+      "sha256": "a3b5d683f49d49452a3cad63aa6dee0edadec59dad40e8300ac330daec1b9105"
     },
     {
       "path": "dist/date-range-field.d.ts",
-      "sha256": "229e953a1e2eff750ede390943f33d3c601e41cb1b1707950800cb0367905d75"
+      "sha256": "0241c1a61f6cce35ff24afea9e99b6702b62aa1ed09603e55b60197e2caf8bf3"
     },
     {
       "path": "dist/date-range-picker.d.ts",
-      "sha256": "01919108d2224745ec876b2b827de859512b846cca28b4ba4badf853fca74849"
+      "sha256": "659ba385b8df77829d8c457b4c6db3ab4c653225b58274da4986f92e58069ce6"
     },
     {
       "path": "dist/date-time-field.d.ts",
-      "sha256": "3f4c358849a7a46946625ac88d336fb47f3f72b4173d39e659759d02cfeb6ec0"
+      "sha256": "f65683f70a0ab21b9e30257809765a825f5ff03783f7dcccf9311822f018d9dc"
     },
     {
       "path": "dist/date-time-picker.d.ts",
-      "sha256": "a0f3aee2a8eb8bf5c501ffb1f0c41ccdce7ca01e53adc49a332de072e9f2fa60"
+      "sha256": "71c93e6cc316490db6d216e8ae8f3af1329fab0838a426fb72e87f7d35f8d582"
     },
     {
       "path": "dist/date-time-range-picker.d.ts",
-      "sha256": "4c58f4062509a331bbac4b4fad27ff1942e8935ab82608d48247f19cac12d724"
+      "sha256": "3b9bda1211935616679c95a8df4565113c672b764fbca81aa99bc723b2c61fdd"
     },
     {
       "path": "dist/dialog.d.ts",
@@ -388,6 +388,10 @@
     {
       "path": "dist/internal/popup-control.d.ts",
       "sha256": "40034ca25b77b008bcf530429a94aa09f6e759886d24bac0d056834bf90aa030"
+    },
+    {
+      "path": "dist/internal/result.d.ts",
+      "sha256": "c2e4e5b50aa29cac1a5fde600ffe8d7786e17d2eb2eea0d1d46ab84d39fbc47f"
     },
     {
       "path": "dist/keyboard.d.ts",
@@ -511,11 +515,11 @@
     },
     {
       "path": "dist/time-field.d.ts",
-      "sha256": "3e130ea670aca668dbd977a33f1fa98cf5b81c3292ecd5abea17043fe18701a6"
+      "sha256": "ef31b3b01ab8d8a9df11fd4e8d6c1ec08aa32f40c15f8c8ffb32e51aa974d967"
     },
     {
       "path": "dist/time-range-field.d.ts",
-      "sha256": "f6237ffef191d2b1255aea661b5488cc5d6d0606e6de29dbb637179a45c557ae"
+      "sha256": "6245360e143338c0eac9530b829a174d0ccd1cfe66c6f36e12d43ea451f71696"
     },
     {
       "path": "dist/timer.d.ts",

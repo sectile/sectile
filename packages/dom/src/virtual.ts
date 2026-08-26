@@ -1,4 +1,4 @@
-import type { Result, SectileError, StableID } from '@sectile/core';
+import type { SectileError, StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
 import type { ExtentUpdate } from '@sectile/virtual/extent-index';
 import type {
@@ -11,6 +11,8 @@ import type {
   VirtualRect,
   VirtualScrollAlignment,
 } from '@sectile/virtual/layout';
+import type { VirtualErrorCode } from '@sectile/virtual';
+import type { DOMVirtualResult } from './internal/result.js';
 
 export interface VirtualizerEnvironment {
   requestFrame(callback: FrameRequestCallback): number;
@@ -58,7 +60,7 @@ export interface VirtualizerOptions<
     connection: VirtualizerConnection<State, ID, Measurement, Mutation>,
   ) => void;
   readonly onStateChange?: (state: State) => void;
-  readonly onError?: (error: SectileError) => void;
+  readonly onError?: (error: SectileError<VirtualErrorCode>) => void;
 }
 
 export type VirtualizerPlanChangeHandler<ID extends StableID = StableID> =
@@ -82,18 +84,21 @@ export interface VirtualizerConnection<
 > {
   getState(): State;
   getPlan(): VirtualLayoutPlan<ID>;
-  setState(state: State): Result<VirtualLayoutPlan<ID>>;
+  setState(state: State): DOMVirtualResult<VirtualLayoutPlan<ID>>;
   setOverscan(
     overscan?: number | Partial<VirtualInsets>,
-  ): Result<VirtualLayoutPlan<ID>>;
+  ): DOMVirtualResult<VirtualLayoutPlan<ID>>;
   registerItem(element: HTMLElement, id: ID): () => void;
   measure(
     measurements: readonly Measurement[],
-  ): Result<VirtualLayoutMutation<State>>;
-  mutate(mutation: Mutation): Result<VirtualLayoutMutation<State>>;
-  scrollTo(id: ID, alignment?: VirtualScrollAlignment): Result<VirtualPoint>;
+  ): DOMVirtualResult<VirtualLayoutMutation<State>>;
+  mutate(mutation: Mutation): DOMVirtualResult<VirtualLayoutMutation<State>>;
+  scrollTo(
+    id: ID,
+    alignment?: VirtualScrollAlignment,
+  ): DOMVirtualResult<VirtualPoint>;
   refresh(): void;
-  flush(): Result<VirtualLayoutPlan<ID>>;
+  flush(): DOMVirtualResult<VirtualLayoutPlan<ID>>;
   disconnect(): void;
 }
 
@@ -176,7 +181,9 @@ class DOMVirtualizer<
     ) => void)
     | undefined;
   readonly #onStateChange: ((state: State) => void) | undefined;
-  readonly #onError: ((error: SectileError) => void) | undefined;
+  readonly #onError:
+    | ((error: SectileError<VirtualErrorCode>) => void)
+    | undefined;
   readonly #rootObserver: ResizeObserver;
   readonly #itemObserver: ResizeObserver;
   readonly #items = new Map<ID, HTMLElement>();
@@ -233,7 +240,7 @@ class DOMVirtualizer<
     return this.#plan;
   }
 
-  public setState(state: State): Result<VirtualLayoutPlan<ID>> {
+  public setState(state: State): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     this.#requireConnected();
     if (Object.is(state, this.#state)) return { ok: true, value: this.#plan };
     const plan = this.#query(state, this.#overscan);
@@ -245,7 +252,7 @@ class DOMVirtualizer<
 
   public setOverscan(
     overscan?: number | Partial<VirtualInsets>,
-  ): Result<VirtualLayoutPlan<ID>> {
+  ): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     this.#requireConnected();
     const plan = this.#query(this.#state, overscan);
     if (!plan.ok) return this.#report(plan);
@@ -279,7 +286,7 @@ class DOMVirtualizer<
 
   public measure(
     measurements: readonly Measurement[],
-  ): Result<VirtualLayoutMutation<State>> {
+  ): DOMVirtualResult<VirtualLayoutMutation<State>> {
     this.#requireConnected();
     const before = this.#query(this.#state, this.#overscan);
     if (!before.ok) return this.#reportFailure(before);
@@ -294,7 +301,9 @@ class DOMVirtualizer<
     return result;
   }
 
-  public mutate(mutation: Mutation): Result<VirtualLayoutMutation<State>> {
+  public mutate(
+    mutation: Mutation,
+  ): DOMVirtualResult<VirtualLayoutMutation<State>> {
     this.#requireConnected();
     const before = this.#query(this.#state, this.#overscan);
     if (!before.ok) return this.#reportFailure(before);
@@ -311,7 +320,7 @@ class DOMVirtualizer<
   public scrollTo(
     id: ID,
     alignment: VirtualScrollAlignment = 'nearest',
-  ): Result<VirtualPoint> {
+  ): DOMVirtualResult<VirtualPoint> {
     this.#requireConnected();
     const result = this.#strategy.tryScrollTarget(
       this.#state,
@@ -333,7 +342,7 @@ class DOMVirtualizer<
     });
   }
 
-  public flush(): Result<VirtualLayoutPlan<ID>> {
+  public flush(): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     this.#requireConnected();
     if (this.#frame !== null) {
       this.#environment.cancelFrame(this.#frame);
@@ -394,7 +403,7 @@ class DOMVirtualizer<
   #query(
     state: State,
     overscan: number | Partial<VirtualInsets> | undefined,
-  ): Result<VirtualLayoutPlan<ID>> {
+  ): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     return this.#strategy.tryQuery(state, {
       viewport: this.#readViewport(this.#root),
       ...(overscan === undefined ? {} : { overscan }),
@@ -413,7 +422,7 @@ class DOMVirtualizer<
     this.#onStateChange?.(this.#state);
   }
 
-  #publishCurrent(): Result<VirtualLayoutPlan<ID>> {
+  #publishCurrent(): DOMVirtualResult<VirtualLayoutPlan<ID>> {
     const plan = this.#query(this.#state, this.#overscan);
     if (!plan.ok) return this.#report(plan);
     this.#publish(plan.value);
@@ -425,12 +434,14 @@ class DOMVirtualizer<
     this.#onPlanChange?.(plan, this);
   }
 
-  #report<T>(result: Result<T>): Result<T> {
+  #report<T>(result: DOMVirtualResult<T>): DOMVirtualResult<T> {
     if (!result.ok) this.#onError?.(result.error);
     return result;
   }
 
-  #reportFailure<T>(result: Result<unknown>): Result<T> {
+  #reportFailure<T>(
+    result: DOMVirtualResult<unknown>,
+  ): DOMVirtualResult<T> {
     if (result.ok)
       throw new TypeError('Expected a failed virtual layout result.');
     this.#onError?.(result.error);

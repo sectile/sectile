@@ -1,4 +1,5 @@
-import type { Result, StableID } from '@sectile/core';
+import type { StableID } from '@sectile/core';
+import type { VirtualResult } from './error.js';
 import { tryApplySequencePatch, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import type { Extent, ExtentIndex, ExtentUpdate } from './extent-index.js';
@@ -77,7 +78,7 @@ export function createMasonryLayout<ID extends StableID>(domain: Sequence<ID>, e
   return unwrap(tryCreateMasonryLayout(domain, extents, input));
 }
 
-export function tryCreateMasonryLayout<ID extends StableID>(domain: Sequence<ID>, extents: ExtentIndex, input: MasonryLayoutInput): Result<MasonryLayoutState<ID>> {
+export function tryCreateMasonryLayout<ID extends StableID>(domain: Sequence<ID>, extents: ExtentIndex, input: MasonryLayoutInput): VirtualResult<MasonryLayoutState<ID>> {
   if (domain.size !== extents.size) return fail('construction', 'virtual-layout-domain-mismatch', 'Masonry domain and extent index must have the same size.', { domainSize: domain.size, extentSize: extents.size });
   const geometry = normalizeGeometry(input);
   if (!geometry.ok) return geometry;
@@ -88,7 +89,7 @@ export function queryMasonryLayout<ID extends StableID>(state: MasonryLayoutStat
   return unwrap(tryQueryMasonryLayout(state, input));
 }
 
-export function tryQueryMasonryLayout<ID extends StableID>(state: MasonryLayoutState<ID>, input: VirtualQueryInput): Result<MasonryLayoutPlan<ID>> {
+export function tryQueryMasonryLayout<ID extends StableID>(state: MasonryLayoutState<ID>, input: VirtualQueryInput): VirtualResult<MasonryLayoutPlan<ID>> {
   const normalized = normalizeQuery(input);
   if (!normalized.ok) return normalized;
   const data = getInternals(state);
@@ -122,7 +123,7 @@ export function applyMasonryMeasurements<ID extends StableID>(state: MasonryLayo
   return unwrap(tryApplyMasonryMeasurements(state, batch));
 }
 
-export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryLayoutState<ID>, batch: VirtualMeasurementBatch<MasonryMeasurement, ID>): Result<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
+export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryLayoutState<ID>, batch: VirtualMeasurementBatch<MasonryMeasurement, ID>): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const before = anchorRect(state, batch.anchor);
@@ -138,7 +139,7 @@ export function applyMasonryMutation<ID extends StableID>(state: MasonryLayoutSt
   return unwrap(tryApplyMasonryMutation(state, mutation, anchor));
 }
 
-export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayoutState<ID>, mutation: MasonryMutation<ID>, anchor: VirtualAnchor<ID> | null = null): Result<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
+export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayoutState<ID>, mutation: MasonryMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<MasonryLayoutState<ID>>> {
   if (mutation.type !== 'items' && mutation.type !== 'geometry') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Masonry mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
   let partial: Omit<MasonryLayoutState<ID>, 'generation'>;
@@ -178,7 +179,7 @@ export function masonryScrollTarget<ID extends StableID>(state: MasonryLayoutSta
   return unwrap(tryMasonryScrollTarget(state, id, viewport, alignment));
 }
 
-export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): Result<VirtualPoint> {
+export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const data = getInternals(state);
   if (!data.ok) return data;
   const logical = data.value.byID.get(id);
@@ -232,7 +233,7 @@ function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Mas
   return Object.freeze({ placements: Object.freeze(placements), lanes: Object.freeze(lanes.map((lane) => Object.freeze(lane))), byID, contentMain });
 }
 
-function normalizeGeometry(input: MasonryLayoutInput): Result<Omit<MasonryLayoutState, 'domain' | 'extents' | 'generation'>> {
+function normalizeGeometry(input: MasonryLayoutInput): VirtualResult<Omit<MasonryLayoutState, 'domain' | 'extents' | 'generation'>> {
   const axis = input.axis ?? 'vertical';
   const flow = input.flow ?? 'forward';
   const laneGap = input.laneGap ?? 0;
@@ -315,12 +316,12 @@ function contentSize<ID extends StableID>(state: MasonryLayoutState<ID>, content
   return Object.freeze(state.axis === 'vertical' ? { width: cross, height: contentMain } : { width: contentMain, height: cross });
 }
 
-function getInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Result<MasonryInternals<ID>> {
+function getInternals<ID extends StableID>(state: MasonryLayoutState<ID>): VirtualResult<MasonryInternals<ID>> {
   const value = internals.get(state as MasonryLayoutState);
   return value === undefined ? fail('construction', 'virtual-layout-domain-mismatch', 'Masonry state must be created by createMasonryLayout().') : ok(value as MasonryInternals<ID>);
 }
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
-function nextGeneration(generation: number): Result<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
+function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
 function finitePositive(value: number): boolean { return Number.isFinite(value) && value > 0; }

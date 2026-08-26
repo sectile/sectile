@@ -1,5 +1,6 @@
 import { unwrap } from '@sectile/core/result';
-import type { ErrorClass, Result } from '@sectile/core';
+import type { ErrorClass } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import type { TextEditingState } from '@sectile/core/text';
@@ -17,7 +18,7 @@ export function createDateRangeFieldState(input: DateRangeFieldStateInput = {}):
   return unwrap(tryCreateDateRangeFieldState(input));
 }
 
-export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): Result<DateRangeFieldState> {
+export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> {
   const range = input.value === undefined || input.value === null ? ok<DateRange | null>(null) : completeRange(input.value.start, input.value.end, 'construction');
   if (!range.ok) return range;
   const startValue = input.startValue !== undefined ? input.startValue : range.value?.start ?? null;
@@ -30,7 +31,7 @@ export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {
   return ok(Object.freeze({ value: value.value, start: start.value, end: end.value, active }));
 }
 
-export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): Result<DateRangeFieldUpdate> {
+export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> {
   const valid = tryCreateDateRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active });
   if (!valid.ok) return invalidTransition(valid);
   if (event === 'cancel') {
@@ -53,8 +54,8 @@ export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: Date
   return composeState(start, end, active, commands);
 }
 
-function composeState(start: DateFieldState, end: DateFieldState, active: DateRangeFieldEndpoint, commands: readonly DateRangeFieldCommand[]): Result<DateRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
-function completeRange(start: DateValue | null, end: DateValue | null, errorClass: ErrorClass = 'transition-rejection'): Result<DateRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateDateRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-date-range-field', 'Date range field start must not be after end.'); }
+function composeState(start: DateFieldState, end: DateFieldState, active: DateRangeFieldEndpoint, commands: readonly DateRangeFieldCommand[]): TemporalResult<DateRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
+function completeRange(start: DateValue | null, end: DateValue | null, errorClass: ErrorClass = 'transition-rejection'): TemporalResult<DateRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateDateRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-date-range-field', 'Date range field start must not be after end.'); }
 function endpointPolicies(policies: DateRangeFieldPolicies): DateFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
 function sameRange(left: DateRange | null, right: DateRange | null): boolean { return left === null || right === null ? left === right : compareDateValues(left.start, right.start) === 0 && compareDateValues(left.end, right.end) === 0; }
-function invalidTransition<T>(result: Result<T>): Result<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

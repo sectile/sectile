@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createTerminalTemporalController, createTerminalTemporalFacadeConnection, type TerminalTemporalController, type TerminalTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
 import { compareDateTimeValues, type DateTimeValue } from '@sectile/temporal/date-time-field';
@@ -13,8 +13,7 @@ import {
   type DateTimePickerPolicies,
   type DateTimePickerState,
 } from '@sectile/temporal/date-time-picker';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { toDatePickerEvent } from './date-picker.js';
 
@@ -49,7 +48,7 @@ export interface DateTimePickerControlledValues {
 export interface DateTimePickerConnection {
   getSnapshot(): RevisionSnapshot<DateTimePickerState>;
   getMonth(): readonly (readonly DateValue[])[];
-  syncControlledValues(values: DateTimePickerControlledValues): Result<RevisionSnapshot<DateTimePickerState>>;
+  syncControlledValues(values: DateTimePickerControlledValues): TerminalTemporalResult<RevisionSnapshot<DateTimePickerState>>;
   handleEvent(event: DateTimePickerEvent): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
@@ -62,11 +61,11 @@ export function createDateTimePicker(
 
 export function tryCreateDateTimePicker(
   options: DateTimePickerOptions = {},
-): Result<FacadeConnection<DateTimePickerConnection>> {
-  return createFacadeConnection(options, construct);
+): TerminalTemporalResult<FacadeConnection<DateTimePickerConnection>> {
+  return createTerminalTemporalFacadeConnection(options, construct);
 }
 
-function construct(options: DateTimePickerOptions): Result<DateTimePickerConnection> {
+function construct(options: DateTimePickerOptions): TerminalTemporalResult<DateTimePickerConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -81,7 +80,7 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
   });
-  const runtime = createSemanticController<
+  const runtime = createTerminalTemporalController<
     DateTimePickerState,
     DateTimePickerEvent,
     DateTimePickerCommand,
@@ -127,12 +126,12 @@ function construct(options: DateTimePickerOptions): Result<DateTimePickerConnect
 
 class TerminalDateTimePicker implements DateTimePickerConnection {
   readonly options: DateTimePickerOptions;
-  readonly runtime: SemanticController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
+  readonly runtime: TerminalTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>;
   readonly controls: { value: boolean; highlighted: boolean; open: boolean };
 
   public constructor(
     options: DateTimePickerOptions,
-    runtime: SemanticController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>,
+    runtime: TerminalTemporalController<DateTimePickerState, DateTimePickerEvent, DateTimePickerCommand>,
     controls: { value: boolean; highlighted: boolean; open: boolean },
   ) {
     this.options = options;
@@ -149,7 +148,7 @@ class TerminalDateTimePicker implements DateTimePickerConnection {
 
   public syncControlledValues(
     values: DateTimePickerControlledValues,
-  ): Result<RevisionSnapshot<DateTimePickerState>> {
+  ): TerminalTemporalResult<RevisionSnapshot<DateTimePickerState>> {
     if (
       this.controls.value !== (values.value !== undefined)
       || this.controls.highlighted !== (values.highlightedValue !== undefined)

@@ -1,6 +1,6 @@
-import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyCalendarEvent,
@@ -62,7 +62,7 @@ export interface CalendarConnection {
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>>;
+  syncControlledValues(values: CalendarControlledValues): DOMTemporalResult<RevisionSnapshot<CalendarState>>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: CalendarEvent): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
@@ -75,11 +75,11 @@ export function createCalendar(options: CalendarOptions): FacadeConnection<Calen
   return unwrap(tryCreateCalendar(options));
 }
 
-export function tryCreateCalendar(options: CalendarOptions): Result<FacadeConnection<CalendarConnection>> {
-  return createFacadeConnection(options, constructCalendar);
+export function tryCreateCalendar(options: CalendarOptions): DOMTemporalResult<FacadeConnection<CalendarConnection>> {
+  return createDOMTemporalFacadeConnection(options, constructCalendar);
 }
 
-function constructCalendar(options: CalendarOptions): Result<CalendarConnection> {
+function constructCalendar(options: CalendarOptions): DOMTemporalResult<CalendarConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -90,7 +90,7 @@ function constructCalendar(options: CalendarOptions): Result<CalendarConnection>
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
   });
-  const runtime = createSemanticController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
+  const runtime = createDOMTemporalController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
     initial,
     reducer: (state, event) => applyCalendarEvent(state, event, {
       ...options.policies,
@@ -118,7 +118,7 @@ function constructCalendar(options: CalendarOptions): Result<CalendarConnection>
 class DOMCalendar implements CalendarConnection {
   readonly #options: CalendarOptions;
   readonly #grid: HTMLElement;
-  readonly #runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>;
+  readonly #runtime: DOMTemporalController<CalendarState, CalendarEvent, CalendarCommand>;
   readonly #controls: { readonly value: boolean; readonly highlighted: boolean };
   readonly #keydown = (event: KeyboardEvent): void => {
     if (this.handleKeyboardEvent(event)) event.preventDefault();
@@ -132,7 +132,7 @@ class DOMCalendar implements CalendarConnection {
 
   public constructor(
     options: CalendarOptions,
-    runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>,
+    runtime: DOMTemporalController<CalendarState, CalendarEvent, CalendarCommand>,
     controls: { readonly value: boolean; readonly highlighted: boolean },
   ) {
     this.#options = options;
@@ -156,7 +156,7 @@ class DOMCalendar implements CalendarConnection {
   public getYear(): readonly (readonly CalendarMonthValue[])[] {
     return createCalendarYear(this.getSnapshot().state.view.year);
   }
-  public syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>> {
+  public syncControlledValues(values: CalendarControlledValues): DOMTemporalResult<RevisionSnapshot<CalendarState>> {
     if (this.#controls.value !== (values.value !== undefined) || this.#controls.highlighted !== (values.highlightedValue !== undefined)) {
       return {
         ok: false,

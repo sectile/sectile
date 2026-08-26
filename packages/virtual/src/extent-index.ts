@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { VirtualResult } from './error.js';
 import { fail, ok, validateMaxItems } from './internal/foundation.js';
 
 export type Extent =
@@ -31,9 +31,9 @@ export interface ExtentIndex {
   offsetAt(index: number): number | null;
   indexAtOffset(offset: number): number | null;
   locateOffset(offset: number): ExtentLocation | null;
-  update(updates: readonly ExtentUpdate[]): Result<ExtentIndex>;
-  splice(start: number, deleteCount: number, inserted?: readonly Extent[]): Result<ExtentIndex>;
-  move(from: number, to: number, count?: number): Result<ExtentIndex>;
+  update(updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex>;
+  splice(start: number, deleteCount: number, inserted?: readonly Extent[]): VirtualResult<ExtentIndex>;
+  move(from: number, to: number, count?: number): VirtualResult<ExtentIndex>;
 }
 
 type Node = Leaf | Branch;
@@ -65,7 +65,7 @@ export function createExtentIndex(
 export function tryCreateExtentIndex(
   extents: readonly Extent[],
   options: ExtentIndexOptions = {},
-): Result<ExtentIndex> {
+): VirtualResult<ExtentIndex> {
   const maxItems = options.maxItems ?? 1_000_000;
   const ceilingError = validateMaxItems(maxItems);
   if (ceilingError !== null) return { ok: false, error: ceilingError };
@@ -89,13 +89,13 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
     offsetAt: (index: number): number | null => offsetAt(root, index),
     indexAtOffset: (offset: number): number | null => locateOffset(root, offset)?.index ?? null,
     locateOffset: (offset: number): ExtentLocation | null => locateOffset(root, offset),
-    update: (updates: readonly ExtentUpdate[]): Result<ExtentIndex> => updateIndex(root, maxItems, updates),
+    update: (updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex> => updateIndex(root, maxItems, updates),
     splice: (
       start: number,
       deleteCount: number,
       inserted: readonly Extent[] = [],
-    ): Result<ExtentIndex> => spliceIndex(root, maxItems, start, deleteCount, inserted),
-    move: (from: number, to: number, count = 1): Result<ExtentIndex> => (
+    ): VirtualResult<ExtentIndex> => spliceIndex(root, maxItems, start, deleteCount, inserted),
+    move: (from: number, to: number, count = 1): VirtualResult<ExtentIndex> => (
       moveIndex(root, maxItems, from, to, count)
     ),
   });
@@ -105,7 +105,7 @@ function updateIndex(
   root: Node | null,
   maxItems: number,
   updates: readonly ExtentUpdate[],
-): Result<ExtentIndex> {
+): VirtualResult<ExtentIndex> {
   const size = root?.size ?? 0;
   let strictlyIncreasing = true;
   const indices: number[] = [];
@@ -151,7 +151,7 @@ function spliceIndex(
   start: number,
   deleteCount: number,
   inserted: readonly Extent[],
-): Result<ExtentIndex> {
+): VirtualResult<ExtentIndex> {
   const size = root?.size ?? 0;
   if (
     !Number.isSafeInteger(start)
@@ -186,7 +186,7 @@ function moveIndex(
   from: number,
   to: number,
   count: number,
-): Result<ExtentIndex> {
+): VirtualResult<ExtentIndex> {
   const size = root?.size ?? 0;
   if (
     !Number.isSafeInteger(from)
@@ -453,7 +453,7 @@ function branch(left: Node, right: Node): Branch {
   });
 }
 
-function validateExtents(extents: readonly Extent[]): Result<readonly Extent[]> {
+function validateExtents(extents: readonly Extent[]): VirtualResult<readonly Extent[]> {
   const result: Extent[] = [];
   for (const extent of extents) {
     const validated = validateExtent(extent);
@@ -463,7 +463,7 @@ function validateExtents(extents: readonly Extent[]): Result<readonly Extent[]> 
   return ok(Object.freeze(result));
 }
 
-function validateExtent(extent: Extent): Result<Extent> {
+function validateExtent(extent: Extent): VirtualResult<Extent> {
   const value = extent.kind === 'unknown' ? extent.fallback : extent.value;
   if (
     (extent.kind !== 'exact' && extent.kind !== 'estimated' && extent.kind !== 'unknown')
@@ -484,4 +484,4 @@ function valueOf(extent: Extent): number {
   return extent.kind === 'unknown' ? extent.fallback : extent.value;
 }
 
-export type { Result } from '@sectile/core';
+export type { VirtualResult } from './error.js';

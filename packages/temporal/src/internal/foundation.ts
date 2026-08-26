@@ -1,15 +1,16 @@
-import type { ErrorClass, Result, SectileErrorCode } from '@sectile/core';
+import type { ErrorClass } from '@sectile/core';
+import type { TemporalErrorCode, TemporalResult } from '../error.js';
 
-export function ok<T>(value: T): Result<T> {
+export function ok<T>(value: T): TemporalResult<T> {
   return { ok: true, value };
 }
 
-export function fail<T = never, Code extends SectileErrorCode = SectileErrorCode>(
+export function fail<T = never, Code extends TemporalErrorCode = TemporalErrorCode>(
   errorClass: ErrorClass,
   code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,
-): Result<T, Code> {
+): TemporalResult<T, Code> {
   return {
     ok: false,
     error: {

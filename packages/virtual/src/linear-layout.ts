@@ -1,4 +1,5 @@
-import type { Result, StableID } from '@sectile/core';
+import type { StableID } from '@sectile/core';
+import type { VirtualResult } from './error.js';
 import { canRequestCollectionWindow, type CollectionWindowEvent, type CollectionWindowState } from '@sectile/core/collection-window';
 import { tryApplySequencePatch, type Sequence, type SequencePatch } from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
@@ -51,7 +52,7 @@ export function createLinearLayout<ID extends StableID>(domain: Sequence<ID>, ex
   return unwrap(tryCreateLinearLayout(domain, extents, input));
 }
 
-export function tryCreateLinearLayout<ID extends StableID>(domain: Sequence<ID>, extents: ExtentIndex, input: LinearLayoutInput = {}): Result<LinearLayoutState<ID>> {
+export function tryCreateLinearLayout<ID extends StableID>(domain: Sequence<ID>, extents: ExtentIndex, input: LinearLayoutInput = {}): VirtualResult<LinearLayoutState<ID>> {
   if (domain.size !== extents.size) return fail('construction', 'virtual-layout-domain-mismatch', 'Linear domain and extent index must have the same size.', { domainSize: domain.size, extentSize: extents.size });
   const axis = input.axis ?? 'vertical';
   const flow = input.flow ?? 'forward';
@@ -69,7 +70,7 @@ export function queryLinearLayout<ID extends StableID>(state: LinearLayoutState<
   return unwrap(tryQueryLinearLayout(state, input));
 }
 
-export function tryQueryLinearLayout<ID extends StableID>(state: LinearLayoutState<ID>, input: VirtualQueryInput): Result<VirtualLayoutPlan<ID>> {
+export function tryQueryLinearLayout<ID extends StableID>(state: LinearLayoutState<ID>, input: VirtualQueryInput): VirtualResult<VirtualLayoutPlan<ID>> {
   const window = tryQueryLinearWindow(state, input);
   if (!window.ok) return window;
   const { viewport, renderBounds } = window.value;
@@ -98,7 +99,7 @@ export function queryLinearWindow<ID extends StableID>(state: LinearLayoutState<
   return unwrap(tryQueryLinearWindow(state, input));
 }
 
-export function tryQueryLinearWindow<ID extends StableID>(state: LinearLayoutState<ID>, input: VirtualQueryInput): Result<LinearLayoutWindow> {
+export function tryQueryLinearWindow<ID extends StableID>(state: LinearLayoutState<ID>, input: VirtualQueryInput): VirtualResult<LinearLayoutWindow> {
   const normalized = normalizeQuery(input);
   if (!normalized.ok) return normalized;
   const range = (bounds: VirtualRect): { readonly start: number; readonly end: number } => {
@@ -123,7 +124,7 @@ export function applyLinearMeasurements<ID extends StableID>(state: LinearLayout
   return unwrap(tryApplyLinearMeasurements(state, batch));
 }
 
-export function tryApplyLinearMeasurements<ID extends StableID>(state: LinearLayoutState<ID>, batch: VirtualMeasurementBatch<LinearMeasurement, ID>): Result<VirtualLayoutMutation<LinearLayoutState<ID>>> {
+export function tryApplyLinearMeasurements<ID extends StableID>(state: LinearLayoutState<ID>, batch: VirtualMeasurementBatch<LinearMeasurement, ID>): VirtualResult<VirtualLayoutMutation<LinearLayoutState<ID>>> {
   if (batch.generation !== state.generation) return fail('transition-rejection', 'virtual-layout-measurement-stale', 'Measurement generation is stale.', { generation: batch.generation, activeGeneration: state.generation });
   if (batch.measurements.length === 0) return ok(Object.freeze({ state, scrollDelta: ZERO_POINT }));
   const generation = nextGeneration(state.generation);
@@ -139,7 +140,7 @@ export function applyLinearPatch<ID extends StableID>(state: LinearLayoutState<I
   return unwrap(tryApplyLinearPatch(state, input, anchor));
 }
 
-export function tryApplyLinearPatch<ID extends StableID>(state: LinearLayoutState<ID>, input: LinearPatch<ID>, anchor: VirtualAnchor<ID> | null = null): Result<VirtualLayoutMutation<LinearLayoutState<ID>>> {
+export function tryApplyLinearPatch<ID extends StableID>(state: LinearLayoutState<ID>, input: LinearPatch<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<LinearLayoutState<ID>>> {
   const inserted = input.insertedExtents ?? [];
   if (input.patch.type === 'splice' && inserted.length !== input.patch.inserted.length) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Every inserted identity requires one extent.');
   if (input.patch.type === 'move' && inserted.length !== 0) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Move patches cannot insert extents.');
@@ -160,7 +161,7 @@ export function linearScrollTarget<ID extends StableID>(state: LinearLayoutState
   return unwrap(tryLinearScrollTarget(state, id, viewport, alignment));
 }
 
-export function tryLinearScrollTarget<ID extends StableID>(state: LinearLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): Result<VirtualPoint> {
+export function tryLinearScrollTarget<ID extends StableID>(state: LinearLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const index = state.domain.indexOf(id);
   const rect = index === null ? null : rectAt(state, index);
   if (rect === null) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the linear domain.', { id });
@@ -178,7 +179,7 @@ export function collectionWindowEventForLinearPlan<ID extends StableID>(
   plan: VirtualLayoutPlan<ID>,
   collection: CollectionWindowState<ID>,
   loadedDomain: Sequence<ID>,
-): Result<CollectionWindowEvent<ID> | null> {
+): VirtualResult<CollectionWindowEvent<ID> | null> {
   if (loadedDomain.size !== collection.size) return fail('transition-rejection', 'virtual-layout-window-mismatch', 'Loaded identity domain must match the collection window size.');
   if (collection.pending !== null || plan.placements.length === 0) return ok(null);
   let renderStart = Number.MAX_SAFE_INTEGER;
@@ -220,7 +221,7 @@ function sizeOf<ID extends StableID>(state: LinearLayoutState<ID>): { readonly w
 }
 function mainStart(axis: LinearAxis, rect: VirtualRect): number { return axis === 'vertical' ? rect.y : rect.x; }
 function mainExtent(axis: LinearAxis, rect: VirtualRect): number { return axis === 'vertical' ? rect.height : rect.width; }
-function nextGeneration(generation: number): Result<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
+function nextGeneration(generation: number): VirtualResult<number> { return generation === Number.MAX_SAFE_INTEGER ? fail('resource-rejection', 'virtual-layout-generation-exhausted', 'Layout generation reached the safe-integer ceiling.') : ok(generation + 1); }
 function freezeState<ID extends StableID>(state: LinearLayoutState<ID>): LinearLayoutState<ID> { return Object.freeze(state); }
 function finiteNonNegative(value: number): boolean { return Number.isFinite(value) && value >= 0; }
-function geometryFailure<T>(message: string): Result<T> { return fail('construction', 'virtual-layout-geometry-invalid', message); }
+function geometryFailure<T>(message: string): VirtualResult<T> { return fail('construction', 'virtual-layout-geometry-invalid', message); }

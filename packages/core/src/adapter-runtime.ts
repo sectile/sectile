@@ -1,5 +1,5 @@
 import type { Result, SectileError } from './shared.js';
-import type { SectileErrorCode } from './error-code.js';
+import type { CoreErrorCode } from './error-code.js';
 import {
   tryCreateInteractionState,
   requireInteraction,
@@ -15,15 +15,15 @@ import {
   type RevisionSnapshot,
 } from './revision.js';
 
-export function applyControllerEvent<State, Event, Command, Effect>(
+export function applyControllerEvent<State, Event, Command, Effect, Code extends string>(
   current: RevisionSnapshot<State>,
   expectedRevision: number,
   event: Event,
-  reducer: EventReducer<State, Event, Command>,
-  reconcile: (previous: State, proposed: State) => Result<State>,
+  reducer: EventReducer<State, Event, Command, Code>,
+  reconcile: (previous: State, proposed: State) => Result<State, Code>,
   notify: (previous: State, proposed: State) => void,
   toEffect: (command: Command) => Effect,
-): RevisionResult<State, Effect> {
+): RevisionResult<State, Effect, CoreErrorCode | Code> {
   const semantic = applyRevisionedEvent(current, expectedRevision, event, reducer);
   if (!semantic.ok) return semantic;
   const committed = reconcile(current.state, semantic.snapshot.state);
@@ -39,10 +39,10 @@ export function applyControllerEvent<State, Event, Command, Effect>(
   );
 }
 
-export function synchronizeControllerState<State>(
+export function synchronizeControllerState<State, Code extends string>(
   current: RevisionSnapshot<State>,
-  state: Result<State>,
-): Result<RevisionSnapshot<State>> {
+  state: Result<State, Code>,
+): Result<RevisionSnapshot<State>, CoreErrorCode | Code> {
   if (!state.ok) return state;
   if (current.revision === Number.MAX_SAFE_INTEGER) {
     return {
@@ -90,17 +90,17 @@ export function controlledFieldError(
   };
 }
 
-export interface SemanticController<State, Event, Effect> {
+export interface SemanticController<State, Event, Effect, Code extends string = CoreErrorCode> {
   getSnapshot(): RevisionSnapshot<State>;
-  replace(state: Result<State>): Result<RevisionSnapshot<State>>;
-  handle(event: Event, expectedRevision?: number): RevisionResult<State, Effect>;
-  reject(code: SectileErrorCode, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect>;
+  replace(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
+  handle(event: Event, expectedRevision?: number): RevisionResult<State, Effect, CoreErrorCode | Code>;
+  reject<Code extends string>(code: Code, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect, Code>;
 }
 
-export interface SemanticControllerOptions<State, Event, Command, Effect> {
-  readonly initial: Result<State>;
-  readonly reducer: EventReducer<State, Event, Command>;
-  readonly reconcile?: (previous: State, proposed: State) => Result<State>;
+export interface SemanticControllerOptions<State, Event, Command, Effect, Code extends string = CoreErrorCode> {
+  readonly initial: Result<State, Code>;
+  readonly reducer: EventReducer<State, Event, Command, Code>;
+  readonly reconcile?: (previous: State, proposed: State) => Result<State, Code>;
   readonly notify?: (previous: State, proposed: State) => void;
   readonly toEffect: (command: Command) => Effect;
   readonly interaction?: InteractionStateInput | undefined;
@@ -110,22 +110,22 @@ export interface SemanticControllerOptions<State, Event, Command, Effect> {
 export type HostInputDecoder<HostInput, Event> = (input: HostInput) => Event | null;
 export type HostEffectProjector<Command, HostEffect> = (command: Command) => HostEffect;
 
-export interface HostAdapter<State, HostInput, HostEffect> {
+export interface HostAdapter<State, HostInput, HostEffect, Code extends string = CoreErrorCode> {
   getSnapshot(): RevisionSnapshot<State>;
-  replace(state: Result<State>): Result<RevisionSnapshot<State>>;
-  handleInput(input: HostInput, expectedRevision?: number): RevisionResult<State, HostEffect> | null;
-  reject(code: SectileErrorCode, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, HostEffect>;
+  replace(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
+  handleInput(input: HostInput, expectedRevision?: number): RevisionResult<State, HostEffect, CoreErrorCode | Code> | null;
+  reject<Code extends string>(code: Code, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, HostEffect, Code>;
 }
 
-export interface HostAdapterOptions<State, HostInput, Event, Command, HostEffect>
-  extends Omit<SemanticControllerOptions<State, Event, Command, HostEffect>, 'toEffect'> {
+export interface HostAdapterOptions<State, HostInput, Event, Command, HostEffect, Code extends string = CoreErrorCode>
+  extends Omit<SemanticControllerOptions<State, Event, Command, HostEffect, Code>, 'toEffect'> {
   readonly decode: HostInputDecoder<HostInput, Event>;
   readonly project: HostEffectProjector<Command, HostEffect>;
 }
 
-export function createSemanticController<State, Event, Command, Effect>(
-  options: SemanticControllerOptions<State, Event, Command, Effect>,
-): Result<SemanticController<State, Event, Effect>> {
+export function createSemanticController<State, Event, Command, Effect, Code extends string = CoreErrorCode>(
+  options: SemanticControllerOptions<State, Event, Command, Effect, Code>,
+): Result<SemanticController<State, Event, Effect, Code>, CoreErrorCode | Code> {
   if (!options.initial.ok) return options.initial;
   const interaction = tryCreateInteractionState(options.interaction);
   if (!interaction.ok) return interaction;
@@ -136,7 +136,7 @@ export function createSemanticController<State, Event, Command, Effect>(
     ok: true,
     value: Object.freeze({
       getSnapshot: (): RevisionSnapshot<State> => current,
-      replace: (state: Result<State>): Result<RevisionSnapshot<State>> => {
+      replace: (state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => {
         const next = synchronizeControllerState(current, state);
         if (next.ok) current = next.value;
         return next;
@@ -144,7 +144,7 @@ export function createSemanticController<State, Event, Command, Effect>(
       handle: (
         event: Event,
         expectedRevision = current.revision,
-      ): RevisionResult<State, Effect> => {
+      ): RevisionResult<State, Effect, CoreErrorCode | Code> => {
         const permitted = requireInteraction(
           interaction.value,
           options.interactionIntent?.(event) ?? 'mutate',
@@ -162,11 +162,11 @@ export function createSemanticController<State, Event, Command, Effect>(
         if (result.ok) current = result.snapshot;
         return result;
       },
-      reject: (
-        code: SectileErrorCode,
+      reject: <Code extends string>(
+        code: Code,
         message: string,
         details?: Readonly<Record<string, unknown>>,
-      ): RevisionResult<State, Effect> => rejectRevisionInput(current, {
+      ): RevisionResult<State, Effect, Code> => rejectRevisionInput(current, {
         class: 'transition-rejection',
         code,
         message,
@@ -176,9 +176,9 @@ export function createSemanticController<State, Event, Command, Effect>(
   };
 }
 
-export function createHostAdapter<State, HostInput, Event, Command, HostEffect>(
-  options: HostAdapterOptions<State, HostInput, Event, Command, HostEffect>,
-): Result<HostAdapter<State, HostInput, HostEffect>> {
+export function createHostAdapter<State, HostInput, Event, Command, HostEffect, Code extends string = CoreErrorCode>(
+  options: HostAdapterOptions<State, HostInput, Event, Command, HostEffect, Code>,
+): Result<HostAdapter<State, HostInput, HostEffect, Code>, CoreErrorCode | Code> {
   const controller = createSemanticController({
     initial: options.initial,
     reducer: options.reducer,
@@ -193,20 +193,20 @@ export function createHostAdapter<State, HostInput, Event, Command, HostEffect>(
     ok: true,
     value: Object.freeze({
       getSnapshot: (): RevisionSnapshot<State> => controller.value.getSnapshot(),
-      replace: (state: Result<State>): Result<RevisionSnapshot<State>> => controller.value.replace(state),
+      replace: (state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => controller.value.replace(state),
       handleInput: (
         input: HostInput,
         expectedRevision?: number,
-      ): RevisionResult<State, HostEffect> | null => {
+      ): RevisionResult<State, HostEffect, CoreErrorCode | Code> | null => {
         const event = options.decode(input);
         if (event === null) return null;
         return controller.value.handle(event, expectedRevision);
       },
-      reject: (
-        code: SectileErrorCode,
+      reject: <Code extends string>(
+        code: Code,
         message: string,
         details?: Readonly<Record<string, unknown>>,
-      ): RevisionResult<State, HostEffect> => controller.value.reject(code, message, details),
+      ): RevisionResult<State, HostEffect, Code> => controller.value.reject(code, message, details),
     }),
   };
 }
@@ -257,10 +257,11 @@ export type FacadeConnection<Connection extends SnapshotConnection> = Connection
 export function createFacadeConnection<
   Options extends FacadeOptions,
   Connection extends SnapshotConnection,
+  Code extends string = CoreErrorCode,
 >(
   options: Options,
-  construct: (options: Options) => Result<Connection>,
-): Result<FacadeConnection<Connection>> {
+  construct: (options: Options) => Result<Connection, Code>,
+): Result<FacadeConnection<Connection>, Code> {
   const subscribers = new Set<FacadeSnapshotListener<Connection>>();
   let connection: Connection | undefined;
   let active = true;

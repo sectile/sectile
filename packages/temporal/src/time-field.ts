@@ -1,5 +1,5 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import type { TemporalResult } from './error.js';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { applyTextEvent, createTextEditingState, normalizeTextEditingState, type TextEditingState, type TextEvent,tryCreateTextEditingState } from '@sectile/core/text';
@@ -48,7 +48,7 @@ export function createTimeValue(hour: number, minute = 0, second = 0, millisecon
   return unwrap(tryCreateTimeValue(hour, minute, second, millisecond));
 }
 
-export function tryCreateTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): Result<TimeValue> {
+export function tryCreateTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): TemporalResult<TimeValue> {
   for (const [name, value, maximum] of [['hour', hour, 23], ['minute', minute, 59], ['second', second, 59], ['millisecond', millisecond, 999]] as const) {
     if (!Number.isSafeInteger(value) || value < 0 || value > maximum) {
       return fail('construction', `invalid-time-${name}`, `Time ${name} must be an integer from 0 through ${maximum}.`, { [name]: value });
@@ -57,7 +57,7 @@ export function tryCreateTimeValue(hour: number, minute = 0, second = 0, millise
   return ok(Object.freeze({ hour, minute, second, millisecond }));
 }
 
-export function parseTimeValue(text: string): Result<TimeValue> {
+export function parseTimeValue(text: string): TemporalResult<TimeValue> {
   if (typeof text !== 'string') return fail('construction', 'invalid-time-text', 'Time text must be a string.');
   const match = /^(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(text);
   if (match === null) return fail('transition-rejection', 'invalid-time-format', 'Time text must use HH:mm, HH:mm:ss, or HH:mm:ss.SSS.', { text });
@@ -76,7 +76,7 @@ export function compareTimeValues(left: TimeValue, right: TimeValue): -1 | 0 | 1
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function addTimeMilliseconds(value: TimeValue, amount: number): Result<TimeValue> {
+export function addTimeMilliseconds(value: TimeValue, amount: number): TemporalResult<TimeValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-time-delta', 'Time delta must be a safe integer.');
   const day = 86_400_000;
   const next = ((timeToMilliseconds(value) + amount) % day + day) % day;
@@ -90,7 +90,7 @@ export function createTimeFieldState(value: TimeValue | null = null, inputState?
   return unwrap(tryCreateTimeFieldState(value, inputState));
 }
 
-export function tryCreateTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): Result<TimeFieldState> {
+export function tryCreateTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): TemporalResult<TimeFieldState> {
   const valid = value === null ? ok(null) : tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
   if (!valid.ok) return valid;
   const input = inputState === undefined ? committedInput(valid.value) : normalizeTextEditingState(inputState);
@@ -99,7 +99,7 @@ export function tryCreateTimeFieldState(value: TimeValue | null = null, inputSta
   return ok(Object.freeze({ value: valid.value, inputState: input.value }));
 }
 
-export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent, policies: TimeFieldPolicies = {}): Result<TimeFieldUpdate> {
+export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent, policies: TimeFieldPolicies = {}): TemporalResult<TimeFieldUpdate> {
   const valid = tryCreateTimeFieldState(state.value, state.inputState);
   if (!valid.ok) return invalidTransition(valid);
   const policy = validatePolicies(policies);
@@ -140,7 +140,7 @@ export function timeSegmentAt(offset: number): TimeSegment {
   return offset <= 2 ? 'hour' : offset <= 5 ? 'minute' : offset <= 8 ? 'second' : 'millisecond';
 }
 
-function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segment?: TimeSegment): Result<TimeFieldUpdate> {
+function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segment?: TimeSegment): TemporalResult<TimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'time-field-value-required', 'Time field requires a value.');
   } else {
@@ -158,13 +158,13 @@ function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segme
   ]);
 }
 
-function committedInput(value: TimeValue | null, segment?: TimeSegment): Result<TextEditingState> {
+function committedInput(value: TimeValue | null, segment?: TimeSegment): TemporalResult<TextEditingState> {
   const text = value === null ? '' : formatTimeValue(value);
   const range = segment === 'hour' ? [0, 2] : segment === 'minute' ? [3, 5] : segment === 'second' ? [6, 8] : segment === 'millisecond' ? [9, 12] : [text.length, text.length];
   return tryCreateTextEditingState(text, { anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length), focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length) });
 }
 
-function validatePolicies(policies: TimeFieldPolicies): Result<true> {
+function validatePolicies(policies: TimeFieldPolicies): TemporalResult<true> {
   if (policies.min !== undefined) { const min = tryCreateTimeValue(policies.min.hour, policies.min.minute, policies.min.second, policies.min.millisecond); if (!min.ok) return min; }
   if (policies.max !== undefined) { const max = tryCreateTimeValue(policies.max.hour, policies.max.minute, policies.max.second, policies.max.millisecond); if (!max.ok) return max; }
   if (policies.min !== undefined && policies.max !== undefined && compareTimeValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-time-field-bounds', 'Time field minimum must not follow its maximum.');
@@ -173,4 +173,4 @@ function validatePolicies(policies: TimeFieldPolicies): Result<true> {
 
 function timeToMilliseconds(value: TimeValue): number { return ((value.hour * 60 + value.minute) * 60 + value.second) * 1_000 + value.millisecond; }
 function pad(value: number, length: number): string { return String(value).padStart(length, '0'); }
-function invalidTransition<T>(result: Result<T>): Result<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

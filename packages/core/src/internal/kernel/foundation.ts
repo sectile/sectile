@@ -4,7 +4,7 @@ import {
   type SectileError,
   type StableID,
 } from '../../shared.js';
-import type { SectileErrorCode } from '../../error-code.js';
+import type { CoreErrorCode } from '../../error-code.js';
 
 type SafeCeilingName =
   | 'columnCount'
@@ -27,7 +27,7 @@ type SafeCeilingName =
   | 'siblingCount'
   | 'total';
 
-const safeCeilingErrorCodes: Readonly<Record<SafeCeilingName, SectileErrorCode>> = Object.freeze({
+const safeCeilingErrorCodes: Readonly<Record<SafeCeilingName, CoreErrorCode>> = Object.freeze({
   columnCount: 'invalid-column-count',
   count: 'invalid-count',
   itemsPerPage: 'invalid-items-per-page',
@@ -53,7 +53,7 @@ export function ok<T>(value: T): Result<T> {
   return { ok: true, value };
 }
 
-export function fail<T = never, Code extends SectileErrorCode = SectileErrorCode>(
+export function fail<T = never, Code extends CoreErrorCode = CoreErrorCode>(
   errorClass: SectileError['class'],
   code: Code,
   message: string,
@@ -70,7 +70,7 @@ export function fail<T = never, Code extends SectileErrorCode = SectileErrorCode
   };
 }
 
-export function resourceError<Code extends SectileErrorCode>(
+export function resourceError<Code extends CoreErrorCode>(
   code: Code,
   message: string,
   details?: Readonly<Record<string, unknown>>,

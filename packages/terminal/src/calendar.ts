@@ -1,6 +1,6 @@
-import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createTerminalTemporalController, createTerminalTemporalFacadeConnection, type TerminalTemporalController, type TerminalTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyCalendarEvent,
@@ -56,7 +56,7 @@ export interface CalendarConnection {
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>>;
+  syncControlledValues(values: CalendarControlledValues): TerminalTemporalResult<RevisionSnapshot<CalendarState>>;
   handleEvent(event: CalendarEvent): boolean;
   handleKeyboardInput(input: TerminalKeyboardInput): boolean;
 }
@@ -65,11 +65,11 @@ export function createCalendar(options: CalendarOptions = {}): FacadeConnection<
   return unwrap(tryCreateCalendar(options));
 }
 
-export function tryCreateCalendar(options: CalendarOptions = {}): Result<FacadeConnection<CalendarConnection>> {
-  return createFacadeConnection(options, constructCalendar);
+export function tryCreateCalendar(options: CalendarOptions = {}): TerminalTemporalResult<FacadeConnection<CalendarConnection>> {
+  return createTerminalTemporalFacadeConnection(options, constructCalendar);
 }
 
-function constructCalendar(options: CalendarOptions): Result<CalendarConnection> {
+function constructCalendar(options: CalendarOptions): TerminalTemporalResult<CalendarConnection> {
   const controls = {
     value: options.value !== undefined,
     highlighted: options.highlightedValue !== undefined,
@@ -80,7 +80,7 @@ function constructCalendar(options: CalendarOptions): Result<CalendarConnection>
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
   });
-  const runtime = createSemanticController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
+  const runtime = createTerminalTemporalController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
     initial,
     reducer: (state, event) => applyCalendarEvent(state, event, {
       ...options.policies,
@@ -107,12 +107,12 @@ function constructCalendar(options: CalendarOptions): Result<CalendarConnection>
 
 class TerminalCalendar implements CalendarConnection {
   readonly #options: CalendarOptions;
-  readonly #runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>;
+  readonly #runtime: TerminalTemporalController<CalendarState, CalendarEvent, CalendarCommand>;
   readonly #controls: { readonly value: boolean; readonly highlighted: boolean };
 
   public constructor(
     options: CalendarOptions,
-    runtime: SemanticController<CalendarState, CalendarEvent, CalendarCommand>,
+    runtime: TerminalTemporalController<CalendarState, CalendarEvent, CalendarCommand>,
     controls: { readonly value: boolean; readonly highlighted: boolean },
   ) {
     this.#options = options;
@@ -130,7 +130,7 @@ class TerminalCalendar implements CalendarConnection {
   public getYear(): readonly (readonly CalendarMonthValue[])[] {
     return createCalendarYear(this.getSnapshot().state.view.year);
   }
-  public syncControlledValues(values: CalendarControlledValues): Result<RevisionSnapshot<CalendarState>> {
+  public syncControlledValues(values: CalendarControlledValues): TerminalTemporalResult<RevisionSnapshot<CalendarState>> {
     if (this.#controls.value !== (values.value !== undefined) || this.#controls.highlighted !== (values.highlightedValue !== undefined)) {
       return {
         ok: false,

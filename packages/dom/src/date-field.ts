@@ -1,10 +1,9 @@
 import { unwrap } from '@sectile/core/result';
-import type { Result } from '@sectile/core';
+import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
-import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
 import { toTextEvent, type TextInput } from './text.js';
@@ -38,20 +37,20 @@ export interface DateFieldConnection {
   getSnapshot(): RevisionSnapshot<DateFieldState>;
   getText(): string;
   getValue(): DateValue | null;
-  syncControlledValues(values: DateFieldControlledValues): Result<RevisionSnapshot<DateFieldState>>;
+  syncControlledValues(values: DateFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateFieldState>>;
   handleEvent(event: DateFieldEvent): boolean;
   refresh(): void;
   disconnect(): void;
 }
 
 export function createDateField(options: DateFieldOptions): FacadeConnection<DateFieldConnection> { return unwrap(tryCreateDateField(options)); }
-export function tryCreateDateField(options: DateFieldOptions): Result<FacadeConnection<DateFieldConnection>> { return createFacadeConnection(options, construct); }
+export function tryCreateDateField(options: DateFieldOptions): DOMTemporalResult<FacadeConnection<DateFieldConnection>> { return createDOMTemporalFacadeConnection(options, construct); }
 
-function construct(options: DateFieldOptions): Result<DateFieldConnection> {
+function construct(options: DateFieldOptions): DOMTemporalResult<DateFieldConnection> {
   const valueControlled = options.value !== undefined;
   const inputControlled = options.inputState !== undefined;
   const policies = Object.freeze({ ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) });
-  const runtime = createSemanticController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({
+  const runtime = createDOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({
     initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState),
     reducer: (state, event) => applyDateFieldEvent(state, event, policies),
     reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState),
@@ -64,7 +63,7 @@ function construct(options: DateFieldOptions): Result<DateFieldConnection> {
 
 class DOMDateField implements DateFieldConnection {
   readonly options: DateFieldOptions;
-  readonly runtime: SemanticController<DateFieldState, DateFieldEvent, DateFieldCommand>;
+  readonly runtime: DOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand>;
   readonly valueControlled: boolean;
   readonly inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
@@ -77,7 +76,7 @@ class DOMDateField implements DateFieldConnection {
   readonly #blur = (): void => {
     if (!this.#binding.isComposing && !this.handleEvent('commit')) this.handleEvent('cancel');
   };
-  public constructor(options: DateFieldOptions, runtime: SemanticController<DateFieldState, DateFieldEvent, DateFieldCommand>, valueControlled: boolean, inputControlled: boolean) {
+  public constructor(options: DateFieldOptions, runtime: DOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand>, valueControlled: boolean, inputControlled: boolean) {
     this.options = options; this.runtime = runtime; this.valueControlled = valueControlled; this.inputControlled = inputControlled;
     this.#binding = new DOMTextElementBinding({ element: options.input, getState: () => this.getSnapshot().state.inputState, dispatch: (input) => this.#text(input) });
     options.input.addEventListener('keydown', this.#keydown); options.input.addEventListener('blur', this.#blur); this.refresh();
@@ -85,7 +84,7 @@ class DOMDateField implements DateFieldConnection {
   public getSnapshot(): RevisionSnapshot<DateFieldState> { return this.runtime.getSnapshot(); }
   public getText(): string { return this.getSnapshot().state.inputState.snapshot.text; }
   public getValue(): DateValue | null { return this.getSnapshot().state.value; }
-  public syncControlledValues(values: DateFieldControlledValues): Result<RevisionSnapshot<DateFieldState>> {
+  public syncControlledValues(values: DateFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateFieldState>> {
     if (this.valueControlled !== (values.value !== undefined) || this.inputControlled !== (values.inputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date field values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
     const result = this.runtime.replace(tryCreateDateFieldState(this.valueControlled ? values.value as DateValue | null : state.value, this.inputControlled ? values.inputState as TextEditingState : state.inputState));
