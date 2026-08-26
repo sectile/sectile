@@ -162,6 +162,12 @@ defineExpose({ element })
 
 Portal parts accept `defer` when their target is rendered by Vue later in the same mount or update tick. It does not wait for a target created in a later tick. Leave it `false` for `body` or an already-mounted target. See Vue's [deferred Teleport documentation](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport).
 
+## SSR and hydration contract
+
+SSR support is evidence-scoped. The verified server-to-client hydration matrix currently covers nested `asChild` Fragment adoption and deferred Select/Toast Teleports. Both must hydrate without Vue mismatch warnings and preserve the intended target structure.
+
+Host-generated ID identity, open and closed conditional presence variants, and hidden form controls are not yet part of the verified hydration contract. They must not be presented as hydration guarantees until executable evidence is added to `packages/vue/testing/hydration-contract.json`.
+
 Dialog, Alert Dialog, Drawer, Popover, Tooltip, and Select roots keep their Content and, where applicable, Overlay DOM mounted while closed by default. Set `unmountOnExit` to remove those presence-managed parts after their CSS exit animation or transition completes. Root and Trigger stay mounted so the popup can reopen. Remounting also resets DOM-local state such as uncontrolled form input values.
 
 Event API names use camelCase, including `positionChange` and `interactOutside`. Vue templates listen with their kebab-case forms, such as `@position-change` and `@interact-outside`. Render functions and JSX use `onPositionChange` and `onInteractOutside`.

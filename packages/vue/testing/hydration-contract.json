@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "verified": [
+    {
+      "id": "HYD-01",
+      "contract": "asChild preserves a nested Fragment path during SSR hydration without mismatch warnings",
+      "evidence": "tests/primitive.dom.test.mjs"
+    },
+    {
+      "id": "HYD-02",
+      "contract": "deferred Select and Toast Teleports hydrate into an existing target without mismatch warnings",
+      "evidence": "tests/presence.dom.test.mjs"
+    }
+  ],
+  "unverified": [
+    {
+      "area": "host-generated IDs",
+      "reason": "SSR output is covered, but an explicit server-to-client identity assertion is not present"
+    },
+    {
+      "area": "conditional presence",
+      "reason": "client presence behavior is covered, but its open and closed SSR hydration variants are not"
+    },
+    {
+      "area": "hidden form controls",
+      "reason": "native submission behavior is covered, but SSR hydration parity is not"
+    }
+  ]
+}

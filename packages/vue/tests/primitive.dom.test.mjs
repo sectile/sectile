@@ -135,7 +135,7 @@ test('Primitive preserves scoped slotted projection through nested fragments', a
   }
 });
 
-test('Primitive hydrates a nested adopted slot without warnings', async () => {
+test('[HYD-01] Primitive hydrates a nested adopted slot without warnings', async () => {
   const component = {
     render: () => h(Primitive, { asChild: true, role: 'checkbox', 'aria-checked': 'false' }, {
       default: () => h(Fragment, { key: 'outer' }, [

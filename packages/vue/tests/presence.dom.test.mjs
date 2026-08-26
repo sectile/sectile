@@ -129,7 +129,7 @@ test('deferred portals resolve targets rendered later in the same mount tick', a
   }
 });
 
-test('SSR teleports hydrate Select and Toast without mismatch warnings', async () => {
+test('[HYD-02] SSR teleports hydrate Select and Toast without mismatch warnings', async () => {
   const component = {
     render: () => h('div', null, [
       h(SelectRoot, { items: ['alpha', 'beta'], defaultOpen: true, position: false }, { default: () => [
