@@ -560,6 +560,8 @@ sectile/
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── modal-effects.ts
 │   │   │   │   ├── popup-control.ts
+│   │   │   │   ├── reference-date.ts
+│   │   │   │   ├── result.ts
 │   │   │   │   └── text-element.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
@@ -621,9 +623,12 @@ sectile/
 │   │   │   ├── tooltip.ts
 │   │   │   ├── tree-grid.ts
 │   │   │   ├── tree-view.ts
+│   │   │   ├── virtual.ts
 │   │   │   ├── window-splitter.ts
 │   │   │   ├── year-picker.ts
 │   │   │   └── year-range-picker.ts
+│   │   ├── testing/
+│   │   │   └── public-signatures.json
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
@@ -667,6 +672,7 @@ sectile/
 │   ├── temporal/
 │   │   ├── scripts/
 │   │   │   ├── build.mjs
+│   │   │   ├── check-laws.mjs
 │   │   │   └── check-package.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
@@ -680,6 +686,7 @@ sectile/
 │   │   │   ├── date-time-field.ts
 │   │   │   ├── date-time-picker.ts
 │   │   │   ├── date-time-range-picker.ts
+│   │   │   ├── error.ts
 │   │   │   ├── index.ts
 │   │   │   ├── month-picker.ts
 │   │   │   ├── month-range-picker.ts
@@ -688,7 +695,13 @@ sectile/
 │   │   │   ├── time-range-field.ts
 │   │   │   ├── year-picker.ts
 │   │   │   └── year-range-picker.ts
+│   │   ├── testing/
+│   │   │   ├── law-evidence.json
+│   │   │   ├── law-registry.json
+│   │   │   └── public-signatures.json
 │   │   ├── tests/
+│   │   │   ├── algebra/
+│   │   │   │   └── date-laws.test.mjs
 │   │   │   ├── composites/
 │   │   │   │   └── date-picker.test.mjs
 │   │   │   └── editing/
@@ -713,6 +726,8 @@ sectile/
 │   │   │   │   ├── grapheme.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── popup-control.ts
+│   │   │   │   ├── reference-date.ts
+│   │   │   │   ├── result.ts
 │   │   │   │   └── text-input.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
@@ -782,6 +797,8 @@ sectile/
 │   │   │   ├── window-splitter.ts
 │   │   │   ├── year-picker.ts
 │   │   │   └── year-range-picker.ts
+│   │   ├── testing/
+│   │   │   └── public-signatures.json
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
@@ -833,6 +850,7 @@ sectile/
 │   │   │   │   ├── foundation.ts
 │   │   │   │   ├── machine.ts
 │   │   │   │   └── track.ts
+│   │   │   ├── error.ts
 │   │   │   ├── extent-index.ts
 │   │   │   ├── index.ts
 │   │   │   ├── layout.ts
@@ -842,10 +860,14 @@ sectile/
 │   │   │   └── track-grid-layout.ts
 │   │   ├── testing/
 │   │   │   ├── law-evidence.json
-│   │   │   └── law-registry.json
+│   │   │   ├── law-registry.json
+│   │   │   └── public-signatures.json
 │   │   ├── tests/
 │   │   │   ├── runtime/
-│   │   │   │   └── linear-layout.test.mjs
+│   │   │   │   ├── linear-layout.test.mjs
+│   │   │   │   ├── masonry-layout.test.mjs
+│   │   │   │   ├── spatial-layout.test.mjs
+│   │   │   │   └── track-grid-layout.test.mjs
 │   │   │   └── structures/
 │   │   │       └── extent-index.test.mjs
 │   │   ├── CHANGELOG.md
@@ -861,7 +883,8 @@ sectile/
 │       ├── scripts/
 │       │   ├── build.mjs
 │       │   ├── check-controlled-reconciliation.mjs
-│       │   └── check-hydration-contract.mjs
+│       │   ├── check-hydration-contract.mjs
+│       │   └── serve-browser-verification.mjs
 │       ├── src/
 │       │   ├── internal/
 │       │   │   ├── collection.ts
@@ -936,13 +959,18 @@ sectile/
 │       │   ├── tooltip.ts
 │       │   ├── tree-grid.ts
 │       │   ├── tree-view.ts
+│       │   ├── virtual.ts
 │       │   ├── window-splitter.ts
 │       │   ├── year-picker.ts
 │       │   └── year-range-picker.ts
 │       ├── testing/
 │       │   ├── controlled-reconciliation.json
-│       │   └── hydration-contract.json
+│       │   ├── hydration-contract.json
+│       │   └── public-signatures.json
 │       ├── tests/
+│       │   ├── browser/
+│       │   │   ├── client.mjs
+│       │   │   └── hydration-fixture.mjs
 │       │   ├── fixtures/
 │       │   │   └── form-nested-mount.mjs
 │       │   ├── accordion.test.mjs
@@ -967,6 +995,7 @@ sectile/
 │       │   ├── form.test.mjs
 │       │   ├── host-provider.dom.test.mjs
 │       │   ├── host-provider.test.mjs
+│       │   ├── hydration.dom.test.mjs
 │       │   ├── linear-selection.test.mjs
 │       │   ├── listbox.test.mjs
 │       │   ├── native-fields.dom.test.mjs
@@ -997,17 +1026,22 @@ sectile/
 │       └── tsconfig.json
 ├── scripts/
 │   ├── lib/
+│   │   ├── public-signatures.mjs
 │   │   ├── published-packages.mjs
+│   │   ├── release-worktree.mjs
 │   │   ├── release.mjs
 │   │   ├── repository.mjs
 │   │   └── tree.mjs
 │   ├── check-component-completeness.mjs
+│   ├── check-public-signatures.mjs
 │   ├── check-release.mjs
 │   ├── check-workspace-boundaries.mjs
 │   ├── publish-packages.mjs
+│   ├── release-worktree.test.mjs
 │   ├── release.mjs
 │   ├── release.test.mjs
 │   ├── tree.test.mjs
+│   ├── update-public-signatures.mjs
 │   ├── update-tree.mjs
 │   └── verify.mjs
 ├── verification/

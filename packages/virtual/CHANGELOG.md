@@ -1,5 +1,16 @@
 # @sectile/virtual
 
+## 0.6.0
+
+### Changes
+
+- fix(api): keep signature checks inside workspace boundary (15e5c85)
+- feat(virtual): add portable layout snapshots (b6f3830)
+- refactor(result)!: localize package error codes (ff18537)
+- build(api): fingerprint every public package (5dee1c2)
+- test(virtual): prove nonlinear layout laws (0e82196)
+- feat(vue): project virtual layouts (7406222)
+
 ## 0.5.0
 
 ### Changes

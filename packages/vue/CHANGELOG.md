@@ -1,5 +1,16 @@
 # @sectile/vue
 
+## 0.6.0
+
+### Changes
+
+- fix(vue): verify hydration in actual browsers (8e4f159)
+- feat(temporal): require explicit calendar reference dates (06fbb40)
+- refactor(result)!: localize package error codes (ff18537)
+- build(api): fingerprint every public package (5dee1c2)
+- feat(vue): project virtual layouts (7406222)
+- fix(vue): prevent redundant popup reconnections (bfaf166)
+
 ## 0.5.0
 
 ### Changes

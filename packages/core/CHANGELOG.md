@@ -1,5 +1,13 @@
 # @sectile/core
 
+## 0.6.0
+
+### Changes
+
+- fix(api): keep signature checks inside workspace boundary (15e5c85)
+- refactor(result)!: localize package error codes (ff18537)
+- build(api): fingerprint every public package (5dee1c2)
+
 ## 0.5.0
 
 ### Changes

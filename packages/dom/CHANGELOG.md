@@ -1,5 +1,15 @@
 # @sectile/dom
 
+## 0.6.0
+
+### Changes
+
+- fix(api): keep signature checks inside workspace boundary (15e5c85)
+- feat(temporal): require explicit calendar reference dates (06fbb40)
+- refactor(result)!: localize package error codes (ff18537)
+- build(api): fingerprint every public package (5dee1c2)
+- feat(dom): add virtualizer host adapter (68e29aa)
+
 ## 0.5.0
 
 ### Changes
