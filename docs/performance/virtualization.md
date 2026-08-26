@@ -12,12 +12,13 @@ Observed on Node 24.19.0, Apple Silicon, macOS:
 
 | Operation | Median time |
 |---|---:|
-| Pretext `layout()` | 0.180 µs |
-| Extent lookup pair, 100k | 0.659 µs |
-| Extent lookup pair, 1m | 1.805 µs |
-| VirtualLayout viewport update, 100k | 1.657 µs |
-| VirtualLayout 32-item measurement batch, 100k | 6.871 µs |
-| Pretext 32 layouts + VirtualLayout measurement batch | 11.774 µs |
-| Added VirtualLayout bookkeeping in the combined batch | 6.856 µs |
+| Pretext `layout()` | 0.181 µs |
+| Extent lookup pair, 100k | 0.621 µs |
+| Extent lookup pair, 1m | 0.885 µs |
+| VirtualLayout viewport update, 100k | 1.729 µs |
+| VirtualLayout changed 32-item measurement batch, 100k | 5.288 µs |
+| VirtualLayout idempotent 32-item measurement batch, 100k | 4.276 µs |
+| Pretext 32 layouts + changed VirtualLayout measurement batch | 9.959 µs |
+| Added VirtualLayout bookkeeping in the combined batch | 5.082 µs |
 
 The script emits one JSON line and has no machine-dependent pass/fail threshold. Compare changes on the same runner and investigate allocation, lookup depth, and batch locality separately.

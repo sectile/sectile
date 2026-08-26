@@ -96,7 +96,10 @@ function updateIndex(
   updates: readonly ExtentUpdate[],
 ): Result<ExtentIndex> {
   const size = root?.size ?? 0;
-  const byIndex = new Map<number, Extent>();
+  let strictlyIncreasing = true;
+  const indices: number[] = [];
+  const extents: Extent[] = [];
+  let previousIndex = -1;
   for (const update of updates) {
     if (!Number.isSafeInteger(update.index) || update.index < 0 || update.index >= size) {
       return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update index is outside the domain.', {
@@ -106,11 +109,29 @@ function updateIndex(
     }
     const validated = validateExtent(update.extent);
     if (!validated.ok) return validated;
-    byIndex.set(update.index, validated.value);
+    if (update.index <= previousIndex) strictlyIncreasing = false;
+    indices.push(update.index);
+    extents.push(validated.value);
+    previousIndex = update.index;
   }
-  if (byIndex.size === 0 || root === null) return ok(createIndex(root, maxItems));
-  const sortedUpdates = [...byIndex].sort(([left], [right]) => left - right);
-  return ok(createIndex(updateNode(root, 0, sortedUpdates, 0, sortedUpdates.length), maxItems));
+  if (indices.length === 0 || root === null) return ok(createIndex(root, maxItems));
+  if (!strictlyIncreasing) {
+    const byIndex = new Map<number, Extent>();
+    for (let update = 0; update < indices.length; update += 1) {
+      byIndex.set(indices[update]!, extents[update]!);
+    }
+    const sorted = [...byIndex].sort(([left], [right]) => left - right);
+    indices.length = 0;
+    extents.length = 0;
+    for (const [index, extent] of sorted) {
+      indices.push(index);
+      extents.push(extent);
+    }
+  }
+  const next = isContiguous(indices)
+    ? updateContiguousNode(root, 0, indices[0]!, extents)
+    : updateNode(root, 0, indices, extents, 0, indices.length);
+  return ok(createIndex(next, maxItems));
 }
 
 function spliceIndex(
@@ -240,29 +261,32 @@ function indexAtOffset(root: Node | null, offset: number): number | null {
 function updateNode(
   node: Node,
   start: number,
-  updates: readonly (readonly [number, Extent])[],
+  indices: readonly number[],
+  extents: readonly Extent[],
   from: number,
   to: number,
 ): Node {
   if (from === to) return node;
   if (node.kind === 'leaf') {
-    const entries = [...node.entries];
+    let entries: Extent[] | null = null;
     for (let update = from; update < to; update += 1) {
-      const [index, extent] = updates[update]!;
-      const local = index - start;
+      const local = indices[update]! - start;
+      const extent = extents[update]!;
+      if (sameExtent(node.entries[local]!, extent)) continue;
+      entries ??= [...node.entries];
       entries[local] = extent;
     }
-    return leaf(entries);
+    return entries === null ? node : leaf(entries);
   }
   const boundary = start + node.left.size;
-  const middle = lowerBound(updates, boundary, from, to);
-  const left = updateNode(node.left, start, updates, from, middle);
-  const right = updateNode(node.right, boundary, updates, middle, to);
+  const middle = lowerBound(indices, boundary, from, to);
+  const left = updateNode(node.left, start, indices, extents, from, middle);
+  const right = updateNode(node.right, boundary, indices, extents, middle, to);
   return left === node.left && right === node.right ? node : branch(left, right);
 }
 
 function lowerBound(
-  updates: readonly (readonly [number, Extent])[],
+  indices: readonly number[],
   boundary: number,
   from: number,
   to: number,
@@ -271,10 +295,45 @@ function lowerBound(
   let high = to;
   while (low < high) {
     const middle = low + Math.floor((high - low) / 2);
-    if (updates[middle]![0] < boundary) low = middle + 1;
+    if (indices[middle]! < boundary) low = middle + 1;
     else high = middle;
   }
   return low;
+}
+
+function updateContiguousNode(
+  node: Node,
+  start: number,
+  updateStart: number,
+  extents: readonly Extent[],
+): Node {
+  const end = start + node.size;
+  const updateEnd = updateStart + extents.length;
+  if (updateEnd <= start || updateStart >= end) return node;
+  if (node.kind === 'leaf') {
+    let entries: Extent[] | null = null;
+    const first = Math.max(start, updateStart);
+    const last = Math.min(end, updateEnd);
+    for (let index = first; index < last; index += 1) {
+      const local = index - start;
+      const extent = extents[index - updateStart]!;
+      if (sameExtent(node.entries[local]!, extent)) continue;
+      entries ??= [...node.entries];
+      entries[local] = extent;
+    }
+    return entries === null ? node : leaf(entries);
+  }
+  const boundary = start + node.left.size;
+  const left = updateContiguousNode(node.left, start, updateStart, extents);
+  const right = updateContiguousNode(node.right, boundary, updateStart, extents);
+  return left === node.left && right === node.right ? node : branch(left, right);
+}
+
+function isContiguous(indices: readonly number[]): boolean {
+  for (let index = 1; index < indices.length; index += 1) {
+    if (indices[index] !== indices[index - 1]! + 1) return false;
+  }
+  return true;
 }
 
 function split(node: Node | null, index: number): readonly [Node | null, Node | null] {
@@ -382,6 +441,11 @@ function validateExtent(extent: Extent): Result<Extent> {
     return fail('construction', 'extent-invalid', 'Extent must have a non-negative finite effective value.');
   }
   return ok(Object.freeze({ ...extent }));
+}
+
+function sameExtent(left: Extent, right: Extent): boolean {
+  if (left.kind === 'unknown') return right.kind === 'unknown' && left.fallback === right.fallback;
+  return right.kind !== 'unknown' && left.kind === right.kind && left.value === right.value;
 }
 
 function valueOf(extent: Extent): number {

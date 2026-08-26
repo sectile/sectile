@@ -53,11 +53,12 @@ for (const size of [100_000, 1_000_000]) {
     index: Math.floor(((item + 1) * size) / 33),
     extent: exact(36 + (item & 15)),
   }));
+  const updateVariants = Array.from({ length: 16 }, (_, variant) => updates.map((update) => ({
+    index: update.index,
+    extent: exact(36 + ((variant + update.index) & 15)),
+  })));
   const batchUpdateUs = measure(2_000, (iteration) => {
-    index = index.update(updates.map((update) => ({
-      index: update.index,
-      extent: exact(36 + ((iteration + update.index) & 15)),
-    }))).value;
+    index = index.update(updateVariants[iteration & 15]).value;
     sink += index.totalExtent;
   });
   const spliceUs = measure(1_000, (iteration) => {
@@ -89,14 +90,31 @@ let measuredState = createVirtualLayoutState(
   createExtentIndex(Array(100_000).fill(estimated(44))),
   { viewportOffset: 2_200_000, viewportExtent: 800, overscanBefore: 800, overscanAfter: 800 },
 );
-const combinedUpdates = Array.from({ length: 32 }, (_, item) => ({ index: 50_000 + item, extent: exact(40) }));
-const virtualMeasurement32Us = measure(2_000, () => {
+const measurementVariants = [40, 41].map((value) => (
+  Array.from({ length: 32 }, (_, item) => ({ index: 50_000 + item, extent: exact(value) }))
+));
+const virtualMeasurement32Us = measure(2_000, (iteration) => {
   measuredState = applyVirtualLayoutEvent(measuredState, {
     type: 'measurements-reported',
     generation: measuredState.measurementGeneration,
-    updates: combinedUpdates,
+    updates: measurementVariants[iteration & 1],
   }).value.state;
   sink += measuredState.extents.totalExtent;
+});
+let idempotentState = applyVirtualLayoutEvent(createVirtualLayoutState(
+  virtualDomain,
+  createExtentIndex(Array(100_000).fill(estimated(44))),
+  { viewportOffset: 2_200_000, viewportExtent: 800, overscanBefore: 800, overscanAfter: 800 },
+), {
+  type: 'measurements-reported', generation: 1, updates: measurementVariants[0],
+}).value.state;
+const idempotentMeasurement32Us = measure(20_000, () => {
+  idempotentState = applyVirtualLayoutEvent(idempotentState, {
+    type: 'measurements-reported',
+    generation: idempotentState.measurementGeneration,
+    updates: measurementVariants[0],
+  }).value.state;
+  sink += idempotentState.extents.totalExtent;
 });
 const pretextBatch32Us = measure(20_000, (iteration) => {
   for (let item = 0; item < 32; item += 1) sink += layout(prepared[item], 240 + (iteration & 15), 20).height;
@@ -106,7 +124,7 @@ const combinedBatch32Us = measure(2_000, (iteration) => {
   measuredState = applyVirtualLayoutEvent(measuredState, {
     type: 'measurements-reported',
     generation: measuredState.measurementGeneration,
-    updates: combinedUpdates,
+    updates: measurementVariants[iteration & 1],
   }).value.state;
   sink += measuredState.extents.totalExtent;
 });
@@ -117,7 +135,11 @@ const result = {
   environment: { node: process.version, platform: `${process.platform}-${process.arch}` },
   pretext: { version: '0.0.8', layoutUs: pretextLayoutUs, batch32Us: pretextBatch32Us },
   extentIndex: measurements,
-  virtualLayout: { viewportUpdateUs, measurement32Us: virtualMeasurement32Us },
+  virtualLayout: {
+    viewportUpdateUs,
+    changedMeasurement32Us: virtualMeasurement32Us,
+    idempotentMeasurement32Us,
+  },
   integration: {
     pretextAndBatchUpdate32Us: combinedBatch32Us,
     addedBookkeepingUs: Number((combinedBatch32Us - pretextBatch32Us).toFixed(3)),
