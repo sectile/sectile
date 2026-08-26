@@ -3,10 +3,10 @@ import type { Result } from '@sectile/core';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateRange, createDateValue, type DateRange, type DateValue,tryCreateDateRange,tryCreateDateValue } from './date-field.js';
+import { isCalendarValueAvailable } from './calendar.js';
 import {
   applyDatePickerEvent,
   createDatePickerState,
-  isDatePickerValueAvailable,
   type DatePickerCommand,
   type DatePickerEvent,
   type DatePickerPolicies,
@@ -94,7 +94,7 @@ export function applyDateRangePickerEvent(
 function selectDate(state: DateRangePickerState, requested: DateValue, policies: DatePickerPolicies): Result<DateRangePickerUpdate> {
   const valid = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!valid.ok) return invalidTransition(valid);
-  if (!isDatePickerValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
+  if (!isCalendarValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
   if (state.anchor === null) {
     const calendar = tryCreateDatePickerState({ ...state.calendar, value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, open: true });
     if (!calendar.ok) return calendar;

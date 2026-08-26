@@ -23,10 +23,6 @@ import {
   applyLinearActionEvent,
 } from '../.verification-dist/internal/composites/linear-action.js';
 import {
-  createCalendarState,
-  applyCalendarEvent,
-} from '../.verification-dist/internal/composites/calendar.js';
-import {
   acceptComboboxCandidate,
   applyComboboxEvent,
   createComboboxState,
@@ -80,10 +76,6 @@ import {
   applyReferenceLinearActionEvent,
 } from '../.verification-dist/internal/reference/composites/linear-action.js';
 import {
-  createReferenceCalendarState,
-  applyReferenceCalendarEvent,
-} from '../.verification-dist/internal/reference/composites/calendar.js';
-import {
   createReferenceComboboxState,
   referenceApplyComboboxEvent,
   referenceAcceptCombobox,
@@ -119,7 +111,6 @@ import { ReferenceRange } from '../.verification-dist/internal/reference/structu
 import { ReferenceSequence } from '../.verification-dist/internal/reference/structures/sequence.js';
 import { ReferenceTree } from '../.verification-dist/internal/reference/structures/tree.js';
 import {
-  calendarResultObservation,
   comboboxResultObservation,
   createRng,
   decimal,
@@ -127,7 +118,6 @@ import {
   listboxResultObservation,
   powerset,
   randomText,
-  referenceCalendarResultObservation,
   referenceComboboxResultObservation,
   referenceListboxResultObservation,
   referenceSliderResultObservation,
@@ -161,7 +151,6 @@ const counts = {
   linearChoice: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   linearAction: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   slider: { models: 0, transitions: 0, commands: 0 },
-  calendar: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   treeView: { models: 0, transitions: 0, accepted: 0, rejected: 0, commands: 0 },
   combobox: { models: 0, accepted: 0, rejected: 0, commands: 0 },
   revision: { cases: 0 },
@@ -751,58 +740,6 @@ for (let iteration = 0; iteration < iterations; iteration += 1) {
     }
   }
   counts.slider.models += 1;
-}
-
-const calendarRng = createRng(seed ^ 0xca1e);
-for (let iteration = 0; iteration < iterations; iteration += 1) {
-  const rowCount = calendarRng.int(0, 8);
-  const columnCount = calendarRng.int(0, 8);
-  const ids = [];
-  const rows = Array.from({ length: rowCount }, (_, row) =>
-    Array.from({ length: columnCount }, (_, column) => {
-      if (!calendarRng.bool()) return null;
-      const id = `c${iteration}-${row}-${column}`;
-      ids.push(id);
-      return id;
-    }));
-  const grid = createGrid(rows, { columnCount });
-  const current = calendarRng.pick([null, ...ids]);
-  const selected = ids.length > 0 && calendarRng.bool() ? [calendarRng.pick(ids)] : [];
-  const input = { current, selected, anchor: selected[0] ?? null };
-  let optimized = createCalendarState(grid, input);
-  let reference = createReferenceCalendarState(grid, input);
-  const eligible = new Set(ids.filter(() => calendarRng.bool()));
-  const policies = {
-    eligible: (id) => eligible.has(id),
-    boundary: calendarRng.pick(['stop', 'wrap-axis']),
-    maxScan: calendarRng.int(0, Math.max(rowCount, columnCount) + 2),
-  };
-  for (let step = 0; step < 10; step += 1) {
-    const target = calendarRng.pick([...ids, `missing-${iteration}`]);
-    const event = calendarRng.pick([
-      'left',
-      'right',
-      'up',
-      'down',
-      'select',
-      'previous-page',
-      'next-page',
-      { type: 'select', id: target },
-    ]);
-    const left = applyCalendarEvent(grid, optimized, event, policies);
-    const right = applyReferenceCalendarEvent(grid, reference, event, policies);
-    assert.deepEqual(calendarResultObservation(left), referenceCalendarResultObservation(right));
-    counts.calendar.transitions += 1;
-    if (left.ok && right.ok) {
-      optimized = left.value.state;
-      reference = right.value.state;
-      counts.calendar.accepted += 1;
-      counts.calendar.commands += left.value.commands.length;
-    } else {
-      counts.calendar.rejected += 1;
-    }
-  }
-  counts.calendar.models += 1;
 }
 
 const treeViewRng = createRng(seed ^ 0x7ee);

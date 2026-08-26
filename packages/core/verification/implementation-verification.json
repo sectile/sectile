@@ -79,13 +79,6 @@
     "transitions": 20000,
     "commands": 15059
   },
-  "calendar": {
-    "models": 2000,
-    "transitions": 20000,
-    "accepted": 15665,
-    "rejected": 4335,
-    "commands": 7595
-  },
   "treeView": {
     "models": 2000,
     "transitions": 20000,

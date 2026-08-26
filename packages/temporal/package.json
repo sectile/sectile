@@ -51,6 +51,11 @@
       "import": "./dist/time-range-field.js",
       "default": "./dist/time-range-field.js"
     },
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "default": "./dist/calendar.js"
+    },
     "./date-picker": {
       "types": "./dist/date-picker.d.ts",
       "import": "./dist/date-picker.js",

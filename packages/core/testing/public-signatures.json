@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "fingerprint": "63d7c626d0ee005071795ff544f4ff768f798406686dee17204ebe7a331b8c29",
+  "fingerprint": "b8e79c46858e05ec06fc04d29004b52f276dfe6406373bedcc878fcb9a4222f2",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -13,10 +13,6 @@
     {
       "path": "dist/alert-dialog.d.ts",
       "sha256": "034399d0dfc160e5531ccedbad6b9e96114dbc70a4aa2f4eed4192d55e2141a3"
-    },
-    {
-      "path": "dist/calendar.d.ts",
-      "sha256": "12444aff5ac8871d0d211bf6059d99072096d84313ac5bd1434ea9cb23937fc0"
     },
     {
       "path": "dist/carousel.d.ts",
@@ -60,7 +56,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "b654f71ac6c992f4bd3ac4c9b6cc3b6f57975c9f366eb0fb3829c41bb50ffd71"
+      "sha256": "55c373915c63c0864a15020f0836aa2bb0b1f96a4002a027db6077d580c4e1ef"
     },
     {
       "path": "dist/feed.d.ts",
@@ -77,10 +73,6 @@
     {
       "path": "dist/interaction.d.ts",
       "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
-    },
-    {
-      "path": "dist/internal/composites/calendar.d.ts",
-      "sha256": "003d06b4bd817cee8d7423f6705fd1c09ede29ef8715c7661bfbe503014b9bbf"
     },
     {
       "path": "dist/internal/composites/combobox.d.ts",

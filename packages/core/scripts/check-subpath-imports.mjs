@@ -17,7 +17,6 @@ try {
     import { createTree } from '@sectile/core/tree';
     import { unwrap } from '@sectile/core/result';
     import { createListboxState } from '@sectile/core/listbox';
-    import { createCalendarState } from '@sectile/core/calendar';
     import { createComboboxState } from '@sectile/core/combobox';
     import { createSliderState } from '@sectile/core/slider';
     import { createTreeViewState } from '@sectile/core/tree-view';
@@ -26,7 +25,7 @@ try {
     import { createTextEditingState } from '@sectile/core/text';
     import { createFormState } from '@sectile/core/form';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createCalendarState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -39,7 +38,6 @@ try {
     import { createGrid, type Grid } from '@sectile/core/grid';
     import { createTree, type Tree } from '@sectile/core/tree';
     import { createListboxState, type ListboxState } from '@sectile/core/listbox';
-    import { createCalendarState, type CalendarState } from '@sectile/core/calendar';
     import { createComboboxState, type ComboboxState } from '@sectile/core/combobox';
     import { createSliderState, type SliderState } from '@sectile/core/slider';
     import { createTreeViewState, type TreeViewState } from '@sectile/core/tree-view';
@@ -54,14 +52,13 @@ try {
     const e: ListboxState<string> = createListboxState(a);
     const f: RevisionSnapshot<string> = createRevisionSnapshot('state');
     const g: SliderState = createSliderState(b);
-    const h: CalendarState<string> = createCalendarState(c);
-    const i: TreeViewState<string> = createTreeViewState(d);
-    const j: ComboboxState<string> = createComboboxState(a);
-    const k: TextEditingState = createTextEditingState();
-    const l: TreeGridModel<string, string> = createTreeGridModel(d, c, ['a']);
+    const h: TreeViewState<string> = createTreeViewState(d);
+    const i: ComboboxState<string> = createComboboxState(a);
+    const j: TextEditingState = createTextEditingState();
+    const k: TreeGridModel<string, string> = createTreeGridModel(d, c, ['a']);
     const rows: readonly TreeGridRowInput<string, string>[] = [{ id: 'a', parentID: null, cells: ['a'] }];
-    const m: TreeGridModel<string, string> = createTreeGridModelFromRows(rows);
-    const n: FormState = createFormState({ fields: [] });
+    const l: TreeGridModel<string, string> = createTreeGridModelFromRows(rows);
+    const m: FormState = createFormState({ fields: [] });
     declare const failure: Result<number, 'no-cursor'>;
     if (!failure.ok) {
       const code: 'no-cursor' = failure.error.code;
@@ -69,7 +66,7 @@ try {
     }
     // @ts-expect-error error codes are a closed contract
     const unknownCode: SectileErrorCode = 'consumer-invented-error';
-    void [a, b, c, d, e, f, g, h, i, j, k, l, m, n, unknownCode];
+    void [a, b, c, d, e, f, g, h, i, j, k, l, m, unknownCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -83,7 +80,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 15, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 14, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -4,6 +4,7 @@ export type * from './date-range-field.js';
 export type * from './date-time-field.js';
 export type * from './time-field.js';
 export type * from './time-range-field.js';
+export type * from './calendar.js';
 export type * from './date-picker.js';
 export type * from './date-range-picker.js';
 export type * from './range-calendar.js';

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDateValue, formatDateValue } from '../../.verification-dist/date-field.js';
 import { createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '../../.verification-dist/date-time-field.js';
-import { applyDatePickerEvent, createDatePickerMonth, createDatePickerState, createDatePickerWeek, createDatePickerYear } from '../../.verification-dist/date-picker.js';
+import { createCalendarMonth, createCalendarWeek, createCalendarYear } from '../../.verification-dist/calendar.js';
+import { applyDatePickerEvent, createDatePickerState } from '../../.verification-dist/date-picker.js';
 import { applyDateRangePickerEvent, createDateRangePickerState } from '../../.verification-dist/date-range-picker.js';
 import { createYearPickerPage, tryCreateYearPickerPage } from '../../.verification-dist/year-picker.js';
 import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/date-time-picker.js';
@@ -32,7 +33,7 @@ test('year picker projects a compact page around the active year', () => {
 });
 
 test('date picker month projection is a stable six by seven grid', () => {
-  const month = createDatePickerMonth({ year: 2026, month: 8 });
+  const month = createCalendarMonth({ year: 2026, month: 8 });
   assert.equal(month.length, 6);
   assert.equal(month.every((row) => row.length === 7), true);
   assert.equal(formatDateValue(month[0][0]), '2026-07-27');
@@ -40,8 +41,8 @@ test('date picker month projection is a stable six by seven grid', () => {
 });
 
 test('date picker exposes week and year projections', () => {
-  const week = createDatePickerWeek(date(2026, 8, 22));
-  const year = createDatePickerYear(2026);
+  const week = createCalendarWeek(date(2026, 8, 22));
+  const year = createCalendarYear(2026);
   assert.deepEqual(week.map(formatDateValue), ['2026-08-17', '2026-08-18', '2026-08-19', '2026-08-20', '2026-08-21', '2026-08-22', '2026-08-23']);
   assert.equal(year.length, 4);
   assert.deepEqual(year.flat(), Array.from({ length: 12 }, (_, index) => ({ year: 2026, month: index + 1 })));
@@ -65,7 +66,7 @@ test('date picker month selection never escapes an unavailable month', () => {
     unavailable: (value) => value.year === 2026 && value.month === 2,
   });
   assert.equal(selected.ok, false);
-  assert.equal(selected.error.code, 'date-picker-month-unavailable');
+  assert.equal(selected.error.code, 'calendar-month-unavailable');
 });
 
 test('date picker skips unavailable dates under a bounded scan', () => {

@@ -271,11 +271,6 @@
       "import": "./dist/feed.js",
       "default": "./dist/feed.js"
     },
-    "./calendar": {
-      "types": "./dist/calendar.d.ts",
-      "import": "./dist/calendar.js",
-      "default": "./dist/calendar.js"
-    },
     "./combobox": {
       "types": "./dist/combobox.d.ts",
       "import": "./dist/combobox.js",

@@ -16,10 +16,6 @@ import {
   applyListboxEvent,
 } from '../../.verification-dist/internal/composites/listbox.js';
 import {
-  createCalendarState,
-  applyCalendarEvent,
-} from '../../.verification-dist/internal/composites/calendar.js';
-import {
   applyComboboxEvent,
   createComboboxState,
 } from '../../.verification-dist/internal/composites/combobox.js';
@@ -60,10 +56,6 @@ import {
   applyReferenceListboxEvent,
 } from '../../.verification-dist/internal/reference/composites/listbox.js';
 import {
-  createReferenceCalendarState,
-  applyReferenceCalendarEvent,
-} from '../../.verification-dist/internal/reference/composites/calendar.js';
-import {
   createReferenceComboboxState,
   referenceApplyComboboxEvent,
 } from '../../.verification-dist/internal/reference/composites/combobox.js';
@@ -98,14 +90,12 @@ import { ReferenceRange } from '../../.verification-dist/internal/reference/stru
 import { ReferenceSequence } from '../../.verification-dist/internal/reference/structures/sequence.js';
 import { ReferenceTree } from '../../.verification-dist/internal/reference/structures/tree.js';
 import {
-  calendarResultObservation,
   comboboxResultObservation,
   createRng,
   decimal,
   deepNormalize,
   listboxResultObservation,
   randomText,
-  referenceCalendarResultObservation,
   referenceComboboxResultObservation,
   referenceListboxResultObservation,
   referenceSliderResultObservation,
@@ -131,7 +121,6 @@ test('optimized implementations are observationally equivalent to independent re
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyText(rng);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyListbox(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifySlider(rng);
-  for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCalendar(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyTreeView(rng, iteration);
   for (let iteration = 0; iteration < ITERATIONS; iteration += 1) verifyCombobox(rng, iteration);
 });
@@ -509,41 +498,6 @@ function verifySlider(rng) {
     const left = applySliderEvent(range, optimized, event, page);
     const right = applyReferenceSliderEvent(range, reference, event, page);
     assert.deepEqual(sliderResultObservation(left), referenceSliderResultObservation(right));
-    if (left.ok && right.ok) {
-      optimized = left.value.state;
-      reference = right.value.state;
-    }
-  }
-}
-
-function verifyCalendar(rng, iteration) {
-  const rowCount = rng.int(0, 8);
-  const columnCount = rng.int(0, 8);
-  const ids = [];
-  const rows = Array.from({ length: rowCount }, (_, row) =>
-    Array.from({ length: columnCount }, (_, column) => {
-      if (!rng.bool()) return null;
-      const id = `c${iteration}-${row}-${column}`;
-      ids.push(id);
-      return id;
-    }));
-  const grid = createGrid(rows, { columnCount });
-  const current = rng.pick([null, ...ids]);
-  const selected = ids.length > 0 && rng.bool() ? [rng.pick(ids)] : [];
-  const input = { current, selected, anchor: selected[0] ?? null };
-  let optimized = createCalendarState(grid, input);
-  let reference = createReferenceCalendarState(grid, input);
-  const eligible = new Set(ids.filter(() => rng.bool()));
-  const policies = {
-    eligible: (id) => eligible.has(id),
-    boundary: rng.pick(['stop', 'wrap-axis']),
-    maxScan: rng.int(0, Math.max(rowCount, columnCount) + 2),
-  };
-  for (let step = 0; step < 10; step += 1) {
-    const event = rng.pick(['left', 'right', 'up', 'down', 'select', 'previous-page', 'next-page']);
-    const left = applyCalendarEvent(grid, optimized, event, policies);
-    const right = applyReferenceCalendarEvent(grid, reference, event, policies);
-    assert.deepEqual(calendarResultObservation(left), referenceCalendarResultObservation(right));
     if (left.ok && right.ok) {
       optimized = left.value.state;
       reference = right.value.state;

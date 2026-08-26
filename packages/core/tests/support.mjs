@@ -83,18 +83,6 @@ export function referenceSliderResultObservation(result) {
     : referenceResultObservationError(result);
 }
 
-export function calendarResultObservation(result) {
-  return result.ok
-    ? selectionUpdateObservation(result.value)
-    : resultObservationError(result);
-}
-
-export function referenceCalendarResultObservation(result) {
-  return result.ok
-    ? selectionUpdateObservation(result.value)
-    : referenceResultObservationError(result);
-}
-
 export function treeViewResultObservation(result) {
   return result.ok
     ? {

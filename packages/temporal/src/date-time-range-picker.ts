@@ -3,6 +3,7 @@ import type { Result } from '@sectile/core';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
+import { isCalendarValueAvailable, type CalendarViewMode } from './calendar.js';
 import {
   compareDateTimeValues,
   createDateTimeRange,
@@ -15,10 +16,8 @@ import {
 import {
   applyDatePickerEvent,
   createDatePickerState,
-  isDatePickerValueAvailable,
   type DatePickerPolicies,
   type DatePickerState,
-  type DatePickerViewMode,
   tryCreateDatePickerState,
 } from './date-picker.js';
 import {
@@ -53,7 +52,7 @@ export type DateTimeRangePickerEvent =
   | 'start-of-week'
   | 'end-of-week'
   | 'select-highlighted'
-  | { readonly type: 'set-view-mode'; readonly value: DatePickerViewMode }
+  | { readonly type: 'set-view-mode'; readonly value: CalendarViewMode }
   | { readonly type: 'select-month'; readonly value: { readonly year: number; readonly month: number } }
   | { readonly type: 'select-date'; readonly value: DateValue }
   | { readonly type: 'set-start-date'; readonly value: DateValue }
@@ -68,7 +67,7 @@ export type DateTimeRangePickerCommand =
   | { readonly type: 'start-time-changed'; readonly value: TimeValue }
   | { readonly type: 'end-time-changed'; readonly value: TimeValue }
   | { readonly type: 'highlight-changed'; readonly value: DateValue }
-  | { readonly type: 'view-mode-changed'; readonly value: DatePickerViewMode }
+  | { readonly type: 'view-mode-changed'; readonly value: CalendarViewMode }
   | { readonly type: 'open-changed'; readonly open: boolean };
 
 export interface DateTimeRangePickerPolicies {
@@ -198,7 +197,7 @@ function selectDate(
 ): Result<DateTimeRangePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
-  if (!isDatePickerValueAvailable(date.value, policies.date)) {
+  if (!isCalendarValueAvailable(date.value, policies.date)) {
     return fail('transition-rejection', 'date-time-range-picker-date-unavailable', 'Date-time range endpoint is outside its selectable domain.');
   }
   if (state.anchor === null) {
@@ -340,7 +339,7 @@ function validateEndpoint(
 ): Result<DateTimeValue> {
   const valid = tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return invalidTransition(valid);
-  if (!isDatePickerValueAvailable(valid.value.date, policies.date)) {
+  if (!isCalendarValueAvailable(valid.value.date, policies.date)) {
     return fail('transition-rejection', 'date-time-range-picker-date-unavailable', 'Date-time range endpoint is outside its selectable domain.');
   }
   const time = validateTime(

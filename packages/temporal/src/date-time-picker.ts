@@ -3,6 +3,7 @@ import type { Result } from '@sectile/core';
 import { fail, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue,tryCreateDateValue } from './date-field.js';
+import { isCalendarValueAvailable, type CalendarViewMode } from './calendar.js';
 import {
   compareDateTimeValues,
   createDateTimeValue,
@@ -12,10 +13,8 @@ import {
 import {
   applyDatePickerEvent,
   createDatePickerState,
-  isDatePickerValueAvailable,
   type DatePickerPolicies,
   type DatePickerState,
-  type DatePickerViewMode,
   tryCreateDatePickerState,
 } from './date-picker.js';
 import {
@@ -47,7 +46,7 @@ export type DateTimePickerEvent =
   | 'start-of-week'
   | 'end-of-week'
   | 'select-highlighted'
-  | { readonly type: 'set-view-mode'; readonly value: DatePickerViewMode }
+  | { readonly type: 'set-view-mode'; readonly value: CalendarViewMode }
   | { readonly type: 'select-month'; readonly value: { readonly year: number; readonly month: number } }
   | { readonly type: 'select-date'; readonly value: DateValue }
   | { readonly type: 'set-date'; readonly value: DateValue }
@@ -58,7 +57,7 @@ export type DateTimePickerCommand =
   | { readonly type: 'value-committed'; readonly value: DateTimeValue | null }
   | { readonly type: 'time-changed'; readonly value: TimeValue }
   | { readonly type: 'highlight-changed'; readonly value: DateValue }
-  | { readonly type: 'view-mode-changed'; readonly value: DatePickerViewMode }
+  | { readonly type: 'view-mode-changed'; readonly value: CalendarViewMode }
   | { readonly type: 'open-changed'; readonly open: boolean };
 
 export interface DateTimePickerPolicies {
@@ -163,7 +162,7 @@ function selectDate(
 ): Result<DateTimePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
   if (!date.ok) return invalidTransition(date);
-  if (!isDatePickerValueAvailable(date.value, policies.date)) {
+  if (!isCalendarValueAvailable(date.value, policies.date)) {
     return fail(
       'transition-rejection',
       'date-time-picker-date-unavailable',
@@ -222,7 +221,7 @@ function validateValue(
 ): Result<DateTimeValue> {
   const value = tryCreateDateTimeValue(requested.date, requested.time);
   if (!value.ok) return invalidTransition(value);
-  if (!isDatePickerValueAvailable(value.value.date, policies.date)) {
+  if (!isCalendarValueAvailable(value.value.date, policies.date)) {
     return fail('transition-rejection', 'date-time-picker-date-unavailable', 'Date-time picker date is outside its selectable domain.');
   }
   const time = validateTime(value.value.time, policies.time);
