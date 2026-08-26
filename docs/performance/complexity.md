@@ -8,7 +8,17 @@
 | tree | `O(n)` | parent/children/depth expected `O(1)` | visible projection `O(n)` worst case |
 | extent index | `O(n)` | offset/index lookup `O(log n)` | batch update `O(m log n)`, persistent splice/move `O(log n + m)` |
 
-VirtualLayout reduces viewport changes in `O(log n)` and reports ranges without scanning the logical domain. A measurement batch touching `m` items costs `O(m log n)` and path-copies only affected tree paths. `SequencePatch` lets geometry consume splice and move changes incrementally; applying the same patch to the public `Sequence` identity owner still materializes and validates its `O(n)` snapshot.
+| Virtual strategy | Build/storage | Viewport query | Measurement or mutation |
+|---|---:|---:|---:|
+| linear, zero gap | `O(n)` / `O(n)` | window `O(log n)`, plan `O(log n + k)` | `m` measurements `O(m log n)` |
+| linear, nonzero gap | `O(n)` / `O(n)` | window `O(log² n)`, plan `O(log² n + k)` | `m` measurements `O(m log n)` |
+| sparse track grid | `O(r log r + p)` / `O(rows + columns + r)` | `O(log r + c)` | track measurements `O(m log n)`; region index reused |
+| masonry | `O(n log lanes)` / `O(n)` | `O(v log(n / lanes) + k)` | balanced reflow may rebuild `O(n log lanes)` |
+| spatial packed tree | expected `O(n log n)` / `O(n)` | expected `O(log n + k)` | current rect batch bulk-rebuilds expected `O(n log n)` |
+
+`k` is the emitted placement count, `r` the sparse region count, `c` the row-overlap candidates, `v` the lanes intersecting the cross-axis viewport, and `p` the active overlap checks during strict grid construction. Pathological regions spanning most rows can make `p` quadratic; normal cell and merged-cell inputs keep the active set local.
+
+`SequencePatch` lets linear and masonry geometry consume splice and move changes directly. Applying the same patch to the public `Sequence` identity owner still materializes and validates its `O(n)` snapshot. Track-grid measurement does not rebuild its region interval index. Masonry shortest-lane placement is intentionally cascading; use round-robin when stable lane ownership is the stronger policy.
 
 See the [virtualization benchmark](virtualization.md) for same-runner Pretext comparison and 100k/1m observations.
 

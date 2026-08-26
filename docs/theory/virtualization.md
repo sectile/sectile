@@ -1,40 +1,61 @@
 ---
 title: Virtualization
-description: Dynamic-size collection geometry, anchoring, and host scheduling contracts.
+description: Dynamic geometry, layout strategy, anchoring, and host scheduling contracts.
 ---
 
 # Virtualization
 
-Sectile virtualization separates four responsibilities:
+Sectile keeps the logical collection, rendered geometry, and loaded data as separate domains:
 
 ```text
-Sequence identity/order ── SequencePatch ──┐
-                                          ├─ VirtualLayout ── host commands
-ExtentIndex geometry ── measurements ─────┘
+Sequence identity/order ─┐
+ExtentIndex measurements ├─ Layout strategy ── LayoutPlan ── host renderer
+Sparse regions/rects ────┘         │
+                                   └─ scrollDelta after mutation
 
 CollectionWindow ── asynchronous data loading only
 ```
 
-`Sequence` remains the identity and order authority. `ExtentIndex` stores one effective extent per logical item as `exact`, `estimated`, or `unknown` with a fallback. `VirtualLayout` owns viewport geometry, visible and overscanned render ranges, measurement generations, and scroll corrections. `CollectionWindow` remains a separate generation-bound data-loading state; a render window is not a loaded-data window.
+`@sectile/core/sequence` remains the identity and order authority. `@sectile/virtual/extent-index` stores exact, estimated, or fallback geometry in a persistent prefix tree. A layout strategy turns those logical inputs into a renderer-neutral `VirtualLayoutPlan`. `CollectionWindow` only controls asynchronous data loading; a render window is never treated as a loaded-data window.
 
-## Dynamic extents
+## Common layout contract
 
-Items do not need a fixed size. A host starts with estimates or fallbacks, renders the requested range, measures the resulting elements, and reports a batch of exact extents. Updates path-copy only affected extent-index chunks. Prefix offsets, offset-to-index lookup, splice, and move do not scan the complete collection.
+Every strategy accepts a two-dimensional viewport and independent overscan on all four sides. A plan contains content size, render bounds, placements, visibility, generation, and a stable identity anchor. Measurements and domain mutations return a new immutable state plus a two-dimensional scroll delta. Stale measurement generations are rejected instead of being guessed or silently applied.
 
-When a measurement or sequence patch changes geometry before the first visible item, VirtualLayout keeps that anchor at the same viewport coordinate and emits `set-scroll-offset` with reason `anchor-correction`. The host applies the command without animation. This prevents content above the viewport from causing visible jumps while allowing the measured item itself to grow or shrink naturally.
+All coordinates are renderer-neutral. DOM reads, `ResizeObserver`, scroll writes, terminal measurement, and animation scheduling stay in host adapters. State and input arrays are never mutated.
 
-## Host cycle
+## Strategies
 
-1. Apply scroll observations with `viewport-changed`.
-2. Render `renderRange` or handle `render-range-changed`.
-3. Read layout once, then report one `measurements-reported` batch with the active generation.
-4. Apply `set-scroll-offset` before the next paint.
-5. Ignore no commands; reject and discard stale measurement generations.
+| Strategy | Best fit | Geometry and query model |
+|---|---|---|
+| linear | lists, feeds, carousels | vertical or horizontal, forward or reverse flow, dynamic per-item extents |
+| track grid | spreadsheets, tables, schedules | independent dynamic row/column tracks, sparse and merged regions, independent axis reversal |
+| masonry | galleries, boards | shortest-lane or stable round-robin placement, responsive lane geometry, either main axis |
+| spatial | canvas, diagrams, layered editors | arbitrary overlapping rectangles, deterministic z-order, packed spatial index |
 
-DOM reads and writes remain outside `@sectile/virtual`. A host should batch observers, avoid alternating measurement and mutation per item, and coalesce scroll observations to its frame scheduler.
+Track-grid storage is proportional to rows, columns, and declared regions. It does not allocate `rows × columns` cells. Blank spreadsheet cells can be projected from the returned row and column ranges, while merged or otherwise material cells remain explicit sparse regions. Frozen panes are multiple coordinated viewport queries over one state rather than duplicated grid state.
 
-## Domain changes
+Masonry `shortest` placement may move downstream items when a measurement changes. This is the intended balanced-layout policy. `round-robin` keeps lane ownership stable when visual continuity matters more than perfect balancing. Responsive lane-count changes are explicit geometry mutations and return anchor correction.
 
-Apply the same `SequencePatch` to the identity owner and VirtualLayout. Splice patches provide one initial extent per inserted identity. Move patches reuse the existing extent subtree and use a destination index in the sequence after source removal. Reorder commands publish this patch directly, so a virtualized consumer does not need to diff complete arrays.
+Spatial layout permits overlap and emits placements in deterministic `zIndex`, then declaration order. It is the escape hatch for freeform geometry, not a replacement for the cheaper linear or track-grid indexes.
 
-Use `collectionWindowEventForVirtualLayout()` only when the render range crosses the loaded range. It derives a normal `CollectionWindowEvent`; request generations and stale-response rejection stay owned by CollectionWindow.
+## Dynamic measurement cycle
+
+1. Start with exact, estimated, or unknown-with-fallback extents.
+2. Query a plan for the latest viewport.
+3. Render only the plan placements.
+4. Batch host measurements once with the plan generation.
+5. Apply the returned scroll delta before the next paint.
+6. Query the next plan.
+
+When geometry before or around the visible anchor changes, the strategy compares that identity's old and new rectangle. The host adds the returned delta without animation. This preserves the anchor's viewport coordinate while allowing measured content to grow, shrink, move between masonry lanes, or span resized grid tracks.
+
+Hosts should coalesce scroll observations per frame, batch all reads before writes, and report measurements together. Per-item read/write alternation is outside the contract and defeats browser layout batching.
+
+## Domain changes and loading
+
+Linear and masonry item mutations consume the same public `SequencePatch` used by collection and reorder semantics. Splices provide one initial extent per inserted identity; moves retain their extents and use post-removal destination indices. Track-grid mutations transform unaffected sparse regions and reject track splices that cut through a merged region; replace regions atomically when a new span is required. Spatial updates preserve existing declaration positions and append new identities.
+
+Use `collectionWindowEventForLinearPlan()` only when a linear render range crosses the loaded range. Request generations and stale-response rejection remain owned by `CollectionWindow`.
+
+Repository verification records the strategy complexity contracts and same-runner benchmark observations separately from this public semantic contract.
