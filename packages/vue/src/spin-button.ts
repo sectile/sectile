@@ -46,7 +46,13 @@ export interface SpinButtonSlotProps {
   readonly disabled: boolean;
   readonly: boolean;
 }
-export interface SpinButtonInputProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface SpinButtonInputProps {
+  readonly name?: string;
+  readonly form?: string;
+  readonly required?: boolean;
+  readonly as?: PrimitiveAs;
+  readonly asChild?: boolean;
+}
 export interface SpinButtonTriggerProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 interface SpinButtonContext {
@@ -76,8 +82,8 @@ export const SpinButtonRoot = defineComponent({
     pageStep: { type: Number, default: 10 },
     modelValue: { type: [Number, String], default: undefined },
     defaultValue: { type: [Number, String], default: undefined },
-    draft: { type: String, default: undefined },
-    defaultDraft: { type: String, default: null },
+    draft: { type: String as PropType<string | null>, default: undefined },
+    defaultDraft: { type: String as PropType<string | null>, default: null },
     policies: { type: Object as PropType<SpinButtonOptions['policies']>, default: undefined },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },

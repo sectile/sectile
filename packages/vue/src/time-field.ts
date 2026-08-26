@@ -19,7 +19,9 @@ export interface TimeFieldProps {
   readonly native?: boolean;
 }
 
-export const TimeField = createNativeFieldComponent<TimeValue>({
+type TimeFieldPolicies = NonNullable<TimeFieldOptions['policies']>;
+
+export const TimeField = createNativeFieldComponent<TimeValue, TimeFieldPolicies>({
   name: 'SectileTimeField',
   scope: 'time-field',
   inputMode: 'numeric',
@@ -27,11 +29,11 @@ export const TimeField = createNativeFieldComponent<TimeValue>({
   placeholder: 'HH:mm',
   formatValue: formatTimeValue,
   valueType: Object as PropType<TimeValue | null>,
-  create: (options: NativeFieldFactoryOptions<TimeValue>): TimeFieldConnection => createTimeField({
+  create: (options: NativeFieldFactoryOptions<TimeValue, TimeFieldPolicies>): TimeFieldConnection => createTimeField({
     ...options,
     ...(options.policies === undefined
       ? {}
-      : { policies: options.policies as NonNullable<TimeFieldOptions['policies']> }),
+      : { policies: options.policies }),
   }),
 });
 export type TimeFieldValueChangeHandler = (value: TimeValue | null) => void;

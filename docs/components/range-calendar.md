@@ -47,10 +47,31 @@ Vue package: `@sectile/vue/range-calendar`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Initially highlighted value for uncontrolled state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultOpen</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Initial uncontrolled open state.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -93,6 +114,13 @@ Vue package: `@sectile/vue/range-calendar`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateRange | null</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Current value when state is controlled by the parent.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -146,53 +174,6 @@ Vue package: `@sectile/vue/range-calendar`
 
 ### Slots
 
-#### `RangeCalendarCellSlotProps`
-
-<dl class="component-api-definitions component-api-definitions--slots">
-<div class="component-api-definition">
-<dt><code>disabled</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether interaction is unavailable.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>highlighted</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether this item is highlighted for interaction.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>inRange</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether this value lies inside the selected range.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>outsideMonth</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether this date belongs to an adjacent month.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>selected</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether this item is selected.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>value</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
-<p>Current value exposed by this contract.</p>
-</dd>
-</div>
-</dl>
-
 #### `RangeCalendarRootSlotProps`
 
 <dl class="component-api-definitions component-api-definitions--slots">
@@ -241,7 +222,7 @@ Vue package: `@sectile/vue/range-calendar`
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerValue</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Value</code></span></div>
 <p>Current value exposed by this contract.</p>
 </dd>
 </div>
@@ -268,30 +249,49 @@ Vue package: `@sectile/vue/range-calendar`
 </div>
 </dl>
 
-### Events
+#### `RangeCalendarCellSlotProps`
 
-#### `RangeCalendarRoot`
-
-<dl class="component-api-definitions component-api-definitions--events">
+<dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
-<dt><code>update:highlightedValue</code></dt>
+<dt><code>disabled</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>DateValue</code></span></div>
-<p>Emitted when the requested highlighted value changes.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>update:modelValue</code></dt>
+<dt><code>highlighted</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>PickerValue</code></span></div>
-<p>Emitted when the component requests a new controlled value.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is highlighted for interaction.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>update:open</code></dt>
+<dt><code>inRange</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>boolean</code></span></div>
-<p>Emitted when the component requests a new open state.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this value lies inside the selected range.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>outsideMonth</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this date belongs to an adjacent month.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether this item is selected.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
+<p>Current value exposed by this contract.</p>
 </dd>
 </div>
 </dl>

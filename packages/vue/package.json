@@ -355,8 +355,9 @@
     "check:hydration-contract": "node scripts/check-hydration-contract.mjs",
     "serve:browser-verification": "pnpm --silent run build && node scripts/serve-browser-verification.mjs",
     "typecheck": "tsc --project tsconfig.json --pretty false",
+    "typecheck:public": "pnpm --silent run build && tsc --project type-tests/tsconfig.json --pretty false && node scripts/typecheck-public-sfc.mjs --project type-tests/tsconfig.vue.json --noEmit",
     "test": "pnpm --silent run build && node --test --test-concurrency=1 tests/*.test.mjs",
-    "verify": "pnpm run typecheck && pnpm run test && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
+    "verify": "pnpm run typecheck && pnpm run typecheck:public && pnpm run test && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
   },
   "dependencies": {
     "@sectile/dom": "workspace:*"
@@ -368,7 +369,9 @@
     "@vue/server-renderer": "^3.5.0",
     "happy-dom": "^20.11.6",
     "typescript": "7.0.2",
+    "typescript-sfc": "npm:typescript@5.9.3",
     "vite": "5.4.21",
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "vue-tsc": "^3.0.6"
   }
 }

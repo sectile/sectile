@@ -1,0 +1,11 @@
+{
+  "extends": "../../../docs/tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "composite": false,
+    "isolatedDeclarations": false,
+    "noEmit": true,
+    "types": []
+  },
+  "include": ["fixtures/**/*.vue"]
+}

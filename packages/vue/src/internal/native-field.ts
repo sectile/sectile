@@ -21,9 +21,9 @@ export interface NativeFieldConnection<Value> {
   disconnect(): void;
 }
 
-export interface NativeFieldFactoryOptions<Value> {
+export interface NativeFieldFactoryOptions<Value, Policies = Readonly<Record<string, unknown>>> {
   readonly input: HTMLInputElement;
-  readonly policies?: Readonly<Record<string, unknown>>;
+  readonly policies?: Policies;
   readonly value?: Value | null;
   readonly defaultValue?: Value | null;
   readonly disabled?: boolean;
@@ -35,7 +35,7 @@ export interface NativeFieldFactoryOptions<Value> {
   readonly onUpdate: () => void;
 }
 
-export interface NativeFieldComponentConfig<Value> {
+export interface NativeFieldComponentConfig<Value, Policies = Readonly<Record<string, unknown>>> {
   readonly name: string;
   readonly scope: string;
   readonly valueType: PropType<Value | null>;
@@ -43,13 +43,13 @@ export interface NativeFieldComponentConfig<Value> {
   readonly nativeInputType?: 'date' | 'time' | 'datetime-local';
   readonly placeholder?: string;
   formatValue(value: Value): string;
-  create(options: NativeFieldFactoryOptions<Value>): NativeFieldConnection<Value>;
+  create(options: NativeFieldFactoryOptions<Value, Policies>): NativeFieldConnection<Value>;
 }
 
-export interface NativeFieldPublicProps<Value> {
+export interface NativeFieldPublicProps<Value, Policies = Readonly<Record<string, unknown>>> {
   readonly modelValue?: Value | null;
   readonly defaultValue?: Value | null;
-  readonly policies?: Readonly<Record<string, unknown>>;
+  readonly policies?: Policies;
   readonly disabled?: boolean;
   readonly readonly?: boolean;
   readonly required?: boolean;
@@ -57,8 +57,8 @@ export interface NativeFieldPublicProps<Value> {
   readonly native?: boolean;
 }
 
-export function createNativeFieldComponent<Value>(
-  config: NativeFieldComponentConfig<Value>,
+export function createNativeFieldComponent<Value, Policies = Readonly<Record<string, unknown>>>(
+  config: NativeFieldComponentConfig<Value, Policies>,
 ) {
   const component = defineComponent({
     name: config.name,
@@ -66,7 +66,7 @@ export function createNativeFieldComponent<Value>(
     props: {
       modelValue: { type: config.valueType, default: undefined },
       defaultValue: { type: config.valueType, default: null },
-      policies: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined },
+      policies: { type: Object as PropType<Policies>, default: undefined },
       disabled: { type: Boolean, default: false },
       readonly: { type: Boolean, default: false },
       required: { type: Boolean, default: false },
@@ -85,9 +85,9 @@ export function createNativeFieldComponent<Value>(
       const connect = (preserved?: Value | null): void => {
         if (input.value === undefined) return;
         connection.value?.disconnect();
-        const fieldOptions: NativeFieldFactoryOptions<Value> = {
+        const fieldOptions: NativeFieldFactoryOptions<Value, Policies> = {
           input: input.value,
-          ...(props.policies === undefined ? {} : { policies: props.policies }),
+          ...(props.policies === undefined ? {} : { policies: props.policies as Policies }),
           ...(controlled
             ? { value: props.modelValue as Value | null }
             : { defaultValue: (preserved === undefined ? props.defaultValue : preserved) as Value | null }),
@@ -138,5 +138,5 @@ export function createNativeFieldComponent<Value>(
       }, participation.controlProps.value));
     },
   });
-  return component as unknown as DefineComponent<NativeFieldPublicProps<Value>>;
+  return component as unknown as DefineComponent<NativeFieldPublicProps<Value, Policies>>;
 }

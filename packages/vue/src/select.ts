@@ -75,8 +75,8 @@ const partProps = { as: { type: [String, Object, Function] as PropType<Primitive
 export const SelectRoot = defineComponent({
   name: 'SectileSelectRoot', inheritAttrs: false,
   props: {
-    items: { type: Array as PropType<readonly string[]>, required: true }, modelValue: { type: String, default: undefined },
-    defaultValue: { type: String, default: null }, open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
+    items: { type: Array as PropType<readonly string[]>, required: true }, modelValue: { type: String as PropType<string | null>, default: undefined },
+    defaultValue: { type: String as PropType<string | null>, default: null }, open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
     disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined },
     form: { type: String, default: undefined }, required: { type: Boolean, default: false },

@@ -14,21 +14,24 @@ export interface NumberFieldProps {
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
+  readonly native?: boolean;
 }
 
-export const NumberField = createNativeFieldComponent<string>({
+type NumberFieldPolicies = NonNullable<NumberFieldOptions['policies']>;
+
+export const NumberField = createNativeFieldComponent<string, NumberFieldPolicies>({
   name: 'SectileNumberField',
   scope: 'number-field',
   inputMode: 'decimal',
   formatValue: (value) => value,
   valueType: String as unknown as PropType<string | null>,
-  create: (options: NativeFieldFactoryOptions<string>): NumberFieldConnection => {
+  create: (options: NativeFieldFactoryOptions<string, NumberFieldPolicies>): NumberFieldConnection => {
     const { onValueChange, policies, ...rest } = options;
     return createNumberField({
       ...rest,
       ...(policies === undefined
         ? {}
-        : { policies: policies as NonNullable<NumberFieldOptions['policies']> }),
+        : { policies }),
       onValueChange: ({ value }) => onValueChange(value),
     });
   },

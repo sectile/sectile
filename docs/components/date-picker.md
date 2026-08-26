@@ -55,6 +55,20 @@ Vue package: `@sectile/vue/date-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -168,6 +182,81 @@ Vue package: `@sectile/vue/date-picker`
 
 ### Slots
 
+#### `DatePickerRootSlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dates</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly DateValue[])[]</code></span></div>
+<p>Dates projected by the active view.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
+<p>Value currently highlighted for interaction.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>months</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
+<p>Months projected by the active view.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the associated popup or disclosure is open.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
+<p>Whether the value can be inspected but not changed.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Value</code></span></div>
+<p>Current value exposed by this contract.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>view</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>{ readonly year: number; readonly month: number }</code></span></div>
+<p>Current calendar anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>viewMode</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarViewMode</code></span></div>
+<p>Active calendar view mode.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>years</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly PickerYearValue[])[]</code></span></div>
+<p>Years projected by the active view.</p>
+</dd>
+</div>
+</dl>
+
 #### `DatePickerCellSlotProps`
 
 <dl class="component-api-definitions component-api-definitions--slots">
@@ -251,109 +340,6 @@ Vue package: `@sectile/vue/date-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarMonthValue</code></span></div>
 <p>Current value exposed by this contract.</p>
-</dd>
-</div>
-</dl>
-
-#### `DatePickerRootSlotProps`
-
-<dl class="component-api-definitions component-api-definitions--slots">
-<div class="component-api-definition">
-<dt><code>dates</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly DateValue[])[]</code></span></div>
-<p>Dates projected by the active view.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>disabled</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether interaction is unavailable.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>highlightedValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span></div>
-<p>Value currently highlighted for interaction.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>months</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
-<p>Months projected by the active view.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>open</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether the associated popup or disclosure is open.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>readonly</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span></div>
-<p>Whether the value can be inspected but not changed.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>value</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerValue</code></span></div>
-<p>Current value exposed by this contract.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>view</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>{ readonly year: number; readonly month: number }</code></span></div>
-<p>Current calendar anchor.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>viewMode</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>CalendarViewMode</code></span></div>
-<p>Active calendar view mode.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>years</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly (readonly PickerYearValue[])[]</code></span></div>
-<p>Years projected by the active view.</p>
-</dd>
-</div>
-</dl>
-
-### Events
-
-#### `DatePickerRoot`
-
-<dl class="component-api-definitions component-api-definitions--events">
-<div class="component-api-definition">
-<dt><code>update:highlightedValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>DateValue</code></span></div>
-<p>Emitted when the requested highlighted value changes.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:modelValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>PickerValue</code></span></div>
-<p>Emitted when the component requests a new controlled value.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:open</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>boolean</code></span></div>
-<p>Emitted when the component requests a new open state.</p>
 </dd>
 </div>
 </dl>

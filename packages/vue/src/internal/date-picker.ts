@@ -1,13 +1,14 @@
 import {
   Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
-  nextTick, provide, shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType,
-  type VNodeChild,
+  nextTick, provide, shallowRef, watch, type AllowedComponentProps, type Component,
+  type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  type VNodeProps,
 } from 'vue';
-import { createCalendar } from '@sectile/dom/calendar';
-import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
-import { createDateRangePicker } from '@sectile/dom/date-range-picker';
-import { createDateTimePicker } from '@sectile/dom/date-time-picker';
-import { createDateTimeRangePicker } from '@sectile/dom/date-time-range-picker';
+import { createCalendar, type CalendarPolicies } from '@sectile/dom/calendar';
+import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
+import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/date-range-picker';
+import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/date-time-picker';
+import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/date-field';
 import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/date-time-field';
 import { formatTimeValue, type TimeValue } from '@sectile/dom/time-field';
@@ -22,10 +23,21 @@ import { useHostReferenceDate } from '../host-provider.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
+export type PickerValueFor<Kind extends PickerKind> =
+  Kind extends 'calendar' | 'date' ? DateValue | null
+    : Kind extends 'date-range' ? DateRange | null
+      : Kind extends 'date-time' ? DateTimeValue | null
+        : DateTimeRange | null;
+export type PickerPoliciesFor<Kind extends PickerKind> =
+  Kind extends 'calendar' ? CalendarPolicies
+    : Kind extends 'date' ? NonNullable<DatePickerOptions['policies']>
+      : Kind extends 'date-range' ? NonNullable<DateRangePickerOptions['policies']>
+        : Kind extends 'date-time' ? NonNullable<DateTimePickerOptions['policies']>
+          : NonNullable<DateTimeRangePickerOptions['policies']>;
 export type PickerInputPart = 'input' | 'start-input' | 'end-input' | 'date-time-input' | 'date-input' | 'time-input' | 'start-date-time-input' | 'end-date-time-input' | 'start-date-input' | 'end-date-input' | 'start-time-input' | 'end-time-input';
 export type PickerNavigationUnit = 'week' | 'month' | 'year';
 export interface PickerYearValue { readonly year: number }
-export interface PickerRootSlotProps { readonly value: PickerValue; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly CalendarMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: CalendarViewMode; readonly disabled: boolean; readonly: boolean }
+export interface PickerRootSlotProps<Value extends PickerValue = PickerValue> { readonly value: Value; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly CalendarMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: CalendarViewMode; readonly disabled: boolean; readonly: boolean }
 export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
 export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
@@ -40,9 +52,9 @@ export interface PickerRootConfig {
   readonly inline?: boolean;
 }
 
-export interface PickerRootRuntimeProps {
-  readonly modelValue?: PickerValue;
-  readonly defaultValue?: PickerValue;
+export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue, Policies = Readonly<Record<string, unknown>>> {
+  readonly modelValue?: Value;
+  readonly defaultValue?: Value;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly highlightedValue?: DateValue;
@@ -53,9 +65,65 @@ export interface PickerRootRuntimeProps {
   readonly?: boolean;
   readonly required?: boolean;
   readonly label?: string;
-  readonly policies?: Readonly<Record<string, unknown>>;
+  readonly policies?: Policies;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
+}
+
+interface ResolvedPickerRootProps<Kind extends PickerKind> {
+  readonly modelValue?: PickerValueFor<Kind>;
+  readonly defaultValue: PickerValueFor<Kind>;
+  readonly open?: boolean;
+  readonly defaultOpen: boolean;
+  readonly highlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
+  readonly defaultView: CalendarViewMode;
+  readonly disabled: boolean;
+  readonly readonly: boolean;
+  readonly required: boolean;
+  readonly label?: string;
+  readonly policies?: PickerPoliciesFor<Kind>;
+  readonly as: PrimitiveAs;
+  readonly asChild: boolean;
+}
+
+export type PickerRootPublicProps<Kind extends PickerKind> =
+  PickerRootRuntimeProps<PickerValueFor<Kind>, PickerPoliciesFor<Kind>>
+  & VNodeProps
+  & AllowedComponentProps
+  & ComponentCustomProps
+  & {
+    readonly 'onUpdate:modelValue'?: (value: PickerValueFor<Kind>) => unknown;
+    readonly 'onUpdate:open'?: (value: boolean) => unknown;
+    readonly 'onUpdate:highlightedValue'?: (value: DateValue) => unknown;
+  };
+
+export interface PickerRootComponent<Kind extends PickerKind> {
+  new (props: PickerRootPublicProps<Kind>): {
+    $props: PickerRootPublicProps<Kind>;
+    $slots: { default?: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild };
+  };
+}
+
+export type PickerRootPartPublicProps =
+  PickerPartProps
+  & VNodeProps
+  & AllowedComponentProps
+  & ComponentCustomProps;
+
+export interface PickerRootPartComponent<Kind extends PickerKind> {
+  new (props: PickerRootPartPublicProps): {
+    $props: PickerRootPartPublicProps;
+    $slots: { default?: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild };
+  };
+}
+
+export function specializePickerRootPart<Kind extends PickerKind>(
+  _kind: Kind,
+  component: Component,
+): PickerRootPartComponent<Kind> {
+  return component as unknown as PickerRootPartComponent<Kind>;
 }
 
 interface PickerConnection {
@@ -88,52 +156,53 @@ interface Context {
 const key = Symbol('SectileDatePickerRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
-export function createPickerRoot(kind: PickerKind, name: string, config: PickerRootConfig = {}) {
+export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
   const scope = config.scope ?? kind;
   const granularity = config.granularity ?? 'day';
   const defaultView = config.defaultView ?? (granularity === 'day' ? 'month' : 'year');
   const defaultOpen = config.defaultOpen ?? false;
   const yearPageSize = config.yearPageSize ?? 12;
   const inline = config.inline ?? false;
-  return defineComponent({
+  const component = defineComponent({
     name, inheritAttrs: false,
     props: {
-      modelValue: { type: Object as PropType<PickerValue>, default: undefined }, defaultValue: { type: Object as PropType<PickerValue>, default: null },
+      modelValue: { type: Object as PropType<PickerValueFor<Kind>>, default: undefined }, defaultValue: { type: Object as PropType<PickerValueFor<Kind>>, default: null },
       open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: defaultOpen },
       highlightedValue: { type: Object as PropType<DateValue>, default: undefined }, defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
       referenceDate: { type: Object as PropType<DateValue>, default: undefined },
       defaultView: { type: String as PropType<CalendarViewMode>, default: defaultView },
       disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false },
-      label: { type: String, default: undefined }, policies: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined },
+      label: { type: String, default: undefined }, policies: { type: Object as PropType<PickerPoliciesFor<Kind>>, default: undefined },
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
     },
-    emits: { 'update:modelValue': (_value: PickerValue): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
-    slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
+    emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
+    slots: Object as SlotsType<{ default: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild }>,
     setup(props, { emit, slots }) {
+      const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
       const hostReferenceDate = useHostReferenceDate();
-      const referenceDate = computed(() => props.referenceDate ?? hostReferenceDate.value);
+      const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
-      const localValue = shallowRef<PickerValue>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
-      const localOpen = shallowRef(props.open ?? props.defaultOpen);
-      const localHighlight = shallowRef<DateValue>(props.highlightedValue ?? props.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
+      const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
+      const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
+      const localHighlight = shallowRef<DateValue>(runtimeProps.highlightedValue ?? runtimeProps.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
       const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
       const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(yearFor(localHighlight.value.year));
       const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFrom(yearPageStart.value, yearPageSize));
       const localView = shallowRef(Object.freeze({ year: localHighlight.value.year, month: localHighlight.value.month }));
-      const localViewMode = shallowRef<CalendarViewMode>(props.defaultView);
+      const localViewMode = shallowRef<CalendarViewMode>(runtimeProps.defaultView);
       const controlled = {
-        value: useControlledStateInvariant(`${kind}PickerRoot`, 'modelValue', () => props.modelValue),
-        open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => props.open),
-        highlighted: useControlledStateInvariant(`${kind}PickerRoot`, 'highlightedValue', () => props.highlightedValue),
+        value: useControlledStateInvariant(`${kind}PickerRoot`, 'modelValue', () => runtimeProps.modelValue),
+        open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => runtimeProps.open),
+        highlighted: useControlledStateInvariant(`${kind}PickerRoot`, 'highlightedValue', () => runtimeProps.highlightedValue),
       };
       const state = computed<PickerRootSlotProps>(() => {
-        const highlighted = props.highlightedValue ?? localHighlight.value;
+        const highlighted = runtimeProps.highlightedValue ?? localHighlight.value;
         return Object.freeze({
-          value: props.modelValue !== undefined ? props.modelValue : localValue.value,
-          highlightedValue: highlighted, open: props.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
-          view: localView.value, viewMode: localViewMode.value, disabled: props.disabled, readonly: props.readonly,
+          value: runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : localValue.value,
+          highlightedValue: highlighted, open: runtimeProps.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
+          view: localView.value, viewMode: localViewMode.value, disabled: runtimeProps.disabled, readonly: runtimeProps.readonly,
         });
       });
       useCompositeFormControl({
@@ -142,7 +211,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         submissions: () => pickerFormSubmissions(elements, kind),
       });
       const periodAvailable = (value: CalendarMonthValue | PickerYearValue): boolean => {
-        const policies = props.policies as PeriodPolicies | undefined;
+        const policies = runtimeProps.policies as PeriodPolicies | undefined;
         if ('month' in value) return monthAvailable(value, policies);
         return Array.from({ length: 12 }, (_entry, index) => index + 1)
           .some((month) => monthAvailable({ year: value.year, month }, policies));
@@ -174,18 +243,18 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
         if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
         const base: Record<string, unknown> = {
-          root: content, grid, disabled: props.disabled, readOnly: props.readonly, required: props.required,
+          root: content, grid, disabled: runtimeProps.disabled, readOnly: runtimeProps.readonly, required: runtimeProps.required,
           referenceDate: referenceDate.value,
-          ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
-          ...(controlled.value ? { value: props.modelValue } : { defaultValue: localValue.value }),
-          ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
-          onValueChange: (value: PickerValue) => { localValue.value = value; emit('update:modelValue', value); },
+          ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
+          ...(controlled.value ? { value: runtimeProps.modelValue } : { defaultValue: localValue.value }),
+          ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
+          onValueChange: (value: PickerValue) => { localValue.value = value; emit('update:modelValue', value as PickerValueFor<Kind>); },
           onHighlightedValueChange: (value: DateValue) => { localHighlight.value = value; emit('update:highlightedValue', value); },
           onUpdate: refresh,
         };
         if (kind !== 'calendar') {
           base['trigger'] = trigger;
-          if (controlled.open) base['open'] = props.open;
+          if (controlled.open) base['open'] = runtimeProps.open;
           else base['defaultOpen'] = localOpen.value;
           base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
         }
@@ -200,7 +269,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
           : kind === 'date-range' ? createDateRangePicker(base as never)
             : kind === 'date-time' ? createDateTimePicker(base as never) : createDateTimeRangePicker(base as never);
         connection.value = created as unknown as PickerConnection;
-        if (props.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: props.defaultView });
+        if (runtimeProps.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: runtimeProps.defaultView });
         refreshCells(); refresh();
       };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
@@ -263,28 +332,29 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         selectYear,
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-      watch([() => props.disabled, () => props.readonly, () => props.required, () => props.label, () => props.policies], connect);
+      watch([() => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies], connect);
       watch(referenceDate, (value) => {
         if (
-          props.highlightedValue === undefined
-          && props.defaultHighlightedValue === undefined
-          && dateOf(props.modelValue ?? props.defaultValue) === null
+          runtimeProps.highlightedValue === undefined
+          && runtimeProps.defaultHighlightedValue === undefined
+          && dateOf(runtimeProps.modelValue ?? runtimeProps.defaultValue) === null
         ) localHighlight.value = value;
         connect();
       });
-      watch([() => props.modelValue, () => props.open, () => props.highlightedValue], () => {
+      watch([() => runtimeProps.modelValue, () => runtimeProps.open, () => runtimeProps.highlightedValue], () => {
         if (connection.value === undefined) return;
         const result = connection.value.syncControlledValues({
-          ...(controlled.value ? { value: props.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: props.open } : {}),
-          ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : {}),
+          ...(controlled.value ? { value: runtimeProps.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: runtimeProps.open } : {}),
+          ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : {}),
         });
         if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
       });
       return (): VNodeChild => {
-        return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
+        return h(Fragment as Component, null, slots['default']?.(state.value as PickerRootSlotProps<PickerValueFor<Kind>>) ?? []);
       };
     },
   });
+  return component as unknown as PickerRootComponent<Kind>;
 }
 
 export const PickerTrigger = defineComponent({

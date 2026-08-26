@@ -48,6 +48,20 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -66,6 +80,13 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateRange | null</code></span><span><span class="component-api-definition__label">기본값</span><code>null</code></span></div>
 <p>컴포넌트가 값을 관리할 때 사용할 초깃값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultView</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerRootSlotProps['viewMode']</code></span><span><span class="component-api-definition__label">기본값</span><code>'year'</code></span></div>
+<p>달력 또는 선택기의 초기 보기입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -154,46 +175,6 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 
 ### 슬롯
 
-#### `MonthRangePickerCellSlotProps`
-
-<dl class="component-api-definitions component-api-definitions--slots">
-<div class="component-api-definition">
-<dt><code>disabled</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>사용자 조작을 막을지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>highlighted</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>조작 대상으로 강조된 항목인지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>inRange</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>선택한 범위 안에 있는 값인지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>selected</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>현재 선택된 항목인지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>value</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarMonthValue</code></span></div>
-<p>이 계약이 노출하는 현재 값입니다.</p>
-</dd>
-</div>
-</dl>
-
 #### `MonthRangePickerRootSlotProps`
 
 <dl class="component-api-definitions component-api-definitions--slots">
@@ -242,7 +223,7 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerValue</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Value</code></span></div>
 <p>이 계약이 노출하는 현재 값입니다.</p>
 </dd>
 </div>
@@ -269,30 +250,42 @@ Vue 패키지: `@sectile/vue/month-range-picker`
 </div>
 </dl>
 
-### 이벤트
+#### `MonthRangePickerCellSlotProps`
 
-#### `MonthRangePickerRoot`
-
-<dl class="component-api-definitions component-api-definitions--events">
+<dl class="component-api-definitions component-api-definitions--slots">
 <div class="component-api-definition">
-<dt><code>update:highlightedValue</code></dt>
+<dt><code>disabled</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>DateValue</code></span></div>
-<p>새 강조 값을 요청할 때 발생합니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>update:modelValue</code></dt>
+<dt><code>highlighted</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>PickerValue</code></span></div>
-<p>컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>조작 대상으로 강조된 항목인지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>update:open</code></dt>
+<dt><code>inRange</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>boolean</code></span></div>
-<p>컴포넌트가 새 열림 상태를 요청할 때 발생합니다.</p>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>선택한 범위 안에 있는 값인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>selected</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>현재 선택된 항목인지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarMonthValue</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
 </dd>
 </div>
 </dl>

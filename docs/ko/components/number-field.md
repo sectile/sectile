@@ -74,6 +74,13 @@ Vue 패키지: `@sectile/vue/number-field`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>native</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>policies</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>NumberFieldOptions['policies']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>

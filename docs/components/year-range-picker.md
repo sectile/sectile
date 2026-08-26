@@ -48,6 +48,20 @@ Vue package: `@sectile/vue/year-range-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or component rendered for this part.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -66,6 +80,13 @@ Vue package: `@sectile/vue/year-range-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateRange | null</code></span><span><span class="component-api-definition__label">Default</span><code>null</code></span></div>
 <p>Initial value used when the component owns its state.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>defaultView</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerRootSlotProps['viewMode']</code></span><span><span class="component-api-definition__label">Default</span><code>'year'</code></span></div>
+<p>Initial calendar or picker view.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -202,7 +223,7 @@ Vue package: `@sectile/vue/year-range-picker`
 <div class="component-api-definition">
 <dt><code>value</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerValue</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Value</code></span></div>
 <p>Current value exposed by this contract.</p>
 </dd>
 </div>
@@ -272,34 +293,6 @@ Vue package: `@sectile/vue/year-range-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerYearValue</code></span></div>
 <p>Current value exposed by this contract.</p>
-</dd>
-</div>
-</dl>
-
-### Events
-
-#### `YearRangePickerRoot`
-
-<dl class="component-api-definitions component-api-definitions--events">
-<div class="component-api-definition">
-<dt><code>update:highlightedValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>DateValue</code></span></div>
-<p>Emitted when the requested highlighted value changes.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:modelValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>PickerValue</code></span></div>
-<p>Emitted when the component requests a new controlled value.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:open</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>boolean</code></span></div>
-<p>Emitted when the component requests a new open state.</p>
 </dd>
 </div>
 </dl>

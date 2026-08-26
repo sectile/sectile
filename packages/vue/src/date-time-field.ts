@@ -19,7 +19,9 @@ export interface DateTimeFieldProps {
   readonly native?: boolean;
 }
 
-export const DateTimeField = createNativeFieldComponent<DateTimeValue>({
+type DateTimeFieldPolicies = NonNullable<DateTimeFieldOptions['policies']>;
+
+export const DateTimeField = createNativeFieldComponent<DateTimeValue, DateTimeFieldPolicies>({
   name: 'SectileDateTimeField',
   scope: 'date-time-field',
   inputMode: 'text',
@@ -27,11 +29,11 @@ export const DateTimeField = createNativeFieldComponent<DateTimeValue>({
   placeholder: 'YYYY-MM-DDTHH:mm',
   formatValue: formatDateTimeValue,
   valueType: Object as PropType<DateTimeValue | null>,
-  create: (options: NativeFieldFactoryOptions<DateTimeValue>): DateTimeFieldConnection => createDateTimeField({
+  create: (options: NativeFieldFactoryOptions<DateTimeValue, DateTimeFieldPolicies>): DateTimeFieldConnection => createDateTimeField({
     ...options,
     ...(options.policies === undefined
       ? {}
-      : { policies: options.policies as NonNullable<DateTimeFieldOptions['policies']> }),
+      : { policies: options.policies }),
   }),
 });
 export type DateTimeFieldValueChangeHandler = (value: DateTimeValue | null) => void;

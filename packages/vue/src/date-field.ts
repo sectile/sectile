@@ -19,7 +19,9 @@ export interface DateFieldProps {
   readonly native?: boolean;
 }
 
-export const DateField = createNativeFieldComponent<DateValue>({
+type DateFieldPolicies = NonNullable<DateFieldOptions['policies']>;
+
+export const DateField = createNativeFieldComponent<DateValue, DateFieldPolicies>({
   name: 'SectileDateField',
   scope: 'date-field',
   inputMode: 'numeric',
@@ -27,11 +29,11 @@ export const DateField = createNativeFieldComponent<DateValue>({
   placeholder: 'YYYY-MM-DD',
   formatValue: formatDateValue,
   valueType: Object as PropType<DateValue | null>,
-  create: (options: NativeFieldFactoryOptions<DateValue>): DateFieldConnection => createDateField({
+  create: (options: NativeFieldFactoryOptions<DateValue, DateFieldPolicies>): DateFieldConnection => createDateField({
     ...options,
     ...(options.policies === undefined
       ? {}
-      : { policies: options.policies as NonNullable<DateFieldOptions['policies']> }),
+      : { policies: options.policies }),
   }),
 });
 export type DateFieldValueChangeHandler = (value: DateValue | null) => void;

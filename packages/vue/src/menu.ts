@@ -43,6 +43,19 @@ interface Context {
   registerItem(element: HTMLElement, id: string): void;
   registerSubmenu(element: HTMLElement, parent: string): void;
 }
+interface ResolvedRootProps {
+  readonly items: readonly MenuItemDefinition<string>[];
+  readonly disabledItems: readonly string[];
+  readonly disabled: boolean;
+  readonly defaultHighlightedValue: string | null;
+  readonly label?: string;
+  readonly textValue?: MenuTextValueResolver;
+  readonly policies?: MenuPolicies<string>;
+  readonly as: PrimitiveAs;
+  readonly asChild: boolean;
+  readonly open?: boolean;
+  readonly defaultOpen?: boolean;
+}
 const key = Symbol('SectileMenuRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
@@ -53,30 +66,41 @@ const commonProps = {
   textValue: { type: Function as PropType<MenuTextValueResolver>, default: undefined },
   policies: { type: Object as PropType<MenuPolicies<string>>, default: undefined },
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
-};
+} as const;
 
-function createRoot(kind: MenuKind, providerOnly = false) {
+const menuButtonProps = {
+  ...commonProps,
+  open: { type: Boolean, default: undefined },
+  defaultOpen: { type: Boolean, default: false },
+} as const;
+
+function createRoot<RootProps extends typeof commonProps | typeof menuButtonProps>(
+  kind: MenuKind,
+  rootProps: RootProps,
+  providerOnly = false,
+) {
   return defineComponent({
     name: kind === 'menu-button' ? 'SectileMenuButtonRoot' : kind === 'menubar' ? 'SectileMenubarRoot' : kind === 'navigation-menu' ? 'SectileNavigationMenuRoot' : 'SectileMenuRoot',
     inheritAttrs: false,
-    props: { ...commonProps, open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false } },
+    props: rootProps,
     emits: { 'update:open': (_value: boolean): boolean => true, invoke: (_value: string): boolean => true },
     slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
     setup(props, { attrs, emit, slots }) {
+      const runtimeProps = props as unknown as ResolvedRootProps;
       const direction = useHostDirection();
       const baseID = useHostId();
       const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLElement>(); const connection = shallowRef<MenuConnection<string>>();
-      const openProp = props.open;
-      const open = shallowRef(kind === 'menu-button' ? openProp ?? props.defaultOpen : true);
-      const highlighted = shallowRef<string | null>(props.defaultHighlightedValue); const openPath = shallowRef<readonly string[]>([]);
+      const openProp = runtimeProps.open;
+      const open = shallowRef(kind === 'menu-button' ? openProp ?? runtimeProps.defaultOpen ?? false : true);
+      const highlighted = shallowRef<string | null>(runtimeProps.defaultHighlightedValue); const openPath = shallowRef<readonly string[]>([]);
       const controlled = useControlledStateInvariant(
         'MenuButtonRoot',
         'open',
-        () => kind === 'menu-button' ? props.open : undefined,
+        () => kind === 'menu-button' ? runtimeProps.open : undefined,
       );
       const state = computed<MenuRootSlotProps>(() => ({
-        open: kind === 'menu-button' && props.open !== undefined ? props.open : open.value,
-        highlightedValue: highlighted.value, openPath: openPath.value, disabled: props.disabled,
+        open: kind === 'menu-button' && runtimeProps.open !== undefined ? runtimeProps.open : open.value,
+        highlightedValue: highlighted.value, openPath: openPath.value, disabled: runtimeProps.disabled,
       }));
       const refresh = (): void => {
         const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
@@ -91,43 +115,43 @@ function createRoot(kind: MenuKind, providerOnly = false) {
       const connect = (): void => {
         connection.value?.disconnect(); if (root.value === undefined || (kind === 'menu-button' && trigger.value === undefined)) return;
         const reconciled = reconcileCollectionState(
-          (props.items ?? []).map((item) => item.id),
+          runtimeProps.items.map((item) => item.id),
           [],
           highlighted.value,
-          props.disabledItems,
+          runtimeProps.disabledItems,
           'single',
           { preserveNullCurrent: true },
         );
         highlighted.value = reconciled.current;
         const options = {
-          root: root.value, items: props.items as readonly MenuItemDefinition<string>[], disabledItems: props.disabledItems, disabled: props.disabled,
+          root: root.value, items: runtimeProps.items, disabledItems: runtimeProps.disabledItems, disabled: runtimeProps.disabled,
           direction: direction.value, baseID,
-          ...(props.policies === undefined ? {} : { policies: props.policies }),
+          ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           defaultHighlightedValue: reconciled.current,
-          ...(props.label === undefined ? {} : { label: props.label }),
-          ...(props.textValue === undefined ? {} : { typeahead: { textValue: props.textValue } }),
+          ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }),
+          ...(runtimeProps.textValue === undefined ? {} : { typeahead: { textValue: runtimeProps.textValue } }),
           onOpenChange: (value: boolean) => { open.value = value; emit('update:open', value); },
           onInvoke: (value: string) => emit('invoke', value), onUpdate: refresh,
         };
         connection.value = kind === 'menu-button'
-          ? createMenuButton({ ...options, trigger: trigger.value as HTMLElement, ...(controlled ? { open: props.open as boolean } : { defaultOpen: open.value }) })
+          ? createMenuButton({ ...options, trigger: trigger.value as HTMLElement, ...(controlled ? { open: runtimeProps.open as boolean } : { defaultOpen: open.value }) })
           : kind === 'menubar' ? createMenubar(options) : kind === 'navigation-menu' ? createNavigationMenu(options) : createMenu(options);
         refreshParts(); refresh();
       };
       provide<Context>(key, {
-        state, kind, label: computed(() => props.label), disabledItems: computed(() => new Set(props.disabledItems)), direction,
+        state, kind, label: computed(() => runtimeProps.label), disabledItems: computed(() => new Set(runtimeProps.disabledItems)), direction,
         registerRoot: (element) => { root.value = element; }, registerTrigger: (element) => { trigger.value = element; },
         registerItem: (element, id) => connection.value?.setItemAttributes(element, id),
         registerSubmenu: (element, parent) => connection.value?.setSubmenuAttributes(element, parent),
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-      watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.label, () => props.textValue, () => props.policies, direction], connect);
-      watch(() => props.open, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
+      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction], connect);
+      watch(() => runtimeProps.open, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
       return (): VNodeChild => {
         if (providerOnly) return h(Fragment as Component, null, slots['default']?.(state.value) ?? []);
         return h(Primitive, mergeProps(attrs, {
-          as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
-          role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': props.label,
+          as: runtimeProps.as, asChild: runtimeProps.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
+          role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': runtimeProps.label,
           dir: direction.value,
           'data-scope': kind === 'navigation-menu' ? 'navigation-menu' : kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
         }), { default: () => slots['default']?.(state.value) });
@@ -136,10 +160,10 @@ function createRoot(kind: MenuKind, providerOnly = false) {
   });
 }
 
-export const MenuRoot = createRoot('menu');
-export const MenubarRoot = createRoot('menubar');
-export const NavigationMenuRoot = createRoot('navigation-menu');
-export const MenuButtonRoot = createRoot('menu-button', true);
+export const MenuRoot = createRoot('menu', commonProps);
+export const MenubarRoot = createRoot('menubar', commonProps);
+export const NavigationMenuRoot = createRoot('navigation-menu', commonProps);
+export const MenuButtonRoot = createRoot('menu-button', menuButtonProps, true);
 export type MenuOpenChangeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onUpdate:open']>;
 export type MenuInvokeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onInvoke']>;
 export type MenubarOpenChangeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onUpdate:open']>;

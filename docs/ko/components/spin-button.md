@@ -161,6 +161,27 @@ Vue 패키지: `@sectile/vue/spin-button`
 <p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>form</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컨트롤을 연결할 네이티브 form 요소의 ID입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>name</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>네이티브 폼 제출에 사용할 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>required</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다.</p>
+</dd>
+</div>
 </dl>
 
 #### `SpinButtonTriggerProps`

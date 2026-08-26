@@ -56,6 +56,20 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>as</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>이 파트가 렌더링할 요소 또는 컴포넌트입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>asChild</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>defaultHighlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -169,6 +183,81 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 
 ### 슬롯
 
+#### `DateRangePickerRootSlotProps`
+
+<dl class="component-api-definitions component-api-definitions--slots">
+<div class="component-api-definition">
+<dt><code>dates</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly DateValue[])[]</code></span></div>
+<p>현재 보기에 표시할 날짜입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>highlightedValue</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span></div>
+<p>조작 대상으로 강조된 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>months</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
+<p>현재 보기에 표시할 달입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>open</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>readonly</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
+<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>value</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Value</code></span></div>
+<p>이 계약이 노출하는 현재 값입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>view</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>{ readonly year: number; readonly month: number }</code></span></div>
+<p>현재 달력 기준점입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>viewMode</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarViewMode</code></span></div>
+<p>현재 달력 보기 방식입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>years</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly PickerYearValue[])[]</code></span></div>
+<p>현재 보기에 표시할 연도입니다.</p>
+</dd>
+</div>
+</dl>
+
 #### `DateRangePickerCellSlotProps`
 
 <dl class="component-api-definitions component-api-definitions--slots">
@@ -252,109 +341,6 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarMonthValue</code></span></div>
 <p>이 계약이 노출하는 현재 값입니다.</p>
-</dd>
-</div>
-</dl>
-
-#### `DateRangePickerRootSlotProps`
-
-<dl class="component-api-definitions component-api-definitions--slots">
-<div class="component-api-definition">
-<dt><code>dates</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly DateValue[])[]</code></span></div>
-<p>현재 보기에 표시할 날짜입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>disabled</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>사용자 조작을 막을지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>highlightedValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span></div>
-<p>조작 대상으로 강조된 현재 값입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>months</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly CalendarMonthValue[])[]</code></span></div>
-<p>현재 보기에 표시할 달입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>open</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>연결된 팝업이나 펼침 영역이 열려 있는지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>readonly</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>value</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerValue</code></span></div>
-<p>이 계약이 노출하는 현재 값입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>view</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>{ readonly year: number; readonly month: number }</code></span></div>
-<p>현재 달력 기준점입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>viewMode</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>CalendarViewMode</code></span></div>
-<p>현재 달력 보기 방식입니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>years</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly (readonly PickerYearValue[])[]</code></span></div>
-<p>현재 보기에 표시할 연도입니다.</p>
-</dd>
-</div>
-</dl>
-
-### 이벤트
-
-#### `DateRangePickerRoot`
-
-<dl class="component-api-definitions component-api-definitions--events">
-<div class="component-api-definition">
-<dt><code>update:highlightedValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>DateValue</code></span></div>
-<p>새 강조 값을 요청할 때 발생합니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:modelValue</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>PickerValue</code></span></div>
-<p>컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.</p>
-</dd>
-</div>
-<div class="component-api-definition">
-<dt><code>update:open</code></dt>
-<dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>boolean</code></span></div>
-<p>컴포넌트가 새 열림 상태를 요청할 때 발생합니다.</p>
 </dd>
 </div>
 </dl>

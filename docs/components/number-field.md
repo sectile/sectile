@@ -74,6 +74,13 @@ Vue package: `@sectile/vue/number-field`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>native</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether to use the browser native date or time input UI.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>policies</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>NumberFieldOptions['policies']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
