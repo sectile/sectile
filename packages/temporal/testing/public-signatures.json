@@ -67,11 +67,11 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "9f8ef20fb3dee877353314c7a479213d8a935c7bbfca8f23ccffc1585a120c23",
+  "fingerprint": "758d59ddc88fabcb04148b89edaef89a6a04e27cbd0c0f3221b04f54496c6e33",
   "files": [
     {
       "path": "dist/calendar.d.ts",
-      "sha256": "b833692445772a7a345ae8fc9d56b314049b5fa08f8e7b330e623116814c1e94"
+      "sha256": "b6f536dfe8ae473ecdad735defe7dbaedfb669bd4f79add6dcdef3b469aa475b"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -87,7 +87,7 @@
     },
     {
       "path": "dist/date-range-picker.d.ts",
-      "sha256": "5483391b7b515eaea24c51d384aa00fc9123e377c8ee5368529c6438f61f843a"
+      "sha256": "3c4377698f6c4310c9686c501e6330e62a5a29a8ffc3c805c8faba7d1fb47d1b"
     },
     {
       "path": "dist/date-time-field.d.ts",
@@ -95,15 +95,15 @@
     },
     {
       "path": "dist/date-time-picker.d.ts",
-      "sha256": "14d1854e0370c757157168b1d35a1cd62698cc3ebc133415696e89df9b7b6094"
+      "sha256": "7a7e17b768ca54f71ad30b153b298755ed4b9ea753ce854f84f1710b064e2c36"
     },
     {
       "path": "dist/date-time-range-picker.d.ts",
-      "sha256": "df89fd23b8e15a4901cdd3a5d38ea9aba88ff50db823aeea7be857c8b132e923"
+      "sha256": "df3733387e2d5bbe93516fef60d43e8964c897e335bff041e993e527cffcb65f"
     },
     {
       "path": "dist/error.d.ts",
-      "sha256": "540ffeee413fd5950fc8fd554a02a1e259c1e9120395f29c838b5df7d95242dc"
+      "sha256": "2707140b4e7712e08dfd82ba934843f222ae4ff5b5ecd64417a9fac9d6acabce"
     },
     {
       "path": "dist/index.d.ts",

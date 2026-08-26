@@ -92,6 +92,7 @@ export interface DateTimeRangePickerStateInput {
   readonly anchor?: DateValue | null;
   readonly startTime?: TimeValue;
   readonly endTime?: TimeValue;
+  readonly referenceDate?: DateValue;
   readonly calendar?: Partial<DatePickerState>;
 }
 
@@ -133,6 +134,7 @@ export function tryCreateDateTimeRangePickerState(
   const fallback = anchor.value ?? value.value?.end.date;
   const calendar = tryCreateDatePickerState({
     value: null,
+    ...(input.referenceDate === undefined ? {} : { referenceDate: input.referenceDate }),
     ...(input.calendar?.highlighted === undefined && fallback !== undefined
       ? { highlighted: fallback }
       : {}),

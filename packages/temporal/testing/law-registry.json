@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    { "id": "TMP-01", "theory": "civil-date", "statement": "canonical ISO formatting and parsing are inverse" },
+    { "id": "TMP-02", "theory": "civil-date", "statement": "day addition and signed difference are inverse inside the supported domain" },
+    { "id": "TMP-03", "theory": "civil-date", "statement": "month and year arithmetic clamp explicitly at month boundaries" },
+    { "id": "TMP-04", "theory": "civil-date", "statement": "Gregorian century leap-year rules are exact" },
+    { "id": "TMP-05", "theory": "calendar", "statement": "week and month projections are contiguous with fixed cardinality" },
+    { "id": "TMP-06", "theory": "calendar", "statement": "an empty calendar requires an injected reference date" },
+    { "id": "TMP-07", "theory": "calendar", "statement": "unavailable-date scans stop at the declared resource ceiling" },
+    { "id": "TMP-08", "theory": "civil-date", "statement": "year 1 and 9999 boundaries reject overflow atomically" }
+  ]
+}

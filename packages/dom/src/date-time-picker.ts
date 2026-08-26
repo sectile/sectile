@@ -21,6 +21,7 @@ import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-bi
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDateTimeField, type DateTimeFieldConnection } from './date-time-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
+import { currentReferenceDate } from './internal/reference-date.js';
 
 export interface DateTimePickerOptions {
   readonly root: HTMLElement;
@@ -34,6 +35,7 @@ export interface DateTimePickerOptions {
   readonly defaultValue?: DateTimeValue | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -93,6 +95,7 @@ function construct(options: DateTimePickerOptions): DOMTemporalResult<DateTimePi
     : options.defaultHighlightedValue;
   const requestedOpen = controls.open ? options.open : options.defaultOpen;
   const initial = tryCreateDateTimePickerState({
+    referenceDate: options.referenceDate ?? currentReferenceDate(),
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedValue == null && options.policies?.defaultTime !== undefined
       ? { time: options.policies.defaultTime }

@@ -9,7 +9,7 @@ export interface RangeCalendarRootProps {
   readonly modelValue?: DateRange | null;
   readonly defaultValue?: DateRange | null;
   readonly highlightedValue?: DateValue;
-  readonly defaultHighlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
   readonly disabled?: boolean;
   readonly?: boolean;

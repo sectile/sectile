@@ -73,6 +73,7 @@ export interface CalendarUpdate {
 export interface CalendarStateInput {
   readonly value?: DateValue | null;
   readonly highlighted?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly view?: CalendarView;
   readonly viewMode?: CalendarViewMode;
 }
@@ -87,8 +88,30 @@ export function tryCreateCalendarState(input: CalendarStateInput = {}): Temporal
     const valid = tryCreateDateValue(value.year, value.month, value.day);
     if (!valid.ok) return valid;
   }
-  const fallback = value ?? Object.freeze({ year: 1970, month: 1, day: 1 });
+  const referenceDate = input.referenceDate === undefined
+    ? ok<DateValue | null>(null)
+    : tryCreateDateValue(
+      input.referenceDate.year,
+      input.referenceDate.month,
+      input.referenceDate.day,
+    );
+  if (!referenceDate.ok) return referenceDate;
+  const fallback = value ?? referenceDate.value;
+  if (input.highlighted === undefined && fallback === null) {
+    return fail(
+      'construction',
+      'calendar-reference-date-required',
+      'Calendar requires a value, highlighted date, or referenceDate.',
+    );
+  }
   const highlighted = input.highlighted ?? fallback;
+  if (highlighted === null) {
+    return fail(
+      'internal-invariant',
+      'calendar-reference-date-required',
+      'Calendar reference date resolution failed.',
+    );
+  }
   const validHighlight = tryCreateDateValue(highlighted.year, highlighted.month, highlighted.day);
   if (!validHighlight.ok) return validHighlight;
   const view = input.view ?? Object.freeze({ year: validHighlight.value.year, month: validHighlight.value.month });

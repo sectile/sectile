@@ -31,7 +31,7 @@ export interface CalendarRootProps {
   readonly modelValue?: DateValue | null;
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
-  readonly defaultHighlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: CalendarViewMode;
   readonly disabled?: boolean;
   readonly?: boolean;

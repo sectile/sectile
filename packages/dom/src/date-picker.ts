@@ -12,6 +12,7 @@ import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import { currentReferenceDate } from './internal/reference-date.js';
 
 export interface DatePickerOptions {
   readonly root: HTMLElement;
@@ -23,6 +24,7 @@ export interface DatePickerOptions {
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -58,7 +60,7 @@ function construct(options: DatePickerOptions): DOMTemporalResult<DatePickerConn
   const requestedValue = controls.value ? options.value : options.defaultValue;
   const requestedHighlight = controls.highlighted ? options.highlightedValue : options.defaultHighlightedValue;
   const requestedOpen = controls.open ? options.open : options.defaultOpen;
-  const initial = tryCreateDatePickerState({ ...(requestedValue === undefined ? {} : { value: requestedValue }), ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }), ...(requestedOpen === undefined ? {} : { open: requestedOpen }) });
+  const initial = tryCreateDatePickerState({ referenceDate: options.referenceDate ?? currentReferenceDate(), ...(requestedValue === undefined ? {} : { value: requestedValue }), ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }), ...(requestedOpen === undefined ? {} : { open: requestedOpen }) });
   const runtime = createDOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand, DatePickerCommand>({ initial, reducer: (state, event) => applyDatePickerEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }), reconcile: (previous, proposed) => tryCreateDatePickerState({ value: controls.value ? previous.value : proposed.value, highlighted: controls.highlighted ? previous.highlighted : proposed.highlighted, open: controls.open ? previous.open : proposed.open, view: controls.highlighted ? previous.view : proposed.view, viewMode: proposed.viewMode }), notify: (previous, proposed) => { if (compareNullable(previous.value, proposed.value) !== 0) options.onValueChange?.(proposed.value); if (compareDateValues(previous.highlighted, proposed.highlighted) !== 0) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); }, toEffect: (command) => command, interaction: options });
   return runtime.ok ? { ok: true, value: new DOMDatePicker(options, runtime.value, controls) } : runtime;
 }

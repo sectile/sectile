@@ -9,7 +9,7 @@ export interface MonthRangePickerRootProps {
   readonly modelValue?: DateRange | null;
   readonly defaultValue?: DateRange | null;
   readonly highlightedValue?: DateValue;
-  readonly defaultHighlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;

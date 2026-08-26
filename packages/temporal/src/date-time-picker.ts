@@ -80,6 +80,7 @@ export interface DateTimePickerUpdate {
 export interface DateTimePickerStateInput {
   readonly value?: DateTimeValue | null;
   readonly time?: TimeValue;
+  readonly referenceDate?: DateValue;
   readonly calendar?: Partial<DatePickerState>;
 }
 
@@ -111,6 +112,7 @@ export function tryCreateDateTimePickerState(
   const fallback = validValue.value?.date;
   const calendar = tryCreateDatePickerState({
     value: null,
+    ...(input.referenceDate === undefined ? {} : { referenceDate: input.referenceDate }),
     ...(input.calendar?.highlighted === undefined && fallback !== undefined
       ? { highlighted: fallback }
       : {}),

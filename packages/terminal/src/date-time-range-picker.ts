@@ -15,6 +15,7 @@ import {
 } from '@sectile/temporal/date-time-range-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { TerminalKeyboardInput } from './keyboard.js';
+import { currentReferenceDate } from './internal/reference-date.js';
 import { toDatePickerEvent } from './date-picker.js';
 
 export interface DateTimeRangePickerOptions {
@@ -23,6 +24,7 @@ export interface DateTimeRangePickerOptions {
   readonly defaultValue?: DateTimeRange | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
@@ -87,6 +89,7 @@ function construct(options: DateTimeRangePickerOptions): TerminalTemporalResult<
     DateTimeRangePickerCommand
   >({
     initial: tryCreateDateTimeRangePickerState({
+      referenceDate: options.referenceDate ?? currentReferenceDate(),
       ...(requestedValue === undefined ? {} : { value: requestedValue }),
       calendar: {
         ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),

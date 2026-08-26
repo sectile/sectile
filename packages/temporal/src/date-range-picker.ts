@@ -35,6 +35,7 @@ export interface DateRangePickerUpdate {
 export interface DateRangePickerStateInput {
   readonly value?: DateRange | null;
   readonly anchor?: DateValue | null;
+  readonly referenceDate?: DateValue;
   readonly calendar?: Partial<DatePickerState>;
 }
 
@@ -58,6 +59,7 @@ export function tryCreateDateRangePickerState(input: DateRangePickerStateInput =
   const fallback = anchor ?? value?.end;
   const calendar = tryCreateDatePickerState({
     value: null,
+    ...(input.referenceDate === undefined ? {} : { referenceDate: input.referenceDate }),
     ...(input.calendar?.highlighted === undefined && fallback !== undefined ? { highlighted: fallback } : {}),
     ...input.calendar,
   });

@@ -18,6 +18,7 @@ export {
   useHostDirection,
   useHostId,
   useHostPortalTarget,
+  useHostReferenceDate,
   type HostDirection,
   type HostIdGenerator,
   type HostPortalTarget,

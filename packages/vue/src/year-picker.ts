@@ -9,7 +9,7 @@ export interface YearPickerRootProps {
   readonly modelValue?: DateValue | null;
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
-  readonly defaultHighlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;

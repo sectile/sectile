@@ -19,6 +19,7 @@ import {
 import { compareDateValues, parseDateValue, type DateValue } from '@sectile/temporal/date-field';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { setInteractionAttributes } from './internal/interaction.js';
+import { currentReferenceDate } from './internal/reference-date.js';
 
 export type {
   CalendarCommand,
@@ -39,6 +40,7 @@ export interface CalendarOptions {
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly required?: boolean;
@@ -87,6 +89,7 @@ function constructCalendar(options: CalendarOptions): DOMTemporalResult<Calendar
   const requestedValue = controls.value ? options.value : options.defaultValue;
   const requestedHighlight = controls.highlighted ? options.highlightedValue : options.defaultHighlightedValue;
   const initial = tryCreateCalendarState({
+    referenceDate: options.referenceDate ?? currentReferenceDate(),
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
   });

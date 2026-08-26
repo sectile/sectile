@@ -18,6 +18,7 @@ import {
 } from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
+import { useHostReferenceDate } from '../host-provider.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -46,6 +47,7 @@ export interface PickerRootRuntimeProps {
   readonly defaultOpen?: boolean;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
+  readonly referenceDate?: DateValue;
   readonly defaultView?: CalendarViewMode;
   readonly disabled?: boolean;
   readonly?: boolean;
@@ -99,6 +101,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       modelValue: { type: Object as PropType<PickerValue>, default: undefined }, defaultValue: { type: Object as PropType<PickerValue>, default: null },
       open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: defaultOpen },
       highlightedValue: { type: Object as PropType<DateValue>, default: undefined }, defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
+      referenceDate: { type: Object as PropType<DateValue>, default: undefined },
       defaultView: { type: String as PropType<CalendarViewMode>, default: defaultView },
       disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false },
       label: { type: String, default: undefined }, policies: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined },
@@ -108,10 +111,12 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
+      const hostReferenceDate = useHostReferenceDate();
+      const referenceDate = computed(() => props.referenceDate ?? hostReferenceDate.value);
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
       const localOpen = shallowRef(props.open ?? props.defaultOpen);
-      const localHighlight = shallowRef<DateValue>(props.highlightedValue ?? props.defaultHighlightedValue ?? dateOf(localValue.value) ?? Object.freeze({ year: 1970, month: 1, day: 1 }));
+      const localHighlight = shallowRef<DateValue>(props.highlightedValue ?? props.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
       const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
       const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(yearFor(localHighlight.value.year));
@@ -170,6 +175,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
         const base: Record<string, unknown> = {
           root: content, grid, disabled: props.disabled, readOnly: props.readonly, required: props.required,
+          referenceDate: referenceDate.value,
           ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
           ...(controlled.value ? { value: props.modelValue } : { defaultValue: localValue.value }),
           ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
@@ -258,6 +264,14 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
       watch([() => props.disabled, () => props.readonly, () => props.required, () => props.label, () => props.policies], connect);
+      watch(referenceDate, (value) => {
+        if (
+          props.highlightedValue === undefined
+          && props.defaultHighlightedValue === undefined
+          && dateOf(props.modelValue ?? props.defaultValue) === null
+        ) localHighlight.value = value;
+        connect();
+      });
       watch([() => props.modelValue, () => props.open, () => props.highlightedValue], () => {
         if (connection.value === undefined) return;
         const result = connection.value.syncControlledValues({

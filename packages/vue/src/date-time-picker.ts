@@ -8,7 +8,7 @@ import {
 
 export interface DateTimePickerRootProps {
   readonly modelValue?: DateTimeValue | null; readonly defaultValue?: DateTimeValue | null;
-  readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue;
+  readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateTimePickerOptions['policies'];

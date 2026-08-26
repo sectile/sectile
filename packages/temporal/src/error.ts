@@ -2,6 +2,7 @@ import type { CoreErrorCode, Result, SectileError } from '@sectile/core';
 
 export type TemporalOwnErrorCode =
   | 'calendar-month-unavailable'
+  | 'calendar-reference-date-required'
   | 'calendar-scan-exhausted'
   | 'calendar-value-required'
   | 'calendar-value-unavailable'
