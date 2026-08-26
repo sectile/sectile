@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ inputs.tag }}
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -47,8 +47,7 @@ jobs:
           git fetch origin main --tags
           git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}"
           git merge-base --is-ancestor "refs/tags/${RELEASE_TAG}^{commit}" origin/main
-      - name: Protect tagged package contents
-        run: git diff --exit-code "refs/tags/${RELEASE_TAG}^{commit}" HEAD -- packages/core packages/temporal packages/virtual packages/dom packages/terminal packages/vue pnpm-lock.yaml
+          git restore --source=origin/main -- scripts/verify.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm ${{ matrix.verification }}
       - if: matrix.node == '24.x'
@@ -67,13 +66,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ inputs.tag }}
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - name: Load current publication tooling
+        run: |
+          git fetch origin main
+          git restore --source=origin/main -- scripts/publish-packages.mjs
       - run: pnpm install --frozen-lockfile
       - run: pnpm release:check "$RELEASE_TAG"
       - name: Publish npm packages with OIDC
