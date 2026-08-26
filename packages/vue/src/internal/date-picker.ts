@@ -3,7 +3,8 @@ import {
   nextTick, provide, shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType,
   type VNodeChild,
 } from 'vue';
-import { createDatePicker, createDatePickerMonth, createDatePickerYear, isDatePickerValueAvailable, type DatePickerConnection, type DatePickerMonthValue, type DatePickerViewMode } from '@sectile/dom/date-picker';
+import { createCalendar } from '@sectile/dom/calendar';
+import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
 import { createDateRangePicker } from '@sectile/dom/date-range-picker';
 import { createDateTimePicker } from '@sectile/dom/date-time-picker';
 import { createDateTimeRangePicker } from '@sectile/dom/date-time-range-picker';
@@ -18,21 +19,21 @@ import {
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
 
-export type PickerKind = 'date' | 'date-range' | 'date-time' | 'date-time-range';
+export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
 export type PickerInputPart = 'input' | 'start-input' | 'end-input' | 'date-time-input' | 'date-input' | 'time-input' | 'start-date-time-input' | 'end-date-time-input' | 'start-date-input' | 'end-date-input' | 'start-time-input' | 'end-time-input';
 export type PickerNavigationUnit = 'week' | 'month' | 'year';
 export interface PickerYearValue { readonly year: number }
-export interface PickerRootSlotProps { readonly value: PickerValue; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly DatePickerMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: DatePickerViewMode; readonly disabled: boolean; readonly: boolean }
+export interface PickerRootSlotProps { readonly value: PickerValue; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly CalendarMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: CalendarViewMode; readonly disabled: boolean; readonly: boolean }
 export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
-export interface PickerMonthCellSlotProps { readonly value: DatePickerMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
+export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 export interface PickerRootConfig {
   readonly scope?: string;
   readonly granularity?: 'day' | 'month' | 'year';
-  readonly defaultView?: DatePickerViewMode;
+  readonly defaultView?: CalendarViewMode;
   readonly defaultOpen?: boolean;
   readonly yearPageSize?: number;
   readonly inline?: boolean;
@@ -45,7 +46,7 @@ export interface PickerRootRuntimeProps {
   readonly defaultOpen?: boolean;
   readonly highlightedValue?: DateValue;
   readonly defaultHighlightedValue?: DateValue;
-  readonly defaultView?: DatePickerViewMode;
+  readonly defaultView?: CalendarViewMode;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly required?: boolean;
@@ -59,7 +60,7 @@ interface PickerConnection {
   getSnapshot(): { readonly state: unknown };
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
-  getYear(): readonly (readonly DatePickerMonthValue[])[];
+  getYear(): readonly (readonly CalendarMonthValue[])[];
   syncControlledValues(values: Record<string, unknown>): { readonly ok: boolean; readonly error?: { readonly message: string } };
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: unknown): boolean;
@@ -76,11 +77,11 @@ interface Context {
   registerCell(element: HTMLElement, value: DateValue): void;
   move(unit: PickerNavigationUnit, direction: -1 | 1): void;
   handleGridKey(event: KeyboardEvent): void;
-  setViewMode(value: DatePickerViewMode): void;
+  setViewMode(value: CalendarViewMode): void;
   selectDate(value: DateValue): void;
-  selectMonth(value: DatePickerMonthValue): void;
+  selectMonth(value: CalendarMonthValue): void;
   selectYear(value: PickerYearValue): void;
-  periodAvailable(value: DatePickerMonthValue | PickerYearValue): boolean;
+  periodAvailable(value: CalendarMonthValue | PickerYearValue): boolean;
 }
 const key = Symbol('SectileDatePickerRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -98,7 +99,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       modelValue: { type: Object as PropType<PickerValue>, default: undefined }, defaultValue: { type: Object as PropType<PickerValue>, default: null },
       open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: defaultOpen },
       highlightedValue: { type: Object as PropType<DateValue>, default: undefined }, defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
-      defaultView: { type: String as PropType<DatePickerViewMode>, default: defaultView },
+      defaultView: { type: String as PropType<CalendarViewMode>, default: defaultView },
       disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false },
       label: { type: String, default: undefined }, policies: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined },
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
@@ -107,16 +108,16 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
-      const inlineTrigger = typeof document === 'undefined' || !inline ? undefined : document.createElement('button');
+      const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
       const localOpen = shallowRef(props.open ?? props.defaultOpen);
       const localHighlight = shallowRef<DateValue>(props.highlightedValue ?? props.defaultHighlightedValue ?? dateOf(localValue.value) ?? Object.freeze({ year: 1970, month: 1, day: 1 }));
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
       const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
-      const months = shallowRef<readonly (readonly DatePickerMonthValue[])[]>(yearFor(localHighlight.value.year));
+      const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(yearFor(localHighlight.value.year));
       const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFrom(yearPageStart.value, yearPageSize));
       const localView = shallowRef(Object.freeze({ year: localHighlight.value.year, month: localHighlight.value.month }));
-      const localViewMode = shallowRef<DatePickerViewMode>(props.defaultView);
+      const localViewMode = shallowRef<CalendarViewMode>(props.defaultView);
       const controlled = {
         value: useControlledStateInvariant(`${kind}PickerRoot`, 'modelValue', () => props.modelValue),
         open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => props.open),
@@ -132,10 +133,10 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       });
       useCompositeFormControl({
         root: () => elements.get('content') ?? elements.get('grid') ?? null,
-        focusTarget: () => elements.get('trigger') ?? firstPickerInput(elements, kind) ?? elements.get('grid') ?? null,
+        focusTarget: () => elements.get('trigger') ?? (kind === 'calendar' ? null : firstPickerInput(elements, kind)) ?? elements.get('grid') ?? null,
         submissions: () => pickerFormSubmissions(elements, kind),
       });
-      const periodAvailable = (value: DatePickerMonthValue | PickerYearValue): boolean => {
+      const periodAvailable = (value: CalendarMonthValue | PickerYearValue): boolean => {
         const policies = props.policies as PeriodPolicies | undefined;
         if ('month' in value) return monthAvailable(value, policies);
         return Array.from({ length: 12 }, (_entry, index) => index + 1)
@@ -166,24 +167,30 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       const connect = (): void => {
         connection.value?.disconnect();
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
-        if (content === undefined || grid === undefined || trigger === undefined) return;
+        if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
         const base: Record<string, unknown> = {
-          root: content, grid, trigger, disabled: props.disabled, readOnly: props.readonly, required: props.required,
+          root: content, grid, disabled: props.disabled, readOnly: props.readonly, required: props.required,
           ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
           ...(controlled.value ? { value: props.modelValue } : { defaultValue: localValue.value }),
-          ...(controlled.open ? { open: props.open } : { defaultOpen: localOpen.value }),
           ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
           onValueChange: (value: PickerValue) => { localValue.value = value; emit('update:modelValue', value); },
           onHighlightedValueChange: (value: DateValue) => { localHighlight.value = value; emit('update:highlightedValue', value); },
-          onOpenChange: (value: boolean) => { localOpen.value = value; emit('update:open', value); }, onUpdate: refresh,
+          onUpdate: refresh,
         };
+        if (kind !== 'calendar') {
+          base['trigger'] = trigger;
+          if (controlled.open) base['open'] = props.open;
+          else base['defaultOpen'] = localOpen.value;
+          base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
+        }
         if (granularity === 'day') {
           for (const part of inputParts(kind)) {
             const element = elements.get(part);
             if (element !== undefined) base[toDOMInputKey(part)] = element;
           }
         }
-        const created = kind === 'date' ? createDatePicker(base as never)
+        const created = kind === 'calendar' ? createCalendar(base as never)
+          : kind === 'date' ? createDatePicker(base as never)
           : kind === 'date-range' ? createDateRangePicker(base as never)
             : kind === 'date-time' ? createDateTimePicker(base as never) : createDateTimeRangePicker(base as never);
         connection.value = created as unknown as PickerConnection;
@@ -197,14 +204,14 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         }
         refresh();
       };
-      const selectMonth = (value: DatePickerMonthValue): void => {
+      const selectMonth = (value: CalendarMonthValue): void => {
         connection.value?.handleEvent(granularity === 'month'
-          ? { type: kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { ...value, day: 1 } }
+          ? { type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { ...value, day: 1 } }
           : { type: 'select-month', value });
         refresh();
       };
       const selectYear = (value: PickerYearValue): void => {
-        connection.value?.handleEvent({ type: kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { year: value.year, month: 1, day: 1 } });
+        connection.value?.handleEvent({ type: kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date', value: { year: value.year, month: 1, day: 1 } });
         refresh();
       };
       provide<Context>(key, {
@@ -241,7 +248,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
         },
         setViewMode: (value) => { connection.value?.handleEvent({ type: 'set-view-mode', value }); refresh(); },
         selectDate: (value) => {
-          const type = kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
+          const type = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
           connection.value?.handleEvent({ type, value });
           refresh();
         },
@@ -253,7 +260,7 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       watch([() => props.modelValue, () => props.open, () => props.highlightedValue], () => {
         if (connection.value === undefined) return;
         const result = connection.value.syncControlledValues({
-          ...(controlled.value ? { value: props.modelValue } : {}), ...(controlled.open ? { open: props.open } : {}),
+          ...(controlled.value ? { value: props.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: props.open } : {}),
           ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : {}),
         });
         if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
@@ -313,7 +320,7 @@ export const PickerCell = defineComponent({
 export function createPickerMonthCell(part = 'month-cell', name = 'SectilePickerMonthCell') {
   return defineComponent({
     name, inheritAttrs: false,
-    props: { value: { type: Object as PropType<DatePickerMonthValue>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
+    props: { value: { type: Object as PropType<CalendarMonthValue>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
     slots: Object as SlotsType<{ default: (props: PickerMonthCellSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
       const root = useRoot(name);
@@ -373,14 +380,14 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
 export const PickerMonthCell = createPickerMonthCell();
 export const PickerYearCell = createPickerYearCell();
 
-export function createPickerInput(part: PickerInputPart, name: string) {
+export function createPickerInput(part: PickerInputPart, name: string, type: 'text' | 'hidden' = 'text') {
   return defineComponent({
     name, inheritAttrs: false,
     props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
     setup(props, { attrs }) { const root = useRoot(name); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
-      type: pickerInputType(part), name: props.name, form: props.form, disabled: root.state.value.disabled,
+      type, name: props.name, form: props.form, disabled: root.state.value.disabled,
       readOnly: root.granularity !== 'day' || root.state.value.readonly || part === 'start-input' || part === 'end-input' || part === 'start-date-time-input' || part === 'end-date-time-input',
       required: false, value: inputValue(root.kind, root.granularity, part, root.state.value.value),
       'data-scope': root.scope, 'data-part': part,
@@ -399,7 +406,7 @@ export function createPickerMove(unit: PickerNavigationUnit, direction: -1 | 1, 
   });
 }
 
-export function createPickerViewTrigger(view: DatePickerViewMode, name: string) {
+export function createPickerViewTrigger(view: CalendarViewMode, name: string) {
   return defineComponent({
     name, inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
@@ -412,9 +419,6 @@ export function createPickerViewTrigger(view: DatePickerViewMode, name: string) 
 }
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside a date picker root.`); return root; }
-function pickerInputType(_part: PickerInputPart): 'text' {
-  return 'text';
-}
 function firstPickerInput(
   elements: ReadonlyMap<string, HTMLElement>,
   kind: PickerKind,
@@ -441,7 +445,7 @@ function pickerFormSubmissions(
       capabilities: hiddenInputSubmissionCapabilities,
     };
   };
-  if (kind === 'date') return compactSubmissions(submission('input'));
+  if (kind === 'calendar' || kind === 'date') return compactSubmissions(submission('input'));
   if (kind === 'date-range') {
     return compactSubmissions(
       submission('start-input', 'start'),
@@ -469,10 +473,10 @@ function compactSubmissions(
   return submissions.filter((submission): submission is FormSubmissionRegistration => submission !== null);
 }
 function monthFor(value: DateValue): readonly (readonly DateValue[])[] {
-  return createDatePickerMonth({ year: value.year, month: value.month });
+  return createCalendarMonth({ year: value.year, month: value.month });
 }
-function yearFor(year: number): readonly (readonly DatePickerMonthValue[])[] {
-  return createDatePickerYear(year);
+function yearFor(year: number): readonly (readonly CalendarMonthValue[])[] {
+  return createCalendarYear(year);
 }
 function yearsFrom(start: number, pageSize: number): readonly (readonly PickerYearValue[])[] {
   const columns = 4;
@@ -490,10 +494,10 @@ interface PeriodPolicies {
   readonly max?: DateValue;
   readonly unavailable?: (value: DateValue) => boolean;
 }
-function monthAvailable(value: DatePickerMonthValue, policies: PeriodPolicies | undefined): boolean {
+function monthAvailable(value: CalendarMonthValue, policies: PeriodPolicies | undefined): boolean {
   const days = daysInMonth(value.year, value.month);
   for (let day = 1; day <= days; day += 1) {
-    if (isDatePickerValueAvailable({ year: value.year, month: value.month, day }, policies)) return true;
+    if (isCalendarValueAvailable({ year: value.year, month: value.month, day }, policies)) return true;
   }
   return false;
 }
@@ -502,11 +506,12 @@ function daysInMonth(year: number, month: number): number {
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 function dateOf(value: PickerValue): DateValue | null { if (value === null) return null; if ('year' in value) return value; if ('date' in value) return value.date; const start = value.start; return 'date' in start ? start.date : start; }
-function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; highlighted: DateValue; open: boolean; view: { readonly year: number; readonly month: number }; viewMode: DatePickerViewMode } {
+function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; highlighted: DateValue; open: boolean; view: { readonly year: number; readonly month: number }; viewMode: CalendarViewMode } {
   const state = raw as Record<string, unknown>;
-  if (kind === 'date') return { value: state['value'] as PickerValue, highlighted: state['highlighted'] as DateValue, open: state['open'] as boolean, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as DatePickerViewMode };
+  if (kind === 'calendar') return { value: state['value'] as PickerValue, highlighted: state['highlighted'] as DateValue, open: true, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
+  if (kind === 'date') return { value: state['value'] as PickerValue, highlighted: state['highlighted'] as DateValue, open: state['open'] as boolean, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
   const calendar = state['calendar'] as Record<string, unknown>;
-  return { value: state['value'] as PickerValue, highlighted: calendar['highlighted'] as DateValue, open: calendar['open'] as boolean, view: calendar['view'] as { readonly year: number; readonly month: number }, viewMode: calendar['viewMode'] as DatePickerViewMode };
+  return { value: state['value'] as PickerValue, highlighted: calendar['highlighted'] as DateValue, open: calendar['open'] as boolean, view: calendar['view'] as { readonly year: number; readonly month: number }, viewMode: calendar['viewMode'] as CalendarViewMode };
 }
 function compare(left: DateValue, right: DateValue): number { return left.year - right.year || left.month - right.month || left.day - right.day; }
 function cellState(kind: PickerKind, state: PickerRootSlotProps, value: DateValue): PickerCellSlotProps {
@@ -525,7 +530,7 @@ function inputValue(kind: PickerKind, granularity: Context['granularity'], part:
     : granularity === 'month'
       ? `${String(date.year).padStart(4, '0')}-${String(date.month).padStart(2, '0')}`
       : formatDateValue(date);
-  if (kind === 'date') return formatPeriod(value as DateValue);
+  if (kind === 'calendar' || kind === 'date') return formatPeriod(value as DateValue);
   if (kind === 'date-time') {
     const dateTime = value as DateTimeValue;
     return part === 'time-input' ? formatTimeValue(dateTime.time) : part === 'date-input' ? formatDateValue(dateTime.date) : formatDateTimeValue(dateTime);
@@ -534,7 +539,7 @@ function inputValue(kind: PickerKind, granularity: Context['granularity'], part:
   if ('date' in endpoint) return part.endsWith('time-input') && !part.includes('date-time') ? formatTimeValue(endpoint.time) : part.endsWith('date-input') ? formatDateValue(endpoint.date) : formatDateTimeValue(endpoint);
   return formatPeriod(endpoint);
 }
-function monthContainsValue(value: PickerValue, month: DatePickerMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
+function monthContainsValue(value: PickerValue, month: CalendarMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
 function yearContainsValue(value: PickerValue, year: PickerYearValue): boolean { const date = dateOf(value); return date !== null && date.year === year.year; }
 function periodInRange(value: PickerValue, start: DateValue, end: DateValue): boolean {
   if (value === null || 'year' in value || 'date' in value) return false;
@@ -542,7 +547,7 @@ function periodInRange(value: PickerValue, start: DateValue, end: DateValue): bo
   const rangeEnd = 'date' in value.end ? value.end.date : value.end;
   return compare(rangeStart, end) <= 0 && compare(start, rangeEnd) <= 0;
 }
-function inputParts(kind: PickerKind): readonly PickerInputPart[] { return kind === 'date' ? ['input'] : kind === 'date-range' ? ['start-input', 'end-input'] : kind === 'date-time' ? ['date-time-input', 'date-input', 'time-input'] : ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input']; }
+function inputParts(kind: PickerKind): readonly PickerInputPart[] { return kind === 'calendar' || kind === 'date' ? ['input'] : kind === 'date-range' ? ['start-input', 'end-input'] : kind === 'date-time' ? ['date-time-input', 'date-input', 'time-input'] : ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input']; }
 function toDOMInputKey(part: PickerInputPart): string {
   if (part === 'date-time-input') return 'dateTimeInput';
   if (part === 'start-date-time-input') return 'startDateTimeInput';

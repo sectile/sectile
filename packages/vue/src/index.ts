@@ -465,9 +465,21 @@ export {
 } from './toolbar.js';
 export {
   CalendarCell,
+  CalendarContent,
+  CalendarGrid,
+  CalendarInput,
+  CalendarMonthViewTrigger,
+  CalendarNextMonth,
+  CalendarNextWeek,
+  CalendarNextYear,
+  CalendarPreviousMonth,
+  CalendarPreviousWeek,
+  CalendarPreviousYear,
   CalendarRoot,
-  type CalendarCellProps,
+  CalendarWeekViewTrigger,
+  CalendarYearViewTrigger,
   type CalendarCellSlotProps,
+  type CalendarPartProps,
   type CalendarRootProps,
   type CalendarRootSlotProps,
 } from './calendar.js';
@@ -745,7 +757,6 @@ export type {
 } from './accordion.js';
 export type {
   CalendarHighlightedValueChangeHandler,
-  CalendarPageHandler,
   CalendarValueChangeHandler,
 } from './calendar.js';
 export type {

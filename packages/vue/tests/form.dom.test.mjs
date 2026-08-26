@@ -37,7 +37,7 @@ const {
 } = await import('../dist/form.js');
 const { CheckboxRoot } = await import('../dist/checkbox.js');
 const { CheckboxGroupRoot } = await import('../dist/checkbox-group.js');
-const { CalendarRoot } = await import('../dist/calendar.js');
+const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../dist/calendar.js');
 const { ColorPickerRoot } = await import('../dist/color-picker.js');
 const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../dist/date-range-field.js');
 const {
@@ -968,13 +968,16 @@ test('calendar submits a scalar value through a FormField path', async () => {
     name: ['release', 'date'],
     label: 'Release date',
     control: () => h(CalendarRoot, {
-      rows: [['2026-08-22']],
-      defaultValue: '2026-08-22',
-      defaultHighlightedValue: '2026-08-22',
+      defaultValue: { year: 2026, month: 8, day: 22 },
+      defaultHighlightedValue: { year: 2026, month: 8, day: 22 },
+    }, {
+      default: () => h(CalendarContent, null, {
+        default: () => [h(CalendarInput), h(CalendarGrid)],
+      }),
     }),
   });
 
-  const root = host.querySelector('[data-scope="calendar"][data-part="root"]');
+  const root = host.querySelector('[data-scope="calendar"][data-part="content"]');
   const input = host.querySelector('input[type="hidden"]');
   assert.equal(root?.getAttribute('aria-labelledby'), 'release-date-label');
   assert.deepEqual([input?.name, input?.value, input?.form?.id], [

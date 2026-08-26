@@ -20,7 +20,6 @@
   ],
   "components": [
     { "id": "accordion", "source": "src/accordion.ts", "models": ["modelValue"] },
-    { "id": "calendar", "source": "src/calendar.ts", "models": ["modelValue", "highlightedValue"] },
     { "id": "carousel", "source": "src/carousel.ts", "models": ["modelValue"] },
     { "id": "combobox", "source": "src/combobox.ts", "models": ["modelValue"] },
     { "id": "grid", "source": "src/grid.ts", "models": ["modelValue", "highlightedValue"], "dependentResets": ["editMode"] },

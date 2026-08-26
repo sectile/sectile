@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { CalendarCell, CalendarRoot } = await import('../dist/calendar.js');
+const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../dist/calendar.js');
 const {
   DatePickerCell,
   DatePickerContent,
@@ -155,60 +155,68 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   host.remove();
 });
 
-test('Vue calendar reconnects cells after the projected rows change', async () => {
+test('Vue calendar reprojects cells after month navigation', async () => {
   const host = document.createElement('div');
   document.body.append(host);
-  const rows = ref([['2026-08-24', '2026-08-25']]);
   const app = createApp({
-    render: () => h(CalendarRoot, { rows: rows.value }, {
-      default: () => rows.value.flat().map((value) => h(CalendarCell, { key: value, value }, { default: () => value })),
+    render: () => h(CalendarRoot, { defaultHighlightedValue: { year: 2026, month: 8, day: 31 } }, {
+      default: ({ dates }) => h(CalendarContent, null, {
+        default: () => [
+          h(CalendarNextMonth),
+          h(CalendarGrid, null, {
+            default: () => dates.flat().map((value) => h(CalendarCell, { key: `${value.year}-${value.month}-${value.day}`, value }, { default: () => String(value.day) })),
+          }),
+        ],
+      }),
     }),
   });
 
   app.mount(host);
   await settle();
-  rows.value = [['2026-08-31', '2026-09-01']];
+  host.querySelector('[data-part="next-month"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   await settle();
 
-  assert.deepEqual(
-    [...host.querySelectorAll('[data-sectile-calendar-id]')].map((element) => element.textContent),
-    ['2026-08-31', '2026-09-01'],
-  );
-  assert.equal(host.querySelector('[data-sectile-calendar-id="2026-08-24"]'), null);
+  assert.equal(host.querySelector('[data-calendar-id="2026-09-30"]')?.getAttribute('tabindex'), '0');
+  assert.equal(host.querySelector('[data-calendar-id="2026-08-24"]'), null);
 
   app.unmount();
   host.remove();
 });
 
-test('Vue calendar proposes valid controlled state when rows replace its domain', async () => {
+test('Vue calendar proposes controlled date state across month boundaries', async () => {
   const host = document.createElement('div');
   document.body.append(host);
-  const rows = ref([['2026-08-24', '2026-08-25']]);
-  const value = ref('2026-08-25');
-  const highlighted = ref('2026-08-25');
+  const value = ref({ year: 2026, month: 8, day: 31 });
+  const highlighted = ref({ year: 2026, month: 8, day: 31 });
   const valueUpdates = [];
   const highlightUpdates = [];
   const app = createApp({
     render: () => h(CalendarRoot, {
-      rows: rows.value,
       modelValue: value.value,
       highlightedValue: highlighted.value,
       'onUpdate:modelValue': (next) => { valueUpdates.push(next); value.value = next; },
       'onUpdate:highlightedValue': (next) => { highlightUpdates.push(next); highlighted.value = next; },
     }, {
-      default: () => rows.value.flat().map((item) => h(CalendarCell, { key: item, value: item }, () => item)),
+      default: ({ dates }) => h(CalendarContent, null, {
+        default: () => h(CalendarGrid, null, {
+          default: () => dates.flat().map((item) => h(CalendarCell, { key: `${item.year}-${item.month}-${item.day}`, value: item }, () => String(item.day))),
+        }),
+      }),
     }),
   });
 
   app.mount(host);
   await settle();
-  rows.value = [['2026-09-01']];
+  const grid = host.querySelector('[data-scope="calendar"][data-part="grid"]');
+  grid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await settle();
+  grid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   await settle();
 
-  assert.deepEqual(valueUpdates, [null]);
-  assert.deepEqual(highlightUpdates, ['2026-09-01']);
-  assert.equal(value.value, null);
-  assert.equal(highlighted.value, '2026-09-01');
+  assert.deepEqual(valueUpdates, [{ year: 2026, month: 9, day: 1 }]);
+  assert.deepEqual(highlightUpdates, [{ year: 2026, month: 9, day: 1 }]);
+  assert.deepEqual(value.value, { year: 2026, month: 9, day: 1 });
+  assert.deepEqual(highlighted.value, { year: 2026, month: 9, day: 1 });
 
   app.unmount();
   host.remove();

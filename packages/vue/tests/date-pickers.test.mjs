@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { CalendarCell, CalendarRoot } from '../dist/calendar.js';
+import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../dist/calendar.js';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../dist/date-picker.js';
 import { DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput } from '../dist/date-range-picker.js';
 import { DateTimePickerCell, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerDateTimeInput, DateTimePickerGrid, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger } from '../dist/date-time-picker.js';
@@ -17,9 +17,12 @@ async function render(component) { return renderToString(createSSRApp({ render: 
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
 
 test('Vue calendar exposes a persistent native grid', async () => {
-  const rows = [['2026-08-21', '2026-08-22'], ['2026-08-28', '2026-08-29']];
-  const html = await render(() => h(CalendarRoot, { rows, defaultValue: '2026-08-22' }, {
-    default: () => h('div', rows.flat().map((value) => h(CalendarCell, { value }, { default: () => value }))),
+  const html = await render(() => h(CalendarRoot, { defaultValue: date }, {
+    default: ({ dates }) => h(CalendarContent, null, {
+      default: () => h(CalendarGrid, null, {
+        default: () => dates.flat().map((value) => h(CalendarCell, { value }, { default: () => String(value.day) })),
+      }),
+    }),
   }));
   assert.match(html, /role="grid"/);
   assert.match(html, /data-part="cell"/);

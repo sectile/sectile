@@ -1,132 +1,100 @@
+import type { CalendarOptions } from '@sectile/dom/calendar';
+import type { DateValue } from '@sectile/dom/date-field';
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
-  nextTick, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  defineComponent,
+  h,
+  mergeProps,
+  type PropType,
+  type SlotsType,
+  type VNodeChild,
 } from 'vue';
-import { createCalendar, type CalendarConnection, type CalendarPolicies } from '@sectile/dom/calendar';
 import {
-  hiddenInputSubmissionCapabilities,
-  useCompositeFormControl,
-} from './internal/form-control.js';
-import { Primitive, type PrimitiveAs } from './primitive.js';
-import { reconcileCollectionState } from './internal/collection.js';
-import { useControlledStateInvariant } from './internal/controlled-state.js';
+  PickerCell,
+  PickerContent,
+  PickerGrid,
+  createPickerInput,
+  createPickerMove,
+  createPickerRoot,
+  createPickerViewTrigger,
+  type PickerCellSlotProps,
+  type PickerPartProps,
+  type PickerRootSlotProps,
+} from './internal/date-picker.js';
+import type { PrimitiveAs } from './primitive.js';
 
-export interface CalendarRootProps { readonly rows: readonly (readonly string[])[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly highlightedValue?: string | null; readonly defaultHighlightedValue?: string | null; readonly disabledValues?: readonly string[]; readonly disabled?: boolean; readonly required?: boolean; readonly name?: string; readonly form?: string; readonly label?: string; readonly policies?: CalendarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface CalendarRootSlotProps { readonly value: string | null; readonly highlightedValue: string | null; readonly rows: readonly (readonly string[])[]; readonly disabled: boolean }
-export interface CalendarCellProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface CalendarCellSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly rowIndex: number; readonly columnIndex: number }
-interface Context { readonly state: ComputedRef<CalendarRootSlotProps>; readonly disabledValues: ComputedRef<ReadonlySet<string>>; register(element: HTMLElement, value: string, disabled: boolean): void }
-const key = Symbol('SectileCalendarRoot');
+export interface CalendarRootProps {
+  readonly modelValue?: DateValue | null;
+  readonly defaultValue?: DateValue | null;
+  readonly highlightedValue?: DateValue;
+  readonly defaultHighlightedValue?: DateValue;
+  readonly defaultView?: PickerRootSlotProps['viewMode'];
+  readonly disabled?: boolean;
+  readonly?: boolean;
+  readonly required?: boolean;
+  readonly label?: string;
+  readonly policies?: CalendarOptions['policies'];
+  readonly as?: PrimitiveAs;
+  readonly asChild?: boolean;
+}
+
+export interface CalendarRootSlotProps extends Omit<PickerRootSlotProps, 'value' | 'open'> {
+  readonly value: DateValue | null;
+}
+
+const CalendarProviderRoot = createPickerRoot('calendar', 'SectileCalendarProviderRoot', {
+  scope: 'calendar',
+  defaultOpen: true,
+  defaultView: 'month',
+  inline: true,
+});
 
 export const CalendarRoot = defineComponent({
-  name: 'SectileCalendarRoot', inheritAttrs: false,
+  name: 'SectileCalendarRoot',
+  inheritAttrs: false,
   props: {
-    rows: { type: Array as PropType<readonly (readonly string[])[]>, required: true },
-    modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
-    highlightedValue: { type: String as PropType<string | null>, default: undefined }, defaultHighlightedValue: { type: String as PropType<string | null>, default: null },
-    disabledValues: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
-    required: { type: Boolean, default: false }, name: { type: String, default: undefined }, form: { type: String, default: undefined },
-    label: { type: String, default: undefined }, policies: { type: Object as PropType<CalendarPolicies<string>>, default: undefined },
-    as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
+    modelValue: { type: Object as PropType<DateValue | null>, default: undefined },
+    defaultValue: { type: Object as PropType<DateValue | null>, default: null },
+    highlightedValue: { type: Object as PropType<DateValue>, default: undefined },
+    defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
+    defaultView: { type: String as PropType<PickerRootSlotProps['viewMode']>, default: 'month' },
+    disabled: { type: Boolean, default: false },
+    readonly: { type: Boolean, default: false },
+    required: { type: Boolean, default: false },
+    label: { type: String, default: undefined },
+    policies: { type: Object as PropType<CalendarOptions['policies']>, default: undefined },
+    as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' },
+    asChild: { type: Boolean, default: false },
   },
-  emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:highlightedValue': (_value: string | null): boolean => true, page: (_details: { direction: -1 | 1; from: string | null }): boolean => true },
+  emits: {
+    'update:modelValue': (_value: DateValue | null): boolean => true,
+    'update:highlightedValue': (_value: DateValue): boolean => true,
+  },
   slots: Object as SlotsType<{ default: (props: CalendarRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const root = shallowRef<HTMLElement>(); const connection = shallowRef<CalendarConnection<string>>();
-    const submission = shallowRef<HTMLInputElement>();
-    const value = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
-    const highlighted = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
-    const controlled = {
-      value: useControlledStateInvariant('CalendarRoot', 'modelValue', () => props.modelValue),
-      highlighted: useControlledStateInvariant('CalendarRoot', 'highlightedValue', () => props.highlightedValue),
-    };
-    const state = computed<CalendarRootSlotProps>(() => ({
-      value: props.modelValue !== undefined ? props.modelValue : value.value,
-      highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : highlighted.value,
-      rows: props.rows, disabled: props.disabled,
-    }));
-    const participation = useCompositeFormControl({
-      root: () => root.value ?? null,
-      focusTarget: () => root.value?.querySelector<HTMLElement>('[data-highlighted]') ?? root.value ?? null,
-      submissions: [{
-        element: () => submission.value ?? null,
-        capabilities: hiddenInputSubmissionCapabilities,
-      }],
-    });
-    const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; value.value = snapshot.selection.selected[0] ?? null; highlighted.value = snapshot.cursor.current; refreshCells(); };
-    const refreshCells = (): void => { if (root.value === undefined || connection.value === undefined) return; root.value.querySelectorAll<HTMLElement>('[data-sectile-calendar-id]').forEach((element) => { const id = element.dataset['sectileCalendarId']; if (id === undefined) return; const rowIndex = Number(element.dataset['rowIndex']); const columnIndex = Number(element.dataset['columnIndex']); connection.value?.setCellAttributes(element, { id, rowIndex, columnIndex, disabled: props.disabledValues.includes(id) }); }); };
-    const connect = (): void => {
-      connection.value?.disconnect(); if (root.value === undefined) return;
-      const items = props.rows.flat();
-      const requestedValue = controlled.value ? props.modelValue as string | null : value.value;
-      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : highlighted.value;
-      const reconciled = reconcileCollectionState(
-        items,
-        requestedValue === null ? [] : [requestedValue],
-        requestedHighlight,
-        props.disabledValues,
-        'single',
-        { preserveNullCurrent: true },
-      );
-      const selected = reconciled.selected[0] ?? null;
-      value.value = selected;
-      highlighted.value = reconciled.current;
-      if (controlled.value && requestedValue !== selected) emit('update:modelValue', selected);
-      if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
-      connection.value = createCalendar({
-        root: root.value, rows: props.rows, disabled: props.disabled,
-        policies: { ...props.policies, eligible: (id: string) => !props.disabledValues.includes(id) && (props.policies?.eligible?.(id) ?? true) },
-        ...(controlled.value ? { value: selected } : { defaultValue: selected }),
-        ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
-        onValueChange: ({ value: next }) => { value.value = next; emit('update:modelValue', next); },
-        onHighlightedValueChange: ({ value: next }) => { highlighted.value = next; emit('update:highlightedValue', next); },
-        onPageRequest: (details) => emit('page', details), onUpdate: refresh,
-      }); connection.value.setCalendarAttributes(props.label); refreshCells(); refresh();
-    };
-    provide<Context>(key, { state, disabledValues: computed(() => new Set(props.disabledValues)), register: (element, id, disabled) => { const rowIndex = props.rows.findIndex((row) => row.includes(id)); const columnIndex = rowIndex < 0 ? -1 : props.rows[rowIndex]?.indexOf(id) ?? -1; connection.value?.setCellAttributes(element, { id, rowIndex: rowIndex + 1, columnIndex: columnIndex + 1, disabled }); } });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch(
-      [() => props.rows, () => props.disabledValues, () => props.disabled, () => props.label, () => props.policies],
-      () => { void nextTick(connect); },
-      { flush: 'post' },
-    );
-    watch([() => props.modelValue, () => props.highlightedValue], () => { if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue as string | null } : {}), ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
-    return (): VNodeChild => {
-      const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
-      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
-      role: 'grid', 'aria-rowcount': props.rows.length, 'aria-colcount': Math.max(0, ...props.rows.map((row) => row.length)), 'aria-label': props.label,
-      'data-scope': 'calendar', 'data-part': 'root', 'data-disabled': props.disabled ? '' : undefined,
-      }), { default: () => slots['default']?.(state.value) });
-      if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual;
-      return [visual, h('input', {
-        ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; },
-        type: 'hidden',
-        name: props.name,
-        form: props.form,
-        required: props.required,
-        disabled: props.disabled,
-        value: state.value.value ?? '',
-      })];
-    };
+    return (): VNodeChild => h(CalendarProviderRoot, mergeProps(attrs, props, {
+      'onUpdate:modelValue': (value: PickerRootSlotProps['value']) => emit('update:modelValue', value as DateValue | null),
+      'onUpdate:highlightedValue': (value: DateValue) => emit('update:highlightedValue', value),
+    }), slots);
   },
 });
+export type CalendarValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:modelValue']>;
+export type CalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:highlightedValue']>;
+export const CalendarContent = PickerContent;
+export const CalendarGrid = PickerGrid;
+export const CalendarCell = PickerCell;
+export const CalendarInput = createPickerInput('input', 'SectileCalendarInput', 'hidden');
+export const CalendarPreviousWeek = createPickerMove('week', -1, 'SectileCalendarPreviousWeek');
+export const CalendarNextWeek = createPickerMove('week', 1, 'SectileCalendarNextWeek');
+export const CalendarPreviousMonth = createPickerMove('month', -1, 'SectileCalendarPreviousMonth');
+export const CalendarNextMonth = createPickerMove('month', 1, 'SectileCalendarNextMonth');
+export const CalendarPreviousYear = createPickerMove('year', -1, 'SectileCalendarPreviousYear');
+export const CalendarNextYear = createPickerMove('year', 1, 'SectileCalendarNextYear');
+export const CalendarWeekViewTrigger = createPickerViewTrigger('week', 'SectileCalendarWeekViewTrigger');
+export const CalendarMonthViewTrigger = createPickerViewTrigger('month', 'SectileCalendarMonthViewTrigger');
+export const CalendarYearViewTrigger = createPickerViewTrigger('year', 'SectileCalendarYearViewTrigger');
 
-export type CalendarValueChangeHandler = (value: string | null) => void;
-export type CalendarHighlightedValueChangeHandler = (value: string | null) => void;
-export type CalendarPageHandler = (details: { direction: -1 | 1; from: string | null }) => void;
-
-export const CalendarCell = defineComponent({
-  name: 'SectileCalendarCell', inheritAttrs: false,
-  props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
-  slots: Object as SlotsType<{ default: (props: CalendarCellSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot(); const position = computed(() => { const rowIndex = root.state.value.rows.findIndex((row) => row.includes(props.value)); return { rowIndex, columnIndex: rowIndex < 0 ? -1 : root.state.value.rows[rowIndex]?.indexOf(props.value) ?? -1 }; }); const state = computed<CalendarCellSlotProps>(() => ({ value: props.value, selected: root.state.value.value === props.value, highlighted: root.state.value.highlightedValue === props.value, disabled: root.state.value.disabled || props.disabled || root.disabledValues.value.has(props.value), rowIndex: position.value.rowIndex, columnIndex: position.value.columnIndex })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
-    elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.register(node, props.value, state.value.disabled); },
-    role: 'gridcell', 'aria-rowindex': position.value.rowIndex + 1, 'aria-colindex': position.value.columnIndex + 1,
-    'aria-selected': String(state.value.selected), disabled: state.value.disabled && props.as === 'button' ? true : undefined,
-    'data-sectile-calendar-id': props.value, 'data-row-index': position.value.rowIndex + 1, 'data-column-index': position.value.columnIndex + 1,
-    'data-scope': 'calendar', 'data-part': 'cell', 'data-selected': state.value.selected ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
-  }), { default: () => slots['default']?.(state.value) }); },
-});
-
-function useRoot(): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError('CalendarCell must be used inside CalendarRoot.'); return root; }
+export type {
+  DateValue,
+  PickerCellSlotProps as CalendarCellSlotProps,
+  PickerPartProps as CalendarPartProps,
+};
