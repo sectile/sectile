@@ -11,6 +11,7 @@ import {
   createListboxController as createTerminalListboxController,
   toListboxEvent as toTerminalListboxEvent,
 } from '@sectile/terminal/listbox';
+import { checkProperty } from '../support/property.mjs';
 
 const INPUTS = [
   [{ key: 'ArrowDown' }, { key: 'down' }, 'next'],
@@ -45,28 +46,43 @@ test('DOM and terminal packages produce equivalent semantic traces', () => {
 });
 
 test('DOM and terminal packages remain equivalent across 40,000 host transitions', () => {
-  const rng = createRNG(0x5ec71e ^ 0xada7);
   let transitions = 0;
-  for (let iteration = 0; iteration < 2_000; iteration += 1) {
-    const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `a${iteration}-${index}`);
-    const domain = createSequence(ids);
-    const eligible = new Set(ids.filter(() => rng.bool()));
-    const policies = {
-      eligible: (id) => eligible.has(id),
-      selectionFollowsFocus: rng.bool(),
-      boundary: rng.pick(['stop', 'wrap']),
-      maxScan: rng.int(0, ids.length + 2),
-    };
-    const DOMController = unwrap(createDOMListboxController({ domain, policies }));
-    const terminalController = unwrap(createTerminalListboxController({ domain, policies }));
-    for (let step = 0; step < 10; step += 1) {
-      const [DOMInput, terminalInput] = rng.pick(INPUTS);
-      const DOMResult = DOMController.handleKeyboardInput(DOMInput);
-      const terminalResult = terminalController.handleKeyboardInput(terminalInput);
-      assert.deepEqual(observe(DOMResult), observe(terminalResult));
-      transitions += 2;
-    }
-  }
+  checkProperty({
+    name: 'DOM and terminal listbox parity',
+    seed: 0x5ec71e ^ 0xada7,
+    runs: 2_000,
+    generate: (rng, iteration) => {
+      const ids = Array.from({ length: rng.int(0, 40) }, (_, index) => `a${iteration}-${index}`);
+      return Object.freeze({
+        ids,
+        eligible: ids.filter(() => rng.bool()),
+        selectionFollowsFocus: rng.bool(),
+        boundary: rng.pick(['stop', 'wrap']),
+        maxScan: rng.int(0, ids.length + 2),
+        inputs: Array.from({ length: 10 }, () => INPUTS.indexOf(rng.pick(INPUTS))),
+      });
+    },
+    verify: (scenario) => {
+      const domain = createSequence(scenario.ids);
+      const eligible = new Set(scenario.eligible);
+      const policies = {
+        eligible: (id) => eligible.has(id),
+        selectionFollowsFocus: scenario.selectionFollowsFocus,
+        boundary: scenario.boundary,
+        maxScan: scenario.maxScan,
+      };
+      const DOMController = unwrap(createDOMListboxController({ domain, policies }));
+      const terminalController = unwrap(createTerminalListboxController({ domain, policies }));
+      for (const inputIndex of scenario.inputs) {
+        const [DOMInput, terminalInput] = INPUTS[inputIndex];
+        const DOMResult = DOMController.handleKeyboardInput(DOMInput);
+        const terminalResult = terminalController.handleKeyboardInput(terminalInput);
+        assert.deepEqual(observe(DOMResult), observe(terminalResult));
+        transitions += 2;
+      }
+    },
+    shrink: shrinkListboxScenario,
+  });
   assert.equal(transitions, 40_000);
 });
 
@@ -120,16 +136,26 @@ function stateObservation(state) {
   };
 }
 
-
-function createRNG(seed) {
-  let state = seed >>> 0;
-  const next = () => {
-    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0;
-    return state / 0x1_0000_0000;
-  };
-  return {
-    bool: () => next() < 0.5,
-    int: (minimum, maximumExclusive) => minimum + Math.floor(next() * (maximumExclusive - minimum)),
-    pick: (values) => values[Math.floor(next() * values.length)],
-  };
+function shrinkListboxScenario(scenario) {
+  const candidates = [];
+  if (scenario.inputs.length > 1) {
+    candidates.push({ ...scenario, inputs: scenario.inputs.slice(0, Math.ceil(scenario.inputs.length / 2)) });
+    for (let index = 0; index < scenario.inputs.length; index += 1) {
+      candidates.push({ ...scenario, inputs: scenario.inputs.toSpliced(index, 1) });
+    }
+  }
+  if (scenario.ids.length > 0) {
+    const ids = scenario.ids.slice(0, Math.floor(scenario.ids.length / 2));
+    const domain = new Set(ids);
+    candidates.push({
+      ...scenario,
+      ids,
+      eligible: scenario.eligible.filter((id) => domain.has(id)),
+      maxScan: Math.min(scenario.maxScan, ids.length + 1),
+    });
+  }
+  if (scenario.boundary !== 'stop') candidates.push({ ...scenario, boundary: 'stop' });
+  if (scenario.selectionFollowsFocus) candidates.push({ ...scenario, selectionFollowsFocus: false });
+  if (scenario.maxScan > 0) candidates.push({ ...scenario, maxScan: Math.floor(scenario.maxScan / 2) });
+  return candidates;
 }
