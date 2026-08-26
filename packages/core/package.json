@@ -398,13 +398,14 @@
     "check:laws": "node scripts/check-law-coverage.mjs",
     "check:naming": "node scripts/check-acronym-casing.mjs",
     "check:layout": "node scripts/check-layout.mjs",
+    "check:import-boundaries": "node scripts/check-import-boundaries.mjs",
     "check:dist-boundary": "node scripts/check-dist-platform-boundary.mjs",
     "check:subpaths": "node scripts/check-subpath-imports.mjs",
     "check:package": "node scripts/check-package-footprint.mjs",
     "check:verification": "node scripts/check-verification.mjs",
     "update:api-stability": "node scripts/update-api-stability.mjs",
     "update:signatures": "node scripts/update-public-signatures.mjs",
-    "verify": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:contracts && pnpm run check:public-api && pnpm run check:api-stability && pnpm run check:signatures && pnpm run check:laws && pnpm run check:naming && pnpm run check:layout && pnpm run check:dist-boundary && pnpm run check:subpaths && pnpm run check:package && pnpm run check:verification"
+    "verify": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm run check:contracts && pnpm run check:public-api && pnpm run check:api-stability && pnpm run check:signatures && pnpm run check:laws && pnpm run check:naming && pnpm run check:layout && pnpm run check:import-boundaries && pnpm run check:dist-boundary && pnpm run check:subpaths && pnpm run check:package && pnpm run check:verification"
   },
   "devDependencies": {
     "typescript": "7.0.2"
