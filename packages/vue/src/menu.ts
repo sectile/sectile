@@ -8,6 +8,7 @@ import { createMenubar } from '@sectile/dom/menubar';
 import { createNavigationMenu } from '@sectile/dom/navigation-menu';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
@@ -89,11 +90,20 @@ function createRoot(kind: MenuKind, providerOnly = false) {
       };
       const connect = (): void => {
         connection.value?.disconnect(); if (root.value === undefined || (kind === 'menu-button' && trigger.value === undefined)) return;
+        const reconciled = reconcileCollectionState(
+          (props.items ?? []).map((item) => item.id),
+          [],
+          highlighted.value,
+          props.disabledItems,
+          'single',
+          { preserveNullCurrent: true },
+        );
+        highlighted.value = reconciled.current;
         const options = {
           root: root.value, items: props.items as readonly MenuItemDefinition<string>[], disabledItems: props.disabledItems, disabled: props.disabled,
           direction: direction.value, baseID,
           ...(props.policies === undefined ? {} : { policies: props.policies }),
-          defaultHighlightedValue: props.defaultHighlightedValue,
+          defaultHighlightedValue: reconciled.current,
           ...(props.label === undefined ? {} : { label: props.label }),
           ...(props.textValue === undefined ? {} : { typeahead: { textValue: props.textValue } }),
           onOpenChange: (value: boolean) => { open.value = value; emit('update:open', value); },

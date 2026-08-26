@@ -69,28 +69,40 @@ export const PaginationRoot = defineComponent({
     if (controlled && (props.modelValue === undefined || props.itemsPerPage === undefined)) {
       throw new TypeError('Controlled pagination requires both modelValue and itemsPerPage.');
     }
+    const effectiveItemsPerPage = computed(() => props.itemsPerPage ?? localItemsPerPage.value);
+    const effectivePage = computed(() => reconcilePage(
+      props.modelValue ?? localPage.value,
+      props.total,
+      effectiveItemsPerPage.value,
+    ));
     const view = computed(() => {
       const result = getPaginationView({
-        total: props.total, page: props.modelValue ?? localPage.value,
-        itemsPerPage: props.itemsPerPage ?? localItemsPerPage.value,
+        total: props.total, page: effectivePage.value,
+        itemsPerPage: effectiveItemsPerPage.value,
         siblingCount: props.siblingCount, showEdges: props.showEdges, showControls: props.showControls,
       });
       if (!result.ok) throw new TypeError(result.error.message);
       return result.value;
     });
     const state = computed<PaginationRootSlotProps>(() => Object.freeze({
-      page: props.modelValue ?? localPage.value,
-      itemsPerPage: props.itemsPerPage ?? localItemsPerPage.value,
+      page: effectivePage.value,
+      itemsPerPage: effectiveItemsPerPage.value,
       pageCount: view.value.pageCount, range: view.value.range, items: view.value.items,
     }));
     const connect = (): void => {
       connection.value?.disconnect();
       if (element.value === undefined) return;
+      const requestedPage = props.modelValue ?? localPage.value;
+      const itemsPerPage = effectiveItemsPerPage.value;
+      const page = reconcilePage(requestedPage, props.total, itemsPerPage);
+      localPage.value = page;
+      localItemsPerPage.value = itemsPerPage;
+      if (pageControlled && requestedPage !== page) emit('update:modelValue', page);
       connection.value = createPagination({
         root: element.value, total: props.total,
         ...(controlled
-          ? { page: props.modelValue as number, itemsPerPage: props.itemsPerPage as number }
-          : { defaultPage: localPage.value, defaultItemsPerPage: localItemsPerPage.value }),
+          ? { page, itemsPerPage }
+          : { defaultPage: page, defaultItemsPerPage: itemsPerPage }),
         siblingCount: props.siblingCount, showEdges: props.showEdges, showControls: props.showControls,
         disabled: props.disabled, readOnly: props.readonly, label: props.label,
         onPageChange: (page) => { localPage.value = page; emit('update:modelValue', page); },
@@ -133,6 +145,13 @@ export const PaginationRoot = defineComponent({
 });
 
 export type PaginationValueChangeHandler = (value: number) => void;
+
+function reconcilePage(page: number, total: number, itemsPerPage: number): number {
+  if (!Number.isSafeInteger(page) || !Number.isSafeInteger(total) || total < 0
+    || !Number.isSafeInteger(itemsPerPage) || itemsPerPage < 1) return page;
+  const pageCount = Math.max(1, Math.ceil(total / itemsPerPage));
+  return Math.min(pageCount, Math.max(1, page));
+}
 export type PaginationItemsPerPageChangeHandler = (value: number) => void;
 
 export const PaginationItem = defineComponent({

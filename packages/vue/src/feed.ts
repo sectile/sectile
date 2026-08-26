@@ -4,6 +4,7 @@ import {
 } from 'vue';
 import { createFeed, type FeedConnection, type FeedDirection } from '@sectile/dom/feed';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { reconcileCollectionState } from './internal/collection.js';
 
 export interface FeedRootProps {
   readonly items: readonly string[];
@@ -51,6 +52,9 @@ export const FeedRoot = defineComponent({
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; highlighted.value = snapshot.cursor.current; pending.value = snapshot.pending; currentRevision.value = snapshot.revision; currentRequestGeneration.value = snapshot.requestGeneration; refreshParts(); };
     const connect = (): void => {
       connection.value?.disconnect(); if (element.value === undefined) return;
+      const reconciled = reconcileCollectionState(props.items, [], highlighted.value, [], 'single');
+      if (highlighted.value !== reconciled.current) emit('highlight', reconciled.current);
+      highlighted.value = reconciled.current;
       connection.value = createFeed({
         root: element.value, items: props.items, revision: props.revision, defaultHighlightedValue: highlighted.value,
         disabled: props.disabled, ...(props.label === undefined ? {} : { label: props.label }), ...(props.setSize === undefined ? {} : { setSize: props.setSize }),
@@ -65,7 +69,10 @@ export const FeedRoot = defineComponent({
     watch([() => props.items, () => props.revision, () => props.requestGeneration], () => {
       if (connection.value === undefined) return;
       if (props.revision <= currentRevision.value) { connect(); return; }
-      const result = connection.value.syncWindow({ items: props.items, revision: props.revision, ...(props.requestGeneration === undefined ? {} : { requestGeneration: props.requestGeneration }), highlightedValue: highlighted.value });
+      const reconciled = reconcileCollectionState(props.items, [], highlighted.value, [], 'single');
+      if (highlighted.value !== reconciled.current) emit('highlight', reconciled.current);
+      highlighted.value = reconciled.current;
+      const result = connection.value.syncWindow({ items: props.items, revision: props.revision, ...(props.requestGeneration === undefined ? {} : { requestGeneration: props.requestGeneration }), highlightedValue: reconciled.current });
       if (!result.ok) throw new TypeError(result.error.message); refresh();
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {

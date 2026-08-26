@@ -47,6 +47,33 @@ test('Vue combobox synchronizes controlled input values through the DOM connecti
   host.remove();
 });
 
+test('Vue combobox clears a controlled value removed from its item domain', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const items = ref([{ id: 'alpha', label: 'Alpha' }, { id: 'beta', label: 'Beta' }]);
+  const value = ref('beta');
+  const updates = [];
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: items.value,
+      modelValue: value.value,
+      'onUpdate:modelValue': (next) => { updates.push(next); value.value = next; },
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  items.value = [{ id: 'alpha', label: 'Alpha' }];
+  await nextTick();
+  await nextTick();
+
+  assert.deepEqual(updates, [null]);
+  assert.equal(value.value, null);
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue combobox keeps live Hangul composition under native input ownership', async () => {
   const host = document.createElement('div');
   document.body.append(host);

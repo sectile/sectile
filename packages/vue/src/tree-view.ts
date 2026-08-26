@@ -9,6 +9,7 @@ import {
   type TreeViewSelectionMode,
 } from '@sectile/dom/tree-view';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TreeViewRootProps {
@@ -83,11 +84,38 @@ export const TreeViewRoot = defineComponent({
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; localValue.value = snapshot.selection.selected; localExpanded.value = snapshot.expansion.ids; localHighlight.value = snapshot.cursor.current; refreshParts(); };
     const connect = (): void => {
       connection.value?.disconnect(); if (element.value === undefined) return;
+      const items = props.nodes.map((node) => node.id);
+      const branches = collectionBranchIDs(props.nodes);
+      const requestedValue = controlled.value ? props.modelValue as readonly string[] : localValue.value;
+      const requestedExpanded = controlled.expanded ? props.expandedValues as readonly string[] : localExpanded.value;
+      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : localHighlight.value;
+      const reconciled = reconcileCollectionState(
+        items,
+        requestedValue,
+        requestedHighlight,
+        props.disabledItems,
+        props.selectionMode,
+        { preserveNullCurrent: true },
+      );
+      const expanded = reconcileCollectionState(
+        branches,
+        requestedExpanded,
+        null,
+        [],
+        'multiple',
+        { preserveNullCurrent: true },
+      ).selected;
+      localValue.value = reconciled.selected;
+      localExpanded.value = expanded;
+      localHighlight.value = reconciled.current;
+      if (controlled.value && !sameIDs(requestedValue, reconciled.selected)) emit('update:modelValue', reconciled.selected);
+      if (controlled.expanded && !sameIDs(requestedExpanded, expanded)) emit('update:expandedValues', expanded);
+      if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       connection.value = createTreeView({
         root: element.value, nodes: props.nodes, selectionMode: props.selectionMode,
-        ...(controlled.value ? { value: props.modelValue as readonly string[] } : { defaultValue: localValue.value }),
-        ...(controlled.expanded ? { expandedValues: props.expandedValues as readonly string[] } : { defaultExpandedValues: localExpanded.value }),
-        ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : { defaultHighlightedValue: localHighlight.value }),
+        ...(controlled.value ? { value: reconciled.selected } : { defaultValue: reconciled.selected }),
+        ...(controlled.expanded ? { expandedValues: expanded } : { defaultExpandedValues: expanded }),
+        ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
         disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },

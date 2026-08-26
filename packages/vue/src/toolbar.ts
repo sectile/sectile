@@ -5,6 +5,7 @@ import {
 import { createToolbar, type ToolbarConnection, type ToolbarPolicies } from '@sectile/dom/toolbar';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection } from './host-provider.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToolbarRootProps { readonly items: readonly string[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly disabledItems?: readonly string[]; readonly disabled?: boolean; readonly orientation?: 'horizontal' | 'vertical'; readonly label?: string; readonly policies?: ToolbarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -36,10 +37,21 @@ export const ToolbarRoot = defineComponent({
     const refreshItems = (): void => { if (root.value === undefined || connection.value === undefined) return; root.value.querySelectorAll<HTMLElement>('[data-sectile-toolbar-id]').forEach((element) => { const id = element.dataset['sectileToolbarId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, props.disabledItems.includes(id)); }); };
     const connect = (): void => {
       connection.value?.disconnect(); if (root.value === undefined) return;
+      const requested = controlled ? props.modelValue as string | null : current.value;
+      const reconciled = reconcileCollectionState(
+        props.items,
+        [],
+        requested,
+        props.disabledItems,
+        'single',
+        { preserveNullCurrent: true },
+      );
+      current.value = reconciled.current;
+      if (controlled && requested !== reconciled.current) emit('update:modelValue', reconciled.current);
       connection.value = createToolbar({
         root: root.value, items: props.items, disabledItems: props.disabledItems,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
-        ...(controlled ? { highlightedValue: props.modelValue as string | null } : { defaultHighlightedValue: current.value }),
+        ...(controlled ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
         disabled: props.disabled, orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }),
         onHighlightedValueChange: (value) => { current.value = value; emit('update:modelValue', value); },
         onInvoke: (value) => emit('invoke', value), onUpdate: refresh,

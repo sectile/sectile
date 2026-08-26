@@ -180,6 +180,40 @@ test('Vue calendar reconnects cells after the projected rows change', async () =
   host.remove();
 });
 
+test('Vue calendar proposes valid controlled state when rows replace its domain', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const rows = ref([['2026-08-24', '2026-08-25']]);
+  const value = ref('2026-08-25');
+  const highlighted = ref('2026-08-25');
+  const valueUpdates = [];
+  const highlightUpdates = [];
+  const app = createApp({
+    render: () => h(CalendarRoot, {
+      rows: rows.value,
+      modelValue: value.value,
+      highlightedValue: highlighted.value,
+      'onUpdate:modelValue': (next) => { valueUpdates.push(next); value.value = next; },
+      'onUpdate:highlightedValue': (next) => { highlightUpdates.push(next); highlighted.value = next; },
+    }, {
+      default: () => rows.value.flat().map((item) => h(CalendarCell, { key: item, value: item }, () => item)),
+    }),
+  });
+
+  app.mount(host);
+  await settle();
+  rows.value = [['2026-09-01']];
+  await settle();
+
+  assert.deepEqual(valueUpdates, [null]);
+  assert.deepEqual(highlightUpdates, ['2026-09-01']);
+  assert.equal(value.value, null);
+  assert.equal(highlighted.value, '2026-09-01');
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue date picker routes direct cell clicks to the date selection event', async () => {
   const host = document.createElement('div');
   document.body.append(host);

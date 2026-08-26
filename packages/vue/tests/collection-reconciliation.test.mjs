@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { reconcileCollectionState } from '../dist/internal/collection.js';
+import { collectionBranchIDs, reconcileCollectionState } from '../dist/internal/collection.js';
 
 test('collection reconciliation follows domain order and removes stale identities', () => {
   const result = reconcileCollectionState(
@@ -20,4 +20,26 @@ test('collection reconciliation narrows single selection and skips disabled focu
   const result = reconcileCollectionState(['a', 'b'], ['a', 'b'], 'a', ['a'], 'single');
   assert.deepEqual(result.selected, ['a']);
   assert.equal(result.current, 'b');
+});
+
+test('collection reconciliation preserves an explicit null focus when requested', () => {
+  const result = reconcileCollectionState(
+    ['a', 'b'],
+    ['a'],
+    null,
+    [],
+    'single',
+    { preserveNullCurrent: true },
+  );
+  assert.deepEqual(result.selected, ['a']);
+  assert.equal(result.current, null);
+  assert.equal(result.currentChanged, false);
+});
+
+test('collection branch reconciliation preserves domain order in linear time', () => {
+  assert.deepEqual(collectionBranchIDs([
+    { id: 'root', parentID: null },
+    { id: 'branch', parentID: 'root' },
+    { id: 'leaf', parentID: 'branch' },
+  ]), ['root', 'branch']);
 });

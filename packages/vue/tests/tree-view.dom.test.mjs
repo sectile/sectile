@@ -61,3 +61,38 @@ test('Vue tree view controls groups through expandedValues v-model', async () =>
   app.unmount();
   host.remove();
 });
+
+test('Vue tree view reconciles selection, expansion, and focus after nodes change', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const nodes = ref([{ id: 'root', parentID: null }, { id: 'leaf', parentID: 'root' }]);
+  const value = ref(['leaf']);
+  const expanded = ref(['root']);
+  const highlighted = ref('leaf');
+  const app = createApp({
+    render: () => h(TreeViewRoot, {
+      nodes: nodes.value,
+      modelValue: value.value,
+      expandedValues: expanded.value,
+      highlightedValue: highlighted.value,
+      'onUpdate:modelValue': (next) => { value.value = next; },
+      'onUpdate:expandedValues': (next) => { expanded.value = next; },
+      'onUpdate:highlightedValue': (next) => { highlighted.value = next; },
+    }, {
+      default: () => nodes.value.map((node) => h(TreeViewItem, { key: node.id, value: node.id }, () => node.id)),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  nodes.value = [{ id: 'other', parentID: null }];
+  await nextTick();
+  await nextTick();
+
+  assert.deepEqual(value.value, []);
+  assert.deepEqual(expanded.value, []);
+  assert.equal(highlighted.value, 'other');
+
+  app.unmount();
+  host.remove();
+});

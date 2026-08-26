@@ -8,6 +8,7 @@ import {
 import { createTextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ComboboxRootProps {
@@ -89,10 +90,25 @@ export const ComboboxRoot = defineComponent({
     };
     const connect = (): void => {
       connection.value?.disconnect(); if (input.value === undefined) return;
+      const items = props.items.map((item) => item.id);
+      const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
+      const reconciled = reconcileCollectionState(
+        items,
+        requestedValue === null ? [] : [requestedValue],
+        highlighted.value,
+        [],
+        'single',
+        { preserveNullCurrent: true },
+      );
+      const value = reconciled.selected[0] ?? null;
+      localValue.value = value;
+      highlighted.value = reconciled.current;
+      if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCombobox({
         input: input.value, ...(popup.value === undefined ? {} : { popup: popup.value }), items: props.items,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
-        ...(controlled.value ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
+        ...(controlled.value ? { value } : { defaultValue: value }),
+        defaultHighlightedValue: reconciled.current,
         ...(controlled.input ? { inputState: createTextState(props.inputValue as string) } : { defaultInputState: createTextState(localInput.value) }),
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly,

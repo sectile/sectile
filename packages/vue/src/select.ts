@@ -9,6 +9,8 @@ import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { useHostId, useHostPortalTarget } from './host-provider.js';
 import { usePresence } from './internal/presence.js';
+import { reconcileCollectionState } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface SelectRootProps {
   readonly items: readonly string[];
@@ -105,7 +107,8 @@ export const SelectRoot = defineComponent({
     const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${encodeURIComponent(value)}`;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value);
-    const valueControlled = props.modelValue !== undefined; const openControlled = props.open !== undefined;
+    const valueControlled = useControlledStateInvariant('SelectRoot', 'modelValue', () => props.modelValue);
+    const openControlled = useControlledStateInvariant('SelectRoot', 'open', () => props.open);
     const state = computed<SelectRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
@@ -125,6 +128,19 @@ export const SelectRoot = defineComponent({
     const connect = (): void => {
       connection.value?.disconnect();
       if (root.value === undefined || trigger.value === undefined || popup.value === undefined) return;
+      const requestedValue = valueControlled ? props.modelValue as string | null : localValue.value;
+      const reconciled = reconcileCollectionState(
+        props.items,
+        requestedValue === null ? [] : [requestedValue],
+        highlighted.value,
+        props.disabledItems,
+        'single',
+        { preserveNullCurrent: true },
+      );
+      const value = reconciled.selected[0] ?? null;
+      localValue.value = value;
+      highlighted.value = reconciled.current;
+      if (valueControlled && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createSelect({
         root: root.value, trigger: trigger.value, popup: popup.value, items: props.items, disabledItems: props.disabledItems,
         textValue: props.textValue ?? ((value: string) => value), typeaheadTimeoutMs: props.typeaheadTimeoutMs,
@@ -134,7 +150,8 @@ export const SelectRoot = defineComponent({
         manageVisibility: false,
         ...(props.middleware === undefined ? {} : { middleware: props.middleware }), ...(props.autoUpdate === undefined ? {} : { autoUpdate: props.autoUpdate }),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
-        ...(valueControlled ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
+        ...(valueControlled ? { value } : { defaultValue: value }),
+        defaultHighlightedValue: reconciled.current,
         ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },

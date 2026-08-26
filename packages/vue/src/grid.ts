@@ -4,6 +4,7 @@ import {
 } from 'vue';
 import { createGridControl, type GridConnection, type GridEditMode, type GridPolicies } from '@sectile/dom/grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface GridRootProps {
@@ -70,11 +71,33 @@ export const GridRoot = defineComponent({
     const refresh = (): void => { const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return; localValue.value = snapshot.selection.selected[0] ?? null; localHighlight.value = snapshot.cursor.current; localEditMode.value = snapshot.editMode; refreshParts(); };
     const connect = (): void => {
       connection.value?.disconnect(); if (element.value === undefined) return;
+      const items = props.rows.flatMap((row) => row.filter((id): id is string => id !== null));
+      const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
+      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : localHighlight.value;
+      const reconciled = reconcileCollectionState(
+        items,
+        requestedValue === null ? [] : [requestedValue],
+        requestedHighlight,
+        props.disabledItems,
+        'single',
+        { preserveNullCurrent: true },
+      );
+      const value = reconciled.selected[0] ?? null;
+      const requestedEditMode = controlled.editMode ? props.editMode as GridEditMode : localEditMode.value;
+      const editMode = reconciled.current === null && requestedEditMode === 'editing'
+        ? 'navigation'
+        : requestedEditMode;
+      localValue.value = value;
+      localHighlight.value = reconciled.current;
+      localEditMode.value = editMode;
+      if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
+      if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
+      if (controlled.editMode && props.editMode !== editMode) emit('update:editMode', editMode);
       connection.value = createGridControl({
         root: element.value, rows: props.rows,
-        ...(controlled.value ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
-        ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : { defaultHighlightedValue: localHighlight.value }),
-        ...(controlled.editMode ? { editMode: props.editMode as GridEditMode } : { defaultEditMode: localEditMode.value }),
+        ...(controlled.value ? { value } : { defaultValue: value }),
+        ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
+        ...(controlled.editMode ? { editMode } : { defaultEditMode: editMode }),
         disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
         ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: (value) => { localValue.value = value; emit('update:modelValue', value); }, onHighlightedValueChange: (value) => { localHighlight.value = value; emit('update:highlightedValue', value); },

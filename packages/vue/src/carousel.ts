@@ -10,6 +10,7 @@ import {
 } from '@sectile/dom/carousel';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface CarouselRootProps {
@@ -84,9 +85,21 @@ export const CarouselRoot = defineComponent({
     };
     const connect = (): void => {
       connection.value?.disconnect(); const root = elements.get('root'); if (root === undefined) return;
+      const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
+      const reconciled = reconcileCollectionState(
+        props.slides,
+        requestedValue === null ? [] : [requestedValue],
+        requestedValue,
+        [],
+        'single',
+        { preserveNullCurrent: true },
+      );
+      const value = reconciled.current;
+      localValue.value = value;
+      if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCarousel({
         root, slides: props.slides,
-        ...(controlled.value ? { value: props.modelValue as string | null } : { defaultValue: localValue.value }),
+        ...(controlled.value ? { value } : { defaultValue: value }),
         ...(controlled.paused ? { paused: props.paused as boolean } : { defaultPaused: localPaused.value }),
         disabled: props.disabled, orientation: props.orientation, direction: direction.value, autoplay: props.autoplay,
         ...(props.policies === undefined ? {} : { policies: props.policies }), ...(props.label === undefined ? {} : { label: props.label }),

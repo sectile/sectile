@@ -8,6 +8,7 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface CalendarRootProps { readonly rows: readonly (readonly string[])[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly highlightedValue?: string | null; readonly defaultHighlightedValue?: string | null; readonly disabledValues?: readonly string[]; readonly disabled?: boolean; readonly required?: boolean; readonly name?: string; readonly form?: string; readonly label?: string; readonly policies?: CalendarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -56,11 +57,27 @@ export const CalendarRoot = defineComponent({
     const refreshCells = (): void => { if (root.value === undefined || connection.value === undefined) return; root.value.querySelectorAll<HTMLElement>('[data-sectile-calendar-id]').forEach((element) => { const id = element.dataset['sectileCalendarId']; if (id === undefined) return; const rowIndex = Number(element.dataset['rowIndex']); const columnIndex = Number(element.dataset['columnIndex']); connection.value?.setCellAttributes(element, { id, rowIndex, columnIndex, disabled: props.disabledValues.includes(id) }); }); };
     const connect = (): void => {
       connection.value?.disconnect(); if (root.value === undefined) return;
+      const items = props.rows.flat();
+      const requestedValue = controlled.value ? props.modelValue as string | null : value.value;
+      const requestedHighlight = controlled.highlighted ? props.highlightedValue as string | null : highlighted.value;
+      const reconciled = reconcileCollectionState(
+        items,
+        requestedValue === null ? [] : [requestedValue],
+        requestedHighlight,
+        props.disabledValues,
+        'single',
+        { preserveNullCurrent: true },
+      );
+      const selected = reconciled.selected[0] ?? null;
+      value.value = selected;
+      highlighted.value = reconciled.current;
+      if (controlled.value && requestedValue !== selected) emit('update:modelValue', selected);
+      if (controlled.highlighted && requestedHighlight !== reconciled.current) emit('update:highlightedValue', reconciled.current);
       connection.value = createCalendar({
         root: root.value, rows: props.rows, disabled: props.disabled,
-        ...(props.policies === undefined ? {} : { policies: { ...props.policies, eligible: (id: string) => !props.disabledValues.includes(id) && (props.policies?.eligible?.(id) ?? true) } }),
-        ...(controlled.value ? { value: props.modelValue as string | null } : { defaultValue: value.value }),
-        ...(controlled.highlighted ? { highlightedValue: props.highlightedValue as string | null } : { defaultHighlightedValue: highlighted.value }),
+        policies: { ...props.policies, eligible: (id: string) => !props.disabledValues.includes(id) && (props.policies?.eligible?.(id) ?? true) },
+        ...(controlled.value ? { value: selected } : { defaultValue: selected }),
+        ...(controlled.highlighted ? { highlightedValue: reconciled.current } : { defaultHighlightedValue: reconciled.current }),
         onValueChange: ({ value: next }) => { value.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: ({ value: next }) => { highlighted.value = next; emit('update:highlightedValue', next); },
         onPageRequest: (details) => emit('page', details), onUpdate: refresh,
