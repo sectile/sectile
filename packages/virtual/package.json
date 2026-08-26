@@ -1,6 +1,6 @@
 {
   "name": "@sectile/virtual",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Renderer-neutral dynamic virtualization and layout semantics for Sectile.",
   "license": "MIT",
   "type": "module",
