@@ -5,10 +5,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const argumentsWithoutSeparator = process.argv.slice(2).filter((argument) => argument !== '--');
-const quiet = argumentsWithoutSeparator.includes('--quiet');
+const quietRequested = argumentsWithoutSeparator.includes('--quiet');
+const verbose = argumentsWithoutSeparator.includes('--verbose');
 const compatibility = argumentsWithoutSeparator.includes('--compat');
-const unexpected = argumentsWithoutSeparator.filter((argument) => argument !== '--quiet' && argument !== '--compat');
+const unexpected = argumentsWithoutSeparator.filter((argument) => (
+  argument !== '--quiet' && argument !== '--verbose' && argument !== '--compat'
+));
 if (unexpected.length > 0) throw new Error(`unexpected verification arguments: ${unexpected.join(', ')}`);
+if (quietRequested && verbose) throw new Error('verification cannot be both quiet and verbose');
 
 const generatedOutputs = [
   join(root, 'packages', 'core', 'dist'),
@@ -67,31 +71,29 @@ function writeFailureOutput(result) {
 }
 
 const steps = compatibility ? compatibilitySteps : fullSteps;
-console.log(`verification: ${compatibility ? 'runtime compatibility' : 'full release'} on ${process.version}`);
+const verificationStartedAt = performance.now();
+if (verbose) console.log(`verification: ${compatibility ? 'runtime compatibility' : 'full release'} on ${process.version}`);
 
-const cleanupStartedAt = performance.now();
-if (quiet) process.stdout.write('- clean generated outputs ... ');
 for (const output of generatedOutputs) rmSync(output, { recursive: true, force: true });
-if (quiet) console.log(`ok (${elapsedSeconds(cleanupStartedAt)}s)`);
 
 for (const { label, command, args } of steps) {
   const startedAt = performance.now();
-  if (quiet) process.stdout.write(`- ${label} ... `);
+  if (verbose) console.log(`- ${label}`);
   const result = spawnSync(command, args, {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,
-    stdio: quiet ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+    stdio: verbose ? 'inherit' : ['ignore', 'pipe', 'pipe'],
   });
-  if (result.error !== undefined) throw result.error;
+  if (result.error !== undefined) {
+    console.error(`verification failed: ${label} (${elapsedSeconds(startedAt)}s)`);
+    throw result.error;
+  }
   if (result.status !== 0) {
-    if (quiet) {
-      console.log(`failed (${elapsedSeconds(startedAt)}s)`);
-      writeFailureOutput(result);
-    }
+    console.error(`verification failed: ${label} (${elapsedSeconds(startedAt)}s)`);
+    if (!verbose) writeFailureOutput(result);
     process.exit(result.status ?? 1);
   }
-  if (quiet) console.log(`ok (${elapsedSeconds(startedAt)}s)`);
 }
 
-console.log(`verification passed: ${steps.length + 1} sequential stages`);
+console.log(`verification passed: ${steps.length + 1} sequential stages (${elapsedSeconds(verificationStartedAt)}s)`);
