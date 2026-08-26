@@ -39,6 +39,10 @@ test('release retries load current verification and packaging tooling', () => {
     workflow,
     /git restore --source=origin\/main -- scripts\/verify\.mjs scripts\/publish-packages\.mjs/u,
   );
+  assert.equal(workflow.includes('.release-artifacts'), false);
+  assert.match(workflow, /--pack-destination=release-artifacts/u);
+  assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
+  assert.match(workflow, /--tarball-directory=release-artifacts/u);
 });
 
 test('allows synchronized and fast-forwardable local release branches', () => {
