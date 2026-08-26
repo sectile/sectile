@@ -1,7 +1,10 @@
 import { performance } from 'node:perf_hooks';
 import { createSequence } from '@sectile/core/sequence';
 import { createExtentIndex } from '@sectile/virtual/extent-index';
-import { applyLinearMeasurements, createLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
+import { applyLinearMeasurements, createLinearLayout, queryLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
+import { createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
+import { createSpatialLayout, querySpatialLayout } from '@sectile/virtual/spatial-layout';
+import { applyGridMeasurements, createTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout';
 
 globalThis.OffscreenCanvas ??= class OffscreenCanvas {
   getContext() {
@@ -34,6 +37,17 @@ function measure(iterations, operation) {
   }
   samples.sort((left, right) => left - right);
   return Number(samples[Math.floor(samples.length / 2)].toFixed(3));
+}
+
+function measureColdMilliseconds(operation) {
+  const samples = [];
+  for (let sample = 0; sample < 5; sample += 1) {
+    const startedAt = performance.now();
+    sink += operation(sample);
+    samples.push(performance.now() - startedAt);
+  }
+  samples.sort((left, right) => left - right);
+  return Number(samples[2].toFixed(3));
 }
 
 const pretextLayoutUs = measure(300_000, (iteration) => {
@@ -85,6 +99,13 @@ const viewportUpdateUs = measure(100_000, (iteration) => {
   });
   sink += window.renderStart;
 });
+const linearPlanUs = measure(20_000, (iteration) => {
+  const plan = queryLinearLayout(viewportState, {
+    viewport: { x: 0, y: (iteration * 97) % 4_300_000, width: 320, height: 800 },
+    overscan: { top: 800, bottom: 800 },
+  });
+  sink += plan.placements.length;
+});
 
 let measuredState = createLinearLayout(
   virtualDomain,
@@ -125,6 +146,53 @@ const combinedBatch32Us = measure(2_000, (iteration) => {
   sink += measuredState.extents.totalExtent;
 });
 
+const strategySize = 100_000;
+const gridRows = createExtentIndex(Array(strategySize).fill(estimated(32)));
+const gridColumns = createExtentIndex(Array(64).fill(exact(96)));
+const gridRegions = Array.from({ length: strategySize }, (_, index) => ({ id: `grid-${index}`, row: index, column: index & 63 }));
+const gridState = createTrackGridLayout(gridRows, gridColumns, gridRegions);
+const gridQueryUs = measure(20_000, (iteration) => {
+  const plan = queryTrackGridLayout(gridState, {
+    viewport: { x: ((iteration * 193) % 6_000), y: ((iteration * 997) % 3_100_000), width: 960, height: 800 },
+    overscan: 320,
+  });
+  sink += plan.placements.length;
+});
+const gridBuildMs = measureColdMilliseconds(() => createTrackGridLayout(gridRows, gridColumns, gridRegions).generation);
+let measuredGrid = gridState;
+const gridMeasurementVariants = [30, 34].map((value) => Array.from({ length: 32 }, (_, index) => ({ axis: 'row', index: 50_000 + index, extent: exact(value) })));
+const gridMeasurement32Us = measure(2_000, (iteration) => {
+  measuredGrid = applyGridMeasurements(measuredGrid, { generation: measuredGrid.generation, measurements: gridMeasurementVariants[iteration & 1] }).state;
+  sink += measuredGrid.rows.totalExtent;
+});
+
+const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize });
+const strategyExtents = createExtentIndex(Array.from({ length: strategySize }, (_, index) => estimated(24 + (index % 73))));
+const masonryState = createMasonryLayout(strategyDomain, strategyExtents, { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 });
+const masonryQueryUs = measure(20_000, (iteration) => {
+  const plan = queryMasonryLayout(masonryState, {
+    viewport: { x: 0, y: (iteration * 977) % 800_000, width: 1_364, height: 800 },
+    overscan: 320,
+  });
+  sink += plan.placements.length;
+});
+const masonryBuildMs = measureColdMilliseconds(() => createMasonryLayout(strategyDomain, strategyExtents, { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 }).generation);
+
+const spatialItems = Array.from({ length: strategySize }, (_, index) => ({
+  id: `spatial-${index}`,
+  rect: { x: (index % 1_000) * 24, y: Math.floor(index / 1_000) * 24, width: 28, height: 28 },
+  zIndex: index % 7,
+}));
+const spatialState = createSpatialLayout(spatialItems);
+const spatialQueryUs = measure(5_000, (iteration) => {
+  const plan = querySpatialLayout(spatialState, {
+    viewport: { x: (iteration * 193) % 23_000, y: (iteration * 47) % 2_000, width: 240, height: 240 },
+    overscan: 48,
+  });
+  sink += plan.placements.length;
+});
+const spatialBuildMs = measureColdMilliseconds(() => createSpatialLayout(spatialItems).generation);
+
 const result = {
   benchmark: 'sectile-virtualization-vs-pretext',
   units: 'microseconds-per-operation',
@@ -133,9 +201,13 @@ const result = {
   extentIndex: measurements,
   linearLayout: {
     viewportUpdateUs,
+    materializedPlanUs: linearPlanUs,
     changedMeasurement32Us: virtualMeasurement32Us,
     idempotentMeasurement32Us,
   },
+  trackGrid: { items: strategySize, queryUs: gridQueryUs, changedRowMeasurement32Us: gridMeasurement32Us, buildMs: gridBuildMs },
+  masonry: { items: strategySize, lanes: 8, queryUs: masonryQueryUs, buildMs: masonryBuildMs },
+  spatial: { items: strategySize, queryUs: spatialQueryUs, buildMs: spatialBuildMs },
   integration: {
     pretextAndBatchUpdate32Us: combinedBatch32Us,
     addedBookkeepingUs: Number((combinedBatch32Us - pretextBatch32Us).toFixed(3)),

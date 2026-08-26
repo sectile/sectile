@@ -12,6 +12,13 @@ export interface ExtentUpdate {
   readonly extent: Extent;
 }
 
+export interface ExtentLocation {
+  readonly index: number;
+  readonly itemOffset: number;
+  readonly offsetWithin: number;
+  readonly extent: Extent;
+}
+
 export interface ExtentIndexOptions {
   readonly maxItems?: number;
 }
@@ -22,6 +29,7 @@ export interface ExtentIndex {
   extentAt(index: number): Extent | null;
   offsetAt(index: number): number | null;
   indexAtOffset(offset: number): number | null;
+  locateOffset(offset: number): ExtentLocation | null;
   update(updates: readonly ExtentUpdate[]): Result<ExtentIndex>;
   splice(start: number, deleteCount: number, inserted?: readonly Extent[]): Result<ExtentIndex>;
   move(from: number, to: number, count?: number): Result<ExtentIndex>;
@@ -77,7 +85,8 @@ function createIndex(root: Node | null, maxItems: number): ExtentIndex {
     totalExtent: root?.sum ?? 0,
     extentAt: (index: number): Extent | null => extentAt(root, index),
     offsetAt: (index: number): number | null => offsetAt(root, index),
-    indexAtOffset: (offset: number): number | null => indexAtOffset(root, offset),
+    indexAtOffset: (offset: number): number | null => locateOffset(root, offset)?.index ?? null,
+    locateOffset: (offset: number): ExtentLocation | null => locateOffset(root, offset),
     update: (updates: readonly ExtentUpdate[]): Result<ExtentIndex> => updateIndex(root, maxItems, updates),
     splice: (
       start: number,
@@ -237,7 +246,7 @@ function offsetAt(root: Node | null, index: number): number | null {
   return offset;
 }
 
-function indexAtOffset(root: Node | null, offset: number): number | null {
+function locateOffset(root: Node | null, offset: number): ExtentLocation | null {
   if (root === null || !Number.isFinite(offset) || offset < 0 || offset >= root.sum) return null;
   let node = root;
   let localOffset = offset;
@@ -251,8 +260,9 @@ function indexAtOffset(root: Node | null, offset: number): number | null {
     }
   }
   for (let index = 0; index < node.entries.length; index += 1) {
-    const extent = valueOf(node.entries[index]!);
-    if (localOffset < extent) return base + index;
+    const entry = node.entries[index]!;
+    const extent = valueOf(entry);
+    if (localOffset < extent) return Object.freeze({ index: base + index, itemOffset: offset - localOffset, offsetWithin: localOffset, extent: entry });
     localOffset -= extent;
   }
   return null;

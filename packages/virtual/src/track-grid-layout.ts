@@ -163,7 +163,7 @@ export function tryApplyGridMeasurements<ID extends StableID>(state: TrackGridLa
   const before = anchorRect(state, batch.anchor);
   const grid = getInternals(state);
   if (!grid.ok) return grid;
-  const next = createState({ ...state, rows: rows.value, columns: columns.value, generation: generation.value }, [...grid.value.byID.values()]);
+  const next = createState({ ...state, rows: rows.value, columns: columns.value, generation: generation.value }, null, grid.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
 }
 
@@ -221,8 +221,13 @@ export function trackGridRegionRect<ID extends StableID>(state: TrackGridLayoutS
   return region === undefined ? null : regionRect(state, region.value as GridRegion<ID>);
 }
 
-function createState<ID extends StableID>(state: TrackGridLayoutState<ID>, indexed: readonly IndexedRegion<ID>[]): TrackGridLayoutState<ID> {
-  const frozen = Object.freeze({ ...state, regions: Object.freeze([...state.regions]) });
+function createState<ID extends StableID>(state: TrackGridLayoutState<ID>, indexed: readonly IndexedRegion<ID>[] | null, reusable?: GridInternals<ID>): TrackGridLayoutState<ID> {
+  const frozen = Object.freeze({ ...state, regions: reusable === undefined ? Object.freeze([...state.regions]) : state.regions });
+  if (reusable !== undefined) {
+    internals.set(frozen, reusable as GridInternals<StableID>);
+    return frozen;
+  }
+  if (indexed === null) throw new Error('Internal invariant breach: grid regions require an index.');
   const sorted = [...indexed].sort(compareRegions);
   internals.set(frozen, { root: buildRegionTree(sorted, 0, sorted.length), byID: new Map(indexed.map((region) => [region.value.id, region])) } as GridInternals<StableID>);
   return frozen;

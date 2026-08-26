@@ -15,6 +15,7 @@ export function trackRange(index: ExtentIndex, gap: number, flow: LinearFlow, vi
   const content = trackContentExtent(index, gap);
   const start = flow === 'forward' ? visualStart : Math.max(0, content - visualEnd);
   const end = flow === 'forward' ? visualEnd : Math.max(0, content - visualStart);
+  if (gap === 0) return Object.freeze({ start: directRangeStart(index, start), end: directRangeEnd(index, end) });
   return Object.freeze({ start: firstIntersecting(index, gap, start), end: firstStartingAtOrAfter(index, gap, end) });
 }
 
@@ -41,6 +42,20 @@ function firstIntersecting(index: ExtentIndex, gap: number, offset: number): num
     else high = middle;
   }
   return low;
+}
+
+function directRangeStart(index: ExtentIndex, offset: number): number {
+  if (offset <= 0) return 0;
+  if (offset >= index.totalExtent) return index.size;
+  return index.locateOffset(offset)?.index ?? index.size;
+}
+
+function directRangeEnd(index: ExtentIndex, offset: number): number {
+  if (offset <= 0) return 0;
+  if (offset >= index.totalExtent) return index.size;
+  const location = index.locateOffset(offset);
+  if (location === null) return index.size;
+  return location.offsetWithin === 0 ? location.index : location.index + 1;
 }
 
 function firstStartingAtOrAfter(index: ExtentIndex, gap: number, offset: number): number {
