@@ -411,7 +411,7 @@ Vue 패키지: `@sectile/vue/select`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>position-change</code></dt>
+<dt><code>positionChange</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>ComputePositionReturn</code></span></div>
 <p>팝업 콘텐츠의 계산된 배치가 갱신된 뒤 발생합니다.</p>

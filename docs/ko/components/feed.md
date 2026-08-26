@@ -244,7 +244,7 @@ Vue 패키지: `@sectile/vue/feed`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>request-window</code></dt>
+<dt><code>requestWindow</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>CollectionWindowDirection, string | null, number, number</code></span></div>
 <p>피드가 현재 구간 밖의 항목을 요청할 때 발생합니다.</p>

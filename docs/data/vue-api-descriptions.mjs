@@ -358,10 +358,10 @@ const koSlots = Object.freeze({
 const enEvents = Object.freeze({
   accept: 'Emitted when the current draft becomes an accepted value.', activate: 'Emitted when an item becomes active.', announce: 'Emitted when assistive feedback should be announced.',
   commit: 'Emitted when the current draft is committed.', complete: 'Emitted when every required segment is filled.',
-  'edit-cancel': 'Emitted when editing is cancelled without committing.', 'edit-commit': 'Emitted when an edited cell value is committed.', 'edit-start': 'Emitted when a cell enters editing mode.',
+  editCancel: 'Emitted when editing is cancelled without committing.', editCommit: 'Emitted when an edited cell value is committed.', editStart: 'Emitted when a cell enters editing mode.',
   highlight: 'Emitted when the highlighted item changes.', invoke: 'Emitted when the current action is invoked.', page: 'Emitted when the requested page changes.',
-  'request-window': 'Emitted when the feed needs items outside the current window.', reset: 'Emitted after the component resets its state.',
-  'state-change': 'Emitted whenever the public state snapshot changes.', submit: 'Emitted when native form submission passes validation.', tick: 'Emitted when a timer interval produces a new value.',
+  requestWindow: 'Emitted when the feed needs items outside the current window.', reset: 'Emitted after the component resets its state.',
+  stateChange: 'Emitted whenever the public state snapshot changes.', submit: 'Emitted when native form submission passes validation.', tick: 'Emitted when a timer interval produces a new value.',
   'update:displayUnit': 'Emitted when the requested display unit changes.', 'update:draft': 'Emitted when the editable draft changes.',
   'update:editMode': 'Emitted when the requested edit mode changes.', 'update:editing': 'Emitted when editing starts or stops.',
   'update:expandedValue': 'Emitted when the requested expanded values change.', 'update:expandedValues': 'Emitted when the requested expanded values change.', 'update:format': 'Emitted when the requested color format changes.',
@@ -369,17 +369,17 @@ const enEvents = Object.freeze({
   'update:itemsPerPage': 'Emitted when the requested page size changes.', 'update:modelValue': 'Emitted when the component requests a new controlled value.',
   'update:open': 'Emitted when the component requests a new open state.', 'update:paused': 'Emitted when the component requests a new pause state.',
   'update:toasts': 'Emitted when the provider requests a new controlled notification collection.',
-  'interact-outside': 'Emitted before an outside interaction closes the content; call preventDefault() to keep it open.',
-  'position-change': 'Emitted after positioned content receives a new calculated placement.',
+  interactOutside: 'Emitted before an outside interaction closes the content; call preventDefault() to keep it open.',
+  positionChange: 'Emitted after positioned content receives a new calculated placement.',
 });
 
 const koEvents = Object.freeze({
   accept: '현재 입력이 허용된 값으로 확정될 때 발생합니다.', activate: '항목이 활성화될 때 발생합니다.', announce: '보조 기술에 피드백을 알려야 할 때 발생합니다.',
   commit: '현재 입력을 확정할 때 발생합니다.', complete: '필요한 모든 입력 칸이 채워질 때 발생합니다.',
-  'edit-cancel': '값을 확정하지 않고 편집을 취소할 때 발생합니다.', 'edit-commit': '편집한 셀 값을 확정할 때 발생합니다.', 'edit-start': '셀이 편집 상태로 들어갈 때 발생합니다.',
+  editCancel: '값을 확정하지 않고 편집을 취소할 때 발생합니다.', editCommit: '편집한 셀 값을 확정할 때 발생합니다.', editStart: '셀이 편집 상태로 들어갈 때 발생합니다.',
   highlight: '강조된 항목이 바뀔 때 발생합니다.', invoke: '현재 작업을 실행할 때 발생합니다.', page: '요청한 페이지가 바뀔 때 발생합니다.',
-  'request-window': '피드가 현재 구간 밖의 항목을 요청할 때 발생합니다.', reset: '컴포넌트 상태를 초기화한 뒤 발생합니다.',
-  'state-change': '공개 상태 스냅샷이 바뀔 때마다 발생합니다.', submit: '네이티브 폼 제출이 검증을 통과할 때 발생합니다.', tick: '타이머 간격마다 새 값이 만들어질 때 발생합니다.',
+  requestWindow: '피드가 현재 구간 밖의 항목을 요청할 때 발생합니다.', reset: '컴포넌트 상태를 초기화한 뒤 발생합니다.',
+  stateChange: '공개 상태 스냅샷이 바뀔 때마다 발생합니다.', submit: '네이티브 폼 제출이 검증을 통과할 때 발생합니다.', tick: '타이머 간격마다 새 값이 만들어질 때 발생합니다.',
   'update:displayUnit': '새 표시 단위를 요청할 때 발생합니다.', 'update:draft': '편집 중인 입력 문자열이 바뀔 때 발생합니다.',
   'update:editMode': '새 편집 상태를 요청할 때 발생합니다.', 'update:editing': '편집을 시작하거나 끝낼 때 발생합니다.',
   'update:expandedValue': '새 펼침 값을 요청할 때 발생합니다.', 'update:expandedValues': '새 펼침 값 목록을 요청할 때 발생합니다.', 'update:format': '새 색상 형식을 요청할 때 발생합니다.',
@@ -387,8 +387,8 @@ const koEvents = Object.freeze({
   'update:itemsPerPage': '새 페이지당 항목 수를 요청할 때 발생합니다.', 'update:modelValue': '컴포넌트가 외부 제어 값의 변경을 요청할 때 발생합니다.',
   'update:open': '컴포넌트가 새 열림 상태를 요청할 때 발생합니다.', 'update:paused': '컴포넌트가 새 일시 정지 상태를 요청할 때 발생합니다.',
   'update:toasts': 'Provider가 새 외부 제어 알림 목록을 요청할 때 발생합니다.',
-  'interact-outside': '외부 조작으로 콘텐츠를 닫기 전에 발생하며, preventDefault()를 호출하면 열린 상태를 유지합니다.',
-  'position-change': '팝업 콘텐츠의 계산된 배치가 갱신된 뒤 발생합니다.',
+  interactOutside: '외부 조작으로 콘텐츠를 닫기 전에 발생하며, preventDefault()를 호출하면 열린 상태를 유지합니다.',
+  positionChange: '팝업 콘텐츠의 계산된 배치가 갱신된 뒤 발생합니다.',
 });
 
 const descriptions = Object.freeze({

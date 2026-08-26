@@ -126,7 +126,7 @@ export type FormRootPublicProps<Schema extends FormSchema = FormSchema> =
   & ComponentCustomProps
   & {
     readonly onReset?: () => unknown;
-    readonly 'onState-change'?: (state: FormState) => unknown;
+    readonly onStateChange?: (state: FormState) => unknown;
   };
 
 export interface FormRootComponent {
@@ -294,7 +294,7 @@ const FormRootImpl = defineComponent({
   },
   emits: {
     reset: (): boolean => true,
-    'state-change': (_state: FormState): boolean => true,
+    stateChange: (_state: FormState): boolean => true,
   },
   slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, expose, slots }) {
@@ -382,7 +382,7 @@ const FormRootImpl = defineComponent({
         onReset: () => emit('reset'),
         onStateChange: (next) => {
           state.value = next;
-          emit('state-change', next);
+          emit('stateChange', next);
         },
       });
       for (const registered of participants.values()) {

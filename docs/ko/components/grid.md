@@ -268,21 +268,21 @@ Vue 패키지: `@sectile/vue/grid`
 
 <dl class="component-api-definitions component-api-definitions--events">
 <div class="component-api-definition">
-<dt><code>edit-cancel</code></dt>
+<dt><code>editCancel</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string</code></span></div>
 <p>값을 확정하지 않고 편집을 취소할 때 발생합니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>edit-commit</code></dt>
+<dt><code>editCommit</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string</code></span></div>
 <p>편집한 셀 값을 확정할 때 발생합니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>edit-start</code></dt>
+<dt><code>editStart</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string</code></span></div>
 <p>셀이 편집 상태로 들어갈 때 발생합니다.</p>

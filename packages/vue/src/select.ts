@@ -90,7 +90,7 @@ export const SelectRoot = defineComponent({
     'update:modelValue': (_value: string | null): boolean => true,
     'update:open': (_value: boolean): boolean => true,
     highlight: (_value: string | null): boolean => true,
-    'position-change': (_position: ComputePositionReturn): boolean => true,
+    positionChange: (_position: ComputePositionReturn): boolean => true,
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
@@ -156,7 +156,7 @@ export const SelectRoot = defineComponent({
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
-        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (position) => { emit('position-change', position); }, onUpdate: refresh,
+        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onPositionChange: (position) => { emit('positionChange', position); }, onUpdate: refresh,
       });
       refreshItems(); refresh();
     };

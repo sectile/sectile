@@ -268,21 +268,21 @@ Vue package: `@sectile/vue/grid`
 
 <dl class="component-api-definitions component-api-definitions--events">
 <div class="component-api-definition">
-<dt><code>edit-cancel</code></dt>
+<dt><code>editCancel</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
 <p>Emitted when editing is cancelled without committing.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>edit-commit</code></dt>
+<dt><code>editCommit</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
 <p>Emitted when an edited cell value is committed.</p>
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>edit-start</code></dt>
+<dt><code>editStart</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>string</code></span></div>
 <p>Emitted when a cell enters editing mode.</p>

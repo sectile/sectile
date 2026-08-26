@@ -195,8 +195,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     },
     emits: {
       'update:open': (_open: boolean): boolean => true,
-      'position-change': (_position: ComputePositionReturn): boolean => true,
-      'interact-outside': (_event: InteractOutsideEvent): boolean => true,
+      positionChange: (_position: ComputePositionReturn): boolean => true,
+      interactOutside: (_event: InteractOutsideEvent): boolean => true,
     },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
@@ -265,8 +265,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
           },
-          onPositionChange: (position) => { emit('position-change', position); },
-          onInteractOutside: (event) => { emit('interact-outside', event); },
+          onPositionChange: (position) => { emit('positionChange', position); },
+          onInteractOutside: (event) => { emit('interactOutside', event); },
           onUpdate: update,
         });
         update();

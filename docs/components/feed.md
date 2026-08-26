@@ -244,7 +244,7 @@ Vue package: `@sectile/vue/feed`
 </dd>
 </div>
 <div class="component-api-definition">
-<dt><code>request-window</code></dt>
+<dt><code>requestWindow</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Payload</span><code>CollectionWindowDirection, string | null, number, number</code></span></div>
 <p>Emitted when the feed needs items outside the current window.</p>

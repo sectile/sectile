@@ -162,6 +162,8 @@ defineExpose({ element })
 
 Portal parts accept `defer` when their target is rendered by Vue later in the same mount or update tick. It does not wait for a target created in a later tick. Leave it `false` for `body` or an already-mounted target. See Vue's [deferred Teleport documentation](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport).
 
+Event API names use camelCase, including `positionChange` and `interactOutside`. Vue templates listen with their kebab-case forms, such as `@position-change` and `@interact-outside`. Render functions and JSX use `onPositionChange` and `onInteractOutside`.
+
 ## Slot state
 
 Root and part slots expose live semantic state. Use slot props for content that must change with interaction; use data attributes for CSS-only state.

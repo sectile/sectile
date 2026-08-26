@@ -48,8 +48,8 @@ export const GridRoot = defineComponent({
   },
   emits: {
     'update:modelValue': (_value: string | null): boolean => true, 'update:highlightedValue': (_value: string | null): boolean => true,
-    'update:editMode': (_value: GridEditMode): boolean => true, 'edit-start': (_value: string): boolean => true,
-    'edit-commit': (_value: string): boolean => true, 'edit-cancel': (_value: string): boolean => true,
+    'update:editMode': (_value: GridEditMode): boolean => true, editStart: (_value: string): boolean => true,
+    editCommit: (_value: string): boolean => true, editCancel: (_value: string): boolean => true,
   },
   slots: Object as SlotsType<{ default: (props: GridRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
@@ -101,8 +101,8 @@ export const GridRoot = defineComponent({
         disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
         ...(props.label === undefined ? {} : { label: props.label }), ...(props.policies === undefined ? {} : { policies: props.policies }),
         onValueChange: (value) => { localValue.value = value; emit('update:modelValue', value); }, onHighlightedValueChange: (value) => { localHighlight.value = value; emit('update:highlightedValue', value); },
-        onEditModeChange: (value) => { localEditMode.value = value; emit('update:editMode', value); }, onEditStart: (id) => emit('edit-start', id),
-        onEditCommit: (id) => emit('edit-commit', id), onEditCancel: (id) => emit('edit-cancel', id), onUpdate: refresh,
+        onEditModeChange: (value) => { localEditMode.value = value; emit('update:editMode', value); }, onEditStart: (id) => emit('editStart', id),
+        onEditCommit: (id) => emit('editCommit', id), onEditCancel: (id) => emit('editCancel', id), onUpdate: refresh,
       });
       refreshParts(); refresh();
     };

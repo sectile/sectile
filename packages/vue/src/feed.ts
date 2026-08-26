@@ -39,7 +39,7 @@ export const FeedRoot = defineComponent({
     label: { type: String, default: undefined }, setSize: { type: Number, default: undefined }, getPosition: { type: Function as PropType<FeedPositionResolver>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
-  emits: { highlight: (_value: string | null): boolean => true, 'request-window': (_direction: FeedDirection, _anchor: string | null, _revision: number, _requestGeneration: number): boolean => true },
+  emits: { highlight: (_value: string | null): boolean => true, requestWindow: (_direction: FeedDirection, _anchor: string | null, _revision: number, _requestGeneration: number): boolean => true },
   slots: Object as SlotsType<{ default: (props: FeedRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<FeedConnection<string>>();
@@ -59,7 +59,7 @@ export const FeedRoot = defineComponent({
         root: element.value, items: props.items, revision: props.revision, defaultHighlightedValue: highlighted.value,
         disabled: props.disabled, ...(props.label === undefined ? {} : { label: props.label }), ...(props.setSize === undefined ? {} : { setSize: props.setSize }),
         ...(props.getPosition === undefined ? {} : { getPosition: props.getPosition }), onHighlightedValueChange: (value) => { highlighted.value = value; emit('highlight', value); },
-        onRequestWindow: (direction, anchor, revision, requestGeneration) => { pending.value = direction; currentRequestGeneration.value = requestGeneration; emit('request-window', direction, anchor, revision, requestGeneration); }, onUpdate: refresh,
+        onRequestWindow: (direction, anchor, revision, requestGeneration) => { pending.value = direction; currentRequestGeneration.value = requestGeneration; emit('requestWindow', direction, anchor, revision, requestGeneration); }, onUpdate: refresh,
       });
       refreshParts(); refresh();
     };

@@ -162,6 +162,8 @@ defineExpose({ element })
 
 Portal 파트는 같은 mount 또는 update tick 안에서 뒤늦게 렌더링되는 대상을 위해 `defer`를 지원합니다. 다음 tick에 생성되는 대상까지 기다리지는 않습니다. `body`나 이미 마운트된 대상을 쓸 때는 `false`로 두면 됩니다. Vue의 [deferred Teleport 문서](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport)도 함께 참고하세요.
 
+이벤트 API 이름은 `positionChange`, `interactOutside`처럼 camelCase를 사용합니다. Vue 템플릿에서는 `@position-change`, `@interact-outside`처럼 kebab-case로 수신하고, render function과 JSX에서는 `onPositionChange`, `onInteractOutside`를 사용합니다.
+
 ## 슬롯 상태
 
 Root와 구성 요소 슬롯은 현재 의미 상태를 노출합니다. 상호작용에 따라 내용이 바뀌어야 하면 슬롯 속성을 사용하고, CSS만 바뀌면 데이터 속성을 사용합니다.
