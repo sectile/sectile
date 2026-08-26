@@ -153,6 +153,7 @@ const enProps = Object.freeze({
   validate: 'Validates the current field and returns application issues.',
   validateOn: 'Interaction events that run validation before the first submission attempt.',
   revalidateOn: 'Interaction events that rerun the active validation intent after validation fails.',
+  unmountOnExit: 'Whether presence-managed content is removed from the DOM after its exit motion completes.',
 });
 
 const koProps = Object.freeze({
@@ -280,6 +281,7 @@ const koProps = Object.freeze({
   validate: '현재 필드를 검증하고 애플리케이션 이슈를 반환하는 함수입니다.',
   validateOn: '첫 제출 전 검증을 수행할 사용자 조작 이벤트입니다.',
   revalidateOn: '검증 실패 후 기존 검증 의도를 다시 수행할 사용자 조작 이벤트입니다.',
+  unmountOnExit: '닫힘 모션이 끝난 뒤 presence 관리 콘텐츠를 DOM에서 제거할지 여부입니다.',
 });
 
 const enSlots = Object.freeze({

@@ -199,6 +199,13 @@ Vue 패키지: `@sectile/vue/alert-dialog`
 <p>열린 콘텐츠 안에 키보드 포커스를 유지할지 여부입니다.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>unmountOnExit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>닫힘 모션이 끝난 뒤 presence 관리 콘텐츠를 DOM에서 제거할지 여부입니다.</p>
+</dd>
+</div>
 </dl>
 
 #### `AlertDialogPartProps`

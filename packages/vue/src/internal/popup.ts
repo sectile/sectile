@@ -8,7 +8,6 @@ import {
   mergeProps,
   nextTick,
   onBeforeUnmount,
-  onMounted,
   provide,
   ref,
   shallowRef,
@@ -112,6 +111,7 @@ export interface PopupRootProps {
   readonly strategy?: Strategy;
   readonly middleware?: Middleware[];
   readonly autoUpdate?: boolean | AutoUpdateOptions;
+  readonly unmountOnExit?: boolean;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
@@ -120,6 +120,7 @@ interface PopupContext {
   readonly open: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
   readonly modal: ComputedRef<boolean>;
+  readonly unmountOnExit: ComputedRef<boolean>;
   readonly label: ComputedRef<string | undefined>;
   readonly contentID: string;
   readonly titleID: string;
@@ -132,7 +133,10 @@ interface PopupContext {
   readonly content: ShallowRef<HTMLElement | undefined>;
   readonly side: ComputedRef<'top' | 'right' | 'bottom' | 'left'>;
   connect(): void;
+  scheduleConnect(): void;
   disconnect(): void;
+  activateTrigger(event?: Event): void;
+  deactivateTrigger(event?: Event): void;
   close(): void;
   refresh(): void;
 }
@@ -192,6 +196,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       strategy: { type: String as PropType<Strategy>, default: 'fixed' },
       middleware: { type: Array as PropType<Middleware[]>, default: undefined },
       autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
+      unmountOnExit: { type: Boolean, default: false },
     },
     emits: {
       'update:open': (_open: boolean): boolean => true,
@@ -216,6 +221,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const open = computed(() => localOpen.value);
       const disabled = computed(() => props.disabled);
       const modal = computed(() => props.modal);
+      const unmountOnExit = computed(() => props.unmountOnExit);
       const label = computed(() => props.label);
       const side = computed(() => props.side);
       const update = (): void => {
@@ -271,8 +277,32 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         });
         update();
       };
+      let connectScheduled = false;
+      let destroyed = false;
+      const scheduleConnect = (): void => {
+        if (connectScheduled || destroyed || (props.unmountOnExit && !localOpen.value)) return;
+        connectScheduled = true;
+        void nextTick(() => {
+          connectScheduled = false;
+          if (!destroyed) connect();
+        });
+      };
+      const activateTrigger = (event?: Event): void => {
+        if (event?.defaultPrevented === true || connection.value !== undefined || props.disabled || localOpen.value) return;
+        if (!controlled) localOpen.value = true;
+        emit('update:open', true);
+      };
+      const deactivateTrigger = (event?: Event): void => {
+        if (event?.defaultPrevented === true || connection.value !== undefined || !localOpen.value) return;
+        if (!controlled) localOpen.value = false;
+        emit('update:open', false);
+      };
       watch(() => props.open, (next) => {
-        if (!controlled || next === undefined || connection.value === undefined) return;
+        if (!controlled || next === undefined) return;
+        if (connection.value === undefined) {
+          localOpen.value = next;
+          return;
+        }
         const result = connection.value.syncControlledValue(next);
         if (!result.ok) throw new TypeError(`${config.scope} controlled open state could not be synchronized.`);
         localOpen.value = next;
@@ -285,9 +315,13 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         () => props.avoidCollisions, () => props.arrowPadding, () => props.hideWhenDetached,
         () => props.strategy, () => props.middleware, () => props.autoUpdate,
       ], connect);
-      onBeforeUnmount(disconnect);
+      onBeforeUnmount(() => {
+        destroyed = true;
+        disconnect();
+      });
       provide<PopupContext>(contextKey, {
-        open, disabled, modal, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side, connect, disconnect,
+        open, disabled, modal, unmountOnExit, label, contentID, titleID, descriptionID, trigger, anchor, arrow, overlay, handle, content, side,
+        connect, scheduleConnect, disconnect, activateTrigger, deactivateTrigger,
         close: () => { connection.value?.handleEvent('close'); },
         refresh: () => { connection.value?.refresh(); },
       });
@@ -299,10 +333,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Trigger`, inheritAttrs: false, props: buttonProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Trigger');
-      onMounted(root.connect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.trigger.value = element instanceof HTMLElement ? element : undefined; },
+        elementRef: (element: unknown) => { root.trigger.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
+        ...(config.triggerMode === 'click'
+          ? { onClick: root.activateTrigger }
+          : { onFocus: root.activateTrigger, onBlur: root.deactivateTrigger, onMouseenter: root.activateTrigger, onMouseleave: root.deactivateTrigger }),
         type: props.as === 'button' ? 'button' : undefined,
         disabled: root.disabled.value,
         'aria-haspopup': config.role === 'tooltip' ? undefined : 'dialog',
@@ -322,18 +358,25 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const element = shallowRef<HTMLElement>();
       const present = usePresence(root.open, element);
       watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
-      onMounted(root.connect);
-      onBeforeUnmount(root.disconnect);
-      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild,
-        elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.content.value = node; },
-        id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
-        'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
-        'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
-        'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
-        'data-side': config.directional === true ? root.side.value : undefined,
-        'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
-      }), slots);
+      return (): VNodeChild => {
+        if (root.unmountOnExit.value && !present.value) return null;
+        return h(Primitive, mergeProps(attrs, {
+          as: props.as, asChild: props.asChild,
+          elementRef: (candidate: unknown) => {
+            const node = candidate instanceof HTMLElement ? candidate : undefined;
+            element.value = node;
+            root.content.value = node;
+            if (node === undefined) root.disconnect();
+            else root.scheduleConnect();
+          },
+          id: root.contentID, role: config.role, hidden: !present.value, dir: direction.value,
+          'aria-modal': config.role === 'tooltip' ? undefined : String(root.modal.value),
+          'aria-label': root.label.value, 'aria-labelledby': root.label.value === undefined ? root.titleID : undefined, 'aria-describedby': root.descriptionID,
+          'data-scope': config.scope, 'data-part': 'content', 'data-state': root.open.value ? 'open' : 'closed',
+          'data-side': config.directional === true ? root.side.value : undefined,
+          'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
+        }), slots);
+      };
     },
   });
 
@@ -341,10 +384,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Anchor`, inheritAttrs: false, props: primitiveProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Anchor');
-      onMounted(root.connect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.anchor.value = element instanceof HTMLElement ? element : undefined; },
+        elementRef: (element: unknown) => { root.anchor.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
         'data-scope': config.scope, 'data-part': 'anchor',
       }), slots);
     },
@@ -354,10 +396,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Arrow`, inheritAttrs: false, props: primitiveProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Arrow');
-      onMounted(root.connect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (element: unknown) => { root.arrow.value = element instanceof HTMLElement ? element : undefined; },
+        elementRef: (element: unknown) => { root.arrow.value = element instanceof HTMLElement ? element : undefined; root.scheduleConnect(); },
         'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'arrow',
       }), slots);
     },
@@ -369,13 +410,15 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       const root = useRoot('Overlay');
       const element = shallowRef<HTMLElement>();
       const present = usePresence(root.open, element);
-      onMounted(root.connect);
-      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.overlay.value = node; }, hidden: !present.value, 'aria-hidden': 'true',
-        'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
-        'data-side': config.directional === true ? root.side.value : undefined,
-        'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
-      }), slots);
+      return (): VNodeChild => {
+        if (root.unmountOnExit.value && !present.value) return null;
+        return h(Primitive, mergeProps(attrs, {
+          as: props.as, asChild: props.asChild, elementRef: (candidate: unknown) => { const node = candidate instanceof HTMLElement ? candidate : undefined; element.value = node; root.overlay.value = node; root.scheduleConnect(); }, hidden: !present.value, 'aria-hidden': 'true',
+          'data-scope': config.scope, 'data-part': 'overlay', 'data-state': root.open.value ? 'open' : 'closed',
+          'data-side': config.directional === true ? root.side.value : undefined,
+          'data-swipe-direction': config.directional === true ? swipeDirection(root.side.value) : undefined,
+        }), slots);
+      };
     },
   });
 
@@ -383,10 +426,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Handle`, inheritAttrs: false, props: primitiveProps,
     setup(props, { attrs, slots }) {
       const root = useRoot('Handle');
-      onMounted(root.connect);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
-        elementRef: (candidate: unknown) => { root.handle.value = candidate instanceof HTMLElement ? candidate : undefined; },
+        elementRef: (candidate: unknown) => { root.handle.value = candidate instanceof HTMLElement ? candidate : undefined; root.scheduleConnect(); },
         'aria-hidden': 'true', 'data-scope': config.scope, 'data-part': 'handle',
         'data-state': root.open.value ? 'open' : 'closed',
         'data-side': config.directional === true ? root.side.value : undefined,

@@ -162,6 +162,8 @@ defineExpose({ element })
 
 Portal 파트는 같은 mount 또는 update tick 안에서 뒤늦게 렌더링되는 대상을 위해 `defer`를 지원합니다. 다음 tick에 생성되는 대상까지 기다리지는 않습니다. `body`나 이미 마운트된 대상을 쓸 때는 `false`로 두면 됩니다. Vue의 [deferred Teleport 문서](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport)도 함께 참고하세요.
 
+Dialog, Alert Dialog, Drawer, Popover, Tooltip, Select root는 기본적으로 닫힌 동안에도 Content와, 해당하는 경우 Overlay DOM을 유지합니다. `unmountOnExit`을 지정하면 CSS 닫힘 animation 또는 transition이 끝난 뒤 presence 관리 파트를 제거합니다. Root와 Trigger는 유지되므로 다시 열 수 있습니다. DOM을 다시 만들기 때문에 비제어 form 입력값 같은 DOM 내부 상태도 초기화됩니다.
+
 이벤트 API 이름은 `positionChange`, `interactOutside`처럼 camelCase를 사용합니다. Vue 템플릿에서는 `@position-change`, `@interact-outside`처럼 kebab-case로 수신하고, render function과 JSX에서는 `onPositionChange`, `onInteractOutside`를 사용합니다.
 
 ## 슬롯 상태

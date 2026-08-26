@@ -36,7 +36,7 @@ export type TooltipRootProps = Pick<PopupRootProps,
   | 'open' | 'defaultOpen' | 'disabled'
   | 'side' | 'align' | 'sideOffset'
   | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions'
-  | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'middleware' | 'autoUpdate'
+  | 'arrowPadding' | 'hideWhenDetached' | 'strategy' | 'middleware' | 'autoUpdate' | 'unmountOnExit'
 >;
 export type TooltipRootSlotProps = PopupRootSlotProps;
 export type TooltipPartProps = PopupPartProps;

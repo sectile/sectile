@@ -45,6 +45,7 @@ const popupRootDefaults = Object.freeze({
   strategy: "'fixed'",
   middleware: 'undefined',
   autoUpdate: 'undefined',
+  unmountOnExit: 'false',
 });
 
 export function vueApiDefault(locale, component, typeName, property, extracted) {

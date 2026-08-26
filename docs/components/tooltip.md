@@ -141,6 +141,13 @@ Vue package: `@sectile/vue/tooltip`
 <p>CSS positioning strategy used for anchored content.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>unmountOnExit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether presence-managed content is removed from the DOM after its exit motion completes.</p>
+</dd>
+</div>
 </dl>
 
 #### `TooltipPartProps`

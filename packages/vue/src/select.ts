@@ -1,5 +1,5 @@
 import {
-  Teleport, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, ref,
+  Teleport, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref,
   shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
@@ -38,6 +38,7 @@ export interface SelectRootProps {
   readonly strategy?: Strategy;
   readonly middleware?: Middleware[];
   readonly autoUpdate?: boolean | AutoUpdateOptions;
+  readonly unmountOnExit?: boolean;
   readonly policies?: SelectPolicies<string>;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -52,6 +53,7 @@ export interface SelectPortalProps { readonly to?: string | HTMLElement; readonl
 
 interface RootContext {
   readonly state: ComputedRef<SelectRootSlotProps>;
+  readonly unmountOnExit: ComputedRef<boolean>;
   readonly label: ComputedRef<string | undefined>;
   readonly textValue: ComputedRef<(id: string) => string>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
@@ -60,6 +62,7 @@ interface RootContext {
   registerTrigger(element?: HTMLButtonElement): void;
   registerPopup(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
+  activateTrigger(event?: Event): void;
   refresh(): void;
 }
 interface ItemContext { readonly state: ComputedRef<SelectItemSlotProps> }
@@ -83,6 +86,7 @@ export const SelectRoot = defineComponent({
     collisionBoundary: { type: [String, Object, Array] as PropType<Boundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
     hideWhenDetached: { type: Boolean, default: true }, strategy: { type: String as PropType<Strategy>, default: 'fixed' },
     middleware: { type: Array as PropType<Middleware[]>, default: undefined }, autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
+    unmountOnExit: { type: Boolean, default: false },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -109,6 +113,7 @@ export const SelectRoot = defineComponent({
     const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value);
     const valueControlled = useControlledStateInvariant('SelectRoot', 'modelValue', () => props.modelValue);
     const openControlled = useControlledStateInvariant('SelectRoot', 'open', () => props.open);
+    const unmountOnExit = computed(() => props.unmountOnExit);
     const state = computed<SelectRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
@@ -160,14 +165,43 @@ export const SelectRoot = defineComponent({
       });
       refreshItems(); refresh();
     };
+    let mounted = false;
+    let connectScheduled = false;
+    const scheduleConnect = (): void => {
+      if (!mounted || connectScheduled || (props.unmountOnExit && !state.value.open)) return;
+      connectScheduled = true;
+      void nextTick(() => {
+        connectScheduled = false;
+        if (mounted) connect();
+      });
+    };
     provide<RootContext>(rootKey, {
-      state, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
+      state, unmountOnExit, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: computed(() => new Set(props.disabledItems)),
-      registerTrigger: (element) => { trigger.value = element; }, registerPopup: (element) => { popup.value = element; if (element !== undefined) connection.value?.refresh(); },
+      registerTrigger: (element) => {
+        trigger.value = element;
+        if (element === undefined) {
+          connection.value?.disconnect();
+          connection.value = undefined;
+        } else scheduleConnect();
+      },
+      registerPopup: (element) => {
+        popup.value = element;
+        if (element === undefined) {
+          connection.value?.disconnect();
+          connection.value = undefined;
+        } else scheduleConnect();
+      },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled),
+      activateTrigger: (event) => {
+        if (event?.defaultPrevented === true || connection.value !== undefined || props.disabled || state.value.open) return;
+        if (!openControlled) localOpen.value = true;
+        emit('update:open', true);
+      },
       refresh: () => connection.value?.refresh(),
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(() => { mounted = true; connect(); });
+    onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
     watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.middleware, () => props.autoUpdate, () => props.policies], connect);
     watch([() => props.modelValue, () => props.open], () => {
       if (connection.value === undefined) return;
@@ -179,7 +213,7 @@ export const SelectRoot = defineComponent({
     });
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; scheduleConnect(); },
         'data-scope': 'select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
@@ -202,6 +236,7 @@ export const SelectTrigger = defineComponent({
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('SelectTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLButtonElement ? node : undefined),
+    onClick: root.activateTrigger,
     type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled,
     'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'aria-controls': root.contentID, 'aria-label': root.label.value,
     'data-scope': 'select', 'data-part': 'trigger', 'data-state': root.state.value.open ? 'open' : 'closed',
@@ -221,12 +256,15 @@ export const SelectContent = defineComponent({
   name: 'SectileSelectContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, () => root.refresh()); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
-    id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
-    'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
-    'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-  }), { default: () => slots['default']?.(root.state.value) }); },
+  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, () => root.refresh()); return (): VNodeChild => {
+    if (root.unmountOnExit.value && !present.value) return null;
+    return h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
+      id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
+      'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
+      'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
+    }), { default: () => slots['default']?.(root.state.value) });
+  }; },
 });
 
 export const SelectItem = defineComponent({

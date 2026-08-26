@@ -243,6 +243,13 @@ Vue package: `@sectile/vue/select`
 <p>Idle time in milliseconds before the printable-text search buffer resets.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>unmountOnExit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether presence-managed content is removed from the DOM after its exit motion completes.</p>
+</dd>
+</div>
 </dl>
 
 #### `SelectItemProps`

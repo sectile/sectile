@@ -243,6 +243,13 @@ Vue 패키지: `@sectile/vue/select`
 <p>글자 검색 버퍼를 초기화하기 전 대기 시간(밀리초)입니다.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>unmountOnExit</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>닫힘 모션이 끝난 뒤 presence 관리 콘텐츠를 DOM에서 제거할지 여부입니다.</p>
+</dd>
+</div>
 </dl>
 
 #### `SelectItemProps`
