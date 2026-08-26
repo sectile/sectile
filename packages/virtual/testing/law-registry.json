@@ -12,6 +12,18 @@
     { "id": "VRT-03", "theory": "virtual-layout", "statement": "stale measurement generations cannot mutate layout" },
     { "id": "VRT-04", "theory": "virtual-layout", "statement": "sequence patches preserve surviving viewport anchors" },
     { "id": "VRT-05", "theory": "virtual-layout", "statement": "target scrolling is an explicit host command" },
-    { "id": "VRT-06", "theory": "virtual-layout", "statement": "data loading remains a collection-window request" }
+    { "id": "VRT-06", "theory": "virtual-layout", "statement": "data loading remains a collection-window request" },
+    { "id": "MRY-01", "theory": "masonry-layout", "statement": "every identity is assigned exactly once and shortest-lane placement matches the reference scan" },
+    { "id": "MRY-02", "theory": "masonry-layout", "statement": "viewport queries equal a full geometry scan and reverse flow reflects forward geometry" },
+    { "id": "MRY-03", "theory": "masonry-layout", "statement": "round-robin lane ownership is stable across measurement changes" },
+    { "id": "MRY-04", "theory": "masonry-layout", "statement": "measurement and item mutation preserve surviving anchors and reject stale generations" },
+    { "id": "SPA-01", "theory": "spatial-layout", "statement": "packed spatial queries equal a full rectangle scan" },
+    { "id": "SPA-02", "theory": "spatial-layout", "statement": "z-index and declaration order define deterministic paint order" },
+    { "id": "SPA-03", "theory": "spatial-layout", "statement": "measurement, update, and removal keep identity indexes consistent" },
+    { "id": "SPA-04", "theory": "spatial-layout", "statement": "rectangle boundaries, zero-size items, anchors, and stale generations are explicit" },
+    { "id": "GRD-01", "theory": "track-grid-layout", "statement": "sparse region queries equal a full region scan" },
+    { "id": "GRD-02", "theory": "track-grid-layout", "statement": "merged regions reflect exactly under reversed row and column flows" },
+    { "id": "GRD-03", "theory": "track-grid-layout", "statement": "overlap and region-splitting track mutations reject atomically" },
+    { "id": "GRD-04", "theory": "track-grid-layout", "statement": "row and column measurements preserve indexes, anchors, and generation" }
   ]
 }

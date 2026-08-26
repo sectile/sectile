@@ -1,0 +1,120 @@
+/* Law evidence: MRY-01 MRY-02 MRY-03 MRY-04 */
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createSequence } from '@sectile/core/sequence';
+import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import {
+  applyMasonryMeasurements,
+  applyMasonryMutation,
+  createMasonryLayout,
+  masonryRectAt,
+  queryMasonryLayout,
+  tryApplyMasonryMeasurements,
+} from '../../.verification-dist/masonry-layout.js';
+
+const exact = (value) => ({ kind: 'exact', value });
+const domain = (size) => createSequence(
+  Array.from({ length: size }, (_, index) => `item-${index}`),
+  { maxItems: Math.max(1, size) },
+);
+
+function intersects(left, right) {
+  return left.x < right.x + right.width && right.x < left.x + left.width
+    && left.y < right.y + right.height && right.y < left.y + left.height;
+}
+
+function referenceShortestLanes(extents, laneCount, itemGap) {
+  const laneEnds = Array(laneCount).fill(0);
+  return extents.map((extent) => {
+    let selected = 0;
+    for (let lane = 1; lane < laneCount; lane += 1) {
+      if (laneEnds[lane] < laneEnds[selected]) selected = lane;
+    }
+    laneEnds[selected] += extent + itemGap;
+    return selected;
+  });
+}
+
+test('MRY-01: shortest placement matches a reference scan and assigns every identity once', () => {
+  const values = Array.from({ length: 257 }, (_, index) => 11 + ((index * 37) % 71));
+  const state = createMasonryLayout(domain(values.length), createExtentIndex(values.map(exact)), {
+    laneCount: 32,
+    laneExtent: 40,
+    laneGap: 3,
+    itemGap: 5,
+    placementPolicy: 'shortest',
+  });
+  const plan = queryMasonryLayout(state, {
+    viewport: { x: 0, y: 0, width: 2_000, height: 100_000 },
+  });
+  assert.equal(plan.placements.length, values.length);
+  assert.equal(new Set(plan.placements.map(({ id }) => id)).size, values.length);
+  assert.deepEqual(plan.placements.map(({ lane }) => lane), referenceShortestLanes(values, 32, 5));
+});
+
+test('MRY-02: viewport queries equal a full rectangle scan and reverse flow reflects geometry', () => {
+  const values = Array.from({ length: 96 }, (_, index) => 10 + ((index * 19) % 43));
+  const input = { laneCount: 5, laneExtent: 30, laneGap: 4, itemGap: 3 };
+  const forward = createMasonryLayout(domain(values.length), createExtentIndex(values.map(exact)), input);
+  const reverse = createMasonryLayout(domain(values.length), createExtentIndex(values.map(exact)), { ...input, flow: 'reverse' });
+  const full = queryMasonryLayout(forward, { viewport: { x: 0, y: 0, width: 200, height: 100_000 } });
+
+  for (let step = 0; step < 32; step += 1) {
+    const viewport = { x: (step * 17) % 120, y: (step * 73) % Math.max(1, full.contentSize.height), width: 67, height: 91 };
+    const expected = full.placements.filter(({ rect }) => intersects(rect, viewport)).map(({ id }) => id);
+    assert.deepEqual(queryMasonryLayout(forward, { viewport }).placements.map(({ id }) => id), expected);
+  }
+
+  for (let index = 0; index < values.length; index += 1) {
+    const id = `item-${index}`;
+    const left = masonryRectAt(forward, id);
+    const right = masonryRectAt(reverse, id);
+    assert.equal(left.y + right.y + left.height, full.contentSize.height);
+    assert.equal(left.x, right.x);
+  }
+});
+
+test('MRY-03: round-robin lane ownership survives dynamic measurements', () => {
+  const values = Array.from({ length: 48 }, (_, index) => 20 + (index % 9));
+  const state = createMasonryLayout(domain(values.length), createExtentIndex(values.map(exact)), {
+    laneCount: 7,
+    laneExtent: 50,
+    placementPolicy: 'round-robin',
+  });
+  const measured = applyMasonryMeasurements(state, {
+    generation: state.generation,
+    measurements: Array.from({ length: 16 }, (_, index) => ({ index: index * 3, extent: exact(60 + index) })),
+  }).state;
+  const plan = queryMasonryLayout(measured, { viewport: { x: 0, y: 0, width: 400, height: 100_000 } });
+  assert.deepEqual(plan.placements.map(({ index, lane }) => [index, lane]), values.map((_, index) => [index, index % 7]));
+});
+
+test('MRY-04: measurements and item mutations preserve anchors and reject stale generations', () => {
+  const state = createMasonryLayout(domain(12), createExtentIndex(Array.from({ length: 12 }, () => exact(20))), {
+    laneCount: 2,
+    laneExtent: 40,
+    itemGap: 2,
+    placementPolicy: 'round-robin',
+  });
+  const anchor = { id: 'item-8', viewportOffset: { x: 0, y: 0 } };
+  const before = masonryRectAt(state, anchor.id);
+  const measured = applyMasonryMeasurements(state, {
+    generation: state.generation,
+    anchor,
+    measurements: [{ index: 0, extent: exact(35) }],
+  });
+  const afterMeasurement = masonryRectAt(measured.state, anchor.id);
+  assert.deepEqual(measured.scrollDelta, {
+    x: afterMeasurement.x - before.x,
+    y: afterMeasurement.y - before.y,
+  });
+  assert.equal(tryApplyMasonryMeasurements(measured.state, { generation: state.generation, measurements: [] }).ok, false);
+
+  const inserted = applyMasonryMutation(measured.state, {
+    type: 'items',
+    patch: { type: 'splice', index: 0, deleteCount: 0, inserted: ['inserted'] },
+    insertedExtents: [exact(10)],
+  }, anchor);
+  assert.equal(inserted.state.domain.at(0), 'inserted');
+  assert.ok(masonryRectAt(inserted.state, anchor.id) !== null);
+});

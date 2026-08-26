@@ -12,6 +12,18 @@
     "VRT-03": "tests/runtime/linear-layout.test.mjs",
     "VRT-04": "tests/runtime/linear-layout.test.mjs",
     "VRT-05": "tests/runtime/linear-layout.test.mjs",
-    "VRT-06": "tests/runtime/linear-layout.test.mjs"
+    "VRT-06": "tests/runtime/linear-layout.test.mjs",
+    "MRY-01": "tests/runtime/masonry-layout.test.mjs",
+    "MRY-02": "tests/runtime/masonry-layout.test.mjs",
+    "MRY-03": "tests/runtime/masonry-layout.test.mjs",
+    "MRY-04": "tests/runtime/masonry-layout.test.mjs",
+    "SPA-01": "tests/runtime/spatial-layout.test.mjs",
+    "SPA-02": "tests/runtime/spatial-layout.test.mjs",
+    "SPA-03": "tests/runtime/spatial-layout.test.mjs",
+    "SPA-04": "tests/runtime/spatial-layout.test.mjs",
+    "GRD-01": "tests/runtime/track-grid-layout.test.mjs",
+    "GRD-02": "tests/runtime/track-grid-layout.test.mjs",
+    "GRD-03": "tests/runtime/track-grid-layout.test.mjs",
+    "GRD-04": "tests/runtime/track-grid-layout.test.mjs"
   }
 }

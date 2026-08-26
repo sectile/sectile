@@ -1,10 +1,10 @@
 import { performance } from 'node:perf_hooks';
-import { createSequence } from '@sectile/core/sequence';
+import { createSequence, tryApplySequencePatch } from '@sectile/core/sequence';
 import { createExtentIndex } from '@sectile/virtual/extent-index';
 import { applyLinearMeasurements, createLinearLayout, queryLinearLayout, queryLinearWindow } from '@sectile/virtual/linear-layout';
-import { createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
-import { createSpatialLayout, querySpatialLayout } from '@sectile/virtual/spatial-layout';
-import { applyGridMeasurements, createTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout';
+import { applyMasonryMeasurements, applyMasonryMutation, createMasonryLayout, queryMasonryLayout } from '@sectile/virtual/masonry-layout';
+import { applySpatialMeasurements, applySpatialMutation, createSpatialLayout, querySpatialLayout } from '@sectile/virtual/spatial-layout';
+import { applyGridMeasurements, applyTrackGridMutation, createTrackGridLayout, queryTrackGridLayout } from '@sectile/virtual/track-grid-layout';
 
 globalThis.OffscreenCanvas ??= class OffscreenCanvas {
   getContext() {
@@ -81,6 +81,24 @@ for (const size of [100_000, 1_000_000]) {
     sink += index.size;
   });
   measurements[size] = { lookupPairUs: lookupUs, batchUpdate32Us: batchUpdateUs, replace8Us: spliceUs };
+}
+
+const sequencePatch = {};
+for (const size of [100_000, 1_000_000]) {
+  const sequence = createSequence(Array.from({ length: size }, (_, index) => `sequence-${index}`), { maxItems: size + 1 });
+  const spliceMs = measureColdMilliseconds((sample) => tryApplySequencePatch(sequence, {
+    type: 'splice',
+    index: size >>> 1,
+    deleteCount: 1,
+    inserted: [`inserted-${sample}`],
+  }, { maxItems: size + 1 }).value.size);
+  const moveMs = measureColdMilliseconds(() => tryApplySequencePatch(sequence, {
+    type: 'move',
+    from: size >>> 2,
+    to: (size * 3) >>> 2,
+    count: 32,
+  }, { maxItems: size + 1 }).value.size);
+  sequencePatch[size] = { replace1Ms: spliceMs, move32Ms: moveMs };
 }
 
 const virtualDomain = createSequence(
@@ -165,6 +183,9 @@ const gridMeasurement32Us = measure(2_000, (iteration) => {
   measuredGrid = applyGridMeasurements(measuredGrid, { generation: measuredGrid.generation, measurements: gridMeasurementVariants[iteration & 1] }).state;
   sink += measuredGrid.rows.totalExtent;
 });
+const gridInsertTrackMs = measureColdMilliseconds(() => applyTrackGridMutation(gridState, {
+  type: 'splice-tracks', axis: 'row', index: 0, deleteCount: 0, inserted: [exact(28)],
+}).state.generation);
 
 const strategyDomain = createSequence(Array.from({ length: strategySize }, (_, index) => `strategy-${index}`), { maxItems: strategySize });
 const strategyExtents = createExtentIndex(Array.from({ length: strategySize }, (_, index) => estimated(24 + (index % 73))));
@@ -177,6 +198,25 @@ const masonryQueryUs = measure(20_000, (iteration) => {
   sink += plan.placements.length;
 });
 const masonryBuildMs = measureColdMilliseconds(() => createMasonryLayout(strategyDomain, strategyExtents, { laneCount: 8, laneExtent: 160, laneGap: 12, itemGap: 12 }).generation);
+const masonryMeasurement1Ms = measureColdMilliseconds((sample) => applyMasonryMeasurements(masonryState, {
+  generation: masonryState.generation,
+  measurements: [{ index: sample & 1 ? 1 : strategySize - 2, extent: exact(72 + sample) }],
+}).state.generation);
+const masonryMeasurements32 = Array.from({ length: 32 }, (_, index) => ({ index: 40_000 + index * 127, extent: exact(48 + (index % 17)) }));
+const masonryMeasurement32Ms = measureColdMilliseconds(() => applyMasonryMeasurements(masonryState, {
+  generation: masonryState.generation,
+  measurements: masonryMeasurements32,
+}).state.generation);
+const masonryInsertEarlyMs = measureColdMilliseconds((sample) => applyMasonryMutation(masonryState, {
+  type: 'items',
+  patch: { type: 'splice', index: 1, deleteCount: 0, inserted: [`masonry-early-${sample}`] },
+  insertedExtents: [exact(44)],
+}).state.generation);
+const masonryInsertLateMs = measureColdMilliseconds((sample) => applyMasonryMutation(masonryState, {
+  type: 'items',
+  patch: { type: 'splice', index: strategySize - 1, deleteCount: 0, inserted: [`masonry-late-${sample}`] },
+  insertedExtents: [exact(44)],
+}).state.generation);
 
 const spatialItems = Array.from({ length: strategySize }, (_, index) => ({
   id: `spatial-${index}`,
@@ -192,6 +232,31 @@ const spatialQueryUs = measure(5_000, (iteration) => {
   sink += plan.placements.length;
 });
 const spatialBuildMs = measureColdMilliseconds(() => createSpatialLayout(spatialItems).generation);
+const spatialMeasurement1Ms = measureColdMilliseconds((sample) => applySpatialMeasurements(spatialState, {
+  generation: spatialState.generation,
+  measurements: [{ id: `spatial-${sample & 1 ? 1 : strategySize - 2}`, rect: { x: 12 + sample, y: 18 + sample, width: 30, height: 30 } }],
+}).state.generation);
+const spatialConcentrated32 = Array.from({ length: 32 }, (_, index) => ({
+  id: `spatial-${index}`,
+  rect: { x: 400 + index, y: 500 + index, width: 30, height: 30 },
+}));
+const spatialDistributed32 = Array.from({ length: 32 }, (_, index) => ({
+  id: `spatial-${index * 3_001}`,
+  rect: { x: (index * 719) % 20_000, y: (index * 283) % 2_000, width: 30, height: 30 },
+}));
+const spatialConcentrated32Ms = measureColdMilliseconds(() => applySpatialMeasurements(spatialState, {
+  generation: spatialState.generation,
+  measurements: spatialConcentrated32,
+}).state.generation);
+const spatialDistributed32Ms = measureColdMilliseconds(() => applySpatialMeasurements(spatialState, {
+  generation: spatialState.generation,
+  measurements: spatialDistributed32,
+}).state.generation);
+const spatialInsertRemoveMs = measureColdMilliseconds((sample) => applySpatialMutation(spatialState, {
+  type: 'update',
+  remove: [`spatial-${sample}`],
+  upsert: [{ id: `spatial-added-${sample}`, rect: { x: 10, y: 20, width: 30, height: 40 } }],
+}).state.generation);
 
 const result = {
   benchmark: 'sectile-virtualization-vs-pretext',
@@ -199,15 +264,33 @@ const result = {
   environment: { node: process.version, platform: `${process.platform}-${process.arch}` },
   pretext: { version: '0.0.8', layoutUs: pretextLayoutUs, batch32Us: pretextBatch32Us },
   extentIndex: measurements,
+  sequencePatch,
   linearLayout: {
     viewportUpdateUs,
     materializedPlanUs: linearPlanUs,
     changedMeasurement32Us: virtualMeasurement32Us,
     idempotentMeasurement32Us,
   },
-  trackGrid: { items: strategySize, queryUs: gridQueryUs, changedRowMeasurement32Us: gridMeasurement32Us, buildMs: gridBuildMs },
-  masonry: { items: strategySize, lanes: 8, queryUs: masonryQueryUs, buildMs: masonryBuildMs },
-  spatial: { items: strategySize, queryUs: spatialQueryUs, buildMs: spatialBuildMs },
+  trackGrid: { items: strategySize, queryUs: gridQueryUs, changedRowMeasurement32Us: gridMeasurement32Us, insertTrackMs: gridInsertTrackMs, buildMs: gridBuildMs },
+  masonry: {
+    items: strategySize,
+    lanes: 8,
+    queryUs: masonryQueryUs,
+    buildMs: masonryBuildMs,
+    changedMeasurement1Ms: masonryMeasurement1Ms,
+    changedMeasurement32Ms: masonryMeasurement32Ms,
+    insertEarlyMs: masonryInsertEarlyMs,
+    insertLateMs: masonryInsertLateMs,
+  },
+  spatial: {
+    items: strategySize,
+    queryUs: spatialQueryUs,
+    buildMs: spatialBuildMs,
+    changedMeasurement1Ms: spatialMeasurement1Ms,
+    changedMeasurementConcentrated32Ms: spatialConcentrated32Ms,
+    changedMeasurementDistributed32Ms: spatialDistributed32Ms,
+    insertRemove1Ms: spatialInsertRemoveMs,
+  },
   integration: {
     pretextAndBatchUpdate32Us: combinedBatch32Us,
     addedBookkeepingUs: Number((combinedBatch32Us - pretextBatch32Us).toFixed(3)),
