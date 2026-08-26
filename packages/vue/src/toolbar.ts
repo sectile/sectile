@@ -5,6 +5,7 @@ import {
 import { createToolbar, type ToolbarConnection, type ToolbarPolicies } from '@sectile/dom/toolbar';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection } from './host-provider.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToolbarRootProps { readonly items: readonly string[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly disabledItems?: readonly string[]; readonly disabled?: boolean; readonly orientation?: 'horizontal' | 'vertical'; readonly label?: string; readonly policies?: ToolbarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ToolbarRootSlotProps { readonly highlightedValue: string | null; readonly disabled: boolean; readonly orientation: 'horizontal' | 'vertical' }
@@ -29,7 +30,7 @@ export const ToolbarRoot = defineComponent({
     const direction = useHostDirection();
     const root = shallowRef<HTMLElement>(); const connection = shallowRef<ToolbarConnection<string>>();
     const current = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('ToolbarRoot', 'modelValue', () => props.modelValue);
     const state = computed<ToolbarRootSlotProps>(() => ({ highlightedValue: props.modelValue !== undefined ? props.modelValue : current.value, disabled: props.disabled, orientation: props.orientation }));
     const refresh = (): void => { if (connection.value !== undefined) current.value = connection.value.getSnapshot().state.cursor.current; refreshItems(); };
     const refreshItems = (): void => { if (root.value === undefined || connection.value === undefined) return; root.value.querySelectorAll<HTMLElement>('[data-sectile-toolbar-id]').forEach((element) => { const id = element.dataset['sectileToolbarId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, props.disabledItems.includes(id)); }); };

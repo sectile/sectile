@@ -12,6 +12,7 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface MultiThumbSliderRootProps {
   readonly thumbs: readonly string[];
@@ -75,7 +76,7 @@ export const MultiThumbSliderRoot = defineComponent({
     const submissions = new Map<number, HTMLInputElement>();
     const connection = shallowRef<MultiThumbSliderConnection<string>>();
     const local = shallowRef<readonly string[]>(normalizeValues(props.modelValue ?? props.defaultValue ?? props.thumbs.map(() => props.min)));
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('MultiThumbSliderRoot', 'modelValue', () => props.modelValue);
     const rangeController = computed(() => {
       const result = createSliderControllerFromRange({ min: String(props.min), max: String(props.max), step: String(props.step) });
       if (!result.ok) throw new TypeError(result.error.message);

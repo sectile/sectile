@@ -1,4 +1,7 @@
 import {
+  Comment,
+  Fragment,
+  Text,
   cloneVNode,
   defineComponent,
   h,
@@ -43,13 +46,33 @@ export function renderPrimitive(
 ): VNodeChild {
   const children = slots['default']?.() ?? [];
   if (!props.asChild) return h(props.as, attributes, children);
-  const child = firstRenderableChild(children);
-  if (child === undefined) {
-    throw new TypeError('A Sectile primitive with asChild requires one rendered child.');
+  const renderable = renderableChildren(children);
+  const child = renderable[0];
+  if (renderable.length !== 1 || child === undefined || typeof child.type === 'symbol') {
+    throw new TypeError(`A Sectile primitive with asChild requires exactly one element child; received ${renderable.length}.`);
   }
   return cloneVNode(child, mergeProps(child.props ?? {}, attributes), true);
 }
 
-function firstRenderableChild(children: readonly VNode[]): VNode | undefined {
-  return children.find((child) => typeof child.type !== 'symbol');
+function renderableChildren(children: readonly VNode[]): readonly VNode[] {
+  const renderable: VNode[] = [];
+  for (const child of children) {
+    if (child.type === Comment) continue;
+    if (child.type === Fragment) {
+      if (Array.isArray(child.children)) {
+        renderable.push(...renderableChildren(child.children.filter(isVNodeChild)));
+      }
+      continue;
+    }
+    if (child.type === Text) {
+      if (String(child.children ?? '').trim().length > 0) renderable.push(child);
+      continue;
+    }
+    renderable.push(child);
+  }
+  return renderable;
+}
+
+function isVNodeChild(value: unknown): value is VNode {
+  return typeof value === 'object' && value !== null && '__v_isVNode' in value;
 }

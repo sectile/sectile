@@ -25,6 +25,7 @@ import type { InteractOutsideEvent, InteractOutsideHandler } from '@sectile/dom'
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useHostDirection, useHostId, useHostPortalTarget } from '../host-provider.js';
 import { usePresence } from './presence.js';
+import { useControlledStateInvariant } from './controlled-state.js';
 
 export interface PopupConnection {
   getSnapshot(): { readonly revision: number };
@@ -199,7 +200,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     },
     slots: Object as SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>,
     setup(props, { emit, slots }) {
-      const controlled = props.open !== undefined;
+      const controlled = useControlledStateInvariant(`${config.scope}Root`, 'open', () => props.open);
       const localOpen = ref(controlled ? props.open as boolean : props.defaultOpen);
       const trigger = shallowRef<HTMLElement>();
       const anchor = shallowRef<HTMLElement>();

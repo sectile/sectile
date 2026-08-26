@@ -16,6 +16,7 @@ import {
   useCompositeFormControl,
 } from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
+import { useControlledStateInvariant } from './controlled-state.js';
 
 export type PickerKind = 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -116,7 +117,11 @@ export function createPickerRoot(kind: PickerKind, name: string, config: PickerR
       const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFrom(yearPageStart.value, yearPageSize));
       const localView = shallowRef(Object.freeze({ year: localHighlight.value.year, month: localHighlight.value.month }));
       const localViewMode = shallowRef<DatePickerViewMode>(props.defaultView);
-      const controlled = { value: props.modelValue !== undefined, open: props.open !== undefined, highlighted: props.highlightedValue !== undefined };
+      const controlled = {
+        value: useControlledStateInvariant(`${kind}PickerRoot`, 'modelValue', () => props.modelValue),
+        open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => props.open),
+        highlighted: useControlledStateInvariant(`${kind}PickerRoot`, 'highlightedValue', () => props.highlightedValue),
+      };
       const state = computed<PickerRootSlotProps>(() => {
         const highlighted = props.highlightedValue ?? localHighlight.value;
         return Object.freeze({

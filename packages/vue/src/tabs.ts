@@ -19,6 +19,7 @@ import {
 } from './internal/tabs-context.js';
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export type TabsActivationMode = 'automatic' | 'manual';
 export interface TabsRootProps {
@@ -63,7 +64,7 @@ export const TabsRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TabsRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('TabsRoot', 'modelValue', () => props.modelValue);
     const instanceID = useHostId();
     const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);

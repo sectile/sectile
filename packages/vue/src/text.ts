@@ -19,6 +19,7 @@ import {
   type TextState,
 } from '@sectile/dom/text';
 import { useNativeInputFormControl } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TextFieldProps {
   readonly modelValue?: string | number;
@@ -67,7 +68,7 @@ export const TextField = defineComponent({
   setup(props, { attrs, emit }) {
     const element = ref<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const participation = useNativeInputFormControl(element);
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
     const initialValue = String(controlled ? props.modelValue : props.defaultValue);
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;

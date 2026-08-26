@@ -4,6 +4,7 @@ import {
 } from 'vue';
 import { createGridControl, type GridConnection, type GridEditMode, type GridPolicies } from '@sectile/dom/grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface GridRootProps {
   readonly rows: readonly (readonly (string | null)[])[];
@@ -55,7 +56,11 @@ export const GridRoot = defineComponent({
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
     const localEditMode = shallowRef<GridEditMode>(props.editMode ?? props.defaultEditMode);
-    const controlled = { value: props.modelValue !== undefined, highlighted: props.highlightedValue !== undefined, editMode: props.editMode !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('GridRoot', 'modelValue', () => props.modelValue),
+      highlighted: useControlledStateInvariant('GridRoot', 'highlightedValue', () => props.highlightedValue),
+      editMode: useControlledStateInvariant('GridRoot', 'editMode', () => props.editMode),
+    };
     const state = computed<GridRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : localHighlight.value,

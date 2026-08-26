@@ -24,11 +24,13 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   connection.setListboxAttributes('Letters');
   assert.equal(root.attributes.get('role'), 'listbox');
   assert.equal(root.attributes.get('aria-label'), 'Letters');
+  assert.equal(root.tabIndex, 0);
   const item = new FakeElement();
   connection.setItemAttributes(item, { id: 'a' });
   assert.equal(item.attributes.get('role'), 'option');
   assert.equal(item.attributes.get('aria-selected'), 'false');
-  assert.equal(item.tabIndex, 0);
+  assert.equal(item.tabIndex, -1);
+  assert.equal(root.attributes.get('aria-activedescendant'), item.id);
 
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
@@ -137,7 +139,7 @@ test('DOM listbox typeahead skips disabled items and uses a timeout buffer', () 
 
 test('DOM commands project into DOM-specific effects', () => {
   assert.deepEqual(toListboxEffect({ type: 'focus', id: 'a' }), {
-    type: 'focus-element',
+    type: 'set-active-descendant',
     id: 'a',
   });
   assert.deepEqual(toListboxEffect({ type: 'activate', id: 'a' }), {
@@ -164,7 +166,7 @@ test('uncontrolled DOM controller owns state and rejects stale or unsupported in
   const moved = controller.handleKeyboardInput({ key: 'ArrowDown' });
   assert.equal(moved.ok, true);
   assert.equal(moved.snapshot.state.cursor.current, 'b');
-  assert.deepEqual(moved.commands, [{ type: 'focus-element', id: 'b' }]);
+  assert.deepEqual(moved.commands, [{ type: 'set-active-descendant', id: 'b' }]);
   assert.deepEqual(highlights, [{ value: 'b', previousValue: 'a' }]);
 
   const selected = controller.handleKeyboardInput({ key: ' ' });
@@ -203,7 +205,7 @@ test('controlled DOM values emit proposals and change only after sync', () => {
   const moved = controller.handleKeyboardInput({ key: 'ArrowDown' });
   assert.equal(moved.ok, true);
   assert.equal(moved.snapshot.state.cursor.current, 'a');
-  assert.deepEqual(moved.commands, [{ type: 'focus-element', id: 'b' }]);
+  assert.deepEqual(moved.commands, [{ type: 'set-active-descendant', id: 'b' }]);
   assert.deepEqual(highlights, [{ value: 'b', previousValue: 'a' }]);
 
   const toggled = controller.handleKeyboardInput({ key: ' ' });

@@ -17,6 +17,7 @@ import {
 } from './internal/form-control.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface SliderRootProps {
   readonly min?: number | string;
@@ -87,7 +88,7 @@ export const SliderRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('SliderRoot', 'modelValue', () => props.modelValue);
     const result = createSliderControllerFromRange({
       min: String(props.min),
       max: String(props.max),

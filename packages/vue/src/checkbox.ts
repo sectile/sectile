@@ -27,6 +27,7 @@ import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export type CheckboxValue = boolean | 'indeterminate';
 
@@ -100,7 +101,7 @@ export const CheckboxRoot = defineComponent({
         capabilities: hiddenInputSubmissionCapabilities,
       }],
     });
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('CheckboxRoot', 'modelValue', () => props.modelValue);
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as CheckboxValue : props.defaultValue,

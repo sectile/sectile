@@ -23,6 +23,7 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface DateRangeFieldRootProps {
   readonly modelValue?: DateRange | null;
@@ -72,7 +73,7 @@ export const DateRangeFieldRoot = defineComponent({
   emits: { 'update:modelValue': (_value: DateRange | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: DateRangeFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('DateRangeFieldRoot', 'modelValue', () => props.modelValue);
     const initial = tryCreateDateRangeFieldState({ value: controlled ? props.modelValue as DateRange | null : props.defaultValue });
     if (!initial.ok) throw new TypeError(initial.error.message);
     const snapshot = shallowRef<DateRangeFieldState>(initial.value);

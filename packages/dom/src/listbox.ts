@@ -37,7 +37,7 @@ export interface KeyboardInput {
 }
 
 export type ListboxEffect<ID extends StableID = StableID> =
-  | { readonly type: 'focus-element'; readonly id: ID }
+  | { readonly type: 'set-active-descendant'; readonly id: ID }
   | { readonly type: 'dispatch-activation'; readonly id: ID };
 
 export interface ListboxValueChangeDetails<ID extends StableID = StableID> {
@@ -145,10 +145,12 @@ export interface ListboxRootAttributesOptions {
   readonly label?: string;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
+  readonly activeDescendantID?: string;
 }
 
 export interface ListboxItemAttributesOptions {
   readonly disabled?: boolean;
+  readonly elementID?: string;
 }
 
 export interface ListboxAttributeState<ID extends StableID = StableID> {
@@ -202,9 +204,11 @@ export function createListboxControllerFromItems<ID extends StableID>(
 
 export function getListboxRootAttributes(
   options: ListboxRootAttributesOptions = {},
-): Readonly<Record<string, string | undefined>> {
+): Readonly<Record<string, string | number | undefined>> {
   return Object.freeze({
     role: 'listbox',
+    tabindex: options.disabled === true ? -1 : 0,
+    'aria-activedescendant': options.activeDescendantID,
     'aria-orientation': options.orientation ?? 'vertical',
     dir: options.direction,
     'aria-multiselectable': options.selectionMode === 'multiple' ? 'true' : undefined,
@@ -224,8 +228,9 @@ export function getListboxItemAttributes<ID extends StableID>(
   const disabled = options.disabled === true || attributes.disabled === true;
   const selected = state.selection.has(attributes.id);
   return Object.freeze({
+    id: options.elementID,
     role: 'option',
-    tabindex: disabled ? -1 : state.cursor.current === attributes.id ? 0 : -1,
+    tabindex: -1,
     'aria-selected': String(selected),
     'aria-disabled': disabled ? 'true' : undefined,
     'data-listbox-id': String(attributes.id),
@@ -293,7 +298,7 @@ export function toListboxEffect<ID extends StableID>(
   command: ListboxCommand<ID>,
 ): ListboxEffect<ID> {
   return Object.freeze(command.type === 'focus'
-    ? { type: 'focus-element', id: command.id }
+    ? { type: 'set-active-descendant', id: command.id }
     : { type: 'dispatch-activation', id: command.id });
 }
 
@@ -309,6 +314,9 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #activationMode: 'activate' | 'toggle';
   readonly #disabledItems: ReadonlySet<ID>;
   readonly #typeaheadEnabled: boolean;
+  readonly #disabled: boolean;
+  readonly #baseID: string;
+  readonly #itemIDs = new Map<ID, string>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
 
@@ -324,6 +332,9 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#activationMode = options.activationMode ?? 'activate';
     this.#disabledItems = new Set(options.disabledItems ?? []);
     this.#typeaheadEnabled = options.typeahead !== undefined;
+    this.#disabled = options.disabled ?? false;
+    this.#baseID = options.root.id || `sectile-listbox-${nextListboxID++}`;
+    if (!options.root.id) options.root.id = this.#baseID;
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
@@ -356,11 +367,16 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   }
 
   public setListboxAttributes(label?: string): void {
+    const current = this.#controller.getSnapshot().state.cursor.current;
     applyAttributes(this.#root, getListboxRootAttributes({
       selectionMode: this.#selectionMode,
       orientation: this.#orientation,
       direction: this.#direction,
       ...(label === undefined ? {} : { label }),
+      disabled: this.#disabled,
+      ...(current === null || this.#itemIDs.get(current) === undefined
+        ? {}
+        : { activeDescendantID: this.#itemIDs.get(current) as string }),
     }));
   }
 
@@ -369,9 +385,15 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     attributes: ListboxItemAttributes<ID>,
   ): void {
     const state = this.#controller.getSnapshot().state;
+    const elementID = element.id || `${this.#baseID}-option-${encodeURIComponent(String(attributes.id)).replaceAll('%', '-')}`;
+    element.id = elementID;
+    this.#itemIDs.set(attributes.id, elementID);
     element.dataset['listboxId'] = String(attributes.id);
     const disabled = attributes.disabled === true || this.#disabledItems.has(attributes.id);
-    applyAttributes(element, getListboxItemAttributes(state, attributes, { disabled }));
+    applyAttributes(element, getListboxItemAttributes(state, attributes, { disabled, elementID }));
+    if (state.cursor.current === attributes.id) {
+      applyAttributes(this.#root, { 'aria-activedescendant': elementID });
+    }
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
@@ -413,15 +435,9 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   public focusCurrent(): void {
     queueMicrotask((): void => {
       const current = this.#controller.getSnapshot().state.cursor.current;
-      if (current === null) {
-        this.#root.focus();
-        return;
-      }
-      for (const element of this.#root.querySelectorAll<HTMLElement>('[data-listbox-id]')) {
-        if (element.dataset['listboxId'] !== String(current)) continue;
-        element.focus();
-        return;
-      }
+      const activeDescendantID = current === null ? undefined : this.#itemIDs.get(current);
+      applyAttributes(this.#root, { 'aria-activedescendant': activeDescendantID });
+      this.#root.focus();
     });
   }
 
@@ -436,6 +452,8 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     }
   }
 }
+
+let nextListboxID = 0;
 
 function applyAttributes(
   element: HTMLElement,

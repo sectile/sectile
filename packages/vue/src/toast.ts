@@ -6,6 +6,7 @@ import {
 import { createToast, createToastState, type ToastConnection, type ToastInput, type ToastItem } from '@sectile/dom/toast';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostPortalTarget } from './host-provider.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToastProviderProps {
   readonly toasts?: readonly ToastInput<string>[];
@@ -59,7 +60,7 @@ export const ToastProvider = defineComponent({
   setup(props, { emit, slots }) {
     const connection = shallowRef<ToastConnection<string>>();
     const pending: ToastInput<string>[] = [];
-    const controlled = props.toasts !== undefined;
+    const controlled = useControlledStateInvariant('ToastProvider', 'toasts', () => props.toasts);
     const initialState = createToastState(props.toasts ?? props.initialToasts, false, { defaultDurationMs: props.defaultDurationMs, maxVisible: props.maxVisible });
     const state = shallowRef(initialState);
     const activeIDs = shallowRef<ReadonlySet<string>>(new Set(initialState.items.map((item) => item.id)));

@@ -8,6 +8,7 @@ import { createMenubar } from '@sectile/dom/menubar';
 import { createNavigationMenu } from '@sectile/dom/navigation-menu';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
 export interface MenuRootProps {
@@ -67,7 +68,11 @@ function createRoot(kind: MenuKind, providerOnly = false) {
       const openProp = props.open;
       const open = shallowRef(kind === 'menu-button' ? openProp ?? props.defaultOpen : true);
       const highlighted = shallowRef<string | null>(props.defaultHighlightedValue); const openPath = shallowRef<readonly string[]>([]);
-      const controlled = kind === 'menu-button' && openProp !== undefined;
+      const controlled = useControlledStateInvariant(
+        'MenuButtonRoot',
+        'open',
+        () => kind === 'menu-button' ? props.open : undefined,
+      );
       const state = computed<MenuRootSlotProps>(() => ({
         open: kind === 'menu-button' && props.open !== undefined ? props.open : open.value,
         highlightedValue: highlighted.value, openPath: openPath.value, disabled: props.disabled,

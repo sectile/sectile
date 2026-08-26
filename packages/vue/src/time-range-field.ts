@@ -2,6 +2,7 @@ import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnm
 import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/time-range-field';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TimeRangeFieldRootProps { readonly modelValue?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly policies?: TimeRangeFieldPolicies; readonly disabled?: boolean; readonly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TimeRangeFieldRootSlotProps { readonly value: TimeRange | null; readonly startText: string; readonly endText: string; readonly active: 'start' | 'end'; readonly disabled: boolean; readonly: boolean }
@@ -13,7 +14,7 @@ export const TimeRangeFieldRoot = defineComponent({
   props: { modelValue: { type: Object as PropType<TimeRange | null>, default: undefined }, defaultValue: { type: Object as PropType<TimeRange | null>, default: null }, policies: { type: Object as PropType<TimeRangeFieldPolicies>, default: undefined }, disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false }, startLabel: { type: String, default: undefined }, endLabel: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   emits: { 'update:modelValue': (_value: TimeRange | null): boolean => true }, slots: Object as SlotsType<{ default: (props: TimeRangeFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined; const initial = tryCreateTimeRangeFieldState({ value: controlled ? props.modelValue as TimeRange | null : props.defaultValue }); if (!initial.ok) throw new TypeError(initial.error.message);
+    const controlled = useControlledStateInvariant('TimeRangeFieldRoot', 'modelValue', () => props.modelValue); const initial = tryCreateTimeRangeFieldState({ value: controlled ? props.modelValue as TimeRange | null : props.defaultValue }); if (!initial.ok) throw new TypeError(initial.error.message);
     const snapshot = shallowRef<TimeRangeFieldState>(initial.value); const startInput = ref<HTMLInputElement | null>(null); const endInput = ref<HTMLInputElement | null>(null); const root = ref<HTMLElement | null>(null); let connection: TimeRangeFieldConnection | null = null;
     const participation = useCompositeFormControl({ root, focusTarget: startInput, submissions: () => [
       { element: startInput, relativeName: 'start', capabilities: hiddenInputSubmissionCapabilities },

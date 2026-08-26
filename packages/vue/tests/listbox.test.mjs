@@ -32,7 +32,10 @@ test('Vue listbox projects native listbox semantics and form state', async () =>
   });
   const html = await renderToString(app);
   assert.match(html, /role="listbox"/);
+  assert.match(html, /tabindex="0"/);
+  assert.match(html, /aria-activedescendant="sectile-listbox-/);
   assert.match(html, /role="option"/);
+  assert.match(html, /id="sectile-listbox-/);
   assert.match(html, /aria-selected="true"/);
   assert.match(html, /data-part="item-indicator"/);
   assert.match(html, /<select/);
@@ -130,4 +133,25 @@ test('Vue listbox proposes a valid controlled value when its domain changes', as
   await nextTick();
   assert.deepEqual(updates, ['']);
   assert.equal(value.value, '');
+});
+
+test('Vue listbox warns when ownership changes without a remount', async () => {
+  const renderer = createTestRenderer();
+  const value = ref(undefined);
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (message) => warnings.push(message);
+  try {
+    const app = renderer.createApp({
+      render: () => h(ListboxRoot, { items, modelValue: value.value }, { default: options }),
+    });
+    app.mount(createHostNode('root'));
+    value.value = 'alpha';
+    await nextTick();
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /cannot switch modelValue/);
+    assert.match(warnings[0], /Remount/);
+  } finally {
+    console.warn = originalWarn;
+  }
 });

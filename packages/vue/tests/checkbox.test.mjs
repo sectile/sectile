@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
-import { createSSRApp, h, nextTick, ref } from 'vue';
+import { Fragment, createSSRApp, h, nextTick, ref } from 'vue';
 import { CheckboxIndicator, CheckboxRoot } from '../dist/checkbox.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
@@ -92,6 +92,27 @@ test('Vue checkbox asChild merges semantics into the consumer element', async ()
   assert.match(html, /class="consumer-button"/);
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /data-state="checked"/);
+});
+
+test('Vue asChild accepts one element through a fragment', async () => {
+  const app = createSSRApp({
+    render: () => h(CheckboxRoot, { asChild: true }, {
+      default: () => h(Fragment, null, [h('button', null, 'Custom')]),
+    }),
+  });
+  const html = await renderToString(app);
+  assert.equal((html.match(/<button/g) ?? []).length, 1);
+  assert.match(html, /role="checkbox"/);
+});
+
+test('Vue asChild rejects multiple element children', async () => {
+  const app = createSSRApp({
+    render: () => h(CheckboxRoot, { asChild: true }, {
+      default: () => [h('button', null, 'First'), h('button', null, 'Second')],
+    }),
+  });
+  app.config.warnHandler = () => {};
+  await assert.rejects(() => renderToString(app), /requires exactly one element child/);
 });
 
 test('Vue checkbox follows controlled v-model ownership', async () => {

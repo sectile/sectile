@@ -20,6 +20,7 @@ import {
 } from '@sectile/dom/disclosure';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface DisclosureRootProps {
   readonly modelValue?: boolean;
@@ -83,7 +84,7 @@ export const DisclosureRoot = defineComponent({
     default: (props: DisclosureSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('DisclosureRoot', 'modelValue', () => props.modelValue);
     const generatedId = useHostId();
     const contentId = props.contentId ?? `sectile-disclosure-${generatedId}`;
     const controller = shallowRef(createController(

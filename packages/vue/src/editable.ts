@@ -24,6 +24,7 @@ import {
 } from '@sectile/dom/editable';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface EditableRootProps {
   readonly modelValue?: string;
@@ -88,7 +89,7 @@ export const EditableRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: EditableRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('EditableRoot', 'modelValue', () => props.modelValue);
     const initial = controlled ? props.modelValue as string : props.defaultValue;
     const snapshot = shallowRef<EditableState>({ value: initial, draft: initial, editing: false });
     const root = ref<HTMLElement | null>(null);

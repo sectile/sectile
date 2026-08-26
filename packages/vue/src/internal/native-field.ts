@@ -11,6 +11,7 @@ import {
   type VNodeChild,
 } from 'vue';
 import { useNativeInputFormControl } from './form-control.js';
+import { useControlledStateInvariant } from './controlled-state.js';
 
 export interface NativeFieldConnection<Value> {
   getSnapshot(): { readonly revision: number };
@@ -79,7 +80,7 @@ export function createNativeFieldComponent<Value>(
       const input = shallowRef<HTMLInputElement>();
       const participation = useNativeInputFormControl(input);
       const connection = shallowRef<NativeFieldConnection<Value>>();
-      const controlled = props.modelValue !== undefined;
+      const controlled = useControlledStateInvariant(config.name, 'modelValue', () => props.modelValue);
 
       const connect = (preserved?: Value | null): void => {
         if (input.value === undefined) return;

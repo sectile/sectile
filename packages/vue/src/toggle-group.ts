@@ -13,6 +13,7 @@ import {
 } from './internal/form-control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToggleGroupRootProps {
   readonly items: readonly string[];
@@ -75,7 +76,7 @@ export const ToggleGroupRoot = defineComponent({
       })),
     });
     provideFormControlOwner();
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('ToggleGroupRoot', 'modelValue', () => props.modelValue);
     const makeController = (value: readonly string[], highlightedValue = value[0] ?? null): ListboxController<string> => {
       const result = createListboxControllerFromItems({
         items: props.items,

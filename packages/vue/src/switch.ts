@@ -25,6 +25,7 @@ import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface SwitchRootProps {
   readonly modelValue?: boolean;
@@ -98,7 +99,7 @@ export const SwitchRoot = defineComponent({
         capabilities: hiddenInputSubmissionCapabilities,
       }],
     });
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('SwitchRoot', 'modelValue', () => props.modelValue);
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as boolean : props.defaultValue,

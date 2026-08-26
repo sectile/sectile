@@ -10,6 +10,7 @@ import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
 } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface PinInputRootProps {
   readonly length?: number;
@@ -70,7 +71,7 @@ export const PinInputRoot = defineComponent({
     const inputs = shallowRef<Array<HTMLInputElement | undefined>>(Array.from({ length: props.length }));
     const connection = shallowRef<PinInputConnection>();
     const value = shallowRef(props.modelValue ?? props.defaultValue);
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('PinInputRoot', 'modelValue', () => props.modelValue);
     const state = computed<PinInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? value.value, complete: (props.modelValue ?? value.value).length === props.length,
       disabled: props.disabled, readonly: props.readonly,

@@ -7,6 +7,7 @@ import {
   type PaginationItem as PaginationViewItem, type PaginationItemRange,
 } from '@sectile/dom/pagination';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface PaginationRootProps {
   readonly total: number;
@@ -62,7 +63,9 @@ export const PaginationRoot = defineComponent({
     const connection = shallowRef<PaginationConnection>();
     const localPage = shallowRef(props.modelValue ?? props.defaultValue);
     const localItemsPerPage = shallowRef(props.itemsPerPage ?? props.defaultItemsPerPage);
-    const controlled = props.modelValue !== undefined || props.itemsPerPage !== undefined;
+    const pageControlled = useControlledStateInvariant('PaginationRoot', 'modelValue', () => props.modelValue);
+    const sizeControlled = useControlledStateInvariant('PaginationRoot', 'itemsPerPage', () => props.itemsPerPage);
+    const controlled = pageControlled || sizeControlled;
     if (controlled && (props.modelValue === undefined || props.itemsPerPage === undefined)) {
       throw new TypeError('Controlled pagination requires both modelValue and itemsPerPage.');
     }

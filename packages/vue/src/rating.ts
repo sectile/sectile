@@ -22,6 +22,7 @@ import {
 } from './radio-group.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { providePartContract } from './internal/part-contract.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface RatingRootProps {
   readonly items: readonly string[];
@@ -73,7 +74,7 @@ export const RatingRoot = defineComponent({
   setup(props, { attrs, emit, slots }) {
     const instance = getCurrentInstance();
     providePartContract('rating');
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('RatingRoot', 'modelValue', () => props.modelValue);
     const localValue = ref(controlled ? props.modelValue as string : props.defaultValue);
     watch(() => props.modelValue, (value) => {
       if (controlled && value !== undefined) localValue.value = value;

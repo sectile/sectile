@@ -15,6 +15,7 @@ import {
   type ToggleButtonController,
 } from '@sectile/dom/toggle-button';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToggleButtonProps {
   readonly modelValue?: boolean;
@@ -58,7 +59,7 @@ export const ToggleButton = defineComponent({
     default: (props: ToggleButtonSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('ToggleButton', 'modelValue', () => props.modelValue);
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as boolean : props.defaultValue,

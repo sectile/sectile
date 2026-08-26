@@ -8,6 +8,7 @@ import {
   useCompositeFormControl,
 } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface CalendarRootProps { readonly rows: readonly (readonly string[])[]; readonly modelValue?: string | null; readonly defaultValue?: string | null; readonly highlightedValue?: string | null; readonly defaultHighlightedValue?: string | null; readonly disabledValues?: readonly string[]; readonly disabled?: boolean; readonly required?: boolean; readonly name?: string; readonly form?: string; readonly label?: string; readonly policies?: CalendarPolicies<string>; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface CalendarRootSlotProps { readonly value: string | null; readonly highlightedValue: string | null; readonly rows: readonly (readonly string[])[]; readonly disabled: boolean }
@@ -34,7 +35,10 @@ export const CalendarRoot = defineComponent({
     const submission = shallowRef<HTMLInputElement>();
     const value = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const highlighted = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
-    const controlled = { value: props.modelValue !== undefined, highlighted: props.highlightedValue !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('CalendarRoot', 'modelValue', () => props.modelValue),
+      highlighted: useControlledStateInvariant('CalendarRoot', 'highlightedValue', () => props.highlightedValue),
+    };
     const state = computed<CalendarRootSlotProps>(() => ({
       value: props.modelValue !== undefined ? props.modelValue : value.value,
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : highlighted.value,

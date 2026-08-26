@@ -25,8 +25,9 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
-import { useHostDirection, type HostDirection } from './host-provider.js';
+import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export type ListboxSelectionMode = 'single' | 'multiple';
 export type ListboxValue = string | readonly string[];
@@ -82,6 +83,7 @@ interface ListboxRootContext {
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  itemID(id: string): string;
   select(id: string, target: HTMLElement): void;
 }
 
@@ -140,13 +142,15 @@ export const ListboxRoot = defineComponent({
   slots: Object as SlotsType<{ default: (props: ListboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const direction = useHostDirection();
+    const instanceID = useHostId();
+    const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${encodeURIComponent(id).replaceAll('%', '-')}`;
     const rootElement = ref<HTMLElement | null>(null);
     const submissionElement = ref<HTMLSelectElement | null>(null);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
     });
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
     const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);
     const controller = shallowRef(createController(
       controlled,
@@ -211,7 +215,7 @@ export const ListboxRoot = defineComponent({
       if (!result.ok) return false;
       snapshot.value = result.snapshot;
       applyEffects(result.commands, emit);
-      if (root !== undefined) void nextTick(() => focusListboxItem(root, result.snapshot.state.cursor.current));
+      if (root !== undefined) void nextTick(() => root.focus());
       return true;
     };
     const select = (id: string, target: HTMLElement): void => {
@@ -231,6 +235,7 @@ export const ListboxRoot = defineComponent({
       disabled,
       readonly,
       disabledItems,
+      itemID,
       select,
     });
 
@@ -240,6 +245,7 @@ export const ListboxRoot = defineComponent({
       direction: direction.value,
       disabled: props.disabled,
       readOnly: props.readonly,
+      ...(highlightedValue.value === null ? {} : { activeDescendantID: itemID(highlightedValue.value) }),
     }));
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(
@@ -298,7 +304,7 @@ export const ListboxItem = defineComponent({
         selection: { has: (id: string) => root.selectedIDs.value.includes(id) },
       },
       { id: props.value, disabled: props.disabled },
-      { disabled: slotProps.value.disabled },
+      { disabled: slotProps.value.disabled, elementID: root.itemID(props.value) },
     ));
     const handleClick = (event: MouseEvent): void => {
       if (!event.defaultPrevented && !slotProps.value.disabled) {
@@ -400,11 +406,4 @@ function toIDs(value: ListboxValue | undefined, mode: ListboxSelectionMode): rea
 
 function fromIDs(value: readonly string[], mode: ListboxSelectionMode): ListboxValue {
   return mode === 'single' ? value[0] ?? '' : value;
-}
-
-function focusListboxItem(root: HTMLElement, id: string | null): void {
-  if (id === null) return;
-  for (const item of root.querySelectorAll<HTMLElement>('[data-listbox-id]')) {
-    if (item.dataset['listboxId'] === id) item.focus();
-  }
 }

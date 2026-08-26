@@ -8,6 +8,7 @@ import {
 import { createTextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ComboboxRootProps {
   readonly items: readonly ComboboxItemDefinition<string>[];
@@ -65,7 +66,11 @@ export const ComboboxRoot = defineComponent({
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue); const localOpen = shallowRef(props.open ?? props.defaultOpen);
     const highlighted = shallowRef<string | null>(null);
-    const controlled = { value: props.modelValue !== undefined, input: props.inputValue !== undefined, open: props.open !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('ComboboxRoot', 'modelValue', () => props.modelValue),
+      input: useControlledStateInvariant('ComboboxRoot', 'inputValue', () => props.inputValue),
+      open: useControlledStateInvariant('ComboboxRoot', 'open', () => props.open),
+    };
     const state = computed<ComboboxRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       inputValue: props.inputValue ?? localInput.value, highlightedValue: highlighted.value,

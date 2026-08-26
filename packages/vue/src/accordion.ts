@@ -23,6 +23,7 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export type AccordionType = 'single' | 'multiple';
 export type AccordionValue = string | readonly string[];
@@ -121,7 +122,7 @@ export const AccordionRoot = defineComponent({
     default: (props: AccordionRootSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('AccordionRoot', 'modelValue', () => props.modelValue);
     const controller = shallowRef(createController(
       controlled,
       toIDs(controlled ? props.modelValue : props.defaultValue, props.type),

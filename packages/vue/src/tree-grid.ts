@@ -10,6 +10,7 @@ import {
   type TreeGridRowInput,
 } from '@sectile/dom/tree-grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TreeGridRootProps {
   readonly rows: readonly TreeGridRowInput<string, string>[];
@@ -67,7 +68,12 @@ export const TreeGridRoot = defineComponent({
     const localExpanded = shallowRef<readonly string[]>(props.expandedValue !== undefined ? props.expandedValue : props.defaultExpandedValue);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
     const localEditMode = shallowRef<TreeGridEditMode>(props.editMode ?? props.defaultEditMode);
-    const controlled = { value: props.modelValue !== undefined, expanded: props.expandedValue !== undefined, highlighted: props.highlightedValue !== undefined, editMode: props.editMode !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('TreeGridRoot', 'modelValue', () => props.modelValue),
+      expanded: useControlledStateInvariant('TreeGridRoot', 'expandedValue', () => props.expandedValue),
+      highlighted: useControlledStateInvariant('TreeGridRoot', 'highlightedValue', () => props.highlightedValue),
+      editMode: useControlledStateInvariant('TreeGridRoot', 'editMode', () => props.editMode),
+    };
     const state = computed<TreeGridRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       expandedValue: props.expandedValue !== undefined ? props.expandedValue : localExpanded.value,

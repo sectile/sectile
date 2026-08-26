@@ -10,6 +10,7 @@ import {
 } from '@sectile/dom/carousel';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostDirection, useHostId } from './host-provider.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface CarouselRootProps {
   readonly slides: readonly string[];
@@ -63,7 +64,10 @@ export const CarouselRoot = defineComponent({
     const elements = new Map<string, HTMLElement>(); const connection = shallowRef<CarouselConnection<string>>();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue ?? props.slides[0] ?? null);
     const localPaused = shallowRef(props.paused ?? props.defaultPaused);
-    const controlled = { value: props.modelValue !== undefined, paused: props.paused !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('CarouselRoot', 'modelValue', () => props.modelValue),
+      paused: useControlledStateInvariant('CarouselRoot', 'paused', () => props.paused),
+    };
     const state = computed<CarouselRootSlotProps>(() => {
       const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
       const foundIndex = value === null ? -1 : props.slides.indexOf(value);

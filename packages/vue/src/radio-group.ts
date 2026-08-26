@@ -15,6 +15,7 @@ import { provideFormControlOwner } from './form.js';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface RadioGroupRootProps {
   readonly items: readonly string[];
@@ -81,7 +82,7 @@ export const RadioGroupRoot = defineComponent({
       })),
     });
     provideFormControlOwner();
-    const controlled = props.modelValue !== undefined;
+    const controlled = useControlledStateInvariant('RadioGroupRoot', 'modelValue', () => props.modelValue);
     const makeController = (value: string, highlightedValue = value || null): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
       const result = createListboxControllerFromItems({

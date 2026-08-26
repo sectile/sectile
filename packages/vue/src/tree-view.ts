@@ -9,6 +9,7 @@ import {
   type TreeViewSelectionMode,
 } from '@sectile/dom/tree-view';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface TreeViewRootProps {
   readonly nodes: readonly TreeNodeInput<string>[];
@@ -63,7 +64,11 @@ export const TreeViewRoot = defineComponent({
     const localValue = shallowRef<readonly string[]>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localExpanded = shallowRef<readonly string[]>(props.expandedValues !== undefined ? props.expandedValues : props.defaultExpandedValues);
     const localHighlight = shallowRef<string | null>(props.highlightedValue !== undefined ? props.highlightedValue : props.defaultHighlightedValue);
-    const controlled = { value: props.modelValue !== undefined, expanded: props.expandedValues !== undefined, highlighted: props.highlightedValue !== undefined };
+    const controlled = {
+      value: useControlledStateInvariant('TreeViewRoot', 'modelValue', () => props.modelValue),
+      expanded: useControlledStateInvariant('TreeViewRoot', 'expandedValues', () => props.expandedValues),
+      highlighted: useControlledStateInvariant('TreeViewRoot', 'highlightedValue', () => props.highlightedValue),
+    };
     const state = computed<TreeViewRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       expandedValues: props.expandedValues !== undefined ? props.expandedValues : localExpanded.value,
