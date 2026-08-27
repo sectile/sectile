@@ -1,32 +1,29 @@
 # Core theory
 
-`@sectile/core` defines interaction as a composition of small semantic models. Rendering, framework lifecycle, dates, virtualization, and visual styling remain outside these models.
+`@sectile/core` does not render UI. It represents item relationships and interaction state as values, then computes the **next state and ordered commands** from the current state and a semantic event.
+
+A command requests an effect such as focus or scrolling; it does not perform that effect. DOM, terminal, and Vue interpret commands in their own environments, so the Core calculation remains host-independent and directly testable.
 
 <TheoryOverview />
 
-## The specification
+Models define item relationships and valid values. State records facts such as cursor, selection, expansion, and text. Events express user intent, while policies make product choices such as eligibility and boundary behavior explicit.
 
-Every model is described by the same observable contract:
+A successful transition returns a new immutable state and its commands together. A failed transition returns a typed error without changing the old state or command list.
+
+## Canonical vocabulary
+
+Core uses [sequence, range, grid, and tree](/theory/structures) as its canonical item relationships. It composes them with independent [cursor, selection, expansion, and text state](/theory/state-and-text). Because each model owns one fact, a component policy can explicitly decide whether moving the cursor preserves selection or moves it too.
+
+Components combine those ingredients through a [deterministic transition](/theory/transitions). Date and calendar arithmetic belongs to [`@sectile/temporal`](/packages/temporal), tabular data interaction to [`@sectile/tabular`](/packages/tabular), and viewport layout to [`@sectile/virtual`](/packages/virtual).
+
+## Reading a public specification
+
+A Core specification is more than a list of API names. It defines valid values, available operations and observable results together with the laws, failures, and resource bounds an implementation must preserve.
 
 <TheoryContractDiagram />
 
-- **Models** state which values are valid.
-- **Operations** construct or transform those values.
-- **Observations** are the public results a consumer can inspect.
-- **Laws** remain true for every valid value and transition.
-- **Errors** distinguish invalid input from ordinary absence.
-- **Costs** make resource use part of the contract.
-
-Two implementations are equivalent when the same public input trace produces the same results, failures, state, and ordered commands.
-
-## The canonical vocabulary
-
-Sectile uses four public structures—[sequence, range, grid, and tree](/theory/structures)—plus independent [cursor, selection, expansion, and text state](/theory/state-and-text). Policies parameterize choices such as eligibility and boundary behavior instead of hiding them in callbacks.
-
-A component combines those ingredients through a [deterministic transition](/theory/transitions). DOM, terminal, and framework packages project the resulting state and commands into their native environment.
-
-Date and calendar rules are documented under [`@sectile/temporal`](/packages/temporal). Viewport geometry and dynamic measurement are documented under [`@sectile/virtual`](/packages/virtual).
+Two implementations are observably equivalent when the same public input trace produces the same state, commands, query results, and failures while preserving every law and cost ceiling.
 
 ## Composition is the primitive
 
-Components are not isolated state machines with unrelated rules. A listbox, calendar, combobox, or tree grid is a lawful composition of the same structures and state models. See [Composition](/theory/composition) for the complete mapping.
+A listbox combines a sequence with cursor and selection. A combobox adds text and popup state. A tree grid combines tree and grid relationships with expansion, cursor, selection, and editing state. See [Composition](/theory/composition) for how each component owns facts and updates them atomically.
