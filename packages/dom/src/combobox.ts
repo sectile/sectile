@@ -444,6 +444,7 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     | ((change: ComboboxHighlightChangeDetails<ID>) => void)
     | undefined;
   #snapshot: RevisionSnapshot<ComboboxState<ID>>;
+  #pendingInputState: TextEditingState | null = null;
 
   public constructor(
     options: ComboboxControllerOptions<ID>,
@@ -501,6 +502,10 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
     const snapshot = synchronizeControllerState(this.#snapshot, state);
     if (!snapshot.ok) return snapshot;
     this.#snapshot = snapshot.value;
+    if (this.#inputStateControlled) {
+      const inputState = values.inputState as TextEditingState;
+      this.#pendingInputState = inputState.composition === null ? null : inputState;
+    }
     return snapshot;
   }
 
@@ -539,8 +544,23 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
   ): RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>> {
     const permitted = requireInteraction(this.#interaction, comboboxIntent(event));
     if (!permitted.ok) return rejectRevisionInput(this.#snapshot, permitted.error);
+    const current = this.#snapshot;
+    const textEvent = typeof event === 'object' && event.type === 'text';
+    const base = this.#inputStateControlled && textEvent && this.#pendingInputState !== null
+      ? Object.freeze({
+          revision: current.revision,
+          state: unwrap(tryCreateComboboxState(this.#domain, {
+            text: this.#pendingInputState,
+            popupOpen: current.state.popupOpen,
+            current: current.state.cursor.current,
+            selected: current.state.selection.selected,
+            anchor: current.state.selection.anchor,
+          })),
+        })
+      : current;
+    const proposal: { value: ComboboxState<ID> | null } = { value: null };
     const result = applyControllerEvent(
-      this.#snapshot,
+      base,
       expectedRevision,
       event,
       (state, semanticEvent) => applyComboboxEvent(
@@ -550,19 +570,30 @@ class DOMComboboxController<ID extends StableID> implements ComboboxController<I
         semanticEvent,
         this.#policies,
       ),
-      (previous, proposed) => controlledState(
-        this.#domain,
-        previous,
-        proposed,
-        this.#valueControlled,
-        this.#inputStateControlled,
-        this.#openControlled,
-        this.#highlightControlled,
-      ),
-      (previous, proposed) => this.#notify(previous, proposed),
+      (_previous, proposed) => {
+        proposal.value = proposed;
+        return controlledState(
+          this.#domain,
+          current.state,
+          proposed,
+          this.#valueControlled,
+          this.#inputStateControlled,
+          this.#openControlled,
+          this.#highlightControlled,
+        );
+      },
+      (_previous, proposed) => this.#notify(current.state, proposed),
       toComboboxEffect,
     );
-    if (result.ok) this.#snapshot = result.snapshot;
+    if (result.ok) {
+      this.#snapshot = result.snapshot;
+      if (this.#inputStateControlled && textEvent) {
+        const proposedInput = proposal.value?.text;
+        this.#pendingInputState = proposedInput?.composition === null
+          ? null
+          : proposedInput ?? null;
+      }
+    }
     return result;
   }
 

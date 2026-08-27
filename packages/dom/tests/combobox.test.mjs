@@ -142,6 +142,36 @@ test('DOM combobox leaves live native IME text under browser ownership', () => {
   assert.equal(input.valueWrites, 1);
 });
 
+test('controlled DOM combobox carries IME proposals across synchronous composition events', () => {
+  const changes = [];
+  const controller = unwrap(createComboboxController({
+    domain: createSequence(['hangul']),
+    labels: new Map([['hangul', '한글']]),
+    inputState: createTextEditingState('', selection(0)),
+    onInputStateChange: ({ value }) => changes.push(value),
+  }));
+
+  assert.equal(controller.handleTextInput({
+    type: 'composition-start',
+    text: '',
+    startCodeUnitOffset: 0,
+    endCodeUnitOffset: 0,
+    selection: selection(0),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({
+    type: 'composition-update',
+    text: '한',
+    selection: selection(1),
+  }).ok, true);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+
+  assert.equal(changes.at(-1).snapshot.text, '한');
+  assert.equal(changes.at(-1).composition, null);
+  assert.equal(controller.getSnapshot().state.text.snapshot.text, '');
+  const synchronized = unwrap(controller.syncControlledValues({ inputState: changes.at(-1) }));
+  assert.equal(synchronized.state.text.snapshot.text, '한');
+});
+
 test('DOM combobox adopts native word deletion through the shared text binding', () => {
   const input = new FakeTextElement();
   const connection = createCombobox({

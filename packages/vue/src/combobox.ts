@@ -1,11 +1,11 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
   createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxPolicies,
 } from '@sectile/dom/combobox';
-import { createTextState } from '@sectile/dom/text';
+import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './internal/form-control.js';
 import { reconcileCollectionState } from './internal/collection.js';
@@ -67,6 +67,7 @@ export const ComboboxRoot = defineComponent({
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue); const localOpen = shallowRef(props.open ?? props.defaultOpen);
     const highlighted = shallowRef<string | null>(null);
+    let proposedInputState: TextState | null = null;
     const controlled = {
       value: useControlledStateInvariant('ComboboxRoot', 'modelValue', () => props.modelValue),
       input: useControlledStateInvariant('ComboboxRoot', 'inputValue', () => props.inputValue),
@@ -113,7 +114,19 @@ export const ComboboxRoot = defineComponent({
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly,
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },
-        onInputStateChange: ({ value }) => { localInput.value = value.snapshot.text; emit('update:inputValue', value.snapshot.text); },
+        onInputStateChange: ({ value }) => {
+          proposedInputState = value;
+          localInput.value = value.snapshot.text;
+          emit('update:inputValue', value.snapshot.text);
+          if (!controlled.input) return;
+          const proposal = value;
+          void nextTick(() => {
+            if (connection.value === undefined || proposedInputState !== proposal) return;
+            if (props.inputValue !== proposal.snapshot.text) return;
+            proposedInputState = null;
+            syncControlledValues(proposal);
+          });
+        },
         onOpenChange: ({ value }) => { localOpen.value = value; emit('update:open', value); },
         onHighlightedValueChange: ({ value }) => { highlighted.value = value; emit('highlight', value); },
         onAccept: (id) => emit('accept', id), onUpdate: refresh,
@@ -126,16 +139,31 @@ export const ComboboxRoot = defineComponent({
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, { id, disabled }),
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.items, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
+    watch(() => props.items, (items, previousItems) => {
+      if (!sameComboboxItems(items, previousItems)) connect();
+    });
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
     watch([() => props.modelValue, () => props.inputValue, () => props.open], () => {
+      const inputState = controlled.input
+        && proposedInputState !== null
+        && proposedInputState.snapshot.text === props.inputValue
+        ? proposedInputState
+        : controlled.input
+          ? createTextState(props.inputValue as string)
+          : undefined;
+      proposedInputState = null;
+      syncControlledValues(inputState);
+    });
+    const syncControlledValues = (inputState?: TextState): void => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
         ...(controlled.value ? { value: props.modelValue as string | null } : {}),
-        ...(controlled.input ? { inputState: createTextState(props.inputValue as string) } : {}),
+        ...(controlled.input ? { inputState: inputState ?? createTextState(props.inputValue as string) } : {}),
         ...(controlled.open ? { open: props.open as boolean } : {}),
       });
-      if (!result.ok) throw new TypeError(result.error.message); refresh();
-    });
+      if (!result.ok) throw new TypeError(result.error.message);
+      refresh();
+    };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, 'data-scope': 'combobox', 'data-part': 'root',
       'data-state': state.value.open ? 'open' : 'closed', 'data-disabled': props.disabled ? '' : undefined,
@@ -212,3 +240,16 @@ export const ComboboxEmpty = defineComponent({
 });
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside ComboboxRoot.`); return root; }
+
+function sameComboboxItems(
+  items: readonly ComboboxItemDefinition<string>[],
+  previousItems: readonly ComboboxItemDefinition<string>[],
+): boolean {
+  return items.length === previousItems.length
+    && items.every((item, index) => {
+      const previousItem = previousItems[index];
+      return previousItem !== undefined
+        && item.id === previousItem.id
+        && item.label === previousItem.label;
+    });
+}

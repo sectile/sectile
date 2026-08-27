@@ -132,6 +132,52 @@ test('Vue combobox keeps live Hangul composition under native input ownership', 
   host.remove();
 });
 
+test('controlled Vue combobox preserves Hangul composition metadata through owner updates', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const inputValue = ref('');
+  const updates = [];
+  const app = createApp({
+    render: () => h(ComboboxRoot, {
+      items: [{ id: 'draft', label: '시안' }, { id: 'other', label: '기타' }],
+      inputValue: inputValue.value,
+      'onUpdate:inputValue': (value) => {
+        updates.push(value);
+        inputValue.value = value;
+      },
+    }, { default: () => h(ComboboxInput) }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  const input = host.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  assert.equal(typeof valueDescriptor?.set, 'function');
+
+  input.dispatchEvent(compositionEvent('compositionstart', ''));
+  await nextTick();
+  valueDescriptor.set.call(input, '시');
+  input.setSelectionRange(1, 1);
+  input.dispatchEvent(compositionEvent('compositionupdate', '시'));
+  await nextTick();
+  assert.equal(inputValue.value, '시');
+
+  valueDescriptor.set.call(input, '시안');
+  input.setSelectionRange(2, 2);
+  input.dispatchEvent(compositionEvent('compositionupdate', '시안'));
+  await nextTick();
+  input.dispatchEvent(compositionEvent('compositionend', '시안'));
+  await nextTick();
+
+  assert.equal(inputValue.value, '시안');
+  assert.equal(input.value, '시안');
+  assert.equal(updates.at(-1), '시안');
+
+  app.unmount();
+  host.remove();
+});
+
 function compositionEvent(type, data) {
   const event = new Event(type, { bubbles: true });
   Object.defineProperty(event, 'data', { value: data });
