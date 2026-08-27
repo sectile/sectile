@@ -18,6 +18,27 @@ if (!(hidden instanceof HTMLInputElement) || hidden.value !== '1234') failures.p
 const form = document.querySelector('#pin-form');
 if (!(form instanceof HTMLFormElement) || new FormData(form).get('pin') !== '1234') failures.push('native form submission');
 if (document.querySelector('#reference-date')?.textContent !== '2026-8-26') failures.push('reference date');
+const meter = document.querySelector('[role="meter"][aria-label="Browser meter"]');
+const progress = document.querySelector('[role="progressbar"][aria-label="Browser progress"]');
+const group = document.querySelector('[role="group"][aria-label="Browser capacity"]');
+if (meter?.getAttribute('aria-valuenow') !== '0.1') failures.push('initial meter value');
+if (progress?.hasAttribute('aria-valuenow')) failures.push('indeterminate progress omission');
+if (group?.getAttribute('aria-live') !== null) failures.push('group live region');
+if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => element.getAttribute('data-id')).join(',') !== 'documents,media') {
+  failures.push('initial group order');
+}
+
+document.querySelector('#update-range-projections')?.click();
+await nextTick();
+if (meter?.getAttribute('aria-valuenow') !== '0.2') failures.push('updated meter value');
+if (progress?.getAttribute('aria-valuenow') !== '0.1') failures.push('updated progress value');
+if (progress?.getAttribute('data-percentage') !== '33.333333333333') failures.push('updated progress percentage');
+if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => element.getAttribute('data-id')).join(',') !== 'media,documents') {
+  failures.push('updated group order');
+}
+if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => element.getAttribute('aria-valuenow')).join(',') !== '0.3,0.1') {
+  failures.push('updated group values');
+}
 if (warnings.length > 0) failures.push('Vue hydration warnings');
 
 const result = Object.freeze({
@@ -25,6 +46,12 @@ const result = Object.freeze({
   failures: Object.freeze(failures),
   warnings: Object.freeze(warnings),
   userAgent: navigator.userAgent,
+  rangeProjection: Object.freeze({
+    meterValue: meter?.getAttribute('aria-valuenow') ?? null,
+    progressValue: progress?.getAttribute('aria-valuenow') ?? null,
+    groupOrder: Object.freeze([...group?.querySelectorAll('[role="meter"]') ?? []]
+      .map((element) => element.getAttribute('data-id'))),
+  }),
 });
 window.__SECTILE_BROWSER_RESULT__ = result;
 document.documentElement.dataset.sectileVerification = result.ok ? 'passed' : 'failed';
