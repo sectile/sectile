@@ -16,6 +16,9 @@
     "TAB-SRC-03": "tests/source/client-source.test.mjs",
     "TAB-SRC-04": "tests/source/client-source.test.mjs",
     "TAB-SRC-05": "tests/source/client-source.test.mjs",
+    "TAB-SRC-06": "tests/source/client-source.test.mjs",
+    "TAB-SRC-07": "tests/source/client-source.test.mjs",
+    "TAB-SRC-08": "tests/source/client-source.test.mjs",
     "TAB-SEL-01": "tests/selection/row-selection.test.mjs",
     "TAB-SEL-02": "tests/selection/row-selection.test.mjs",
     "TAB-SEL-03": "tests/selection/row-selection.test.mjs",
@@ -32,10 +35,21 @@
     "TAB-ADV-03": "tests/advanced/grouping.test.mjs",
     "TAB-ADV-04": "tests/advanced/grouping.test.mjs",
     "TAB-ADV-05": "tests/advanced/grouping.test.mjs",
+    "TAB-ADV-06": "tests/advanced/grouping.test.mjs",
+    "TAB-ADV-07": "tests/advanced/grouping.test.mjs",
     "TAB-TBL-01": "tests/profiles/data-table.test.mjs",
     "TAB-TBL-02": "tests/profiles/data-table.test.mjs",
     "TAB-TBL-03": "tests/profiles/data-table.test.mjs",
     "TAB-TBL-04": "tests/profiles/data-table.test.mjs",
-    "TAB-TBL-05": "tests/profiles/data-table.test.mjs"
+    "TAB-TBL-05": "tests/profiles/data-table.test.mjs",
+    "TAB-GRD-01": "tests/profiles/data-grid.test.mjs",
+    "TAB-GRD-02": "tests/profiles/data-grid.test.mjs",
+    "TAB-GRD-03": "tests/profiles/data-grid.test.mjs",
+    "TAB-GRD-04": "tests/profiles/data-grid.test.mjs",
+    "TAB-GRD-05": "tests/profiles/data-grid.test.mjs",
+    "TAB-TGR-01": "tests/profiles/data-tree-grid.test.mjs",
+    "TAB-TGR-02": "tests/profiles/data-tree-grid.test.mjs",
+    "TAB-TGR-03": "tests/profiles/data-tree-grid.test.mjs",
+    "TAB-TGR-04": "tests/profiles/data-tree-grid.test.mjs"
   }
 }

@@ -46,6 +46,16 @@
       "import": "./dist/data-table.js",
       "default": "./dist/data-table.js"
     },
+    "./data-grid": {
+      "types": "./dist/data-grid.d.ts",
+      "import": "./dist/data-grid.js",
+      "default": "./dist/data-grid.js"
+    },
+    "./data-tree-grid": {
+      "types": "./dist/data-tree-grid.d.ts",
+      "import": "./dist/data-tree-grid.js",
+      "default": "./dist/data-tree-grid.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

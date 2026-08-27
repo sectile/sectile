@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "profiles",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-GRD-01",
+      "title": "TAB-GRD-01: direct focus and axis movement skip disabled cells deterministically",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+    },
+    {
+      "id": "TAB-GRD-02",
+      "title": "TAB-GRD-02: edit events emit exact semantic payloads without reveal or native-table commands",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+    },
+    {
+      "id": "TAB-GRD-03",
+      "title": "TAB-GRD-03: hierarchical views reject before changing the flat profile state",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+    },
+    {
+      "id": "TAB-GRD-04",
+      "title": "TAB-GRD-04: removed edit targets cancel before cursor recovery and source reset",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+    },
+    {
+      "id": "TAB-GRD-05",
+      "title": "TAB-GRD-05: request execution remains single-owner and disposable",
+      "file": "tests/profiles/data-grid.test.mjs",
+      "sha256": "84cff536fc4c60910298af4ad3a3f316520329a0d4d09e77681065464d980e9e"
+    },
+    {
+      "id": "TAB-TBL-01",
+      "title": "TAB-TBL-01: controller begins pending and one executor resolves the current native-table projection",
+      "file": "tests/profiles/data-table.test.mjs",
+      "sha256": "c413ee3752e3a5a28d8da6b9ac0c3d589e2891b05de5bddb57a6d114e485e3de"
+    },
+    {
+      "id": "TAB-TBL-02",
+      "title": "TAB-TBL-02: observer and sole executor channels remain distinct and disposable",
+      "file": "tests/profiles/data-table.test.mjs",
+      "sha256": "c413ee3752e3a5a28d8da6b9ac0c3d589e2891b05de5bddb57a6d114e485e3de"
+    },
+    {
+      "id": "TAB-TBL-03",
+      "title": "TAB-TBL-03: response envelopes, abandonment, and stale requests are failure-atomic",
+      "file": "tests/profiles/data-table.test.mjs",
+      "sha256": "c413ee3752e3a5a28d8da6b9ac0c3d589e2891b05de5bddb57a6d114e485e3de"
+    },
+    {
+      "id": "TAB-TBL-04",
+      "title": "TAB-TBL-04: DataTable value commit is application intent without cell cursor or edit authority",
+      "file": "tests/profiles/data-table.test.mjs",
+      "sha256": "c413ee3752e3a5a28d8da6b9ac0c3d589e2891b05de5bddb57a6d114e485e3de"
+    },
+    {
+      "id": "TAB-TBL-05",
+      "title": "TAB-TBL-05: controlled query proposes once and requests only after external synchronization",
+      "file": "tests/profiles/data-table.test.mjs",
+      "sha256": "c413ee3752e3a5a28d8da6b9ac0c3d589e2891b05de5bddb57a6d114e485e3de"
+    },
+    {
+      "id": "TAB-TGR-01",
+      "title": "TAB-TGR-01: tree projection derives ordered parentage and navigates visible cells",
+      "file": "tests/profiles/data-tree-grid.test.mjs",
+      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+    },
+    {
+      "id": "TAB-TGR-02",
+      "title": "TAB-TGR-02: group cells are read-only while leaf edit commands keep exact payloads",
+      "file": "tests/profiles/data-tree-grid.test.mjs",
+      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+    },
+    {
+      "id": "TAB-TGR-03",
+      "title": "TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically",
+      "file": "tests/profiles/data-tree-grid.test.mjs",
+      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+    },
+    {
+      "id": "TAB-TGR-04",
+      "title": "TAB-TGR-04: tree profile emits no renderer reveal commands",
+      "file": "tests/profiles/data-tree-grid.test.mjs",
+      "sha256": "22145c0cdffbb2f3ce53f8cf62e67b10e1e076c809c53b2c3958dede31ef2a28"
+    }
+  ],
+  "expectedFailures": [
+    "hierarchical DataGrid rejection",
+    "profile authority isolation",
+    "exact semantic command payload",
+    "absence of reveal commands",
+    "cursor edit and expansion recovery"
+  ]
+}

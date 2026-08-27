@@ -32,7 +32,7 @@ test('the package root is type-only and runtime APIs require explicit subpaths',
     .map((line) => line.trim())
     .find((line) => line.startsWith('export ') && !line.startsWith('export type ') && line !== 'export {};');
   assert.equal(runtimeExport, undefined);
-  assert.deepEqual(Object.keys(manifest.exports).sort(), ['.', './data-table', './model', './package.json', './query', './source']);
+  assert.deepEqual(Object.keys(manifest.exports).sort(), ['.', './data-grid', './data-table', './data-tree-grid', './model', './package.json', './query', './source']);
 });
 
 async function sourceFiles(directory) {
