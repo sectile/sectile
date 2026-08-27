@@ -988,9 +988,30 @@ const meter = createMeter({
 window.addEventListener('pagehide', () => meter.disconnect(), { once: true })`);
 }
 
+function progressDomSource(scenario: string): string {
+  const values = scenario === 'indeterminate'
+    ? ''
+    : scenario === 'complete'
+      ? `value: '100',`
+      : scenario === 'exact-decimal'
+        ? `value: '0.1', max: '0.3',`
+        : `value: '64',`;
+  return example('progress', 'createProgress', `const root = document.querySelector<HTMLElement>('[data-progress]')!
+const indicator = document.querySelector<HTMLElement>('[data-progress-indicator]')!
+const progress = createProgress({
+  root,
+  indicator,
+  ${values}
+  label: 'Upload progress',
+})
+
+window.addEventListener('pagehide', () => progress.disconnect(), { once: true })`);
+}
+
 export function domExampleCodeFor(component: string, scenario: string): string {
   if (component === 'pin-input') return pinInputDomSource(scenario);
   if (component === 'meter') return meterDomSource(scenario);
+  if (component === 'progress') return progressDomSource(scenario);
   const source = domDemoCode[component];
   if (source === undefined) throw new Error(`Missing exact DOM example: ${component}/${scenario}`);
   return source;

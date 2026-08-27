@@ -156,14 +156,14 @@ Vue 패키지: `@sectile/vue/meter`
 <dt><code>max</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
-<p>Meter 범위의 최댓값입니다.</p>
+<p>숫자 범위의 최댓값입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>min</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
-<p>Meter 범위의 최솟값입니다.</p>
+<p>숫자 범위의 최솟값입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -191,7 +191,7 @@ Vue 패키지: `@sectile/vue/meter`
 <dt><code>valueText</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
-<p>현재 meter 값을 형식화한 문자열입니다.</p>
+<p>현재 범위 값을 사용할 수 있을 때 형식화한 문자열입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -253,7 +253,7 @@ type MeterValueFormatter = (value: string) => string
 
 | 키 | 동작 |
 | --- | --- |
-| <kbd>None</kbd> | Meter는 읽기 전용이며 키보드 조작을 정의하지 않습니다. |
+| <kbd>None</kbd> | 범위 표시는 읽기 전용이며 키보드 조작을 정의하지 않습니다. |
 
 ## 접근성
 

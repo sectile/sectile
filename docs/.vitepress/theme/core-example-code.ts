@@ -636,6 +636,20 @@ const meter = createMeterState(${input})
 
 console.log(meter.value, meter.ratio, meter.zone)`;
     }
+    case 'progress': {
+      const input = scenario === 'indeterminate'
+        ? `{}`
+        : scenario === 'complete'
+          ? `{ value: '100' }`
+          : scenario === 'exact-decimal'
+            ? `{ value: '0.1', max: '0.3' }`
+            : `{ value: '64' }`;
+      return `import { createProgressState } from '@sectile/core/progress'
+
+const progress = createProgressState(${input})
+
+console.log(progress.value, progress.ratio, progress.status)`;
+    }
     case 'navigation-menu':
       return menuExample(component, 'NavigationMenu', scenario);
     case 'multi-thumb-slider': {

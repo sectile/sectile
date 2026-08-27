@@ -322,7 +322,7 @@ const enSlots = Object.freeze({
   inputValue: 'Current editable input text.', invalid: 'Whether the current draft fails validation.', isChecked: 'Whether this checkbox value is selected.',
   isIndeterminate: 'Whether only part of a grouped value is selected.', issues: 'Current validation issues.', item: 'Current pagination item.',
   items: 'Current derived item collection.', itemsPerPage: 'Number of records currently shown per page.', labelId: 'ID assigned to the field label.',
-  high: 'Lower boundary of the high-value region.', low: 'Upper boundary of the low-value region.', max: 'Maximum of the meter range.', min: 'Minimum of the meter range.', optimum: 'Value that determines the optimal threshold region.',
+  high: 'Lower boundary of the high-value region.', low: 'Upper boundary of the low-value region.', max: 'Maximum of the numeric range.', min: 'Minimum of the numeric range.', optimum: 'Value that determines the optimal threshold region.',
   messageId: 'ID assigned to the field error message.', months: 'Months projected by the active view.', openPath: 'Ordered values in the open menu path.',
   orientation: 'Current layout and movement axis.', outsideMonth: 'Whether this date belongs to an adjacent month.', page: 'Current one-based page number.',
   pageCount: 'Total number of available pages.', parentValue: 'Value that owns the current cascade column.', parts: 'Formatted segments of the current value.',
@@ -332,7 +332,7 @@ const enSlots = Object.freeze({
   reset: 'Restores the initial value and interaction state.', restart: 'Restarts timing from the configured initial value.', resume: 'Resumes a paused timer.',
   requestGeneration: 'Generation of the current or most recently issued window request.', revision: 'Revision of the current state snapshot.', rowIndex: 'Zero-based row position.', rows: 'Rows projected by the active view.', running: 'Whether the timer is currently running.',
   selected: 'Whether this item is selected.', selectedValues: 'Current selected values.', start: 'Starts timer updates.', startText: 'Formatted text for the range start value.',
-  state: 'Complete current form state.', status: 'Current submission status.', submitCount: 'Number of submission attempts.',
+  state: 'Complete current form state.', status: 'Current lifecycle status.', submitCount: 'Number of submission attempts.',
   submissionStatus: 'Current submission lifecycle.', validationStatus: 'Current validation lifecycle.',
   validationTrigger: 'Event that started the current or latest validation run.',
   validationIntent: 'Whether current validation uses interaction or submission rules.',
@@ -340,7 +340,7 @@ const enSlots = Object.freeze({
   submitFailed: 'Marks the identified submission as failed.', submitStarted: 'Starts submission and returns its generation token.', submitSucceeded: 'Marks the identified submission as successful.',
   submitted: 'Whether submission has been attempted.', text: 'Formatted text for the current value.', toast: 'Notification represented by this item.', toasts: 'Current notification collection.',
   touched: 'Whether the user has interacted with the field.', update: 'Updates one notification without replacing its identifier.', valid: 'Whether current validation has no issues.', valueMs: 'Current timer value in milliseconds.',
-  valuePath: 'Current selected values from root to leaf.', valueText: 'Formatted text for the current meter value.', values: 'Current ordered value collection.', view: 'Current calendar anchor.', viewMode: 'Active calendar view mode.', years: 'Years projected by the active view.', zone: 'Quality region derived from the thresholds and optimum value.',
+  valuePath: 'Current selected values from root to leaf.', valueText: 'Formatted text for the current range value when available.', values: 'Current ordered value collection.', view: 'Current calendar anchor.', viewMode: 'Active calendar view mode.', years: 'Years projected by the active view.', zone: 'Quality region derived from the thresholds and optimum value.',
 });
 
 const koSlots = Object.freeze({
@@ -358,7 +358,7 @@ const koSlots = Object.freeze({
   id: '현재 필드 또는 항목의 안정적인 ID입니다.', inRange: '선택한 범위 안에 있는 값인지 여부입니다.', index: '부모 컬렉션 안의 0부터 시작하는 위치입니다.',
   inputValue: '현재 편집 입력 문자열입니다.', invalid: '현재 입력이 검증에 실패했는지 여부입니다.', isChecked: '이 체크박스 값이 선택됐는지 여부입니다.',
   isIndeterminate: '묶음 값의 일부만 선택됐는지 여부입니다.', issues: '현재 검증 이슈입니다.', item: '현재 페이지 항목입니다.', items: '현재 계산된 항목 컬렉션입니다.',
-  high: '높은 값 구간의 하한입니다.', low: '낮은 값 구간의 상한입니다.', max: 'Meter 범위의 최댓값입니다.', min: 'Meter 범위의 최솟값입니다.', optimum: '어느 임계 구간이 최적인지 결정하는 값입니다.',
+  high: '높은 값 구간의 하한입니다.', low: '낮은 값 구간의 상한입니다.', max: '숫자 범위의 최댓값입니다.', min: '숫자 범위의 최솟값입니다.', optimum: '어느 임계 구간이 최적인지 결정하는 값입니다.',
   itemsPerPage: '현재 페이지당 레코드 수입니다.', labelId: '필드 레이블에 지정한 ID입니다.', messageId: '필드 오류 메시지에 지정한 ID입니다.',
   months: '현재 보기에 표시할 달입니다.', openPath: '열린 메뉴 경로의 순서 있는 값입니다.', orientation: '현재 배치와 이동 축입니다.', outsideMonth: '인접한 달의 날짜인지 여부입니다.',
   page: '1부터 시작하는 현재 페이지 번호입니다.', pageCount: '사용 가능한 전체 페이지 수입니다.', parentValue: '현재 단계별 선택 열을 소유한 값입니다.',
@@ -368,7 +368,7 @@ const koSlots = Object.freeze({
   reset: '초깃값과 조작 상태로 되돌리는 함수입니다.', restart: '설정한 초깃값에서 타이머를 다시 시작하는 함수입니다.', resume: '멈춘 타이머를 다시 시작하는 함수입니다.',
   requestGeneration: '현재 또는 가장 최근에 발급한 구간 요청의 generation입니다.', revision: '현재 상태 스냅샷의 변경 차수입니다.', rowIndex: '0부터 시작하는 행 위치입니다.', rows: '현재 보기에 표시할 행입니다.', running: '타이머가 작동 중인지 여부입니다.',
   selected: '현재 선택된 항목인지 여부입니다.', selectedValues: '현재 선택된 값입니다.', start: '타이머 갱신을 시작하는 함수입니다.', startText: '범위 시작값을 표시한 문자열입니다.',
-  state: '현재 전체 폼 상태입니다.', status: '현재 제출 상태입니다.', submitCount: '제출을 시도한 횟수입니다.', submitFailed: '식별한 제출을 실패로 기록하는 함수입니다.',
+  state: '현재 전체 폼 상태입니다.', status: '현재 생명주기 상태입니다.', submitCount: '제출을 시도한 횟수입니다.', submitFailed: '식별한 제출을 실패로 기록하는 함수입니다.',
   submissionStatus: '현재 제출 생명주기입니다.', validationStatus: '현재 검증 생명주기입니다.',
   validationTrigger: '현재 또는 최근 검증을 시작한 이벤트입니다.',
   validationIntent: '현재 검증이 입력 과정용인지 최종 제출용인지 나타냅니다.',
@@ -376,7 +376,7 @@ const koSlots = Object.freeze({
   submitStarted: '제출을 시작하고 generation 토큰을 반환하는 함수입니다.', submitSucceeded: '식별한 제출을 성공으로 기록하는 함수입니다.', submitted: '제출을 시도했는지 여부입니다.',
   text: '현재 값을 표시한 문자열입니다.', toast: '이 항목이 나타내는 알림입니다.', toasts: '현재 알림 컬렉션입니다.', touched: '사용자가 필드를 조작했는지 여부입니다.',
   update: '식별자를 유지하면서 알림 하나를 갱신하는 함수입니다.', valid: '현재 검증 이슈가 없는지 여부입니다.', valueMs: '밀리초 단위의 현재 타이머 값입니다.', valuePath: '루트부터 마지막 항목까지의 현재 선택값입니다.',
-  valueText: '현재 meter 값을 형식화한 문자열입니다.', values: '현재 순서 있는 값 컬렉션입니다.', view: '현재 달력 기준점입니다.', viewMode: '현재 달력 보기 방식입니다.', years: '현재 보기에 표시할 연도입니다.', zone: '임계값과 최적값에서 계산한 품질 구간입니다.',
+  valueText: '현재 범위 값을 사용할 수 있을 때 형식화한 문자열입니다.', values: '현재 순서 있는 값 컬렉션입니다.', view: '현재 달력 기준점입니다.', viewMode: '현재 달력 보기 방식입니다.', years: '현재 보기에 표시할 연도입니다.', zone: '임계값과 최적값에서 계산한 품질 구간입니다.',
 });
 
 const enEvents = Object.freeze({

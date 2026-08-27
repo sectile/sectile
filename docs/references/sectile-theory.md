@@ -3874,6 +3874,12 @@ hex·rgb·rgba text는 draft로 유지하다 commit 시에만 canonical RGBA로 
 
 DOM은 native `input[type=color]`, text input, range input과 form submission을 소유한다. native color input이 alpha를 표현하지 못하므로 alpha는 독립 range로 투영한다. terminal은 같은 channel cursor와 reducer를 방향키·text input에 투영한다. 색 공간 변환, gamut mapping, eye-dropper permission, 화면상 2차원 geometry는 host 또는 상위 정책 책임이다.
 
+## Progress
+
+Progress는 최솟값을 0으로 고정한 읽기 전용 bounded scalar projection이다. `value`가 있으면 `0 ≤ value ≤ max`와 exact ratio를 보존하고, `value`가 없으면 ratio 자체가 없는 불확정 상태로 둔다. 이 구분은 0%와 진행량을 알 수 없음이 같은 상태로 합쳐지는 것을 막는다. 현재 값이 `max`와 정확히 같을 때만 완료 상태다.
+
+DOM의 `progressbar` role은 불확정 상태에서 `aria-valuenow`와 값에서 파생된 `aria-valuetext`를 생략한다. native `<progress>` projection도 같은 상태에서 `value`를 생략한다. Terminal은 애니메이션 시간축을 소유하지 않고, 불확정 상태와 폭만 포함하는 안정적인 render plan을 반환한다. 진행 애니메이션, 색상, glyph, 갱신 주기는 host 책임이다.[R29][R30]
+
 ## 참고문헌
 
 [R1] Barbara Liskov and Stephen Zilles. “Programming with Abstract Data Types.” SIGPLAN Symposium on Very High Level Languages, 1974. https://doi.org/10.1145/800233.807045
@@ -3931,3 +3937,7 @@ DOM은 native `input[type=color]`, text input, range input과 form submission을
 [R27] TC39. “Temporal: PlainDate and PlainTime.” https://tc39.es/proposal-temporal/docs/
 
 [R28] W3C WAI. “Date Picker Dialog Example.” https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/
+
+[R29] W3C WAI. “Communicating Value and Limits for Range Widgets.” https://www.w3.org/WAI/ARIA/apg/practices/range-related-properties/
+
+[R30] WHATWG. “The progress element.” https://html.spec.whatwg.org/multipage/form-elements.html#the-progress-element

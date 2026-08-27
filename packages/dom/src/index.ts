@@ -644,3 +644,17 @@ export {
   type MeterRootAttributesOptions,
   type MeterValueFormatter,
 } from './meter.js';
+export {
+  createProgress,
+  getProgressIndicatorAttributes,
+  getProgressNativeAttributes,
+  getProgressRootAttributes,
+  tryCreateProgress,
+  type ProgressAttributeRecord,
+  type ProgressConnection,
+  type ProgressControlledValues,
+  type ProgressIndicatorAttributesOptions,
+  type ProgressOptions,
+  type ProgressRootAttributesOptions,
+  type ProgressValueFormatter,
+} from './progress.js';

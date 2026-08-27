@@ -1387,6 +1387,24 @@ function meterSource(scenario: string): string {
   );
 }
 
+function progressSource(scenario: string): string {
+  const attributes = scenario === 'indeterminate'
+    ? ''
+    : scenario === 'complete'
+      ? 'value="100"'
+      : scenario === 'exact-decimal'
+        ? 'value="0.1" max="0.3"'
+        : 'value="64"';
+  return sfc(
+    'ProgressRoot, ProgressTrack, ProgressIndicator, ProgressValueText',
+    `  <ProgressRoot ${attributes} label="Upload progress" v-slot="{ status }">
+    <ProgressTrack><ProgressIndicator /></ProgressTrack>
+    <ProgressValueText />
+    <span aria-hidden="true">{{ status }}</span>
+  </ProgressRoot>`,
+  );
+}
+
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
   carousel: exactScenarios(requiredCatalogSource('carousel'), ['wrapping', 'bounded', 'paused', 'controlled']),
   'checkbox-group': exactScenarios(requiredCatalogSource('checkbox-group'), ['release-channels', 'disabled-choice', 'controlled']),
@@ -1406,6 +1424,12 @@ const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> =
     'threshold-zones': meterSource('threshold-zones'),
     'exact-decimal': meterSource('exact-decimal'),
     'degenerate-range': meterSource('degenerate-range'),
+  }),
+  progress: Object.freeze({
+    determinate: progressSource('determinate'),
+    indeterminate: progressSource('indeterminate'),
+    complete: progressSource('complete'),
+    'exact-decimal': progressSource('exact-decimal'),
   }),
   pagination: exactScenarios(requiredCatalogSource('pagination'), ['compact', 'long-range', 'page-size', 'pages-only', 'controlled']),
   'quantity-field': Object.freeze({

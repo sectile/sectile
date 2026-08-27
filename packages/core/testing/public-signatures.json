@@ -127,6 +127,10 @@
       "types": "dist/popover.d.ts"
     },
     {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts"
+    },
+    {
       "subpath": "./quantity-field",
       "types": "dist/quantity-field.d.ts"
     },
@@ -235,7 +239,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "40d92eff1c36ed4ad329f684ad95ed2eb8b4ccb1214c30128a115fd5ec1d9411",
+  "fingerprint": "d2585af03b2823d683f004c8135449b34c2d0d602e2efda7895b46e2ae2f2318",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -295,7 +299,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "ca2066f96c4a6c5c20d054ded3a2f05146756f8994c974ef3c289ca6dab90a28"
+      "sha256": "81397438e88b14682d775d6cf6479bbf983009fa53271164d649c6b04a9d4d9c"
     },
     {
       "path": "dist/feed.d.ts",
@@ -436,6 +440,10 @@
     {
       "path": "dist/popover.d.ts",
       "sha256": "f90a66480685b1156941c38d442af7832d5f6cd7932fa0c771837510726a664b"
+    },
+    {
+      "path": "dist/progress.d.ts",
+      "sha256": "2fdea45711b27c710a68dfa818cb474cc0ac1a43b5c9ff7ea30265c2444062ee"
     },
     {
       "path": "dist/quantity-field.d.ts",

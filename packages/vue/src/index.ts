@@ -1034,3 +1034,13 @@ export {
   type MeterRootSlotProps,
   type MeterValueFormatter,
 } from './meter.js';
+export {
+  ProgressIndicator,
+  ProgressRoot,
+  ProgressTrack,
+  ProgressValueText,
+  type ProgressPartProps,
+  type ProgressRootProps,
+  type ProgressRootSlotProps,
+  type ProgressValueFormatter,
+} from './progress.js';

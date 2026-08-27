@@ -34,6 +34,7 @@ import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem as MenuB
 import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger, NavigationMenuViewport } from '@sectile/vue/navigation-menu';
 import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPause, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '@sectile/vue/carousel';
 import { ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxRoot } from '@sectile/vue/combobox';
+import { ProgressIndicator, ProgressRoot, ProgressTrack, ProgressValueText } from '@sectile/vue/progress';
 import { componentExampleSources } from '../component-example-sources.js';
 import { multiThumbSliderExampleState } from '../catalog-example-state.js';
 import type { PinInputExampleOptions } from '../pin-input-example-options.js';
@@ -158,6 +159,7 @@ const parts: Record<string, readonly string[]> = {
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
   'navigation-menu': ['NavigationMenuRoot', 'NavigationMenuList', 'NavigationMenuItem', 'NavigationMenuTrigger', 'NavigationMenuContent', 'NavigationMenuViewport', 'NavigationMenuLink'],
   feed: ['FeedRoot', 'FeedItem', 'FeedLoadEarlier', 'FeedLoadNewer'], calendar: ['CalendarRoot', 'CalendarContent', 'CalendarGrid', 'CalendarCell', 'CalendarMonthCell', 'CalendarInput', 'CalendarWeekViewTrigger', 'CalendarMonthViewTrigger', 'CalendarYearViewTrigger', 'CalendarPreviousWeek', 'CalendarNextWeek', 'CalendarPreviousMonth', 'CalendarNextMonth', 'CalendarPreviousYear', 'CalendarNextYear'], combobox: ['ComboboxRoot', 'ComboboxInput', 'ComboboxContent', 'ComboboxItem'],
+  progress: ['ProgressRoot', 'ProgressTrack', 'ProgressIndicator', 'ProgressValueText'],
 };
 const code = computed(() => {
   const source = componentExampleSources(props.component, props.scenario).vue;
@@ -203,6 +205,8 @@ if (props.component === 'pin-input') {
   watch(() => props.pinInputOptions?.value, (value) => { pinValue.value = value ?? ''; }, { immediate: true });
 }
 const actionStatus = ref('');
+const progressValue = computed(() => isScenario('indeterminate') ? null : isScenario('complete') ? '100' : isScenario('exact-decimal') ? '0.1' : '64');
+const progressMax = computed(() => isScenario('exact-decimal') ? '0.3' : '100');
 const pickerDateTime = computed(() => isScenario('morning') ? morningDateTime : dateTime);
 const dateTimePickerProps = computed(() => isScenario('controlled')
   ? { modelValue: controlledDateTime.value }
@@ -675,6 +679,18 @@ const recordAction = (value: string): void => {
           </ComboboxContent>
         </ComboboxRoot>
       </div>
+
+      <ProgressRoot
+        v-else-if="component === 'progress'"
+        :value="progressValue"
+        :max="progressMax"
+        label="Upload progress"
+        class="catalog-progress"
+        v-slot="{ status }"
+      >
+        <div class="catalog-progress-meta"><ProgressValueText /><span>{{ status }}</span></div>
+        <ProgressTrack class="catalog-progress-track"><ProgressIndicator class="catalog-progress-indicator" /></ProgressTrack>
+      </ProgressRoot>
 
     </div>
   </DemoCard>

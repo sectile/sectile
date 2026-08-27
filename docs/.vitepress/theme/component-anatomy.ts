@@ -224,6 +224,19 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
       purpose: copy('Fills the exact percentage without adding another accessible value.', '접근 가능한 값을 중복하지 않고 정확한 백분율만큼 채웁니다.'),
     },
   }),
+  progress: anatomy('progress', ['root', 'track', 'indicator', 'value-text'], {
+    root: {
+      attributes: [['role', 'progressbar'], ['data-status', '<status>'], ['data-percentage', '<percentage>']],
+      purpose: copy('Exposes determinate completion or an explicitly unknown amount of progress.', '확정된 완료량 또는 진행량을 알 수 없는 상태를 노출합니다.'),
+    },
+    track: {
+      purpose: copy('Provides the visual path for task completion.', '작업 완료도의 시각적 경로를 제공합니다.'),
+    },
+    indicator: {
+      attributes: [['aria-hidden', 'true'], ['data-status', '<status>'], ['data-percentage', '<percentage>']],
+      purpose: copy('Fills the exact known percentage without duplicating accessible semantics.', '접근성 의미를 중복하지 않고 알려진 정확한 백분율만큼 채웁니다.'),
+    },
+  }),
   'month-picker': anatomy('month-picker', ['input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'month-range-picker': anatomy('month-range-picker', ['start-input', 'end-input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'multi-thumb-slider': anatomy('multi-thumb-slider', ['root', 'track', 'range', 'thumb']),

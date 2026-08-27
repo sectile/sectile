@@ -159,6 +159,10 @@
       "types": "dist/primitive.d.ts"
     },
     {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts"
+    },
+    {
       "subpath": "./quantity-field",
       "types": "dist/quantity-field.d.ts"
     },
@@ -267,7 +271,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "65be141e51eeaa721505afda001b0f322042e19d8b4c4da3851cf2bcaef10e39",
+  "fingerprint": "69cbf7c61eaf6c7decfd9063bf4456315d367b6986f64af5f332806eda014063",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -367,7 +371,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "d76207f58020a34a64581ff1bd95742fa33ce090af8125ecb2bf608ed4cf0369"
+      "sha256": "e2a3bd7cf9e897599a3291b4dbad77b049b644e874ebb293bb25298395145d6e"
     },
     {
       "path": "dist/internal/date-picker.d.ts",
@@ -436,6 +440,10 @@
     {
       "path": "dist/primitive.d.ts",
       "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+    },
+    {
+      "path": "dist/progress.d.ts",
+      "sha256": "831144c17cdd01d47c337d1829c9364f52b4a49115c94bcaca5d33a02fdba728"
     },
     {
       "path": "dist/quantity-field.d.ts",

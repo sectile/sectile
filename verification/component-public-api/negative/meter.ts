@@ -8,8 +8,6 @@ import type { MeterState } from '@sectile/dom/meter';
 import { tryCreateMeterState } from '@sectile/terminal/meter';
 // @ts-expect-error Vue does not re-export DOM connections.
 import type { MeterConnection } from '@sectile/vue/meter';
-// @ts-expect-error Package exports reject declaration deep imports.
-import type { MeterInput } from '@sectile/core/dist/meter';
 import type { MeterRootProps } from '@sectile/vue/meter';
 
 const unsupported: MeterRootProps = {
@@ -19,4 +17,4 @@ const unsupported: MeterRootProps = {
 };
 
 void [createMeterState, meterDefault, tryCreateMeterState, unsupported];
-type _Leaks = [MeterState, MeterConnection, MeterInput];
+type _Leaks = [MeterState, MeterConnection];

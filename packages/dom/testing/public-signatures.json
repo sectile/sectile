@@ -151,6 +151,10 @@
       "types": "dist/popover.d.ts"
     },
     {
+      "subpath": "./progress",
+      "types": "dist/progress.d.ts"
+    },
+    {
       "subpath": "./quantity-field",
       "types": "dist/quantity-field.d.ts"
     },
@@ -259,7 +263,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "f6f5759c32aca062bb991093a0453c32257841ac28c9030a78ca43f32a04eaff",
+  "fingerprint": "3d7a58a73dc9a408770882bc25faaa119a3f4209065a8f9b423964442c761477",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -355,7 +359,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "106a0ccca1d93a8d6fd8b8c65d8227713ebedc90d6e5ff3f3e163355b99cb0e7"
+      "sha256": "9c7682bc86a6d1e451fa5a97402135b88f1509a0f6f28a15555d15cf035ed3f8"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -440,6 +444,10 @@
     {
       "path": "dist/popover.d.ts",
       "sha256": "aac36d20bd746d5eb5dfa45577eb7c3cb8b3dc8f4e3198aeb131c6344f565d9c"
+    },
+    {
+      "path": "dist/progress.d.ts",
+      "sha256": "cccb1de48e6ad3db1e21f481a106317c6f2aabdd1dc3d7b400f203d90580bc7c"
     },
     {
       "path": "dist/quantity-field.d.ts",

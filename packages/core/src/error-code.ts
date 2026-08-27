@@ -309,6 +309,8 @@ export type CoreErrorCode =
   | 'meter-threshold-order-invalid'
   | 'meter-threshold-outside-range'
   | 'meter-value-outside-range'
+  | 'progress-maximum-not-positive'
+  | 'progress-value-outside-range'
   | 'missing-candidate-label'
   | 'missing-parent'
   | 'missing-quantity-expression-result'

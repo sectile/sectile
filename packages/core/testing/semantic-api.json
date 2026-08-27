@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "c473a329499cef1644095936a66243365be5f1503abf7474e3ac91aa986b98b9",
+    "publicSignatureFingerprint": "29b44c27396339fb7db7aede30425eff50e3dbae7e31633fa49c245705d691a6",
     "subpaths": [
       ".",
       "./accordion",
@@ -44,6 +44,7 @@
       "./pagination",
       "./pin-input",
       "./popover",
+      "./progress",
       "./quantity-field",
       "./radio-group",
       "./range",
@@ -400,6 +401,8 @@
       "pagination-page-out-of-range",
       "pagination-sibling-ceiling-exceeded",
       "pin-input-value-rejected",
+      "progress-maximum-not-positive",
+      "progress-value-outside-range",
       "quantity-above-maximum",
       "quantity-below-minimum",
       "quantity-commit-during-composition",
@@ -527,6 +530,6 @@
   ],
   "acceptance": {
     "classification": "contract-impact-reviewed",
-    "reason": "Meter_adds_bounded_value_and_threshold_validation_errors"
+    "reason": "Add_progress_subpath_and_explicit_construction_errors"
   }
 }

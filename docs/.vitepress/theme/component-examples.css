@@ -867,6 +867,11 @@
   .catalog-slider { padding-block: 2rem; }
   .catalog-slider-track { position: relative; display: block; height: 0.45rem; border-radius: 99rem; background: var(--demo-divider); }
   .catalog-slider-range { position: absolute; inset-block: 0; left: var(--sectile-range-start); right: calc(100% - var(--sectile-range-end)); border-radius: inherit; background-color: var(--demo-brand-hover); pointer-events: none; }
+  .catalog-progress { display: grid; gap: 0.55rem; width: min(26rem, 100%); }
+  .catalog-progress-meta { display: flex; justify-content: space-between; color: var(--demo-muted); font-size: 0.78rem; }
+  .catalog-progress-track { display: block; height: 0.5rem; overflow: hidden; border-radius: 99rem; background: var(--demo-divider); }
+  .catalog-progress-indicator { display: block; width: var(--sectile-progress-percentage, 34%); height: 100%; border-radius: inherit; background: var(--demo-brand-hover); }
+  .catalog-progress-indicator[data-status="indeterminate"] { width: 34%; }
   .catalog-slider-thumb { position: absolute; top: 50%; left: var(--sectile-thumb-percentage); width: 1.2rem; height: 1.2rem; border: 0.2rem solid var(--demo-divider); border-radius: 50%; padding: 0; background: var(--demo-brand-light); transform: translate(-50%, -50%); }
   .catalog-menu-demo { width: min(100%, 34rem); min-height: 16rem; align-content: start; justify-items: start; }
   .catalog-menu { position: relative; display: grid; width: min(18rem, 100%); gap: 0.18rem; padding: 0.35rem; border: 1px solid var(--demo-border); border-radius: 0.65rem; background: var(--demo-surface); box-shadow: var(--demo-floating-shadow); }

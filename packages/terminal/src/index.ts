@@ -519,3 +519,11 @@ export {
   type MeterOptions,
   type MeterRenderPlan,
 } from './meter.js';
+export {
+  createProgress,
+  tryCreateProgress,
+  type ProgressConnection,
+  type ProgressControlledValues,
+  type ProgressOptions,
+  type ProgressRenderPlan,
+} from './progress.js';

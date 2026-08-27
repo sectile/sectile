@@ -156,14 +156,14 @@ Vue package: `@sectile/vue/meter`
 <dt><code>max</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
-<p>Maximum of the meter range.</p>
+<p>Maximum of the numeric range.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>min</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
-<p>Minimum of the meter range.</p>
+<p>Minimum of the numeric range.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -191,7 +191,7 @@ Vue package: `@sectile/vue/meter`
 <dt><code>valueText</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span></div>
-<p>Formatted text for the current meter value.</p>
+<p>Formatted text for the current range value when available.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -253,7 +253,7 @@ Shared scope: <code class="component-scope-token">[data-scope="meter"]</code>. C
 
 | Key | Behavior |
 | --- | --- |
-| <kbd>None</kbd> | The meter is read-only and defines no keyboard interaction. |
+| <kbd>None</kbd> | The range display is read-only and defines no keyboard interaction. |
 
 ## Accessibility
 

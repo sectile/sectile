@@ -1030,6 +1030,10 @@ function scenarioTitle(component, scenario) {
   if (component.id === 'meter' && scenario === 'threshold-zones') return 'Threshold zones';
   if (component.id === 'meter' && scenario === 'exact-decimal') return 'Exact decimal';
   if (component.id === 'meter' && scenario === 'degenerate-range') return 'Equal bounds';
+  if (component.id === 'progress' && scenario === 'determinate') return 'Known progress';
+  if (component.id === 'progress' && scenario === 'indeterminate') return 'Unknown progress';
+  if (component.id === 'progress' && scenario === 'complete') return 'Complete';
+  if (component.id === 'progress' && scenario === 'exact-decimal') return 'Exact decimal';
   if (component.id === 'pin-input' && scenario === 'verification-code') return 'Verification code';
   if (component.id === 'pin-input' && scenario === 'custom-length') return 'Custom length';
   if (component.id === 'pin-input' && scenario === 'masked') return 'Masked input';
@@ -1063,6 +1067,10 @@ function koScenarioTitle(component, scenario) {
   if (component.id === 'meter' && scenario === 'threshold-zones') return '임계 구간';
   if (component.id === 'meter' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'meter' && scenario === 'degenerate-range') return '같은 최솟값과 최댓값';
+  if (component.id === 'progress' && scenario === 'determinate') return '확정된 진행량';
+  if (component.id === 'progress' && scenario === 'indeterminate') return '알 수 없는 진행량';
+  if (component.id === 'progress' && scenario === 'complete') return '완료';
+  if (component.id === 'progress' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'stepper' && scenario === 'gated-step') return '진행 조건';
   if (component.id === 'pin-input' && scenario === 'verification-code') return '인증 번호';
   if (component.id === 'pin-input' && scenario === 'custom-length') return '입력 칸 수 설정';

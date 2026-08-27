@@ -76,6 +76,11 @@
       "import": "./dist/meter.js",
       "default": "./dist/meter.js"
     },
+    "./progress": {
+      "types": "./dist/progress.d.ts",
+      "import": "./dist/progress.js",
+      "default": "./dist/progress.js"
+    },
     "./cascade-select": {
       "types": "./dist/cascade-select.d.ts",
       "import": "./dist/cascade-select.js",
