@@ -56,6 +56,35 @@ const copy = computed(() => isKorean.value ? {
   transientFailure: (correct: number, total: number) => `화면 이상 ${total - correct}/${total}회`,
   failureCode: { 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
+  criteriaTitle: '이 그래프의 측정 기준',
+  criteriaLabel: {
+    data: '데이터',
+    viewport: '화면',
+    height: '높이 입력',
+    repeat: '반복',
+    completion: '완료 판정',
+    environment: '환경',
+  },
+  criteriaValue: {
+    data: '같은 행 100,000개',
+    viewport: '720 × 480px · 여유 8행',
+    height: {
+      fixed: '정확한 48px 전달',
+      estimated: '48px 예상값 뒤 DOM 실측',
+      automatic: '높이값 없이 DOM 실측',
+    } as Record<BenchmarkHeightMode, string>,
+    repeat: {
+      mount: '라이브러리 순서를 바꿔 5회',
+      scroll: '5회 · 준비 5번 뒤 40번 기록',
+      mutation: '같은 조건 10회',
+    },
+    completion: {
+      mount: '전체 높이와 화면 배치가 모두 맞은 시점',
+      scroll: '목표 행이 DOM에 나타난 시점',
+      mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 프레임',
+    },
+    environment: 'Chrome 151 · Apple Silicon · macOS',
+  },
 } : {
   title: 'Compare results under the same conditions',
   description: 'Change the scenario to compare all seven libraries in the same chart.',
@@ -73,6 +102,35 @@ const copy = computed(() => isKorean.value ? {
   transientFailure: (correct: number, total: number) => `Visual failure in ${total - correct}/${total} runs`,
   failureCode: { 'scroll-anchor': 'anchor moved', 'row-overlap': 'row overlap', 'scroll-height': 'scroll-height error', 'blank-viewport': 'blank viewport', timeout: 'failed to settle', 'row-gap': 'row gap', 'row-height': 'row-height error', 'row-order': 'row-order error', 'duplicate-id': 'duplicate ID', 'unexpected-id': 'unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
+  criteriaTitle: 'Measurement criteria for this chart',
+  criteriaLabel: {
+    data: 'Data',
+    viewport: 'Viewport',
+    height: 'Height input',
+    repeat: 'Repetition',
+    completion: 'Completion',
+    environment: 'Environment',
+  },
+  criteriaValue: {
+    data: '100,000 identical rows',
+    viewport: '720 × 480px · 8-row overscan',
+    height: {
+      fixed: 'Exact 48px supplied',
+      estimated: '48px estimate, then DOM measurement',
+      automatic: 'DOM measurement without a height value',
+    } as Record<BenchmarkHeightMode, string>,
+    repeat: {
+      mount: '5 rounds with rotated library order',
+      scroll: '5 rounds · 5 warm-ups, then 40 samples',
+      mutation: '10 samples under the same condition',
+    },
+    completion: {
+      mount: 'Correct total height and viewport geometry',
+      scroll: 'Target row appears in the DOM',
+      mutation: 'Correct order, geometry, total height, and anchor',
+    },
+    environment: 'Chrome 151 · Apple Silicon · macOS',
+  },
 });
 
 const selectionParts = computed(() => (cascadeValue.value ?? 'mount:fixed').split(':'));
@@ -105,6 +163,19 @@ const selectedDescription = computed(() => {
   const parts = [copy.value.scenario[scenario.value], copy.value.mode[mode]];
   if (!isBaselineScenario(scenario.value)) parts.push(copy.value.location[location.value]);
   return parts.join(' · ');
+});
+
+const benchmarkCriteria = computed(() => {
+  const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
+  const phase = scenario.value === 'mount' ? 'mount' : scenario.value === 'scroll' ? 'scroll' : 'mutation';
+  return [
+    { label: copy.value.criteriaLabel.data, value: copy.value.criteriaValue.data },
+    { label: copy.value.criteriaLabel.viewport, value: copy.value.criteriaValue.viewport },
+    { label: copy.value.criteriaLabel.height, value: copy.value.criteriaValue.height[mode] },
+    { label: copy.value.criteriaLabel.repeat, value: copy.value.criteriaValue.repeat[phase] },
+    { label: copy.value.criteriaLabel.completion, value: copy.value.criteriaValue.completion[phase] },
+    { label: copy.value.criteriaLabel.environment, value: copy.value.criteriaValue.environment },
+  ];
 });
 
 function baselineResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
@@ -208,12 +279,22 @@ function failureLabel(result: MutationBenchmarkResult): string {
           </div>
         </div>
       </div>
+
+      <footer class="benchmark-criteria" :aria-label="copy.criteriaTitle">
+        <strong>{{ copy.criteriaTitle }}</strong>
+        <dl>
+          <div v-for="criterion in benchmarkCriteria" :key="criterion.label">
+            <dt>{{ criterion.label }}</dt>
+            <dd>{{ criterion.value }}</dd>
+          </div>
+        </dl>
+      </footer>
     </figure>
   </section>
 </template>
 
 <style scoped>
-.virtual-benchmark-report { display: grid; gap: 18px; margin: 28px 0 44px; color: var(--sectile-content-primary); }
+.virtual-benchmark-report { display: grid; gap: 18px; margin: 28px 0 0; color: var(--sectile-content-primary); }
 .report-heading { display: grid; gap: 5px; }
 .report-heading h2 { margin: 0; padding: 0; border: 0; font-size: 1rem; line-height: 1.45; letter-spacing: -0.015em; }
 .report-heading p { max-width: 70ch; margin: 0; color: var(--sectile-content-secondary); font-size: 0.8rem; line-height: 1.65; }
@@ -242,6 +323,12 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .bar span { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .result-message { display: grid; block-size: 42px; place-items: center; overflow: hidden; padding-inline: 10px; color: var(--sectile-content-primary); font-size: 0.8rem; font-weight: 720; line-height: 1.4; text-align: center; }
 .result-message.is-failure { color: var(--sectile-feedback-critical); }
+.benchmark-criteria { display: grid; gap: 10px; padding-top: 14px; }
+.benchmark-criteria > strong { font-size: 0.76rem; line-height: 1.4; }
+.benchmark-criteria dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 36px; margin: 0; }
+.benchmark-criteria dl > div { display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: baseline; gap: 10px; min-width: 0; }
+.benchmark-criteria dt { color: var(--sectile-content-tertiary); font-size: 0.66rem; font-weight: 700; line-height: 1.4; }
+.benchmark-criteria dd { margin: 0; color: var(--sectile-content-primary); font-size: 0.74rem; font-weight: 560; line-height: 1.45; }
 .is-placeholder { visibility: hidden; pointer-events: none; }
 
 @media (max-width: 640px) {
@@ -249,6 +336,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
   .benchmark-row { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 9px 0; }
   .benchmark-row header { grid-template-columns: auto 1fr; align-items: baseline; gap: 7px; }
   .bar { grid-template-columns: minmax(0, 1fr) 46px; }
+  .benchmark-criteria dl { grid-template-columns: minmax(0, 1fr); gap: 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
