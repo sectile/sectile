@@ -364,14 +364,14 @@ const recordAction = (value: string): void => {
         <WindowSplitterPane side="before" class="catalog-pane">Navigator</WindowSplitterPane><WindowSplitterHandle class="catalog-handle" /><WindowSplitterPane side="after" class="catalog-pane">Editor</WindowSplitterPane>
       </WindowSplitterRoot>
 
-      <DatePickerRoot v-else-if="component === 'date-picker'" :default-value="isScenario('weekdays') ? dateRange.end : date" :default-open="preview" :default-view="isScenario('weekdays') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+      <DatePickerRoot v-else-if="component === 'date-picker'" :default-value="isScenario('weekdays') ? dateRange.end : date" :default-open="preview" :default-view="isScenario('weekdays') ? 'week' : 'month'" :position="!preview" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
         <DatePickerAnchor class="catalog-inline"><DatePickerInput class="text-field temporal-input" /><DatePickerTrigger class="catalog-picker-trigger" aria-label="Open date picker"><CalendarDays :size="18" aria-hidden="true" /></DatePickerTrigger></DatePickerAnchor>
         <DatePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
           <PickerCalendarDemo component="date-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" />
         </DatePickerContent>
       </DatePickerRoot>
 
-      <DateRangePickerRoot v-else-if="component === 'date-range-picker'" :default-value="dateRange" :default-open="preview" :policies="dateRangePickerPolicies" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+      <DateRangePickerRoot v-else-if="component === 'date-range-picker'" :default-value="dateRange" :default-open="preview" :policies="dateRangePickerPolicies" :position="!preview" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
         <DateRangePickerAnchor class="catalog-inline"><DateRangePickerStartInput class="text-field temporal-input" /><DateRangePickerEndInput class="text-field temporal-input" /><DateRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date range picker"><CalendarDays :size="18" aria-hidden="true" /></DateRangePickerTrigger></DateRangePickerAnchor>
         <DateRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating"><PickerCalendarDemo component="date-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateRangePickerContent>
       </DateRangePickerRoot>
@@ -394,7 +394,7 @@ const recordAction = (value: string): void => {
         </RangeCalendarContent>
       </RangeCalendarRoot>
 
-      <MonthPickerRoot v-else-if="component === 'month-picker'" :default-value="monthValue" :default-open="preview" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
+      <MonthPickerRoot v-else-if="component === 'month-picker'" :default-value="monthValue" :default-open="preview" :position="!preview" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
         <MonthPickerAnchor class="catalog-inline"><MonthPickerInput class="text-field temporal-input" aria-label="Billing month" /><MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker"><CalendarDays :size="18" aria-hidden="true" /></MonthPickerTrigger></MonthPickerAnchor>
         <MonthPickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><MonthPickerPreviousYear aria-label="Previous year"><ChevronLeft :size="17" /></MonthPickerPreviousYear><strong>{{ view.year }}</strong><MonthPickerNextYear aria-label="Next year"><ChevronRight :size="17" /></MonthPickerNextYear></div>
@@ -402,7 +402,7 @@ const recordAction = (value: string): void => {
         </MonthPickerContent>
       </MonthPickerRoot>
 
-      <MonthRangePickerRoot v-else-if="component === 'month-range-picker'" :default-value="monthRange" :default-open="preview" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
+      <MonthRangePickerRoot v-else-if="component === 'month-range-picker'" :default-value="monthRange" :default-open="preview" :position="!preview" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
         <MonthRangePickerAnchor class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><MonthRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><MonthRangePickerEndInput class="text-field temporal-input" /></label><MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker"><CalendarDays :size="18" aria-hidden="true" /></MonthRangePickerTrigger></MonthRangePickerAnchor>
         <MonthRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><MonthRangePickerPreviousYear aria-label="Previous year"><ChevronLeft :size="17" /></MonthRangePickerPreviousYear><strong>{{ view.year }}</strong><MonthRangePickerNextYear aria-label="Next year"><ChevronRight :size="17" /></MonthRangePickerNextYear></div>
@@ -410,7 +410,7 @@ const recordAction = (value: string): void => {
         </MonthRangePickerContent>
       </MonthRangePickerRoot>
 
-      <YearPickerRoot v-else-if="component === 'year-picker'" :default-value="yearValue" :default-open="preview" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
+      <YearPickerRoot v-else-if="component === 'year-picker'" :default-value="yearValue" :default-open="preview" :position="!preview" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
         <YearPickerAnchor class="catalog-inline"><YearPickerInput class="text-field temporal-input" aria-label="Graduation year" /><YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker"><CalendarDays :size="18" aria-hidden="true" /></YearPickerTrigger></YearPickerAnchor>
         <YearPickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><YearPickerPreviousPage aria-label="Previous years"><ChevronLeft :size="17" /></YearPickerPreviousPage><strong>{{ years.flat()[0]?.year }}–{{ years.flat()[years.flat().length - 1]?.year }}</strong><YearPickerNextPage aria-label="Next years"><ChevronRight :size="17" /></YearPickerNextPage></div>
@@ -418,7 +418,7 @@ const recordAction = (value: string): void => {
         </YearPickerContent>
       </YearPickerRoot>
 
-      <YearRangePickerRoot v-else-if="component === 'year-range-picker'" :default-value="yearRange" :default-open="preview" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
+      <YearRangePickerRoot v-else-if="component === 'year-range-picker'" :default-value="yearRange" :default-open="preview" :position="!preview" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
         <YearRangePickerAnchor class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><YearRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><YearRangePickerEndInput class="text-field temporal-input" /></label><YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker"><CalendarDays :size="18" aria-hidden="true" /></YearRangePickerTrigger></YearRangePickerAnchor>
         <YearRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><YearRangePickerPreviousPage aria-label="Previous years"><ChevronLeft :size="17" /></YearRangePickerPreviousPage><strong>{{ years.flat()[0]?.year }}–{{ years.flat()[years.flat().length - 1]?.year }}</strong><YearRangePickerNextPage aria-label="Next years"><ChevronRight :size="17" /></YearRangePickerNextPage></div>
@@ -426,7 +426,7 @@ const recordAction = (value: string): void => {
         </YearRangePickerContent>
       </YearRangePickerRoot>
 
-      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" v-bind="dateTimePickerProps" :default-open="preview" :default-view="isScenario('morning') ? 'week' : 'month'" @update:model-value="updateControlledDateTime" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+      <DateTimePickerRoot v-else-if="component === 'date-time-picker'" v-bind="dateTimePickerProps" :default-open="preview" :default-view="isScenario('morning') ? 'week' : 'month'" :position="!preview" @update:model-value="updateControlledDateTime" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
         <DateTimePickerAnchor class="catalog-range-fields catalog-range-fields--single">
           <label class="catalog-endpoint">
             <span>Date and time</span>
@@ -439,7 +439,7 @@ const recordAction = (value: string): void => {
         </DateTimePickerAnchor>
         <DateTimePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating"><PickerCalendarDemo component="date-time-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimePickerContent>
       </DateTimePickerRoot>
-      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isScenario('office-hours') ? sameDayDateTimeRange : dateTimeRange" :default-open="preview" :default-view="isScenario('office-hours') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+      <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isScenario('office-hours') ? sameDayDateTimeRange : dateTimeRange" :default-open="preview" :default-view="isScenario('office-hours') ? 'week' : 'month'" :position="!preview" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
         <DateTimeRangePickerAnchor class="catalog-range-fields">
           <label class="catalog-endpoint">
             <span>Start</span>

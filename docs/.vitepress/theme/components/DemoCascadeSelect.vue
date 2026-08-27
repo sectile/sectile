@@ -83,7 +83,7 @@ const valueBindings = computed(() => ({
 </template>
 
 <style scoped>
-.demo-cascade-select { position: relative; width: 100%; }
+.demo-cascade-select { position: relative; display: grid; width: 100%; gap: var(--sectile-overlay-gap); }
 .demo-cascade-select[data-state='open'] { z-index: 20; }
 .cascade-select-trigger { display: flex; width: 100%; min-height: 2.75rem; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--sectile-border-control); border-radius: 0.7rem; padding: 0.68rem 1rem; color: var(--sectile-content-secondary); background: var(--sectile-surface); font: inherit; text-align: left; cursor: pointer; }
 .cascade-select-trigger:hover:not(:disabled) { border-color: var(--sectile-border-strong); background: var(--sectile-surface-hover); }
@@ -93,7 +93,7 @@ const valueBindings = computed(() => ({
 .cascade-select-trigger__chevron.is-open { transform: rotate(180deg); }
 .cascade-select-content { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(11rem, 1fr); overflow-x: auto; border: 1px solid var(--sectile-border-control); border-radius: 0.65rem; color: var(--sectile-content-primary); background: var(--sectile-surface); box-shadow: var(--sectile-shadow-floating); }
 .cascade-select-content[hidden] { display: none; }
-.demo-cascade-select--floating .cascade-select-content { position: absolute; z-index: 20; top: calc(100% + 0.35rem); right: 0; left: 0; max-height: 260px; overflow: auto; }
+.demo-cascade-select--floating .cascade-select-content { position: absolute; z-index: 20; top: calc(100% + var(--sectile-overlay-gap)); right: 0; left: 0; max-height: 260px; overflow: auto; }
 .cascade-select-column { display: grid; min-width: 0; min-height: 15rem; align-content: start; gap: 0.1rem; padding: 0.25rem; border-inline-end: 1px solid var(--sectile-border-control); }
 .cascade-select-column:last-child { border-inline-end: 0; }
 .cascade-select-item { display: flex; min-width: 0; min-height: 2.7rem; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0.4rem; padding: 0.55rem 0.65rem; color: inherit; background: transparent; text-align: left; cursor: pointer; outline: 0; }

@@ -218,7 +218,7 @@ Vue package: `@sectile/vue/select`
 <div class="component-api-definition">
 <dt><code>sideOffset</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>4</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
 <p>Distance between positioned content and its anchor.</p>
 </dd>
 </div>

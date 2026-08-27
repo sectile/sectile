@@ -107,7 +107,7 @@ const optionLabel = (id: string): string => (
 .demo-select__content {
   position: absolute;
   z-index: 12;
-  top: calc(100% + .35rem);
+  top: calc(100% + var(--sectile-overlay-gap));
   right: 0;
   left: 0;
 }

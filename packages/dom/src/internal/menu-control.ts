@@ -75,7 +75,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
         reference: options.trigger,
         side: 'bottom',
         align: 'center',
-        sideOffset: 4,
+        sideOffset: 8,
         onPositionChange: (position) => {
           const side = position.placement.split('-')[0];
           options.root.dataset['placement'] = `${side}-center`;
@@ -143,7 +143,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       reference: anchor,
       side: opensFromMenubar ? 'bottom' : this.#options.direction === 'rtl' ? 'left' : 'right',
       align: 'start',
-      sideOffset: 4,
+      sideOffset: 8,
       onPositionChange: (next) => {
         submenu.dataset['placement'] = next.placement;
         anchor.dataset['submenuPlacement'] = next.placement;

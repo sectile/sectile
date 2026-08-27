@@ -83,14 +83,14 @@ test('DOM menu owns hidden submenu surfaces and collision-safe placement', async
   await settlePosition();
   assert.equal(submenu.hidden, false);
   assert.equal(submenu.dataset.placement, 'left-start');
-  assert.equal(submenu.style.left, '256px');
+  assert.equal(submenu.style.left, '252px');
   assert.equal(submenu.style.top, '120px');
 
   window.innerWidth = 800;
   window.dispatchEvent(new window.Event('resize'));
   await settlePosition();
   assert.equal(submenu.dataset.placement, 'right-start');
-  assert.equal(submenu.style.left, '484px');
+  assert.equal(submenu.style.left, '488px');
 });
 
 test('DOM menu button positions its popup without occupying trigger layout', async () => {
@@ -112,7 +112,7 @@ test('DOM menu button positions its popup without occupying trigger layout', asy
   assert.equal(root.dataset.placement, 'bottom-center');
   assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.left, '50px');
-  assert.equal(root.style.top, '104px');
+  assert.equal(root.style.top, '108px');
 });
 
 test('DOM menubar opens its top-level submenu below the horizontal item', async () => {
@@ -138,7 +138,7 @@ test('DOM menubar opens its top-level submenu below the horizontal item', async 
   assert.equal(submenu.hidden, false);
   assert.equal(submenu.dataset.placement, 'bottom-start');
   assert.equal(submenu.style.left, '100px');
-  assert.equal(submenu.style.top, '104px');
+  assert.equal(submenu.style.top, '108px');
 });
 
 test('DOM menus reverse horizontal navigation and submenu placement in RTL', async () => {

@@ -35,6 +35,7 @@
   --sectile-radius-surface: 16px;
   --sectile-control-height: 40px;
   --sectile-control-height-compact: 34px;
+  --sectile-overlay-gap: 8px;
   --sectile-motion-fast: 120ms;
   --sectile-motion-standard: 180ms;
   --sectile-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -70,6 +71,7 @@
   --demo-focus: var(--sectile-focus-ring);
   --demo-on-brand: var(--sectile-content-on-accent);
   --demo-floating-shadow: var(--sectile-shadow-floating);
+  --demo-overlay-gap: var(--sectile-overlay-gap);
 }
 
 .ds-product {

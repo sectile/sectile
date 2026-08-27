@@ -218,7 +218,7 @@ Vue 패키지: `@sectile/vue/select`
 <div class="component-api-definition">
 <dt><code>sideOffset</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>4</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
 <p>팝업과 기준 요소 사이 거리입니다.</p>
 </dd>
 </div>
