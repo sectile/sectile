@@ -92,6 +92,7 @@ Observed results:
 
 - VoiceOver was enabled through System Settings and its caption panel setting was confirmed active.
 - Safari exposed the expected role, accessible name, value, and group ordering through the macOS accessibility tree while VoiceOver was enabled.
+- A temporary focus-probe fixture made the otherwise read-only range projections sequentially focusable. With VoiceOver enabled, Tab focus traversed custom indeterminate (`ARIA bare`, `50`), custom bounded indeterminate (`ARIA bounds`, `50`), custom zero (`ARIA zero`, `0`), native indeterminate (`Native indeterminate`, `0`), and native zero (`Native zero`, `0`) in DOM order. This confirms focused accessibility objects and order, but does not substitute for virtual-cursor or spoken-output evidence.
 - Computer Use key events are app-scoped and could not issue the global VoiceOver navigation commands needed to produce and capture spoken-output traversal. Role/name/value/update/order announcements and non-duplication therefore remain unverified.
 - VoiceOver was restored to its original off state after the inspection.
 
