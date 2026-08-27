@@ -87,8 +87,12 @@ interface LogicalPlacement<ID extends StableID> {
 interface MasonryInternals<ID extends StableID> {
   readonly placements: readonly LogicalPlacement<ID>[];
   readonly lanes: readonly (readonly LogicalPlacement<ID>[])[];
-  readonly byID: ReadonlyMap<ID, LogicalPlacement<ID>>;
   readonly contentMain: number;
+}
+
+interface MasonryReuse<ID extends StableID> {
+  readonly previous: MasonryInternals<ID>;
+  readonly recomputeStart: number;
 }
 
 const internals = new WeakMap<MasonryLayoutState, MasonryInternals<StableID>>();
@@ -208,7 +212,15 @@ export function tryApplyMasonryMeasurements<ID extends StableID>(state: MasonryL
   if (!updated.ok) return updated;
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = createState({ ...state, extents: updated.value, generation: generation.value });
+  const data = getInternals(state);
+  if (!data.ok) return data;
+  const next = createState(
+    { ...state, extents: updated.value, generation: generation.value },
+    {
+      previous: data.value,
+      recomputeStart: firstChangedExtentIndex(state.extents, batch.measurements),
+    },
+  );
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, batch.anchor)) }));
 }
 
@@ -220,6 +232,7 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
   if (mutation.type !== 'items' && mutation.type !== 'geometry') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Masonry mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
   let partial: Omit<MasonryLayoutStateData<ID>, 'generation'>;
+  let recomputeStart: number | null = null;
   if (mutation.type === 'items') {
     const inserted = mutation.insertedExtents ?? [];
     if (mutation.patch.type === 'splice' && inserted.length !== mutation.patch.inserted.length) return fail('transition-rejection', 'virtual-layout-inserted-extents-mismatch', 'Every inserted identity requires one extent.');
@@ -231,6 +244,9 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
       : state.extents.move(mutation.patch.from, mutation.patch.to, mutation.patch.count);
     if (!extents.ok) return extents;
     partial = { ...state, domain: domain.value, extents: extents.value };
+    recomputeStart = mutation.patch.type === 'splice'
+      ? mutation.patch.index
+      : Math.min(mutation.patch.from, mutation.patch.to);
   } else {
     const geometry = normalizeGeometry({
       axis: mutation.axis ?? state.axis,
@@ -247,7 +263,17 @@ export function tryApplyMasonryMutation<ID extends StableID>(state: MasonryLayou
   }
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const next = createState({ ...partial, generation: generation.value });
+  const data = recomputeStart === null ? null : getInternals(state);
+  if (data !== null && !data.ok) return data;
+  const next = createState(
+    { ...partial, generation: generation.value },
+    data === null
+      ? undefined
+      : {
+          previous: data.value,
+          recomputeStart: Math.min(recomputeStart ?? 0, partial.domain.size),
+        },
+  );
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
 }
 
@@ -258,7 +284,8 @@ export function masonryScrollTarget<ID extends StableID>(state: MasonryLayoutSta
 export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const data = getInternals(state);
   if (!data.ok) return data;
-  const logical = data.value.byID.get(id);
+  const index = state.domain.indexOf(id);
+  const logical = index === null ? undefined : data.value.placements[index];
   if (logical === undefined) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the masonry domain.', { id });
   const rect = placementRect(state, data.value.contentMain, logical);
   const size = contentSize(state, data.value.contentMain);
@@ -269,36 +296,50 @@ export function tryMasonryScrollTarget<ID extends StableID>(state: MasonryLayout
 
 export function masonryRectAt<ID extends StableID>(state: MasonryLayoutState<ID>, id: ID): VirtualRect | null {
   const data = internals.get(state as MasonryLayoutState);
-  const logical = data?.byID.get(id);
+  const index = state.domain.indexOf(id);
+  const logical = index === null ? undefined : data?.placements[index];
   return logical === undefined || data === undefined ? null : placementRect(state, data.contentMain, logical as LogicalPlacement<ID>);
 }
 
-function createState<ID extends StableID>(state: MasonryLayoutStateData<ID>): MasonryLayoutState<ID> {
+function createState<ID extends StableID>(state: MasonryLayoutStateData<ID>, reuse?: MasonryReuse<ID>): MasonryLayoutState<ID> {
   Object.defineProperty(state, masonryLayoutStateBrand, { value: true });
   const frozen = Object.freeze(state) as MasonryLayoutState<ID>;
-  internals.set(frozen, buildInternals(frozen) as MasonryInternals<StableID>);
+  internals.set(frozen, buildInternals(frozen, reuse) as MasonryInternals<StableID>);
   return frozen;
 }
 
-function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>): MasonryInternals<ID> {
+function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>, reuse?: MasonryReuse<ID>): MasonryInternals<ID> {
   const laneEnds = Array<number>(state.laneCount).fill(0);
-  const heap = state.placementPolicy === 'shortest' && state.laneCount > 16
-    ? Array.from({ length: state.laneCount }, (_, lane) => ({ lane, end: 0 }))
-    : null;
   const lanes = Array.from({ length: state.laneCount }, () => [] as LogicalPlacement<ID>[]);
-  const placements: LogicalPlacement<ID>[] = [];
-  const byID = new Map<ID, LogicalPlacement<ID>>();
-  const extents = state.extents.slice(0, state.extents.size);
+  const recomputeStart = reuse === undefined
+    ? 0
+    : Math.min(Math.max(0, reuse.recomputeStart), state.domain.size);
+  const placements: LogicalPlacement<ID>[] = reuse === undefined
+    ? []
+    : reuse.previous.placements.slice(0, recomputeStart) as LogicalPlacement<ID>[];
+  if (reuse !== undefined && recomputeStart > 0) {
+    for (let lane = 0; lane < state.laneCount; lane += 1) {
+      const previous = reuse.previous.lanes[lane] ?? [];
+      const end = firstIndexAtOrAfter(previous, recomputeStart);
+      const prefix = previous.slice(0, end) as LogicalPlacement<ID>[];
+      lanes[lane]!.push(...prefix);
+      const last = prefix[prefix.length - 1];
+      if (last !== undefined) laneEnds[lane] = last.start + last.extent + state.itemGap;
+    }
+  }
+  const heap = state.placementPolicy === 'shortest' && state.laneCount > 16
+    ? Array.from({ length: state.laneCount }, (_, lane) => ({ lane, end: laneEnds[lane]! })).sort(compareLane)
+    : null;
+  const extents = state.extents.slice(recomputeStart, state.extents.size);
   if (extents === null) throw new Error('Internal invariant breach: masonry extent range is invalid.');
-  for (let index = 0; index < state.domain.size; index += 1) {
+  for (let index = recomputeStart; index < state.domain.size; index += 1) {
     const id = state.domain.at(index)!;
-    const extent = extentValue(extents[index]!);
+    const extent = extentValue(extents[index - recomputeStart]!);
     const lane = state.placementPolicy === 'round-robin' ? index % state.laneCount : heap === null ? shortestLane(laneEnds) : heap[0]!.lane;
     const start = laneEnds[lane]!;
-    const placement = Object.freeze({ id, index, lane, start, extent });
+    const placement = { id, index, lane, start, extent };
     placements.push(placement);
     lanes[lane]!.push(placement);
-    byID.set(id, placement);
     laneEnds[lane] = start + extent + state.itemGap;
     if (heap !== null) {
       heap[0] = { lane, end: laneEnds[lane]! };
@@ -307,7 +348,29 @@ function buildInternals<ID extends StableID>(state: MasonryLayoutState<ID>): Mas
   }
   let contentMain = 0;
   for (const end of laneEnds) contentMain = Math.max(contentMain, end === 0 ? 0 : end - state.itemGap);
-  return Object.freeze({ placements: Object.freeze(placements), lanes: Object.freeze(lanes.map((lane) => Object.freeze(lane))), byID, contentMain });
+  return Object.freeze({ placements: Object.freeze(placements), lanes: Object.freeze(lanes.map((lane) => Object.freeze(lane))), contentMain });
+}
+
+function firstIndexAtOrAfter<ID extends StableID>(lane: readonly LogicalPlacement<ID>[], itemIndex: number): number {
+  let low = 0;
+  let high = lane.length;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (lane[middle]!.index < itemIndex) low = middle + 1;
+    else high = middle;
+  }
+  return low;
+}
+
+function firstChangedExtentIndex(index: ExtentIndex, measurements: readonly MasonryMeasurement[]): number {
+  let first = index.size;
+  for (const measurement of measurements) {
+    const previous = index.extentAt(measurement.index);
+    if (previous === null || extentValue(previous) !== extentValue(measurement.extent)) {
+      first = Math.min(first, measurement.index);
+    }
+  }
+  return first;
 }
 
 function normalizeGeometry(input: MasonryLayoutInput): VirtualResult<Omit<MasonryLayoutStateData, 'domain' | 'extents' | 'generation'>> {

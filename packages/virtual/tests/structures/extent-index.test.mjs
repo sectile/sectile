@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createExtentIndex } from '../../.verification-dist/extent-index.js';
+import {
+  createExtentIndex,
+  createUniformExtentIndex,
+} from '../../.verification-dist/extent-index.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });
@@ -49,6 +52,47 @@ test('EXT-06: extent moves use post-removal destinations without changing geomet
   const after = before.move(1, 3, 2).value;
   assert.deepEqual(Array.from({ length: 5 }, (_, item) => after.extentAt(item).value), [1, 4, 5, 2, 3]);
   assert.equal(after.totalExtent, before.totalExtent);
+});
+
+test('uniform extent indexes keep only measured differences while preserving array semantics', () => {
+  const base = Object.freeze(estimated(10));
+  let index = createUniformExtentIndex(100_000, base);
+  assert.equal(index.size, 100_000);
+  assert.equal(index.totalExtent, 1_000_000);
+  assert.equal(index.extentAt(50_000), base);
+  assert.equal(index.offsetAt(50_000), 500_000);
+
+  index = index.update([
+    { index: 0, extent: exact(12) },
+    { index: 50_000, extent: exact(20) },
+    { index: 99_999, extent: exact(8) },
+  ]).value;
+  assert.equal(index.totalExtent, 1_000_010);
+  assert.equal(index.offsetAt(50_000), 500_002);
+  assert.equal(index.offsetAt(50_001), 500_022);
+  assert.deepEqual(index.locateOffset(500_021), {
+    index: 50_000,
+    itemOffset: 500_002,
+    offsetWithin: 19,
+    extent: exact(20),
+  });
+  assert.deepEqual(index.slice(49_999, 50_002), [base, exact(20), base]);
+
+  index = index.splice(1, 2, [exact(14), base, exact(16)]).value;
+  assert.equal(index.size, 100_001);
+  assert.deepEqual(index.slice(0, 5), [exact(12), exact(14), base, exact(16), base]);
+  index = index.move(0, 4, 2).value;
+  assert.deepEqual(index.slice(0, 6), [base, exact(16), base, base, exact(12), exact(14)]);
+});
+
+test('uniform extent indexes locate offsets around zero-sized entries', () => {
+  const index = createUniformExtentIndex(4, exact(0)).update([
+    { index: 0, extent: exact(10) },
+    { index: 3, extent: exact(20) },
+  ]).value;
+  assert.equal(index.indexAtOffset(9), 0);
+  assert.equal(index.indexAtOffset(10), 3);
+  assert.equal(index.indexAtOffset(29), 3);
 });
 
 test('extent index remains equivalent to a flat model through deterministic edits', () => {

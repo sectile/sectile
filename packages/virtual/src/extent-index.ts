@@ -54,6 +54,17 @@ interface Branch {
   readonly height: number;
 }
 
+interface UniformOverride {
+  readonly index: number;
+  readonly extent: Extent;
+  readonly delta: number;
+}
+
+interface UniformStore {
+  readonly overrides: readonly UniformOverride[];
+  readonly prefixDeltas: readonly number[];
+}
+
 const LEAF_SIZE = 64;
 
 export function createExtentIndex(
@@ -79,6 +90,269 @@ export function tryCreateExtentIndex(
   const validated = validateExtents(extents);
   if (!validated.ok) return validated;
   return ok(createIndex(build(validated.value), maxItems));
+}
+
+/**
+ * Creates an extent index backed by one shared extent and sparse overrides.
+ * This avoids allocating one extent entry per item when a large collection
+ * starts from the same fixed or estimated size.
+ */
+export function createUniformExtentIndex(
+  size: number,
+  extent: Extent,
+  options: ExtentIndexOptions = {},
+): ExtentIndex {
+  return unwrap(tryCreateUniformExtentIndex(size, extent, options));
+}
+
+export function tryCreateUniformExtentIndex(
+  size: number,
+  extent: Extent,
+  options: ExtentIndexOptions = {},
+): VirtualResult<ExtentIndex> {
+  const maxItems = options.maxItems ?? 1_000_000;
+  const ceilingError = validateMaxItems(maxItems);
+  if (ceilingError !== null) return { ok: false, error: ceilingError };
+  if (!Number.isSafeInteger(size) || size < 0) {
+    return fail('construction', 'extent-index-size-invalid', 'Extent index size must be a non-negative safe integer.', {
+      size,
+    });
+  }
+  if (size > maxItems) {
+    return fail('resource-rejection', 'extent-index-ceiling-exceeded', 'Extent index exceeds maxItems.', {
+      size,
+      maxItems,
+    });
+  }
+  const validated = validateExtent(extent);
+  if (!validated.ok) return validated;
+  return ok(createUniformIndex(size, validated.value, maxItems, createUniformStore([])));
+}
+
+function createUniformIndex(
+  size: number,
+  baseExtent: Extent,
+  maxItems: number,
+  store: UniformStore,
+): ExtentIndex {
+  const baseValue = valueOf(baseExtent);
+  const totalDelta = store.prefixDeltas[store.prefixDeltas.length - 1] ?? 0;
+  const offset = (index: number): number | null => {
+    if (!Number.isSafeInteger(index) || index < 0 || index > size) return null;
+    const overrideEnd = uniformLowerBound(store.overrides, index);
+    return (baseValue * index) + store.prefixDeltas[overrideEnd]!;
+  };
+  const at = (index: number): Extent | null => {
+    if (!Number.isSafeInteger(index) || index < 0 || index >= size) return null;
+    const position = uniformLowerBound(store.overrides, index);
+    const override = store.overrides[position];
+    return override?.index === index ? override.extent : baseExtent;
+  };
+  const locate = (value: number): ExtentLocation | null => {
+    const totalExtent = (baseValue * size) + totalDelta;
+    if (size === 0 || !Number.isFinite(value) || value < 0 || value >= totalExtent) return null;
+    let low = 0;
+    let high = size - 1;
+    while (low < high) {
+      const middle = low + Math.ceil((high - low) / 2);
+      const middleOffset = offset(middle)!;
+      if (middleOffset <= value) low = middle;
+      else high = middle - 1;
+    }
+    const itemExtent = at(low)!;
+    const itemOffset = offset(low)!;
+    return Object.freeze({
+      index: low,
+      itemOffset,
+      offsetWithin: value - itemOffset,
+      extent: itemExtent,
+    });
+  };
+  return Object.freeze({
+    size,
+    totalExtent: (baseValue * size) + totalDelta,
+    maxItems,
+    extentAt: at,
+    slice: (start: number, end: number): readonly Extent[] | null => {
+      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > size) return null;
+      const output = Array.from({ length: end - start }, () => baseExtent);
+      let position = uniformLowerBound(store.overrides, start);
+      while (position < store.overrides.length) {
+        const override = store.overrides[position]!;
+        if (override.index >= end) break;
+        output[override.index - start] = override.extent;
+        position += 1;
+      }
+      return Object.freeze(output);
+    },
+    offsetAt: offset,
+    indexAtOffset: (value: number): number | null => locate(value)?.index ?? null,
+    locateOffset: locate,
+    update: (updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex> => (
+      updateUniformIndex(size, baseExtent, maxItems, store, updates)
+    ),
+    splice: (
+      start: number,
+      deleteCount: number,
+      inserted: readonly Extent[] = [],
+    ): VirtualResult<ExtentIndex> => (
+      spliceUniformIndex(size, baseExtent, maxItems, store, start, deleteCount, inserted)
+    ),
+    move: (from: number, to: number, count = 1): VirtualResult<ExtentIndex> => (
+      moveUniformIndex(size, baseExtent, maxItems, store, from, to, count)
+    ),
+  });
+}
+
+function updateUniformIndex(
+  size: number,
+  baseExtent: Extent,
+  maxItems: number,
+  store: UniformStore,
+  updates: readonly ExtentUpdate[],
+): VirtualResult<ExtentIndex> {
+  const byIndex = new Map(store.overrides.map((override) => [override.index, override.extent]));
+  for (const update of updates) {
+    if (!Number.isSafeInteger(update.index) || update.index < 0 || update.index >= size) {
+      return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update index is outside the domain.', {
+        index: update.index,
+        size,
+      });
+    }
+    const validated = validateExtent(update.extent);
+    if (!validated.ok) return validated;
+    if (sameExtent(baseExtent, validated.value)) byIndex.delete(update.index);
+    else byIndex.set(update.index, validated.value);
+  }
+  return ok(createUniformIndex(size, baseExtent, maxItems, createUniformStore(
+    [...byIndex].sort(([left], [right]) => left - right).map(([index, extent]) => ({ index, extent })),
+    baseExtent,
+  )));
+}
+
+function spliceUniformIndex(
+  size: number,
+  baseExtent: Extent,
+  maxItems: number,
+  store: UniformStore,
+  start: number,
+  deleteCount: number,
+  inserted: readonly Extent[],
+): VirtualResult<ExtentIndex> {
+  if (
+    !Number.isSafeInteger(start)
+    || !Number.isSafeInteger(deleteCount)
+    || start < 0
+    || deleteCount < 0
+    || start > size
+    || deleteCount > size - start
+  ) {
+    return fail('transition-rejection', 'extent-index-splice-invalid', 'Extent splice range is invalid.', {
+      start,
+      deleteCount,
+      size,
+    });
+  }
+  const nextSize = size - deleteCount + inserted.length;
+  if (nextSize > maxItems) {
+    return fail('resource-rejection', 'extent-index-ceiling-exceeded', 'Extent splice exceeds maxItems.', {
+      size: nextSize,
+      maxItems,
+    });
+  }
+  const validated = validateExtents(inserted);
+  if (!validated.ok) return validated;
+  const shift = inserted.length - deleteCount;
+  const next: { readonly index: number; readonly extent: Extent }[] = [];
+  for (const override of store.overrides) {
+    if (override.index < start) next.push(override);
+    else if (override.index >= start + deleteCount) {
+      next.push({ index: override.index + shift, extent: override.extent });
+    }
+  }
+  for (let index = 0; index < validated.value.length; index += 1) {
+    const extent = validated.value[index]!;
+    if (!sameExtent(baseExtent, extent)) next.push({ index: start + index, extent });
+  }
+  next.sort((left, right) => left.index - right.index);
+  return ok(createUniformIndex(nextSize, baseExtent, maxItems, createUniformStore(next, baseExtent)));
+}
+
+function moveUniformIndex(
+  size: number,
+  baseExtent: Extent,
+  maxItems: number,
+  store: UniformStore,
+  from: number,
+  to: number,
+  count: number,
+): VirtualResult<ExtentIndex> {
+  if (
+    !Number.isSafeInteger(from)
+    || !Number.isSafeInteger(to)
+    || !Number.isSafeInteger(count)
+    || from < 0
+    || count < 0
+    || from > size
+    || count > size - from
+    || to < 0
+    || to > size - count
+  ) {
+    return fail(
+      'transition-rejection',
+      'extent-index-move-invalid',
+      'Extent move must identify a valid source and post-removal destination.',
+      { from, to, count, size },
+    );
+  }
+  if (count === 0 || from === to || store.overrides.length === 0) {
+    return ok(createUniformIndex(size, baseExtent, maxItems, store));
+  }
+  const next = store.overrides.map((override) => {
+    if (override.index >= from && override.index < from + count) {
+      return { index: to + override.index - from, extent: override.extent };
+    }
+    const afterRemoval = override.index < from ? override.index : override.index - count;
+    return {
+      index: afterRemoval >= to ? afterRemoval + count : afterRemoval,
+      extent: override.extent,
+    };
+  }).sort((left, right) => left.index - right.index);
+  return ok(createUniformIndex(size, baseExtent, maxItems, createUniformStore(next, baseExtent)));
+}
+
+function createUniformStore(
+  entries: readonly { readonly index: number; readonly extent: Extent }[],
+  baseExtent?: Extent,
+): UniformStore {
+  const baseValue = baseExtent === undefined ? 0 : valueOf(baseExtent);
+  let sum = 0;
+  const prefixDeltas = [0];
+  const overrides = entries.map((entry) => {
+    const override = Object.freeze({
+      index: entry.index,
+      extent: entry.extent,
+      delta: valueOf(entry.extent) - baseValue,
+    });
+    sum += override.delta;
+    prefixDeltas.push(sum);
+    return override;
+  });
+  return Object.freeze({
+    overrides: Object.freeze(overrides),
+    prefixDeltas: Object.freeze(prefixDeltas),
+  });
+}
+
+function uniformLowerBound(overrides: readonly UniformOverride[], index: number): number {
+  let low = 0;
+  let high = overrides.length;
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    if (overrides[middle]!.index < index) low = middle + 1;
+    else high = middle;
+  }
+  return low;
 }
 
 function createIndex(root: Node | null, maxItems: number): ExtentIndex {
@@ -474,7 +748,7 @@ function validateExtent(extent: Extent): VirtualResult<Extent> {
   ) {
     return fail('construction', 'extent-invalid', 'Extent must have a non-negative finite effective value.');
   }
-  return ok(Object.freeze({ ...extent }));
+  return ok(Object.isFrozen(extent) ? extent : Object.freeze({ ...extent }));
 }
 
 function sameExtent(left: Extent, right: Extent): boolean {

@@ -118,3 +118,50 @@ test('MRY-04: measurements and item mutations preserve anchors and reject stale 
   assert.equal(inserted.state.domain.at(0), 'inserted');
   assert.ok(masonryRectAt(inserted.state, anchor.id) !== null);
 });
+
+test('masonry suffix reuse stays equivalent to a fresh shortest-lane rebuild', () => {
+  const values = Array.from({ length: 513 }, (_, index) => 18 + ((index * 29) % 67));
+  const input = {
+    laneCount: 24,
+    laneExtent: 36,
+    laneGap: 3,
+    itemGap: 5,
+    placementPolicy: 'shortest',
+  };
+  const state = createMasonryLayout(
+    domain(values.length),
+    createExtentIndex(values.map(exact)),
+    input,
+  );
+  const measured = applyMasonryMeasurements(state, {
+    generation: state.generation,
+    measurements: [
+      { index: 487, extent: exact(91) },
+      { index: 503, extent: exact(43) },
+    ],
+  }).state;
+  const inserted = applyMasonryMutation(measured, {
+    type: 'items',
+    patch: {
+      type: 'splice',
+      index: 500,
+      deleteCount: 1,
+      inserted: ['replacement'],
+    },
+    insertedExtents: [exact(57)],
+  }).state;
+  const moved = applyMasonryMutation(inserted, {
+    type: 'items',
+    patch: { type: 'move', from: 505, to: 493, count: 3 },
+  }).state;
+  const rebuilt = createMasonryLayout(moved.domain, moved.extents, input);
+  const viewport = { x: 0, y: 0, width: 1_000, height: 100_000 };
+  const incrementalPlan = queryMasonryLayout(moved, { viewport });
+  const rebuiltPlan = queryMasonryLayout(rebuilt, { viewport });
+
+  assert.deepEqual(
+    incrementalPlan.placements.map(({ id, index, lane, rect }) => ({ id, index, lane, rect })),
+    rebuiltPlan.placements.map(({ id, index, lane, rect }) => ({ id, index, lane, rect })),
+  );
+  assert.deepEqual(incrementalPlan.contentSize, rebuiltPlan.contentSize);
+});

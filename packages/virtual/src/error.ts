@@ -3,6 +3,7 @@ import type { CoreErrorCode, Result, SectileError } from '@sectile/core';
 export type VirtualOwnErrorCode =
   | 'extent-index-ceiling-exceeded'
   | 'extent-index-move-invalid'
+  | 'extent-index-size-invalid'
   | 'extent-index-splice-invalid'
   | 'extent-index-update-invalid'
   | 'extent-invalid'

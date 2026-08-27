@@ -163,6 +163,17 @@ test('VRT-04: sequence patches preserve surviving viewport anchors', () => {
   assert.deepEqual(changed.scrollDelta, { x: 0, y: 20 });
 });
 
+test('VRT-04: deleting the active anchor preserves the next surviving row', () => {
+  const state = createLinearLayout(domain(10), createExtentIndex(Array(10).fill(exact(10))), { crossExtent: 100 });
+  const plan = queryLinearLayout(state, { viewport: { x: 0, y: 50, width: 100, height: 30 } });
+  assert.equal(plan.anchor.id, 'item-5');
+  const changed = applyLinearPatch(state, {
+    patch: { type: 'splice', index: 5, deleteCount: 1, inserted: [] },
+  }, plan.anchor);
+  assert.deepEqual(changed.scrollDelta, { x: 0, y: -10 });
+  assert.equal(changed.state.domain.at(5), 'item-6');
+});
+
 test('VRT-05: target scrolling returns an explicit two-dimensional offset', () => {
   const state = createLinearLayout(domain(20), createExtentIndex(Array(20).fill(exact(10))), { crossExtent: 100 });
   assert.deepEqual(linearScrollTarget(state, 'item-15', { x: 0, y: 0, width: 100, height: 50 }, 'center'), { x: 0, y: 130 });

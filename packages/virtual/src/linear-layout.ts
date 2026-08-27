@@ -217,9 +217,15 @@ export function tryApplyLinearPatch<ID extends StableID>(state: LinearLayoutStat
   if (!extents.ok) return extents;
   const generation = nextGeneration(state.generation);
   if (!generation.ok) return generation;
-  const before = anchorRect(state, anchor);
   const next = freezeState({ ...state, domain: domain.value, extents: extents.value, generation: generation.value });
-  return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+  const activeAnchor = survivingLinearAnchor(state, next, anchor);
+  return ok(Object.freeze({
+    state: next,
+    scrollDelta: anchorDelta(
+      anchorRect(state, activeAnchor),
+      anchorRect(next, activeAnchor),
+    ),
+  }));
 }
 
 export function linearScrollTarget<ID extends StableID>(state: LinearLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualPoint {
@@ -276,6 +282,30 @@ function anchorRect<ID extends StableID>(state: LinearLayoutState<ID>, anchor: V
   if (anchor === null || anchor === undefined) return null;
   const index = state.domain.indexOf(anchor.id);
   return index === null ? null : rectAt(state, index);
+}
+
+function survivingLinearAnchor<ID extends StableID>(
+  previous: LinearLayoutState<ID>,
+  next: LinearLayoutState<ID>,
+  anchor: VirtualAnchor<ID> | null | undefined,
+): VirtualAnchor<ID> | null {
+  if (anchor === null || anchor === undefined) return null;
+  if (next.domain.indexOf(anchor.id) !== null) return anchor;
+  const anchorIndex = previous.domain.indexOf(anchor.id);
+  if (anchorIndex === null) return null;
+  for (let index = anchorIndex + 1; index < previous.domain.size; index += 1) {
+    const id = previous.domain.at(index);
+    if (id !== null && next.domain.indexOf(id) !== null) {
+      return Object.freeze({ id, viewportOffset: anchor.viewportOffset });
+    }
+  }
+  for (let index = anchorIndex - 1; index >= 0; index -= 1) {
+    const id = previous.domain.at(index);
+    if (id !== null && next.domain.indexOf(id) !== null) {
+      return Object.freeze({ id, viewportOffset: anchor.viewportOffset });
+    }
+  }
+  return null;
 }
 
 function anchorDelta(before: VirtualRect | null, after: VirtualRect | null): VirtualPoint { return before === null || after === null ? ZERO_POINT : pointDelta(before, after); }
