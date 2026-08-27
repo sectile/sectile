@@ -1,102 +1,74 @@
+<script setup>
+import TabularFeatureMap from '../.vitepress/theme/components/TabularFeatureMap.vue'
+import TabularDataTableDemo from '../.vitepress/theme/components/TabularDataTableDemo.vue'
+import TabularDataGridDemo from '../.vitepress/theme/components/TabularDataGridDemo.vue'
+import TabularDataTreeGridDemo from '../.vitepress/theme/components/TabularDataTreeGridDemo.vue'
+</script>
+
 # Tabular
 
-`@sectile/tabular` is the renderer-neutral data interaction layer. It owns
-identity, query and source revisions, column state, selection, grouping,
-aggregation, pivot projection, cursor state, and edit intent. It does not own
-DOM measurement, rendering, network transport, loading UI, or error UI.
+`@sectile/tabular` is the renderer-neutral contract for data-heavy tables and grids. It keeps identity, query and source revisions, selection, grouping, aggregation, pivot projection, cursor state, and edit intent deterministic while the host decides how those results look.
 
 ```sh
 pnpm add @sectile/tabular
 ```
 
-Import runtime APIs from focused subpaths. The package root is type-only.
+<TabularFeatureMap />
 
-```ts
-import { createDataGrid } from '@sectile/tabular/data-grid'
-import { createClientDataSource } from '@sectile/tabular/source'
-```
+## DataTable
 
-## Profiles
+Choose DataTable when people primarily scan, compare, sort, filter, and select rows. It preserves native table and form semantics and can express grouped disclosure or edit commit intent without turning the surface into a spreadsheet.
 
-### DataTable
+<TabularDataTableDemo />
 
-DataTable projects read-oriented tabular semantics through a native table or an
-equivalent semantic structure. It provides stable rows and columns, sorting,
-filtering, grouping, row selection, disclosure, column sizing intent, and native
-form coordination. It emits edit commit intent but does not own spreadsheet-like
-cell navigation.
+[Build a DataTable →](./tabular/data-table)
 
-Public runtime: `applyDataTableEvent`, `createDataTable`,
-`tryCreateDataTable`. Public contracts: `DataTableCommand`,
-`DataTableController`, `DataTableEvent`, `DataTableOptions`,
-`DataTableProjection`, `DataTableState`, and `DataTableUpdate`.
+## DataGrid
 
-### DataGrid
+Choose DataGrid when every cell is an interactive destination. It adds a two-dimensional cursor, roving focus, row and cell selection, navigation/edit modes, commit and cancel, and deterministic recovery when data disappears.
 
-DataGrid is the application-grid profile. It adds a two-dimensional cursor,
-roving focus, cell selection, explicit navigation/edit modes, validation-aware
-commit/cancel, and recovery when a row or column disappears. Hierarchical rows
-are rejected instead of silently changing the profile.
+<TabularDataGridDemo />
 
-Public runtime: `applyDataGridEvent`, `createDataGrid`, `tryCreateDataGrid`.
-Public contracts add `DataGridCursorState` and `DataGridEditState` to the shared
-command/controller/event/options/projection/state/update shape.
+[Build a DataGrid →](./tabular/data-grid)
 
-### DataTreeGrid
+## DataTreeGrid
 
-DataTreeGrid combines grid navigation and editing with ordered parent/child rows,
-expansion, level/position metadata, context-only ancestors, and deterministic
-cursor/edit recovery across collapse or removal.
+Choose DataTreeGrid when grid navigation must coexist with parent-child rows. It adds expansion, level and position metadata, context-only ancestors, group-leaf selection, and cursor or editor recovery after collapse and removal.
 
-Public runtime: `applyDataTreeGridEvent`, `createDataTreeGrid`,
-`tryCreateDataTreeGrid`. Public contracts add `DataTreeGridCursorState`,
-`DataTreeGridEditState`, `DataTreeGridExpansionState`, and `DataTreeGridRow` to
-the shared profile shape.
+<TabularDataTreeGridDemo />
 
-## Model and query API
+[Build a DataTreeGrid →](./tabular/data-tree-grid)
 
-| Subpath | Public responsibility |
+## What the package owns
+
+The three profiles share the same bounded contracts:
+
+- stable row, column, cell, group, and header identities;
+- canonical sort, filter, group, aggregate, and pivot descriptors;
+- request, source, query, expansion, access, and view revisions;
+- explicit-row and all-matching selection without enumerating unloaded rows;
+- controlled or uncontrolled query, selection, columns, access, and expansion;
+- atomic rejection for stale responses, collisions, profile mismatches, and limit violations.
+
+Every change enters as a typed event and returns a deterministic state, projection, command list, or structured failure. Policy functions and transport stay outside reducers.
+
+## What the application owns
+
+Loading, empty, error, retry, caching, suspense, optimistic updates, and transport are presentation and application policy. `useData*Source` can expose source status, cancellation, reload, and errors, but Tabular never prescribes a spinner or error screen.
+
+DOM measurement, scrolling, and rendering also remain host responsibilities. Virtualization is a separate opt-in composition with consumer-installed `@sectile/virtual`; a normal table or grid does not pay for it.
+
+## Public subpaths
+
+| Subpath | Responsibility |
 | --- | --- |
 | `@sectile/tabular` | Shared type contracts and errors; no runtime exports |
-| `/model` | Row, column, cell and group IDs; codecs; immutable model, controlled ownership and limits |
-| `/query` | Bounded filter, sort, group, aggregate and pivot descriptors plus canonical query revisions |
-| `/source` | Request/response envelopes, page/window access, source generations, deletion deltas and synchronous client source |
-| `/data-table` | Read-oriented profile controller and reducer |
-| `/data-grid` | Flat interactive grid controller and reducer |
-| `/data-tree-grid` | Hierarchical interactive grid controller and reducer |
-| `/virtual` | Optional adapter from Tabular projections to consumer-installed Virtual strategies |
+| `/model` | IDs, codecs, immutable model, controlled ownership, and limits |
+| `/query` | Filter, sort, group, aggregate, and pivot descriptors |
+| `/source` | Request/response envelopes, page/window access, deletion deltas, and client source |
+| `/data-table` | Read-oriented table controller and reducer |
+| `/data-grid` | Flat application-grid controller and reducer |
+| `/data-tree-grid` | Hierarchical application-grid controller and reducer |
+| `/virtual` | Optional adapters from Tabular projections to Virtual strategies |
 
-Every mutation is expressed as a typed event and produces a deterministic state,
-projection, update, or failure. Query values are bounded JSON values; policy
-functions execute outside reducers. Remote responses must match protocol,
-request, source, query, access, and view revisions before they can be accepted.
-
-## State ownership
-
-The controller owns semantic state only when the corresponding option is
-uncontrolled. Controlled fields emit exact proposed values and remain unchanged
-until the application supplies an accepted state. Selection is independent of
-visibility; all-matching selection is bound to source generation and query
-revision and stores exclusions rather than enumerating unloaded rows.
-
-Loading, empty, and error presentation remain application policy. A source
-executor may report those states, but Tabular does not prescribe spinners,
-placeholders, retry UI, suspense, caching, or transport.
-
-## Host integrations
-
-- `@sectile/dom/data-table`, `/data-grid`, and `/data-tree-grid` expose
-  `create*`, `tryCreate*`, and `connect*` APIs, pure attribute projections,
-  typed registrations, reveal hooks, editor coordination, and teardown.
-- `@sectile/vue/data-table`, `/data-grid`, and `/data-tree-grid` expose
-  controller composables, source composables, Providers, typed column helpers,
-  compound parts, and public injected contexts. See [Vue composition](./tabular/vue).
-- Virtualization is opt-in. See [optional virtualization](./tabular/virtual).
-
-## Limits and failures
-
-`TabularLimits` bounds rows, columns, query descriptors and values, selection
-exclusions, groups, pivots, partitions, projected cells, and related resources.
-Construction and transitions reject malformed IDs, collisions, stale revisions,
-profile mismatches, over-limit inputs, unknown responses, and invalid controlled
-proposals atomically.
+Use `@sectile/dom/data-*` for direct DOM connection or `@sectile/vue/data-*` for composables, Providers, compound parts, and injected contexts. Application code using Vue installs only `@sectile/vue` and `vue`; the Vue package carries its public Tabular and DOM types directly. See [Vue composition](./tabular/vue) and [optional virtualization](./tabular/virtual).

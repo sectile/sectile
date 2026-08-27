@@ -1,78 +1,55 @@
 # Tabular with Vue
 
-Install only Vue for the base profiles. `@sectile/tabular` and `@sectile/dom`
-are direct dependencies of `@sectile/vue`; application code does not install
-them merely to receive public component types.
+Install Vue for the base profiles. `@sectile/tabular` and `@sectile/dom` are direct dependencies of `@sectile/vue`, so application code does not install them merely to receive public component types.
 
 ```sh
 pnpm add @sectile/vue vue
 ```
 
-## Complete DataGrid example
+## Choose a profile
+
+- [DataTable](./data-table) includes a live directory with sorting, filtering, explicit and all-matching selection, grouped disclosure, native forms, and edit intent.
+- [DataGrid](./data-grid) includes live two-dimensional navigation, row selection, editing, commit/cancel, and recovery behavior.
+- [DataTreeGrid](./data-tree-grid) includes live hierarchy disclosure, leaf selection, editing, and collapse recovery.
+
+Each page includes the complete source of its running example plus focused patterns for individual features.
+
+## Provider and injection
+
+Create the controller in `setup`, pass it to the Provider once, and place Root and every compound part below that Provider. The controller is injected through the subtree; Root does not need another controller prop.
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
 import {
-  DataGridBody,
-  DataGridCell,
-  DataGridColumnHeader,
-  DataGridEditor,
-  DataGridHeader,
-  DataGridHeaderRow,
   DataGridProvider,
   DataGridRoot,
-  DataGridRow,
   defineDataGridColumns,
   useDataGrid,
+  useDataGridSource,
 } from '@sectile/vue/data-grid'
 
-interface User { id: string; name: string; role: string }
-
-const rows = ref<User[]>([
-  { id: 'u1', name: 'Ada', role: 'Admin' },
-  { id: 'u2', name: 'Grace', role: 'Editor' },
-])
 const columns = defineDataGridColumns([
-  { id: 'name', getValue: (row: User) => row.name },
-  { id: 'role', getValue: (row: User) => row.role },
+  { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
 ])
 const grid = useDataGrid({ columns })
+const source = useDataGridSource(grid, (request, { signal }) =>
+  resolveUsers(request, signal),
+)
 </script>
 
 <template>
   <DataGridProvider :controller="grid">
     <DataGridRoot aria-label="Users">
-      <DataGridHeader>
-        <DataGridHeaderRow>
-          <DataGridColumnHeader
-            v-for="column in columns"
-            :key="column.id"
-            :header-node-id="column.id"
-          >{{ column.id }}</DataGridColumnHeader>
-        </DataGridHeaderRow>
-      </DataGridHeader>
-      <DataGridBody>
-        <DataGridRow v-for="row in rows" :key="row.id" :row-id="row.id">
-          <DataGridCell
-            v-for="column in columns"
-            :key="`${row.id}:${column.id}`"
-            :row-id="row.id"
-            :column-id="column.id"
-          >
-            {{ column.getValue?.(row) }}
-            <DataGridEditor :row-id="row.id" :column-id="column.id" />
-          </DataGridCell>
-        </DataGridRow>
-      </DataGridBody>
+      <!-- Header, Body, Row, Cell, and controls inject grid here. -->
     </DataGridRoot>
   </DataGridProvider>
+
+  <p v-if="source.status.value === 'loading'">Loading…</p>
+  <button v-if="source.status.value === 'error'" @click="source.reload">Retry</button>
 </template>
 ```
 
-The Provider receives the controller once. Root and every compound part obtain
-it through injection. Nested Providers are rejected, and parts used outside the
-matching Provider fail immediately.
+Nested Providers are rejected, and a part used outside its matching Provider fails immediately. The application renders accepted source rows; arbitrary local IDs that are absent from the current projection cannot be registered as interactive rows or cells.
 
 ## Public API by profile
 
@@ -82,24 +59,19 @@ matching Provider fail immediately.
 | DataGrid | `useDataGrid`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`, `DataGridProvider`, `DataGridRoot` | `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
 | DataTreeGrid | `useDataTreeGrid`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`, `DataTreeGridProvider`, `DataTreeGridRoot` | `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
-Every part exports its `Props` and `SlotProps` types. Each profile also exports
-its row/column/query/view/source/status/error/command/controller/context types,
-accepted-view and access state, request state, change handlers, source resolver,
-and `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn`. These types are
-available from the same `@sectile/vue/data-*` subpath and the Vue package root.
+Every part exports its `Props` and `SlotProps` types. Each profile also exports row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, a source resolver, and `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` from the same `@sectile/vue/data-*` subpath and the Vue package root.
 
-## Source execution
+## Source execution and UI states
 
-`useData*Source` attaches exactly one executor to a controller and defers work
-until mount. It exposes status, request and error refs; cancels replaced work;
-and ignores stale completion. The resolver owns transport only. Loading, empty,
-error, retry, cache and suspense UI remain application-owned.
+`useData*Source` attaches exactly one executor to a controller and starts after mount. It exposes reactive `status` and `error`, cancels replaced work, and ignores stale completion. Its resolver owns transport only. The application owns loading, empty, stale, error, retry, cache, and suspense presentation.
+
+SSR does not execute a source resolver. Hydration must begin from the same accepted view. `sourceKey` replaces a semantic source generation; `replaceResolver` changes transport logic without changing the controller.
 
 ## Rendering contracts
 
-- `as` selects the rendered element; `as-child` adopts exactly one valid child.
-- Native DataTable markup retains table semantics and native form submission.
-- DataGrid and DataTreeGrid expose grid/treegrid ARIA, cursor and edit state.
+- `as` selects the rendered element; `asChild` adopts exactly one valid child.
+- Acronym props retain their public spelling in templates: `rowID`, `columnID`, and `headerNodeID`.
+- Native DataTable markup retains table semantics and form submission.
+- DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.
 - Controlled ownership is fixed for the mounted Provider.
-- SSR never executes a source resolver. Hydration requires the same initial view.
-- Column sizes, measurement, scroll and resize remain host state, not semantic state.
+- Column sizes, measurement, scroll, and resize remain host state, not semantic state.

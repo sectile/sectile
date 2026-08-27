@@ -95,6 +95,9 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     collapsed: false,
     items: [
       { text: 'Overview and profiles', link: '/packages/tabular' },
+      { text: 'DataTable', link: '/packages/tabular/data-table' },
+      { text: 'DataGrid', link: '/packages/tabular/data-grid' },
+      { text: 'DataTreeGrid', link: '/packages/tabular/data-tree-grid' },
       { text: 'Vue composition', link: '/packages/tabular/vue' },
       { text: 'Optional virtualization', link: '/packages/tabular/virtual' },
     ],
@@ -150,6 +153,9 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
     collapsed: false,
     items: [
       { text: '개요와 프로필', link: '/ko/packages/tabular' },
+      { text: 'DataTable', link: '/ko/packages/tabular/data-table' },
+      { text: 'DataGrid', link: '/ko/packages/tabular/data-grid' },
+      { text: 'DataTreeGrid', link: '/ko/packages/tabular/data-tree-grid' },
       { text: 'Vue 구성', link: '/ko/packages/tabular/vue' },
       { text: '선택적 가상화', link: '/ko/packages/tabular/virtual' },
     ],

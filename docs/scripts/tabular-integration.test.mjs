@@ -4,8 +4,8 @@ import test from 'node:test';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Tabular documentation covers profiles, Vue injection, source ownership, and opt-in Virtual', async () => {
-  const [overview, vue, virtual, koOverview, koVue, koVirtual, config] = await Promise.all([
+test('Tabular documentation covers profiles, live examples, Vue injection, source ownership, and opt-in Virtual', async () => {
+  const [overview, vue, virtual, koOverview, koVue, koVirtual, config, ...profilePages] = await Promise.all([
     read('packages/tabular.md'),
     read('packages/tabular/vue.md'),
     read('packages/tabular/virtual.md'),
@@ -13,15 +13,22 @@ test('Tabular documentation covers profiles, Vue injection, source ownership, an
     read('ko/packages/tabular/vue.md'),
     read('ko/packages/tabular/virtual.md'),
     read('.vitepress/config.ts'),
+    ...['data-table', 'data-grid', 'data-tree-grid'].flatMap((profile) => [
+      read(`packages/tabular/${profile}.md`),
+      read(`ko/packages/tabular/${profile}.md`),
+    ]),
   ]);
   for (const source of [overview, koOverview]) {
     for (const profile of ['DataTable', 'DataGrid', 'DataTreeGrid']) assert.match(source, new RegExp(profile));
-    assert.match(source, /terminal/iu);
   }
   for (const source of [vue, koVue]) {
     assert.match(source, /DataTableProvider|DataGridProvider/u);
     assert.match(source, /useData(?:Table|Grid)Source/u);
     assert.match(source, /loading/iu);
+  }
+  for (const source of profilePages) {
+    assert.match(source, /TabularData(?:Table|Grid|TreeGrid)Demo/u);
+    assert.match(source, /전체 예제 source|Complete source for the live example/u);
   }
   for (const source of [virtual, koVirtual]) {
     assert.match(source, /@sectile\/tabular\/virtual/u);
@@ -29,5 +36,6 @@ test('Tabular documentation covers profiles, Vue injection, source ownership, an
     assert.match(source, /pnpm add @sectile\/vue @sectile\/virtual vue/u);
   }
   assert.match(config, /\/packages\/tabular\/vue/u);
+  assert.match(config, /\/packages\/tabular\/data-tree-grid/u);
   assert.match(config, /\/ko\/packages\/tabular\/virtual/u);
 });
