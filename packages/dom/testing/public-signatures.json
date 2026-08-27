@@ -255,7 +255,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "1907610ce8fb0ca70ce0bdc621866cade339ff6bc213a1dc8fd3696d134590cd",
+  "fingerprint": "2424470c7977f0d975b5a93dc4433fb548118b68f20d95fa7eb9c0ba7d31e3c7",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -299,7 +299,7 @@
     },
     {
       "path": "dist/date-picker.d.ts",
-      "sha256": "25696fd94372ba7801437aba565a4105bb4f10840bfbdd6303d8cfd61197d418"
+      "sha256": "93b9852a414e39f35cef0bb81adad46a7980fadb8da9942646a38a66a0bea74d"
     },
     {
       "path": "dist/date-range-field.d.ts",
@@ -307,7 +307,7 @@
     },
     {
       "path": "dist/date-range-picker.d.ts",
-      "sha256": "c680946916be9ee50c2ee6b66f18f2a52c9425cae4a95ea2d5c5895e935b353d"
+      "sha256": "3080f98e682f5c9b8b916f46280751a9d79816e451d3526f74468a6a42d5b40c"
     },
     {
       "path": "dist/date-time-field.d.ts",
@@ -315,11 +315,11 @@
     },
     {
       "path": "dist/date-time-picker.d.ts",
-      "sha256": "22b56ab4093696f77753f82cfd27755b36f0c1d710e1e98db7f8d9b705a01fd1"
+      "sha256": "9911d60ccb35100e8d0b39c05aa41c2c68e605805dff91c817c08455a78423fa"
     },
     {
       "path": "dist/date-time-range-picker.d.ts",
-      "sha256": "16bcfca34e4b43833173d3e1c1482104e10fc14524e87cebe441176bef3342dc"
+      "sha256": "e827caeb4fa8d51fb979ef11a49f9475be86937e7a225b97e958a06391243ce6"
     },
     {
       "path": "dist/dialog.d.ts",
@@ -351,7 +351,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "29beaa9cd1049e0f984b6a3cb075e934d31d122171996bfa72541c6cb300e2aa"
+      "sha256": "213f5d52c8098af8fb8626805a9baacd5309d54146f310a749ae2e193abb984b"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -372,6 +372,10 @@
     {
       "path": "dist/internal/menu-control.d.ts",
       "sha256": "cc7a57ddf8b00cbd69431d2eb8fa34441e82f57dfe49f898f0c69878cf363562"
+    },
+    {
+      "path": "dist/internal/picker-position.d.ts",
+      "sha256": "46d26050ba2350db080291c5a2114a6409c495555a4b2bbec0ebf44214a2b343"
     },
     {
       "path": "dist/internal/popup-control.d.ts",
