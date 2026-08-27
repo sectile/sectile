@@ -226,7 +226,7 @@ function resolveClient<RecordValue>(
   const matchingLeafCount = filtered.length;
   const range = sliceRange(request.access, projected.value.rows.length);
   if (!range.ok) return range;
-  const rows = Object.freeze(projected.value.rows.slice(range.value.start, range.value.end));
+  const rows = sliceVisibleRows(projected.value.rows, range.value.start, range.value.end);
   return ok(Object.freeze({
     protocolVersion: 1,
     requestID: request.requestID,
@@ -681,6 +681,25 @@ function sliceRange(access: TabularAccessRange, total: number): TabularResult<{ 
     return fail('transition-rejection', 'response-envelope-mismatch', 'Requested access range starts outside the resolved projection.', { start, total });
   }
   return ok(Object.freeze({ start, end: Math.min(total, start + count) }));
+}
+
+function sliceVisibleRows(
+  rows: readonly TabularResolvedRow[],
+  start: number,
+  end: number,
+): readonly TabularResolvedRow[] {
+  if (start === 0 || start === end) return Object.freeze(rows.slice(start, end));
+  const ancestors: TabularResolvedRow[] = [];
+  for (let index = 0; index < start; index += 1) {
+    const row = rows[index]!;
+    if (row.kind !== 'group') continue;
+    ancestors.length = row.depth;
+    ancestors[row.depth] = row;
+  }
+  const first = rows[start];
+  const requiredDepth = first?.kind === 'group' ? first.depth : ancestors.length;
+  const context = ancestors.slice(0, requiredDepth).map((row) => Object.freeze({ ...row, contextOnly: true as const }));
+  return Object.freeze([...context, ...rows.slice(start, end)]);
 }
 
 function validateCount(count: TabularCount, label: string): TabularResult<TabularCount> {

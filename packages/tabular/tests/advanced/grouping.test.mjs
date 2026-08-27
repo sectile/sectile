@@ -20,6 +20,9 @@ function makeSource(groupID = (record, _descriptor, depth) => `${depth}:team:${r
     getRowID: (record) => record.id,
     getValue: (record, columnID) => record[columnID],
     policies: {
+      predicates: {
+        none: () => false,
+      },
       comparators: {
         text: (left, right, descriptor, getValue) => String(getValue(left, descriptor.columnID)).localeCompare(String(getValue(right, descriptor.columnID))),
       },
@@ -150,4 +153,45 @@ test('TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only agg
     ['team:B', 4, 0],
     ['team:A', 3, 2],
   ]);
+  assert.deepEqual(result.value.columnSchema.columns.slice(-2).map((column) => column.capabilities), [[], []]);
+});
+
+test('TAB-ADV-06: sliced descendants retain context-only ancestors outside the access range', () => {
+  const nestedRequest = {
+    ...request(['0:team:A', '1:team:A']),
+    queryRevision: 2,
+    expansionRevision: 2,
+    query: {
+      ...request().query,
+      groups: [
+        { id: 'by-team', columnID: 'team', policy: 'team' },
+        { id: 'by-team-again', columnID: 'team', policy: 'team' },
+      ],
+    },
+    access: { kind: 'window', start: 3, count: 1 },
+  };
+  const result = resolveClientTabularRequest(makeSource(), nestedRequest);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.rows.map(({ id, contextOnly }) => [id, contextOnly ?? false]), [
+    ['0:team:A', true],
+    ['1:team:A', true],
+    ['r1', false],
+  ]);
+  assert.deepEqual(result.value.visibleRowCount, { kind: 'known', value: 5 });
+});
+
+test('TAB-ADV-07: client grouping does not fabricate empty groups after filtering', () => {
+  const emptyRequest = {
+    ...request(),
+    queryRevision: 2,
+    query: {
+      ...request().query,
+      filters: [{ id: 'none', scope: 'global', predicate: 'none', value: null }],
+    },
+  };
+  const result = resolveClientTabularRequest(makeSource(), emptyRequest);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.rows, []);
+  assert.deepEqual(result.value.matchingLeafCount, { kind: 'known', value: 0 });
+  assert.deepEqual(result.value.visibleRowCount, { kind: 'known', value: 0 });
 });

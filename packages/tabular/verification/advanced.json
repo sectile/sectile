@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "advanced",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-ADV-01",
+      "title": "TAB-ADV-01: groups follow first-seen stable sorted order and aggregate filtered descendants",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-02",
+      "title": "TAB-ADV-02: expansion inserts ordered leaf rows without changing matching leaf count",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-03",
+      "title": "TAB-ADV-03: synthetic group identities cannot collide with records or another path",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-04",
+      "title": "TAB-ADV-04: aggregate and group policies are required and failures stay atomic",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-05",
+      "title": "TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only aggregate cells",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-06",
+      "title": "TAB-ADV-06: sliced descendants retain context-only ancestors outside the access range",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    },
+    {
+      "id": "TAB-ADV-07",
+      "title": "TAB-ADV-07: client grouping does not fabricate empty groups after filtering",
+      "file": "tests/advanced/grouping.test.mjs",
+      "sha256": "a1764ed6e75520c67cfd0dd58d20564f8a63b84a93a0cadf5358d0029f8a0fc7"
+    }
+  ],
+  "expectedFailures": [
+    "group identity collision",
+    "context-only ancestor projection",
+    "empty group policy",
+    "read-only aggregate cell",
+    "stable pivot order"
+  ]
+}
