@@ -99,7 +99,7 @@ const valueBindings = computed(() => ({
 .cascade-select-item { display: flex; min-width: 0; min-height: 2.7rem; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-radius: 0.4rem; padding: 0.55rem 0.65rem; color: inherit; background: transparent; text-align: left; cursor: pointer; outline: 0; }
 .cascade-select-item > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cascade-select-item:hover:not([aria-disabled='true']), .cascade-select-item[data-highlighted]:not([data-expanded]):not([data-selected]) { background: var(--sectile-surface-subtle); }
-.cascade-select-item:is([data-expanded], [data-selected]) { color: var(--sectile-content-primary); background: var(--sectile-surface-selected); font-weight: 650; }
+.cascade-select-item:is([data-expanded], [data-selected]) { color: var(--sectile-action); font-weight: 650; }
 .cascade-select-item__end { display: inline-flex; flex: 0 0 auto; align-items: center; color: var(--sectile-content-tertiary); }
 .cascade-select-item:is([data-expanded], [data-selected]) .cascade-select-item__end { color: var(--sectile-action); }
 
