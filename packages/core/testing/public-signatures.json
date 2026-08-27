@@ -231,7 +231,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "b6da17a7c2294c66bff78507ecf1b1b7707d30434dc62932315df6219c09a956",
+  "fingerprint": "ce586a81ecaa8d022bc2d1fb4ca3ce620a96a4cece3fd10ce4c678a3d70c9055",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -511,7 +511,7 @@
     },
     {
       "path": "dist/toast.d.ts",
-      "sha256": "c7adc515420431c3427a44c6b0f33c7cd6ea8fc48dbc7652464fa76f70d305fd"
+      "sha256": "c114c202085ccad28cdb678150916892e4dc5f6bccf8de71f4d769066fafa340"
     },
     {
       "path": "dist/toggle-button.d.ts",

@@ -2,7 +2,8 @@ import { unwrap } from './result.js';
 import type { Result, StableID } from './shared.js';
 import { fail, ok } from './internal/kernel/foundation.js';
 
-export type ToastKind = 'info' | 'success' | 'warning' | 'error';
+/** User-defined notification category projected to `data-kind`. */
+export type ToastKind = string;
 export interface ToastInput<ID extends StableID = StableID> { readonly id: ID; readonly title: string; readonly description?: string; readonly kind?: ToastKind; /** `null` keeps the toast until dismissed. */ readonly durationMs?: number | null }
 export interface ToastItem<ID extends StableID = StableID> { readonly id: ID; readonly title: string; readonly description: string | null; readonly kind: ToastKind; readonly durationMs: number | null; readonly remainingMs: number | null }
 export interface ToastState<ID extends StableID = StableID> { readonly items: readonly ToastItem<ID>[]; readonly paused: boolean }
@@ -62,6 +63,7 @@ export function applyToastEvent<ID extends StableID>(state: ToastState<ID>, even
   const dismissed: ToastCommand<ID>[] = [];
   const items = state.items.flatMap((item): readonly ToastItem<ID>[] => {
     if (item.remainingMs === null) return [item];
+    if (item.remainingMs === 0) return [item];
     const remainingMs = Math.max(0, item.remainingMs - event.elapsedMs);
     if (remainingMs === 0) { dismissed.push({ type: 'toast-dismissed', id: item.id, reason: 'timeout' }); return []; }
     return [Object.freeze({ ...item, remainingMs })];
@@ -74,6 +76,6 @@ function normalizeToast<ID extends StableID>(input: ToastInput<ID>, defaultDurat
   if (title.length === 0) return fail('construction', 'toast-title-empty', 'Toast title must not be empty.');
   const durationMs = input.durationMs === undefined ? defaultDurationMs : input.durationMs;
   if (durationMs !== null && (!Number.isFinite(durationMs) || durationMs <= 0)) return fail('construction', 'toast-duration-invalid', 'Toast duration must be positive and finite, or null.');
-  return ok(Object.freeze({ id: input.id, title, description: input.description?.trim() || null, kind: input.kind ?? 'info', durationMs, remainingMs: durationMs }));
+  return ok(Object.freeze({ id: input.id, title, description: input.description?.trim() || null, kind: input.kind?.trim() || 'info', durationMs, remainingMs: durationMs }));
 }
 function update<ID extends StableID>(state: ToastState<ID>, commands: readonly ToastCommand<ID>[] = []): Result<ToastUpdate<ID>> { return ok(Object.freeze({ state, commands: Object.freeze([...commands]) })); }

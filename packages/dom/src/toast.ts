@@ -48,11 +48,13 @@ export function tryCreateToast<ID extends StableID>(options: ToastOptions<ID>): 
 
 function tryCreateToastConnection<ID extends StableID>(options: ToastOptions<ID>): Result<ToastConnection<ID>> {
   let connection: DOMToast<ID> | undefined;
+  const controlled = options.items !== undefined;
+  let currentEvent: ToastEvent<ID> | undefined;
   const runtime = createSemanticController<ToastState<ID>, ToastEvent<ID>, ToastCommand<ID>, ToastCommand<ID>>({
     initial: tryCreateToastState(options.items ?? options.initialToasts ?? [], false, options),
-    reducer: (state, event) => applyToastEvent(state, event, options),
-    ...(options.items === undefined ? {} : { reconcile: (previous: ToastState<ID>, proposed: ToastState<ID>) => ({ ok: true as const, value: Object.freeze({ items: previous.items, paused: proposed.paused }) }) }),
-    notify: (_previous, proposed) => options.onItemsChange?.(proposed.items),
+    reducer: (state, event) => { currentEvent = event; return applyToastEvent(state, event, options); },
+    ...(controlled ? { reconcile: (previous: ToastState<ID>, proposed: ToastState<ID>) => reconcileControlledToastState(previous, proposed, currentEvent) } : {}),
+    notify: (previous, proposed) => { if (!controlled || !sameToastInputs(previous.items, proposed.items)) options.onItemsChange?.(proposed.items); },
     toEffect: (command) => command,
   });
   if (!runtime.ok) return runtime;
@@ -146,7 +148,7 @@ class DOMToast<ID extends StableID> implements ToastConnection<ID> {
     this.#timer = options.autoDismiss === false ? null : setInterval(() => {
       if (this.getSnapshot().state.paused) return;
       const now = Date.now(); const elapsedMs = now - this.#lastTick; this.#lastTick = now;
-      if (this.getSnapshot().state.items.some((item) => item.remainingMs !== null)) this.handleEvent({ type: 'tick', elapsedMs });
+      if (this.getSnapshot().state.items.some((item) => item.remainingMs !== null && item.remainingMs > 0)) this.handleEvent({ type: 'tick', elapsedMs });
     }, interval);
     this.#refresh();
   }
@@ -164,7 +166,7 @@ class DOMToast<ID extends StableID> implements ToastConnection<ID> {
   public updateToast(id: ID, toast: Partial<Omit<ToastInput<ID>, 'id'>>): boolean { return this.handleEvent({ type: 'update', id, toast }); }
   public dismiss(id: ID): boolean { return this.handleEvent({ type: 'dismiss', id }); }
   public dismissAll(): boolean { return this.handleEvent('dismiss-all'); }
-  public syncItems(items: readonly ToastInput<ID>[]): Result<RevisionSnapshot<ToastState<ID>>> { const result = this.#runtime.replace(tryCreateToastState(items, this.getSnapshot().state.paused, this.#options)); if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); } return result; }
+  public syncItems(items: readonly ToastInput<ID>[]): Result<RevisionSnapshot<ToastState<ID>>> { const result = this.#runtime.replace(trySynchronizeToastState(this.getSnapshot().state, items, this.#options)); if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); } return result; }
   public setToastAttributes(element: HTMLElement, id: ID): void { for (const [candidate, registered] of this.#toasts) if (candidate !== id && registered === element) this.#toasts.delete(candidate); this.#toasts.set(id, element); const style = element.style as CSSStyleDeclaration | undefined; if (style !== undefined && !this.#touchActions.has(element)) { this.#touchActions.set(element, style.touchAction); if (style.touchAction === '') style.touchAction = optionsTouchAction(this.#options.swipeDirection ?? 'right'); } this.#refresh(); }
   public setCloseButtonAttributes(element: HTMLButtonElement, id: ID): void {
     for (const [candidate, registered] of this.#closes) if (candidate !== id && registered.element === element) { registered.element.removeEventListener('click', registered.click); this.#closes.delete(candidate); }
@@ -193,6 +195,31 @@ class DOMToast<ID extends StableID> implements ToastConnection<ID> {
   }
   #toastAt(target: EventTarget | null): { readonly id: ID; readonly element: HTMLElement } | null { for (const [id, element] of this.#toasts) { try { if (element === target || (target !== null && element.contains(target as Node))) return { id, element }; } catch { continue; } } return null; }
   #syncPause(): void { const paused = this.#hovered || this.#focused || this.#windowBlurred; if (this.getSnapshot().state.paused === paused) return; if (!paused) this.#lastTick = Date.now(); this.handleEvent(paused ? 'pause' : 'resume'); }
+}
+
+function reconcileControlledToastState<ID extends StableID>(previous: ToastState<ID>, proposed: ToastState<ID>, event: ToastEvent<ID> | undefined): Result<ToastState<ID>> {
+  if (typeof event !== 'object' || event.type !== 'tick') return { ok: true, value: Object.freeze({ items: previous.items, paused: proposed.paused }) };
+  const proposedByID = new Map(proposed.items.map((item) => [item.id, item] as const));
+  const items = previous.items.map((item) => proposedByID.get(item.id) ?? Object.freeze({ ...item, remainingMs: 0 }));
+  return { ok: true, value: Object.freeze({ items: Object.freeze(items), paused: proposed.paused }) };
+}
+
+function trySynchronizeToastState<ID extends StableID>(previous: ToastState<ID>, inputs: readonly ToastInput<ID>[], policies: ToastPolicies): Result<ToastState<ID>> {
+  const normalized = tryCreateToastState(inputs, previous.paused, policies);
+  if (!normalized.ok) return normalized;
+  const previousByID = new Map(previous.items.map((item) => [item.id, item] as const));
+  const items = normalized.value.items.map((item) => {
+    const current = previousByID.get(item.id);
+    return current === undefined || current.durationMs !== item.durationMs ? item : Object.freeze({ ...item, remainingMs: current.remainingMs });
+  });
+  return { ok: true, value: Object.freeze({ items: Object.freeze(items), paused: normalized.value.paused }) };
+}
+
+function sameToastInputs<ID extends StableID>(previous: readonly ToastItem<ID>[], proposed: readonly ToastItem<ID>[]): boolean {
+  return previous.length === proposed.length && previous.every((item, index) => {
+    const candidate = proposed[index];
+    return candidate !== undefined && item.id === candidate.id && item.title === candidate.title && item.description === candidate.description && item.kind === candidate.kind && item.durationMs === candidate.durationMs;
+  });
 }
 
 function matchesHotkey(event: KeyboardEvent, hotkey: readonly string[] | false): boolean { if (hotkey === false || hotkey.length === 0) return false; const modifiers = new Set(hotkey.map((key) => key.toLowerCase())); const key = hotkey.find((candidate) => !['alt', 'control', 'ctrl', 'meta', 'shift'].includes(candidate.toLowerCase())); if (key === undefined || event.key.toLowerCase() !== key.toLowerCase()) return false; return event.altKey === modifiers.has('alt') && event.ctrlKey === (modifiers.has('control') || modifiers.has('ctrl')) && event.metaKey === modifiers.has('meta') && event.shiftKey === modifiers.has('shift'); }

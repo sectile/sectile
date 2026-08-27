@@ -43,8 +43,14 @@ test('controlled toast emits proposals and changes only when synchronized', () =
   const item = window.document.createElement('li');
   viewport.append(item); window.document.body.append(viewport);
   const proposals = [];
-  const toast = createToast({ root: viewport, items: [{ id: 'saved', title: 'Saved' }], autoDismiss: false, manageVisibility: false, onItemsChange: (items) => proposals.push(items) });
+  const toast = createToast({ root: viewport, items: [{ id: 'saved', title: 'Saved', kind: 'product-pending' }], autoDismiss: false, manageVisibility: false, onItemsChange: (items) => proposals.push(items) });
   toast.setToastAttributes(item, 'saved');
+  toast.updateToast('saved', { kind: 'product-complete' });
+  assert.equal(toast.getSnapshot().state.items[0].kind, 'product-pending');
+  assert.equal(proposals.at(-1)[0].kind, 'product-complete');
+  toast.syncItems([{ id: 'saved', title: 'Saved', kind: 'product-complete' }]);
+  assert.equal(toast.getSnapshot().state.items[0].kind, 'product-complete');
+  assert.equal(item.dataset.kind, 'product-complete');
   toast.dismiss('saved');
   assert.equal(toast.getSnapshot().state.items.length, 1);
   assert.equal(proposals.at(-1).length, 0);
@@ -53,6 +59,60 @@ test('controlled toast emits proposals and changes only when synchronized', () =
   assert.equal(toast.getSnapshot().state.items.length, 0);
   assert.equal(item.hidden, false);
   assert.equal(item.dataset.state, 'closed');
+  toast.disconnect();
+});
+
+test('toast projects user-defined kinds while preserving error alert semantics', () => {
+  const window = new Window();
+  const viewport = window.document.createElement('ol');
+  const item = window.document.createElement('li');
+  viewport.append(item); window.document.body.append(viewport);
+  const toast = createToast({ root: viewport, autoDismiss: false });
+
+  toast.push({ id: 'deployment', title: 'Deploying', kind: 'deployment-pending' });
+  toast.setToastAttributes(item, 'deployment');
+  assert.equal(item.dataset.kind, 'deployment-pending');
+  assert.equal(item.getAttribute('role'), 'status');
+
+  toast.updateToast('deployment', { kind: 'error' });
+  assert.equal(item.dataset.kind, 'error');
+  assert.equal(item.getAttribute('role'), 'alert');
+  toast.disconnect();
+});
+
+test('controlled toast commits countdown progress and preserves it across external synchronization', () => {
+  const window = new Window();
+  const viewport = window.document.createElement('ol');
+  const proposals = [];
+  const dismissals = [];
+  const toast = createToast({
+    root: viewport,
+    items: [{ id: 'saved', title: 'Saved', durationMs: 1_000 }],
+    autoDismiss: false,
+    onItemsChange: (items) => proposals.push(items),
+    onDismiss: (id, reason) => dismissals.push({ id, reason }),
+  });
+
+  toast.handleEvent({ type: 'tick', elapsedMs: 100 });
+  assert.equal(toast.getSnapshot().state.items[0].remainingMs, 900);
+  assert.equal(proposals.length, 0);
+
+  toast.syncItems([{ id: 'saved', title: 'Saved externally', durationMs: 1_000 }]);
+  assert.equal(toast.getSnapshot().state.items[0].title, 'Saved externally');
+  assert.equal(toast.getSnapshot().state.items[0].remainingMs, 900);
+
+  toast.syncItems([{ id: 'saved', title: 'Saved externally', durationMs: 2_000 }]);
+  assert.equal(toast.getSnapshot().state.items[0].remainingMs, 2_000);
+  toast.handleEvent({ type: 'tick', elapsedMs: 2_000 });
+  assert.equal(toast.getSnapshot().state.items[0].remainingMs, 0);
+  assert.deepEqual(proposals.at(-1), []);
+  assert.deepEqual(dismissals, [{ id: 'saved', reason: 'timeout' }]);
+
+  toast.handleEvent({ type: 'tick', elapsedMs: 100 });
+  assert.equal(proposals.length, 1);
+  assert.equal(dismissals.length, 1);
+  toast.syncItems([]);
+  assert.equal(toast.getSnapshot().state.items.length, 0);
   toast.disconnect();
 });
 

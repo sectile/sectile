@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "8e7ac9ffd6245ca9d7d19ed70d06aa36e121782df7c86161724c244ddb829e5d",
+    "publicSignatureFingerprint": "3cc3b37f29694ca820b3702eac422e3a1be1ff862f0b724fd937a8e5fee28f39",
     "subpaths": [
       ".",
       "./accordion",
@@ -522,7 +522,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "Sequence-resource-ceilings-are-now-observable-and-preserved-across-patches-and-virtual-layout-snapshots"
+    "classification": "type-change-reviewed",
+    "reason": "ToastKind_accepts_user-defined_strings"
   }
 }
