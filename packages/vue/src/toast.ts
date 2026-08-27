@@ -20,7 +20,15 @@ export interface ToastProviderProps {
   readonly swipeDirection?: 'up' | 'right' | 'down' | 'left';
   readonly swipeThreshold?: number;
 }
-export interface ToastProviderSlotProps { readonly toasts: readonly ToastItem<string>[]; readonly paused: boolean; toast(input: ToastInput<string>): void; dismiss(id: string): void; dismissAll(): void }
+export interface ToastProviderSlotProps { readonly toasts: readonly ToastItem<string>[]; readonly paused: boolean; toast(input: ToastInput<string>): void; update(id: string, toast: Partial<Omit<ToastInput<string>, 'id'>>): void; dismiss(id: string): void; dismissAll(): void }
+export interface UseToastReturn {
+  readonly toasts: ComputedRef<readonly ToastItem<string>[]>;
+  readonly paused: ComputedRef<boolean>;
+  toast(input: ToastInput<string>): void;
+  update(id: string, toast: Partial<Omit<ToastInput<string>, 'id'>>): void;
+  dismiss(id: string): void;
+  dismissAll(): void;
+}
 export interface ToastPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ToastPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 export interface ToastRootProps extends ToastPartProps { readonly value: string }
@@ -35,6 +43,7 @@ interface ToastContext {
   connect(root: HTMLElement, label: string): void;
   disconnect(): void;
   push(input: ToastInput<string>): void;
+  update(id: string, toast: Partial<Omit<ToastInput<string>, 'id'>>): void;
   dismiss(id: string): void;
   dismissAll(): void;
   registerItem(element: HTMLElement, id: string): void;
@@ -60,7 +69,7 @@ export const ToastProvider = defineComponent({
   slots: Object as SlotsType<{ default: (props: ToastProviderSlotProps) => VNodeChild }>,
   setup(props, { emit, slots }) {
     const connection = shallowRef<ToastConnection<string>>();
-    const pending: ToastInput<string>[] = [];
+    const pending: Array<(target: ToastConnection<string>) => void> = [];
     const controlled = useControlledStateInvariant('ToastProvider', 'toasts', () => props.toasts);
     const initialState = createToastState(props.toasts ?? props.initialToasts, false, { defaultDurationMs: props.defaultDurationMs, maxVisible: props.maxVisible });
     const state = shallowRef(initialState);
@@ -113,17 +122,19 @@ export const ToastProvider = defineComponent({
         swipeDirection: props.swipeDirection, swipeThreshold: props.swipeThreshold, manageVisibility: false,
         onItemsChange: (items) => { emit('update:toasts', items.map(toInput)); }, onUpdate: refresh,
       });
-      for (const input of pending.splice(0)) connection.value.push(input);
+      for (const send of pending.splice(0)) send(connection.value);
       root.querySelectorAll<HTMLElement>('[data-sectile-toast-item]').forEach((node) => { const id = node.dataset['sectileToastItem']; if (id !== undefined) connection.value?.setToastAttributes(node, id); });
       root.querySelectorAll<HTMLButtonElement>('[data-sectile-toast-close]').forEach((node) => { const id = node.dataset['sectileToastClose']; if (id !== undefined) connection.value?.setCloseButtonAttributes(node, id); });
       refresh();
     };
     const disconnect = (): void => { connection.value?.disconnect(); connection.value = undefined; for (const cleanup of exitCleanups.values()) cleanup(); exitCleanups.clear(); };
+    const send = (event: (target: ToastConnection<string>) => void): void => { const target = connection.value; if (target === undefined) pending.push(event); else event(target); refresh(); };
     const context: ToastContext = {
       state, activeIDs, connection, closeLabel, swipeDirection, connect, disconnect,
-      push: (input) => { if (connection.value === undefined) pending.push(input); else connection.value.push(input); refresh(); },
-      dismiss: (id) => { connection.value?.dismiss(id); refresh(); },
-      dismissAll: () => { connection.value?.dismissAll(); refresh(); },
+      push: (input) => send((target) => { target.push(input); }),
+      update: (id, toast) => send((target) => { target.updateToast(id, toast); }),
+      dismiss: (id) => send((target) => { target.dismiss(id); }),
+      dismissAll: () => send((target) => { target.dismissAll(); }),
       registerItem: (element, id) => { elements.set(id, element); connection.value?.setToastAttributes(element, id); if (!activeIDs.value.has(id)) scheduleExit(id); },
       registerClose: (element, id) => connection.value?.setCloseButtonAttributes(element, id),
     };
@@ -131,9 +142,21 @@ export const ToastProvider = defineComponent({
     watch(() => props.toasts, (items) => { if (!controlled || items === undefined || connection.value === undefined) return; const result = connection.value.syncItems(items); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     watch([() => props.closeLabel, () => props.hotkey, () => props.pauseOnWindowBlur, () => props.dismissOnEscape, () => props.swipeDirection, () => props.swipeThreshold, () => props.defaultDurationMs, () => props.maxVisible], () => { if (viewport !== undefined) connect(viewport.root, viewport.label); });
     onBeforeUnmount(disconnect);
-    return (): VNodeChild => h(Fragment as Component, null, slots['default']?.({ toasts: state.value.items, paused: state.value.paused, toast: context.push, dismiss: context.dismiss, dismissAll: context.dismissAll }) ?? []);
+    return (): VNodeChild => h(Fragment as Component, null, slots['default']?.({ toasts: state.value.items, paused: state.value.paused, toast: context.push, update: context.update, dismiss: context.dismiss, dismissAll: context.dismissAll }) ?? []);
   },
 });
+
+export function useToast(): UseToastReturn {
+  const context = useProvider('useToast');
+  return Object.freeze({
+    toasts: computed(() => context.state.value.items),
+    paused: computed(() => context.state.value.paused),
+    toast: context.push,
+    update: context.update,
+    dismiss: context.dismiss,
+    dismissAll: context.dismissAll,
+  });
+}
 
 export const ToastPortal = defineComponent({
   name: 'SectileToastPortal',

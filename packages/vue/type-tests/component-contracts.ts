@@ -23,6 +23,7 @@ import {
   type SpinButtonInputProps,
 } from '../dist/spin-button.js';
 import { TimeField } from '../dist/time-field.js';
+import { useToast, type UseToastReturn } from '../dist/toast.js';
 
 type Assert<T extends true> = T;
 type Equal<Left, Right> =
@@ -66,6 +67,21 @@ const spinButtonInputProps: SpinButtonInputProps = {
 const numberFieldProps: NumberFieldProps = { native: true };
 void spinButtonInputProps;
 void numberFieldProps;
+void useToast;
+
+declare const toast: UseToastReturn;
+toast.toast({ id: 'request', title: 'Request pending', durationMs: null });
+toast.toast({ id: 'custom', title: 'Custom category', kind: 'product-specific' });
+toast.update('request', { title: 'Request complete', kind: 'success', durationMs: 3_000 });
+toast.dismiss('request');
+toast.dismissAll();
+toast.toasts.value satisfies readonly { readonly id: string }[];
+toast.paused.value satisfies boolean;
+
+// @ts-expect-error toast identifiers are required.
+toast.toast({ title: 'Missing identifier' });
+// @ts-expect-error updates cannot replace a toast identifier.
+toast.update('request', { id: 'other' });
 
 type DatePickerValue = Parameters<DatePickerValueChangeHandler>[0];
 type DatePickerSlotValue = DatePickerRootSlotProps['value'];

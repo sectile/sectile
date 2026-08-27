@@ -23,6 +23,136 @@ Enforce the configured item or visible-notification limit without losing existin
 
 <ComponentExample component="toast" scenario="limited" title="Limited" description="Enforce the configured item or visible-notification limit without losing existing values." :index="2" />
 
+### Calling from setup
+
+Call <code>useToast()</code> in the setup of a component below <code>ToastProvider</code>. Its returned state and functions can be used from templates, event handlers, or asynchronous functions. The component that declares the provider is above that provider and cannot read its context from the same setup. Place callers inside the provider slot.
+
+~~~vue
+<!-- AppShell.vue -->
+<ToastProvider v-slot="{ toasts }">
+  <RequestButton />
+  <ToastViewport class="toast-viewport">
+    <ToastRoot v-for="item in toasts" :key="item.id" :value="item.id" class="toast-item">
+      <ToastTitle />
+      <ToastDescription />
+      <ToastClose>Dismiss</ToastClose>
+    </ToastRoot>
+  </ToastViewport>
+</ToastProvider>
+~~~
+
+~~~ts
+// RequestButton.vue <script setup>
+const { toast, update } = useToast()
+
+async function save() {
+  const id = crypto.randomUUID()
+  toast({ id, title: 'Saving', kind: 'deployment-pending', durationMs: null })
+  try {
+    const result = await saveRelease()
+    update(id, { title: 'Saved', kind: 'deployment-complete', durationMs: 3_000 })
+    return result
+  } catch (error) {
+    update(id, { title: 'Save failed', description: 'Try again.', kind: 'error', durationMs: 5_000 })
+    throw error
+  }
+}
+~~~
+
+Sectile does not execute request functions or consume their errors. The application chooses pending, success, and failure copy, timing, and error disclosure. The application that composes the provider's compound parts also owns markup, icons, classes, placement, and motion.
+
+<code>kind</code> is a user-defined string, not a predefined enum. An omitted or blank value defaults to <code>info</code>; every other value is preserved through <code>data-kind</code>. For backward-compatible accessibility semantics, exactly <code>error</code> uses <code>role="alert"</code> and every other kind uses <code>role="status"</code>.
+
+### Styling directly with CSS
+
+When no icon or extra configuration is needed, use <code>data-kind</code> selectors without a registry.
+
+~~~css
+.toast-item[data-kind='deployment-pending'] {
+  background: var(--toast-pending-background);
+}
+
+.toast-item[data-kind='deployment-complete'] {
+  background: var(--toast-complete-background);
+}
+~~~
+
+### Registering classes and icons
+
+Register kind presentation in a normal application object rather than a Sectile global registry. Handle unregistered values with an explicit fallback.
+
+~~~ts
+// toast-kinds.ts
+import type { Component } from 'vue'
+import InfoIcon from './InfoIcon.vue'
+import SpinnerIcon from './SpinnerIcon.vue'
+import SuccessIcon from './SuccessIcon.vue'
+import ErrorIcon from './ErrorIcon.vue'
+
+interface ToastKindPresentation {
+  readonly class: string
+  readonly icon: Component
+}
+
+export const toastKinds = {
+  info: { class: 'toast--info', icon: InfoIcon },
+  'deployment-pending': { class: 'toast--pending', icon: SpinnerIcon },
+  'deployment-complete': { class: 'toast--complete', icon: SuccessIcon },
+  error: { class: 'toast--error', icon: ErrorIcon },
+} as const satisfies Record<string, ToastKindPresentation>
+
+export type AppToastKind = keyof typeof toastKinds
+
+const fallbackKind: ToastKindPresentation = {
+  class: 'toast--unknown',
+  icon: InfoIcon,
+}
+
+export function resolveToastKind(kind: string): ToastKindPresentation {
+  return kind in toastKinds
+    ? toastKinds[kind as AppToastKind]
+    : fallbackKind
+}
+~~~
+
+~~~vue
+<ToastRoot
+  v-for="item in toasts"
+  :key="item.id"
+  :value="item.id"
+  :class="resolveToastKind(item.kind).class"
+>
+  <component :is="resolveToastKind(item.kind).icon" />
+  <ToastTitle />
+  <ToastDescription />
+</ToastRoot>
+~~~
+
+### Restricting kinds inside an application
+
+Sectile accepts every string, while an application wrapper can narrow calls to registered kinds.
+
+~~~ts
+// use-app-toast.ts
+import type { ToastInput } from '@sectile/vue/toast'
+import { useToast } from '@sectile/vue/toast'
+import type { AppToastKind } from './toast-kinds'
+
+type AppToastInput = Omit<ToastInput<string>, 'kind'> & {
+  readonly kind?: AppToastKind
+}
+
+export function useAppToast() {
+  const api = useToast()
+  return {
+    ...api,
+    toast(input: AppToastInput) {
+      api.toast(input)
+    },
+  }
+}
+~~~
+
 ## API
 
 Vue package: `@sectile/vue/toast`
@@ -39,6 +169,14 @@ Vue package: `@sectile/vue/toast`
   <li><code class="component-api-token">ToastClose</code></li>
 </ul>
 </div>
+
+### Functions
+
+#### `useToast`
+
+```ts
+function useToast(): UseToastReturn
+```
 
 ### Props
 
@@ -228,6 +366,13 @@ Vue package: `@sectile/vue/toast`
 <p>Current notification collection.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>update</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>void</code></span></div>
+<p>Updates one notification without replacing its identifier.</p>
+</dd>
+</div>
 </dl>
 
 #### `ToastRootSlotProps`
@@ -262,6 +407,19 @@ Vue package: `@sectile/vue/toast`
 </dd>
 </div>
 </dl>
+
+### Other types
+
+#### `UseToastReturn`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `toasts` | `ComputedRef<readonly ToastItem<string>[]>` | Yes |
+| `paused` | `ComputedRef<boolean>` | Yes |
+| `toast` | `void` | Yes |
+| `update` | `void` | Yes |
+| `dismiss` | `void` | Yes |
+| `dismissAll` | `void` | Yes |
 
 ## Parts
 

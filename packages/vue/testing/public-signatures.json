@@ -263,7 +263,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "1689b6f40161f1413862745a55ba3ac41de5c3f4321551fa60a12b94ce0b4bb0",
+  "fingerprint": "06a9c8c327ea4d0c876f39cd0779e6587e8714da4cab45977f9711f632cf28b4",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -363,7 +363,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "65e6c31ea45297bf57bf5672d25a9c4d9bdfe96ac3948eef570e1afc9eec0cbf"
+      "sha256": "b0cf27d4d0358b324ad9b0303b2005a6ef2432be5e923093db2b0bfe764ba8bf"
     },
     {
       "path": "dist/internal/date-picker.d.ts",
@@ -495,7 +495,7 @@
     },
     {
       "path": "dist/toast.d.ts",
-      "sha256": "73370052bcfecd75e7197a628aeb0485ed80dc22a2f82ef14d6a9d509ecb6c2b"
+      "sha256": "ecc3aa08d3a4322b5bff86c3851508510a016771f16ff8e0b29e2114e91d41e1"
     },
     {
       "path": "dist/toggle-button.d.ts",

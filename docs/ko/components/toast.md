@@ -23,6 +23,136 @@
 
 <ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
 
+### setup에서 호출
+
+<code>useToast()</code>는 <code>ToastProvider</code>의 하위 컴포넌트 setup에서 호출합니다. 반환된 state와 함수는 템플릿이나 이벤트·비동기 함수에서 사용할 수 있습니다. Provider를 선언한 컴포넌트 자체는 Provider의 상위이므로 같은 setup에서 context를 읽을 수 없습니다. 호출하는 컴포넌트를 Provider의 슬롯 하위에 둡니다.
+
+~~~vue
+<!-- AppShell.vue -->
+<ToastProvider v-slot="{ toasts }">
+  <RequestButton />
+  <ToastViewport class="toast-viewport">
+    <ToastRoot v-for="item in toasts" :key="item.id" :value="item.id" class="toast-item">
+      <ToastTitle />
+      <ToastDescription />
+      <ToastClose>닫기</ToastClose>
+    </ToastRoot>
+  </ToastViewport>
+</ToastProvider>
+~~~
+
+~~~ts
+// RequestButton.vue <script setup>
+const { toast, update } = useToast()
+
+async function save() {
+  const id = crypto.randomUUID()
+  toast({ id, title: '저장 중', kind: 'deployment-pending', durationMs: null })
+  try {
+    const result = await saveRelease()
+    update(id, { title: '저장 완료', kind: 'deployment-complete', durationMs: 3_000 })
+    return result
+  } catch (error) {
+    update(id, { title: '저장 실패', description: '다시 시도해 주세요.', kind: 'error', durationMs: 5_000 })
+    throw error
+  }
+}
+~~~
+
+Sectile은 요청 함수를 대신 실행하거나 오류를 소비하지 않습니다. pending·성공·실패 문구, 시간, 오류 노출 정책은 애플리케이션이 결정합니다. markup, 아이콘, class, 위치, 모션도 Provider의 compound parts를 조립하는 애플리케이션이 소유합니다.
+
+<code>kind</code>는 미리 정해진 enum이 아니라 사용자 정의 문자열입니다. 생략하거나 빈 문자열이면 <code>info</code>가 되고, 그 외 값은 <code>data-kind</code>까지 그대로 전달됩니다. 기존 접근성 호환성을 위해 정확히 <code>error</code>인 항목만 <code>role="alert"</code>, 나머지는 <code>role="status"</code>를 사용합니다.
+
+### CSS로 직접 스타일링
+
+아이콘이나 별도 설정이 필요 없다면 registry 없이 <code>data-kind</code> 선택자만 사용합니다.
+
+~~~css
+.toast-item[data-kind='deployment-pending'] {
+  background: var(--toast-pending-background);
+}
+
+.toast-item[data-kind='deployment-complete'] {
+  background: var(--toast-complete-background);
+}
+~~~
+
+### class와 아이콘 등록
+
+Sectile 전역 registry가 아니라 애플리케이션의 일반 객체로 kind 표시 정보를 등록합니다. 미등록 값은 명시적인 fallback으로 처리합니다.
+
+~~~ts
+// toast-kinds.ts
+import type { Component } from 'vue'
+import InfoIcon from './InfoIcon.vue'
+import SpinnerIcon from './SpinnerIcon.vue'
+import SuccessIcon from './SuccessIcon.vue'
+import ErrorIcon from './ErrorIcon.vue'
+
+interface ToastKindPresentation {
+  readonly class: string
+  readonly icon: Component
+}
+
+export const toastKinds = {
+  info: { class: 'toast--info', icon: InfoIcon },
+  'deployment-pending': { class: 'toast--pending', icon: SpinnerIcon },
+  'deployment-complete': { class: 'toast--complete', icon: SuccessIcon },
+  error: { class: 'toast--error', icon: ErrorIcon },
+} as const satisfies Record<string, ToastKindPresentation>
+
+export type AppToastKind = keyof typeof toastKinds
+
+const fallbackKind: ToastKindPresentation = {
+  class: 'toast--unknown',
+  icon: InfoIcon,
+}
+
+export function resolveToastKind(kind: string): ToastKindPresentation {
+  return kind in toastKinds
+    ? toastKinds[kind as AppToastKind]
+    : fallbackKind
+}
+~~~
+
+~~~vue
+<ToastRoot
+  v-for="item in toasts"
+  :key="item.id"
+  :value="item.id"
+  :class="resolveToastKind(item.kind).class"
+>
+  <component :is="resolveToastKind(item.kind).icon" />
+  <ToastTitle />
+  <ToastDescription />
+</ToastRoot>
+~~~
+
+### 애플리케이션 내부에서 kind 제한
+
+Sectile은 모든 문자열을 허용하지만 애플리케이션 wrapper에서는 등록된 kind만 받도록 좁힐 수 있습니다.
+
+~~~ts
+// use-app-toast.ts
+import type { ToastInput } from '@sectile/vue/toast'
+import { useToast } from '@sectile/vue/toast'
+import type { AppToastKind } from './toast-kinds'
+
+type AppToastInput = Omit<ToastInput<string>, 'kind'> & {
+  readonly kind?: AppToastKind
+}
+
+export function useAppToast() {
+  const api = useToast()
+  return {
+    ...api,
+    toast(input: AppToastInput) {
+      api.toast(input)
+    },
+  }
+}
+~~~
+
 ## API
 
 Vue 패키지: `@sectile/vue/toast`
@@ -39,6 +169,14 @@ Vue 패키지: `@sectile/vue/toast`
   <li><code class="component-api-token">ToastClose</code></li>
 </ul>
 </div>
+
+### 함수
+
+#### `useToast`
+
+```ts
+function useToast(): UseToastReturn
+```
 
 ### Props
 
@@ -228,6 +366,13 @@ Vue 패키지: `@sectile/vue/toast`
 <p>현재 알림 컬렉션입니다.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>update</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>void</code></span></div>
+<p>식별자를 유지하면서 알림 하나를 갱신하는 함수입니다.</p>
+</dd>
+</div>
 </dl>
 
 #### `ToastRootSlotProps`
@@ -262,6 +407,19 @@ Vue 패키지: `@sectile/vue/toast`
 </dd>
 </div>
 </dl>
+
+### 기타 타입
+
+#### `UseToastReturn`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `toasts` | `ComputedRef<readonly ToastItem<string>[]>` | 필수 |
+| `paused` | `ComputedRef<boolean>` | 필수 |
+| `toast` | `void` | 필수 |
+| `update` | `void` | 필수 |
+| `dismiss` | `void` | 필수 |
+| `dismissAll` | `void` | 필수 |
 
 ## 파트
 

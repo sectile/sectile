@@ -322,7 +322,7 @@ const enSlots = Object.freeze({
   targetValue: 'Value the action will activate, or null when no enabled step remains in that direction.',
   submitFailed: 'Marks the identified submission as failed.', submitStarted: 'Starts submission and returns its generation token.', submitSucceeded: 'Marks the identified submission as successful.',
   submitted: 'Whether submission has been attempted.', text: 'Formatted text for the current value.', toast: 'Notification represented by this item.', toasts: 'Current notification collection.',
-  touched: 'Whether the user has interacted with the field.', valid: 'Whether current validation has no issues.', valueMs: 'Current timer value in milliseconds.',
+  touched: 'Whether the user has interacted with the field.', update: 'Updates one notification without replacing its identifier.', valid: 'Whether current validation has no issues.', valueMs: 'Current timer value in milliseconds.',
   valuePath: 'Current selected values from root to leaf.', values: 'Current ordered value collection.', view: 'Current calendar anchor.', viewMode: 'Active calendar view mode.', years: 'Years projected by the active view.',
 });
 
@@ -357,7 +357,7 @@ const koSlots = Object.freeze({
   targetValue: '이 동작이 활성화할 값입니다. 해당 방향에 활성화할 단계가 없으면 null입니다.',
   submitStarted: '제출을 시작하고 generation 토큰을 반환하는 함수입니다.', submitSucceeded: '식별한 제출을 성공으로 기록하는 함수입니다.', submitted: '제출을 시도했는지 여부입니다.',
   text: '현재 값을 표시한 문자열입니다.', toast: '이 항목이 나타내는 알림입니다.', toasts: '현재 알림 컬렉션입니다.', touched: '사용자가 필드를 조작했는지 여부입니다.',
-  valid: '현재 검증 이슈가 없는지 여부입니다.', valueMs: '밀리초 단위의 현재 타이머 값입니다.', valuePath: '루트부터 마지막 항목까지의 현재 선택값입니다.',
+  update: '식별자를 유지하면서 알림 하나를 갱신하는 함수입니다.', valid: '현재 검증 이슈가 없는지 여부입니다.', valueMs: '밀리초 단위의 현재 타이머 값입니다.', valuePath: '루트부터 마지막 항목까지의 현재 선택값입니다.',
   values: '현재 순서 있는 값 컬렉션입니다.', view: '현재 달력 기준점입니다.', viewMode: '현재 달력 보기 방식입니다.', years: '현재 보기에 표시할 연도입니다.',
 });
 
