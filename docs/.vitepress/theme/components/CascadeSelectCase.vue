@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import DemoCard from './DemoCard.vue'; import type { EventEntry } from '../types.js';
 import DemoCascadeSelect from './DemoCascadeSelect.vue';
-const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly initialValue?: string | null; readonly controlled?: boolean; readonly disabledItems?: readonly string[] }>(), { initialValue: null, controlled: false, disabledItems: () => [] });
+const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly initialValue?: string | null; readonly controlled?: boolean; readonly disabledItems?: readonly string[]; readonly preview?: boolean }>(), { initialValue: null, controlled: false, disabledItems: () => [], preview: false });
 const nodes = [{ id: 'asia', parentID: null }, { id: 'europe', parentID: null }, { id: 'america', parentID: null }, { id: 'kr', parentID: 'asia' }, { id: 'jp', parentID: 'asia' }, { id: 'fr', parentID: 'europe' }, { id: 'us', parentID: 'america' }, { id: 'seoul', parentID: 'kr' }, { id: 'busan', parentID: 'kr' }, { id: 'tokyo', parentID: 'jp' }, { id: 'paris', parentID: 'fr' }, { id: 'nyc', parentID: 'us' }];
 const labels: Readonly<Record<string, string>> = { asia: 'Asia', europe: 'Europe', america: 'Americas', kr: 'South Korea', jp: 'Japan', fr: 'France', us: 'United States', seoul: 'Seoul', busan: 'Busan', tokyo: 'Tokyo', paris: 'Paris', nyc: 'New York' };
 const value = ref<string | null>(props.initialValue); const open = ref(false); const revision = ref(0); const entries = ref<EventEntry[]>([]);
@@ -28,7 +28,7 @@ function update(next: string | null): void { value.value = next; revision.value 
   <DemoCard :title="title" :revision="revision" :state="state" :entries="entries" interaction="enabled" :code="code">
     <div class="cascade-select-demo">
       <p class="demo-copy">{{ description }}</p>
-      <DemoCascadeSelect v-bind="bindings" label="Destination" :column-labels="['Region', 'Country', 'City']" placeholder="Choose a destination" @update:model-value="update" @update:open="open = $event" />
+      <DemoCascadeSelect v-bind="bindings" :default-open="preview" label="Destination" :column-labels="['Region', 'Country', 'City']" placeholder="Choose a destination" @update:model-value="update" @update:open="open = $event" />
     </div>
   </DemoCard>
 </template>

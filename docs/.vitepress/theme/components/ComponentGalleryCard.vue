@@ -13,17 +13,17 @@ defineProps<{
 <template>
   <li class="component-gallery-card">
     <ComponentGalleryPreview :component="component" :scenario="scenario" />
-    <a class="component-gallery-card__link" :href="href">
-      <span class="component-gallery-card__body">
-        <strong>{{ title }}</strong>
-        <span>{{ familyLabel }}</span>
-      </span>
-    </a>
+    <span class="component-gallery-card__body">
+      <strong>{{ title }}</strong>
+      <span>{{ familyLabel }}</span>
+    </span>
+    <a class="component-gallery-card__link" :href="href" :aria-label="title" />
   </li>
 </template>
 
 <style scoped>
 .component-gallery-card {
+  position: relative;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -39,12 +39,12 @@ defineProps<{
 }
 
 .component-gallery-card__link {
-  display: block;
-  color: var(--vp-c-text-1) !important;
-  text-decoration: none !important;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
 }
 
-.component-gallery-card__link:focus-visible {
+.component-gallery-card:has(.component-gallery-card__link:focus-visible) {
   outline: 3px solid var(--vp-c-brand-soft);
   outline-offset: 3px;
 }

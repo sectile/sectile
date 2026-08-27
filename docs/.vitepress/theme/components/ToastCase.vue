@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, defineComponent, onMounted, ref, type PropType } from 'vue';
 import { CheckCircle2, CircleAlert, CircleX, X } from '@lucide/vue';
 import { ToastClose, ToastDescription, ToastProvider, ToastRoot, ToastTitle, ToastViewport } from '@sectile/vue/toast';
 import DemoCard from './DemoCard.vue'; import type { EventEntry } from '../types.js';
-const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly persistent?: boolean; readonly maxVisible?: number }>(), { persistent: false, maxVisible: 3 });
+type ToastPush = (input: { id: string; title: string; description: string; kind: 'success' | 'warning' | 'error'; durationMs?: number | null }) => void;
+const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly persistent?: boolean; readonly maxVisible?: number; readonly preview?: boolean }>(), { persistent: false, maxVisible: 3, preview: false });
+const ToastPreviewSeed = defineComponent({
+  props: { push: { type: Function as PropType<ToastPush>, required: true } },
+  setup(seedProps) {
+    onMounted(() => seedProps.push({ id: 'gallery-preview', title: 'Release saved', description: 'Version 0.2.0 is ready to publish.', kind: 'success', durationMs: null }));
+    return () => null;
+  },
+});
 const revision = ref(0); const sequence = ref(0); const entries = ref<EventEntry[]>([]);
 const state = computed(() => ({ persistent: props.persistent, maxVisible: props.maxVisible }));
 const code = `<script setup lang="ts">
@@ -23,8 +31,9 @@ function notify(push: (input: { id: string; title: string; description: string; 
 </script>
 <template>
   <DemoCard :title="title" :revision="revision" :state="state" :entries="entries" interaction="enabled" :code="code">
-    <ToastProvider :default-duration-ms="persistent ? null : 5000" :max-visible="maxVisible" v-slot="{ toasts, toast, dismissAll }">
+    <ToastProvider :default-duration-ms="preview || persistent ? null : 5000" :max-visible="maxVisible" v-slot="{ toasts, toast, dismissAll }">
       <div class="toast-example">
+        <ToastPreviewSeed v-if="preview" :push="toast" />
         <p class="demo-copy">{{ description }}</p>
         <div class="toast-actions"><button type="button" class="secondary" @click="notify(toast, 'success')">Save release</button><button type="button" class="secondary" @click="notify(toast, 'warning')">Warn</button><button type="button" class="secondary" @click="notify(toast, 'error')">Fail</button><button type="button" class="secondary" @click="dismissAll">Dismiss all</button></div>
         <ToastViewport class="toast-viewport" aria-label="Notifications">

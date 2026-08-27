@@ -17,6 +17,7 @@ const props = defineProps<{
   readonly nodes: CascadeSelectRootProps['nodes'];
   readonly modelValue?: string | null;
   readonly defaultValue?: string | null;
+  readonly defaultOpen?: boolean;
   readonly disabledItems?: readonly string[];
   readonly disabled?: boolean;
   readonly readonly?: boolean;
@@ -44,6 +45,7 @@ const valueBindings = computed(() => ({
   <CascadeSelectRoot
     v-bind="valueBindings"
     :nodes="nodes"
+    :default-open="defaultOpen"
     :disabled-items="disabledItems ?? []"
     :disabled="disabled"
     :readonly="readonly"

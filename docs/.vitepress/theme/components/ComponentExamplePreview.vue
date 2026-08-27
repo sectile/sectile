@@ -38,7 +38,8 @@ const props = withDefaults(defineProps<{
   readonly description: string;
   readonly index?: number;
   readonly pinInputOptions?: PinInputExampleOptions | undefined;
-}>(), { index: 0 });
+  readonly preview?: boolean;
+}>(), { index: 0, preview: false });
 
 interface ResolvedExample {
   readonly component: Component;
@@ -70,8 +71,8 @@ function resolveExample(): ResolvedExample {
     case 'checkbox': return specialized(CheckedControlCase, { kind: 'checkbox', label: 'Include analytics', initialValue: props.scenario === 'mixed' ? 'indeterminate' : controlled, controlled });
     case 'switch': return specialized(CheckedControlCase, { kind: 'switch', label: 'Deployment notifications', initialValue: initialOn, controlled });
     case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled });
-    case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
-    case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled });
+    case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.preview ? 'general' : props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
+    case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: props.preview || initialOn, controlled });
     case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
     case 'form': return specialized(FormCase, { scenario: props.scenario });
@@ -79,11 +80,11 @@ function resolveExample(): ResolvedExample {
     case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
     case 'tree-view': return specialized(TreeViewCase, { scenario: props.scenario });
     case 'listbox': return specialized(ListboxCase, { multiple: props.scenario === 'multiple', controlled });
-    case 'cascade-select': return specialized(CascadeSelectCase, { initialValue: props.scenario === 'controlled' ? 'paris' : 'seoul', disabledItems: props.scenario === 'disabled' ? ['jp', 'tokyo'] : [], controlled });
+    case 'cascade-select': return specialized(CascadeSelectCase, { initialValue: props.scenario === 'controlled' ? 'paris' : 'seoul', disabledItems: props.scenario === 'disabled' ? ['jp', 'tokyo'] : [], controlled, preview: props.preview });
     case 'radio-group': return specialized(RadioGroupCase, { controlled });
     case 'toggle-group': return specialized(ToggleGroupCase, { multiple: props.scenario === 'multiple', controlled });
-    case 'popover': return specialized(PopoverCase, { side: props.scenario === 'collision' ? 'right' : 'bottom', controlled });
-    case 'toast': return specialized(ToastCase, { persistent: props.scenario === 'persistent', maxVisible: props.scenario === 'limited' ? 2 : 3 });
+    case 'popover': return specialized(PopoverCase, { side: props.scenario === 'collision' ? 'right' : 'bottom', controlled, preview: props.preview });
+    case 'toast': return specialized(ToastCase, { persistent: props.scenario === 'persistent', maxVisible: props.scenario === 'limited' ? 2 : 3, preview: props.preview });
     case 'timer': return specialized(TimerCase, { countdown: props.scenario === 'countdown', startMs: props.scenario === 'countdown' ? 10_000 : 0, targetMs: props.scenario === 'target' ? 15_000 : undefined });
     case 'color-picker': return specialized(ColorPickerCase, { initialValue: props.scenario === 'alpha' ? '#26c6a080' : '#5b6df6', alpha: props.scenario === 'alpha', controlled, readonly: props.scenario === 'readonly' });
     case 'tabs': return specialized(TabsCase, { manual: props.scenario === 'manual', controlled });
@@ -118,6 +119,7 @@ function resolveExample(): ResolvedExample {
     default: return specialized(CatalogCase, {
       component: props.component,
       scenario: props.scenario,
+      preview: props.preview,
       ...(props.component === 'pin-input' ? { pinInputOptions: props.pinInputOptions } : {}),
     });
   }
@@ -147,6 +149,6 @@ const example = computed(resolveExample);
 
 <template>
   <div class="component-example-stage" :data-component="component">
-    <component :is="example.component" :key="`${component}:${scenario}`" v-bind="example.props" />
+    <component :is="example.component" :key="`${component}:${scenario}:${preview}`" v-bind="example.props" />
   </div>
 </template>

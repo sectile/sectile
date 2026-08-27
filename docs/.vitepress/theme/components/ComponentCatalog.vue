@@ -126,7 +126,7 @@ const sections = computed(() => {
 
 .component-catalog__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
   margin: 0;
   padding: 0;
@@ -139,9 +139,4 @@ const sections = computed(() => {
   text-align: center;
 }
 
-@media (max-width: 720px) {
-  .component-catalog__grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
