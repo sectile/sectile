@@ -175,6 +175,19 @@ importers:
         specifier: 7.0.2
         version: 7.0.2
 
+  packages/tabular:
+    dependencies:
+      '@sectile/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:../virtual
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
   packages/temporal:
     dependencies:
       '@sectile/core':

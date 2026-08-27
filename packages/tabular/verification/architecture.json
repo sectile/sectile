@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "rendererNeutral": true,
+  "frameworkNeutral": true,
+  "platformNeutral": true,
+  "rootRuntimeExports": false,
+  "virtual": {
+    "relationship": "optional-peer",
+    "baseRuntimeDependency": false,
+    "adapterSubpathPromotion": "after-adapter-evidence"
+  }
+}

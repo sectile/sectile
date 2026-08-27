@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "rootKind": "type-only",
+  "runtimeDependencies": [
+    "@sectile/core"
+  ],
+  "optionalPeers": {
+    "@sectile/virtual": [
+      "./virtual"
+    ]
+  },
+  "forbiddenProductionAuthorities": [
+    "dom",
+    "terminal",
+    "vue",
+    "node-builtins",
+    "timers",
+    "transport",
+    "css",
+    "host-geometry"
+  ],
+  "sharedAuthority": [
+    "identity",
+    "query",
+    "column-state",
+    "row-selection",
+    "page-or-window-access",
+    "source-protocol",
+    "accepted-view-freshness",
+    "profile-projection"
+  ],
+  "profiles": {
+    "data-table": {
+      "hostSemantics": "native-table",
+      "rowShape": "flat-or-native-disclosure",
+      "cellCursor": false,
+      "editAuthority": "application-value-commit",
+      "hierarchy": "native-disclosure-only"
+    },
+    "data-grid": {
+      "hostSemantics": "aria-grid",
+      "rowShape": "flat",
+      "cellCursor": true,
+      "editAuthority": "single-cell",
+      "hierarchy": "rejected"
+    },
+    "data-tree-grid": {
+      "hostSemantics": "aria-treegrid",
+      "rowShape": "hierarchical",
+      "cellCursor": true,
+      "editAuthority": "single-leaf-cell",
+      "hierarchy": "core-tree-grid"
+    }
+  },
+  "sourceOwnership": {
+    "tabular": [
+      "request-envelope",
+      "response-validation",
+      "stale-rejection",
+      "accepted-view-freshness"
+    ],
+    "frameworkHelper": [
+      "injected-resolver",
+      "abort-controller",
+      "loading-status",
+      "resolver-error"
+    ],
+    "application": [
+      "transport",
+      "cache",
+      "retry",
+      "mutation-persistence",
+      "status-ui"
+    ]
+  },
+  "virtualBoundary": {
+    "baseState": false,
+    "baseCommand": false,
+    "adapterSubpath": "./virtual",
+    "gridStrategy": "partitioned-track-grid",
+    "unpinnedForm": "center-only",
+    "projectionGenerationDistinctFromVirtualGeneration": true,
+    "adapterOwnsMeasurement": false,
+    "adapterOwnsScrolling": false,
+    "adapterOwnsRendering": false
+  },
+  "extensionPolicy": {
+    "mechanism": "named-state-slices-and-source-contracts",
+    "runtimeRegistry": false,
+    "untypedReducerInjection": false,
+    "genericLifecycle": false
+  },
+  "costs": {
+    "identityLookup": "expected-o-1",
+    "projection": "o-rows-columns-headers-emitted-cells",
+    "stableSort": "o-n-log-n",
+    "clientPipeline": "o-scan-plus-sort-plus-output"
+  },
+  "defaultLimits": {
+    "maxIDCodeUnits": 1024,
+    "maxRows": 100000,
+    "maxColumns": 10000,
+    "maxProjectedCells": 1000000,
+    "maxGroupDepth": 1024,
+    "maxSortRules": 64,
+    "maxFilterRules": 256,
+    "maxGroupDescriptors": 64,
+    "maxAggregateDescriptors": 256,
+    "maxPivotDescriptors": 64,
+    "maxPivotColumns": 10000,
+    "maxSelectionIDs": 100000,
+    "maxScanRecords": 1000000,
+    "maxQueryValueDepth": 32,
+    "maxQueryValueCodeUnits": 1048576,
+    "maxQueryValueNodes": 100000,
+    "maxLiveRequestGenerations": 1
+  },
+  "countermodels": [
+    {
+      "id": "profile-mode-switch",
+      "rejectedAuthority": "runtime-role-switch",
+      "requiredContract": "construction-time-profile"
+    },
+    {
+      "id": "host-geometry-in-model",
+      "rejectedAuthority": "renderer-state-in-tabular",
+      "requiredContract": "host-local-layout-state"
+    },
+    {
+      "id": "async-transport-in-reducer",
+      "rejectedAuthority": "promise-or-abort-in-tabular",
+      "requiredContract": "pure-envelope-synchronization"
+    },
+    {
+      "id": "virtual-default-dependency",
+      "rejectedAuthority": "base-virtual-state",
+      "requiredContract": "optional-peer-adapter"
+    },
+    {
+      "id": "generic-feature-registry",
+      "rejectedAuthority": "runtime-plugin-lifecycle",
+      "requiredContract": "named-state-slices"
+    }
+  ],
+  "promotionEvidence": [
+    "reference-or-differential-laws",
+    "independent-host-witnesses",
+    "package-and-declaration-closure",
+    "deterministic-evidence",
+    "packed-consumer-installation"
+  ]
+}
