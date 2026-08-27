@@ -12,12 +12,14 @@ const props = withDefaults(defineProps<{
   readonly multiline?: boolean;
   readonly disabled?: boolean;
   readonly?: boolean;
+  readonly preview?: boolean;
 }>(), {
   initialValue: '',
   controlled: false,
   multiline: false,
   disabled: false,
   readonly: false,
+  preview: false,
 });
 
 const value = ref(props.initialValue);
@@ -36,6 +38,10 @@ const state = computed<Readonly<Record<string, unknown>>>(() => ({
   interaction: interaction.value,
 }));
 const sourceCode = computed(() => textSource(props));
+const previewStates = computed(() => [
+  { label: 'Empty', value: '' },
+  { label: 'Filled', value: props.initialValue || 'Sectile' },
+] as const);
 
 function handleUpdate(next: string | number): void {
   const text = String(next);
@@ -59,21 +65,34 @@ function handleUpdate(next: string | number): void {
     :interaction="interaction"
     :code="sourceCode"
   >
-    <div class="text-demo">
-      <p class="demo-copy">{{ description }}</p>
-      <label class="text-label">
-        <span>{{ multiline ? 'Release notes' : 'Search query' }}</span>
-        <TextField
-          v-bind="ownershipProps"
-          :multiline="multiline"
-          :disabled="disabled"
-          :readonly="readonly"
-          class="text-field"
-          placeholder="한글과 English를 입력해 보세요"
-          @update:model-value="handleUpdate"
-        />
-      </label>
-      <p class="text-value">Current: {{ value || 'Empty' }}</p>
+    <div class="text-demo" :class="{ 'text-demo--preview': preview }">
+      <template v-if="preview">
+        <label v-for="item in previewStates" :key="item.label" class="text-label">
+          <span>{{ item.label }}</span>
+          <TextField
+            :default-value="item.value"
+            :multiline="multiline"
+            class="text-field"
+            placeholder="Enter text"
+          />
+        </label>
+      </template>
+      <template v-else>
+        <p class="demo-copy">{{ description }}</p>
+        <label class="text-label">
+          <span>{{ multiline ? 'Release notes' : 'Search query' }}</span>
+          <TextField
+            v-bind="ownershipProps"
+            :multiline="multiline"
+            :disabled="disabled"
+            :readonly="readonly"
+            class="text-field"
+            placeholder="한글과 English를 입력해 보세요"
+            @update:model-value="handleUpdate"
+          />
+        </label>
+        <p class="text-value">Current: {{ value || 'Empty' }}</p>
+      </template>
     </div>
   </DemoCard>
 </template>

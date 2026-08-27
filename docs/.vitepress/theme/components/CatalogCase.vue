@@ -186,6 +186,7 @@ const pinOptions = computed(() => {
   return props.pinInputOptions;
 });
 const pinLength = computed(() => pinOptions.value.length);
+const pinInitialValue = computed(() => props.preview && pinOptions.value.value.length === 0 ? '482' : pinOptions.value.value);
 const pinRootProps = computed(() => ({
   length: pinLength.value,
   mask: pinOptions.value.mask,
@@ -194,9 +195,9 @@ const pinRootProps = computed(() => ({
   disabled: pinOptions.value.disabled,
   ...(isScenario('controlled')
     ? { modelValue: pinValue.value }
-    : { defaultValue: pinOptions.value.value }),
+    : { defaultValue: pinInitialValue.value }),
 }));
-const pinDemoKey = computed(() => `${props.scenario}:${pinLength.value}:${pinOptions.value.value}`);
+const pinDemoKey = computed(() => `${props.scenario}:${pinLength.value}:${pinInitialValue.value}`);
 if (props.component === 'pin-input') {
   if (props.pinInputOptions === undefined) throw new Error('Pin Input examples require editable options.');
   watch(() => props.pinInputOptions?.value, (value) => { pinValue.value = value ?? ''; }, { immediate: true });
@@ -329,7 +330,15 @@ const recordAction = (value: string): void => {
         <p class="catalog-tags-help">Press Enter or comma to add a tag.</p>
       </div>
 
-      <GridRoot v-else-if="component === 'grid'" :rows="gridRows" :disabled-items="isScenario('disabled-wrap') ? ['Pending'] : []" :readonly="!isScenario('editable')" class="catalog-grid">
+      <GridRoot
+        v-else-if="component === 'grid'"
+        :rows="gridRows"
+        :default-value="preview ? (gridRows[0]?.[0] ?? null) : null"
+        :default-highlighted-value="preview ? (gridRows[1]?.[1] ?? null) : null"
+        :disabled-items="isScenario('disabled-wrap') ? ['Pending'] : []"
+        :readonly="!isScenario('editable')"
+        class="catalog-grid"
+      >
         <GridRow v-for="row in gridRows" :key="row.join(':')" class="catalog-grid-row"><GridCell v-for="cell in row" :key="cell" :value="cell" class="catalog-grid-cell">{{ cell }}</GridCell></GridRow>
       </GridRoot>
 

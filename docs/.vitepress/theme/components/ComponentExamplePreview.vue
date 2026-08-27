@@ -73,7 +73,7 @@ function resolveExample(): ResolvedExample {
     case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled, preview: props.preview });
     case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.preview ? 'general' : props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
     case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled, preview: props.preview });
-    case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled });
+    case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled, preview: props.preview });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
     case 'form': return specialized(FormCase, { scenario: props.scenario });
     case 'feed': return specialized(FeedCase, { scenario: props.scenario });
@@ -98,18 +98,19 @@ function resolveExample(): ResolvedExample {
         initialValue: config.initialValue,
         policies: numberFieldPolicies(config),
         controlled: config.controlled,
+        preview: props.preview,
       });
     }
     case 'date-field': return specialized(NativeFieldCase, {
-      kind: 'date-field', initialValue: date, controlled,
+      kind: 'date-field', initialValue: date, controlled, preview: props.preview,
       policies: props.scenario === 'bounded' ? { min: { year: 2026, month: 8, day: 1 }, max: { year: 2026, month: 8, day: 31 } } : undefined,
     });
     case 'time-field': return specialized(NativeFieldCase, {
-      kind: 'time-field', initialValue: time, controlled,
+      kind: 'time-field', initialValue: time, controlled, preview: props.preview,
       policies: props.scenario === 'stepped' ? { step: { minute: 15 } } : undefined,
     });
     case 'date-time-field': return specialized(NativeFieldCase, {
-      kind: 'date-time-field', initialValue: props.scenario === 'cross-midnight' ? lateDateTime : dateTime, controlled,
+      kind: 'date-time-field', initialValue: props.scenario === 'cross-midnight' ? lateDateTime : dateTime, controlled, preview: props.preview,
       policies: props.scenario === 'cross-midnight' ? { step: { minute: 15 } } : undefined,
     });
     case 'date-range-field': return specialized(DateRangeFieldCase, { initialValue: props.scenario === 'bounded' ? septemberRange : dateRange, bounded: props.scenario === 'bounded', controlled });

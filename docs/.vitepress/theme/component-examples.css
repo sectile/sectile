@@ -197,6 +197,7 @@
   .text-value { margin: 0.7rem 0 0; color: var(--demo-muted); font-size: 0.75rem; }
   .native-field-demo, .spin-button-demo { width: min(100%, 44rem); }
   .native-field-demo { display: grid; gap: 0.8rem; }
+  .text-demo--preview, .native-field-demo--preview { display: grid; width: min(100%, 48rem); max-width: 48rem; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 0.75rem; }
   .temporal-field__label { display: inline-flex; align-items: center; }
   .temporal-input { box-sizing: border-box; height: 3rem; min-width: 0; font-variant-numeric: tabular-nums; }
   .temporal-range { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 0.5rem; }
@@ -479,7 +480,7 @@
   .catalog-tree-item { justify-content: flex-start; }
   .catalog-option[data-state="checked"], .catalog-option[data-selected] { border-color: var(--demo-border); background: var(--demo-surface); }
   .catalog-option:hover:not(:disabled), .catalog-option[data-state="checked"]:hover:not(:disabled) { border-color: var(--demo-border-hover); background: var(--demo-soft); }
-  .catalog-grid-cell[data-selected] { box-shadow: inset 0 0 0 2px var(--demo-focus); }
+  .catalog-grid-cell[data-selected] { color: var(--demo-brand); background: var(--demo-brand-soft); box-shadow: inset 0 0 0 2px var(--demo-brand-border); }
   .catalog-trigger, .catalog-input, .catalog-select { min-height: 3rem; border: 1px solid var(--demo-border); border-radius: 0.65rem; padding: 0.65rem 0.8rem; color: var(--demo-text); background: var(--demo-surface); font: inherit; }
   :is(.catalog-trigger, .catalog-input, .catalog-select, .text-field, .editable-preview, .editable-input):hover:not(:disabled):not([aria-disabled="true"]) { border-color: var(--demo-border-hover); }
   :is(.catalog-trigger, .catalog-input, .catalog-select, .text-field, .editable-preview, .editable-input):focus-visible { border-color: var(--demo-brand); outline: 2px solid var(--demo-focus); outline-offset: 2px; }
@@ -1226,7 +1227,7 @@
 @media (max-width: 520px) {
   .component-example-stage { padding: 1.25rem; }
 
-  .disclosure-demo--preview, .toast-example--preview .toast-viewport { grid-template-columns: 1fr; }
+  .disclosure-demo--preview, .toast-example--preview .toast-viewport, .text-demo--preview, .native-field-demo--preview { grid-template-columns: 1fr; }
 
   .editable-area { grid-template-columns: 1fr; }
   .editable-actions { grid-column: 1; grid-row: auto; }

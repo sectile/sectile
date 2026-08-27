@@ -14,7 +14,7 @@ import type { EventEntry } from '../types.js';
 type FieldKind = 'number-field' | 'date-field' | 'time-field' | 'date-time-field';
 type FieldValue = string | DateValue | TimeValue | DateTimeValue | null;
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   readonly kind: FieldKind;
   readonly title: string;
   readonly description: string;
@@ -23,7 +23,8 @@ const props = defineProps<{
   readonly controlled?: boolean;
   readonly disabled?: boolean;
   readonly?: boolean;
-}>();
+  readonly preview?: boolean;
+}>(), { preview: false });
 
 const component = computed<Component>(() => ({
   'number-field': NumberField,
@@ -52,6 +53,10 @@ const displayValue = computed(() => {
   if (props.kind === 'date-time-field') return formatDemoDateTime(value.value as DemoDateTimeValue | null);
   return value.value === null ? 'No value' : String(value.value);
 });
+const previewStates = computed(() => [
+  { label: 'Empty', value: null },
+  { label: 'Filled', value: props.initialValue },
+] as const);
 const summaryLabel = computed(() => ({
   'date-field': 'Selected date',
   'time-field': 'Selected time',
@@ -87,23 +92,36 @@ function update(next: FieldValue): void {
     :interaction="interaction"
     :code="sourceCode"
   >
-    <div class="native-field-demo">
-      <label class="text-label" :class="{ 'temporal-field': temporal }">
-        <span class="temporal-field__label">{{ title }}</span>
-        <component
-          :is="component"
-          v-bind="ownershipProps"
-          :disabled="disabled"
-          :readonly="readonly"
-          :policies="policies"
-          class="text-field temporal-input"
-          @update:model-value="update"
-        />
-      </label>
-      <p class="temporal-value" role="status" aria-live="polite">
-        <span>{{ summaryLabel }}</span>
-        <strong>{{ displayValue }}</strong>
-      </p>
+    <div class="native-field-demo" :class="{ 'native-field-demo--preview': preview }">
+      <template v-if="preview">
+        <label v-for="item in previewStates" :key="item.label" class="text-label" :class="{ 'temporal-field': temporal }">
+          <span class="temporal-field__label">{{ item.label }}</span>
+          <component
+            :is="component"
+            :default-value="item.value"
+            :policies="policies"
+            class="text-field temporal-input"
+          />
+        </label>
+      </template>
+      <template v-else>
+        <label class="text-label" :class="{ 'temporal-field': temporal }">
+          <span class="temporal-field__label">{{ title }}</span>
+          <component
+            :is="component"
+            v-bind="ownershipProps"
+            :disabled="disabled"
+            :readonly="readonly"
+            :policies="policies"
+            class="text-field temporal-input"
+            @update:model-value="update"
+          />
+        </label>
+        <p class="temporal-value" role="status" aria-live="polite">
+          <span>{{ summaryLabel }}</span>
+          <strong>{{ displayValue }}</strong>
+        </p>
+      </template>
     </div>
   </DemoCard>
 </template>
