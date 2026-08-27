@@ -17,6 +17,7 @@ import {
   type GridDOMConnectionOptions,
   type GridDOMControlledValues,
   type GridDOMDisclosureOptions,
+  type GridDOMEditorOptions,
   type GridDOMFilterControlOptions,
   type GridDOMRowOptions,
   type GridDOMSelectionControlOptions,
@@ -24,7 +25,7 @@ import {
   type GridRevealCellCommand,
   type GridRevealRowCommand,
 } from './internal/tabular-grid-dom.js';
-import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState } from './internal/tabular-dom.js';
+import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState, TabularDOMEditorElement, TabularDOMEditorValueParser } from './internal/tabular-dom.js';
 import { validateColumnSizeOptions } from './internal/tabular-dom.js';
 
 export type DataTreeGridDOMCommand = SemanticDataTreeGridCommand | GridRevealCellCommand | GridRevealRowCommand;
@@ -43,6 +44,9 @@ export interface DataTreeGridRowSelectionControlOptions extends GridDOMSelection
 export type DataTreeGridBulkSelectionControlOptions = GridDOMBulkSelectionControlOptions;
 export interface DataTreeGridRowDisclosureOptions extends GridDOMDisclosureOptions {}
 export type DataTreeGridColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+export type DataTreeGridEditorElement = TabularDOMEditorElement;
+export type DataTreeGridEditorValueParser = TabularDOMEditorValueParser;
+export interface DataTreeGridEditorOptions extends GridDOMEditorOptions {}
 
 export interface DataTreeGridConnectionOptions extends Omit<GridDOMConnectionOptions<SemanticDataTreeGridController, SemanticDataTreeGridCommand>, 'onCommand' | 'onSnapshotChange'> {
   readonly controller: SemanticDataTreeGridController;
@@ -74,6 +78,7 @@ export interface DataTreeGridConnection {
   bindRowSelectionControl(element: HTMLInputElement, options: DataTreeGridRowSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataTreeGridBulkSelectionControlOptions): () => void;
   bindRowDisclosure(element: HTMLElement, options: DataTreeGridRowDisclosureOptions): () => void;
+  bindEditor(element: DataTreeGridEditorElement, options: DataTreeGridEditorOptions): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: DataTreeGridColumnResizeHandleOptions): () => void;
   requestRevealCell(cell: TabularCellAddress, expectedProjectionGeneration?: number): boolean;
   requestRevealRow(rowID: TabularRowID, expectedProjectionGeneration?: number): boolean;
@@ -126,6 +131,7 @@ function createDataTreeGridConnection(options: DataTreeGridConnectionOptions, ow
     bindRowSelectionControl: (element: HTMLInputElement, value: DataTreeGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
     bindBulkSelectionControl: (element: HTMLElement, value: DataTreeGridBulkSelectionControlOptions) => base.bindBulkSelectionControl(element, value),
     bindRowDisclosure: (element: HTMLElement, value: DataTreeGridRowDisclosureOptions) => base.bindRowDisclosure(element, value),
+    bindEditor: (element: DataTreeGridEditorElement, value: DataTreeGridEditorOptions) => base.bindEditor(element, value),
     bindColumnResizeHandle: (element: HTMLElement, value: DataTreeGridColumnResizeHandleOptions) => base.bindColumnResizeHandle(element, value),
     requestRevealCell: (cell: TabularCellAddress, generation?: number) => base.requestRevealCell(cell, generation),
     requestRevealRow: (rowID: TabularRowID, generation?: number) => base.requestRevealRow(rowID, generation),

@@ -16,13 +16,14 @@ import {
   type GridDOMColumnHeaderOptions,
   type GridDOMConnectionOptions,
   type GridDOMControlledValues,
+  type GridDOMEditorOptions,
   type GridDOMFilterControlOptions,
   type GridDOMRowOptions,
   type GridDOMSelectionControlOptions,
   type GridDOMSortTriggerOptions,
   type GridRevealCellCommand,
 } from './internal/tabular-grid-dom.js';
-import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState } from './internal/tabular-dom.js';
+import type { TabularDOMColumnResizeHandleOptions, TabularDOMColumnSizeState, TabularDOMEditorElement, TabularDOMEditorValueParser } from './internal/tabular-dom.js';
 import { validateColumnSizeOptions } from './internal/tabular-dom.js';
 
 export type DataGridDOMCommand = SemanticDataGridCommand | GridRevealCellCommand;
@@ -39,6 +40,9 @@ export type DataGridFilterControlOptions = GridDOMFilterControlOptions;
 export interface DataGridRowSelectionControlOptions extends GridDOMSelectionControlOptions {}
 export type DataGridBulkSelectionControlOptions = GridDOMBulkSelectionControlOptions;
 export type DataGridColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+export type DataGridEditorElement = TabularDOMEditorElement;
+export type DataGridEditorValueParser = TabularDOMEditorValueParser;
+export interface DataGridEditorOptions extends GridDOMEditorOptions {}
 
 export interface DataGridConnectionOptions extends Omit<GridDOMConnectionOptions<SemanticDataGridController, SemanticDataGridCommand>, 'onCommand' | 'onSnapshotChange'> {
   readonly controller: SemanticDataGridController;
@@ -68,6 +72,7 @@ export interface DataGridConnection {
   bindFilterControl(element: HTMLInputElement | HTMLSelectElement, options: DataGridFilterControlOptions): () => void;
   bindRowSelectionControl(element: HTMLInputElement, options: DataGridRowSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataGridBulkSelectionControlOptions): () => void;
+  bindEditor(element: DataGridEditorElement, options: DataGridEditorOptions): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: DataGridColumnResizeHandleOptions): () => void;
   requestRevealCell(cell: TabularCellAddress, expectedProjectionGeneration?: number): boolean;
   focusCurrent(): void;
@@ -117,6 +122,7 @@ function createDataGridConnection(options: DataGridConnectionOptions, ownsContro
     bindFilterControl: (element: HTMLInputElement | HTMLSelectElement, value: DataGridFilterControlOptions) => base.bindFilterControl(element, value),
     bindRowSelectionControl: (element: HTMLInputElement, value: DataGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
     bindBulkSelectionControl: (element: HTMLElement, value: DataGridBulkSelectionControlOptions) => base.bindBulkSelectionControl(element, value),
+    bindEditor: (element: DataGridEditorElement, value: DataGridEditorOptions) => base.bindEditor(element, value),
     bindColumnResizeHandle: (element: HTMLElement, value: DataGridColumnResizeHandleOptions) => base.bindColumnResizeHandle(element, value),
     requestRevealCell: (cell: TabularCellAddress, generation?: number) => base.requestRevealCell(cell, generation),
     focusCurrent: () => base.focusCurrent(),

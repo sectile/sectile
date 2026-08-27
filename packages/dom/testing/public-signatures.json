@@ -283,7 +283,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "8a936e0b421016ee7b04104e86e62d910d06ff8a9447ae525de142d6108dbbd2",
+  "fingerprint": "58a8a469597c8c19eba778579226a18a0c491ceb9dbfa35a8c29b2f88bfbd04f",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -327,15 +327,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "b3e71283912699ea306dbac4591764891fb881dbe9d5b9dde7d4d66839b0d427"
+      "sha256": "5febc8fca48c6986c7c1f008408dd796a565de9ce5fe8a8c471feb40e82e63f6"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "7f1b889708e131ef1bde0a48822a6d7b8b9be7b2133a7ad311f6d60b50a7e0c5"
+      "sha256": "c5a4c5c404d9eb0d51b417c3ae5377b05093a671469ee33552e07029070c66ea"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "b92430f6a072c8921fffaa075f1b0576e5d097e842cf02c52ac55124c60d33ac"
+      "sha256": "32b8d3ac0ac2918becf3fb5c91db9123b3a523f57799755f023a8fc77f98f5af"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -395,7 +395,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "b46f4b4fa67f32fc70d65c5e71a9779bada645c52476aa2921ecc249eb217018"
+      "sha256": "2a158167e7177fdf621789dbf34e51fc98235997122b709d2f0f21b892e8f496"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -431,11 +431,11 @@
     },
     {
       "path": "dist/internal/tabular-dom.d.ts",
-      "sha256": "deaef6c7cc0c12da40e13915ecfc67afd639237e80f8a677de2f56abfa505377"
+      "sha256": "9e5e6ed34c41ec776d90fff538cf68036e4d140935c967e9fab576844f81cf33"
     },
     {
       "path": "dist/internal/tabular-grid-dom.d.ts",
-      "sha256": "bd416fde8a20a81da03f63427b3185283a4e318de798b4b0922dac3d30255433"
+      "sha256": "6359f4d7f47f014f2225dce850872d982d352422a2bc8cc32d922356a105baed"
     },
     {
       "path": "dist/listbox.d.ts",

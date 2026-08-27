@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sectile DOM Tabular Editing Verification</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@sectile/core/result": "/packages/core/dist/result.js",
+          "@sectile/core/pagination": "/packages/core/dist/pagination.js",
+          "@sectile/tabular/data-table": "/packages/tabular/dist/data-table.js",
+          "@sectile/tabular/data-grid": "/packages/tabular/dist/data-grid.js",
+          "@sectile/tabular/data-tree-grid": "/packages/tabular/dist/data-tree-grid.js"
+        }
+      }
+    </script>
+    <style>
+      body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+      section { margin-block: 16px; }
+      [role="gridcell"] { border: 1px solid #aaa; padding: 4px 8px; }
+      pre { background: #111; color: #eee; padding: 16px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>DOM Tabular Editing Verification</h1>
+    <section id="tabular-table-native-editor"><h2>Native table editor</h2><table></table></section>
+    <section id="tabular-grid-editing"><h2>Grid editor</h2><div class="root" tabindex="0"></div></section>
+    <section id="tabular-treegrid-editing"><h2>Tree grid editor</h2><div class="root" tabindex="0"></div></section>
+    <pre id="result">running</pre>
+    <script type="module" src="./tabular-editing-browser.mjs"></script>
+  </body>
+</html>

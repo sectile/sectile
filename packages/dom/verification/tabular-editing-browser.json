@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/dom",
+  "status": "passed",
+  "browser": "Codex In-app Browser",
+  "url": "http://127.0.0.1:8765/packages/dom/verification/tabular-editing-browser.html",
+  "scenarios": {
+    "tabular-table-native-editor": {
+      "imeCommitSuppressed": true,
+      "validationRejected": true,
+      "nativeCommitIntent": true
+    },
+    "tabular-grid-editing": {
+      "beganAndFocused": true,
+      "imeCommitSuppressed": true,
+      "validationRejected": true,
+      "committed": true,
+      "removedCellCancelBeforeFocus": true,
+      "teardown": true,
+      "reconnectSingleBegin": true
+    },
+    "tabular-treegrid-editing": {
+      "beganAndFocused": true,
+      "escapedToNavigation": true
+    }
+  },
+  "consoleWarningsOrErrors": []
+}

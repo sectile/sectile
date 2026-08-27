@@ -35,13 +35,18 @@ import {
   ok,
   queryWithFilter,
   queryWithSort,
+  readEditorValue,
   rowSelected,
+  setEditorAttributes,
   setColumnInlineSize,
   validateColumnSizeOptions,
   validateRegistrationGeneration,
   type TabularDOMColumnResizeHandleOptions,
   type TabularDOMColumnSizeOptions,
   type TabularDOMColumnSizeState,
+  type TabularDOMEditorElement,
+  type TabularDOMEditorOptions,
+  type TabularDOMEditorValueParser,
   type TabularDOMRegistrationOptions,
 } from './internal/tabular-dom.js';
 
@@ -103,6 +108,11 @@ export interface DataTableDisclosureOptions {
 }
 
 export type DataTableColumnResizeHandleOptions = TabularDOMColumnResizeHandleOptions;
+export type DataTableEditorElement = TabularDOMEditorElement;
+export type DataTableEditorValueParser = TabularDOMEditorValueParser;
+export interface DataTableEditorOptions extends TabularDOMEditorOptions {
+  readonly commitOnChange?: boolean;
+}
 
 export interface DataTableConnection {
   readonly controller: SemanticDataTableController;
@@ -125,6 +135,7 @@ export interface DataTableConnection {
   bindSelectionControl(element: HTMLInputElement, options: DataTableSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataTableBulkSelectionControlOptions): () => void;
   bindDisclosure(element: HTMLElement, options: DataTableDisclosureOptions): () => void;
+  bindEditor(element: DataTableEditorElement, options: DataTableEditorOptions): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: DataTableColumnResizeHandleOptions): () => void;
   refresh(): void;
   disconnect(): void;
@@ -356,6 +367,35 @@ class DOMDataTable implements DataTableConnection {
     this.#refreshers.add(update);
     update();
     return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
+  }
+
+  public bindEditor(element: DataTableEditorElement, options: DataTableEditorOptions): () => void {
+    setEditorAttributes(element, options, 'editor');
+    let composing = false;
+    const commit = (): boolean => {
+      if (composing || !this.#scope.active || options.disabled === true || options.readOnly === true) return false;
+      const value = readEditorValue(element, options.parseValue);
+      element.setAttribute('aria-invalid', String(!value.ok));
+      return value.ok && this.handleEvent({ type: 'request-value-commit', cell: options.cell, value: value.value });
+    };
+    const keydown = (event: KeyboardEvent): void => {
+      if (event.isComposing || composing || event.key !== 'Enter' || (element.tagName === 'TEXTAREA' && event.shiftKey)) return;
+      if (commit()) event.preventDefault();
+    };
+    const input = (): void => element.setAttribute('aria-invalid', 'false');
+    const change = (): void => { if (options.commitOnChange !== false) commit(); };
+    const blur = (): void => { if (options.commitOnBlur === true) commit(); };
+    const compositionStart = (): void => { composing = true; };
+    const compositionEnd = (): void => { composing = false; };
+    const disposers = [
+      bindEvent(this.#scope, element, 'keydown', keydown),
+      bindEvent(this.#scope, element, 'input', input),
+      bindEvent(this.#scope, element, 'change', change),
+      bindEvent(this.#scope, element, 'blur', blur),
+      bindEvent(this.#scope, element, 'compositionstart', compositionStart),
+      bindEvent(this.#scope, element, 'compositionend', compositionEnd),
+    ];
+    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); });
   }
 
   public bindColumnResizeHandle(element: HTMLElement, options: DataTableColumnResizeHandleOptions): () => void {

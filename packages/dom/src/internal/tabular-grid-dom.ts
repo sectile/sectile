@@ -26,12 +26,16 @@ import {
   ok,
   queryWithFilter,
   queryWithSort,
+  readEditorValue,
   rowSelected,
   setColumnInlineSize,
+  setEditorAttributes,
   validateRegistrationGeneration,
   type TabularDOMColumnResizeHandleOptions,
   type TabularDOMColumnSizeOptions,
   type TabularDOMColumnSizeState,
+  type TabularDOMEditorElement,
+  type TabularDOMEditorOptions,
   type TabularDOMRegistrationOptions,
 } from './tabular-dom.js';
 
@@ -109,6 +113,14 @@ export type GridDOMBulkSelectionControlOptions =
   | { readonly target: { readonly kind: 'all-matching' }; readonly disabled?: boolean }
   | { readonly target: { readonly kind: 'group-leaves'; readonly groupID: TabularGroupID }; readonly disabled?: boolean };
 export interface GridDOMDisclosureOptions { readonly rowID: TabularGroupID; readonly disabled?: boolean }
+export interface GridDOMEditorOptions extends TabularDOMEditorOptions {}
+
+interface GridDOMEditorRegistration {
+  readonly element: TabularDOMEditorElement;
+  readonly options: GridDOMEditorOptions;
+  composing: boolean;
+  commit: () => boolean;
+}
 
 type BaseGridEvent =
   | { readonly type: 'focus-cell'; readonly cell: TabularCellAddress }
@@ -132,6 +144,7 @@ export class DOMTabularGrid<
   readonly #columnSizes: ColumnSizeStore;
   readonly #rows = new Map<string, { readonly element: HTMLElement; readonly options: GridDOMRowOptions }>();
   readonly #cells = new Map<string, { readonly element: HTMLElement; readonly options: GridDOMCellOptions }>();
+  readonly #editors = new Map<string, GridDOMEditorRegistration>();
   readonly #refreshers = new Set<() => void>();
   readonly #unsubscribeCommands: () => void;
   #pendingCell: GridRevealCellCommand | null = null;
@@ -384,6 +397,55 @@ export class DOMTabularGrid<
     return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
   }
 
+  public bindEditor(element: TabularDOMEditorElement, options: GridDOMEditorOptions): () => void {
+    const key = cellKey(options.cell);
+    const registration: GridDOMEditorRegistration = { element, options, composing: false, commit: () => false };
+    this.#editors.set(key, registration);
+    setEditorAttributes(element, options, 'editor');
+    const update = (): void => {
+      const edit = this.getSnapshot().edit;
+      const active = edit.kind === 'editing' && cellKey(edit.cell) === key;
+      element.hidden = !active;
+      element.tabIndex = active && options.disabled !== true ? 0 : -1;
+      element.setAttribute('data-state', active ? 'editing' : 'idle');
+    };
+    const commit = (): boolean => {
+      if (registration.composing || options.disabled === true || options.readOnly === true) return false;
+      const value = readEditorValue(element, options.parseValue);
+      element.setAttribute('aria-invalid', String(!value.ok));
+      return value.ok && this.handleEvent({ type: 'commit-edit', value: value.value } as Event);
+    };
+    registration.commit = commit;
+    const keydown = (event: KeyboardEvent): void => {
+      if (event.isComposing || registration.composing) return;
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        if (this.handleEvent({ type: 'cancel-edit', reason: 'escape' } as Event)) event.preventDefault();
+      } else if (event.key === 'Enter' && !(element.tagName === 'TEXTAREA' && event.shiftKey)) {
+        event.stopPropagation();
+        if (commit()) event.preventDefault();
+      }
+    };
+    const input = (): void => element.setAttribute('aria-invalid', 'false');
+    const blur = (): void => { if (options.commitOnBlur === true && this.getSnapshot().edit.kind === 'editing') commit(); };
+    const compositionStart = (): void => { registration.composing = true; };
+    const compositionEnd = (): void => { registration.composing = false; };
+    const disposers = [
+      bindEvent(this.#scope, element, 'keydown', keydown),
+      bindEvent(this.#scope, element, 'input', input),
+      bindEvent(this.#scope, element, 'blur', blur),
+      bindEvent(this.#scope, element, 'compositionstart', compositionStart),
+      bindEvent(this.#scope, element, 'compositionend', compositionEnd),
+    ];
+    this.#refreshers.add(update);
+    update();
+    return this.#scope.retain(() => {
+      for (const dispose of disposers) dispose();
+      this.#refreshers.delete(update);
+      if (this.#editors.get(key) === registration) this.#editors.delete(key);
+    });
+  }
+
   public bindColumnResizeHandle(element: HTMLElement, options: TabularDOMColumnResizeHandleOptions): () => void {
     return bindColumnResizeHandle(this.#scope, element, this.#columnSizes, options, () => this.#updated());
   }
@@ -413,6 +475,17 @@ export class DOMTabularGrid<
       this.#options.root.focus({ preventScroll: true });
       return;
     }
+    const edit = this.getSnapshot().edit;
+    const editorRegistration = edit.kind === 'editing' ? this.#editors.get(cellKey(edit.cell)) : undefined;
+    const editor = editorRegistration?.options.disabled === true ? undefined : editorRegistration?.element;
+    if (editor !== undefined) {
+      queueMicrotask(() => {
+        if (!this.#scope.active || this.getSnapshot().edit.kind !== 'editing') return;
+        editor.focus({ preventScroll: true });
+        if ('select' in editor && typeof editor.select === 'function') editor.select();
+      });
+      return;
+    }
     const element = this.#cells.get(cellKey(current))?.element;
     if (element !== undefined) {
       this.#pendingCell = null;
@@ -440,6 +513,7 @@ export class DOMTabularGrid<
     this.#unsubscribeCommands();
     this.#rows.clear();
     this.#cells.clear();
+    this.#editors.clear();
     this.#refreshers.clear();
     this.#pendingCell = null;
     this.#pendingRow = null;
@@ -476,13 +550,26 @@ export class DOMTabularGrid<
     this.handleEvent({ type: 'focus-cell', cell: registration.cell } as Event);
   }
   #keydown(event: KeyboardEvent): void {
-    if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    const edit = this.getSnapshot().edit;
+    if (edit.kind === 'editing') {
+      if (event.key === 'Escape') {
+        if (this.handleEvent({ type: 'cancel-edit', reason: 'escape' } as Event)) event.preventDefault();
+      } else if (event.key === 'Enter') {
+        if (this.#editors.get(cellKey(edit.cell))?.commit() === true) event.preventDefault();
+      }
+      return;
+    }
+    if (event.key === 'Enter' || event.key === 'F2') {
+      if (this.handleEvent({ type: 'begin-edit' } as Event)) event.preventDefault();
+      return;
+    }
     const direction = event.key === 'ArrowLeft' ? 'left' : event.key === 'ArrowRight' ? 'right' : event.key === 'ArrowUp' ? 'up' : event.key === 'ArrowDown' ? 'down' : null;
     if (direction !== null) {
       if (this.handleEvent({ type: 'move-cell', direction } as Event)) event.preventDefault();
       return;
     }
-    if (event.key !== ' ' || this.getSnapshot().edit.kind === 'editing') return;
+    if (event.key !== ' ') return;
     const current = this.getProjection().cursor.current;
     const row = current === null ? undefined : this.getProjection().rows.find((entry) => entry.rowID === current.rowID)?.row;
     if (row?.kind === 'leaf' && this.handleEvent({ type: 'toggle-row-selection', rowID: row.id } as Event)) event.preventDefault();

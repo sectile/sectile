@@ -200,6 +200,140 @@ test('DOM Tabular column sizes preserve controlled ownership and validate host i
   connection.disconnect();
 });
 
+test('DOM DataTable native editor emits parsed commit intent and suppresses IME commits', () => {
+  const window = new Window();
+  const table = window.document.createElement('table');
+  const commands = [];
+  const connection = createDataTable({ columns, table, onCommand: (command) => commands.push(command) });
+  assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
+  const editor = window.document.createElement('input');
+  table.append(editor);
+  const unbind = connection.bindEditor(editor, {
+    cell: { rowID: 'r1', columnID: 'name' },
+    parseValue: (value) => value === 'invalid'
+      ? { ok: false, error: { class: 'transition-rejection', code: 'profile-view-mismatch', message: 'Rejected editor value.' } }
+      : { ok: true, value: Number(value) },
+  });
+
+  editor.value = '12';
+  editor.dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true }));
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, isComposing: true }));
+  assert.equal(commands.some((command) => command.type === 'request-value-commit'), false);
+  editor.dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true }));
+  editor.value = 'invalid';
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(editor.getAttribute('aria-invalid'), 'true');
+  assert.equal(commands.some((command) => command.type === 'request-value-commit'), false);
+  editor.value = '12';
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.deepEqual(commands.at(-1), { type: 'request-value-commit', cell: { rowID: 'r1', columnID: 'name' }, value: 12 });
+  unbind();
+  unbind();
+  connection.disconnect();
+});
+
+test('DOM DataGrid editor coordinates begin, validation, IME, commit, and teardown', async () => {
+  const window = new Window();
+  const root = window.document.createElement('div');
+  window.document.body.append(root);
+  const commands = [];
+  const connection = createDataGrid({ columns, root, onCommand: (command) => commands.push(command) });
+  assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
+  const cell = window.document.createElement('div');
+  const editor = window.document.createElement('input');
+  cell.append(editor);
+  root.append(cell);
+  assert.equal(connection.registerCell(cell, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
+  const unbind = connection.bindEditor(editor, {
+    cell: { rowID: 'r1', columnID: 'name' },
+    parseValue: (value) => value.length === 0
+      ? { ok: false, error: { class: 'transition-rejection', code: 'profile-view-mismatch', message: 'Value is required.' } }
+      : { ok: true, value },
+  });
+  cell.focus();
+  root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'F2', bubbles: true }));
+  await Promise.resolve();
+  assert.equal(connection.getSnapshot().edit.kind, 'editing');
+  assert.equal(window.document.activeElement, editor);
+  assert.equal(commands.some((command) => command.type === 'begin-edit'), true);
+
+  editor.value = 'IME';
+  editor.dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true }));
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, isComposing: true }));
+  assert.equal(connection.getSnapshot().edit.kind, 'editing');
+  editor.dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true }));
+  editor.value = '';
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  assert.equal(editor.getAttribute('aria-invalid'), 'true');
+  assert.equal(connection.getSnapshot().edit.kind, 'editing');
+  editor.value = 'Gamma';
+  editor.dispatchEvent(new window.Event('input', { bubbles: true }));
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await Promise.resolve();
+  assert.equal(connection.getSnapshot().edit.kind, 'navigation');
+  assert.deepEqual(commands.at(-1), { type: 'commit-edit', cell: { rowID: 'r1', columnID: 'name' }, value: 'Gamma' });
+
+  const count = commands.length;
+  unbind();
+  connection.disconnect();
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  assert.equal(commands.length, count);
+});
+
+test('DOM grid emits removed-cell cancellation before moving focus', async () => {
+  const window = new Window();
+  const root = window.document.createElement('div');
+  window.document.body.append(root);
+  const timeline = [];
+  const connection = createDataGrid({ columns, root, onCommand: (command) => timeline.push(command.type) });
+  assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
+  const first = window.document.createElement('div');
+  const second = window.document.createElement('div');
+  const editor = window.document.createElement('input');
+  first.append(editor);
+  root.append(first, second);
+  assert.equal(connection.registerCell(first, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
+  assert.equal(connection.registerCell(second, { cell: { rowID: 'r2', columnID: 'name' } }).ok, true);
+  connection.bindEditor(editor, { cell: { rowID: 'r1', columnID: 'name' } });
+  second.addEventListener('focus', () => timeline.push('focus-fallback'));
+  first.focus();
+  connection.handleEvent({ type: 'begin-edit' });
+  await Promise.resolve();
+  timeline.length = 0;
+  assert.equal(connection.requestView().ok, true);
+  const response = clientResponse(connection.controller, [{ id: 'r2', name: 'Beta', score: 2 }]);
+  const synchronized = connection.synchronizeView({ ...response, viewRevision: 2, removedRowIDs: ['r1'] });
+  assert.equal(synchronized.ok, true, JSON.stringify(synchronized));
+  assert.deepEqual(connection.getSnapshot().edit, { kind: 'navigation' });
+  await Promise.resolve();
+  assert.ok(timeline.indexOf('cancel-edit') >= 0);
+  assert.ok(timeline.indexOf('focus-fallback') > timeline.indexOf('cancel-edit'));
+  connection.disconnect();
+});
+
+test('DOM DataTreeGrid uses the shared explicit editor contract', async () => {
+  const window = new Window();
+  const root = window.document.createElement('div');
+  window.document.body.append(root);
+  const commands = [];
+  const connection = createDataTreeGrid({ columns, root, onCommand: (command) => commands.push(command) });
+  assert.equal(connection.synchronizeView(treeResponse(connection.controller)).ok, true);
+  const cell = window.document.createElement('div');
+  const editor = window.document.createElement('input');
+  cell.append(editor);
+  root.append(cell);
+  assert.equal(connection.registerCell(cell, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
+  connection.bindEditor(editor, { cell: { rowID: 'r1', columnID: 'name' } });
+  cell.focus();
+  root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await Promise.resolve();
+  assert.equal(connection.getSnapshot().edit.kind, 'editing');
+  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert.equal(connection.getSnapshot().edit.kind, 'navigation');
+  assert.equal(commands.at(-1).reason, 'escape');
+  connection.disconnect();
+});
+
 test('DOM Tabular subpaths declare direct Tabular dependency and no profile Virtual imports', async () => {
   assert.equal(manifest.dependencies['@sectile/tabular'], 'workspace:*');
   for (const name of ['data-table', 'data-grid', 'data-tree-grid']) {

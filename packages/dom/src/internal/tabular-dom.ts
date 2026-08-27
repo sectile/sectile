@@ -11,6 +11,7 @@ import type {
   TabularRowSelection,
   TabularSnapshot,
   TabularView,
+  TabularWireValue,
 } from '@sectile/tabular';
 
 export interface TabularDOMColumnSizeState {
@@ -33,6 +34,18 @@ export interface TabularDOMColumnResizeHandleOptions {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly step?: number;
+}
+
+export type TabularDOMEditorElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+export type TabularDOMEditorValueParser = (value: string) => TabularResult<TabularWireValue>;
+
+export interface TabularDOMEditorOptions {
+  readonly cell: TabularCellAddress;
+  readonly parseValue?: TabularDOMEditorValueParser;
+  readonly commitOnBlur?: boolean;
+  readonly disabled?: boolean;
+  readonly readOnly?: boolean;
+  readonly label?: string;
 }
 
 export interface TabularHeaderMetrics {
@@ -118,6 +131,27 @@ export function bindEvent<K extends keyof HTMLElementEventMap>(
   const typed = listener as EventListener;
   element.addEventListener(type, typed);
   return scope.retain(() => element.removeEventListener(type, typed));
+}
+
+export function readEditorValue(
+  element: TabularDOMEditorElement,
+  parser: TabularDOMEditorValueParser | undefined,
+): TabularResult<TabularWireValue> {
+  return parser?.(element.value) ?? ok(element.value);
+}
+
+export function setEditorAttributes(
+  element: TabularDOMEditorElement,
+  options: TabularDOMEditorOptions,
+  part: string,
+): void {
+  element.setAttribute('data-part', part);
+  element.setAttribute('data-row-id', options.cell.rowID);
+  element.setAttribute('data-column-id', options.cell.columnID);
+  if (options.label === undefined) element.removeAttribute('aria-label');
+  else element.setAttribute('aria-label', options.label);
+  element.disabled = options.disabled === true;
+  if ('readOnly' in element) element.readOnly = options.readOnly === true;
 }
 
 export function bindColumnResizeHandle(
