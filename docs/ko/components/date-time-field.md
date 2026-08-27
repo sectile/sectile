@@ -1,15 +1,15 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Date Time Field
 
-시간대 변환 없이 날짜와 현지 시각을 함께 편집합니다.
+날짜와 현지 시각을 하나의 민간 시간 값으로 편집합니다.
 
 ## 용법
 
 ### 현지 일정 일정 선택
 
-시간대 변환 없이 날짜와 현지 시각을 하나의 일정으로 확정합니다.
+날짜와 현지 시각을 하나의 민간 시간 일정으로 확정합니다.
 
-<ComponentExample component="date-time-field" scenario="local-schedule" title="현지 일정 일정 선택" description="시간대 변환 없이 날짜와 현지 시각을 하나의 일정으로 확정합니다." :index="0" />
+<ComponentExample component="date-time-field" scenario="local-schedule" title="현지 일정 일정 선택" description="날짜와 현지 시각을 하나의 민간 시간 일정으로 확정합니다." :index="0" />
 
 ### 외부 상태 관리
 
@@ -87,7 +87,7 @@ Vue 패키지: `@sectile/vue/date-time-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

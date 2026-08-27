@@ -1,7 +1,7 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Progress
 
-작업 완료도를 정확히 보여 주거나 진행량을 알 수 없는 상태를 나타냅니다.
+작업 완료도를 정확히 보여 주고 진행량 미정 상태도 함께 나타냅니다.
 
 ## 용법
 
@@ -11,11 +11,11 @@
 
 <ComponentExample component="progress" scenario="determinate" title="확정된 진행량" description="명시한 최댓값을 기준으로 확인된 완료량을 보여 줍니다." :index="0" />
 
-### 알 수 없는 진행량
+### 진행량 미정
 
-아직 완료량을 알 수 없는 작업 상태를 나타냅니다.
+완료량이 미정인 작업 상태를 나타냅니다.
 
-<ComponentExample component="progress" scenario="indeterminate" title="알 수 없는 진행량" description="아직 완료량을 알 수 없는 작업 상태를 나타냅니다." :index="1" />
+<ComponentExample component="progress" scenario="indeterminate" title="진행량 미정" description="완료량이 미정인 작업 상태를 나타냅니다." :index="1" />
 
 ### 완료
 
@@ -25,9 +25,9 @@
 
 ### 정확한 소수
 
-0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다.
+입력한 십진수 0.1을 정확한 값으로 유지합니다.
 
-<ComponentExample component="progress" scenario="exact-decimal" title="정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="3" />
+<ComponentExample component="progress" scenario="exact-decimal" title="정확한 소수" description="입력한 십진수 0.1을 정확한 값으로 유지합니다." :index="3" />
 
 ## API
 
@@ -59,7 +59,7 @@ Vue 패키지: `@sectile/vue/progress`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -106,7 +106,7 @@ Vue 패키지: `@sectile/vue/progress`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -174,7 +174,7 @@ type ProgressValueFormatter = (value: string) => string
 <tr>
   <td><code class="component-part-token">root</code></td>
   <td><code>[data-part="root"]</code></td>
-  <td>확정된 완료량 또는 진행량을 알 수 없는 상태를 노출합니다.</td>
+  <td>확정된 완료량과 진행량 미정 상태를 노출합니다.</td>
   <td><code>role="progressbar"</code><br><code>data-status="&lt;status&gt;"</code><br><code>data-percentage="&lt;percentage&gt;"</code></td>
 </tr>
 <tr>
@@ -186,7 +186,7 @@ type ProgressValueFormatter = (value: string) => string
 <tr>
   <td><code class="component-part-token">indicator</code></td>
   <td><code>[data-part="indicator"]</code></td>
-  <td>접근성 의미를 중복하지 않고 알려진 정확한 백분율만큼 채웁니다.</td>
+  <td>기존 접근성 의미를 유지하며 알려진 정확한 백분율만큼 채웁니다.</td>
   <td><code>aria-hidden="true"</code><br><code>data-status="&lt;status&gt;"</code><br><code>data-percentage="&lt;percentage&gt;"</code></td>
 </tr>
 <tr>
@@ -203,8 +203,8 @@ type ProgressValueFormatter = (value: string) => string
 
 | 키 | 동작 |
 | --- | --- |
-| <kbd>None</kbd> | 범위 표시는 읽기 전용이며 키보드 조작을 정의하지 않습니다. |
+| <kbd>None</kbd> | 범위 표시는 읽기 전용 의미와 값만 제공합니다. |
 
 ## 접근성
 
-이름이 있는 진행 표시줄은 0과 최댓값을 노출하고 진행량을 알 수 없을 때 현재 값과 값 텍스트를 생략합니다.
+이름이 있는 진행 표시줄은 0과 최댓값을 노출하고 진행량 미정 상태에서는 현재 값과 값 텍스트를 생략합니다.

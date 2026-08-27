@@ -10,11 +10,11 @@ pnpm add @sectile/terminal
 import * as checkbox from '@sectile/terminal/checkbox'
 ```
 
-터미널 연결 함수는 입력과 화면 반영을 맡으며 응용 프로그램의 스타일이나 저장 방식을 정하지 않습니다.
+터미널 연결 함수는 입력과 화면 반영을 맡습니다. 스타일과 저장 방식은 응용 프로그램이 정합니다.
 
 ## 제품 범위
 
-이 패키지의 본체는 의미 기반 실행 환경 어댑터입니다. 터미널 입력을 정규화하고 Core 효과를 투영하여 응용 프로그램이나 기존 TUI 렌더러가 DOM과 같은 상호작용 의미를 공유하게 합니다. `screen`, `layout`, `appearance`, `node` 경로는 예시와 작은 응용 프로그램을 위한 소형 참고 렌더러입니다. 완전한 TUI 프레임워크가 아니며 응용 프로그램의 reconciliation, 스크롤, 라우팅, 저장, 프로세스 생명주기를 소유하지 않습니다.
+이 패키지의 본체는 의미 기반 실행 환경 어댑터입니다. 터미널 입력을 정규화하고 Core 효과를 투영하여 응용 프로그램이나 기존 TUI 렌더러가 DOM과 같은 상호작용 의미를 공유하게 합니다. `screen`, `layout`, `appearance`, `node` 경로는 예시와 작은 응용 프로그램을 위한 소형 참고 렌더러입니다. Reconciliation, 스크롤, 라우팅, 저장, 프로세스 생명주기는 응용 프로그램과 TUI 렌더러가 맡습니다.
 
 큰 응용 프로그램에서는 기존 렌더러가 레이아웃과 입출력을 계속 소유하게 하고, 그 입력을 `TerminalKeyboardInput`으로 바꾼 뒤 컴포넌트 연결 객체를 의미 경계로 사용합니다.
 
@@ -109,11 +109,11 @@ process.once('exit', close)
 process.stdout.on('resize', render)
 ```
 
-프로세스를 끝내지 않고 터미널 화면만 내릴 수 있다면 응용 프로그램이 등록한 signal과 resize listener도 같은 생명주기에서 제거합니다.
+프로세스를 유지한 채 터미널 화면만 내리는 구성에서는 응용 프로그램이 등록한 signal과 resize listener도 같은 생명주기에서 제거합니다.
 
 ## 키보드 사용 원칙
 
-화살표 키의 의미는 터미널 화면에 보이는 배치와 일치합니다. 세로 목록은 <kbd>↑</kbd>/<kbd>↓</kbd>, 가로 목록은 <kbd>←</kbd>/<kbd>→</kbd>로 이동합니다. 세로 계층에서는 <kbd>→</kbd>로 하위 단계에 들어가고 <kbd>←</kbd> 또는 <kbd>Esc</kbd>로 돌아옵니다. <kbd>Home</kbd>/<kbd>End</kbd>가 없는 키보드에서는 <kbd>Fn</kbd>+<kbd>←</kbd>/<kbd>→</kbd> 또는 <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd>로 현재 단계의 처음과 끝으로 이동합니다. <kbd>Fn</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>는 <kbd>Page Up</kbd>/<kbd>Page Down</kbd>으로 처리합니다. <kbd>Enter</kbd> 또는 <kbd>Space</kbd>는 하위 메뉴를 열거나 명령을 실행합니다.
+화살표 키의 의미는 터미널 화면에 보이는 배치와 일치합니다. 세로 목록은 <kbd>↑</kbd>/<kbd>↓</kbd>, 가로 목록은 <kbd>←</kbd>/<kbd>→</kbd>로 이동합니다. 세로 계층에서는 <kbd>→</kbd>로 하위 단계에 들어가고 <kbd>←</kbd> 또는 <kbd>Esc</kbd>로 돌아옵니다. 현재 단계의 처음과 끝은 <kbd>Home</kbd>/<kbd>End</kbd>, <kbd>Fn</kbd>+<kbd>←</kbd>/<kbd>→</kbd>, <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd>로 이동합니다. <kbd>Fn</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>는 <kbd>Page Up</kbd>/<kbd>Page Down</kbd>으로 처리합니다. <kbd>Enter</kbd> 또는 <kbd>Space</kbd>는 하위 메뉴를 열거나 명령을 실행합니다.
 
 `@sectile/terminal/reorder`는 `move-up`, `move-down`, `move-start`, `move-end`, `indent`, `outdent`를 sequence/tree 이동 명령으로 제공합니다. `@sectile/terminal/layer-stack`은 애플리케이션이 소유하는 레이어 범위를 만들어 여러 터미널 팝업의 최상위 닫기와 하위 레이어 닫기 순서를 통일합니다.
 
@@ -121,16 +121,16 @@ process.stdout.on('resize', render)
 
 ## 터미널에서 체험하기
 
-아래 화면은 브라우저에서 터미널 입력과 출력을 재현한 체험 화면이며, 별도의 `sectile` CLI 명령을 제공한다는 뜻은 아닙니다. 상태 전이에는 실제 `@sectile/terminal` 체크박스 연결 함수를 사용합니다. 항목을 누르거나 체험 화면에 포커스를 둔 뒤 <kbd>Space</kbd> 또는 <kbd>Enter</kbd>를 누르면 선택 상태가 바뀝니다.
+아래 화면은 브라우저에서 터미널 입력과 출력을 재현합니다. 상태 전이에는 실제 `@sectile/terminal` 체크박스 연결 함수를 사용합니다. 항목을 누르거나 체험 화면에 포커스를 둔 뒤 <kbd>Space</kbd> 또는 <kbd>Enter</kbd>를 누르면 선택 상태가 바뀝니다.
 
 <TerminalCheckboxDemo />
 
 ## 브라우저에서 Bash 실행하기
 
-격리된 Debian `/bin/bash`를 시작한 뒤 프롬프트에 직접 명령을 입력할 수 있습니다. 브라우저 호스트 터미널 응용 프로그램이 보는 셸 환경을 보여 주는 VM이며, 컴퓨터의 파일이나 호스트 셸에는 접근하지 않습니다. 처음 시작할 때 런타임과 스트리밍 디스크 블록을 내려받습니다.
+격리된 Debian `/bin/bash`를 시작한 뒤 프롬프트에 직접 명령을 입력할 수 있습니다. 브라우저 호스트 터미널 응용 프로그램이 보는 셸 환경을 보여 주는 VM이며, 파일 접근 범위는 VM의 가상 디스크와 셸로 제한됩니다. 처음 시작할 때 런타임과 스트리밍 디스크 블록을 내려받습니다.
 
 <BashTerminal />
 
 ## 생성 함수
 
-`create*`는 바로 사용할 수 있는 연결 객체를 반환합니다. 잘못된 설정을 직접 복구해야 할 때만 `tryCreate*`를 사용해 `Result`로 받습니다. `create*` 결과에는 `unwrap`이 필요하지 않습니다.
+`create*`는 바로 사용할 수 있는 연결 객체를 반환합니다. 설정 오류를 직접 복구하는 흐름에서는 `tryCreate*`로 `Result`를 받습니다.

@@ -85,7 +85,7 @@ Vue 패키지: `@sectile/vue/time-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

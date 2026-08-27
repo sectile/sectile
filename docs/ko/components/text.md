@@ -7,9 +7,9 @@
 
 ### 유니코드 선택
 
-사용자가 한 글자로 인식하는 문자를 쪼개지 않고 선택 영역을 이동하고 바꿉니다.
+사용자가 한 글자로 인식하는 문자 단위로 선택 영역을 이동하고 바꿉니다.
 
-<ComponentExample component="text" scenario="unicode-selection" title="유니코드 선택" description="사용자가 한 글자로 인식하는 문자를 쪼개지 않고 선택 영역을 이동하고 바꿉니다." :index="0" />
+<ComponentExample component="text" scenario="unicode-selection" title="유니코드 선택" description="사용자가 한 글자로 인식하는 문자 단위로 선택 영역을 이동하고 바꿉니다." :index="0" />
 
 ### 여러 줄
 
@@ -27,9 +27,9 @@
 
 ### 한글 조합 입력 일부 선택
 
-한글, 영문, 그림 문자를 함께 편집해도 조합 중인 글자가 끊어지지 않습니다.
+한글, 영문, 그림 문자를 함께 편집하면서 조합 중인 글자를 온전히 유지합니다.
 
-<ComponentExample component="text" scenario="ime-mixed" title="한글 조합 입력 일부 선택" description="한글, 영문, 그림 문자를 함께 편집해도 조합 중인 글자가 끊어지지 않습니다." :index="3" />
+<ComponentExample component="text" scenario="ime-mixed" title="한글 조합 입력 일부 선택" description="한글, 영문, 그림 문자를 함께 편집하면서 조합 중인 글자를 온전히 유지합니다." :index="3" />
 
 ## API
 
@@ -107,14 +107,14 @@ Vue 패키지: `@sectile/vue/text`
 <dt><code>placeholder</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>아직 값이 없을 때 표시할 안내 문자열입니다.</p>
+<p>빈 값 상태에 표시할 안내 문자열입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

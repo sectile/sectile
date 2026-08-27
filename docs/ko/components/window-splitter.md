@@ -60,7 +60,7 @@ Vue 패키지: `@sectile/vue/window-splitter`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -170,7 +170,7 @@ Vue 패키지: `@sectile/vue/window-splitter`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

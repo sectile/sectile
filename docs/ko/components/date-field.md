@@ -13,9 +13,9 @@
 
 ### 범위 제한
 
-설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
+입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다.
 
-<ComponentExample component="date-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
+<ComponentExample component="date-field" scenario="bounded" title="범위 제한" description="입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -85,7 +85,7 @@ Vue 패키지: `@sectile/vue/date-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

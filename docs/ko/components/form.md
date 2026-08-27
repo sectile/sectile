@@ -48,9 +48,9 @@ Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-`onSubmit`은 Vue emit이 아니라 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 `:on-submit="save"`로 전달합니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
+`onSubmit`은 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 `event`, 구조화된 `values`, 원본 `formData`, `submitter`, 현재 폼 `state`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 `:on-submit="save"`로 전달합니다. 애플리케이션은 `values`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 `formData`를 활용할 수 있습니다.
 
-서버 이슈는 내부 필드 ID 대신 `path`로 연결할 수 있습니다. 예: `{ message: 'Already registered', path: 'email' }` 또는 `{ message: 'Invalid', path: ['members', 0, 'email'] }`. `id`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 내부 오류 메시지를 노출하지 않고 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 `mapSubmitError`에서 명시적으로 변환합니다.
+서버 이슈는 `path`로 필드에 연결할 수 있습니다. 예: `{ message: 'Already registered', path: 'email' }` 또는 `{ message: 'Invalid', path: ['members', 0, 'email'] }`. `id`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 `mapSubmitError`에서 명시적으로 변환합니다.
 
 ### 타입이 지정된 폼
 
@@ -212,7 +212,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -247,7 +247,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -273,7 +273,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -364,7 +364,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <dt><code>valid</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>현재 검증 이슈가 없는지 여부입니다.</p>
+<p>현재 입력의 검증 통과 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -460,7 +460,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <dt><code>valid</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>현재 검증 이슈가 없는지 여부입니다.</p>
+<p>현재 입력의 검증 통과 여부입니다.</p>
 </dd>
 </div>
 </dl>

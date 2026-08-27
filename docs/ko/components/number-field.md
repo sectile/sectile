@@ -7,9 +7,9 @@
 
 ### 정확한 값 정확한 소수
 
-0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다.
+입력한 십진수 0.1을 정확한 값으로 유지합니다.
 
-<ComponentExample component="number-field" scenario="exact-decimal" title="정확한 값 정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="0" />
+<ComponentExample component="number-field" scenario="exact-decimal" title="정확한 값 정확한 소수" description="입력한 십진수 0.1을 정확한 값으로 유지합니다." :index="0" />
 
 ### 계산식 입력
 
@@ -25,9 +25,9 @@
 
 ### 범위 제한
 
-설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
+입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다.
 
-<ComponentExample component="number-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="3" />
+<ComponentExample component="number-field" scenario="bounded" title="범위 제한" description="입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다." :index="3" />
 
 ## API
 
@@ -91,7 +91,7 @@ Vue 패키지: `@sectile/vue/number-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

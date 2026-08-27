@@ -19,9 +19,9 @@
 
 ### 페이지 번호만 표시
 
-처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다.
+페이지 번호만 표시하는 간결한 탐색 구성을 보여 줍니다.
 
-<ComponentExample component="pagination" scenario="pages-only" title="페이지 번호만 표시" description="처음·마지막 이동 버튼 없이 페이지 번호만 표시합니다." :index="2" />
+<ComponentExample component="pagination" scenario="pages-only" title="페이지 번호만 표시" description="페이지 번호만 표시하는 간결한 탐색 구성을 보여 줍니다." :index="2" />
 
 ### 외부 상태 관리
 
@@ -33,9 +33,9 @@
 
 ### 긴 범위
 
-모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다.
+현재 위치 주변의 페이지 번호만 표시하며 큰 결과 목록을 이동합니다.
 
-<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="모든 페이지 번호를 늘어놓지 않고 큰 결과 목록을 이동합니다." :index="4" />
+<ComponentExample component="pagination" scenario="long-range" title="긴 범위" description="현재 위치 주변의 페이지 번호만 표시하며 큰 결과 목록을 이동합니다." :index="4" />
 
 ## API
 
@@ -69,7 +69,7 @@ Vue 패키지: `@sectile/vue/pagination`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -132,7 +132,7 @@ Vue 패키지: `@sectile/vue/pagination`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -179,7 +179,7 @@ Vue 패키지: `@sectile/vue/pagination`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -366,4 +366,4 @@ type PaginationItemsPerPageChangeHandler = (value: number) => void
 
 ## 접근성
 
-페이지 링크나 버튼이 기본 실행 의미를 유지하고 위치에만 의존하지 않고 현재 페이지를 식별합니다.
+페이지 링크나 버튼이 기본 실행 의미와 현재 페이지 속성을 함께 제공합니다.

@@ -59,7 +59,7 @@ Vue 패키지: `@sectile/vue/listbox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -122,7 +122,7 @@ Vue 패키지: `@sectile/vue/listbox`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -162,7 +162,7 @@ Vue 패키지: `@sectile/vue/listbox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -195,7 +195,7 @@ Vue 패키지: `@sectile/vue/listbox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -223,7 +223,7 @@ Vue 패키지: `@sectile/vue/listbox`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -383,6 +383,6 @@ type ListboxActivateHandler = (value: string) => void
 
 ## 접근성
 
-이름이 있는 목록 상자가 모든 항목으로 DOM 포커스를 옮기지 않고 현재·선택·비활성 상태를 노출합니다.
+이름이 있는 목록 상자가 DOM 포커스를 유지하며 현재·선택·비활성 상태를 노출합니다.
 
 [관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

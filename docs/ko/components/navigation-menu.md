@@ -19,9 +19,9 @@
 
 ### 비활성 항목
 
-키보드와 포인터 입력을 받지 않습니다.
+비활성 상태에서 키보드와 포인터 입력을 차단합니다.
 
-<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="키보드와 포인터 입력을 받지 않습니다." :index="2" />
+<ComponentExample component="navigation-menu" scenario="disabled" title="비활성 항목" description="비활성 상태에서 키보드와 포인터 입력을 차단합니다." :index="2" />
 
 ## API
 
@@ -57,7 +57,7 @@ Vue 패키지: `@sectile/vue/navigation-menu`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -90,7 +90,7 @@ Vue 패키지: `@sectile/vue/navigation-menu`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -158,7 +158,7 @@ Vue 패키지: `@sectile/vue/navigation-menu`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -308,7 +308,7 @@ Vue 패키지: `@sectile/vue/navigation-menu`
 <tr>
   <td><code class="component-part-token">indicator</code></td>
   <td><code>[data-part="indicator"]</code></td>
-  <td>주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.</td>
+  <td>주요 콘텐츠와 나란히 상태나 위치를 표시합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>

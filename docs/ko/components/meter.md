@@ -13,9 +13,9 @@
 
 ### 정확한 소수
 
-0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다.
+입력한 십진수 0.1을 정확한 값으로 유지합니다.
 
-<ComponentExample component="meter" scenario="exact-decimal" title="정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="1" />
+<ComponentExample component="meter" scenario="exact-decimal" title="정확한 소수" description="입력한 십진수 0.1을 정확한 값으로 유지합니다." :index="1" />
 
 ### 같은 최솟값과 최댓값
 
@@ -53,7 +53,7 @@ Vue 패키지: `@sectile/vue/meter`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -128,7 +128,7 @@ Vue 패키지: `@sectile/vue/meter`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -236,7 +236,7 @@ type MeterValueFormatter = (value: string) => string
 <tr>
   <td><code class="component-part-token">indicator</code></td>
   <td><code>[data-part="indicator"]</code></td>
-  <td>접근 가능한 값을 중복하지 않고 정확한 백분율만큼 채웁니다.</td>
+  <td>기존 접근성 값을 유지하며 정확한 백분율만큼 채웁니다.</td>
   <td><code>aria-hidden="true"</code><br><code>data-zone="&lt;zone&gt;"</code><br><code>data-percentage="&lt;percentage&gt;"</code></td>
 </tr>
 <tr>
@@ -253,10 +253,10 @@ type MeterValueFormatter = (value: string) => string
 
 | 키 | 동작 |
 | --- | --- |
-| <kbd>None</kbd> | 범위 표시는 읽기 전용이며 키보드 조작을 정의하지 않습니다. |
+| <kbd>None</kbd> | 범위 표시는 읽기 전용 의미와 값만 제공합니다. |
 
 ## 접근성
 
-이름이 있는 읽기 전용 meter가 최솟값·최댓값·현재 값·형식화된 값을 노출하며 ARIA에 없는 임계값 속성을 만들지 않습니다.
+이름이 있는 읽기 전용 meter가 표준 ARIA 속성으로 최솟값·최댓값·현재 값·형식화된 값을 노출합니다.
 
 [관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/meter/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

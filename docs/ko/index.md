@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: Sectile
-  text: 모양이 아니라 동작을 설계합니다
+  text: 동작을 중심에 두고 설계합니다
   tagline: 브라우저와 터미널, 프레임워크에서 같은 상호작용 규칙을 사용하면서 화면 디자인은 온전히 직접 결정합니다.
   actions:
     - theme: brand

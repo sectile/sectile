@@ -13,9 +13,9 @@
 
 ### 범위 제한
 
-설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
+입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다.
 
-<ComponentExample component="carousel" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
+<ComponentExample component="carousel" scenario="bounded" title="범위 제한" description="입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다." :index="1" />
 
 ### 일시 정지
 
@@ -64,14 +64,14 @@ Vue 패키지: `@sectile/vue/carousel`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>autoplay</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean | CarouselAutoplayOptions</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>직접 조작하지 않아도 캐러셀이 자동으로 넘어갈지 여부입니다.</p>
+<p>캐러셀이 자동으로 넘어갈지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -167,7 +167,7 @@ Vue 패키지: `@sectile/vue/carousel`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -382,7 +382,7 @@ type CarouselAnnounceHandler = (value: string) => void
 <tr>
   <td><code class="component-part-token">indicator</code></td>
   <td><code>[data-part="indicator"]</code></td>
-  <td>주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.</td>
+  <td>주요 콘텐츠와 나란히 상태나 위치를 표시합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>

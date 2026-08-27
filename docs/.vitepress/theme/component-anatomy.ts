@@ -122,7 +122,7 @@ const partPurposes = Object.freeze<Record<string, Readonly<{ en: string; ko: str
   'value-text': copy('Displays the formatted value as text.', '서식화된 값을 텍스트로 표시합니다.'),
   label: copy('Labels the component control.', '컴포넌트 조작부의 레이블입니다.'),
   preview: copy('Shows the committed value outside editing mode.', '편집 모드 밖에서 확정 값을 표시합니다.'),
-  empty: copy('Shows feedback when no collection item matches.', '일치하는 항목이 없을 때 안내를 표시합니다.'),
+  empty: copy('Shows feedback when no collection item matches.', '검색 결과가 빈 상태일 때 안내를 표시합니다.'),
   control: copy('Groups the primary interactive controls.', '주요 조작부를 묶습니다.'),
   area: copy('Provides the two-dimensional interaction surface.', '2차원 조작 영역을 제공합니다.'),
   'area-thumb': copy('Marks and controls the selected point in the area.', '2차원 영역의 선택 지점을 표시하고 조절합니다.'),
@@ -140,7 +140,7 @@ const partPurposes = Object.freeze<Record<string, Readonly<{ en: string; ko: str
   last: copy('Moves to the last page.', '마지막 페이지로 이동합니다.'),
   pause: copy('Pauses or resumes automatic movement.', '자동 이동을 일시 정지하거나 다시 시작합니다.'),
   'indicator-group': copy('Groups direct position controls.', '직접 위치 이동 조작부를 묶습니다.'),
-  indicator: copy('Shows state or position without replacing the primary content.', '주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.'),
+  indicator: copy('Shows state or position without replacing the primary content.', '주요 콘텐츠와 나란히 상태나 위치를 표시합니다.'),
   grid: copy('Groups cells into a navigable two-dimensional structure.', '셀을 탐색 가능한 2차원 구조로 묶습니다.'),
   row: copy('Groups cells that belong to one grid row.', '같은 그리드 행에 속한 셀을 묶습니다.'),
   cell: copy('Represents one navigable or selectable grid value.', '탐색하거나 선택할 수 있는 그리드 값 하나입니다.'),
@@ -148,7 +148,7 @@ const partPurposes = Object.freeze<Record<string, Readonly<{ en: string; ko: str
   column: copy('Groups one level of hierarchical choices.', '계층형 선택 항목의 한 단계를 묶습니다.'),
   header: copy('Provides the semantic heading for an expandable item.', '펼칠 수 있는 항목의 의미론적 제목입니다.'),
   disclosure: copy('Expands or collapses child content.', '하위 콘텐츠를 펼치거나 접습니다.'),
-  separator: copy('Separates related groups without becoming an action.', '동작을 추가하지 않고 관련 그룹을 구분합니다.'),
+  separator: copy('Separates related groups without becoming an action.', '관련 그룹 사이에 의미 구분선을 표시합니다.'),
   editor: copy('Edits the active grid or tree-grid cell.', '활성 그리드 또는 트리 그리드 셀을 편집합니다.'),
   pane: copy('Contains one resizable region.', '크기를 조절할 수 있는 영역 하나를 담습니다.'),
   handle: copy('Resizes adjacent panes.', '인접한 영역의 크기를 조절합니다.'),
@@ -222,7 +222,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
     },
     indicator: {
       attributes: [['aria-hidden', 'true'], ['data-zone', '<zone>'], ['data-percentage', '<percentage>']],
-      purpose: copy('Fills the exact percentage without adding another accessible value.', '접근 가능한 값을 중복하지 않고 정확한 백분율만큼 채웁니다.'),
+      purpose: copy('Fills the exact percentage without adding another accessible value.', '기존 접근성 값을 유지하며 정확한 백분율만큼 채웁니다.'),
     },
   }),
   'meter-group': anatomy('meter-group', [
@@ -231,7 +231,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   ], {
     root: {
       attributes: [['role', 'group'], ['data-zone', '<zone>'], ['data-percentage', '<percentage>']],
-      purpose: copy('Names the related set without adding a duplicate aggregate meter.', '중복 집계 meter를 만들지 않고 관련 측정값 묶음에 이름을 제공합니다.'),
+      purpose: copy('Names the related set without adding a duplicate aggregate meter.', '관련 측정값 묶음에 하나의 집계 이름을 제공합니다.'),
     },
     track: {
       attributes: [['role', 'presentation']],
@@ -243,11 +243,11 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
     },
     indicator: {
       attributes: [['aria-hidden', 'true'], ['data-percentage', '<percentage>']],
-      purpose: copy('Draws the current segment without adding another accessible value.', '접근 가능한 값을 중복하지 않고 현재 구간을 그립니다.'),
+      purpose: copy('Draws the current segment without adding another accessible value.', '기존 접근성 값을 유지하며 현재 구간을 그립니다.'),
     },
     list: {
       attributes: [['aria-hidden', 'true']],
-      purpose: copy('Groups the visual legend without repeating the named meter announcements.', '이름이 있는 meter 안내를 반복하지 않도록 시각적 범례를 묶습니다.'),
+      purpose: copy('Groups the visual legend without repeating the named meter announcements.', '이름이 있는 meter 안내와 시각적 범례를 하나의 공유 의미로 묶습니다.'),
     },
     item: {
       attributes: [['data-id', '<id>'], ['aria-hidden', 'true']],
@@ -257,14 +257,14 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   progress: anatomy('progress', ['root', 'track', 'indicator', 'value-text'], {
     root: {
       attributes: [['role', 'progressbar'], ['data-status', '<status>'], ['data-percentage', '<percentage>']],
-      purpose: copy('Exposes determinate completion or an explicitly unknown amount of progress.', '확정된 완료량 또는 진행량을 알 수 없는 상태를 노출합니다.'),
+      purpose: copy('Exposes determinate completion or an explicitly unknown amount of progress.', '확정된 완료량과 진행량 미정 상태를 노출합니다.'),
     },
     track: {
       purpose: copy('Provides the visual path for task completion.', '작업 완료도의 시각적 경로를 제공합니다.'),
     },
     indicator: {
       attributes: [['aria-hidden', 'true'], ['data-status', '<status>'], ['data-percentage', '<percentage>']],
-      purpose: copy('Fills the exact known percentage without duplicating accessible semantics.', '접근성 의미를 중복하지 않고 알려진 정확한 백분율만큼 채웁니다.'),
+      purpose: copy('Fills the exact known percentage without duplicating accessible semantics.', '기존 접근성 의미를 유지하며 알려진 정확한 백분율만큼 채웁니다.'),
     },
   }),
   'month-picker': anatomy('month-picker', ['input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),

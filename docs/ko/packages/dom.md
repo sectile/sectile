@@ -1,6 +1,6 @@
 # 브라우저
 
-`@sectile/dom`은 Sectile의 상호작용 규칙을 실제 브라우저 요소에 연결합니다. 키보드와 포인터 입력, 포커스, 조합 입력, 폼, ARIA 속성, 요소 수명 주기를 처리하지만 마크업이나 시각 스타일은 정하지 않습니다.
+`@sectile/dom`은 Sectile의 상호작용 규칙을 실제 브라우저 요소에 연결합니다. 키보드와 포인터 입력, 포커스, 조합 입력, 폼, ARIA 속성, 요소 수명 주기를 처리합니다. 마크업과 시각 스타일은 응용 프로그램이 정합니다.
 
 ```sh
 pnpm add @sectile/dom
@@ -29,7 +29,7 @@ const element = document.querySelector<HTMLElement>('#newsletter')
 const stateLabel = document.querySelector<HTMLElement>('#newsletter-state')
 
 if (element === null || stateLabel === null) {
-  throw new Error('체크박스 마크업을 찾을 수 없습니다.')
+  throw new Error('체크박스 마크업이 필요합니다.')
 }
 
 const checkbox = createCheckbox({
@@ -84,11 +84,11 @@ const checkbox = createCheckbox({
 })
 ```
 
-제어 상태에서는 상호작용이 제안된 값을 알릴 뿐 응용 프로그램 상태를 몰래 바꾸지 않습니다. 소유자가 값을 수락한 뒤 `update`를 호출해 연결 객체를 동기화합니다. 공통 규칙은 [상태 소유권](/ko/guide/state-ownership)에서 확인할 수 있습니다.
+제어 상태의 상호작용은 제안된 값을 알립니다. 소유자가 값을 수락한 뒤 `update`를 호출해 응용 프로그램 상태와 연결 객체를 동기화합니다. 공통 규칙은 [상태 소유권](/ko/guide/state-ownership)에서 확인할 수 있습니다.
 
 ## 컨트롤러와 속성 반영
 
-상태와 렌더링의 수명 주기를 따로 관리해야 하면 `create*Controller`를 사용합니다. 컨트롤러에는 요소가 필요하지 않습니다. `get*Attributes`와 함께 사용하면 스냅숏을 원하는 DOM 구조에 반영할 수 있습니다.
+상태와 렌더링의 수명 주기를 따로 관리해야 하면 `create*Controller`를 사용합니다. 컨트롤러는 상태만으로 동작하며, `get*Attributes`가 스냅숏을 원하는 DOM 구조에 반영합니다.
 
 ```ts
 import {
@@ -103,7 +103,7 @@ const snapshot = result.value.getSnapshot()
 const attributes = getCheckboxAttributes(snapshot.state, { required: true })
 ```
 
-복합 컴포넌트는 전용 이벤트 변환 함수와 효과 반영 함수도 제공합니다. 사용자 정의 렌더러, 이벤트 위임 시스템, 연결 객체가 요소를 직접 소유할 수 없는 실행 환경에서 이 하위 API를 사용합니다.
+복합 컴포넌트는 전용 이벤트 변환 함수와 효과 반영 함수도 제공합니다. 사용자 정의 렌더러, 이벤트 위임 시스템, 요소 소유권을 상위 계층에서 관리하는 실행 환경에서 이 하위 API를 사용합니다.
 
 ## 브라우저 기본 동작
 
@@ -111,10 +111,10 @@ HTML이 이미 올바른 의미를 제공하는 영역에서는 브라우저 기
 
 - 텍스트 필드는 기본 편집, 선택 영역, 한글을 포함한 IME 조합 입력을 유지합니다.
 - 폼 컨트롤은 지원 범위 안에서 `name`, `value`, `required`, `disabled`, 소속 폼을 반영합니다.
-- 포커스된 요소가 처리해야 하는 키보드 동작을 불필요하게 가로채지 않습니다.
-- 포커스 효과는 별도의 가상 포커스 모델을 만들지 않고 실제 요소를 대상으로 합니다.
+- 키보드 동작의 우선권은 포커스된 요소에 둡니다.
+- 포커스 효과는 실제 요소를 직접 대상으로 합니다.
 
-가능하면 해당 컴포넌트에 맞는 HTML 기본 요소를 사용합니다. 제품 구조상 다른 요소가 필요할 때만 비기본 요소를 사용하고 반환된 ARIA와 데이터 속성을 빠짐없이 적용합니다.
+해당 컴포넌트에 맞는 HTML 기본 요소를 우선 사용합니다. 제품 구조가 다른 요소를 요구하면 반환된 ARIA와 데이터 속성을 모두 적용합니다.
 
 ## 떠 있는 화면
 
@@ -128,7 +128,7 @@ Popover와 Tooltip 연결 객체는 Floating UI를 사용합니다. 기본 오�
 
 ## 가상화 host
 
-`@sectile/dom/virtual`은 모든 `@sectile/virtual` layout strategy를 scroll element에 연결합니다. Connection은 브라우저 scheduling만 소유하며 논리 collection이나 응용 프로그램 markup을 소유하지 않습니다.
+`@sectile/dom/virtual`은 모든 `@sectile/virtual` layout strategy를 scroll element에 연결합니다. Connection은 브라우저 scheduling을 맡고, 논리 collection과 markup은 응용 프로그램이 관리합니다.
 
 ```sh
 pnpm add @sectile/core @sectile/virtual @sectile/dom
@@ -162,15 +162,15 @@ const virtualizer = createVirtualizer({
 })
 ```
 
-Scroll과 resize 알림은 한 animation frame으로 합칩니다. Item rect를 한꺼번에 읽고 strategy에 한 세대의 measurement batch로 적용한 뒤 anchor를 보정하고 다음 plan을 공개합니다. `measure()`는 item 하나가 rect 하나로 대응하지 않는 track grid 등에 명시적인 strategy measurement를 전달합니다. `mutate()`는 domain이나 geometry 변경에도 같은 anchor 보정 경로를 적용하며, `scrollTo()`는 현재 render window 밖에 있는 ID도 요청할 수 있습니다.
+Scroll과 resize 알림은 한 animation frame으로 합칩니다. Item rect를 한꺼번에 읽고 strategy에 한 세대의 measurement batch로 적용한 뒤 anchor를 보정하고 다음 plan을 공개합니다. `measure()`는 여러 rect가 하나의 item을 구성하는 track grid 등에 명시적인 strategy measurement를 전달합니다. `mutate()`는 domain이나 geometry 변경에도 같은 anchor 보정 경로를 적용하며, `scrollTo()`는 현재 render window 밖에 있는 ID도 요청할 수 있습니다.
 
 `createAxisMeasurementResolver()`는 layout plan의 물리 좌표와 일치하도록 `getBoundingClientRect()`로 물리 border-box rect를 읽습니다. Content-box, device-pixel, writing-mode 기반 측정이 필요하면 custom resolver에 전달되는 원래 `ResizeObserverEntry`를 사용합니다. 재활용한 element를 다른 identity에 할당하면 이전 identity에서 대기하던 observation은 폐기합니다.
 
-기본 viewport는 음수가 아닌 물리 `scrollLeft`와 `scrollTop`을 사용합니다. RTL scroller나 사용자 정의 surface의 좌표 모델이 다르면 `readViewport`와 `writeScroll`을 전달합니다.
+기본 viewport는 0 이상의 물리 `scrollLeft`와 `scrollTop`을 사용합니다. RTL scroller나 사용자 정의 surface의 좌표 모델이 다르면 `readViewport`와 `writeScroll`을 전달합니다.
 
 ## 스타일 선택자
 
-DOM 연결 객체는 동작만 제공하고 테마를 포함하지 않습니다. 응용 프로그램 클래스와 반영된 상태 속성으로 스타일을 지정합니다.
+DOM 연결 객체는 동작을 제공합니다. 테마는 응용 프로그램 클래스와 반영된 상태 속성으로 구성합니다.
 
 ```css
 #newsletter {
@@ -202,4 +202,4 @@ const connection = createCheckbox(options)
 const recoverable = tryCreateCheckbox(options)
 ```
 
-브라우저의 `create*` 결과에는 `unwrap`을 다시 적용하지 않습니다.
+브라우저의 `create*`는 바로 사용할 수 있는 연결 객체를 반환합니다.

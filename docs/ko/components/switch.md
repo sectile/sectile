@@ -13,9 +13,9 @@
 
 ### 켜짐
 
-켜진 상태에서 시작하며 이름을 바꾸지 않고 현재 상태를 드러냅니다.
+켜진 상태에서 시작하며 같은 이름으로 현재 상태를 드러냅니다.
 
-<ComponentExample component="switch" scenario="on" title="켜짐" description="켜진 상태에서 시작하며 이름을 바꾸지 않고 현재 상태를 드러냅니다." :index="1" />
+<ComponentExample component="switch" scenario="on" title="켜짐" description="켜진 상태에서 시작하며 같은 이름으로 현재 상태를 드러냅니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -51,7 +51,7 @@ Vue 패키지: `@sectile/vue/switch`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -93,7 +93,7 @@ Vue 패키지: `@sectile/vue/switch`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -126,7 +126,7 @@ Vue 패키지: `@sectile/vue/switch`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -154,7 +154,7 @@ Vue 패키지: `@sectile/vue/switch`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 </dl>

@@ -1,7 +1,7 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Popover
 
-페이지를 막지 않고 실행 요소에 상호작용 가능한 내용을 붙입니다.
+페이지 조작을 유지하며 실행 요소에 상호작용 가능한 내용을 붙입니다.
 
 ## 용법
 
@@ -27,7 +27,7 @@
 
 ## 외부 조작
 
-`closeOnInteractOutside`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. `interactOutsideExclusions`에 넣은 요소는 모달에서도 계속 조작할 수 있고 외부 조작으로 간주하지 않습니다. 조건부로 유지하려면 `interact-outside` 이벤트에서 `preventDefault()`를 호출합니다.
+`closeOnInteractOutside`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. `interactOutsideExclusions`에 넣은 요소는 모달에서도 계속 조작할 수 있으며 외부 조작 판정에서 제외됩니다. 조건부로 유지하려면 `interact-outside` 이벤트에서 `preventDefault()`를 호출합니다.
 
 ```vue
 <PopoverRoot
@@ -150,7 +150,7 @@ Vue 패키지: `@sectile/vue/popover`
 <dt><code>interactOutsideExclusions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다.</p>
+<p>계속 조작할 수 있는 외부 조작 판정 제외 요소 목록입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -239,7 +239,7 @@ Vue 패키지: `@sectile/vue/popover`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>

@@ -52,7 +52,7 @@ Vue 패키지: `@sectile/vue/toolbar`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -127,7 +127,7 @@ Vue 패키지: `@sectile/vue/toolbar`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -160,7 +160,7 @@ Vue 패키지: `@sectile/vue/toolbar`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -279,7 +279,7 @@ type ToolbarInvokeHandler = (value: string) => void
 <tr>
   <td><code class="component-part-token">separator</code></td>
   <td><code>[data-part="separator"]</code></td>
-  <td>동작을 추가하지 않고 관련 그룹을 구분합니다.</td>
+  <td>관련 그룹 사이에 의미 구분선을 표시합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>

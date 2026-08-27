@@ -1,6 +1,6 @@
 # Vue
 
-`@sectile/vue`는 Sectile DOM 의미 체계를 사용하는 스타일 없는 Vue 컴포넌트를 제공합니다. Vue의 모델 규칙을 따르고 접근 가능한 조합형 구성 요소와 안정적인 스타일 경계를 렌더링하되, 레이아웃과 시각 디자인은 응용 프로그램에 맡깁니다.
+`@sectile/vue`는 Sectile DOM 의미 체계를 사용하는 Vue 컴포넌트를 제공합니다. Vue의 모델 규칙을 따르고 접근 가능한 조합형 구성 요소와 안정적인 스타일 경계를 렌더링합니다. 레이아웃과 시각 디자인은 응용 프로그램이 소유합니다.
 
 ```sh
 pnpm add @sectile/vue vue
@@ -14,7 +14,7 @@ import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox'
 
 ## 실행 환경 기본값
 
-`HostProvider`는 별도 래퍼 요소를 렌더링하지 않고 실행 환경 기본값을 하위 컴포넌트에 전달합니다. 일반적으로 응용 프로그램 루트 가까이에 한 번 두고, 방향이나 포털 경계가 다른 하위 영역에서만 중첩해 재정의합니다.
+`HostProvider`는 Context를 통해 실행 환경 기본값을 하위 컴포넌트에 전달합니다. 일반적으로 응용 프로그램 루트 가까이에 한 번 두고, 방향이나 포털 경계가 다른 하위 영역에서 중첩해 재정의합니다.
 
 ```vue
 <script setup lang="ts">
@@ -33,9 +33,9 @@ import { HostProvider } from '@sectile/vue/host-provider'
 
 | Prop | 타입 | 기본값 | 설명 |
 | --- | --- | --- | --- |
-| `direction` | `'ltr' \| 'rtl'` | 상위 값, 없으면 `'ltr'` | 컴포넌트가 소유한 영역과 수평 키보드 탐색에 적용할 읽기 방향입니다. |
-| `portalTarget` | `string \| HTMLElement` | 상위 값, 없으면 `'body'` | 팝업 Portal 파트가 사용할 기본 대상입니다. 각 Portal의 `to`가 있으면 그 값을 우선합니다. |
-| `createId` | `() => string` | 상위 값, 없으면 Vue `useId()` | 서로 연결된 ARIA ID가 공유할 고유 접미사를 만듭니다. 호출할 때마다 SSR에서도 동일한 고유 값을 반환해야 합니다. |
+| `direction` | `'ltr' \| 'rtl'` | 상위 값 또는 기본값 `'ltr'` | 컴포넌트가 소유한 영역과 수평 키보드 탐색에 적용할 읽기 방향입니다. |
+| `portalTarget` | `string \| HTMLElement` | 상위 값 또는 기본값 `'body'` | 팝업 Portal 파트가 사용할 기본 대상입니다. 각 Portal의 `to`가 있으면 그 값을 우선합니다. |
+| `createId` | `() => string` | 상위 값 또는 Vue `useId()` | 서로 연결된 ARIA ID가 공유할 고유 접미사를 만듭니다. 호출할 때마다 SSR에서도 동일한 고유 값을 반환해야 합니다. |
 
 응용 프로그램이 직접 만든 조합형 파트에서는 `useHostDirection`, `useHostPortalTarget`, `useHostId`로 확정된 값을 읽을 수 있습니다. 중첩한 Provider는 생략한 속성만 상위 값을 물려받습니다.
 
@@ -93,7 +93,7 @@ const accepted = ref(false)
 </style>
 ```
 
-컴포넌트에는 시각 CSS가 포함되지 않습니다. 위 스타일은 응용 프로그램 소유이므로 동작을 바꾸지 않고 모두 교체할 수 있습니다.
+시각 CSS는 응용 프로그램이 소유합니다. 위 스타일을 다른 CSS로 교체해도 컴포넌트 동작은 그대로 유지됩니다.
 
 ## 제어 상태와 비제어 상태
 
@@ -109,7 +109,7 @@ const accepted = ref(false)
 <CheckboxRoot :default-value="true" />
 ```
 
-두 소유 방식을 함께 전달하지 않습니다. 제어 컴포넌트는 `update:modelValue`로 제안된 값을 알리고, 부모가 그 값을 받아들일지 결정합니다.
+내부 관리와 외부 관리 가운데 한 가지 소유 방식을 선택합니다. 제어 컴포넌트는 `update:modelValue`로 제안된 값을 알리고, 부모가 그 값을 받아들일지 결정합니다.
 
 마운트된 root의 소유 방식은 고정됩니다. 모델 prop을 `undefined`에서 값으로 바꾸거나, 전달하던 모델 prop을 제거하면 오류입니다. 응용 프로그램이 소유 방식을 의도적으로 바꿀 때는 root를 다시 마운트합니다.
 
@@ -138,11 +138,11 @@ import {
 </template>
 ```
 
-기본 슬롯은 투명한 fragment와 중첩 배열을 탐색한 뒤 정확히 하나의 네이티브 요소 또는 지원 가능한 컴포넌트를 포함해야 합니다. 주석과 공백뿐인 텍스트는 후보에서 제외하되 VNode 트리에는 그대로 남깁니다. 화면에 보이는 텍스트, 요소 없음, 여러 요소는 허용하지 않습니다. Sectile은 채택한 요소까지 이어지는 fragment 경로만 복제하여 key, scoped slot 메타데이터, hydration 구조를 보존합니다.
+기본 슬롯의 유효한 형태는 네이티브 요소 또는 지원 가능한 컴포넌트 하나입니다. Sectile은 투명한 fragment와 중첩 배열을 탐색하고, 주석과 공백뿐인 텍스트는 VNode 트리에 보존합니다. 채택한 요소까지 이어지는 fragment 경로만 복제하므로 key, scoped slot 메타데이터, hydration 구조도 유지됩니다.
 
-자식 속성은 Vue가 한 번만 병합합니다. 기존 class·style과 Sectile 값은 합성되고 두 ref가 모두 유지되며, 충돌하는 role, ARIA 속성, 데이터 속성, 내부 ID는 Sectile 값이 우선합니다. 자식 listener가 먼저 실행되며 `preventDefault()`를 호출하면 해당 Sectile listener는 의미 동작을 적용하지 않습니다.
+자식 속성은 Vue가 한 번만 병합합니다. 기존 class·style과 Sectile 값은 합성되고 두 ref가 모두 유지되며, 충돌하는 role, ARIA 속성, 데이터 속성, 내부 ID는 Sectile 값이 우선합니다. 자식 listener가 먼저 실행되며 `preventDefault()`를 호출하면 자식 listener가 해당 동작의 제어권을 유지합니다.
 
-컴포넌트 자식이 요소 root 하나를 렌더링하면 `$el`을 사용할 수 있습니다. Fragment 또는 multi-root 컴포넌트는 대상 요소에 `$attrs`를 전달하고 그 요소를 명시적으로 expose해야 합니다. 이 계약을 지키지 않으면 겉보기 마크업만 맞고 focus, positioning, collection registration이 끊긴 상태로 마운트하지 않고 오류를 냅니다.
+컴포넌트 자식이 요소 root 하나를 렌더링하면 `$el`을 사용할 수 있습니다. Fragment 또는 multi-root 컴포넌트는 대상 요소에 `$attrs`를 전달하고 그 요소를 명시적으로 expose해야 합니다. 이 계약을 위반하면 마운트 단계에서 즉시 오류를 냅니다.
 
 ```vue
 <script setup lang="ts">
@@ -160,7 +160,7 @@ defineExpose({ element })
 </template>
 ```
 
-Portal 파트는 같은 mount 또는 update tick 안에서 뒤늦게 렌더링되는 대상을 위해 `defer`를 지원합니다. 다음 tick에 생성되는 대상까지 기다리지는 않습니다. `body`나 이미 마운트된 대상을 쓸 때는 `false`로 두면 됩니다. Vue의 [deferred Teleport 문서](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport)도 함께 참고하세요.
+Portal 파트의 `defer`는 같은 mount 또는 update tick 안에서 뒤늦게 렌더링되는 대상을 지원합니다. 탐색 범위는 현재 tick이며, `body`나 이미 마운트된 대상을 쓸 때는 `false`로 두면 됩니다. Vue의 [deferred Teleport 문서](https://vuejs.org/guide/built-ins/teleport.html#deferred-teleport)도 함께 참고하세요.
 
 ## 가상화 collection
 
@@ -242,13 +242,13 @@ const measure = createAxisMeasurementResolver('vertical')
 
 `size="width"`는 cross axis 너비만 고정하므로 item 높이는 content에 따라 달라지고 측정할 수 있습니다. 가로 layout은 보통 `size="height"`를 사용합니다. 크기가 고정된 2차원 region은 `both`, 응용 프로그램이 크기를 소유하면 기본값 `none`을 사용합니다.
 
-`VirtualizerRoot`는 `defaultState`로 초기화한 뒤 현재 layout state를 소유하고, 확정된 state마다 `stateChange`를 보냅니다. Frame 내부 측정 제안을 부모가 먼저 수락하지 않아도 anchor 보정을 끝낼 수 있습니다. Mount된 layout은 슬롯 method로 변경하고, layout 자체를 교체하려면 root를 다시 mount합니다.
+`VirtualizerRoot`는 `defaultState`로 초기화한 뒤 현재 layout state를 소유하고, 확정된 state마다 `stateChange`를 보냅니다. Frame 내부 측정과 anchor 보정은 transient state에서 한 번에 끝냅니다. Mount된 layout은 슬롯 method로 변경하고, layout 자체를 교체하려면 root를 다시 mount합니다.
 
-`strategy`, `measure`, `initialViewport`는 생성 시점 option입니다. Mount된 root에서 바꾸면 경고를 내고 활성 connection은 교체하지 않습니다. `overscan`은 반응형으로 유지됩니다. 완전한 generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. Composable의 `state` ref와 `overscan` source는 반응형이고 strategy와 host integration callback은 connection마다 고정됩니다. SSR plan이 필요하면 결정적인 `initialViewport`를 전달합니다. 생략할 경우 서버 viewport를 추측하지 않고 mount 뒤에 초기 window를 렌더링합니다.
+`strategy`, `measure`, `initialViewport`는 생성 시점 option입니다. Mount된 root는 처음 받은 값으로 활성 connection을 유지하며 변경 요청에는 경고를 냅니다. `overscan`은 반응형으로 유지됩니다. 완전한 generic 타입, 수동 grid-track 측정, 사용자 정의 RTL 좌표, geometry mutation을 응용 프로그램 코드에서 직접 다뤄야 하면 `useVirtualizer`를 사용합니다. Composable의 `state` ref와 `overscan` source는 반응형이고 strategy와 host integration callback은 connection마다 고정됩니다. SSR plan에는 결정적인 `initialViewport`를 전달합니다. 생략하면 mount 뒤에 초기 window를 렌더링합니다.
 
 ## SSR과 hydration 계약
 
-SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택, deferred Select/Toast Teleport, host가 생성한 ID 관계, 열린 상태와 닫힌 상태의 conditional presence, 숨겨진 form control을 검증합니다. 이 시나리오는 Vue mismatch 경고 없이 hydration되고 의도한 동일성, 대상 구조, presence 상태, 네이티브 제출 값을 유지해야 합니다. 기준 목록과 증거 경로는 `packages/vue/testing/hydration-contract.json`에 있습니다.
+SSR 지원 범위는 검증 증거를 기준으로 정합니다. 현재 server-to-client hydration 매트릭스는 중첩 Fragment의 `asChild` 채택, deferred Select/Toast Teleport, host가 생성한 ID 관계, 열린 상태와 닫힌 상태의 conditional presence, 숨겨진 form control을 검증합니다. 이 시나리오는 Vue mismatch 경고 0건과 함께 의도한 동일성, 대상 구조, presence 상태, 네이티브 제출 값을 유지해야 합니다. 기준 목록과 증거 경로는 `packages/vue/testing/hydration-contract.json`에 있습니다.
 
 Dialog, Alert Dialog, Drawer, Popover, Tooltip, Select root는 기본적으로 닫힌 동안에도 Content와, 해당하는 경우 Overlay DOM을 유지합니다. `unmountOnExit`을 지정하면 CSS 닫힘 animation 또는 transition이 끝난 뒤 presence 관리 파트를 제거합니다. Root와 Trigger는 유지되므로 다시 열 수 있습니다. DOM을 다시 만들기 때문에 비제어 form 입력값 같은 DOM 내부 상태도 초기화됩니다.
 
@@ -271,7 +271,7 @@ Root와 구성 요소 슬롯은 현재 의미 상태를 노출합니다. 상호�
 
 폼을 지원하는 컴포넌트는 브라우저의 제출 의미를 유지합니다. 예를 들어 `CheckboxRoot`는 `name`, `form`, `required` 중 하나 때문에 기본 체크박스가 필요할 때 시각적으로 숨긴 입력 요소를 렌더링합니다. 이 요소의 `checked`, `indeterminate`, `required`, `disabled`, 폼 속성은 의미 상태를 따릅니다.
 
-텍스트 입력 컴포넌트는 Vue에서 편집 동작을 다시 만들지 않고 브라우저의 입력, 선택 영역, IME 조합 입력을 유지합니다. `autocomplete`, `inputmode`, `aria-label` 같은 일반 HTML 속성은 공개 Field 구성 요소에 전달합니다.
+텍스트 입력 컴포넌트는 브라우저의 입력, 선택 영역, IME 조합 입력을 그대로 사용합니다. `autocomplete`, `inputmode`, `aria-label` 같은 일반 HTML 속성은 공개 Field 구성 요소에 전달합니다.
 
 ## 스타일 경계
 
@@ -296,7 +296,7 @@ Root와 구성 요소 슬롯은 현재 의미 상태를 노출합니다. 상호�
 
 Vue 컴포넌트는 ARIA 속성, 정규화된 입력, 포커스 효과, 팝업 배치, 기본 요소 동작을 `@sectile/dom`에서 재사용합니다. 설정 과정에서 연결 객체를 만들고, 감시자로 제어 속성을 동기화하며, 렌더링 소유권이 끝나면 리스너를 해제합니다.
 
-Vue는 예시용 래퍼가 아니라 완전한 공개 실행 환경 투영입니다. 저장소 완전성 검사는 모든 공개 Core 컴포넌트 경로에 Vue 증거가 있는지 확인합니다. Vue 테스트는 prop과 controller option의 연결, 모델 변경 제안, 동적 컬렉션 보정, 네이티브 폼 직렬화, SSR ID, hydration, Teleport 소유권을 따로 검증합니다.
+Vue는 Core의 완전한 공개 실행 환경 투영입니다. 저장소 완전성 검사는 모든 공개 Core 컴포넌트 경로에 Vue 증거가 있는지 확인합니다. Vue 테스트는 prop과 controller option의 연결, 모델 변경 제안, 동적 컬렉션 보정, 네이티브 폼 직렬화, SSR ID, hydration, Teleport 소유권을 따로 검증합니다.
 
 Vue 템플릿과 조합형 구성에는 `@sectile/vue`를 사용합니다. Vue 밖에서 마크업을 만들거나 사용자 정의 렌더러가 연결 객체의 수명 주기를 소유해야 하면 `@sectile/dom`을 직접 사용합니다.
 

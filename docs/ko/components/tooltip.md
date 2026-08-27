@@ -13,9 +13,9 @@
 
 ### 처음부터 열림 상태
 
-처음부터 열려 있어도 실행 요소 주변 배치를 밀어내지 않습니다.
+처음부터 열린 도움말을 실행 요소 주변에 겹쳐 표시합니다.
 
-<ComponentExample component="tooltip" scenario="initially-open" title="처음부터 열림 상태" description="처음부터 열려 있어도 실행 요소 주변 배치를 밀어내지 않습니다." :index="1" />
+<ComponentExample component="tooltip" scenario="initially-open" title="처음부터 열림 상태" description="처음부터 열린 도움말을 실행 요소 주변에 겹쳐 표시합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -164,7 +164,7 @@ Vue 패키지: `@sectile/vue/tooltip`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -271,6 +271,6 @@ type TooltipPositionChangeHandler = NonNullable<PopupFactoryOptions['onPositionC
 
 ## 접근성
 
-도움말을 실행 요소의 설명으로 연결하고 도움말 자체에는 포커스를 두지 않습니다.
+도움말을 실행 요소의 설명으로 연결하고 포커스는 실행 요소에 유지합니다.
 
 [관련 WAI-ARIA 패턴](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/)에서 호스트 접근성 규칙을 확인할 수 있습니다.

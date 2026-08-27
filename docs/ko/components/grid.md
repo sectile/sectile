@@ -13,9 +13,9 @@
 
 ### 비활성 항목 끝에서 처음으로 이동
 
-격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다.
+격자 끝에서도 활성 칸을 따라 이동을 이어 갑니다.
 
-<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="격자 끝에서 이동이 이어질 때 사용할 수 없는 칸을 건너뜁니다." :index="1" />
+<ComponentExample component="grid" scenario="disabled-wrap" title="비활성 항목 끝에서 처음으로 이동" description="격자 끝에서도 활성 칸을 따라 이동을 이어 갑니다." :index="1" />
 
 ### 편집 가능
 
@@ -58,7 +58,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -135,7 +135,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -161,7 +161,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -196,7 +196,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -243,7 +243,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -271,7 +271,7 @@ Vue 패키지: `@sectile/vue/grid`
 <dt><code>editCancel</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">페이로드</span><code>string</code></span></div>
-<p>값을 확정하지 않고 편집을 취소할 때 발생합니다.</p>
+<p>편집을 취소하고 기존 값을 유지할 때 발생합니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

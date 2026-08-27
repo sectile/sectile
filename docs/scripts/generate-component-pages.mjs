@@ -113,7 +113,7 @@ function outsideInteractionSection(component, korean = false) {
 
 ## 외부 조작
 
-\`closeOnInteractOutside\`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. \`interactOutsideExclusions\`에 넣은 요소는 모달에서도 계속 조작할 수 있고 외부 조작으로 간주하지 않습니다. 조건부로 유지하려면 \`interact-outside\` 이벤트에서 \`preventDefault()\`를 호출합니다.
+\`closeOnInteractOutside\`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. \`interactOutsideExclusions\`에 넣은 요소는 모달에서도 계속 조작할 수 있으며 외부 조작 판정에서 제외됩니다. 조건부로 유지하려면 \`interact-outside\` 이벤트에서 \`preventDefault()\`를 호출합니다.
 
 \`\`\`vue
 <${root}
@@ -210,9 +210,9 @@ function formDetailsSection(component, korean = false) {
 | \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
 | \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
 
-\`onSubmit\`은 Vue emit이 아니라 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 \`event\`, 구조화된 \`values\`, 원본 \`formData\`, \`submitter\`, 현재 폼 \`state\`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 \`:on-submit="save"\`로 전달합니다. 애플리케이션은 \`values\`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 \`formData\`를 활용할 수 있습니다.
+\`onSubmit\`은 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 \`event\`, 구조화된 \`values\`, 원본 \`formData\`, \`submitter\`, 현재 폼 \`state\`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 \`:on-submit="save"\`로 전달합니다. 애플리케이션은 \`values\`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 \`formData\`를 활용할 수 있습니다.
 
-서버 이슈는 내부 필드 ID 대신 \`path\`로 연결할 수 있습니다. 예: \`{ message: 'Already registered', path: 'email' }\` 또는 \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. \`id\`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 내부 오류 메시지를 노출하지 않고 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 \`mapSubmitError\`에서 명시적으로 변환합니다.
+서버 이슈는 \`path\`로 필드에 연결할 수 있습니다. 예: \`{ message: 'Already registered', path: 'email' }\` 또는 \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. \`id\`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 \`mapSubmitError\`에서 명시적으로 변환합니다.
 
 ### 타입이 지정된 폼
 
@@ -310,7 +310,7 @@ function toastDetailsSection(component, korean = false) {
   if (component.id !== 'toast') return '';
   if (korean) return `### setup에서 호출
 
-<code>useToast()</code>는 <code>ToastProvider</code>의 하위 컴포넌트 setup에서 호출합니다. 반환된 state와 함수는 템플릿이나 이벤트·비동기 함수에서 사용할 수 있습니다. Provider를 선언한 컴포넌트 자체는 Provider의 상위이므로 같은 setup에서 context를 읽을 수 없습니다. 호출하는 컴포넌트를 Provider의 슬롯 하위에 둡니다.
+<code>useToast()</code>는 <code>ToastProvider</code>의 슬롯 하위 컴포넌트 setup에서 호출합니다. 반환된 state와 함수는 템플릿이나 이벤트·비동기 함수에서 사용할 수 있습니다. Context를 사용하는 컴포넌트를 Provider 슬롯 아래에 두면 같은 트리에서 toast 상태와 동작을 공유합니다.
 
 ~~~vue
 <!-- AppShell.vue -->
@@ -344,13 +344,13 @@ async function save() {
 }
 ~~~
 
-Sectile은 요청 함수를 대신 실행하거나 오류를 소비하지 않습니다. pending·성공·실패 문구, 시간, 오류 노출 정책은 애플리케이션이 결정합니다. markup, 아이콘, class, 위치, 모션도 Provider의 compound parts를 조립하는 애플리케이션이 소유합니다.
+애플리케이션이 요청을 실행하고 pending·성공·실패 문구, 시간, 오류 노출 정책을 결정합니다. markup, 아이콘, class, 위치, 모션도 Provider의 compound parts를 조립하는 애플리케이션이 소유합니다.
 
-<code>kind</code>는 미리 정해진 enum이 아니라 사용자 정의 문자열입니다. 생략하거나 빈 문자열이면 <code>info</code>가 되고, 그 외 값은 <code>data-kind</code>까지 그대로 전달됩니다. 기존 접근성 호환성을 위해 정확히 <code>error</code>인 항목만 <code>role="alert"</code>, 나머지는 <code>role="status"</code>를 사용합니다.
+<code>kind</code>는 사용자 정의 문자열입니다. 생략하거나 빈 문자열이면 <code>info</code>가 되고, 그 외 값은 <code>data-kind</code>까지 그대로 전달됩니다. 기존 접근성 호환성을 위해 정확히 <code>error</code>인 항목만 <code>role="alert"</code>, 나머지는 <code>role="status"</code>를 사용합니다.
 
 ### CSS로 직접 스타일링
 
-아이콘이나 별도 설정이 필요 없다면 registry 없이 <code>data-kind</code> 선택자만 사용합니다.
+아이콘과 별도 설정을 생략하는 구성에서는 <code>data-kind</code> 선택자만 사용합니다.
 
 ~~~css
 .toast-item[data-kind='deployment-pending'] {
@@ -364,7 +364,7 @@ Sectile은 요청 함수를 대신 실행하거나 오류를 소비하지 않습
 
 ### class와 아이콘 등록
 
-Sectile 전역 registry가 아니라 애플리케이션의 일반 객체로 kind 표시 정보를 등록합니다. 미등록 값은 명시적인 fallback으로 처리합니다.
+애플리케이션의 일반 객체에 kind 표시 정보를 등록합니다. 미등록 값은 명시적인 fallback으로 처리합니다.
 
 ~~~ts
 // toast-kinds.ts
@@ -1037,7 +1037,7 @@ function scenarioDescription(component, scenario) {
 
 function koScenarioDescription(component, scenario) {
   if (component.id === 'cascade-list' && scenario === 'location') return '지역·국가·도시 열을 한 화면에 펼쳐 두고 목적지를 선택합니다.';
-  if (component.id === 'cascade-list' && scenario === 'disabled') return '사용할 수 없는 가지도 계층에 보여 주고 나머지 항목 사이를 계속 이동합니다.';
+  if (component.id === 'cascade-list' && scenario === 'disabled') return '비활성 가지를 계층에 유지하면서 활성 항목 사이를 이동합니다.';
   if (component.id === 'cascade-list' && scenario === 'controlled') return '계층 탐색은 그대로 제공하면서 선택한 목적지는 부모가 관리합니다.';
   if (component.id === 'form' && scenario === 'profile') return 'Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다.';
   if (component.id === 'form' && scenario === 'notifications') return 'FormField가 공통 메타데이터를 제공하는 Select와 Switch를 함께 사용합니다.';
@@ -1049,12 +1049,12 @@ function koScenarioDescription(component, scenario) {
   if (component.id === 'toolbar' && scenario === 'formatting') return '인라인 텍스트 서식 작업을 자연스러운 가로 순서로 묶습니다.';
   if (component.id === 'toolbar' && scenario === 'vertical') return '편집 화면 옆에 캔버스 도구를 세로로 배치합니다.';
   if (component.id === 'tree-view' && scenario === 'expanded') return '각 폴더의 펼침 상태를 따로 유지하면서 실제 프로젝트 계층을 탐색합니다.';
-  if (component.id === 'tree-view' && scenario === 'multiple') return '폴더 펼침과 선택을 혼동하지 않고 검토할 파일 여러 개를 고릅니다.';
+  if (component.id === 'tree-view' && scenario === 'multiple') return '폴더 펼침 상태를 유지하면서 검토할 파일 여러 개를 선택합니다.';
   if (component.id === 'tree-view' && scenario === 'unavailable') return '비활성화된 항목을 계층에 표시하되 포커스와 선택 대상에서는 제외합니다.';
   if (component.id === 'tree-grid' && scenario === 'expanded') return '하위 응용 프로그램과 기능이 부모 리소스에 어떻게 연결되는지 프로젝트 목록에서 확인합니다.';
   if (component.id === 'tree-grid' && scenario === 'editable') return '행과 열의 키보드 이동을 유지하면서 하위 리소스 담당자를 편집합니다.';
   if (component.id === 'feed' && scenario === 'finite') return '하나의 릴리스에서 발생한 전체 활동 기록을 확인합니다.';
-  if (component.id === 'feed' && scenario === 'load-after') return '읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다.';
+  if (component.id === 'feed' && scenario === 'load-after') return '읽던 위치를 유지하면서 새 배포 활동을 불러옵니다.';
   if (component.id === 'feed' && scenario === 'load-before') return '현재 활동 순서를 유지하면서 이전 릴리스 기록을 이어 붙입니다.';
   if (component.id === 'toast' && scenario === 'automatic') {
     return '잠시 표시한 알림을 자동으로 닫되 사용자가 바로 닫을 수 있는 버튼도 함께 제공합니다.';
@@ -1113,7 +1113,7 @@ function koScenarioTitle(component, scenario) {
   if (component.id === 'meter-group' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'meter-group' && scenario === 'invalid-input') return '잘못된 입력';
   if (component.id === 'progress' && scenario === 'determinate') return '확정된 진행량';
-  if (component.id === 'progress' && scenario === 'indeterminate') return '알 수 없는 진행량';
+  if (component.id === 'progress' && scenario === 'indeterminate') return '진행량 미정';
   if (component.id === 'progress' && scenario === 'complete') return '완료';
   if (component.id === 'progress' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'stepper' && scenario === 'gated-step') return '진행 조건';
@@ -1133,7 +1133,7 @@ function koScenarioTitle(component, scenario) {
   if (component.id === 'toolbar' && scenario === 'formatting') return '가로 도구 막대';
   if (component.id === 'toolbar' && scenario === 'vertical') return '세로 도구 막대';
   if (component.id === 'alert-dialog' && scenario === 'destructive') return '파괴적 작업 확인';
-  if (component.id === 'alert-dialog' && scenario === 'unsaved') return '저장하지 않은 변경';
+  if (component.id === 'alert-dialog' && scenario === 'unsaved') return '미저장 변경';
   if (component.id === 'tree-view' && scenario === 'expanded') return '계층 펼치기';
   if (component.id === 'tree-view' && scenario === 'multiple') return '여러 항목 선택';
   if (component.id === 'tree-view' && scenario === 'unavailable') return '비활성 항목';
@@ -1171,7 +1171,7 @@ const koTerms = Object.freeze({
   collision: '화면 경계 회피', collapsible: '모두 접기 허용', column: '열', commands: '명령 실행', commit: '입력 확정',
   completion: '입력 완료', composition: '한글 조합 입력', compound: '복합 단위', contains: '포함 검색', controlled: '외부 상태 관리',
   coordinate: '좌표', countdown: '남은 시간', crossing: '핸들 교차', current: '현재 항목', cursor: '현재 위치',
-  date: '날짜', decimal: '정확한 소수', deletion: '삭제', destructive: '되돌릴 수 없는 작업 확인', direction: '진행 방향',
+  date: '날짜', decimal: '정확한 소수', deletion: '삭제', destructive: '영구 작업 확인', direction: '진행 방향',
   disabled: '비활성 항목', dismissal: '직접 닫기', display: '표시', draft: '입력 중인 값', duration: '표시 시간',
   dynamic: '동적', edge: '양 끝', editable: '편집 가능', elapsed: '경과 시간', eligibility: '사용 가능 여부',
   ellipsis: '줄임표', endpoint: '양 끝값', environment: '실행 환경 선택', exact: '정확한 값', exponent: '거듭제곱',
@@ -1189,7 +1189,7 @@ const koTerms = Object.freeze({
   nested: '하위 메뉴', non: '비모달', normalization: '입력 정리', notifications: '알림 대기열', off: '꺼짐', on: '켜짐',
   open: '열림 상태', ordered: '순서가 있는', orientation: '배치 방향', outside: '바깥 영역 클릭', page: '페이지',
   pages: '페이지 번호만 표시', parse: '입력 해석', pause: '일시 정지', pending: '요청 대기', percentage: '계산기식 백분율',
-  persistent: '자동으로 닫히지 않는 알림', plain: '일반 텍스트', popup: '팝업 상태', position: '위치', prefix: '앞부분 검색',
+  persistent: '계속 유지되는 알림', plain: '일반 텍스트', popup: '팝업 상태', position: '위치', prefix: '앞부분 검색',
   prefilled: '미리 입력된 값', pressed: '눌림 상태', product: '제품 이동 메뉴', progress: '진행률', projection: '화면 표현',
   quantized: '일정 간격의', queued: '대기 중인', range: '범위', readonly: '읽기 전용', release: '배포 채널',
   replacement: '선택 영역 바꾸기', request: '자료 요청', required: '필수 선택', reset: '초기화', restore: '이전 포커스 복원',
@@ -1198,9 +1198,9 @@ const koTerms = Object.freeze({
   sibling: '현재 페이지 주변', single: '하나만 선택', skills: '기술 태그', slide: '슬라이드', star: '별점', start: '시작',
   state: '상태', step: '증감 간격', stepped: '일정 간격', stopwatch: '스톱워치', strict: '엄격한', synchronization: '목록 동기화',
   target: '목표 시간', temperature: '온도 단위', text: '텍스트', three: '핸들 3개', threshold: '구간 기준값',
-  thumb: '핸들', tick: '단계값', time: '시간', timezone: '시간대 없는', toggle: '선택 상태 전환', token: '태그',
-  trap: '포커스 가두기', tree: '계층', two: '핸들 2개', typeahead: '글자 입력으로 이동', unavailable: '선택할 수 없는',
-  unicode: '유니코드', unit: '단위', unsaved: '저장하지 않은 변경 확인', validated: '입력 검증', validation: '값 검증',
+  thumb: '핸들', tick: '단계값', time: '시간', timezone: '민간 시간', toggle: '선택 상태 전환', token: '태그',
+  trap: '포커스 가두기', tree: '계층', two: '핸들 2개', typeahead: '글자 입력으로 이동', unavailable: '비활성',
+  unicode: '유니코드', unit: '단위', unsaved: '미저장 변경 확인', validated: '입력 검증', validation: '값 검증',
   value: '값', variant: '알림 종류', vector: '값 묶음', verification: '인증 번호', vertical: '세로 방향', visible: '표시',
   wall: '시각', week: '주간 달력', weekdays: '평일만 선택', weekends: '주말 비활성', window: '표시 구간', wrap: '끝에서 처음으로 이동',
   wrapping: '순환 이동', rgba: 'RGBA', hsl: 'HSL', hsv: 'HSV', cmyk: 'CMYK', oklch: 'OKLCH',
@@ -1231,11 +1231,11 @@ const koPhrases = Object.freeze({
   'controlled-range-highlight-and-open': '부모가 관리하는 범위·현재 날짜·열림 상태',
   'reverse-date-selection-normalization': '종료일을 먼저 골라도 올바른 날짜 순서로 정리',
   'single-or-multiple-selection': '하나 또는 여러 항목 선택',
-  'timezone-free-civil-date-time': '시간대에 영향받지 않는 날짜와 시각',
-  'timezone-free-civil-date-time-range': '시간대에 영향받지 않는 날짜·시간 범위',
-  'timezone-free-date-value': '시간대에 영향받지 않는 날짜',
-  'timezone-free-wall-clock-range': '시간대에 영향받지 않는 시각 범위',
-  'timezone-free-wall-clock-value': '시간대에 영향받지 않는 시각',
+  'timezone-free-civil-date-time': '민간 날짜와 시각',
+  'timezone-free-civil-date-time-range': '민간 날짜·시간 범위',
+  'timezone-free-date-value': '민간 날짜',
+  'timezone-free-wall-clock-range': '민간 시각 범위',
+  'timezone-free-wall-clock-value': '민간 시각',
   'two-thumb-range': '핸들 두 개로 고르는 범위',
   'three-thumb-thresholds': '핸들 세 개로 나누는 구간',
 });

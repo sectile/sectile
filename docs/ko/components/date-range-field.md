@@ -1,7 +1,7 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Date Range Field
 
-완성되지 않았거나 잘못된 입력을 유지하면서 두 날짜를 편집합니다.
+입력 초안과 검증 결과를 유지하면서 두 날짜를 편집합니다.
 
 ## 용법
 
@@ -13,9 +13,9 @@
 
 ### 범위 제한
 
-설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
+입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다.
 
-<ComponentExample component="date-range-field" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
+<ComponentExample component="date-range-field" scenario="bounded" title="범위 제한" description="입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -52,7 +52,7 @@ Vue 패키지: `@sectile/vue/date-range-field`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -94,7 +94,7 @@ Vue 패키지: `@sectile/vue/date-range-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -143,7 +143,7 @@ Vue 패키지: `@sectile/vue/date-range-field`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -233,4 +233,4 @@ type DateRangeFieldValueChangeHandler = (value: DateRange | null) => void
 
 ## 접근성
 
-시작과 종료 입력에 각각 이름을 제공하고 양 끝의 오류를 숨기지 않은 하나의 순서 있는 범위로 노출합니다.
+시작과 종료 입력에 각각 이름을 제공하고 양 끝의 오류와 순서 있는 범위를 함께 노출합니다.

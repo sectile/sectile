@@ -1,7 +1,7 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Toast
 
-현재 작업을 막지 않고 짧은 피드백을 순서대로 알립니다.
+현재 작업과 함께 짧은 피드백을 순서대로 알립니다.
 
 ## 용법
 
@@ -11,21 +11,21 @@
 
 <ComponentExample component="toast" scenario="automatic" title="자동 닫힘" description="잠시 표시한 알림을 자동으로 닫되 사용자가 바로 닫을 수 있는 버튼도 함께 제공합니다." :index="0" />
 
-### 자동으로 닫히지 않는 알림
+### 계속 유지되는 알림
 
 사용자가 직접 닫을 때까지 알림을 계속 표시합니다.
 
-<ComponentExample component="toast" scenario="persistent" title="자동으로 닫히지 않는 알림" description="사용자가 직접 닫을 때까지 알림을 계속 표시합니다." :index="1" />
+<ComponentExample component="toast" scenario="persistent" title="계속 유지되는 알림" description="사용자가 직접 닫을 때까지 알림을 계속 표시합니다." :index="1" />
 
 ### 개수 제한
 
-기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
+기존 값을 유지하면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
 
-<ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
+<ComponentExample component="toast" scenario="limited" title="개수 제한" description="기존 값을 유지하면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="2" />
 
 ### setup에서 호출
 
-<code>useToast()</code>는 <code>ToastProvider</code>의 하위 컴포넌트 setup에서 호출합니다. 반환된 state와 함수는 템플릿이나 이벤트·비동기 함수에서 사용할 수 있습니다. Provider를 선언한 컴포넌트 자체는 Provider의 상위이므로 같은 setup에서 context를 읽을 수 없습니다. 호출하는 컴포넌트를 Provider의 슬롯 하위에 둡니다.
+<code>useToast()</code>는 <code>ToastProvider</code>의 슬롯 하위 컴포넌트 setup에서 호출합니다. 반환된 state와 함수는 템플릿이나 이벤트·비동기 함수에서 사용할 수 있습니다. Context를 사용하는 컴포넌트를 Provider 슬롯 아래에 두면 같은 트리에서 toast 상태와 동작을 공유합니다.
 
 ~~~vue
 <!-- AppShell.vue -->
@@ -59,13 +59,13 @@ async function save() {
 }
 ~~~
 
-Sectile은 요청 함수를 대신 실행하거나 오류를 소비하지 않습니다. pending·성공·실패 문구, 시간, 오류 노출 정책은 애플리케이션이 결정합니다. markup, 아이콘, class, 위치, 모션도 Provider의 compound parts를 조립하는 애플리케이션이 소유합니다.
+애플리케이션이 요청을 실행하고 pending·성공·실패 문구, 시간, 오류 노출 정책을 결정합니다. markup, 아이콘, class, 위치, 모션도 Provider의 compound parts를 조립하는 애플리케이션이 소유합니다.
 
-<code>kind</code>는 미리 정해진 enum이 아니라 사용자 정의 문자열입니다. 생략하거나 빈 문자열이면 <code>info</code>가 되고, 그 외 값은 <code>data-kind</code>까지 그대로 전달됩니다. 기존 접근성 호환성을 위해 정확히 <code>error</code>인 항목만 <code>role="alert"</code>, 나머지는 <code>role="status"</code>를 사용합니다.
+<code>kind</code>는 사용자 정의 문자열입니다. 생략하거나 빈 문자열이면 <code>info</code>가 되고, 그 외 값은 <code>data-kind</code>까지 그대로 전달됩니다. 기존 접근성 호환성을 위해 정확히 <code>error</code>인 항목만 <code>role="alert"</code>, 나머지는 <code>role="status"</code>를 사용합니다.
 
 ### CSS로 직접 스타일링
 
-아이콘이나 별도 설정이 필요 없다면 registry 없이 <code>data-kind</code> 선택자만 사용합니다.
+아이콘과 별도 설정을 생략하는 구성에서는 <code>data-kind</code> 선택자만 사용합니다.
 
 ~~~css
 .toast-item[data-kind='deployment-pending'] {
@@ -79,7 +79,7 @@ Sectile은 요청 함수를 대신 실행하거나 오류를 소비하지 않습
 
 ### class와 아이콘 등록
 
-Sectile 전역 registry가 아니라 애플리케이션의 일반 객체로 kind 표시 정보를 등록합니다. 미등록 값은 명시적인 fallback으로 처리합니다.
+애플리케이션의 일반 객체에 kind 표시 정보를 등록합니다. 미등록 값은 명시적인 fallback으로 처리합니다.
 
 ~~~ts
 // toast-kinds.ts
@@ -208,7 +208,7 @@ function useToast(): UseToastReturn
 <dt><code>hotkey</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly string[] | false</code></span><span><span class="component-api-definition__label">기본값</span><code>['F8']</code></span></div>
-<p>알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false면 사용하지 않습니다.</p>
+<p>알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false는 단축키를 해제합니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -269,7 +269,7 @@ function useToast(): UseToastReturn
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -314,7 +314,7 @@ function useToast(): UseToastReturn
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

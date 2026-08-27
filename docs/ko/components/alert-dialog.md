@@ -1,21 +1,21 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Alert Dialog
 
-되돌릴 수 없는 작업을 실행하기 전에 명확한 확인을 받습니다.
+복구 불가능한 작업을 실행하기 전에 명확한 확인을 받습니다.
 
 ## 용법
 
 ### 파괴적 작업 확인
 
-되돌릴 수 없는 작업은 실행 전에 명시적으로 확인합니다.
+복구 불가능한 작업은 실행 전에 명시적으로 확인합니다.
 
-<ComponentExample component="alert-dialog" scenario="destructive" title="파괴적 작업 확인" description="되돌릴 수 없는 작업은 실행 전에 명시적으로 확인합니다." :index="0" />
+<ComponentExample component="alert-dialog" scenario="destructive" title="파괴적 작업 확인" description="복구 불가능한 작업은 실행 전에 명시적으로 확인합니다." :index="0" />
 
-### 저장하지 않은 변경
+### 미저장 변경
 
-저장하지 않은 변경을 버리기 전에 확인합니다.
+저장 전 변경을 버리기 전에 확인합니다.
 
-<ComponentExample component="alert-dialog" scenario="unsaved" title="저장하지 않은 변경" description="저장하지 않은 변경을 버리기 전에 확인합니다." :index="1" />
+<ComponentExample component="alert-dialog" scenario="unsaved" title="미저장 변경" description="저장 전 변경을 버리기 전에 확인합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -25,7 +25,7 @@
 
 ## 외부 조작
 
-`closeOnInteractOutside`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. `interactOutsideExclusions`에 넣은 요소는 모달에서도 계속 조작할 수 있고 외부 조작으로 간주하지 않습니다. 조건부로 유지하려면 `interact-outside` 이벤트에서 `preventDefault()`를 호출합니다.
+`closeOnInteractOutside`로 콘텐츠 밖의 포인터 조작이 컴포넌트를 닫을지 정합니다. `interactOutsideExclusions`에 넣은 요소는 모달에서도 계속 조작할 수 있으며 외부 조작 판정에서 제외됩니다. 조건부로 유지하려면 `interact-outside` 이벤트에서 `preventDefault()`를 호출합니다.
 
 ```vue
 <AlertDialogRoot
@@ -147,7 +147,7 @@ Vue 패키지: `@sectile/vue/alert-dialog`
 <dt><code>interactOutsideExclusions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>계속 조작할 수 있고 외부 조작으로 간주하지 않을 요소 목록입니다.</p>
+<p>계속 조작할 수 있는 외부 조작 판정 제외 요소 목록입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -229,7 +229,7 @@ Vue 패키지: `@sectile/vue/alert-dialog`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>

@@ -13,9 +13,9 @@
 
 ### 포함 검색
 
-앞부분뿐 아니라 검색어가 포함된 모든 항목을 찾습니다.
+검색어가 중간에 들어간 항목까지 모두 찾습니다.
 
-<ComponentExample component="combobox" scenario="contains" title="포함 검색" description="앞부분뿐 아니라 검색어가 포함된 모든 항목을 찾습니다." :index="1" />
+<ComponentExample component="combobox" scenario="contains" title="포함 검색" description="검색어가 중간에 들어간 항목까지 모두 찾습니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -62,7 +62,7 @@ Vue 패키지: `@sectile/vue/combobox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -139,7 +139,7 @@ Vue 패키지: `@sectile/vue/combobox`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -158,7 +158,7 @@ Vue 패키지: `@sectile/vue/combobox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -191,7 +191,7 @@ Vue 패키지: `@sectile/vue/combobox`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -233,7 +233,7 @@ Vue 패키지: `@sectile/vue/combobox`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -389,7 +389,7 @@ type ComboboxAcceptHandler = (value: string) => void
 <tr>
   <td><code class="component-part-token">empty</code></td>
   <td><code>[data-part="empty"]</code></td>
-  <td>일치하는 항목이 없을 때 안내를 표시합니다.</td>
+  <td>검색 결과가 빈 상태일 때 안내를 표시합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>
@@ -402,8 +402,8 @@ type ComboboxAcceptHandler = (value: string) => void
 | --- | --- |
 | <kbd>Arrow Down</kbd> / <kbd>Arrow Up</kbd> | 팝업을 열고 현재 선택 항목을 이동합니다. |
 | <kbd>Enter</kbd> | 현재 선택 항목을 확정합니다. |
-| <kbd>Escape</kbd> | 확정된 값을 바꾸지 않고 팝업을 닫습니다. |
-| <kbd>Text input</kbd> | IME 조합 입력을 방해하지 않고 항목을 검색합니다. |
+| <kbd>Escape</kbd> | 확정된 값을 유지한 채 팝업을 닫습니다. |
+| <kbd>Text input</kbd> | IME 조합 입력을 유지하며 항목을 검색합니다. |
 
 ## 접근성
 

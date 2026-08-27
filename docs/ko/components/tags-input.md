@@ -7,15 +7,15 @@
 
 ### 기술 태그
 
-입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다.
+입력 포커스를 유지하며 기술 태그를 만들거나 지웁니다.
 
-<ComponentExample component="tags-input" scenario="skills" title="기술 태그" description="입력 포커스를 잃지 않고 기술 태그를 만들거나 지웁니다." :index="0" />
+<ComponentExample component="tags-input" scenario="skills" title="기술 태그" description="입력 포커스를 유지하며 기술 태그를 만들거나 지웁니다." :index="0" />
 
 ### 개수 제한
 
-기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
+기존 값을 유지하면서 설정한 항목 수나 화면 표시 개수를 지킵니다.
 
-<ComponentExample component="tags-input" scenario="limited" title="개수 제한" description="기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="1" />
+<ComponentExample component="tags-input" scenario="limited" title="개수 제한" description="기존 값을 유지하면서 설정한 항목 수나 화면 표시 개수를 지킵니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -55,7 +55,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -125,7 +125,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -151,7 +151,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -177,7 +177,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -205,7 +205,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -238,7 +238,7 @@ Vue 패키지: `@sectile/vue/tags-input`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">

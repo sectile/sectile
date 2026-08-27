@@ -66,7 +66,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -192,14 +192,14 @@ Vue 패키지: `@sectile/vue/month-picker`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>referenceDate</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>달력에 선택값이나 강조값이 없을 때 사용할 시간대 없는 기준 날짜입니다.</p>
+<p>달력의 선택값과 강조값을 초기화할 때 사용하는 민간 기준 날짜입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -246,7 +246,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -321,7 +321,7 @@ Vue 패키지: `@sectile/vue/month-picker`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -497,7 +497,7 @@ type MonthPickerPositionChangeHandler = NonNullable<InstanceType<typeof MonthPic
 | <kbd>Arrow keys</kbd> | 연도 격자에서 달 사이를 이동합니다. |
 | <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 이전 또는 다음 연도로 이동합니다. |
 | <kbd>Enter</kbd> / <kbd>Space</kbd> | 강조된 달을 선택합니다. |
-| <kbd>Escape</kbd> | 값을 바꾸지 않고 월 격자를 닫습니다. |
+| <kbd>Escape</kbd> | 현재 값을 유지한 채 월 격자를 닫습니다. |
 
 ## 접근성
 

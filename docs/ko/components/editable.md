@@ -13,9 +13,9 @@
 
 ### 입력 검증
 
-잘못된 편집은 거부하고 마지막으로 확정된 값을 유지합니다.
+검증을 통과한 편집만 확정하고 마지막 확정값을 유지합니다.
 
-<ComponentExample component="editable" scenario="validated" title="입력 검증" description="잘못된 편집은 거부하고 마지막으로 확정된 값을 유지합니다." :index="1" />
+<ComponentExample component="editable" scenario="validated" title="입력 검증" description="검증을 통과한 편집만 확정하고 마지막 확정값을 유지합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -56,7 +56,7 @@ Vue 패키지: `@sectile/vue/editable`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -105,7 +105,7 @@ Vue 패키지: `@sectile/vue/editable`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -131,7 +131,7 @@ Vue 패키지: `@sectile/vue/editable`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -152,7 +152,7 @@ Vue 패키지: `@sectile/vue/editable`
 <dt><code>draft</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span></div>
-<p>아직 확정하지 않은 입력 문자열입니다.</p>
+<p>현재 편집 중인 입력 문자열입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -166,7 +166,7 @@ Vue 패키지: `@sectile/vue/editable`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -279,4 +279,4 @@ type EditableEditingChangeHandler = (editing: boolean) => void
 
 ## 접근성
 
-미리보기와 입력 상태를 구분하고 잘못된 입력은 실제 입력 요소에서 전달합니다.
+미리보기와 입력 상태를 구분하고 검증 오류는 실제 입력 요소에서 전달합니다.

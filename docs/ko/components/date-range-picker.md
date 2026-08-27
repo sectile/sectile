@@ -13,9 +13,9 @@
 
 ### 범위 제한
 
-설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다.
+입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다.
 
-<ComponentExample component="date-range-picker" scenario="bounded" title="범위 제한" description="설정한 최솟값과 최댓값을 벗어난 값은 받지 않습니다." :index="1" />
+<ComponentExample component="date-range-picker" scenario="bounded" title="범위 제한" description="입력값을 설정한 최솟값과 최댓값 범위 안에서 확정합니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -75,7 +75,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -201,14 +201,14 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
 <dt><code>referenceDate</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
-<p>달력에 선택값이나 강조값이 없을 때 사용할 시간대 없는 기준 날짜입니다.</p>
+<p>달력의 선택값과 강조값을 초기화할 때 사용하는 민간 기준 날짜입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -255,7 +255,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
@@ -330,7 +330,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -615,7 +615,7 @@ type DateRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof Date
 | <kbd>Home</kbd> / <kbd>End</kbd> | 한 주의 시작 또는 끝으로 이동합니다. |
 | <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | 한 달 단위로 이동하고, Shift와 함께 누르면 일 년 단위로 이동합니다. |
 | <kbd>Enter</kbd> / <kbd>Space</kbd> | 강조된 날짜를 선택합니다. |
-| <kbd>Escape</kbd> | 다른 날짜를 선택하지 않고 달력을 닫습니다. |
+| <kbd>Escape</kbd> | 현재 날짜를 유지한 채 달력을 닫습니다. |
 
 ## 접근성
 

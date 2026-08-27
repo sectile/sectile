@@ -13,9 +13,9 @@
 
 ### 비활성 항목 선택 항목
 
-사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다.
+비활성 선택지는 표시 상태를 유지하고 나머지 선택지는 계속 조작할 수 있습니다.
 
-<ComponentExample component="checkbox-group" scenario="disabled-choice" title="비활성 항목 선택 항목" description="사용할 수 없는 선택지는 그대로 보여 주되 나머지 선택지는 계속 조작할 수 있습니다." :index="1" />
+<ComponentExample component="checkbox-group" scenario="disabled-choice" title="비활성 항목 선택 항목" description="비활성 선택지는 표시 상태를 유지하고 나머지 선택지는 계속 조작할 수 있습니다." :index="1" />
 
 ### 외부 상태 관리
 
@@ -52,7 +52,7 @@ Vue 패키지: `@sectile/vue/checkbox-group`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -101,7 +101,7 @@ Vue 패키지: `@sectile/vue/checkbox-group`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -127,7 +127,7 @@ Vue 패키지: `@sectile/vue/checkbox-group`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -169,7 +169,7 @@ Vue 패키지: `@sectile/vue/checkbox-group`
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>값을 확인할 수 있지만 바꿀 수 없게 할지 여부입니다.</p>
+<p>값 확인만 허용하는 읽기 전용 상태 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -228,7 +228,7 @@ type CheckboxGroupValueChangeHandler = (value: readonly string[]) => void
 <tr>
   <td><code class="component-part-token">indicator</code></td>
   <td><code>[data-part="indicator"]</code></td>
-  <td>주요 콘텐츠를 가리지 않고 상태나 위치를 표시합니다.</td>
+  <td>주요 콘텐츠와 나란히 상태나 위치를 표시합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 </tbody>

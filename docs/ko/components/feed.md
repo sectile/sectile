@@ -1,7 +1,7 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
 # Feed
 
-읽던 위치를 잃지 않고 새 활동이나 이전 기록을 불러오는 제품 활동 목록을 제공합니다.
+읽던 위치를 유지하며 새 활동이나 이전 기록을 불러오는 제품 활동 목록을 제공합니다.
 
 ## 용법
 
@@ -15,9 +15,9 @@
 
 ### 새 항목 불러오기
 
-읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다.
+읽던 위치를 유지하면서 새 배포 활동을 불러옵니다.
 
-<ComponentExample component="feed" scenario="load-after" title="새 항목 불러오기" description="읽고 있던 위치를 방해하지 않고 새 배포 활동을 불러옵니다." :index="1" />
+<ComponentExample component="feed" scenario="load-after" title="새 항목 불러오기" description="읽던 위치를 유지하면서 새 배포 활동을 불러옵니다." :index="1" />
 
 ### 이전 항목 불러오기
 
@@ -55,7 +55,7 @@ Vue 패키지: `@sectile/vue/feed`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -130,7 +130,7 @@ Vue 패키지: `@sectile/vue/feed`
 <dt><code>asChild</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
-<p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+<p>하나뿐인 자식 요소에 파트 속성을 직접 합칠지 여부입니다.</p>
 </dd>
 </div>
 </dl>
