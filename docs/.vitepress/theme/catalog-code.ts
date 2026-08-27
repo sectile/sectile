@@ -1387,6 +1387,61 @@ function meterSource(scenario: string): string {
   );
 }
 
+function meterGroupSource(scenario: string): string {
+  if (scenario === 'invalid-input') {
+    return `<script setup lang="ts">
+import { tryCreateMeterGroupState } from '@sectile/core/meter-group'
+
+const result = tryCreateMeterGroupState({
+  max: '100',
+  items: [
+    { id: 'documents', value: '70' },
+    { id: 'media', value: '40' },
+  ],
+})
+</script>
+
+<template>
+  <p v-if="!result.ok">Rejected input: {{ result.error.code }}</p>
+</template>`;
+  }
+  const setup = scenario === 'zero-values'
+    ? `const items = [
+  { id: 'documents', label: 'Documents', value: '42' },
+  { id: 'archives', label: 'Archives', value: '0' },
+] as const`
+    : scenario === 'exact-decimal'
+      ? `const items = [
+  { id: 'documents', label: 'Documents', value: '0.1' },
+  { id: 'media', label: 'Media', value: '0.2' },
+] as const`
+      : `const items = [
+  { id: 'documents', label: 'Documents', value: '42' },
+  { id: 'media', label: 'Media', value: '31' },
+  { id: 'archives', label: 'Archives', value: '7' },
+] as const`;
+  const max = scenario === 'exact-decimal' ? '0.6' : '100';
+  return sfc(
+    'MeterGroupIndicator, MeterGroupItem, MeterGroupItemIndicator, MeterGroupItemLabel, MeterGroupItemValue, MeterGroupList, MeterGroupRoot, MeterGroupSegment, MeterGroupTrack, MeterGroupValueText',
+    `  <MeterGroupRoot :items="items" max="${max}" label="Storage capacity">
+    <MeterGroupValueText />
+    <MeterGroupTrack>
+      <MeterGroupSegment v-for="item in items" :key="item.id" :id="item.id">
+        <MeterGroupIndicator />
+      </MeterGroupSegment>
+    </MeterGroupTrack>
+    <MeterGroupList>
+      <MeterGroupItem v-for="item in items" :key="item.id" :id="item.id">
+        <MeterGroupItemIndicator />
+        <MeterGroupItemLabel />
+        <MeterGroupItemValue />
+      </MeterGroupItem>
+    </MeterGroupList>
+  </MeterGroupRoot>`,
+    setup,
+  );
+}
+
 function progressSource(scenario: string): string {
   const attributes = scenario === 'indeterminate'
     ? ''
@@ -1424,6 +1479,12 @@ const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> =
     'threshold-zones': meterSource('threshold-zones'),
     'exact-decimal': meterSource('exact-decimal'),
     'degenerate-range': meterSource('degenerate-range'),
+  }),
+  'meter-group': Object.freeze({
+    'grouped-capacity': meterGroupSource('grouped-capacity'),
+    'zero-values': meterGroupSource('zero-values'),
+    'exact-decimal': meterGroupSource('exact-decimal'),
+    'invalid-input': meterGroupSource('invalid-input'),
   }),
   progress: Object.freeze({
     determinate: progressSource('determinate'),

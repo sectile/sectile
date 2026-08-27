@@ -520,6 +520,15 @@ export {
   type MeterRenderPlan,
 } from './meter.js';
 export {
+  createMeterGroup,
+  tryCreateMeterGroup,
+  type MeterGroupConnection,
+  type MeterGroupControlledValues,
+  type MeterGroupOptions,
+  type MeterGroupRenderPlan,
+  type MeterGroupRenderSegment,
+} from './meter-group.js';
+export {
   createProgress,
   tryCreateProgress,
   type ProgressConnection,

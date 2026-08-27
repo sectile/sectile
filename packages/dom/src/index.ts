@@ -645,6 +645,20 @@ export {
   type MeterValueFormatter,
 } from './meter.js';
 export {
+  createMeterGroup,
+  getMeterGroupRootAttributes,
+  getMeterGroupSegmentAttributes,
+  getMeterGroupTrackAttributes,
+  tryCreateMeterGroup,
+  type MeterGroupAttributeRecord,
+  type MeterGroupConnection,
+  type MeterGroupControlledValues,
+  type MeterGroupOptions,
+  type MeterGroupRootAttributesOptions,
+  type MeterGroupSegmentAttributesOptions,
+  type MeterGroupValueFormatter,
+} from './meter-group.js';
+export {
   createProgress,
   getProgressIndicatorAttributes,
   getProgressNativeAttributes,

@@ -15,6 +15,14 @@ import type { DateTimeRange } from '../dist/date-time-range-picker.js';
 import { DateTimeField } from '../dist/date-time-field.js';
 import type { DateValue } from '../dist/date-field.js';
 import { MenuButtonRoot, MenuRoot } from '../dist/menu.js';
+import {
+  MeterGroupRoot,
+  MeterGroupSegment,
+  type MeterGroupEntry,
+  type MeterGroupRootProps,
+  type MeterGroupRootSlotProps,
+  type MeterGroupSegmentSlotProps,
+} from '../dist/meter-group.js';
 import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '../dist/meter.js';
 import { NumberField, type NumberFieldProps } from '../dist/number-field.js';
 import { SelectRoot } from '../dist/select.js';
@@ -66,6 +74,12 @@ h(MenuButtonRoot, { items: [], open: false });
 h(MeterRoot, { value: '25', min: 0, max: '100', label: 'Quota' });
 // @ts-expect-error Meter value is required.
 h(MeterRoot, {});
+h(MeterGroupRoot, { items: [{ id: 'used', value: '25', label: 'Used' }], max: 100, label: 'Capacity' });
+// @ts-expect-error MeterGroup items are required.
+h(MeterGroupRoot, {});
+h(MeterGroupSegment, { id: 'used' });
+// @ts-expect-error MeterGroup segment id is required.
+h(MeterGroupSegment, {});
 h(DatePickerRoot, { modelValue: date, policies: datePickerPolicies });
 h(NumberField, { policies: numberFieldPolicies });
 h(DateField, { policies: dateFieldPolicies });
@@ -117,11 +131,29 @@ const meterSlot: MeterRootSlotProps = {
   value: '25', min: '0', max: '100', low: '0', high: '100', optimum: '50',
   valueText: '25', percentage: 25, zone: 'optimum',
 };
+const meterGroupEntries: readonly MeterGroupEntry[] = [{ id: 'used', value: 25, label: 'Used' }];
+const meterGroupProps: MeterGroupRootProps = { items: meterGroupEntries, max: '100' };
+const invalidMeterGroupProps: MeterGroupRootProps = {
+  items: meterGroupEntries,
+  // @ts-expect-error MeterGroup has no model ownership API.
+  modelValue: meterGroupEntries,
+};
+const meterGroupSegment: MeterGroupSegmentSlotProps = {
+  id: 'used', label: 'Used', value: '25', valueText: '25 GB', start: '0', end: '25',
+  percentage: 25, startPercentage: 0, endPercentage: 25,
+};
+const meterGroupSlot: MeterGroupRootSlotProps = {
+  segments: [meterGroupSegment], max: '100', total: '25', remaining: '75', percentage: 25,
+  zone: 'optimum', valueText: '25 / 100',
+};
 void spinButtonInputProps;
 void numberFieldProps;
 void meterProps;
 void invalidMeterProps;
 void meterSlot;
+void meterGroupProps;
+void invalidMeterGroupProps;
+void meterGroupSlot;
 void useToast;
 
 declare const toast: UseToastReturn;

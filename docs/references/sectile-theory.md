@@ -3880,6 +3880,14 @@ Progress는 최솟값을 0으로 고정한 읽기 전용 bounded scalar projecti
 
 DOM의 `progressbar` role은 불확정 상태에서 `aria-valuenow`와 값에서 파생된 `aria-valuetext`를 생략한다. native `<progress>` projection도 같은 상태에서 `value`를 생략한다. Terminal은 애니메이션 시간축을 소유하지 않고, 불확정 상태와 폭만 포함하는 안정적인 render plan을 반환한다. 진행 애니메이션, 색상, glyph, 갱신 주기는 host 책임이다.[R29][R30]
 
+## Meter Group
+
+Meter Group은 하나의 양을 여러 독립 범위로 바꾸는 제어가 아니라, 양수인 공용 최대치에 대해 순서가 있는 비음수 측정값을 정확히 분할한 읽기 전용 projection이다. Core는 입력 순서를 유지하면서 각 항목의 누적 시작·끝, 개별 비율, 전체 합계, 잔여 용량을 exact decimal로 계산한다. 합계가 최대치를 넘으면 비율을 다시 맞추거나 값을 자르지 않고 구성을 거부한다. 값이 0인 항목은 정체성과 순서를 유지하지만 길이는 차지하지 않는다.
+
+DOM은 이름이 있는 `group` 안에 항목마다 이름이 있는 `meter`를 둔다. 그룹 자체를 또 하나의 meter나 live region으로 만들지 않으므로 같은 값을 집계와 항목 수준에서 중복 안내하지 않는다. 트랙과 범례 표시는 presentational이며, 각 meter의 DOM 순서는 Core의 항목 순서를 따른다.[R31]
+
+Terminal은 항목과 잔여 용량을 함께 하나의 완전한 partition으로 보고 exact largest-remainder 방식으로 셀을 배분한다. 먼저 각 몫의 바닥값을 배정한 뒤 나머지가 큰 순서로 남은 셀을 하나씩 주며, 동률은 항목 순서로 풀고 잔여 용량은 항상 마지막에 둔다. 따라서 모든 셀은 정확히 한 번 배정되고 값이 0인 항목은 셀을 받지 않는다. 색상, glyph, 범례 배치는 host 책임이다.
+
 ## 참고문헌
 
 [R1] Barbara Liskov and Stephen Zilles. “Programming with Abstract Data Types.” SIGPLAN Symposium on Very High Level Languages, 1974. https://doi.org/10.1145/800233.807045
@@ -3941,3 +3949,5 @@ DOM의 `progressbar` role은 불확정 상태에서 `aria-valuenow`와 값에서
 [R29] W3C WAI. “Communicating Value and Limits for Range Widgets.” https://www.w3.org/WAI/ARIA/apg/practices/range-related-properties/
 
 [R30] WHATWG. “The progress element.” https://html.spec.whatwg.org/multipage/form-elements.html#the-progress-element
+
+[R31] W3C WAI. “WAI-ARIA — group role.” https://www.w3.org/TR/wai-aria-1.3/#group

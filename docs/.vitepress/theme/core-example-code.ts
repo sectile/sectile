@@ -636,6 +636,28 @@ const meter = createMeterState(${input})
 
 console.log(meter.value, meter.ratio, meter.zone)`;
     }
+    case 'meter-group': {
+      const items = scenario === 'zero-values'
+        ? `[{ id: 'documents', value: '42' }, { id: 'archives', value: '0' }]`
+        : scenario === 'exact-decimal'
+          ? `[{ id: 'documents', value: '0.1' }, { id: 'media', value: '0.2' }]`
+          : scenario === 'invalid-input'
+            ? `[{ id: 'documents', value: '70' }, { id: 'media', value: '40' }]`
+            : `[{ id: 'documents', value: '42' }, { id: 'media', value: '31' }, { id: 'archives', value: '7' }]`;
+      const max = scenario === 'exact-decimal' ? '0.6' : '100';
+      if (scenario === 'invalid-input') {
+        return `import { tryCreateMeterGroupState } from '@sectile/core/meter-group'
+
+const result = tryCreateMeterGroupState({ max: '${max}', items: ${items} })
+
+if (!result.ok) console.log(result.error.code)`;
+      }
+      return `import { createMeterGroupState } from '@sectile/core/meter-group'
+
+const group = createMeterGroupState({ max: '${max}', items: ${items} })
+
+console.log(group.segments, group.total, group.remaining, group.zone)`;
+    }
     case 'progress': {
       const input = scenario === 'indeterminate'
         ? `{}`

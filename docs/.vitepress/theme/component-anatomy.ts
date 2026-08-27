@@ -224,6 +224,35 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
       purpose: copy('Fills the exact percentage without adding another accessible value.', '접근 가능한 값을 중복하지 않고 정확한 백분율만큼 채웁니다.'),
     },
   }),
+  'meter-group': anatomy('meter-group', [
+    'root', 'track', 'segment', 'indicator', 'value-text',
+    'list', 'item', 'item-indicator', 'item-label', 'item-value',
+  ], {
+    root: {
+      attributes: [['role', 'group'], ['data-zone', '<zone>'], ['data-percentage', '<percentage>']],
+      purpose: copy('Names the related set without adding a duplicate aggregate meter.', '중복 집계 meter를 만들지 않고 관련 측정값 묶음에 이름을 제공합니다.'),
+    },
+    track: {
+      attributes: [['role', 'presentation']],
+      purpose: copy('Preserves the ordered visual track while its meter children retain semantics.', '하위 meter의 의미를 유지하면서 순서가 있는 시각적 트랙을 제공합니다.'),
+    },
+    segment: {
+      attributes: [['role', 'meter'], ['data-id', '<id>'], ['data-start-percentage', '<percentage>'], ['data-end-percentage', '<percentage>']],
+      purpose: copy('Exposes one named measurement and its exact cumulative offsets.', '이름이 있는 측정값 하나와 정확한 누적 시작·끝 위치를 노출합니다.'),
+    },
+    indicator: {
+      attributes: [['aria-hidden', 'true'], ['data-percentage', '<percentage>']],
+      purpose: copy('Draws the current segment without adding another accessible value.', '접근 가능한 값을 중복하지 않고 현재 구간을 그립니다.'),
+    },
+    list: {
+      attributes: [['aria-hidden', 'true']],
+      purpose: copy('Groups the visual legend without repeating the named meter announcements.', '이름이 있는 meter 안내를 반복하지 않도록 시각적 범례를 묶습니다.'),
+    },
+    item: {
+      attributes: [['data-id', '<id>'], ['aria-hidden', 'true']],
+      purpose: copy('Keeps one legend row keyed to the same Core segment.', '같은 Core 구간을 키로 사용하는 범례 행 하나를 유지합니다.'),
+    },
+  }),
   progress: anatomy('progress', ['root', 'track', 'indicator', 'value-text'], {
     root: {
       attributes: [['role', 'progressbar'], ['data-status', '<status>'], ['data-percentage', '<percentage>']],

@@ -47,6 +47,7 @@ export const scenarioDescriptions = Object.freeze({
   'focus-hover': 'Show the same supporting text from pointer hover and keyboard focus.',
   'follow-focus': 'Move selection together with the active listbox item.',
   formatting: 'Keep a formatting action pressed until the same action is invoked again.',
+  'grouped-capacity': 'Partition one shared capacity into ordered named measurements and explicit remaining space.',
   'fiscal-year': 'Move by year and choose one month from the active fiscal calendar.',
   'gated-step': 'Block forward movement until the current step satisfies its completion rule.',
   'graduation-year': 'Choose one graduation year from a paged year grid.',
@@ -57,6 +58,7 @@ export const scenarioDescriptions = Object.freeze({
   'initially-open': 'Begin open without occupying layout space around the trigger.',
   integer: 'Accept whole-number drafts and expose increment and decrement controls.',
   'invalid-draft': 'Type a quantity directly; leaving an invalid edit restores the last accepted value.',
+  'invalid-input': 'Reject a partition whose exact total exceeds the shared capacity.',
   'iso-date': 'Edit a timezone-free civil date using an ISO-shaped value.',
   length: 'Enter a length and switch between compatible display units.',
   limited: 'Enforce the configured item or visible-notification limit without losing existing values.',
@@ -132,6 +134,7 @@ export const scenarioDescriptions = Object.freeze({
   weekdays: 'Keep every day visible while allowing only weekdays to be selected.',
   week: 'Switch to a focused seven-day view while keeping selection and paging available.',
   wrapping: 'Move from the last slide back to the first and from the first to the last.',
+  'zero-values': 'Keep zero-valued categories in order without assigning them visual capacity.',
 });
 
 export const koScenarioDescriptions = Object.freeze({
@@ -183,6 +186,7 @@ export const koScenarioDescriptions = Object.freeze({
   'focus-hover': '마우스를 올렸을 때와 키보드 포커스를 받았을 때 같은 도움말을 표시합니다.',
   'follow-focus': '목록 상자의 현재 항목이 이동할 때 선택도 함께 옮깁니다.',
   formatting: '같은 작업을 다시 누를 때까지 서식 기능의 눌림 상태를 유지합니다.',
+  'grouped-capacity': '하나의 공용 용량을 순서와 이름이 있는 측정값 및 명시적인 잔여 공간으로 나눕니다.',
   'fiscal-year': '연도를 이동하며 현재 회계연도에서 달 하나를 고릅니다.',
   'gated-step': '현재 단계의 완료 조건을 충족하기 전에는 다음 단계로 이동하지 못하게 합니다.',
   'graduation-year': '페이지로 나뉜 연도 격자에서 졸업 연도 하나를 고릅니다.',
@@ -193,6 +197,7 @@ export const koScenarioDescriptions = Object.freeze({
   'initially-open': '처음부터 열려 있어도 실행 요소 주변 배치를 밀어내지 않습니다.',
   integer: '정수 입력을 받고 증가·감소 제어 기능을 제공합니다.',
   'invalid-draft': '수량을 직접 입력하고 잘못된 값을 입력한 채 벗어나면 마지막으로 확정한 값으로 복구합니다.',
+  'invalid-input': '정확한 합계가 공용 용량을 넘는 구성을 거부합니다.',
   'iso-date': '시간대와 무관한 날짜를 ISO 형태로 입력합니다.',
   length: '길이를 입력하고 호환되는 표시 단위 사이를 전환합니다.',
   limited: '기존 값을 잃지 않으면서 설정한 항목 수나 화면 표시 개수를 지킵니다.',
@@ -268,4 +273,5 @@ export const koScenarioDescriptions = Object.freeze({
   weekdays: '모든 날짜를 보여 주되 평일만 선택할 수 있게 합니다.',
   week: '선택과 날짜 이동 기능을 유지하면서 한 주의 7일만 집중해 봅니다.',
   wrapping: '마지막 슬라이드 다음에는 첫 슬라이드로, 첫 슬라이드 이전에는 마지막으로 이동합니다.',
+  'zero-values': '값이 0인 항목도 순서를 유지하되 시각적 용량은 할당하지 않습니다.',
 });

@@ -1035,6 +1035,28 @@ export {
   type MeterValueFormatter,
 } from './meter.js';
 export {
+  MeterGroupIndicator,
+  MeterGroupItem,
+  MeterGroupItemIndicator,
+  MeterGroupItemLabel,
+  MeterGroupItemValue,
+  MeterGroupList,
+  MeterGroupRoot,
+  MeterGroupSegment,
+  MeterGroupTrack,
+  MeterGroupValueText,
+  type MeterGroupEntry,
+  type MeterGroupItemProps,
+  type MeterGroupItemSlotProps,
+  type MeterGroupPartProps,
+  type MeterGroupRootProps,
+  type MeterGroupRootSlotProps,
+  type MeterGroupSegmentProps,
+  type MeterGroupSegmentSlotProps,
+  type MeterGroupTotalFormatter,
+  type MeterGroupValueFormatter,
+} from './meter-group.js';
+export {
   ProgressIndicator,
   ProgressRoot,
   ProgressTrack,

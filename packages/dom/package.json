@@ -231,6 +231,11 @@
       "import": "./dist/meter.js",
       "default": "./dist/meter.js"
     },
+    "./meter-group": {
+      "types": "./dist/meter-group.d.ts",
+      "import": "./dist/meter-group.js",
+      "default": "./dist/meter-group.js"
+    },
     "./progress": {
       "types": "./dist/progress.d.ts",
       "import": "./dist/progress.js",

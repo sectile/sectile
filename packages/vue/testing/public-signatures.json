@@ -123,6 +123,10 @@
       "types": "dist/meter.d.ts"
     },
     {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts"
+    },
+    {
       "subpath": "./month-picker",
       "types": "dist/month-picker.d.ts"
     },
@@ -271,7 +275,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "69cbf7c61eaf6c7decfd9063bf4456315d367b6986f64af5f332806eda014063",
+  "fingerprint": "e8594d4c2d89d464e0e22365916f40219cc681dde318637f4da50fc251666627",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -371,7 +375,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "e2a3bd7cf9e897599a3291b4dbad77b049b644e874ebb293bb25298395145d6e"
+      "sha256": "752ba159964ecca1749a9cdb1e48f11143cc16a823564310b3a538d08f39607a"
     },
     {
       "path": "dist/internal/date-picker.d.ts",
@@ -400,6 +404,10 @@
     {
       "path": "dist/menubar.d.ts",
       "sha256": "edb65c6ff2c35ec4300aafe692316dd609ccc827e416f7a90e43f176f6cbcd43"
+    },
+    {
+      "path": "dist/meter-group.d.ts",
+      "sha256": "5b8842c92b42683645e70fcb2124c18a779a3d839c9949217a258414adf87353"
     },
     {
       "path": "dist/meter.d.ts",

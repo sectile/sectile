@@ -34,6 +34,7 @@ const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze
   'menu-button': 'MenuButton',
   menubar: 'Menubar',
   meter: 'Meter',
+  'meter-group': 'MeterGroup',
   progress: 'Progress',
   'month-picker': 'MonthPicker',
   'month-range-picker': 'MonthRangePicker',
@@ -118,6 +119,7 @@ form.handleKeyboardInput({ key: 'enter' })`,
     return formExamples[scenario] ?? formExamples['profile'] ?? '';
   }
   if (component === 'pin-input') return pinInputTerminalSource(scenario);
+  if (component === 'meter-group') return meterGroupTerminalSource(scenario);
   const name = terminalIntegrationNames[component];
   if (name === undefined) throw new Error(`Missing exact Terminal example: ${component}/${scenario}`);
   const specifier = `@sectile/terminal/${component}`;
@@ -130,6 +132,34 @@ type State = ReturnType<Control['getSnapshot']>['state']
 export function draw${name}(control: Control, render: (state: State) => string) {
   const frame = render(control.getSnapshot().state)
   process.stdout.write('\\u001B[2J\\u001B[H' + frame)
+}`;
+}
+
+function meterGroupTerminalSource(scenario: string): string {
+  const items = scenario === 'zero-values'
+    ? `[{ id: 'documents', value: '42' }, { id: 'archives', value: '0' }] as const`
+    : scenario === 'exact-decimal'
+      ? `[{ id: 'documents', value: '0.1' }, { id: 'media', value: '0.2' }] as const`
+      : scenario === 'invalid-input'
+        ? `[{ id: 'documents', value: '70' }, { id: 'media', value: '40' }] as const`
+        : `[{ id: 'documents', value: '42' }, { id: 'media', value: '31' }, { id: 'archives', value: '7' }] as const`;
+  const max = scenario === 'exact-decimal' ? '0.6' : '100';
+  if (scenario === 'invalid-input') {
+    return `import { tryCreateMeterGroup } from '@sectile/terminal/meter-group'
+
+const result = tryCreateMeterGroup({ max: '${max}', items: ${items} })
+if (!result.ok) process.stderr.write(result.error.code + '\\n')`;
+  }
+  return `import { createMeterGroup } from '@sectile/terminal/meter-group'
+
+const group = createMeterGroup({ max: '${max}', items: ${items} })
+const plan = group.getRenderPlan(process.stdout.columns ?? 80)
+
+if (plan.ok) {
+  for (const segment of plan.value.segments) {
+    process.stdout.write('█'.repeat(segment.cellCount))
+  }
+  process.stdout.write('░'.repeat(plan.value.remainingCells) + '\\n')
 }`;
 }
 

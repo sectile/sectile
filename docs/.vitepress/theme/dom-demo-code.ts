@@ -988,6 +988,30 @@ const meter = createMeter({
 window.addEventListener('pagehide', () => meter.disconnect(), { once: true })`);
 }
 
+function meterGroupDomSource(scenario: string): string {
+  const items = scenario === 'zero-values'
+    ? `[{ id: 'documents', value: '42' }, { id: 'archives', value: '0' }] as const`
+    : scenario === 'exact-decimal'
+      ? `[{ id: 'documents', value: '0.1' }, { id: 'media', value: '0.2' }] as const`
+      : scenario === 'invalid-input'
+        ? `[{ id: 'documents', value: '70' }, { id: 'media', value: '40' }] as const`
+        : `[{ id: 'documents', value: '42' }, { id: 'media', value: '31' }, { id: 'archives', value: '7' }] as const`;
+  const max = scenario === 'exact-decimal' ? '0.6' : '100';
+  const factory = scenario === 'invalid-input' ? 'tryCreateMeterGroup' : 'createMeterGroup';
+  return example('meter-group', factory, `const root = document.querySelector<HTMLElement>('[data-meter-group]')!
+const track = root.querySelector<HTMLElement>('[data-meter-group-track]')!
+const items = ${items}
+const group = ${factory}({ root, track, max: '${max}', items, label: 'Storage capacity' })
+
+${scenario === 'invalid-input'
+    ? `if (!group.ok) console.log(group.error.code)`
+    : `for (const item of items) {
+  const element = track.querySelector<HTMLElement>(\`[data-id="\${item.id}"]\`)!
+  group.registerSegment(item.id, element, { label: item.id })
+}
+window.addEventListener('pagehide', () => group.disconnect(), { once: true })`}`);
+}
+
 function progressDomSource(scenario: string): string {
   const values = scenario === 'indeterminate'
     ? ''
@@ -1011,6 +1035,7 @@ window.addEventListener('pagehide', () => progress.disconnect(), { once: true })
 export function domExampleCodeFor(component: string, scenario: string): string {
   if (component === 'pin-input') return pinInputDomSource(scenario);
   if (component === 'meter') return meterDomSource(scenario);
+  if (component === 'meter-group') return meterGroupDomSource(scenario);
   if (component === 'progress') return progressDomSource(scenario);
   const source = domDemoCode[component];
   if (source === undefined) throw new Error(`Missing exact DOM example: ${component}/${scenario}`);
