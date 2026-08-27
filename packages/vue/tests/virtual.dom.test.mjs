@@ -384,6 +384,78 @@ test('VirtualSpatial measures DOM size while data owns position and z-order', as
   }
 });
 
+test('declarative virtual collections resolve only the changed keyed window', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const source = Array.from({ length: 1_000 }, (_, index) => ({
+    id: `item-${index}`,
+    x: index % 100,
+    y: Math.floor(index / 100),
+  }));
+  const items = ref(source);
+  const keyCalls = { list: 0, grid: 0, masonry: 0, spatial: 0 };
+  let rectCalls = 0;
+  const key = (scope) => (value) => {
+    keyCalls[scope] += 1;
+    return value.id;
+  };
+  const keys = {
+    list: key('list'),
+    grid: key('grid'),
+    masonry: key('masonry'),
+    spatial: key('spatial'),
+  };
+  const getRect = (value) => {
+    rectCalls += 1;
+    return { x: value.x, y: value.y, width: 1, height: 1 };
+  };
+  const app = createApp({
+    render: () => h('div', [
+      h(VirtualList, {
+        items: items.value,
+        getKey: keys.list,
+        itemSize: 20,
+        initialViewport: { x: 0, y: 0, width: 20, height: 20 },
+      }, { default: ({ key: id }) => id }),
+      h(VirtualGrid, {
+        items: items.value,
+        getKey: keys.grid,
+        itemSize: 20,
+        laneCount: 2,
+        initialViewport: { x: 0, y: 0, width: 40, height: 20 },
+      }, { default: ({ key: id }) => id }),
+      h(VirtualMasonry, {
+        items: items.value,
+        getKey: keys.masonry,
+        itemSize: 20,
+        laneCount: 2,
+        initialViewport: { x: 0, y: 0, width: 40, height: 20 },
+      }, { default: ({ key: id }) => id }),
+      h(VirtualSpatial, {
+        items: items.value,
+        getKey: keys.spatial,
+        getRect,
+        measureSize: false,
+        initialViewport: { x: 0, y: 0, width: 20, height: 20 },
+      }, { default: ({ key: id }) => id }),
+    ]),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    Object.keys(keyCalls).forEach((scope) => { keyCalls[scope] = 0; });
+    rectCalls = 0;
+    items.value = [{ id: 'inserted', x: 0, y: 0 }, ...source];
+    await settle();
+    assert.deepEqual(keyCalls, { list: 1, grid: 1, masonry: 1, spatial: 1 });
+    assert.equal(rectCalls, 1);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue virtualizer owns frame-local state and keeps construction options fixed', async () => {
   const host = document.createElement('div');
   document.body.append(host);

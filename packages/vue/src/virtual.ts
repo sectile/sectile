@@ -25,6 +25,10 @@ import {
 } from 'vue';
 import {
   createSequence,
+  type BoundaryPolicy,
+  type Direction,
+  type MoveResult,
+  type ScanOptions,
   type Sequence,
 } from '@sectile/core/sequence';
 import {
@@ -42,7 +46,7 @@ import {
   type LinearPatch,
 } from '@sectile/virtual/linear-layout';
 import {
-  createTrackGridLayout,
+  createDenseTrackGridLayout,
   trackGridLayoutStrategy,
   type GridRegion,
   type GridTrackMeasurement,
@@ -575,6 +579,14 @@ interface PreparedVirtualList {
   readonly items: readonly unknown[];
   readonly ids: readonly string[];
   readonly getKey: VirtualListKeyResolver<unknown>;
+  readonly change: PreparedVirtualListChange | null;
+  readonly initialIndex: ReadonlyMap<string, number> | null;
+}
+
+interface PreparedVirtualListChange {
+  readonly index: number;
+  readonly deleteCount: number;
+  readonly inserted: readonly string[];
 }
 
 const VirtualListRuntime = defineComponent({
@@ -810,7 +822,7 @@ const VirtualListRuntime = defineComponent({
           {
             ...itemAttributes,
             key: placement.id,
-            ref: itemRef(placement.id),
+            ...(props.itemSize === undefined ? { ref: itemRef(placement.id) } : {}),
             style: [
               itemAttributes['style'],
               itemStyle,
@@ -885,6 +897,8 @@ function prepareVirtualList(
     items,
     ids: Object.freeze(ids),
     getKey,
+    change: null,
+    initialIndex: indexByID,
   });
 }
 
@@ -894,7 +908,17 @@ function updatePreparedVirtualList(
   getKey: VirtualListKeyResolver<unknown>,
 ): PreparedVirtualList {
   if (previous.items === items && previous.getKey === getKey) return previous;
-  if (previous.getKey !== getKey) return prepareVirtualList(items, getKey);
+  if (previous.getKey !== getKey) {
+    const prepared = prepareVirtualList(items, getKey);
+    return Object.freeze({
+      ...prepared,
+      change: Object.freeze({
+        index: 0,
+        deleteCount: previous.ids.length,
+        inserted: prepared.ids,
+      }),
+    });
+  }
   let prefix = 0;
   while (
     prefix < previous.items.length
@@ -911,7 +935,13 @@ function updatePreparedVirtualList(
     )
   ) suffix += 1;
   if (prefix === previous.items.length && prefix === items.length) {
-    return Object.freeze({ items, ids: previous.ids, getKey });
+    return Object.freeze({
+      items,
+      ids: previous.ids,
+      getKey,
+      change: null,
+      initialIndex: previous.initialIndex,
+    });
   }
   const changedEnd = items.length - suffix;
   const inserted: string[] = [];
@@ -924,14 +954,21 @@ function updatePreparedVirtualList(
     inserted.push(id);
     insertedIDs.add(id);
   }
+  const frozenInserted = Object.freeze(inserted);
   return Object.freeze({
     items,
     ids: Object.freeze([
       ...previous.ids.slice(0, prefix),
-      ...inserted,
+      ...frozenInserted,
       ...previous.ids.slice(previous.ids.length - suffix),
     ]),
     getKey,
+    initialIndex: null,
+    change: Object.freeze({
+      index: prefix,
+      deleteCount: previous.ids.length - prefix - suffix,
+      inserted: frozenInserted,
+    }),
   });
 }
 
@@ -992,7 +1029,40 @@ function createPreparedVirtualListSequence(
   if (prepared.ids.length > maxItems) {
     throw new RangeError(`VirtualList received ${prepared.ids.length} items, exceeding maxItems ${maxItems}.`);
   }
-  return createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
+  const index = prepared.initialIndex;
+  if (index === null) return createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
+  let materialized: Sequence<string> | undefined;
+  const complete = (): Sequence<string> => {
+    materialized ??= createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
+    return materialized;
+  };
+  return Object.freeze({
+    size: prepared.ids.length,
+    ids: prepared.ids,
+    maxItems,
+    maxIDCodeUnits: 1_024,
+    at: (position: number): string | null => (
+      Number.isSafeInteger(position) && position >= 0 && position < prepared.ids.length
+        ? prepared.ids[position] ?? null
+        : null
+    ),
+    indexOf: (id: string): number | null => index.get(id) ?? null,
+    contains: (id: string): boolean => index.has(id),
+    compare: (left: string, right: string): -1 | 0 | 1 | null => {
+      const leftIndex = index.get(left);
+      const rightIndex = index.get(right);
+      if (leftIndex === undefined || rightIndex === undefined) return null;
+      return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
+    },
+    project: (predicate: (id: string, position: number) => boolean): Sequence<string> =>
+      complete().project(predicate),
+    move: (
+      current: string,
+      direction: Direction,
+      boundary?: BoundaryPolicy,
+      options?: ScanOptions<string>,
+    ): MoveResult<string> => complete().move(current, direction, boundary, options),
+  });
 }
 
 function isWellFormedVirtualListKey(value: string): boolean {
@@ -1016,30 +1086,18 @@ function reconcileVirtualList(
     estimateSize: VirtualListEstimate<unknown> | undefined;
   }>,
 ): LinearPatch<string> | null {
-  const previous = state.domain.ids;
-  let prefix = 0;
-  while (
-    prefix < previous.length
-    && prefix < next.ids.length
-    && previous[prefix] === next.ids[prefix]
-  ) prefix += 1;
-  if (prefix === previous.length && prefix === next.ids.length) return null;
-  let suffix = 0;
-  while (
-    suffix < previous.length - prefix
-    && suffix < next.ids.length - prefix
-    && previous[previous.length - suffix - 1] === next.ids[next.ids.length - suffix - 1]
-  ) suffix += 1;
-  const inserted = next.ids.slice(prefix, next.ids.length - suffix);
+  const change = next.change;
+  if (change === null) return null;
+  const inserted = change.inserted;
   return Object.freeze({
     patch: Object.freeze({
       type: 'splice',
-      index: prefix,
-      deleteCount: previous.length - prefix - suffix,
-      inserted: Object.freeze(inserted),
+      index: change.index,
+      deleteCount: change.deleteCount,
+      inserted,
     }),
     insertedExtents: Object.freeze(inserted.map((id, localIndex) => {
-      const nextIndex = prefix + localIndex;
+      const nextIndex = change.index + localIndex;
       const previousIndex = state.domain.indexOf(id);
       return (previousIndex === null ? null : state.extents.extentAt(previousIndex))
         ?? initialExtent(props, items[nextIndex], nextIndex);
@@ -1165,8 +1223,10 @@ const VirtualGridRuntime = defineComponent({
         props.maxLaneCount,
         props.laneGap,
       );
-      const active = new Set(next.ids);
-      for (const id of measuredHeights.keys()) if (!active.has(id)) measuredHeights.delete(id);
+      if (measuredHeights.size > 2_048) {
+        const active = new Set(next.ids);
+        for (const id of measuredHeights.keys()) if (!active.has(id)) measuredHeights.delete(id);
+      }
       if (syncVirtualGrid(exposed, next, props.items, props, geometry, measuredHeights)) {
         prepared.value = next;
       }
@@ -1451,32 +1511,47 @@ const VirtualSpatialRuntime = defineComponent({
 
     watch(
       () => [props.items, props.getKey, props.getRect, props.getZIndex] as const,
-      () => {
+      (current, previous) => {
         const exposed = root.value;
         if (exposed === undefined) return;
         const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
-        const spatialItems = createSpatialItems(next, props.items, props);
-        const previousByID = new Map(
-          (exposed.state as SpatialLayoutState<string>).items.map((item) => [item.id, item] as const),
-        );
-        const result = exposed.mutate(Object.freeze({
-          type: 'replace',
-          items: props.measureSize
-            ? Object.freeze(spatialItems.map((item) => {
-                const previous = previousByID.get(item.id);
-                return previous === undefined
-                  ? item
-                  : Object.freeze({
-                      ...item,
-                      rect: Object.freeze({
-                        ...item.rect,
-                        width: previous.rect.width,
-                        height: previous.rect.height,
-                      }),
-                    });
-              }))
-            : spatialItems,
-        }) satisfies SpatialMutation<string>);
+        const state = exposed.state as SpatialLayoutState<string>;
+        const resolverChanged = current[2] !== previous[2] || current[3] !== previous[3];
+        const result = resolverChanged || next.change === null
+          ? resolverChanged
+            ? exposed.mutate(Object.freeze({
+                type: 'replace',
+                items: preserveSpatialMeasurements(
+                  createSpatialItems(next, props.items, props),
+                  state,
+                  props.measureSize,
+                ),
+              }) satisfies SpatialMutation<string>)
+            : null
+          : exposed.mutate(Object.freeze({
+              type: 'patch',
+              patch: Object.freeze({
+                type: 'splice',
+                index: next.change.index,
+                deleteCount: next.change.deleteCount,
+                inserted: next.change.inserted,
+              }),
+              inserted: preserveSpatialMeasurements(
+                createSpatialItemsRange(
+                  next,
+                  props.items,
+                  props,
+                  next.change.index,
+                  next.change.inserted.length,
+                ),
+                state,
+                props.measureSize,
+              ),
+            }) satisfies SpatialMutation<string>);
+        if (result === null) {
+          prepared.value = next;
+          return;
+        }
         if (result.ok) prepared.value = next;
       },
       { flush: 'post' },
@@ -1571,10 +1646,10 @@ function createVirtualGridState(
   geometry: ResponsiveLaneGeometry,
 ): TrackGridLayoutState<string> {
   const rowCount = Math.ceil(prepared.ids.length / geometry.count);
-  return createTrackGridLayout(
+  return createDenseTrackGridLayout(
     createGridRowExtentIndex(rowCount, geometry.count, items, props),
     createUniformExtentIndex(geometry.count, exactExtent(geometry.extent), { maxItems: props.maxItems }),
-    createGridRegions(prepared.ids, geometry.count),
+    prepared.ids,
     {
       rowGap: props.rowGap,
       columnGap: props.laneGap,
@@ -1661,14 +1736,6 @@ function createCollectionExtents(
     : createUniformExtentIndex(prepared.ids.length, shared, { maxItems: props.maxItems });
 }
 
-function createGridRegions(ids: readonly string[], columnCount: number): readonly GridRegion<string>[] {
-  return Object.freeze(ids.map((id, index) => Object.freeze({
-    id,
-    row: Math.floor(index / columnCount),
-    column: index % columnCount,
-  })));
-}
-
 function createGridRowExtents(
   rowCount: number,
   columnCount: number,
@@ -1721,13 +1788,51 @@ function createSpatialItems(
     getZIndex: VirtualSpatialZIndexResolver<unknown>;
   }>,
 ): readonly SpatialItem<string>[] {
-  return Object.freeze(prepared.ids.map((id, index) => Object.freeze({
-    id,
-    rect: Object.freeze({ ...props.getRect(items[index], index) }),
-    zIndex: typeof props.getZIndex === 'number'
-      ? props.getZIndex
-      : props.getZIndex(items[index], index),
-  })));
+  return createSpatialItemsRange(prepared, items, props, 0, prepared.ids.length);
+}
+
+function createSpatialItemsRange(
+  prepared: PreparedVirtualList,
+  items: readonly unknown[],
+  props: Readonly<{
+    getRect: VirtualSpatialRectResolver<unknown>;
+    getZIndex: VirtualSpatialZIndexResolver<unknown>;
+  }>,
+  start: number,
+  count: number,
+): readonly SpatialItem<string>[] {
+  return Object.freeze(Array.from({ length: count }, (_unused, localIndex) => {
+    const index = start + localIndex;
+    return Object.freeze({
+      id: prepared.ids[index]!,
+      rect: Object.freeze({ ...props.getRect(items[index], index) }),
+      zIndex: typeof props.getZIndex === 'number'
+        ? props.getZIndex
+        : props.getZIndex(items[index], index),
+    });
+  }));
+}
+
+function preserveSpatialMeasurements(
+  items: readonly SpatialItem<string>[],
+  state: SpatialLayoutState<string>,
+  preserve: boolean,
+): readonly SpatialItem<string>[] {
+  if (!preserve) return items;
+  return Object.freeze(items.map((item) => {
+    const previousIndex = state.domain.indexOf(item.id);
+    const previous = previousIndex === null ? undefined : state.items[previousIndex];
+    return previous === undefined
+      ? item
+      : Object.freeze({
+          ...item,
+          rect: Object.freeze({
+            ...item.rect,
+            width: previous.rect.width,
+            height: previous.rect.height,
+          }),
+        });
+  }));
 }
 
 function syncVirtualGrid(
@@ -1749,7 +1854,7 @@ function syncVirtualGrid(
   const currentColumn = state.columns.extentAt(0);
   if (
     state.regions.length === prepared.ids.length
-    && state.regions.every((region, index) => region.id === prepared.ids[index])
+    && prepared.change === null
     && state.rows.size === rowCount
     && state.columns.size === geometry.count
     && state.rowGap === props.rowGap
@@ -1782,7 +1887,15 @@ function syncVirtualGrid(
     type: 'splice-tracks', axis: 'row', index: state.rows.size, deleteCount: 0,
     inserted: Object.freeze(rowExtents.slice(state.rows.size)),
   }));
-  mutate(Object.freeze({ type: 'replace-regions', regions: createGridRegions(prepared.ids, geometry.count) }));
+  if (prepared.change !== null) mutate(Object.freeze({
+    type: 'patch-dense-regions',
+    patch: Object.freeze({
+      type: 'splice',
+      index: prepared.change.index,
+      deleteCount: prepared.change.deleteCount,
+      inserted: prepared.change.inserted,
+    }),
+  }));
   if (rowCount < state.rows.size) mutate(Object.freeze({
     type: 'splice-tracks', axis: 'row', index: rowCount, deleteCount: state.rows.size - rowCount, inserted: Object.freeze([]),
   }));
