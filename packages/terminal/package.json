@@ -392,7 +392,6 @@
   },
   "dependencies": {
     "@sectile/core": "workspace:*",
-    "string-width": "8.1.0",
     "@sectile/temporal": "workspace:*"
   },
   "devDependencies": {

@@ -1,10 +1,13 @@
-import stringWidth from 'string-width';
 import type {
   TerminalAppearance,
   TerminalStyleReference,
 } from './appearance.js';
 import { createTerminalAppearance } from './appearance.js';
-import { graphemeSegments } from './internal/grapheme.js';
+import {
+  graphemeSegments,
+  terminalGraphemeWidth,
+  terminalStringWidth,
+} from './internal/grapheme.js';
 
 export type TerminalDimension = number | 'auto' | 'fill';
 export type TerminalAlignment = 'start' | 'center' | 'end' | 'stretch';
@@ -152,6 +155,18 @@ interface Size {
   readonly height: number;
 }
 
+interface TerminalTextWalk {
+  readonly x: number;
+  readonly y: number;
+  readonly height: number;
+  readonly codeUnitOffset: number;
+}
+
+interface TerminalTextVisitor {
+  readonly position?: (x: number, y: number, codeUnitOffset: number) => void;
+  readonly grapheme?: (x: number, y: number, grapheme: string, width: number) => void;
+}
+
 interface BorderCharacters {
   readonly horizontal: string;
   readonly vertical: string;
@@ -204,7 +219,8 @@ export function renderTerminalScreen(
       Array.from({ length: options.columns }, () => ({ text: ' ' }))),
     cursor: null,
   };
-  renderNode(frame, node, { x: 0, y: 0, width: options.columns, height: options.rows }, appearance);
+  const viewport = { x: 0, y: 0, width: options.columns, height: options.rows };
+  renderNode(frame, node, viewport, viewport, appearance);
   return Object.freeze({
     columns: frame.columns,
     rows: frame.rows,
@@ -239,55 +255,63 @@ function renderNode(
   frame: MutableFrame,
   node: TerminalScreenNode,
   rectangle: Rectangle,
+  parentClip: Rectangle,
   appearance: TerminalAppearance,
 ): void {
-  if (rectangle.width <= 0 || rectangle.height <= 0) return;
+  const clip = intersectRectangles(parentClip, rectangle);
+  if (rectangle.width <= 0 || rectangle.height <= 0 || clip.width <= 0 || clip.height <= 0) return;
   if (node.type === 'text') {
-    renderText(frame, node, rectangle);
+    renderText(frame, node, rectangle, clip);
     return;
   }
   if (node.type === 'row' || node.type === 'column') {
-    renderContainer(frame, node, rectangle, appearance);
+    renderContainer(frame, node, rectangle, clip, appearance);
     return;
   }
-  if (node.type === 'box') renderBox(frame, node, rectangle, appearance);
+  if (node.type === 'box') renderBox(frame, node, rectangle, clip, appearance);
 }
 
-function renderText(frame: MutableFrame, node: TerminalTextNode, rectangle: Rectangle): void {
-  let x = rectangle.x;
-  let y = rectangle.y;
-  let codeUnitOffset = 0;
+function renderText(
+  frame: MutableFrame,
+  node: TerminalTextNode,
+  rectangle: Rectangle,
+  clip: Rectangle,
+): void {
   const wrap = node.wrap !== false;
   const cursorOffset = node.cursor?.codeUnitOffset;
   if (cursorOffset !== undefined && (!Number.isSafeInteger(cursorOffset) || cursorOffset < 0)) {
     throw new RangeError('Terminal cursor offset must be a non-negative safe integer.');
   }
 
-  for (const part of graphemeSegments(node.value)) {
-    if (cursorOffset !== undefined && frame.cursor === null && cursorOffset <= codeUnitOffset) {
-      frame.cursor = createFrameCursor(node.cursor, x, y, frame, rectangle, wrap);
-    }
-    const grapheme = part.segment;
-    codeUnitOffset += grapheme.length;
-    if (grapheme === '\n') {
-      x = rectangle.x;
-      y += 1;
-      if (y >= rectangle.y + rectangle.height) break;
-      continue;
-    }
-    const width = Math.max(0, stringWidth(grapheme));
-    if (width === 0) continue;
-    if (x + width > rectangle.x + rectangle.width) {
-      if (!wrap) break;
-      x = rectangle.x;
-      y += 1;
-    }
-    if (y >= rectangle.y + rectangle.height) break;
-    drawGrapheme(frame, x, y, grapheme, width, node.style);
-    x += width;
-  }
-  if (cursorOffset !== undefined && frame.cursor === null && cursorOffset >= codeUnitOffset) {
-    frame.cursor = createFrameCursor(node.cursor, x, y, frame, rectangle, wrap);
+  const layout = walkTerminalText(node.value, rectangle.width, wrap, {
+    position: (x, y, codeUnitOffset) => {
+      if (cursorOffset !== undefined && frame.cursor === null && cursorOffset <= codeUnitOffset) {
+        frame.cursor = createFrameCursor(
+          node.cursor,
+          rectangle.x + x,
+          rectangle.y + y,
+          frame,
+          rectangle,
+          clip,
+          wrap,
+        );
+      }
+    },
+    grapheme: (x, y, grapheme, width) => {
+      if (y >= rectangle.height) return;
+      drawGrapheme(frame, rectangle.x + x, rectangle.y + y, grapheme, width, node.style, clip);
+    },
+  });
+  if (cursorOffset !== undefined && frame.cursor === null && cursorOffset >= layout.codeUnitOffset) {
+    frame.cursor = createFrameCursor(
+      node.cursor,
+      rectangle.x + layout.x,
+      rectangle.y + layout.y,
+      frame,
+      rectangle,
+      clip,
+      wrap,
+    );
   }
 }
 
@@ -295,6 +319,7 @@ function renderContainer(
   frame: MutableFrame,
   node: TerminalRowNode | TerminalColumnNode,
   rectangle: Rectangle,
+  clip: Rectangle,
   appearance: TerminalAppearance,
 ): void {
   const padding = normalizeSpacing(node.padding);
@@ -307,6 +332,7 @@ function renderContainer(
   const mainSizes = distributeMainSizes(
     node.children,
     Math.max(0, availableMain - totalGap),
+    availableCross,
     horizontal,
   );
   const occupied = mainSizes.reduce((sum, size) => sum + size, 0) + totalGap;
@@ -330,7 +356,7 @@ function renderContainer(
     const childRectangle: Rectangle = horizontal
       ? { x: cursor, y: content.y + crossOffset, width: main, height: desiredCross }
       : { x: content.x + crossOffset, y: cursor, width: desiredCross, height: main };
-    renderNode(frame, child, childRectangle, appearance);
+    renderNode(frame, child, childRectangle, clip, appearance);
     cursor += main + distributedGap;
   });
 }
@@ -339,6 +365,7 @@ function renderBox(
   frame: MutableFrame,
   node: TerminalBoxNode,
   rectangle: Rectangle,
+  clip: Rectangle,
   appearance: TerminalAppearance,
 ): void {
   const border = node.border ?? 'single';
@@ -346,7 +373,7 @@ function renderBox(
   const borderSize = hasBorder ? 1 : 0;
   if (hasBorder) {
     const characters = borderCharacters(border, appearance.capabilities.unicode);
-    drawBorder(frame, rectangle, characters, node.borderStyle ?? node.style);
+    drawBorder(frame, rectangle, characters, node.borderStyle ?? node.style, clip);
     if (node.title !== undefined && rectangle.width > 4) {
       const titleStyle = node.borderStyle ?? node.style;
       renderText(frame, terminalText(` ${node.title} `, {
@@ -357,7 +384,7 @@ function renderBox(
         y: rectangle.y,
         width: rectangle.width - 4,
         height: 1,
-      });
+      }, clip);
     }
   }
   if (node.child === undefined) return;
@@ -367,19 +394,24 @@ function renderBox(
     right: padding.right + borderSize,
     bottom: padding.bottom + borderSize,
     left: padding.left + borderSize,
-  }), appearance);
+  }), clip, appearance);
 }
 
 function distributeMainSizes(
   children: readonly TerminalScreenNode[],
   available: number,
+  availableCross: number,
   horizontal: boolean,
 ): readonly number[] {
   const sizes = children.map((child) => {
     const dimension = horizontal ? child.width : child.height;
     if (typeof dimension === 'number') return clampNonNegative(dimension);
     if (dimension === 'fill') return -1;
-    const measured = measureNode(child, available, available);
+    const measured = measureNode(
+      child,
+      horizontal ? available : availableCross,
+      horizontal ? availableCross : available,
+    );
     return horizontal ? measured.width : measured.height;
   });
   const fillCount = sizes.filter((size) => size === -1).length;
@@ -397,12 +429,15 @@ function distributeMainSizes(
 function measureNode(node: TerminalScreenNode, maximumWidth: number, maximumHeight: number): Size {
   if (node.type === 'text') {
     const lines = node.value.split('\n');
-    const width = Math.min(maximumWidth, Math.max(0, ...lines.map((line) => stringWidth(line))));
-    const height = node.wrap === false || width === 0
-      ? Math.min(maximumHeight, lines.length)
-      : Math.min(maximumHeight, lines.reduce((sum, line) =>
-        sum + Math.max(1, Math.ceil(stringWidth(line) / width)), 0));
-    return resolveSize(node, { width, height }, maximumWidth, maximumHeight);
+    const intrinsicWidth = Math.max(0, ...lines.map((line) => terminalStringWidth(line)));
+    const width = resolveDimension(node.width, intrinsicWidth, maximumWidth);
+    const intrinsicHeight = node.wrap === false || width === 0
+      ? lines.length
+      : walkTerminalText(node.value, width, true).height;
+    return {
+      width,
+      height: resolveDimension(node.height, intrinsicHeight, maximumHeight),
+    };
   }
   if (node.type === 'spacer') return resolveSize(node, { width: 0, height: 0 }, maximumWidth, maximumHeight);
   if (node.type === 'box') {
@@ -430,6 +465,44 @@ function measureNode(node: TerminalScreenNode, maximumWidth: number, maximumHeig
         height: children.reduce((sum, size) => sum + size.height, 0) + gap + padding.top + padding.bottom,
       };
   return resolveSize(node, intrinsic, maximumWidth, maximumHeight);
+}
+
+function walkTerminalText(
+  value: string,
+  lineWidth: number,
+  wrap: boolean,
+  visitor: TerminalTextVisitor = {},
+): TerminalTextWalk {
+  let x = 0;
+  let y = 0;
+  let codeUnitOffset = 0;
+  for (const { segment } of graphemeSegments(value)) {
+    visitor.position?.(x, y, codeUnitOffset);
+    codeUnitOffset += segment.length;
+    if (segment === '\n') {
+      x = 0;
+      y += 1;
+      continue;
+    }
+    const width = terminalGraphemeWidth(segment);
+    if (width === 0) continue;
+    if (width > lineWidth) {
+      if (!wrap) break;
+      if (x > 0) {
+        x = 0;
+        y += 1;
+      }
+      continue;
+    }
+    if (x + width > lineWidth) {
+      if (!wrap) break;
+      x = 0;
+      y += 1;
+    }
+    visitor.grapheme?.(x, y, segment, width);
+    x += width;
+  }
+  return Object.freeze({ x, y, height: y + 1, codeUnitOffset });
 }
 
 function resolveSize(
@@ -470,6 +543,7 @@ function createFrameCursor(
   y: number,
   frame: MutableFrame,
   rectangle: Rectangle,
+  clip: Rectangle,
   wrap: boolean,
 ): TerminalFrameCursor {
   const projectedX = wrap && x >= rectangle.x + rectangle.width ? rectangle.x : x;
@@ -478,6 +552,10 @@ function createFrameCursor(
     && projectedX < rectangle.x + rectangle.width
     && projectedY >= rectangle.y
     && projectedY < rectangle.y + rectangle.height
+    && projectedX >= clip.x
+    && projectedX < clip.x + clip.width
+    && projectedY >= clip.y
+    && projectedY < clip.y + clip.height
     && projectedX >= 0
     && projectedX < frame.columns
     && projectedY >= 0
@@ -498,8 +576,10 @@ function drawGrapheme(
   grapheme: string,
   width: number,
   style: TerminalStyleReference | undefined,
+  clip: Rectangle,
 ): void {
-  if (y < 0 || y >= frame.rows || x < 0 || x >= frame.columns) return;
+  if (y < clip.y || y >= clip.y + clip.height || x < clip.x || x + width > clip.x + clip.width) return;
+  if (y < 0 || y >= frame.rows || x < 0 || x + width > frame.columns) return;
   const cell = frame.cells[y]?.[x];
   if (cell === undefined) return;
   cell.text = grapheme;
@@ -519,19 +599,20 @@ function drawBorder(
   rectangle: Rectangle,
   characters: BorderCharacters,
   style: TerminalStyleReference | undefined,
+  clip: Rectangle,
 ): void {
   if (rectangle.width < 2 || rectangle.height < 2) return;
-  drawGrapheme(frame, rectangle.x, rectangle.y, characters.topLeft, 1, style);
-  drawGrapheme(frame, rectangle.x + rectangle.width - 1, rectangle.y, characters.topRight, 1, style);
-  drawGrapheme(frame, rectangle.x, rectangle.y + rectangle.height - 1, characters.bottomLeft, 1, style);
-  drawGrapheme(frame, rectangle.x + rectangle.width - 1, rectangle.y + rectangle.height - 1, characters.bottomRight, 1, style);
+  drawGrapheme(frame, rectangle.x, rectangle.y, characters.topLeft, 1, style, clip);
+  drawGrapheme(frame, rectangle.x + rectangle.width - 1, rectangle.y, characters.topRight, 1, style, clip);
+  drawGrapheme(frame, rectangle.x, rectangle.y + rectangle.height - 1, characters.bottomLeft, 1, style, clip);
+  drawGrapheme(frame, rectangle.x + rectangle.width - 1, rectangle.y + rectangle.height - 1, characters.bottomRight, 1, style, clip);
   for (let x = rectangle.x + 1; x < rectangle.x + rectangle.width - 1; x += 1) {
-    drawGrapheme(frame, x, rectangle.y, characters.horizontal, 1, style);
-    drawGrapheme(frame, x, rectangle.y + rectangle.height - 1, characters.horizontal, 1, style);
+    drawGrapheme(frame, x, rectangle.y, characters.horizontal, 1, style, clip);
+    drawGrapheme(frame, x, rectangle.y + rectangle.height - 1, characters.horizontal, 1, style, clip);
   }
   for (let y = rectangle.y + 1; y < rectangle.y + rectangle.height - 1; y += 1) {
-    drawGrapheme(frame, rectangle.x, y, characters.vertical, 1, style);
-    drawGrapheme(frame, rectangle.x + rectangle.width - 1, y, characters.vertical, 1, style);
+    drawGrapheme(frame, rectangle.x, y, characters.vertical, 1, style, clip);
+    drawGrapheme(frame, rectangle.x + rectangle.width - 1, y, characters.vertical, 1, style, clip);
   }
 }
 
@@ -561,6 +642,19 @@ function insetRectangle(rectangle: Rectangle, spacing: TerminalSpacing): Rectang
     y: rectangle.y + spacing.top,
     width: Math.max(0, rectangle.width - spacing.left - spacing.right),
     height: Math.max(0, rectangle.height - spacing.top - spacing.bottom),
+  };
+}
+
+function intersectRectangles(left: Rectangle, right: Rectangle): Rectangle {
+  const x = Math.max(left.x, right.x);
+  const y = Math.max(left.y, right.y);
+  const rightEdge = Math.min(left.x + left.width, right.x + right.width);
+  const bottomEdge = Math.min(left.y + left.height, right.y + right.height);
+  return {
+    x,
+    y,
+    width: Math.max(0, rightEdge - x),
+    height: Math.max(0, bottomEdge - y),
   };
 }
 

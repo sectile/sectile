@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
-import stringWidth from 'string-width';
+import { terminalStringWidth } from '../dist/internal/grapheme.js';
 import {
   applyTerminalTextInput,
   removeLastGrapheme,
@@ -102,7 +102,13 @@ test('TTY keyboard preserves a pre-existing flowing and raw stream', () => {
 });
 
 test('terminal layout fits text by rendered Unicode width', () => {
-  assert.equal(stringWidth(fitTerminalText('  · 한글 입력', 20)), 20);
-  assert.equal(stringWidth(fitTerminalText('  · Design system', 20)), 20);
-  assert.equal(stringWidth(fitTerminalText('한글 입력이 아주 긴 경우', 10)), 10);
+  assert.equal(terminalStringWidth('ASCII'), 5);
+  assert.equal(terminalStringWidth('한글'), 4);
+  assert.equal(terminalStringWidth('e\u0301'), 1);
+  assert.equal(terminalStringWidth('👨‍👩‍👧‍👦'), 2);
+  assert.equal(terminalStringWidth('\u0301'), 0);
+  assert.equal(terminalStringWidth('！'), 2);
+  assert.equal(terminalStringWidth(fitTerminalText('  · 한글 입력', 20)), 20);
+  assert.equal(terminalStringWidth(fitTerminalText('  · Design system', 20)), 20);
+  assert.equal(terminalStringWidth(fitTerminalText('한글 입력이 아주 긴 경우', 10)), 10);
 });

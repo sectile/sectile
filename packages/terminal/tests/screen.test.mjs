@@ -102,6 +102,37 @@ test('screen wraps a caret at the viewport edge and hides it when clipping remov
   assert.equal(clipped.cursor.visible, false);
 });
 
+test('screen measures wrapped wide graphemes with the same packing used to render them', () => {
+  const frame = renderTerminalScreen(
+    terminalColumn([
+      terminalText('漢字語', { width: 3 }),
+      terminalText('X'),
+    ], { width: 3 }),
+    { columns: 3, rows: 4 },
+  );
+
+  assert.deepEqual(serializeTerminalFrame(frame), [
+    '漢 ',
+    '字 ',
+    '語 ',
+    'X  ',
+  ]);
+});
+
+test('screen clips oversized descendants to every ancestor rectangle', () => {
+  const frame = renderTerminalScreen(
+    terminalRow([
+      terminalRow([
+        terminalText('ABCDEFGHIJ', { width: 10 }),
+      ], { width: 5 }),
+      terminalText('R', { width: 5 }),
+    ]),
+    { columns: 10, rows: 1 },
+  );
+
+  assert.deepEqual(serializeTerminalFrame(frame), ['ABCDER    ']);
+});
+
 test('node capability detection respects NO_COLOR and explicit FORCE_COLOR', () => {
   const output = { isTTY: true, write() {}, getColorDepth: () => 24 };
   assert.equal(detectTerminalCapabilities(output, { NO_COLOR: '1' }).colorLevel, 0);
