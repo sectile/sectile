@@ -52,6 +52,23 @@ test('DOM virtualizer discards queued measurements when an element is recycled',
   connection.disconnect();
 });
 
+test('DOM virtualizer publishes the visible range in the scroll event', () => {
+  let queryCalls = 0;
+  const fixture = createFixture({
+    tryQuery: (state) => {
+      queryCalls += 1;
+      return success(plan(state));
+    },
+  });
+  const connection = createVirtualizer(fixture.options);
+
+  fixture.options.root.listeners.get('scroll')();
+
+  assert.equal(queryCalls, 2);
+  assert.equal(fixture.options.root.frame, null);
+  connection.disconnect();
+});
+
 test('axis measurement resolver uses the physical border-box rectangle', () => {
   const element = new FakeElement({ width: 120, height: 48 });
   const entry = {
@@ -89,7 +106,7 @@ function createFixture(overrides = {}) {
   const state = Object.freeze({ generation: 0 });
   const strategy = {
     kind: 'test',
-    tryQuery: (value) => success(plan(value)),
+    tryQuery: overrides.tryQuery ?? ((value) => success(plan(value))),
     tryMeasure: overrides.tryMeasure ?? ((value) => mutation(value)),
     tryMutate: (value) => mutation(value),
     tryScrollTarget: () => success({ x: 0, y: 0 }),

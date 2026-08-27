@@ -212,7 +212,7 @@ class DOMVirtualizer<
     this.#onError = options.onError;
     this.#plan = unwrap(this.#query(this.#state, this.#overscan));
     this.#handleScroll = (): void => {
-      this.refresh();
+      this.#publishCurrent();
     };
     this.#rootObserver = this.#environment.createResizeObserver((): void => {
       this.refresh();
