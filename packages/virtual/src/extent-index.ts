@@ -37,10 +37,17 @@ export interface ExtentIndex {
   move(from: number, to: number, count?: number): VirtualResult<ExtentIndex>;
 }
 
-type Node = Leaf | Branch;
+type Node = Leaf | Run | Branch;
 interface Leaf {
   readonly kind: 'leaf';
   readonly entries: readonly Extent[];
+  readonly size: number;
+  readonly sum: number;
+  readonly height: 1;
+}
+interface Run {
+  readonly kind: 'run';
+  readonly entry: Extent;
   readonly size: number;
   readonly sum: number;
   readonly height: 1;
@@ -52,17 +59,6 @@ interface Branch {
   readonly size: number;
   readonly sum: number;
   readonly height: number;
-}
-
-interface UniformOverride {
-  readonly index: number;
-  readonly extent: Extent;
-  readonly delta: number;
-}
-
-interface UniformStore {
-  readonly overrides: readonly UniformOverride[];
-  readonly prefixDeltas: readonly number[];
 }
 
 const LEAF_SIZE = 64;
@@ -126,233 +122,7 @@ export function tryCreateUniformExtentIndex(
   }
   const validated = validateExtent(extent);
   if (!validated.ok) return validated;
-  return ok(createUniformIndex(size, validated.value, maxItems, createUniformStore([])));
-}
-
-function createUniformIndex(
-  size: number,
-  baseExtent: Extent,
-  maxItems: number,
-  store: UniformStore,
-): ExtentIndex {
-  const baseValue = valueOf(baseExtent);
-  const totalDelta = store.prefixDeltas[store.prefixDeltas.length - 1] ?? 0;
-  const offset = (index: number): number | null => {
-    if (!Number.isSafeInteger(index) || index < 0 || index > size) return null;
-    const overrideEnd = uniformLowerBound(store.overrides, index);
-    return (baseValue * index) + store.prefixDeltas[overrideEnd]!;
-  };
-  const at = (index: number): Extent | null => {
-    if (!Number.isSafeInteger(index) || index < 0 || index >= size) return null;
-    const position = uniformLowerBound(store.overrides, index);
-    const override = store.overrides[position];
-    return override?.index === index ? override.extent : baseExtent;
-  };
-  const locate = (value: number): ExtentLocation | null => {
-    const totalExtent = (baseValue * size) + totalDelta;
-    if (size === 0 || !Number.isFinite(value) || value < 0 || value >= totalExtent) return null;
-    let low = 0;
-    let high = size - 1;
-    while (low < high) {
-      const middle = low + Math.ceil((high - low) / 2);
-      const middleOffset = offset(middle)!;
-      if (middleOffset <= value) low = middle;
-      else high = middle - 1;
-    }
-    const itemExtent = at(low)!;
-    const itemOffset = offset(low)!;
-    return Object.freeze({
-      index: low,
-      itemOffset,
-      offsetWithin: value - itemOffset,
-      extent: itemExtent,
-    });
-  };
-  return Object.freeze({
-    size,
-    totalExtent: (baseValue * size) + totalDelta,
-    maxItems,
-    extentAt: at,
-    slice: (start: number, end: number): readonly Extent[] | null => {
-      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > size) return null;
-      const output = Array.from({ length: end - start }, () => baseExtent);
-      let position = uniformLowerBound(store.overrides, start);
-      while (position < store.overrides.length) {
-        const override = store.overrides[position]!;
-        if (override.index >= end) break;
-        output[override.index - start] = override.extent;
-        position += 1;
-      }
-      return Object.freeze(output);
-    },
-    offsetAt: offset,
-    indexAtOffset: (value: number): number | null => locate(value)?.index ?? null,
-    locateOffset: locate,
-    update: (updates: readonly ExtentUpdate[]): VirtualResult<ExtentIndex> => (
-      updateUniformIndex(size, baseExtent, maxItems, store, updates)
-    ),
-    splice: (
-      start: number,
-      deleteCount: number,
-      inserted: readonly Extent[] = [],
-    ): VirtualResult<ExtentIndex> => (
-      spliceUniformIndex(size, baseExtent, maxItems, store, start, deleteCount, inserted)
-    ),
-    move: (from: number, to: number, count = 1): VirtualResult<ExtentIndex> => (
-      moveUniformIndex(size, baseExtent, maxItems, store, from, to, count)
-    ),
-  });
-}
-
-function updateUniformIndex(
-  size: number,
-  baseExtent: Extent,
-  maxItems: number,
-  store: UniformStore,
-  updates: readonly ExtentUpdate[],
-): VirtualResult<ExtentIndex> {
-  const byIndex = new Map(store.overrides.map((override) => [override.index, override.extent]));
-  for (const update of updates) {
-    if (!Number.isSafeInteger(update.index) || update.index < 0 || update.index >= size) {
-      return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update index is outside the domain.', {
-        index: update.index,
-        size,
-      });
-    }
-    const validated = validateExtent(update.extent);
-    if (!validated.ok) return validated;
-    if (sameExtent(baseExtent, validated.value)) byIndex.delete(update.index);
-    else byIndex.set(update.index, validated.value);
-  }
-  return ok(createUniformIndex(size, baseExtent, maxItems, createUniformStore(
-    [...byIndex].sort(([left], [right]) => left - right).map(([index, extent]) => ({ index, extent })),
-    baseExtent,
-  )));
-}
-
-function spliceUniformIndex(
-  size: number,
-  baseExtent: Extent,
-  maxItems: number,
-  store: UniformStore,
-  start: number,
-  deleteCount: number,
-  inserted: readonly Extent[],
-): VirtualResult<ExtentIndex> {
-  if (
-    !Number.isSafeInteger(start)
-    || !Number.isSafeInteger(deleteCount)
-    || start < 0
-    || deleteCount < 0
-    || start > size
-    || deleteCount > size - start
-  ) {
-    return fail('transition-rejection', 'extent-index-splice-invalid', 'Extent splice range is invalid.', {
-      start,
-      deleteCount,
-      size,
-    });
-  }
-  const nextSize = size - deleteCount + inserted.length;
-  if (nextSize > maxItems) {
-    return fail('resource-rejection', 'extent-index-ceiling-exceeded', 'Extent splice exceeds maxItems.', {
-      size: nextSize,
-      maxItems,
-    });
-  }
-  const validated = validateExtents(inserted);
-  if (!validated.ok) return validated;
-  const shift = inserted.length - deleteCount;
-  const next: { readonly index: number; readonly extent: Extent }[] = [];
-  for (const override of store.overrides) {
-    if (override.index < start) next.push(override);
-    else if (override.index >= start + deleteCount) {
-      next.push({ index: override.index + shift, extent: override.extent });
-    }
-  }
-  for (let index = 0; index < validated.value.length; index += 1) {
-    const extent = validated.value[index]!;
-    if (!sameExtent(baseExtent, extent)) next.push({ index: start + index, extent });
-  }
-  next.sort((left, right) => left.index - right.index);
-  return ok(createUniformIndex(nextSize, baseExtent, maxItems, createUniformStore(next, baseExtent)));
-}
-
-function moveUniformIndex(
-  size: number,
-  baseExtent: Extent,
-  maxItems: number,
-  store: UniformStore,
-  from: number,
-  to: number,
-  count: number,
-): VirtualResult<ExtentIndex> {
-  if (
-    !Number.isSafeInteger(from)
-    || !Number.isSafeInteger(to)
-    || !Number.isSafeInteger(count)
-    || from < 0
-    || count < 0
-    || from > size
-    || count > size - from
-    || to < 0
-    || to > size - count
-  ) {
-    return fail(
-      'transition-rejection',
-      'extent-index-move-invalid',
-      'Extent move must identify a valid source and post-removal destination.',
-      { from, to, count, size },
-    );
-  }
-  if (count === 0 || from === to || store.overrides.length === 0) {
-    return ok(createUniformIndex(size, baseExtent, maxItems, store));
-  }
-  const next = store.overrides.map((override) => {
-    if (override.index >= from && override.index < from + count) {
-      return { index: to + override.index - from, extent: override.extent };
-    }
-    const afterRemoval = override.index < from ? override.index : override.index - count;
-    return {
-      index: afterRemoval >= to ? afterRemoval + count : afterRemoval,
-      extent: override.extent,
-    };
-  }).sort((left, right) => left.index - right.index);
-  return ok(createUniformIndex(size, baseExtent, maxItems, createUniformStore(next, baseExtent)));
-}
-
-function createUniformStore(
-  entries: readonly { readonly index: number; readonly extent: Extent }[],
-  baseExtent?: Extent,
-): UniformStore {
-  const baseValue = baseExtent === undefined ? 0 : valueOf(baseExtent);
-  let sum = 0;
-  const prefixDeltas = [0];
-  const overrides = entries.map((entry) => {
-    const override = Object.freeze({
-      index: entry.index,
-      extent: entry.extent,
-      delta: valueOf(entry.extent) - baseValue,
-    });
-    sum += override.delta;
-    prefixDeltas.push(sum);
-    return override;
-  });
-  return Object.freeze({
-    overrides: Object.freeze(overrides),
-    prefixDeltas: Object.freeze(prefixDeltas),
-  });
-}
-
-function uniformLowerBound(overrides: readonly UniformOverride[], index: number): number {
-  let low = 0;
-  let high = overrides.length;
-  while (low < high) {
-    const middle = low + Math.floor((high - low) / 2);
-    if (overrides[middle]!.index < index) low = middle + 1;
-    else high = middle;
-  }
-  return low;
+  return ok(createIndex(size === 0 ? null : run(validated.value, size), maxItems));
 }
 
 function createIndex(root: Node | null, maxItems: number): ExtentIndex {
@@ -383,10 +153,8 @@ function updateIndex(
   updates: readonly ExtentUpdate[],
 ): VirtualResult<ExtentIndex> {
   const size = root?.size ?? 0;
-  let strictlyIncreasing = true;
-  const indices: number[] = [];
-  const extents: Extent[] = [];
-  let previousIndex = -1;
+  const changes: [number, Extent][] = [];
+  let ordered = true;
   for (const update of updates) {
     if (!Number.isSafeInteger(update.index) || update.index < 0 || update.index >= size) {
       return fail('transition-rejection', 'extent-index-update-invalid', 'Extent update index is outside the domain.', {
@@ -396,28 +164,11 @@ function updateIndex(
     }
     const validated = validateExtent(update.extent);
     if (!validated.ok) return validated;
-    if (update.index <= previousIndex) strictlyIncreasing = false;
-    indices.push(update.index);
-    extents.push(validated.value);
-    previousIndex = update.index;
+    if (changes.length > 0 && update.index <= changes[changes.length - 1]![0]) ordered = false;
+    changes.push([update.index, validated.value]);
   }
-  if (indices.length === 0 || root === null) return ok(createIndex(root, maxItems));
-  if (!strictlyIncreasing) {
-    const byIndex = new Map<number, Extent>();
-    for (let update = 0; update < indices.length; update += 1) {
-      byIndex.set(indices[update]!, extents[update]!);
-    }
-    const sorted = [...byIndex].sort(([left], [right]) => left - right);
-    indices.length = 0;
-    extents.length = 0;
-    for (const [index, extent] of sorted) {
-      indices.push(index);
-      extents.push(extent);
-    }
-  }
-  const next = isContiguous(indices)
-    ? updateContiguousNode(root, 0, indices[0]!, extents)
-    : updateNode(root, 0, indices, extents, 0, indices.length);
+  const sorted = ordered ? changes : [...new Map(changes)].sort(([left], [right]) => left - right);
+  const next = root === null ? null : updateNode(root, 0, sorted, 0, sorted.length);
   return ok(createIndex(next, maxItems));
 }
 
@@ -501,7 +252,7 @@ function extentAt(root: Node | null, index: number): Extent | null {
       node = node.right;
     }
   }
-  return node.entries[local] ?? null;
+  return node.kind === 'run' ? node.entry : node.entries[local] ?? null;
 }
 
 function sliceExtents(root: Node | null, start: number, end: number): readonly Extent[] | null {
@@ -516,6 +267,11 @@ function sliceExtents(root: Node | null, start: number, end: number): readonly E
 function collectExtents(node: Node, nodeStart: number, start: number, end: number, output: Extent[]): void {
   const nodeEnd = nodeStart + node.size;
   if (end <= nodeStart || start >= nodeEnd) return;
+  if (node.kind === 'run') {
+    const count = Math.min(node.size, end - nodeStart) - Math.max(0, start - nodeStart);
+    for (let index = 0; index < count; index += 1) output.push(node.entry);
+    return;
+  }
   if (node.kind === 'leaf') {
     output.push(...node.entries.slice(Math.max(0, start - nodeStart), Math.min(node.size, end - nodeStart)));
     return;
@@ -540,6 +296,7 @@ function offsetAt(root: Node | null, index: number): number | null {
       node = node.right;
     }
   }
+  if (node.kind === 'run') return offset + (local * valueOf(node.entry));
   for (let current = 0; current < local; current += 1) offset += valueOf(node.entries[current]!);
   return offset;
 }
@@ -557,6 +314,12 @@ function locateOffset(root: Node | null, offset: number): ExtentLocation | null 
       node = node.right;
     }
   }
+  if (node.kind === 'run') {
+    const extent = valueOf(node.entry);
+    const index = Math.floor(localOffset / extent);
+    const offsetWithin = localOffset - (index * extent);
+    return Object.freeze({ index: base + index, itemOffset: offset - offsetWithin, offsetWithin, extent: node.entry });
+  }
   for (let index = 0; index < node.entries.length; index += 1) {
     const entry = node.entries[index]!;
     const extent = valueOf(entry);
@@ -569,85 +332,51 @@ function locateOffset(root: Node | null, offset: number): ExtentLocation | null 
 function updateNode(
   node: Node,
   start: number,
-  indices: readonly number[],
-  extents: readonly Extent[],
+  changes: readonly (readonly [number, Extent])[],
   from: number,
   to: number,
 ): Node {
   if (from === to) return node;
+  if (node.kind === 'branch') {
+    const boundary = start + node.left.size;
+    let middle = from;
+    while (middle < to && changes[middle]![0] < boundary) middle += 1;
+    const left = updateNode(node.left, start, changes, from, middle);
+    const right = updateNode(node.right, boundary, changes, middle, to);
+    return left === node.left && right === node.right ? node : branch(left, right);
+  }
   if (node.kind === 'leaf') {
-    let entries: Extent[] | null = null;
-    for (let update = from; update < to; update += 1) {
-      const local = indices[update]! - start;
-      const extent = extents[update]!;
-      if (sameExtent(node.entries[local]!, extent)) continue;
-      entries ??= [...node.entries];
+    const entries = [...node.entries];
+    let changed = false;
+    for (let index = from; index < to; index += 1) {
+      const [position, extent] = changes[index]!;
+      const local = position - start;
+      if (sameExtent(entries[local]!, extent)) continue;
       entries[local] = extent;
+      changed = true;
     }
-    return entries === null ? node : leaf(entries);
+    return changed ? leaf(entries) : node;
   }
-  const boundary = start + node.left.size;
-  const middle = lowerBound(indices, boundary, from, to);
-  const left = updateNode(node.left, start, indices, extents, from, middle);
-  const right = updateNode(node.right, boundary, indices, extents, middle, to);
-  return left === node.left && right === node.right ? node : branch(left, right);
-}
-
-function lowerBound(
-  indices: readonly number[],
-  boundary: number,
-  from: number,
-  to: number,
-): number {
-  let low = from;
-  let high = to;
-  while (low < high) {
-    const middle = low + Math.floor((high - low) / 2);
-    if (indices[middle]! < boundary) low = middle + 1;
-    else high = middle;
+  let output: Node | null = null;
+  let cursor = 0;
+  for (let index = from; index < to; index += 1) {
+    const [position, extent] = changes[index]!;
+    const local = position - start;
+    if (sameExtent(node.entry, extent)) continue;
+    if (local > cursor) output = join(output, run(node.entry, local - cursor));
+    output = join(output, run(extent, 1));
+    cursor = local + 1;
   }
-  return low;
-}
-
-function updateContiguousNode(
-  node: Node,
-  start: number,
-  updateStart: number,
-  extents: readonly Extent[],
-): Node {
-  const end = start + node.size;
-  const updateEnd = updateStart + extents.length;
-  if (updateEnd <= start || updateStart >= end) return node;
-  if (node.kind === 'leaf') {
-    let entries: Extent[] | null = null;
-    const first = Math.max(start, updateStart);
-    const last = Math.min(end, updateEnd);
-    for (let index = first; index < last; index += 1) {
-      const local = index - start;
-      const extent = extents[index - updateStart]!;
-      if (sameExtent(node.entries[local]!, extent)) continue;
-      entries ??= [...node.entries];
-      entries[local] = extent;
-    }
-    return entries === null ? node : leaf(entries);
-  }
-  const boundary = start + node.left.size;
-  const left = updateContiguousNode(node.left, start, updateStart, extents);
-  const right = updateContiguousNode(node.right, boundary, updateStart, extents);
-  return left === node.left && right === node.right ? node : branch(left, right);
-}
-
-function isContiguous(indices: readonly number[]): boolean {
-  for (let index = 1; index < indices.length; index += 1) {
-    if (indices[index] !== indices[index - 1]! + 1) return false;
-  }
-  return true;
+  if (output === null) return node;
+  if (cursor < node.size) output = join(output, run(node.entry, node.size - cursor));
+  return output!;
 }
 
 function split(node: Node | null, index: number): readonly [Node | null, Node | null] {
   if (node === null) return [null, null];
   if (index === 0) return [null, node];
   if (index === node.size) return [node, null];
+  if (node.kind === 'run') return [run(node.entry, index), run(node.entry, node.size - index)];
   if (node.kind === 'leaf') return [leaf(node.entries.slice(0, index)), leaf(node.entries.slice(index))];
   if (index < node.left.size) {
     const [before, remainder] = split(node.left, index);
@@ -660,6 +389,9 @@ function split(node: Node | null, index: number): readonly [Node | null, Node | 
 function join(left: Node | null, right: Node | null): Node | null {
   if (left === null) return right;
   if (right === null) return left;
+  if (left.kind === 'run' && right.kind === 'run' && sameExtent(left.entry, right.entry)) {
+    return run(left.entry, left.size + right.size);
+  }
   if (left.kind === 'leaf' && right.kind === 'leaf' && left.size + right.size <= LEAF_SIZE) {
     return leaf([...left.entries, ...right.entries]);
   }
@@ -716,6 +448,10 @@ function leaf(entries: readonly Extent[]): Leaf {
     sum: frozen.reduce((sum, extent) => sum + valueOf(extent), 0),
     height: 1,
   });
+}
+
+function run(entry: Extent, size: number): Run {
+  return Object.freeze({ kind: 'run', entry, size, sum: valueOf(entry) * size, height: 1 });
 }
 
 function branch(left: Node, right: Node): Branch {

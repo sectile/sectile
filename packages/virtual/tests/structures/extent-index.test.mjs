@@ -95,6 +95,45 @@ test('uniform extent indexes locate offsets around zero-sized entries', () => {
   assert.equal(index.indexAtOffset(29), 3);
 });
 
+test('uniform runs remain equivalent to a flat model through mixed edits', () => {
+  let values = Array(2_000).fill(10);
+  let index = createUniformExtentIndex(values.length, estimated(10));
+  let seed = 0x85ebca6b;
+  const random = () => {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    return seed >>> 0;
+  };
+  for (let operation = 0; operation < 300; operation += 1) {
+    const kind = random() % 3;
+    if (kind === 0) {
+      const updates = Array.from({ length: 8 }, () => ({
+        index: random() % values.length,
+        value: (random() % 40) + 1,
+      }));
+      for (const update of updates) values[update.index] = update.value;
+      index = index.update(updates.map((update) => ({ index: update.index, extent: exact(update.value) }))).value;
+    } else if (kind === 1) {
+      const start = random() % (values.length + 1);
+      const count = Math.min(random() % 4, values.length - start);
+      const inserted = Array.from({ length: random() % 4 }, () => (random() % 40) + 1);
+      values.splice(start, count, ...inserted);
+      index = index.splice(start, count, inserted.map(exact)).value;
+    } else {
+      const count = Math.min((random() % 4) + 1, values.length);
+      const from = random() % (values.length - count + 1);
+      const to = random() % (values.length - count + 1);
+      const moved = values.splice(from, count);
+      values.splice(to, 0, ...moved);
+      index = index.move(from, to, count).value;
+    }
+    assert.equal(index.size, values.length);
+    assert.equal(index.totalExtent, values.reduce((sum, value) => sum + value, 0));
+    const item = random() % values.length;
+    assert.equal(index.extentAt(item).value, values[item]);
+    assert.equal(index.offsetAt(item), values.slice(0, item).reduce((sum, value) => sum + value, 0));
+  }
+});
+
 test('extent index remains equivalent to a flat model through deterministic edits', () => {
   let values = Array.from({ length: 500 }, (_, index) => (index % 31) + 1);
   let index = createExtentIndex(values.map(exact));
