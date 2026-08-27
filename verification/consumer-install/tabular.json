@@ -9,6 +9,26 @@
     "@sectile/dom",
     "@sectile/vue"
   ],
+  "packedFootprint": {
+    "@sectile/core": {
+      "bytes": 198176
+    },
+    "@sectile/tabular": {
+      "bytes": 59996
+    },
+    "@sectile/temporal": {
+      "bytes": 41115
+    },
+    "@sectile/virtual": {
+      "bytes": 54278
+    },
+    "@sectile/dom": {
+      "bytes": 284149
+    },
+    "@sectile/vue": {
+      "bytes": 297711
+    }
+  },
   "declarationClosure": {
     "status": "passed",
     "files": 310,

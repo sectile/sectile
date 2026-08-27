@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, relative, resolve } from 'node:path';
 
@@ -83,6 +83,10 @@ try {
     schemaVersion: 1,
     status: 'passed',
     packages: packageNames.map((name) => `@sectile/${name}`),
+    packedFootprint: Object.fromEntries(await Promise.all(packageNames.map(async (name) => [
+      `@sectile/${name}`,
+      { bytes: (await stat(tarballs[name])).size },
+    ]))),
     declarationClosure,
     scenarios,
   };

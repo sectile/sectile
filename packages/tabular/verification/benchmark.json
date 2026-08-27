@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "status": "passed",
+  "seed": "sectile-tabular-benchmark-v1",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "timingPolicy": "informational-no-threshold",
+  "scales": [
+    {
+      "recordCount": 1000,
+      "completed": true,
+      "matchingLeafCount": 666,
+      "returnedRows": 100,
+      "operationCount": 20991,
+      "operations": {
+        "getRowID": 1000,
+        "getValue": 13660,
+        "predicate": 1000,
+        "comparator": 5331
+      },
+      "timingsMs": {
+        "construct": 0.573,
+        "resolve": 4.261,
+        "total": 4.834
+      }
+    },
+    {
+      "recordCount": 10000,
+      "completed": true,
+      "matchingLeafCount": 6666,
+      "returnedRows": 100,
+      "operationCount": 277152,
+      "operations": {
+        "getRowID": 10000,
+        "getValue": 181434,
+        "predicate": 10000,
+        "comparator": 75718
+      },
+      "timingsMs": {
+        "construct": 0.067,
+        "resolve": 16.377,
+        "total": 16.444
+      }
+    },
+    {
+      "recordCount": 100000,
+      "completed": true,
+      "matchingLeafCount": 66666,
+      "returnedRows": 100,
+      "operationCount": 3436701,
+      "operations": {
+        "getRowID": 100000,
+        "getValue": 2257800,
+        "predicate": 100000,
+        "comparator": 978901
+      },
+      "timingsMs": {
+        "construct": 0.196,
+        "resolve": 162.699,
+        "total": 162.895
+      }
+    }
+  ]
+}
