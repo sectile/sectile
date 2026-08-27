@@ -31,6 +31,9 @@ function gridProjection(ids, columns = { start: [], center: ['name', 'score'], e
 
 test('TAB-VIR-01: DataTable reconciliation preserves measured stable identities across insert remove and reorder', () => {
   const adapter = createDataTableVirtualAdapter({ projection: tableProjection(['r1', 'r2']), rowExtents: { kind: 'uniform', extent: estimated(24) } });
+  const plan = adapter.strategy.tryQuery(adapter.state, { viewport: { x: 0, y: 0, width: 320, height: 24 } });
+  assert.equal(plan.ok, true);
+  assert.deepEqual(plan.value.placements.map(({ id }) => id), ['r1']);
   const measured = adapter.strategy.tryMeasure(adapter.state, { generation: adapter.state.generation, measurements: [{ index: 0, extent: exact(41) }], anchor: null });
   assert.equal(measured.ok, true);
   const reconciled = reconcileDataTableVirtualAdapter(adapter, measured.value.state, tableProjection(['r3', 'r1'], 9));

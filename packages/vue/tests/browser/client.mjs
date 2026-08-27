@@ -1,5 +1,6 @@
 import { createSSRApp, nextTick } from 'vue';
 import { createHydrationFixture } from './hydration-fixture.mjs';
+import { runTabularVirtualScenarios } from './tabular-virtual-fixture.mjs?wi=15e';
 
 const warnings = [];
 const app = createSSRApp(createHydrationFixture());
@@ -40,6 +41,14 @@ if ([...group?.querySelectorAll('[role="meter"]') ?? []].map((element) => elemen
   failures.push('updated group values');
 }
 if (warnings.length > 0) failures.push('Vue hydration warnings');
+let tabularVirtual;
+try {
+  tabularVirtual = await runTabularVirtualScenarios();
+  for (const [scenario, evidence] of Object.entries(tabularVirtual)) if (!evidence.ok) failures.push(scenario);
+} catch (error) {
+  failures.push(`tabular virtual exception: ${error instanceof Error ? error.message : String(error)}`);
+  tabularVirtual = Object.freeze({});
+}
 
 const result = Object.freeze({
   ok: failures.length === 0,
@@ -52,6 +61,7 @@ const result = Object.freeze({
     groupOrder: Object.freeze([...group?.querySelectorAll('[role="meter"]') ?? []]
       .map((element) => element.getAttribute('data-id'))),
   }),
+  tabularVirtual,
 });
 window.__SECTILE_BROWSER_RESULT__ = result;
 document.documentElement.dataset.sectileVerification = result.ok ? 'passed' : 'failed';

@@ -8,25 +8,25 @@
       "id": "TAB-VIR-01",
       "title": "TAB-VIR-01: DataTable reconciliation preserves measured stable identities across insert remove and reorder",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "fbcbed8e926b01be5ef96ca399371a0d1c5e33649ed06f96727a463217cce462"
+      "sha256": "56d0f82c8c0ae73389f8eb770c304ca7e7bed01cea2f1c050cd2c1ff311c0462"
     },
     {
       "id": "TAB-VIR-02",
       "title": "TAB-VIR-02: reconciliation rejects stale unrelated Virtual state without conflating projection generation",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "fbcbed8e926b01be5ef96ca399371a0d1c5e33649ed06f96727a463217cce462"
+      "sha256": "56d0f82c8c0ae73389f8eb770c304ca7e7bed01cea2f1c050cd2c1ff311c0462"
     },
     {
       "id": "TAB-VIR-03",
       "title": "TAB-VIR-03: partitioned Grid adapter survives measurement and center to pinned mutation without strategy replacement",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "fbcbed8e926b01be5ef96ca399371a0d1c5e33649ed06f96727a463217cce462"
+      "sha256": "56d0f82c8c0ae73389f8eb770c304ca7e7bed01cea2f1c050cd2c1ff311c0462"
     },
     {
       "id": "TAB-VIR-04",
       "title": "TAB-VIR-04: partition and projected-cell ceilings remain distinct",
       "file": "tests/virtual/adapter.test.mjs",
-      "sha256": "fbcbed8e926b01be5ef96ca399371a0d1c5e33649ed06f96727a463217cce462"
+      "sha256": "56d0f82c8c0ae73389f8eb770c304ca7e7bed01cea2f1c050cd2c1ff311c0462"
     }
   ],
   "expectedFailures": [

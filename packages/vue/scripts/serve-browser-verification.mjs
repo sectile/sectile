@@ -16,6 +16,11 @@ const vite = await createViteServer({
   root: fixtureRoot,
   appType: 'custom',
   logLevel: 'error',
+  define: {
+    __VUE_OPTIONS_API__: 'true',
+    __VUE_PROD_DEVTOOLS__: 'false',
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'true',
+  },
   server: { middlewareMode: true },
 });
 const rendered = await renderToString(createSSRApp(createHydrationFixture()));
@@ -25,7 +30,7 @@ const template = `<!doctype html>
   <body>
     <div id="app">${rendered}</div>
     <pre id="result">pending</pre>
-    <script type="module" src="/client.mjs"></script>
+    <script type="module" src="/client.mjs?wi=15e"></script>
   </body>
 </html>`;
 

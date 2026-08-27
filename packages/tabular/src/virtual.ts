@@ -137,7 +137,12 @@ export function tryCreateDataTableVirtualAdapter(options: DataTableVirtualAdapte
   if (!sequence.ok) return sequence;
   const extents = createExtentDomain(ids, options.rowExtents, limits.value.maxProjectedCells);
   if (!extents.ok) return extents;
-  const state = tryCreateLinearLayout(sequence.value, extents.value, { axis: 'vertical' });
+  const state = tryCreateLinearLayout(sequence.value, extents.value, {
+    axis: 'vertical',
+    // Row virtualization owns only the main axis. A non-zero normalized cross
+    // span keeps rows queryable while the native table continues to own width.
+    crossExtent: 1,
+  });
   if (!state.ok) return state;
   return success(createTableAdapter(options.projection.generation, state.value, options.rowExtents, limits.value));
 }

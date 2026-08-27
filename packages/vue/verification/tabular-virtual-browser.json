@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "browser": "Chromium 151",
+  "command": "SECTILE_BROWSER_PORT=4178 pnpm --filter @sectile/vue serve:browser-verification",
+  "optionalPeer": {
+    "package": "@sectile/virtual",
+    "manifestOptional": true,
+    "baseProfileImportsVirtual": false,
+    "optInSubpath": "@sectile/vue/virtual"
+  },
+  "scenarios": {
+    "tabular-virtual-flat": {
+      "ok": true,
+      "renderer": "VirtualList",
+      "rendered": 4,
+      "total": 80
+    },
+    "tabular-virtual-native": {
+      "ok": true,
+      "renderer": "VirtualizerRoot/Content/Item",
+      "rendered": 4,
+      "total": 80,
+      "measuredRowExtent": 41,
+      "nativeTable": true,
+      "extraItemWrappers": 0
+    },
+    "tabular-virtual-pinned": {
+      "ok": true,
+      "renderer": "partitioned-track-grid-layout",
+      "strategyStable": true,
+      "pinnedOverlap": true,
+      "measurementSurvived": true,
+      "revealCount": 6,
+      "editingFocus": true
+    }
+  },
+  "warnings": [],
+  "errors": [],
+  "ok": true
+}
