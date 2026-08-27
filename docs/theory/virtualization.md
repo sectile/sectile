@@ -1,67 +1,12 @@
 ---
-title: Virtualization
-description: Dynamic geometry, layout strategy, anchoring, and host scheduling contracts.
+title: Virtualization moved
+description: The virtualization contract now has a dedicated Virtual package manual.
 ---
 
-# Virtualization
+# Virtualization moved
 
-Sectile keeps the logical collection, rendered geometry, and loaded data as separate domains:
+Virtualization is now a separate semantic package rather than part of Core theory. The dedicated manual separates geometry from collection identity and provides strategy-specific, DOM, and Vue implementation guides.
 
-```text
-Sequence identity/order ─┐
-ExtentIndex measurements ├─ Layout strategy ── LayoutPlan ── host renderer
-Sparse regions/rects ────┘         │
-                                   └─ scrollDelta after mutation
+Start with the [`@sectile/virtual` overview](/packages/virtual), then continue to the [mental model](/packages/virtual/concepts) or [linear implementation](/packages/virtual/linear).
 
-CollectionWindow ── asynchronous data loading only
-```
-
-`@sectile/core/sequence` remains the identity and order authority. `@sectile/virtual/extent-index` stores exact, estimated, or fallback geometry in a persistent prefix tree. A layout strategy turns those logical inputs into a renderer-neutral `VirtualLayoutPlan`. `CollectionWindow` only controls asynchronous data loading; a render window is never treated as a loaded-data window.
-
-## Common layout contract
-
-Every strategy accepts a two-dimensional viewport and independent overscan on all four sides. A plan contains content size, render bounds, placements, visibility, generation, and a stable identity anchor. Measurements and domain mutations return a new immutable state plus a two-dimensional scroll delta. Stale measurement generations are rejected instead of being guessed or silently applied.
-
-All coordinates are renderer-neutral. DOM reads, `ResizeObserver`, scroll writes, terminal measurement, and animation scheduling stay in host adapters. State and input arrays are never mutated.
-
-## Strategies
-
-| Strategy | Best fit | Geometry and query model |
-|---|---|---|
-| linear | lists, feeds, carousels | vertical or horizontal, forward or reverse flow, dynamic per-item extents |
-| track grid | spreadsheets, tables, schedules | independent dynamic row/column tracks, sparse and merged regions, independent axis reversal |
-| masonry | galleries, boards | shortest-lane or stable round-robin placement, responsive lane geometry, either main axis |
-| spatial | canvas, diagrams, layered editors | arbitrary overlapping rectangles, deterministic z-order, packed spatial index |
-
-Track-grid storage is proportional to rows, columns, and declared regions. It does not allocate `rows × columns` cells. Blank spreadsheet cells can be projected from the returned row and column ranges, while merged or otherwise material cells remain explicit sparse regions. Frozen panes are multiple coordinated viewport queries over one state rather than duplicated grid state.
-
-Masonry `shortest` placement may move downstream items when a measurement changes. This is the intended balanced-layout policy. `round-robin` keeps lane ownership stable when visual continuity matters more than perfect balancing. Responsive lane-count changes are explicit geometry mutations and return anchor correction.
-
-Spatial layout permits overlap and emits placements in deterministic `zIndex`, then declaration order. It is the escape hatch for freeform geometry, not a replacement for the cheaper linear or track-grid indexes.
-
-## Dynamic measurement cycle
-
-1. Start with exact, estimated, or unknown-with-fallback extents.
-2. Query a plan for the latest viewport.
-3. Render only the plan placements.
-4. Batch host measurements once with the plan generation.
-5. Apply the returned scroll delta before the next paint.
-6. Query the next plan.
-
-When geometry before or around the visible anchor changes, the strategy compares that identity's old and new rectangle. The host adds the returned delta without animation. This preserves the anchor's viewport coordinate while allowing measured content to grow, shrink, move between masonry lanes, or span resized grid tracks.
-
-Hosts should coalesce scroll observations per frame, batch all reads before writes, and report measurements together. Per-item read/write alternation is outside the contract and defeats browser layout batching.
-
-## Browser and Vue projection
-
-`@sectile/dom/virtual` implements that scheduling contract for browser scroll elements. One animation frame collects root and item resize notifications, resolves all measurements, applies one semantic measurement batch, writes the returned anchor correction, and only then publishes the next plan. A custom viewport reader and scroll writer keep normalized coordinates available for RTL or non-standard scroll surfaces. Manual measurement remains public for merged track grids whose row and column evidence cannot be inferred from one item rectangle.
-
-`@sectile/vue/virtual` projects the DOM connection without taking ownership of the logical collection. `VirtualizerRoot` owns the viewport connection, `VirtualizerContent` projects content extent, and `VirtualizerItem` places and measures one returned placement. Its `asChild` mode composes with Listbox, Combobox, Feed, Grid, and application-owned elements while those components continue to receive the complete semantic identity domain. An optional deterministic `initialViewport` produces the same initial plan during SSR and hydration; without it, Vue renders the window after mount.
-
-## Domain changes and loading
-
-Linear and masonry item mutations consume the same public `SequencePatch` used by collection and reorder semantics. Splices provide one initial extent per inserted identity; moves retain their extents and use post-removal destination indices. Track-grid mutations transform unaffected sparse regions and reject track splices that cut through a merged region; replace regions atomically when a new span is required. Spatial updates preserve existing declaration positions and append new identities.
-
-Use `collectionWindowEventForLinearPlan()` only when a linear render range crosses the loaded range. Request generations and stale-response rejection remain owned by `CollectionWindow`.
-
-Repository verification records the strategy complexity contracts and same-runner benchmark observations separately from this public semantic contract.
+This page remains available so existing links do not break.

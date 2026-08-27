@@ -6,12 +6,21 @@ import ComponentExample from './components/ComponentExample.vue';
 import HostCode from './components/HostCode.vue';
 import HostInstall from './components/HostInstall.vue';
 import PackageImport from './components/PackageImport.vue';
+import PackageBoundaryMap from './components/PackageBoundaryMap.vue';
 import TerminalCheckboxDemo from './components/TerminalCheckboxDemo.vue';
 import TheoryComposition from './components/TheoryComposition.vue';
+import TheoryContractDiagram from './components/TheoryContractDiagram.vue';
 import TheoryOverview from './components/TheoryOverview.vue';
+import VirtualConceptDiagram from './components/VirtualConceptDiagram.vue';
+import VirtualLibraryComparison from './components/VirtualLibraryComparison.vue';
+import VirtualBenchmarkReport from './components/VirtualBenchmarkReport.vue';
+import VirtualStrengthOverview from './components/VirtualStrengthOverview.vue';
+import VirtualStrategyLab from './components/VirtualStrategyLab.vue';
+import VirtualWindowLab from './components/VirtualWindowLab.vue';
 import Layout from './Layout.vue';
 import './styles.css';
 import './component-examples.css';
+import './semantic-system.css';
 import '@xterm/xterm/css/xterm.css';
 
 export default {
@@ -24,8 +33,16 @@ export default {
     app.component('HostCode', HostCode);
     app.component('HostInstall', HostInstall);
     app.component('PackageImport', PackageImport);
+    app.component('PackageBoundaryMap', PackageBoundaryMap);
     app.component('TerminalCheckboxDemo', TerminalCheckboxDemo);
     app.component('TheoryComposition', TheoryComposition);
+    app.component('TheoryContractDiagram', TheoryContractDiagram);
     app.component('TheoryOverview', TheoryOverview);
+    app.component('VirtualConceptDiagram', VirtualConceptDiagram);
+    app.component('VirtualLibraryComparison', VirtualLibraryComparison);
+    app.component('VirtualBenchmarkReport', VirtualBenchmarkReport);
+    app.component('VirtualStrengthOverview', VirtualStrengthOverview);
+    app.component('VirtualStrategyLab', VirtualStrategyLab);
+    app.component('VirtualWindowLab', VirtualWindowLab);
   },
 } satisfies Theme;

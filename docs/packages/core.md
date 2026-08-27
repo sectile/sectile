@@ -1,51 +1,35 @@
+---
+title: Core
+description: Renderer-neutral interaction state, transitions, structures, and commands.
+---
+
 # Core
 
-`@sectile/core` contains renderer-neutral component semantics and reusable foundations for sequence, range, grid, tree, selection, expansion, cursor, editing, bounded collection windows, layer ownership, and identity-based reordering.
+`@sectile/core` answers one question: **given this state and event, what state and ordered commands come next?** It contains no dates, layout geometry, DOM, framework lifecycle, or styling.
 
 ```sh
 pnpm add @sectile/core
 ```
 
-Import component subpaths directly:
-
 ```ts
 import * as listbox from '@sectile/core/listbox'
+import * as sequence from '@sectile/core/sequence'
 ```
 
-Coordination theories use focused support subpaths:
+## What Core owns
 
-```ts
-import * as window from '@sectile/core/collection-window'
-import * as layers from '@sectile/core/layer-stack'
-import * as reorder from '@sectile/core/reorder'
-```
+- canonical structures: sequence, range, grid, tree
+- independent state: cursor, selection, expansion, text editing
+- deterministic transitions and ordered commands
+- stable string identity, revisions, typed failures, resource ceilings
+- composed component semantics such as Listbox, Combobox, Slider, and Tree Grid
 
-Collection replacements and Form validation/submission results are generation-bound, so a stale asynchronous result cannot mutate newer state. Layer dismissal is topmost-only, and tree reorder rejects cycles and invalid sibling destinations.
+Date arithmetic and picker calendars belong to [`@sectile/temporal`](/packages/temporal). Viewport geometry and dynamic measurement belong to [`@sectile/virtual`](/packages/virtual).
 
-Date and time semantics live in [`@sectile/temporal`](temporal.md). Dynamic virtualization lives in [`@sectile/virtual`](virtual.md).
+## Learning path
 
-Core has no DOM, terminal, Vue, or styling dependency.
+1. [Foundations](core/foundations.md): identity, `Result`, revisions, and limits.
+2. [Structures and state](core/structures.md): reusable sequence, range, grid, tree, and selection models.
+3. [Transitions and composition](core/transitions.md): events, immutable updates, commands, and controlled ownership.
 
-## Identity and revisions
-
-Public component identities use `StableID`, which is a string contract. String IDs pass directly through serialization, DOM attributes, terminal effects, and framework keys. Applications whose source identity is numeric or object-based must map it to a stable, collision-free string before constructing a Sectile domain; keep the reverse lookup in application state.
-
-`RevisionSnapshot.revision` is an accepted-event sequence, not a count of visible state changes. Every accepted event advances it exactly once, including an accepted boundary no-op whose state remains equal. Use revisions to reject stale controlled updates and preserve event order; do not use them as a render or dirty-state counter.
-
-## Failure handling
-
-Core constructors and transitions return `Result`. Narrow the result when failure is recoverable, or use `unwrap` only when converting a typed failure into an exception is the intended application boundary.
-
-`CoreErrorCode` is Core's closed union. `SectileError<Code>` and `Result<Value, Code>` accept any string code, so Temporal, Virtual, and application adapters can own narrower failure vocabularies without changing Core. Match the package-local union exhaustively; do not cast application codes into `CoreErrorCode`.
-
-```ts
-const result = sequence.createSequence(['alpha', 'beta'])
-
-if (!result.ok) {
-  report(result.error)
-} else {
-  use(result.value)
-}
-```
-
-The direct `create*` and recoverable `tryCreate*` pair belongs to host facades such as `@sectile/dom` and `@sectile/terminal`. It does not change the pure Core `Result` contract.
+Core has no DOM, terminal, Vue, or styling dependency. Choose a host adapter only after the interaction contract is clear.

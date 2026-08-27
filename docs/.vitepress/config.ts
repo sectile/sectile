@@ -145,29 +145,121 @@ const componentSidebar = buildComponentSidebar('en');
 const koComponentSidebar = buildComponentSidebar('ko');
 
 const theorySidebar: DefaultTheme.SidebarItem[] = [
-  { text: 'Overview', link: '/theory/' },
+  { text: 'Core theory', link: '/theory/' },
   { text: 'Canonical structures', link: '/theory/structures' },
   { text: 'State and text', link: '/theory/state-and-text' },
   { text: 'Transitions', link: '/theory/transitions' },
   { text: 'Composition', link: '/theory/composition' },
-  { text: 'Virtualization', link: '/theory/virtualization' },
   { text: 'Scope and guarantees', link: '/theory/scope' },
+  { text: 'Virtual manual', link: '/packages/virtual' },
 ];
 
 const koTheorySidebar: DefaultTheme.SidebarItem[] = [
-  { text: '개요', link: '/ko/theory/' },
+  { text: '코어 이론', link: '/ko/theory/' },
   { text: '기본 구조', link: '/ko/theory/structures' },
   { text: '상태와 텍스트', link: '/ko/theory/state-and-text' },
   { text: '상태 전이', link: '/ko/theory/transitions' },
   { text: '조합 원리', link: '/ko/theory/composition' },
-  { text: '가상화', link: '/ko/theory/virtualization' },
   { text: '보장 범위', link: '/ko/theory/scope' },
+  { text: '가상화 사용 안내', link: '/ko/packages/virtual' },
+];
+
+const packageSidebar: DefaultTheme.SidebarItem[] = [
+  { text: 'Package map', link: '/packages/' },
+  {
+    text: 'Core',
+    collapsed: false,
+    items: [
+      { text: 'Overview', link: '/packages/core' },
+      { text: 'Foundations', link: '/packages/core/foundations' },
+      { text: 'Structures and state', link: '/packages/core/structures' },
+      { text: 'Transitions and composition', link: '/packages/core/transitions' },
+    ],
+  },
+  {
+    text: 'Temporal',
+    collapsed: false,
+    items: [
+      { text: 'Overview', link: '/packages/temporal' },
+      { text: 'Values and fields', link: '/packages/temporal/values' },
+      { text: 'Calendars and pickers', link: '/packages/temporal/calendars' },
+      { text: 'Deterministic rendering', link: '/packages/temporal/determinism' },
+    ],
+  },
+  {
+    text: 'Virtual',
+    collapsed: false,
+    items: [
+      { text: 'Overview and lab', link: '/packages/virtual' },
+      { text: 'Mental model', link: '/packages/virtual/concepts' },
+      { text: 'Linear lists', link: '/packages/virtual/linear' },
+      { text: 'Layout strategies', link: '/packages/virtual/layouts' },
+      { text: 'Measurement and anchoring', link: '/packages/virtual/measurement' },
+      { text: 'DOM connection', link: '/packages/virtual/dom' },
+      { text: 'Vue connection', link: '/packages/virtual/vue' },
+      { text: 'Benchmark', link: '/packages/virtual/benchmark' },
+    ],
+  },
+  {
+    text: 'Host adapters',
+    items: [
+      { text: 'DOM', link: '/packages/dom' },
+      { text: 'Terminal', link: '/packages/terminal' },
+      { text: 'Vue', link: '/packages/vue' },
+    ],
+  },
+];
+
+const koPackageSidebar: DefaultTheme.SidebarItem[] = [
+  { text: '패키지 지도', link: '/ko/packages/' },
+  {
+    text: '코어',
+    collapsed: false,
+    items: [
+      { text: '개요', link: '/ko/packages/core' },
+      { text: '기본 계약', link: '/ko/packages/core/foundations' },
+      { text: '구조와 상태', link: '/ko/packages/core/structures' },
+      { text: '상태 전이와 조합', link: '/ko/packages/core/transitions' },
+    ],
+  },
+  {
+    text: '날짜와 시간',
+    collapsed: false,
+    items: [
+      { text: '개요', link: '/ko/packages/temporal' },
+      { text: '값과 입력란', link: '/ko/packages/temporal/values' },
+      { text: '달력과 선택기', link: '/ko/packages/temporal/calendars' },
+      { text: '결정적인 화면 생성', link: '/ko/packages/temporal/determinism' },
+    ],
+  },
+  {
+    text: '가상화',
+    collapsed: false,
+    items: [
+      { text: '개요와 체험', link: '/ko/packages/virtual' },
+      { text: '동작 원리', link: '/ko/packages/virtual/concepts' },
+      { text: '선형 목록', link: '/ko/packages/virtual/linear' },
+      { text: '배치 방식', link: '/ko/packages/virtual/layouts' },
+      { text: '측정과 기준 항목', link: '/ko/packages/virtual/measurement' },
+      { text: 'DOM 연결', link: '/ko/packages/virtual/dom' },
+      { text: 'Vue 연결', link: '/ko/packages/virtual/vue' },
+      { text: '벤치마크', link: '/ko/packages/virtual/benchmark' },
+    ],
+  },
+  {
+    text: '실행 환경 연결',
+    items: [
+      { text: '브라우저', link: '/ko/packages/dom' },
+      { text: '터미널', link: '/ko/packages/terminal' },
+      { text: 'Vue', link: '/ko/packages/vue' },
+    ],
+  },
 ];
 
 const rootLocaleTheme: DefaultTheme.Config = {
   nav: [
     { text: 'Guide', link: '/guide/getting-started' },
-    { text: 'Theory', link: '/theory/' },
+    { text: 'Core theory', link: '/theory/' },
     { text: 'Components', link: '/components/', activeMatch: '^/components/' },
     { text: 'Packages', link: '/packages/' },
   ],
@@ -181,15 +273,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
       { text: 'Adapter authoring', link: '/guide/adapter-authoring' },
     ],
     '/components/': componentSidebar,
-    '/packages/': [
-      { text: 'Packages', link: '/packages/' },
-      { text: 'Core', link: '/packages/core' },
-      { text: 'Temporal', link: '/packages/temporal' },
-      { text: 'Virtual', link: '/packages/virtual' },
-      { text: 'DOM', link: '/packages/dom' },
-      { text: 'Terminal', link: '/packages/terminal' },
-      { text: 'Vue', link: '/packages/vue' },
-    ],
+    '/packages/': packageSidebar,
     '/theory/': theorySidebar,
   },
   editLink: { pattern: 'https://github.com/sectile/sectile/edit/main/docs/:path', text: 'Edit this page on GitHub' },
@@ -200,7 +284,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
 const koLocaleTheme: DefaultTheme.Config = {
   nav: [
     { text: '사용 안내', link: '/ko/guide/getting-started' },
-    { text: '이론', link: '/ko/theory/' },
+    { text: '코어 이론', link: '/ko/theory/' },
     { text: '컴포넌트', link: '/ko/components/', activeMatch: '^/ko/components/' },
     { text: '패키지', link: '/ko/packages/' },
   ],
@@ -214,15 +298,7 @@ const koLocaleTheme: DefaultTheme.Config = {
       { text: 'Adapter 작성', link: '/ko/guide/adapter-authoring' },
     ],
     '/ko/components/': koComponentSidebar,
-    '/ko/packages/': [
-      { text: '패키지', link: '/ko/packages/' },
-      { text: '코어', link: '/ko/packages/core' },
-      { text: '날짜와 시간', link: '/ko/packages/temporal' },
-      { text: '가상화', link: '/ko/packages/virtual' },
-      { text: '브라우저', link: '/ko/packages/dom' },
-      { text: '터미널', link: '/ko/packages/terminal' },
-      { text: 'Vue', link: '/ko/packages/vue' },
-    ],
+    '/ko/packages/': koPackageSidebar,
     '/ko/theory/': koTheorySidebar,
   },
   editLink: { pattern: 'https://github.com/sectile/sectile/edit/main/docs/:path', text: 'GitHub에서 이 페이지 수정' },

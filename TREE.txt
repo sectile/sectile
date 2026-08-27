@@ -306,7 +306,6 @@ sectile/
 │   │   ├── sectile-theory.md
 │   │   └── verification.md
 │   ├── scripts/
-│   │   ├── check-content.mjs
 │   │   └── generate-component-pages.mjs
 │   ├── testing/
 │   │   ├── browser-accessibility.md

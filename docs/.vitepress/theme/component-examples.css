@@ -1035,27 +1035,6 @@
 }
 
 .component-example-stage {
-  --demo-bg: #f6f6f7;
-  --demo-surface: #fff;
-  --demo-soft: #f0f0f2;
-  --demo-hover: #e8e8ec;
-  --demo-divider: #e3e3e7;
-  --demo-border: #d8d8de;
-  --demo-border-hover: #b8b8c0;
-  --demo-text: #3c3c43;
-  --demo-text-2: #55555e;
-  --demo-muted: #6b6b73;
-  --demo-placeholder: #919198;
-  --demo-disabled: #aaaab1;
-  --demo-brand: #5368eb;
-  --demo-brand-hover: #6377f1;
-  --demo-brand-light: #a9b7ff;
-  --demo-brand-soft: #e8eaff;
-  --demo-brand-border: #8795f3;
-  --demo-focus: #7889f2;
-  --demo-on-brand: #fff;
-  --demo-floating-shadow: 0 0.5rem 1.25rem rgb(32 32 38 / 0.1);
-
   display: grid;
   min-height: 0;
   padding: clamp(1.5rem, 4vw, 3rem);

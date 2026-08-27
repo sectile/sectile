@@ -1,39 +1,35 @@
+---
+title: 코어
+description: 실행 환경과 무관한 상호작용 상태, 상태 전이, 기본 구조와 명령을 설명합니다.
+---
+
 # 코어
 
-`@sectile/core`에는 실행 환경과 무관한 컴포넌트 규칙과 순서, 범위, 격자, 계층, 선택, 펼침, 현재 위치, 텍스트 편집의 기본 구조가 들어 있습니다.
+`@sectile/core`는 **현재 상태와 사용자 입력을 다음 상태와 실행할 명령으로 바꾸는 규칙**을 담습니다. 같은 상태에서 같은 입력을 받으면 어느 실행 환경에서도 같은 결과가 나옵니다.
 
-<HostInstall />
-
-컴포넌트별 공개 경로를 직접 가져옵니다.
+```sh
+pnpm add @sectile/core
+```
 
 ```ts
 import * as listbox from '@sectile/core/listbox'
+import * as sequence from '@sectile/core/sequence'
 ```
 
-날짜·시간 의미는 [`@sectile/temporal`](temporal.md), 동적 가상화는 [`@sectile/virtual`](virtual.md)에 있습니다.
+## 코어가 맡는 것
 
-코어는 브라우저, 터미널, Vue, 스타일에 의존하지 않습니다.
+- 순서, 범위, 격자, 계층으로 이루어진 기본 구조
+- 현재 위치, 선택, 펼침, 텍스트 편집 상태
+- 입력 사건에 따른 결정적인 상태 전이와 순서가 있는 명령
+- 안정적인 문자열 ID, 변경 차수, 형식이 정해진 실패, 자원 한도
+- 목록 상자, 콤보박스, 슬라이더, 계층 격자 같은 컴포넌트 규칙
 
-## ID와 revision
+날짜 계산과 날짜 선택기 달력은 [`@sectile/temporal`](/ko/packages/temporal), 화면 영역과 동적 크기 측정은 [`@sectile/virtual`](/ko/packages/virtual)이 맡습니다.
 
-공개 컴포넌트 ID인 `StableID`는 문자열 계약입니다. 문자열 ID는 직렬화, DOM 속성, 터미널 효과, 프레임워크 key에 그대로 사용할 수 있습니다. 원본 ID가 숫자나 객체라면 Sectile domain을 만들기 전에 충돌하지 않는 안정적인 문자열로 바꾸고, 역방향 조회는 응용 프로그램 상태에 둡니다.
+## 읽는 순서
 
-`RevisionSnapshot.revision`은 화면 상태가 바뀐 횟수가 아니라 수락된 이벤트의 순서 번호입니다. 경계에서 더 이동할 수 없어 상태가 같게 남는 no-op도 수락된 이벤트라면 정확히 한 번 증가합니다. 오래된 외부 관리 갱신을 거부하고 이벤트 순서를 지키는 용도로 사용하며 렌더링 횟수나 변경 여부를 판단하는 값으로 사용하지 않습니다.
+1. [기본 계약](core/foundations.md): ID, `Result`, 변경 차수, 자원 한도.
+2. [구조와 상태](core/structures.md): 순서, 범위, 격자, 계층, 선택 상태.
+3. [상태 전이와 조합](core/transitions.md): 사건, 불변 갱신, 명령, 외부 상태 관리.
 
-## 오류 처리
-
-코어의 생성 함수와 상태 전이는 `Result`를 반환합니다. 실패를 복구할 수 있다면 성공 여부를 나눠 처리합니다. 실패를 예외로 바꾸는 것이 의도된 경계에서만 `unwrap`을 사용합니다.
-
-`CoreErrorCode`는 코어가 소유하는 닫힌 union입니다. `SectileError<Code>`와 `Result<Value, Code>`는 임의의 문자열 코드를 받을 수 있으므로 Temporal, Virtual, 응용 프로그램 adapter가 코어를 수정하지 않고 더 좁은 오류 vocabulary를 소유할 수 있습니다. 응용 프로그램 코드를 `CoreErrorCode`로 강제 변환하지 않습니다.
-
-```ts
-const result = sequence.createSequence(['alpha', 'beta'])
-
-if (!result.ok) {
-  report(result.error)
-} else {
-  use(result.value)
-}
-```
-
-`create*`와 `tryCreate*`를 나누는 방식은 브라우저·터미널 연결 함수에 적용됩니다. 코어의 `Result` 반환 규칙은 그대로 유지됩니다.
+Core에서 상호작용 계약을 정한 뒤 DOM, 터미널, Vue 연결 패키지가 실제 입력과 화면 출력을 이어 줍니다. 날짜 계산은 Temporal이, 큰 화면 영역의 배치와 측정은 Virtual이 맡습니다.

@@ -1,32 +1,31 @@
+---
+title: Temporal
+description: Civil date, wall-clock time, calendar, and picker semantics without hidden clocks.
+---
+
 # Temporal
 
-`@sectile/temporal` owns renderer-neutral civil date, wall-clock time, range field, calendar projection, and picker state machines.
-
-Its canonical domain is ISO/Gregorian plain civil dates (`year`, `month`,
-`day`) and timezone-free wall-clock times. It does not model instants, timezone
-databases, or non-ISO calendar systems. Locale-specific editing and presentation
-belong to host codecs rather than the canonical value.
+`@sectile/temporal` owns renderer-neutral rules for **calendar dates** and **wall-clock times**. It builds date/time fields, ranges, calendars, and pickers on public Core contracts.
 
 ```sh
 pnpm add @sectile/core @sectile/temporal
 ```
-
-Runtime APIs use focused subpaths:
 
 ```ts
 import { createDateValue } from '@sectile/temporal/date-field'
 import { createDatePickerState } from '@sectile/temporal/date-picker'
 ```
 
-The package depends only on public `@sectile/core` contracts. It owns no locale formatting, timezone database, DOM, terminal, or Vue behavior.
+## Domain boundary
 
-An empty semantic calendar has no hidden clock. Supply `referenceDate` when no
-value or highlight exists:
+Temporal models ISO/Gregorian plain civil dates such as `{ year, month, day }` and timezone-free times such as `{ hour, minute, second }`. It does not model instants, offsets, timezone databases, locale formatting, or non-ISO calendars.
 
-```ts
-createDatePickerState({ referenceDate: { year: 2026, month: 8, day: 26 } })
-```
+This boundary prevents a field or calendar from silently reading the machine clock or changing meaning across environments.
 
-DOM and terminal adapters inject the host's current civil date by default. Vue
-also accepts `referenceDate` on picker roots and on `HostProvider`. SSR
-applications should provide one stable date to both server and client.
+## Learning path
+
+1. [Values and fields](temporal/values.md): canonical values, parsing boundaries, date and time fields.
+2. [Calendars and pickers](temporal/calendars.md): visible months, selection, ranges, and navigation.
+3. [Deterministic rendering](temporal/determinism.md): `referenceDate`, SSR, hydration, and host defaults.
+
+DOM and Terminal adapters may inject the host's current civil date as a convenience. Deterministic or server-rendered applications should provide one stable reference date explicitly.

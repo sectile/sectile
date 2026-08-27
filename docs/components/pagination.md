@@ -94,6 +94,20 @@ Vue package: `@sectile/vue/pagination`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>getControlLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(control: PaginationControl) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns the accessible label announced for a pagination control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getPageLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(page: number) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns the accessible label announced for a page choice.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>itemsPerPage</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -267,6 +281,18 @@ Vue package: `@sectile/vue/pagination`
 </dl>
 
 ### Other types
+
+#### `PaginationPageLabelResolver`
+
+```ts
+type PaginationPageLabelResolver = NonNullable<PaginationRootProps['getPageLabel']>
+```
+
+#### `PaginationControlLabelResolver`
+
+```ts
+type PaginationControlLabelResolver = NonNullable<PaginationRootProps['getControlLabel']>
+```
 
 #### `PaginationValueChangeHandler`
 

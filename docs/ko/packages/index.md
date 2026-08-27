@@ -1,12 +1,30 @@
+---
+title: 패키지
+description: 상호작용의 의미와 실행 환경을 맡는 패키지를 구분합니다.
+---
+
 # 패키지
 
-| 패키지 | 역할 |
-| --- | --- |
-| [`@sectile/core`](/ko/packages/core) | 실행 환경과 무관한 상호작용 규칙 |
-| [`@sectile/temporal`](/ko/packages/temporal) | 날짜·시간 field와 picker 규칙 |
-| [`@sectile/virtual`](/ko/packages/virtual) | 동적 가상화와 layout 규칙 |
-| [`@sectile/dom`](/ko/packages/dom) | 브라우저 입력과 화면 반영 |
-| [`@sectile/terminal`](/ko/packages/terminal) | 터미널 입력과 화면 반영 |
-| [`@sectile/vue`](/ko/packages/vue) | 스타일 없는 Vue 컴포넌트 |
+Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. Core는 상호작용을 계산하고, Temporal은 날짜와 시각을 다루며, Virtual은 큰 화면의 배치를 구합니다. DOM, Terminal, Vue 패키지는 이 결과를 실제 입력과 출력에 연결합니다.
 
-각 패키지는 공개된 가져오기 경로로만 연결됩니다. 응용 프로그램에서도 패키지의 내부 파일이 아니라 공개 경로를 사용해야 합니다.
+<PackageBoundaryMap />
+
+## 의미를 계산하는 패키지
+
+| 패키지 | 핵심 판단 | 함께 쓰는 패키지 |
+| --- | --- | --- |
+| [`@sectile/core`](/ko/packages/core) | 현재 상태와 사건으로 다음 상태와 명령 계산 | DOM · Terminal · Vue |
+| [`@sectile/temporal`](/ko/packages/temporal) | 달력 날짜, 하루 안의 시각, 달력 이동과 선택 계산 | Core · DOM · Vue |
+| [`@sectile/virtual`](/ko/packages/virtual) | 항목 크기와 화면 영역으로 배치 좌표와 스크롤 보정값 계산 | Core · DOM · Vue |
+
+앱이 판단할 값에 따라 패키지를 고릅니다. 달력은 Core의 상호작용 규칙과 Temporal의 날짜 계산을 함께 씁니다. 가상 목록은 Core의 안정적인 ID와 Virtual의 배치 계산을 조합합니다. 화면 출력은 DOM, Terminal, Vue 패키지가 이어받습니다.
+
+## 실행 환경에 연결하는 패키지
+
+| 패키지 | 연결하는 것 |
+| --- | --- |
+| [`@sectile/dom`](/ko/packages/dom) | 브라우저 이벤트, 포커스, 속성, 크기 측정, 스크롤 |
+| [`@sectile/terminal`](/ko/packages/terminal) | 키 입력, 터미널 명령, 텍스트 출력 |
+| [`@sectile/vue`](/ko/packages/vue) | Vue 상태 관리, 반응성, 슬롯, 스타일을 앱에서 정하는 구성 요소 |
+
+각 패키지는 공개된 가져오기 경로로 연결됩니다. 앱도 계산할 상태, 실행 환경에서 처리할 작업, 제품의 시각 스타일을 같은 기준으로 나누면 구조를 오래 유지하기 쉽습니다.

@@ -1,6 +1,19 @@
+---
+title: Virtual
+description: Renderer-neutral viewport queries, dynamic measurement, layout strategies, and anchor correction.
+---
+
 # Virtual
 
-`@sectile/virtual` owns renderer-neutral dynamic-size indexing, viewport state, measurement generations, anchor correction, and layout strategies.
+`@sectile/virtual` is a framework-independent layout engine that calculates **where a large collection belongs and which placements should render now**. Give it stable IDs, order, estimated extents or rectangles, and a viewport; it returns the full content size and nearby placements as a `VirtualLayoutPlan`.
+
+When measured geometry differs from its estimate—or items are inserted, removed, moved, or resized—the engine returns a new layout state and `scrollDelta`. The host applies that correction to keep the item being read at the same viewport position. Linear, track-grid, masonry, and arbitrary spatial layouts share one query, measurement, and mutation contract. DOM and Vue adapters connect those calculations to browser measurement and rendering.
+
+## Where Sectile Virtual is strongest
+
+<VirtualStrengthOverview />
+
+## Install
 
 ```sh
 pnpm add @sectile/core @sectile/virtual
@@ -9,23 +22,38 @@ pnpm add @sectile/core @sectile/virtual
 ```ts
 import { createExtentIndex } from '@sectile/virtual/extent-index'
 import { createLinearLayout } from '@sectile/virtual/linear-layout'
-import { createMasonryLayout } from '@sectile/virtual/masonry-layout'
-import { createSpatialLayout } from '@sectile/virtual/spatial-layout'
-import { createTrackGridLayout } from '@sectile/virtual/track-grid-layout'
 ```
 
-Identity and order stay in `@sectile/core/sequence`. Data loading stays in `@sectile/core/collection-window`. See the [virtualization contract](../theory/virtualization.md).
+## How it compares
 
-The package never reads DOM geometry. Use `@sectile/dom/virtual` for frame-batched browser measurement and scroll anchoring, or `@sectile/vue/virtual` for the Vue composable and headless rendering parts.
+Conventional list virtualization has many good options. TanStack Virtual provides a broad headless virtualizer; react-window keeps conventional React lists and grids concise. React Virtuoso supplies higher-level list behavior, react-virtualized offers a mature component collection, Virtua spans several frameworks, and Vue Virtual Scroller connects directly to Vue collections.
 
-Layout states are opaque runtime handles. Do not clone them with object spread or
-send them through `structuredClone()`. Every strategy instead exports a matching
-`snapshot*Layout()` and `restore*Layout()` pair. Snapshots contain only schema
-metadata, IDs, extents, geometry, policies, and the active generation, so they can
-cross a worker or SSR serialization boundary. Restoration validates the snapshot and rebuilds
-the strategy's search indexes before it can be queried.
+Sectile differs in **how much layout state one model owns**. Dynamic list measurement and anchor correction share state transitions with grids, masonry, and arbitrary spatial surfaces.
 
-Every snapshot carries `schemaVersion: 1` and its strategy `kind`. Linear and
-masonry snapshots also preserve the source Sequence item and ID ceilings, so a
-JSON or worker round trip restores the same resource contract. Restoration
-rejects a snapshot from another strategy or an unsupported schema version.
+<VirtualLibraryComparison />
+
+In the fixed-row browser comparison, Sectile had the shortest prepared-data initial render while TanStack Virtual and react-virtualized had shorter median scroll response. Versions, conditions, raw observations, and limitations are published in the [virtualization benchmark](/packages/virtual/benchmark).
+
+## Customer request list
+
+Work with 50,000 customer requests rendered as complete component rows with selection, disclosures, status, metrics, and activity history. Changing the view or adding a reply alters row height, and browser measurements update the layout automatically. Insert, remove, or move requests before the viewport and the item being read stays in place.
+
+<VirtualWindowLab />
+
+## Compare every strategy
+
+The same viewport contract drives 50k linear records, 48k grid cells, 30k masonry tiles, and 25k spatial nodes. Switch strategies and scroll both axes to compare actual placement plans against the number of DOM nodes created.
+
+<VirtualStrategyLab />
+
+## Learning path
+
+1. [Mental model](virtual/concepts.md): identity, geometry, render windows, and loaded windows.
+2. [Linear lists](virtual/linear.md): dynamic rows, overscan, scrolling, and collection changes.
+3. [Grid, masonry, and spatial layouts](virtual/layouts.md): choose the lowest-cost fitting strategy.
+4. [Measurement and anchoring](virtual/measurement.md): generation-safe measurement and scroll correction.
+5. [DOM connection](virtual/dom.md): browser scheduling, reads, writes, and normalized scrolling.
+6. [Vue connection](virtual/vue.md): `useVirtualizer` and headless rendering parts.
+7. [Benchmark](virtual/benchmark.md): same-list browser observations across widely used libraries.
+
+Runtime layout states are opaque handles. Use each strategy's `snapshot*Layout()` and `restore*Layout()` pair when state must cross a worker or serialization boundary.

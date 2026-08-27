@@ -1,6 +1,6 @@
-# Theory
+# Core theory
 
-Sectile defines interaction as a composition of small semantic models. Rendering, framework lifecycle, and visual styling remain outside those models, so the same behavior can be projected into different hosts without changing its meaning.
+`@sectile/core` defines interaction as a composition of small semantic models. Rendering, framework lifecycle, dates, virtualization, and visual styling remain outside these models.
 
 <TheoryOverview />
 
@@ -8,9 +8,7 @@ Sectile defines interaction as a composition of small semantic models. Rendering
 
 Every model is described by the same observable contract:
 
-```text
-Theory = Sorts + Models + Operations + Observations + Laws + Errors + Costs
-```
+<TheoryContractDiagram />
 
 - **Models** state which values are valid.
 - **Operations** construct or transform those values.
@@ -26,6 +24,8 @@ Two implementations are equivalent when the same public input trace produces the
 Sectile uses four public structures—[sequence, range, grid, and tree](/theory/structures)—plus independent [cursor, selection, expansion, and text state](/theory/state-and-text). Policies parameterize choices such as eligibility and boundary behavior instead of hiding them in callbacks.
 
 A component combines those ingredients through a [deterministic transition](/theory/transitions). DOM, terminal, and framework packages project the resulting state and commands into their native environment.
+
+Date and calendar rules are documented under [`@sectile/temporal`](/packages/temporal). Viewport geometry and dynamic measurement are documented under [`@sectile/virtual`](/packages/virtual).
 
 ## Composition is the primitive
 

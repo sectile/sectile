@@ -96,6 +96,20 @@ Vue package: `@sectile/vue/carousel`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>getIndicatorLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(id: string, index: number, count: number) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns the accessible label announced for a carousel indicator.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getSlideLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>(id: string, index: number, count: number) =&gt; string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Returns the accessible label announced for a carousel slide.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>label</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -276,6 +290,18 @@ Vue package: `@sectile/vue/carousel`
 </dl>
 
 ### Other types
+
+#### `CarouselSlideLabelResolver`
+
+```ts
+type CarouselSlideLabelResolver = NonNullable<CarouselRootProps['getSlideLabel']>
+```
+
+#### `CarouselIndicatorLabelResolver`
+
+```ts
+type CarouselIndicatorLabelResolver = NonNullable<CarouselRootProps['getIndicatorLabel']>
+```
 
 #### `CarouselValueChangeHandler`
 

@@ -94,6 +94,20 @@ Vue 패키지: `@sectile/vue/pagination`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>getControlLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(control: PaginationControl) =&gt; string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>각 페이지 이동 버튼에 제공할 접근 가능한 이름을 만드는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getPageLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(page: number) =&gt; string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>각 페이지 선택지에 제공할 접근 가능한 이름을 만드는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>itemsPerPage</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -267,6 +281,18 @@ Vue 패키지: `@sectile/vue/pagination`
 </dl>
 
 ### 기타 타입
+
+#### `PaginationPageLabelResolver`
+
+```ts
+type PaginationPageLabelResolver = NonNullable<PaginationRootProps['getPageLabel']>
+```
+
+#### `PaginationControlLabelResolver`
+
+```ts
+type PaginationControlLabelResolver = NonNullable<PaginationRootProps['getControlLabel']>
+```
 
 #### `PaginationValueChangeHandler`
 

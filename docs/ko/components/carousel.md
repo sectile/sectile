@@ -96,6 +96,20 @@ Vue 패키지: `@sectile/vue/carousel`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>getIndicatorLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(id: string, index: number, count: number) =&gt; string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>각 캐러셀 표시기에 제공할 접근 가능한 이름을 만드는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>getSlideLabel</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>(id: string, index: number, count: number) =&gt; string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>각 캐러셀 슬라이드에 제공할 접근 가능한 이름을 만드는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>label</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -276,6 +290,18 @@ Vue 패키지: `@sectile/vue/carousel`
 </dl>
 
 ### 기타 타입
+
+#### `CarouselSlideLabelResolver`
+
+```ts
+type CarouselSlideLabelResolver = NonNullable<CarouselRootProps['getSlideLabel']>
+```
+
+#### `CarouselIndicatorLabelResolver`
+
+```ts
+type CarouselIndicatorLabelResolver = NonNullable<CarouselRootProps['getIndicatorLabel']>
+```
 
 #### `CarouselValueChangeHandler`
 
