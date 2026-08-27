@@ -1,7 +1,12 @@
 import type { StableID } from '@sectile/core';
 import type { VirtualResult } from './error.js';
 import { unwrap } from '@sectile/core/result';
-import { tryCreateSequence } from '@sectile/core/sequence';
+import {
+  tryApplySequencePatch,
+  tryCreateSequence,
+  type Sequence,
+  type SequencePatch,
+} from '@sectile/core/sequence';
 import { tryCreateExtentIndex, type Extent, type ExtentIndex, type ExtentUpdate } from './extent-index.js';
 import { fail, ok } from './internal/foundation.js';
 import { trackContentExtent, trackRange, trackSpan, type TrackRange } from './internal/track.js';
@@ -64,6 +69,7 @@ export interface GridTrackMeasurement { readonly axis: 'row' | 'column'; readonl
 
 export type TrackGridMutation<ID extends StableID = StableID> =
   | { readonly type: 'replace-regions'; readonly regions: readonly GridRegion<ID>[] }
+  | { readonly type: 'patch-dense-regions'; readonly patch: SequencePatch<ID> }
   | { readonly type: 'splice-tracks'; readonly axis: 'row' | 'column'; readonly index: number; readonly deleteCount: number; readonly inserted: readonly Extent[] };
 
 export interface TrackGridLayoutPlan<ID extends StableID = StableID> extends VirtualLayoutPlan<ID> {
@@ -87,7 +93,13 @@ interface RegionNode<ID extends StableID> {
 
 interface GridInternals<ID extends StableID> {
   readonly root: RegionNode<ID> | null;
-  readonly byID: ReadonlyMap<ID, IndexedRegion<ID>>;
+  readonly byID: ReadonlyMap<ID, IndexedRegion<ID>> | null;
+  readonly dense: DenseGridInternals<ID> | null;
+}
+
+interface DenseGridInternals<ID extends StableID> {
+  readonly domain: Sequence<ID>;
+  readonly columnCount: number;
 }
 
 const internals = new WeakMap<TrackGridLayoutState, GridInternals<StableID>>();
@@ -107,6 +119,26 @@ export function createTrackGridLayout<ID extends StableID>(
   input: TrackGridLayoutInput = {},
 ): TrackGridLayoutState<ID> {
   return unwrap(tryCreateTrackGridLayout(rows, columns, regions, input));
+}
+
+export function createDenseTrackGridLayout<ID extends StableID>(
+  rows: ExtentIndex,
+  columns: ExtentIndex,
+  ids: readonly ID[],
+  input: TrackGridLayoutInput = {},
+): TrackGridLayoutState<ID> {
+  const created = tryCreateSequence(ids, {
+    maxItems: input.maxRegions ?? 1_000_000,
+  });
+  const domain = unwrap(created);
+  if (columns.size === 0 && domain.size > 0) {
+    throw new RangeError('Dense grid items require at least one column.');
+  }
+  if (domain.size > rows.size * columns.size) {
+    throw new RangeError('Dense grid tracks must contain every item.');
+  }
+  const state = createTrackGridLayout<ID>(rows, columns, [], input);
+  return createDenseState(state, domain);
 }
 
 export function tryCreateTrackGridLayout<ID extends StableID>(
@@ -196,6 +228,9 @@ export function tryQueryTrackGridLayout<ID extends StableID>(state: TrackGridLay
   if (!grid.ok) return grid;
   const rowRange = trackRange(state.rows, state.rowGap, state.rowFlow, normalized.value.renderBounds.y, normalized.value.renderBounds.y + normalized.value.renderBounds.height);
   const columnRange = trackRange(state.columns, state.columnGap, state.columnFlow, normalized.value.renderBounds.x, normalized.value.renderBounds.x + normalized.value.renderBounds.width);
+  if (grid.value.dense !== null) {
+    return queryDenseGrid(state, grid.value.dense, normalized.value, rowRange, columnRange);
+  }
   const candidates: IndexedRegion<ID>[] = [];
   queryRows(grid.value.root, rowRange.start, rowRange.end, candidates);
   const placements: VirtualPlacement<ID>[] = [];
@@ -250,8 +285,24 @@ export function applyTrackGridMutation<ID extends StableID>(state: TrackGridLayo
 }
 
 export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridLayoutState<ID>, mutation: TrackGridMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<TrackGridLayoutState<ID>>> {
-  if (mutation.type !== 'replace-regions' && mutation.type !== 'splice-tracks') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
+  if (mutation.type !== 'replace-regions' && mutation.type !== 'patch-dense-regions' && mutation.type !== 'splice-tracks') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Grid mutation type is unsupported.', { mutation });
   const before = anchorRect(state, anchor);
+  const current = getInternals(state);
+  if (!current.ok) return current;
+  if (mutation.type === 'patch-dense-regions') {
+    if (current.value.dense === null) return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Dense region patches require a dense grid state.');
+    const domain = tryApplySequencePatch(current.value.dense.domain, mutation.patch, {
+      maxItems: state.maxRegions,
+    });
+    if (!domain.ok) return domain;
+    if (state.columns.size === 0 && domain.value.size > 0 || domain.value.size > state.rows.size * state.columns.size) {
+      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
+    }
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const next = createDenseState({ ...state, generation: generation.value }, domain.value);
+    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+  }
   let rows = state.rows;
   let columns = state.columns;
   let regions: readonly GridRegion<ID>[] = state.regions;
@@ -260,11 +311,25 @@ export function tryApplyTrackGridMutation<ID extends StableID>(state: TrackGridL
     const target = mutation.axis === 'row' ? rows : columns;
     const changed = target.splice(mutation.index, mutation.deleteCount, mutation.inserted);
     if (!changed.ok) return changed;
-    const transformed = transformRegions(regions, mutation.axis, mutation.index, mutation.deleteCount, mutation.inserted.length);
-    if (!transformed.ok) return transformed;
-    regions = transformed.value;
+    if (current.value.dense === null) {
+      const transformed = transformRegions(regions, mutation.axis, mutation.index, mutation.deleteCount, mutation.inserted.length);
+      if (!transformed.ok) return transformed;
+      regions = transformed.value;
+    }
     if (mutation.axis === 'row') rows = changed.value;
     else columns = changed.value;
+  }
+  if (current.value.dense !== null && mutation.type === 'splice-tracks') {
+    if (columns.size === 0 && current.value.dense.domain.size > 0 || current.value.dense.domain.size > rows.size * columns.size) {
+      return fail('transition-rejection', 'virtual-layout-region-invalid', 'Dense grid tracks must contain every item.');
+    }
+    const generation = nextGeneration(state.generation);
+    if (!generation.ok) return generation;
+    const next = createDenseState(
+      { ...state, rows, columns, generation: generation.value },
+      current.value.dense.domain,
+    );
+    return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
   }
   const validated = validateRegions(rows.size, columns.size, regions, state.maxRegions);
   if (!validated.ok) return validated.error.class === 'construction'
@@ -283,8 +348,11 @@ export function trackGridScrollTarget<ID extends StableID>(state: TrackGridLayou
 export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualResult<VirtualPoint> {
   const grid = getInternals(state);
   if (!grid.ok) return grid;
-  const region = grid.value.byID.get(id);
-  const rect = region === undefined ? null : regionRect(state, region.value);
+  const denseIndex = grid.value.dense?.domain.indexOf(id) ?? null;
+  const region = grid.value.byID?.get(id);
+  const rect = denseIndex !== null
+    ? denseRegionRect(state, denseIndex, grid.value.dense!.columnCount)
+    : region === undefined ? null : regionRect(state, region.value);
   if (rect === null) return fail('transition-rejection', 'virtual-layout-scroll-target-invalid', 'Scroll target must exist in the grid region domain.', { id });
   const size = contentSize(state);
   return ok(Object.freeze({
@@ -295,7 +363,9 @@ export function tryTrackGridScrollTarget<ID extends StableID>(state: TrackGridLa
 
 export function trackGridRegionRect<ID extends StableID>(state: TrackGridLayoutState<ID>, id: ID): VirtualRect | null {
   const grid = internals.get(state as TrackGridLayoutState);
-  const region = grid?.byID.get(id);
+  const denseIndex = grid?.dense?.domain.indexOf(id) ?? null;
+  if (denseIndex !== null) return denseRegionRect(state, denseIndex, grid!.dense!.columnCount);
+  const region = grid?.byID?.get(id);
   return region === undefined ? null : regionRect(state, region.value as GridRegion<ID>);
 }
 
@@ -309,8 +379,105 @@ function createState<ID extends StableID>(state: Omit<TrackGridLayoutState<ID>, 
   }
   if (indexed === null) throw new Error('Internal invariant breach: grid regions require an index.');
   const sorted = [...indexed].sort(compareRegions);
-  internals.set(frozen, { root: buildRegionTree(sorted, 0, sorted.length), byID: new Map(indexed.map((region) => [region.value.id, region])) } as GridInternals<StableID>);
+  internals.set(frozen, { root: buildRegionTree(sorted, 0, sorted.length), byID: new Map(indexed.map((region) => [region.value.id, region])), dense: null } as GridInternals<StableID>);
   return frozen;
+}
+
+function createDenseState<ID extends StableID>(
+  state: Omit<TrackGridLayoutState<ID>, typeof trackGridLayoutStateBrand>,
+  domain: Sequence<ID>,
+): TrackGridLayoutState<ID> {
+  const columnCount = state.columns.size;
+  const regions = denseRegions(domain, columnCount);
+  return createState(
+    { ...state, regions },
+    null,
+    { root: null, byID: null, dense: Object.freeze({ domain, columnCount }) },
+  );
+}
+
+function denseRegions<ID extends StableID>(
+  domain: Sequence<ID>,
+  columnCount: number,
+): readonly GridRegion<ID>[] {
+  const target = new Array<GridRegion<ID>>(domain.size);
+  return new Proxy(target, {
+    get(array, property, receiver) {
+      if (typeof property === 'string') {
+        const index = Number(property);
+        if (Number.isSafeInteger(index) && index >= 0 && index < domain.size) {
+          const existing = array[index];
+          if (existing !== undefined) return existing;
+          const id = domain.at(index);
+          if (id === null) return undefined;
+          const region = Object.freeze({
+            id,
+            row: Math.floor(index / columnCount),
+            column: index % columnCount,
+          });
+          array[index] = region;
+          return region;
+        }
+      }
+      return Reflect.get(array, property, receiver);
+    },
+    set: () => false,
+    deleteProperty: () => false,
+  });
+}
+
+function queryDenseGrid<ID extends StableID>(
+  state: TrackGridLayoutState<ID>,
+  dense: DenseGridInternals<ID>,
+  input: Readonly<{ readonly viewport: VirtualRect; readonly renderBounds: VirtualRect }>,
+  rowRange: TrackRange,
+  columnRange: TrackRange,
+): VirtualResult<TrackGridLayoutPlan<ID>> {
+  const placements: VirtualPlacement<ID>[] = [];
+  for (let row = rowRange.start; row < rowRange.end; row += 1) {
+    for (let column = columnRange.start; column < columnRange.end; column += 1) {
+      const index = row * dense.columnCount + column;
+      const id = dense.domain.at(index);
+      if (id === null) continue;
+      const rect = denseRegionRect(state, index, dense.columnCount);
+      if (rect === null || !rectanglesIntersect(rect, input.renderBounds)) continue;
+      placements.push(Object.freeze({
+        id,
+        index,
+        rect,
+        visible: rectanglesIntersect(rect, input.viewport),
+      }));
+    }
+  }
+  const frozen = Object.freeze(placements);
+  return ok(Object.freeze({
+    generation: state.generation,
+    contentSize: contentSize(state),
+    viewport: input.viewport,
+    renderBounds: input.renderBounds,
+    placements: frozen,
+    anchor: anchorForPlan(input.viewport, frozen),
+    rowRange,
+    columnRange,
+  }));
+}
+
+function denseRegionRect<ID extends StableID>(
+  state: TrackGridLayoutState<ID>,
+  index: number,
+  columnCount: number,
+): VirtualRect | null {
+  if (columnCount === 0) return null;
+  const row = Math.floor(index / columnCount);
+  const column = index % columnCount;
+  const rowSpan = trackSpan(state.rows, state.rowGap, state.rowFlow, row, 1);
+  const columnSpan = trackSpan(state.columns, state.columnGap, state.columnFlow, column, 1);
+  return rowSpan === null || columnSpan === null ? null : Object.freeze({
+    x: columnSpan.start,
+    y: rowSpan.start,
+    width: columnSpan.extent,
+    height: rowSpan.extent,
+  });
 }
 
 function validateRegions<ID extends StableID>(rowCount: number, columnCount: number, regions: readonly GridRegion<ID>[], maxRegions: number): VirtualResult<readonly IndexedRegion<ID>[]> {

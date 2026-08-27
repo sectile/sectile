@@ -1,6 +1,11 @@
 import type { StableID } from '@sectile/core';
 import type { VirtualResult } from './error.js';
-import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
+import {
+  tryApplySequencePatch,
+  tryCreateSequence,
+  type Sequence,
+  type SequencePatch,
+} from '@sectile/core/sequence';
 import { unwrap } from '@sectile/core/result';
 import { fail, ok } from './internal/foundation.js';
 import {
@@ -39,7 +44,12 @@ export interface SpatialMeasurement<ID extends StableID = StableID> { readonly i
 
 export type SpatialMutation<ID extends StableID = StableID> =
   | { readonly type: 'replace'; readonly items: readonly SpatialItem<ID>[] }
-  | { readonly type: 'update'; readonly upsert?: readonly SpatialItem<ID>[]; readonly remove?: readonly ID[] };
+  | { readonly type: 'update'; readonly upsert?: readonly SpatialItem<ID>[]; readonly remove?: readonly ID[] }
+  | {
+      readonly type: 'patch';
+      readonly patch: SequencePatch<ID>;
+      readonly inserted: readonly SpatialItem<ID>[];
+    };
 
 export interface SpatialPlacement<ID extends StableID = StableID> extends VirtualPlacement<ID> { readonly zIndex: number; }
 export interface SpatialLayoutPlan<ID extends StableID = StableID> extends VirtualLayoutPlan<ID> { readonly placements: readonly SpatialPlacement<ID>[]; }
@@ -179,7 +189,8 @@ export function applySpatialMutation<ID extends StableID>(state: SpatialLayoutSt
 }
 
 export function tryApplySpatialMutation<ID extends StableID>(state: SpatialLayoutState<ID>, mutation: SpatialMutation<ID>, anchor: VirtualAnchor<ID> | null = null): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
-  if (mutation.type !== 'replace' && mutation.type !== 'update') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial mutation type is unsupported.', { mutation });
+  if (mutation.type !== 'replace' && mutation.type !== 'update' && mutation.type !== 'patch') return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial mutation type is unsupported.', { mutation });
+  if (mutation.type === 'patch') return tryApplySpatialPatch(state, mutation, anchor);
   let items: readonly SpatialItem<ID>[];
   if (mutation.type === 'replace') items = mutation.items;
   else {
@@ -211,6 +222,52 @@ export function tryApplySpatialMutation<ID extends StableID>(state: SpatialLayou
   if (!generation.ok) return generation;
   const next = createState(validated.value.domain, validated.value.items, state.maxItems, generation.value);
   return ok(Object.freeze({ state: next, scrollDelta: anchorDelta(before, anchorRect(next, anchor)) }));
+}
+
+function tryApplySpatialPatch<ID extends StableID>(
+  state: SpatialLayoutState<ID>,
+  mutation: Extract<SpatialMutation<ID>, { readonly type: 'patch' }>,
+  anchor: VirtualAnchor<ID> | null,
+): VirtualResult<VirtualLayoutMutation<SpatialLayoutState<ID>>> {
+  if (mutation.patch.type !== 'splice') {
+    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial item patches must use splice semantics.');
+  }
+  const patch = mutation.patch;
+  if (
+    patch.inserted.length !== mutation.inserted.length
+    || mutation.inserted.some((item, index) => item.id !== patch.inserted[index])
+  ) {
+    return fail('transition-rejection', 'virtual-layout-mutation-invalid', 'Spatial inserted items must match the patched identities.');
+  }
+  const frozenInserted: SpatialItem<ID>[] = [];
+  for (const item of mutation.inserted) {
+    if (!validRect(item.rect) || (item.zIndex !== undefined && !Number.isSafeInteger(item.zIndex))) {
+      return fail('transition-rejection', 'virtual-layout-geometry-invalid', 'Spatial items require finite non-negative rectangles and safe-integer z-indices.', { item });
+    }
+    frozenInserted.push(Object.freeze({
+      id: item.id,
+      rect: freezeRect(item.rect),
+      ...(item.zIndex === undefined || item.zIndex === 0 ? {} : { zIndex: item.zIndex }),
+    }));
+  }
+  const domain = tryApplySequencePatch(state.domain, patch, {
+    maxItems: state.maxItems,
+  });
+  if (!domain.ok) return domain;
+  const items = [...state.items];
+  items.splice(
+    patch.index,
+    patch.deleteCount,
+    ...frozenInserted,
+  );
+  const before = anchorRect(state, anchor);
+  const generation = nextGeneration(state.generation);
+  if (!generation.ok) return generation;
+  const next = createState(domain.value, items, state.maxItems, generation.value);
+  return ok(Object.freeze({
+    state: next,
+    scrollDelta: anchorDelta(before, anchorRect(next, anchor)),
+  }));
 }
 
 export function spatialScrollTarget<ID extends StableID>(state: SpatialLayoutState<ID>, id: ID, viewport: VirtualRect, alignment: VirtualScrollAlignment = 'nearest'): VirtualPoint {

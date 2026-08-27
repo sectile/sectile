@@ -77,6 +77,35 @@ test('SPA-03: measurement, update, and removal keep domain and index observation
   assert.equal(spatialRectAt(updated, 'item-39'), null);
 });
 
+test('spatial splice patches preserve declaration order and validate inserted identities', () => {
+  const rect = (x) => ({ x, y: 0, width: 10, height: 10 });
+  const state = createSpatialLayout([
+    { id: 'a', rect: rect(0) },
+    { id: 'b', rect: rect(20) },
+    { id: 'c', rect: rect(40) },
+  ]);
+  const changed = applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 1, deleteCount: 1, inserted: ['x', 'y'] },
+    inserted: [
+      { id: 'x', rect: rect(10) },
+      { id: 'y', rect: rect(30) },
+    ],
+  }).state;
+  assert.deepEqual(changed.domain.ids, ['a', 'x', 'y', 'c']);
+  assert.deepEqual(changed.items.map(({ id }) => id), changed.domain.ids);
+  assert.deepEqual(
+    querySpatialLayout(changed, { viewport: { x: 0, y: 0, width: 60, height: 20 } })
+      .placements.map(({ id, index }) => [id, index]),
+    [['a', 0], ['x', 1], ['y', 2], ['c', 3]],
+  );
+  assert.throws(() => applySpatialMutation(state, {
+    type: 'patch',
+    patch: { type: 'splice', index: 0, deleteCount: 0, inserted: ['wrong'] },
+    inserted: [{ id: 'different', rect: rect(0) }],
+  }), /inserted items must match/);
+});
+
 test('SPA-04: boundaries, zero-size rectangles, anchors, and stale generations are explicit', () => {
   const state = createSpatialLayout([
     { id: 'anchor', rect: { x: 10, y: 10, width: 20, height: 20 } },

@@ -5,6 +5,7 @@ import { createExtentIndex } from '../../.verification-dist/extent-index.js';
 import {
   applyGridMeasurements,
   applyTrackGridMutation,
+  createDenseTrackGridLayout,
   createTrackGridLayout,
   queryTrackGridLayout,
   trackGridRegionRect,
@@ -107,4 +108,30 @@ test('GRD-04: row and column measurements preserve the index, anchor, and genera
   }, anchor);
   assert.deepEqual(inserted.state.regions, [{ id: 'anchor', row: 3, column: 2 }]);
   assert.ok(trackGridRegionRect(inserted.state, anchor.id) !== null);
+});
+
+test('dense grid patches derive regions and visible placements from sequence indices', () => {
+  const rows = createExtentIndex(Array.from({ length: 4 }, () => exact(20)));
+  const columns = createExtentIndex(Array.from({ length: 3 }, () => exact(30)));
+  const state = createDenseTrackGridLayout(rows, columns, ['a', 'b', 'c', 'd', 'e']);
+  assert.deepEqual(state.regions[4], { id: 'e', row: 1, column: 1 });
+  const changed = applyTrackGridMutation(state, {
+    type: 'patch-dense-regions',
+    patch: { type: 'splice', index: 1, deleteCount: 2, inserted: ['x', 'y', 'z'] },
+  }).state;
+  assert.equal(changed.regions.length, 6);
+  assert.deepEqual([...changed.regions].map(({ id, row, column }) => [id, row, column]), [
+    ['a', 0, 0],
+    ['x', 0, 1],
+    ['y', 0, 2],
+    ['z', 1, 0],
+    ['d', 1, 1],
+    ['e', 1, 2],
+  ]);
+  assert.deepEqual(
+    queryTrackGridLayout(changed, { viewport: { x: 0, y: 20, width: 90, height: 20 } })
+      .placements.map(({ id, index }) => [id, index]),
+    [['z', 3], ['d', 4], ['e', 5]],
+  );
+  assert.deepEqual(trackGridRegionRect(changed, 'd'), { x: 30, y: 20, width: 30, height: 20 });
 });
