@@ -1,5 +1,25 @@
 {
   "schemaVersion": 2,
+  "tabularProfiles": {
+    "data-table": {
+      "tabular": ["packages/tabular/tests/profiles/data-table.test.mjs"],
+      "dom": ["packages/dom/tests/tabular.test.mjs"],
+      "vue": ["packages/vue/tests/data-table.test.mjs"],
+      "docs": { "en": "docs/packages/tabular.md", "ko": "docs/ko/packages/tabular.md" }
+    },
+    "data-grid": {
+      "tabular": ["packages/tabular/tests/profiles/data-grid.test.mjs"],
+      "dom": ["packages/dom/tests/tabular.test.mjs"],
+      "vue": ["packages/vue/tests/data-grid.test.mjs"],
+      "docs": { "en": "docs/packages/tabular.md", "ko": "docs/ko/packages/tabular.md" }
+    },
+    "data-tree-grid": {
+      "tabular": ["packages/tabular/tests/profiles/data-tree-grid.test.mjs"],
+      "dom": ["packages/dom/tests/tabular.test.mjs"],
+      "vue": ["packages/vue/tests/data-tree-grid.test.mjs"],
+      "docs": { "en": "docs/packages/tabular.md", "ko": "docs/ko/packages/tabular.md" }
+    }
+  },
   "support": {
     "layer-stack": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },

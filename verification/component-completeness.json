@@ -12,6 +12,11 @@
     "cross-host-parity"
   ],
   "migrationGaps": {},
+  "tabularProfiles": [
+    { "id": "data-table", "standard": "docs/packages/tabular.md#datatable", "capabilities": ["semantic-table-projection", "row-selection", "sorting-filtering-grouping", "native-form-coordination"] },
+    { "id": "data-grid", "standard": "docs/packages/tabular.md#datagrid", "capabilities": ["two-dimensional-cursor", "cell-editing", "row-selection", "column-coordination"] },
+    { "id": "data-tree-grid", "standard": "docs/packages/tabular.md#datatreegrid", "capabilities": ["hierarchical-row-projection", "two-dimensional-cursor", "expansion", "cell-editing"] }
+  ],
   "components": [
     { "id": "accordion", "family": "expansion", "standard": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/", "capabilities": ["cursor", "single-or-multiple-expansion", "collapsible-policy", "eligibility"], "scenarios": { "dom": ["single", "multiple", "required", "controlled"], "terminal": ["single", "multiple", "required", "controlled"] } },
     { "id": "alert-dialog", "family": "popup", "standard": "https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/", "capabilities": ["open-state", "initial-focus-command", "focus-restore-command", "announcement-command", "focus-trap", "controlled-open"], "scenarios": { "dom": ["destructive", "unsaved", "controlled"], "terminal": ["destructive", "unsaved", "controlled"] } },

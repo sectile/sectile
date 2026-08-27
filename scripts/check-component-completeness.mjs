@@ -18,6 +18,7 @@ const supportSubpaths = new Set([
   'package.json', 'adapter-runtime', 'sequence', 'selection', 'extent-index', 'range', 'tree', 'result', 'revision', 'interaction',
   'collection-window', 'virtual-layout', 'virtual', 'layer-stack', 'reorder',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
+  'model', 'query', 'source', 'data-table', 'data-grid', 'data-tree-grid',
 ]);
 const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
 const migrationBaselineIDs = new Set([
@@ -31,7 +32,7 @@ const migrationBaselineIDs = new Set([
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
 const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
 const allowedHostInputs = {
-  dom: new Set(['focus', 'ime', 'keyboard', 'native-form', 'pointer', 'text', 'timer']),
+  dom: new Set(['focus', 'ime', 'keyboard', 'measurement', 'native-form', 'pointer', 'resize', 'scroll', 'text', 'timer']),
   terminal: new Set(['keyboard', 'text', 'timer']),
 };
 assert.equal(manifest.schemaVersion, 1, 'Unsupported component completeness schema.');
@@ -194,4 +195,43 @@ for (const id of canonical) {
   assert.ok(ids.includes(id), `${id}: unaudited public component.`);
 }
 
-console.log(`component completeness contract: ${canonical.length} public components, ${declaredFamilies.length} evidence families, ${Object.keys(gaps).length} migration entries`);
+const tabularProfiles = manifest.tabularProfiles;
+assert.ok(Array.isArray(tabularProfiles), 'Tabular profiles must be declared.');
+assert.deepEqual(
+  tabularProfiles.map((entry) => entry.id).sort(),
+  ['data-grid', 'data-table', 'data-tree-grid'],
+  'Tabular profiles must be exact.',
+);
+const tabularPackages = ['tabular', 'dom', 'vue'];
+for (const entry of tabularProfiles) {
+  assert.match(entry.id, /^data-(?:table|grid|tree-grid)$/u, `${entry.id}: invalid Tabular profile ID.`);
+  assert.ok(Array.isArray(entry.capabilities) && entry.capabilities.length >= 2,
+    `${entry.id}: declare Tabular profile capabilities.`);
+  assert.equal(new Set(entry.capabilities).size, entry.capabilities.length,
+    `${entry.id}: Tabular capabilities must be unique.`);
+  assert.ok(entry.standard.startsWith('docs/'), `${entry.id}: Tabular standard must be a repository document.`);
+  for (const packageName of tabularPackages) {
+    const pkg = JSON.parse(await readFile(`packages/${packageName}/package.json`, 'utf8'));
+    assert.ok(pkg.exports?.[`./${entry.id}`] !== undefined,
+      `${entry.id}: @sectile/${packageName} subpath missing.`);
+  }
+  const terminal = JSON.parse(await readFile('packages/terminal/package.json', 'utf8'));
+  assert.equal(terminal.exports?.[`./${entry.id}`], undefined,
+    `${entry.id}: terminal projection is intentionally unsupported.`);
+  const profileEvidence = evidence.tabularProfiles?.[entry.id];
+  assert.ok(profileEvidence !== undefined, `${entry.id}: evidence must be declared.`);
+  for (const packageName of tabularPackages) {
+    const paths = profileEvidence[packageName];
+    assert.ok(Array.isArray(paths) && paths.length > 0,
+      `${entry.id}: ${packageName} evidence must be declared.`);
+    for (const path of paths) assert.equal((await stat(path)).isFile(), true,
+      `${entry.id}: missing ${packageName} evidence ${path}.`);
+  }
+  for (const locale of ['en', 'ko']) {
+    const path = profileEvidence.docs?.[locale];
+    assert.equal(typeof path, 'string', `${entry.id}: ${locale} documentation must be declared.`);
+    assert.equal((await stat(path)).isFile(), true, `${entry.id}: missing documentation ${path}.`);
+  }
+}
+
+console.log(`component completeness contract: ${canonical.length} public components, ${tabularProfiles.length} Tabular profiles, ${declaredFamilies.length} evidence families, ${Object.keys(gaps).length} migration entries`);

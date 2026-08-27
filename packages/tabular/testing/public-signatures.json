@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 3,
+  "package": "@sectile/tabular",
+  "exports": [
+    {
+      "subpath": ".",
+      "types": "dist/index.d.ts"
+    },
+    {
+      "subpath": "./data-grid",
+      "types": "dist/data-grid.d.ts"
+    },
+    {
+      "subpath": "./data-table",
+      "types": "dist/data-table.d.ts"
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "types": "dist/data-tree-grid.d.ts"
+    },
+    {
+      "subpath": "./model",
+      "types": "dist/model.d.ts"
+    },
+    {
+      "subpath": "./query",
+      "types": "dist/query.d.ts"
+    },
+    {
+      "subpath": "./source",
+      "types": "dist/source.d.ts"
+    },
+    {
+      "subpath": "./virtual",
+      "types": "dist/virtual.d.ts"
+    }
+  ],
+  "fingerprint": "8d6dd52331e9ce73b7f293f40dc881a7e2170acc150325f572f8ac8de17f88cd",
+  "files": [
+    {
+      "path": "dist/contracts.d.ts",
+      "sha256": "20c5161e0d42dcd9abcb58829af2ba2232c5537dd99efa1e698a91a014c736cb"
+    },
+    {
+      "path": "dist/data-grid.d.ts",
+      "sha256": "3fdab77e8438a54744d6641cac9bc02a0f7ff60672c25c24b65e0cf0705b8075"
+    },
+    {
+      "path": "dist/data-table.d.ts",
+      "sha256": "b430f1eb2972a1998bec70a509ce95602f7c6dda60b3945c40dff09acf51637f"
+    },
+    {
+      "path": "dist/data-tree-grid.d.ts",
+      "sha256": "0d0e7fe6fc309b02609c438f130dd9656d5a2b4eb2b28b0d5f149d9fa6dd259a"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "sha256": "4bf95f155da6b67bae2fff0f239f4da56d6af969fd3e8dcaacf064b3e34527be"
+    },
+    {
+      "path": "dist/internal/grid-profile.d.ts",
+      "sha256": "7ffd7f7ef2f02d27552bf04089b4c7a648551df3d562f9f2883e0fbe10a827d0"
+    },
+    {
+      "path": "dist/model.d.ts",
+      "sha256": "84b10260b8183b26d634105252ac8109e81a35ec319591a6005c87062ae49a88"
+    },
+    {
+      "path": "dist/query.d.ts",
+      "sha256": "6d320aedbb1a6eaae9a8dfe99cdf74713252b05dbc2e2302196c5e2b2d3812d3"
+    },
+    {
+      "path": "dist/source.d.ts",
+      "sha256": "05dfe9fc5389ae3890b0e940b0aa97133038c7078f44a1974b1494f2641890f2"
+    },
+    {
+      "path": "dist/virtual.d.ts",
+      "sha256": "15b5dc589a94180c9fe92445fbb8035bf90c3b16dad0559306a4fe88562ee2c2"
+    }
+  ]
+}

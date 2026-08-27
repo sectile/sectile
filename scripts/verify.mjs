@@ -17,6 +17,8 @@ if (quietRequested && verbose) throw new Error('verification cannot be both quie
 const generatedOutputs = [
   join(root, 'packages', 'core', 'dist'),
   join(root, 'packages', 'core', '.verification-dist'),
+  join(root, 'packages', 'tabular', 'dist'),
+  join(root, 'packages', 'tabular', '.verification-dist'),
   join(root, 'packages', 'temporal', 'dist'),
   join(root, 'packages', 'temporal', '.verification-dist'),
   join(root, 'packages', 'virtual', 'dist'),
@@ -36,6 +38,7 @@ const packageStep = (label, packageName, script) => Object.freeze({
 const fullSteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core verification', '@sectile/core', 'verify'),
+  packageStep('Tabular verification', '@sectile/tabular', 'verify'),
   packageStep('temporal verification', '@sectile/temporal', 'verify'),
   packageStep('virtual verification', '@sectile/virtual', 'verify'),
   packageStep('DOM verification', '@sectile/dom', 'verify'),
@@ -58,11 +61,14 @@ const fullSteps = [
   Object.freeze({ label: 'workspace boundaries', ...pnpm('check:boundaries') }),
   Object.freeze({ label: 'public signatures', ...pnpm('check:signatures') }),
   Object.freeze({ label: 'component completeness', ...pnpm('check:components') }),
+  Object.freeze({ label: 'component public API', ...pnpm('check:component-api') }),
 ];
 
 const compatibilitySteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core runtime tests', '@sectile/core', 'test'),
+  packageStep('Tabular runtime tests', '@sectile/tabular', 'test'),
+  packageStep('Tabular compatibility build', '@sectile/tabular', 'build'),
   packageStep('temporal runtime tests', '@sectile/temporal', 'test'),
   packageStep('temporal compatibility build', '@sectile/temporal', 'build'),
   packageStep('virtual runtime tests', '@sectile/virtual', 'test'),

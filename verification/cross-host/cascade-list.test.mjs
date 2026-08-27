@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCascadeList as createDOMCascadeList } from '../../packages/dom/dist/cascade-list.js';
-import { createCascadeList as createTerminalCascadeList } from '../../packages/terminal/dist/cascade-list.js';
+import { createCascadeList as createDOMCascadeList } from '@sectile/dom/cascade-list';
+import { createCascadeList as createTerminalCascadeList } from '@sectile/terminal/cascade-list';
 
 const nodes = [
   { id: 'root-a', parentID: null }, { id: 'root-b', parentID: null },

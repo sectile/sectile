@@ -7,12 +7,27 @@ sectile/
 │   ├── data/
 │   │   └── taskchampion.sqlite3
 │   ├── items/
+│   │   ├── cascade-list-shared-engine-f0dd0e23f1/
+│   │   │   ├── manifest.json
+│   │   │   ├── plan.md
+│   │   │   ├── spec.md
+│   │   │   └── validation.md
 │   │   ├── cross-host-form-coordination-f16d4a2bc7/
 │   │   │   ├── manifest.json
 │   │   │   ├── plan.md
 │   │   │   ├── spec.md
 │   │   │   └── validation.md
-│   │   └── structured-form-participation-caaa1fa03b/
+│   │   ├── meter-progress-range-primitives-3810e81c00/
+│   │   │   ├── manifest.json
+│   │   │   ├── plan.md
+│   │   │   ├── spec.md
+│   │   │   └── validation.md
+│   │   ├── structured-form-participation-caaa1fa03b/
+│   │   │   ├── manifest.json
+│   │   │   ├── plan.md
+│   │   │   ├── spec.md
+│   │   │   └── validation.md
+│   │   └── tabular-data-interaction-system-68aa4ec990/
 │   │       ├── manifest.json
 │   │       ├── plan.md
 │   │       ├── spec.md
@@ -21,7 +36,39 @@ sectile/
 │   │   └── taskchampion.sqlite3
 │   ├── task-data/
 │   │   └── taskchampion.sqlite3
+│   ├── taskwarrior/
+│   │   └── taskchampion.sqlite3
+│   ├── taskchampion.sqlite3
 │   └── taskrc
+├── _workspace/
+│   ├── 2026-08-27-001/
+│   │   ├── final.md
+│   │   └── original.md
+│   ├── 2026-08-28-001/
+│   │   ├── final.md
+│   │   └── original.md
+│   └── 2026-08-28-002/
+│       ├── final.md
+│       └── original.md
+├── benchmarks/
+│   └── virtual-ecosystem/
+│       ├── results/
+│       │   └── chrome-151-macos-arm64.json
+│       ├── scripts/
+│       │   └── commit-results.mjs
+│       ├── src/
+│       │   ├── adapters.tsx
+│       │   ├── constants.ts
+│       │   ├── main.ts
+│       │   ├── mutable-adapters.tsx
+│       │   ├── mutation-runner.ts
+│       │   ├── mutations.ts
+│       │   └── style.css
+│       ├── index.html
+│       ├── package.json
+│       ├── README.md
+│       ├── tsconfig.json
+│       └── vite.config.ts
 ├── docs/
 │   ├── .vitepress/
 │   │   ├── theme/
@@ -29,6 +76,7 @@ sectile/
 │   │   │   │   ├── AccordionCase.vue
 │   │   │   │   ├── BashTerminal.vue
 │   │   │   │   ├── CalendarExample.vue
+│   │   │   │   ├── CascadeListCase.vue
 │   │   │   │   ├── CascadeSelectCase.vue
 │   │   │   │   ├── CatalogCase.vue
 │   │   │   │   ├── CheckedControlCase.vue
@@ -36,8 +84,12 @@ sectile/
 │   │   │   │   ├── ComponentCatalog.vue
 │   │   │   │   ├── ComponentExample.vue
 │   │   │   │   ├── ComponentExamplePreview.vue
+│   │   │   │   ├── ComponentGalleryCard.vue
+│   │   │   │   ├── ComponentGalleryPreview.vue
 │   │   │   │   ├── DateRangeFieldCase.vue
 │   │   │   │   ├── DemoCard.vue
+│   │   │   │   ├── DemoCascadeList.vue
+│   │   │   │   ├── DemoCascadeSelect.vue
 │   │   │   │   ├── DemoSelect.vue
 │   │   │   │   ├── DisclosureCase.vue
 │   │   │   │   ├── EditableCase.vue
@@ -50,9 +102,12 @@ sectile/
 │   │   │   │   ├── HostSelector.vue
 │   │   │   │   ├── ListboxCase.vue
 │   │   │   │   ├── MenubarExample.vue
+│   │   │   │   ├── MeterCase.vue
+│   │   │   │   ├── MeterGroupCase.vue
 │   │   │   │   ├── MultiThumbSliderCase.vue
 │   │   │   │   ├── NativeFieldCase.vue
 │   │   │   │   ├── NavPreferenceMenu.vue
+│   │   │   │   ├── PackageBoundaryMap.vue
 │   │   │   │   ├── PackageImport.vue
 │   │   │   │   ├── PaginationCase.vue
 │   │   │   │   ├── PickerCalendarDemo.vue
@@ -66,6 +121,7 @@ sectile/
 │   │   │   │   ├── TerminalComponentExample.vue
 │   │   │   │   ├── TextCase.vue
 │   │   │   │   ├── TheoryComposition.vue
+│   │   │   │   ├── TheoryContractDiagram.vue
 │   │   │   │   ├── TheoryOverview.vue
 │   │   │   │   ├── TimeRangeFieldCase.vue
 │   │   │   │   ├── TimerCase.vue
@@ -73,6 +129,12 @@ sectile/
 │   │   │   │   ├── ToggleGroupCase.vue
 │   │   │   │   ├── TreeGridCase.vue
 │   │   │   │   ├── TreeViewCase.vue
+│   │   │   │   ├── VirtualBenchmarkReport.vue
+│   │   │   │   ├── VirtualConceptDiagram.vue
+│   │   │   │   ├── VirtualStrategyLab.vue
+│   │   │   │   ├── VirtualStrengthOverview.vue
+│   │   │   │   ├── VirtualWindowLab.vue
+│   │   │   │   ├── VirtualWorkItemRow.vue
 │   │   │   │   └── WindowSplitterCase.vue
 │   │   │   ├── bash-terminal-bridge.ts
 │   │   │   ├── catalog-code.ts
@@ -91,13 +153,15 @@ sectile/
 │   │   │   ├── locale.ts
 │   │   │   ├── number-field-examples.ts
 │   │   │   ├── pin-input-example-options.ts
+│   │   │   ├── semantic-system.css
 │   │   │   ├── specialized-example-code.ts
 │   │   │   ├── styles.css
 │   │   │   ├── temporal-demo-format.ts
 │   │   │   ├── terminal-demo-sessions.mjs
 │   │   │   ├── terminal-demo-ui.mjs
 │   │   │   ├── terminal-keyboard-input.mjs
-│   │   │   └── types.ts
+│   │   │   ├── types.ts
+│   │   │   └── virtual-benchmark-data.ts
 │   │   └── config.ts
 │   ├── architecture/
 │   │   ├── composite-proof-plan.md
@@ -108,6 +172,7 @@ sectile/
 │   │   ├── alert-dialog.md
 │   │   ├── calendar.md
 │   │   ├── carousel.md
+│   │   ├── cascade-list.md
 │   │   ├── cascade-select.md
 │   │   ├── checkbox-group.md
 │   │   ├── checkbox.md
@@ -132,6 +197,8 @@ sectile/
 │   │   ├── menu-button.md
 │   │   ├── menu.md
 │   │   ├── menubar.md
+│   │   ├── meter-group.md
+│   │   ├── meter.md
 │   │   ├── month-picker.md
 │   │   ├── month-range-picker.md
 │   │   ├── multi-thumb-slider.md
@@ -140,6 +207,7 @@ sectile/
 │   │   ├── pagination.md
 │   │   ├── pin-input.md
 │   │   ├── popover.md
+│   │   ├── progress.md
 │   │   ├── quantity-field.md
 │   │   ├── radio-group.md
 │   │   ├── range-calendar.md
@@ -168,6 +236,7 @@ sectile/
 │   ├── data/
 │   │   ├── component-contracts.mjs
 │   │   ├── component-documentation.mjs
+│   │   ├── component-sections.ts
 │   │   ├── component-summaries.mjs
 │   │   ├── components.json
 │   │   ├── scenario-descriptions.mjs
@@ -181,6 +250,11 @@ sectile/
 │   │   ├── index.md
 │   │   ├── naming.md
 │   │   └── package-boundary.md
+│   ├── examples/
+│   │   └── virtual/
+│   │       ├── linear-window.ts
+│   │       ├── strategy-explorer.ts
+│   │       └── work-item-data.ts
 │   ├── getting-started/
 │   │   ├── consumer-usage.md
 │   │   └── index.md
@@ -199,6 +273,7 @@ sectile/
 │   │   │   ├── alert-dialog.md
 │   │   │   ├── calendar.md
 │   │   │   ├── carousel.md
+│   │   │   ├── cascade-list.md
 │   │   │   ├── cascade-select.md
 │   │   │   ├── checkbox-group.md
 │   │   │   ├── checkbox.md
@@ -223,6 +298,8 @@ sectile/
 │   │   │   ├── menu-button.md
 │   │   │   ├── menu.md
 │   │   │   ├── menubar.md
+│   │   │   ├── meter-group.md
+│   │   │   ├── meter.md
 │   │   │   ├── month-picker.md
 │   │   │   ├── month-range-picker.md
 │   │   │   ├── multi-thumb-slider.md
@@ -231,6 +308,7 @@ sectile/
 │   │   │   ├── pagination.md
 │   │   │   ├── pin-input.md
 │   │   │   ├── popover.md
+│   │   │   ├── progress.md
 │   │   │   ├── quantity-field.md
 │   │   │   ├── radio-group.md
 │   │   │   ├── range-calendar.md
@@ -264,13 +342,35 @@ sectile/
 │   │   │   ├── state-ownership.md
 │   │   │   └── styling.md
 │   │   ├── packages/
+│   │   │   ├── core/
+│   │   │   │   ├── foundations.md
+│   │   │   │   ├── structures.md
+│   │   │   │   └── transitions.md
+│   │   │   ├── tabular/
+│   │   │   │   ├── virtual.md
+│   │   │   │   └── vue.md
+│   │   │   ├── temporal/
+│   │   │   │   ├── calendars.md
+│   │   │   │   ├── determinism.md
+│   │   │   │   └── values.md
+│   │   │   ├── virtual/
+│   │   │   │   ├── benchmark.md
+│   │   │   │   ├── concepts.md
+│   │   │   │   ├── dom.md
+│   │   │   │   ├── layouts.md
+│   │   │   │   ├── linear.md
+│   │   │   │   ├── measurement.md
+│   │   │   │   └── vue.md
 │   │   │   ├── core.md
 │   │   │   ├── dom.md
 │   │   │   ├── index.md
+│   │   │   ├── tabular.md
 │   │   │   ├── temporal.md
 │   │   │   ├── terminal.md
 │   │   │   ├── virtual.md
 │   │   │   └── vue.md
+│   │   ├── performance/
+│   │   │   └── virtualization.md
 │   │   ├── theory/
 │   │   │   ├── composition.md
 │   │   │   ├── index.md
@@ -281,9 +381,29 @@ sectile/
 │   │   │   └── virtualization.md
 │   │   └── index.md
 │   ├── packages/
+│   │   ├── core/
+│   │   │   ├── foundations.md
+│   │   │   ├── structures.md
+│   │   │   └── transitions.md
+│   │   ├── tabular/
+│   │   │   ├── virtual.md
+│   │   │   └── vue.md
+│   │   ├── temporal/
+│   │   │   ├── calendars.md
+│   │   │   ├── determinism.md
+│   │   │   └── values.md
+│   │   ├── virtual/
+│   │   │   ├── benchmark.md
+│   │   │   ├── concepts.md
+│   │   │   ├── dom.md
+│   │   │   ├── layouts.md
+│   │   │   ├── linear.md
+│   │   │   ├── measurement.md
+│   │   │   └── vue.md
 │   │   ├── core.md
 │   │   ├── dom.md
 │   │   ├── index.md
+│   │   ├── tabular.md
 │   │   ├── temporal.md
 │   │   ├── terminal.md
 │   │   ├── virtual.md
@@ -306,7 +426,9 @@ sectile/
 │   │   ├── sectile-theory.md
 │   │   └── verification.md
 │   ├── scripts/
-│   │   └── generate-component-pages.mjs
+│   │   ├── cascade-list-integration.test.mjs
+│   │   ├── generate-component-pages.mjs
+│   │   └── tabular-integration.test.mjs
 │   ├── testing/
 │   │   ├── browser-accessibility.md
 │   │   ├── index.md
@@ -356,6 +478,7 @@ sectile/
 │   │   ├── src/
 │   │   │   ├── internal/
 │   │   │   │   ├── composites/
+│   │   │   │   │   ├── cascade-choice.ts
 │   │   │   │   │   ├── combobox.ts
 │   │   │   │   │   ├── grid-control.ts
 │   │   │   │   │   ├── linear-action.ts
@@ -369,6 +492,7 @@ sectile/
 │   │   │   │   ├── editing/
 │   │   │   │   │   └── text.ts
 │   │   │   │   ├── kernel/
+│   │   │   │   │   ├── bounded-scalar.ts
 │   │   │   │   │   ├── decimal.ts
 │   │   │   │   │   ├── foundation.ts
 │   │   │   │   │   ├── indexed-sequence.ts
@@ -419,6 +543,7 @@ sectile/
 │   │   │   ├── adapter-runtime.ts
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-list.ts
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
@@ -439,12 +564,15 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── meter-group.ts
+│   │   │   ├── meter.ts
 │   │   │   ├── multi-thumb-slider.ts
 │   │   │   ├── navigation-menu.ts
 │   │   │   ├── number-field.ts
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
 │   │   │   ├── popover.ts
+│   │   │   ├── progress.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── rating.ts
@@ -452,6 +580,7 @@ sectile/
 │   │   │   ├── result.ts
 │   │   │   ├── revision.ts
 │   │   │   ├── select.ts
+│   │   │   ├── selection.ts
 │   │   │   ├── shared.ts
 │   │   │   ├── slider.ts
 │   │   │   ├── spin-button.ts
@@ -480,6 +609,7 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── composites/
 │   │   │   │   ├── carousel.reference-law.test.mjs
+│   │   │   │   ├── cascade-list.test.mjs
 │   │   │   │   ├── cascade-select.test.mjs
 │   │   │   │   ├── checked-controls.reference-law.test.mjs
 │   │   │   │   ├── color-picker.test.mjs
@@ -494,8 +624,11 @@ sectile/
 │   │   │   │   ├── linear-choice.reference-law.test.mjs
 │   │   │   │   ├── listbox.reference-law.test.mjs
 │   │   │   │   ├── menu.reference-law.test.mjs
+│   │   │   │   ├── meter-group.test.mjs
+│   │   │   │   ├── meter.test.mjs
 │   │   │   │   ├── multi-thumb-slider.reference-law.test.mjs
 │   │   │   │   ├── popup-controls.reference-law.test.mjs
+│   │   │   │   ├── progress.test.mjs
 │   │   │   │   ├── slider.reference-law.test.mjs
 │   │   │   │   ├── spin-button.reference-law.test.mjs
 │   │   │   │   ├── timer.test.mjs
@@ -524,6 +657,7 @@ sectile/
 │   │   │   │   ├── expansion.reference-law.test.mjs
 │   │   │   │   └── selection.reference-law.test.mjs
 │   │   │   ├── structures/
+│   │   │   │   ├── bounded-scalar.test.mjs
 │   │   │   │   ├── grid.reference-law.test.mjs
 │   │   │   │   ├── range.reference-law.test.mjs
 │   │   │   │   ├── sequence.reference-law.test.mjs
@@ -547,30 +681,40 @@ sectile/
 │   │   │   └── check-reproducible-build.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
+│   │   │   │   ├── cascade-choice-binding.ts
 │   │   │   │   ├── checked-control.ts
+│   │   │   │   ├── controlled-field-input.ts
 │   │   │   │   ├── date-picker-cell.ts
 │   │   │   │   ├── delegated-event.ts
 │   │   │   │   ├── direction.ts
 │   │   │   │   ├── disabled-items.ts
+│   │   │   │   ├── exact-percentage.ts
 │   │   │   │   ├── floating-position.ts
 │   │   │   │   ├── interaction.ts
 │   │   │   │   ├── layer-binding.ts
 │   │   │   │   ├── layer-manager.ts
 │   │   │   │   ├── menu-control.ts
 │   │   │   │   ├── modal-effects.ts
+│   │   │   │   ├── picker-position.ts
 │   │   │   │   ├── popup-control.ts
 │   │   │   │   ├── reference-date.ts
 │   │   │   │   ├── result.ts
+│   │   │   │   ├── tabular-dom.ts
+│   │   │   │   ├── tabular-grid-dom.ts
 │   │   │   │   └── text-element.ts
 │   │   │   ├── accordion.ts
 │   │   │   ├── alert-dialog.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-list.ts
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
 │   │   │   ├── color-picker.ts
 │   │   │   ├── combobox.ts
+│   │   │   ├── data-grid.ts
+│   │   │   ├── data-table.ts
+│   │   │   ├── data-tree-grid.ts
 │   │   │   ├── date-field.ts
 │   │   │   ├── date-picker.ts
 │   │   │   ├── date-range-field.ts
@@ -591,6 +735,8 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── meter-group.ts
+│   │   │   ├── meter.ts
 │   │   │   ├── month-picker.ts
 │   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
@@ -599,6 +745,7 @@ sectile/
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
 │   │   │   ├── popover.ts
+│   │   │   ├── progress.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── range-calendar.ts
@@ -631,6 +778,7 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
+│   │   │   ├── cascade-list.test.mjs
 │   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── color-picker.test.mjs
@@ -647,14 +795,18 @@ sectile/
 │   │   │   ├── linear-controls.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── menu.test.mjs
+│   │   │   ├── meter-group.test.mjs
+│   │   │   ├── meter.test.mjs
 │   │   │   ├── multi-thumb-slider.test.mjs
 │   │   │   ├── number-field.test.mjs
 │   │   │   ├── popover-positioning.test.mjs
 │   │   │   ├── popup-controls.test.mjs
+│   │   │   ├── progress.test.mjs
 │   │   │   ├── quantity-field.test.mjs
 │   │   │   ├── reorder.test.mjs
 │   │   │   ├── slider.test.mjs
 │   │   │   ├── spin-button.test.mjs
+│   │   │   ├── tabular.test.mjs
 │   │   │   ├── text.test.mjs
 │   │   │   ├── timer.test.mjs
 │   │   │   ├── toast-browser.test.mjs
@@ -663,12 +815,89 @@ sectile/
 │   │   │   ├── tree-view.test.mjs
 │   │   │   ├── virtual.test.mjs
 │   │   │   └── window-splitter.test.mjs
+│   │   ├── verification/
+│   │   │   ├── browser.json
+│   │   │   ├── tabular-browser.html
+│   │   │   ├── tabular-browser.mjs
+│   │   │   ├── tabular-editing-browser.html
+│   │   │   ├── tabular-editing-browser.json
+│   │   │   └── tabular-editing-browser.mjs
 │   │   ├── CHANGELOG.md
 │   │   ├── LICENSE
 │   │   ├── package.json
 │   │   ├── README.md
 │   │   ├── tsconfig.build.json
 │   │   └── tsconfig.json
+│   ├── tabular/
+│   │   ├── benchmarks/
+│   │   │   └── tabular.mjs
+│   │   ├── scripts/
+│   │   │   ├── lib/
+│   │   │   │   └── evidence.mjs
+│   │   │   ├── build.mjs
+│   │   │   ├── check-laws.mjs
+│   │   │   ├── check-package.mjs
+│   │   │   ├── check-reproducible-build.mjs
+│   │   │   ├── run-test-group.mjs
+│   │   │   └── verify-model.mjs
+│   │   ├── src/
+│   │   │   ├── internal/
+│   │   │   │   ├── columns.ts
+│   │   │   │   ├── foundation.ts
+│   │   │   │   ├── grid-profile.ts
+│   │   │   │   └── selection.ts
+│   │   │   ├── contracts.ts
+│   │   │   ├── data-grid.ts
+│   │   │   ├── data-table.ts
+│   │   │   ├── data-tree-grid.ts
+│   │   │   ├── index.ts
+│   │   │   ├── model.ts
+│   │   │   ├── query.ts
+│   │   │   ├── source.ts
+│   │   │   └── virtual.ts
+│   │   ├── testing/
+│   │   │   ├── law-evidence.json
+│   │   │   ├── law-registry.json
+│   │   │   └── public-signatures.json
+│   │   ├── tests/
+│   │   │   ├── advanced/
+│   │   │   │   └── grouping.test.mjs
+│   │   │   ├── architecture/
+│   │   │   │   └── package-boundary.test.mjs
+│   │   │   ├── columns/
+│   │   │   │   └── reconciliation.test.mjs
+│   │   │   ├── model/
+│   │   │   │   └── foundation.test.mjs
+│   │   │   ├── profiles/
+│   │   │   │   ├── data-grid.test.mjs
+│   │   │   │   ├── data-table.test.mjs
+│   │   │   │   └── data-tree-grid.test.mjs
+│   │   │   ├── selection/
+│   │   │   │   └── row-selection.test.mjs
+│   │   │   ├── source/
+│   │   │   │   ├── client-source.test.mjs
+│   │   │   │   └── query.test.mjs
+│   │   │   ├── virtual/
+│   │   │   │   └── adapter.test.mjs
+│   │   │   └── virtual-witnesses/
+│   │   │       └── dom-composition.test.mjs
+│   │   ├── verification/
+│   │   │   ├── advanced.json
+│   │   │   ├── architecture.json
+│   │   │   ├── columns.json
+│   │   │   ├── model.json
+│   │   │   ├── profiles.json
+│   │   │   ├── selection.json
+│   │   │   ├── source.json
+│   │   │   ├── virtual-witnesses.json
+│   │   │   └── virtual.json
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── tsconfig.build.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.verify-build.json
 │   ├── temporal/
 │   │   ├── scripts/
 │   │   │   ├── build.mjs
@@ -721,6 +950,7 @@ sectile/
 │   │   │   └── check-reproducible-build.mjs
 │   │   ├── src/
 │   │   │   ├── internal/
+│   │   │   │   ├── cascade-choice.ts
 │   │   │   │   ├── checked-control.ts
 │   │   │   │   ├── disabled-items.ts
 │   │   │   │   ├── grapheme.ts
@@ -734,6 +964,7 @@ sectile/
 │   │   │   ├── appearance.ts
 │   │   │   ├── calendar.ts
 │   │   │   ├── carousel.ts
+│   │   │   ├── cascade-list.ts
 │   │   │   ├── cascade-select.ts
 │   │   │   ├── checkbox-group.ts
 │   │   │   ├── checkbox.ts
@@ -761,6 +992,8 @@ sectile/
 │   │   │   ├── menu-button.ts
 │   │   │   ├── menu.ts
 │   │   │   ├── menubar.ts
+│   │   │   ├── meter-group.ts
+│   │   │   ├── meter.ts
 │   │   │   ├── month-picker.ts
 │   │   │   ├── month-range-picker.ts
 │   │   │   ├── multi-thumb-slider.ts
@@ -770,6 +1003,7 @@ sectile/
 │   │   │   ├── pagination.ts
 │   │   │   ├── pin-input.ts
 │   │   │   ├── popover.ts
+│   │   │   ├── progress.ts
 │   │   │   ├── quantity-field.ts
 │   │   │   ├── radio-group.ts
 │   │   │   ├── range-calendar.ts
@@ -802,6 +1036,7 @@ sectile/
 │   │   ├── tests/
 │   │   │   ├── calendar.test.mjs
 │   │   │   ├── carousel.test.mjs
+│   │   │   ├── cascade-list.test.mjs
 │   │   │   ├── cascade-select.test.mjs
 │   │   │   ├── checked-controls.test.mjs
 │   │   │   ├── color-picker.test.mjs
@@ -818,9 +1053,12 @@ sectile/
 │   │   │   ├── linear-controls.test.mjs
 │   │   │   ├── listbox.test.mjs
 │   │   │   ├── menu.test.mjs
+│   │   │   ├── meter-group.test.mjs
+│   │   │   ├── meter.test.mjs
 │   │   │   ├── multi-thumb-slider.test.mjs
 │   │   │   ├── number-field.test.mjs
 │   │   │   ├── popup-controls.test.mjs
+│   │   │   ├── progress.test.mjs
 │   │   │   ├── quantity-field.test.mjs
 │   │   │   ├── reorder.test.mjs
 │   │   │   ├── screen.test.mjs
@@ -856,6 +1094,7 @@ sectile/
 │   │   │   ├── layout.ts
 │   │   │   ├── linear-layout.ts
 │   │   │   ├── masonry-layout.ts
+│   │   │   ├── partitioned-track-grid-layout.ts
 │   │   │   ├── spatial-layout.ts
 │   │   │   └── track-grid-layout.ts
 │   │   ├── testing/
@@ -866,6 +1105,7 @@ sectile/
 │   │   │   ├── runtime/
 │   │   │   │   ├── linear-layout.test.mjs
 │   │   │   │   ├── masonry-layout.test.mjs
+│   │   │   │   ├── partitioned-track-grid-layout.test.mjs
 │   │   │   │   ├── spatial-layout.test.mjs
 │   │   │   │   └── track-grid-layout.test.mjs
 │   │   │   └── structures/
@@ -888,9 +1128,11 @@ sectile/
 │       │   └── typecheck-public-sfc.mjs
 │       ├── src/
 │       │   ├── internal/
+│       │   │   ├── cascade-choice.ts
 │       │   │   ├── collection.ts
 │       │   │   ├── controlled-state.ts
 │       │   │   ├── date-picker.ts
+│       │   │   ├── decimal-input.ts
 │       │   │   ├── form-control-inventory.ts
 │       │   │   ├── form-control.ts
 │       │   │   ├── native-field.ts
@@ -898,16 +1140,22 @@ sectile/
 │       │   │   ├── part-contract.ts
 │       │   │   ├── popup.ts
 │       │   │   ├── presence.ts
-│       │   │   └── tabs-context.ts
+│       │   │   ├── tabs-context.ts
+│       │   │   ├── tabular-parts.ts
+│       │   │   └── tabular-profile.ts
 │       │   ├── accordion.ts
 │       │   ├── alert-dialog.ts
 │       │   ├── calendar.ts
 │       │   ├── carousel.ts
+│       │   ├── cascade-list.ts
 │       │   ├── cascade-select.ts
 │       │   ├── checkbox-group.ts
 │       │   ├── checkbox.ts
 │       │   ├── color-picker.ts
 │       │   ├── combobox.ts
+│       │   ├── data-grid.ts
+│       │   ├── data-table.ts
+│       │   ├── data-tree-grid.ts
 │       │   ├── date-field.ts
 │       │   ├── date-picker.ts
 │       │   ├── date-range-field.ts
@@ -928,6 +1176,8 @@ sectile/
 │       │   ├── menu-button.ts
 │       │   ├── menu.ts
 │       │   ├── menubar.ts
+│       │   ├── meter-group.ts
+│       │   ├── meter.ts
 │       │   ├── month-picker.ts
 │       │   ├── month-range-picker.ts
 │       │   ├── multi-thumb-slider.ts
@@ -937,6 +1187,7 @@ sectile/
 │       │   ├── pin-input.ts
 │       │   ├── popover.ts
 │       │   ├── primitive.ts
+│       │   ├── progress.ts
 │       │   ├── quantity-field.ts
 │       │   ├── radio-group.ts
 │       │   ├── range-calendar.ts
@@ -971,10 +1222,13 @@ sectile/
 │       ├── tests/
 │       │   ├── browser/
 │       │   │   ├── client.mjs
-│       │   │   └── hydration-fixture.mjs
+│       │   │   ├── hydration-fixture.mjs
+│       │   │   └── tabular-virtual-fixture.mjs
 │       │   ├── fixtures/
 │       │   │   └── form-nested-mount.mjs
 │       │   ├── accordion.test.mjs
+│       │   ├── cascade-list.dom.test.mjs
+│       │   ├── cascade-list.test.mjs
 │       │   ├── cascade-select.test.mjs
 │       │   ├── checkbox.test.mjs
 │       │   ├── checked-controls.test.mjs
@@ -983,9 +1237,13 @@ sectile/
 │       │   ├── collection-reconciliation.test.mjs
 │       │   ├── color-picker.test.mjs
 │       │   ├── combobox.dom.test.mjs
+│       │   ├── data-grid.test.mjs
+│       │   ├── data-table.test.mjs
+│       │   ├── data-tree-grid.test.mjs
 │       │   ├── date-pickers.dom.test.mjs
 │       │   ├── date-pickers.test.mjs
 │       │   ├── date-range-field.test.mjs
+│       │   ├── decimal-input.test.mjs
 │       │   ├── derived-selection.test.mjs
 │       │   ├── disclosure.test.mjs
 │       │   ├── drawer.dom.test.mjs
@@ -999,6 +1257,10 @@ sectile/
 │       │   ├── hydration.dom.test.mjs
 │       │   ├── linear-selection.test.mjs
 │       │   ├── listbox.test.mjs
+│       │   ├── meter-group.dom.test.mjs
+│       │   ├── meter-group.test.mjs
+│       │   ├── meter.dom.test.mjs
+│       │   ├── meter.test.mjs
 │       │   ├── native-fields.dom.test.mjs
 │       │   ├── native-fields.test.mjs
 │       │   ├── pin-input.dom.test.mjs
@@ -1006,6 +1268,8 @@ sectile/
 │       │   ├── presence.dom.test.mjs
 │       │   ├── primitive.dom.test.mjs
 │       │   ├── primitive.test.mjs
+│       │   ├── progress.dom.test.mjs
+│       │   ├── progress.test.mjs
 │       │   ├── public-parity.test.mjs
 │       │   ├── renderer.mjs
 │       │   ├── slider.test.mjs
@@ -1013,10 +1277,13 @@ sectile/
 │       │   ├── spin-button.test.mjs
 │       │   ├── stepper.dom.test.mjs
 │       │   ├── structural-controls.test.mjs
+│       │   ├── tabular-source.test.mjs
+│       │   ├── tabular-ssr.test.mjs
 │       │   ├── text.dom.test.mjs
 │       │   ├── text.test.mjs
 │       │   ├── time-range-field.test.mjs
 │       │   ├── timer.test.mjs
+│       │   ├── toast.dom.test.mjs
 │       │   ├── toast.test.mjs
 │       │   ├── tree-view.dom.test.mjs
 │       │   └── virtual.dom.test.mjs
@@ -1024,8 +1291,11 @@ sectile/
 │       │   ├── fixtures/
 │       │   │   └── nullable-props.vue
 │       │   ├── component-contracts.ts
+│       │   ├── tabular-components.ts
 │       │   ├── tsconfig.json
 │       │   └── tsconfig.vue.json
+│       ├── verification/
+│       │   └── tabular-virtual-browser.json
 │       ├── CHANGELOG.md
 │       ├── LICENSE
 │       ├── package.json
@@ -1034,16 +1304,21 @@ sectile/
 │       └── tsconfig.json
 ├── scripts/
 │   ├── lib/
+│   │   ├── component-public-api.mjs
 │   │   ├── public-signatures.mjs
 │   │   ├── published-packages.mjs
 │   │   ├── release-worktree.mjs
 │   │   ├── release.mjs
 │   │   ├── repository.mjs
-│   │   └── tree.mjs
+│   │   ├── tree.mjs
+│   │   └── type-fixture.mjs
 │   ├── check-component-completeness.mjs
+│   ├── check-component-completeness.test.mjs
+│   ├── check-component-public-api.mjs
 │   ├── check-public-signatures.mjs
 │   ├── check-release.mjs
 │   ├── check-workspace-boundaries.mjs
+│   ├── component-public-api.test.mjs
 │   ├── publish-packages.mjs
 │   ├── release-worktree.test.mjs
 │   ├── release.mjs
@@ -1053,8 +1328,26 @@ sectile/
 │   ├── update-tree.mjs
 │   └── verify.mjs
 ├── verification/
+│   ├── browser-accessibility/
+│   │   └── range-projections.md
+│   ├── component-public-api/
+│   │   ├── negative/
+│   │   │   ├── meter-group.ts
+│   │   │   ├── meter.ts
+│   │   │   └── progress.ts
+│   │   ├── positive/
+│   │   │   ├── meter-group.ts
+│   │   │   ├── meter.ts
+│   │   │   └── progress.ts
+│   │   ├── tsconfig.meter-group.json
+│   │   ├── tsconfig.meter.json
+│   │   └── tsconfig.progress.json
+│   ├── consumer-install/
+│   │   ├── tabular.json
+│   │   └── tabular.mjs
 │   ├── cross-host/
 │   │   ├── calendar.test.mjs
+│   │   ├── cascade-list.test.mjs
 │   │   ├── checked-controls.test.mjs
 │   │   ├── collection-controls.test.mjs
 │   │   ├── combobox.test.mjs
@@ -1066,16 +1359,23 @@ sectile/
 │   │   ├── popup-controls.test.mjs
 │   │   ├── property-harness.test.mjs
 │   │   ├── range-controls.test.mjs
+│   │   ├── scalar-projections.test.mjs
 │   │   ├── slider.test.mjs
 │   │   ├── text.test.mjs
 │   │   ├── tree-grid.test.mjs
 │   │   └── tree-view.test.mjs
 │   ├── support/
 │   │   └── property.mjs
+│   ├── tabular/
+│   │   ├── architecture.json
+│   │   ├── architecture.md
+│   │   └── architecture.test.mjs
 │   ├── component-completeness.json
-│   └── component-evidence.json
+│   ├── component-evidence.json
+│   └── component-public-api.json
 ├── .gitignore
 ├── .node-version
+├── .npmrc
 ├── LICENSE
 ├── package.json
 ├── pnpm-lock.yaml

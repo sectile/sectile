@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "packages": [
+    "@sectile/core",
+    "@sectile/tabular",
+    "@sectile/temporal",
+    "@sectile/virtual",
+    "@sectile/dom",
+    "@sectile/vue"
+  ],
+  "declarationClosure": {
+    "status": "passed",
+    "files": 310,
+    "imports": 477
+  },
+  "scenarios": [
+    {
+      "id": "tabular-base-without-virtual",
+      "status": "passed"
+    },
+    {
+      "id": "dom-base-without-virtual",
+      "status": "passed"
+    },
+    {
+      "id": "vue-base-types-without-direct-tabular",
+      "status": "passed"
+    },
+    {
+      "id": "tabular-virtual-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "dom-virtual-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "vue-virtual-explicit-opt-in",
+      "status": "passed"
+    }
+  ]
+}

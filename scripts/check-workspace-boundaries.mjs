@@ -18,6 +18,11 @@ for (const directory of packageDirectories) {
   const manifest = JSON.parse(await readFile(resolve(directory, 'package.json'), 'utf8'));
   manifests.set(manifest.name, { directory, manifest });
 }
+const rootManifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
+const rootDependencies = new Set([
+  ...Object.keys(rootManifest.dependencies ?? {}),
+  ...Object.keys(rootManifest.devDependencies ?? {}),
+]);
 
 let sourceFiles = 0;
 let workspaceImports = 0;
@@ -49,8 +54,10 @@ for (const { directory, manifest } of manifests.values()) {
       const [scope, packageName, ...subpathParts] = specifier.split('/');
       const dependency = `${scope}/${packageName}`;
       if (dependency !== manifest.name) {
+        const rootOwnedWitness = relative(root, path).split(sep).join('/')
+          .startsWith('packages/tabular/tests/virtual-witnesses/');
         assert.equal(
-          declared.has(dependency),
+          declared.has(dependency) || (rootOwnedWitness && rootDependencies.has(dependency)),
           true,
           `${relative(root, path)} imports undeclared workspace dependency ${dependency}`,
         );
@@ -73,11 +80,6 @@ for (const { directory, manifest } of manifests.values()) {
   }
 }
 
-const rootManifest = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
-const rootDependencies = new Set([
-  ...Object.keys(rootManifest.dependencies ?? {}),
-  ...Object.keys(rootManifest.devDependencies ?? {}),
-]);
 for (const path of await sourcePaths(resolve(root, 'verification'))) {
   sourceFiles += 1;
   const source = await readFile(path, 'utf8');

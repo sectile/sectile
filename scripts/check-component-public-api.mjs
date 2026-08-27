@@ -59,12 +59,55 @@ for (const family of families) {
 
 console.log(`component public API passed: ${families.join(', ')}`);
 
+for (const [profile, profileContract] of Object.entries(manifest.profiles ?? {})) {
+  const expectedPackages = ['dom', 'tabular', 'vue'];
+  assert.deepEqual(Object.keys(profileContract).sort(), expectedPackages,
+    `${profile}: package contracts must be exact.`);
+  for (const packageName of expectedPackages) {
+    const packageRoot = resolve('packages', packageName);
+    const packageJson = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
+    const subpath = `./${profile}`;
+    const target = packageJson.exports?.[subpath];
+    assert.ok(target !== undefined, `${packageName}/${profile}: package subpath missing.`);
+    assert.deepEqual(Object.keys(target).sort(), ['default', 'import', 'types'],
+      `${packageName}/${profile}: export conditions must be exact.`);
+    const expectedBase = `./dist/${profile}`;
+    assert.deepEqual(target, { types: `${expectedBase}.d.ts`, import: `${expectedBase}.js`, default: `${expectedBase}.js` });
+    const [module, rootModule, declaration, rootDeclaration] = await Promise.all([
+      import(pathToFileURL(resolve(packageRoot, target.import)).href),
+      import(pathToFileURL(resolve(packageRoot, packageJson.exports['.'].import)).href),
+      readFile(resolve(packageRoot, target.types), 'utf8'),
+      readFile(resolve(packageRoot, packageJson.exports['.'].types), 'utf8'),
+    ]);
+    const declarationModel = declarationExports(declaration);
+    const rootNames = new Set([...Object.keys(rootModule), ...declarationExports(rootDeclaration).names]);
+    const publicNames = new Set([...Object.keys(module), ...declarationModel.names]);
+    assert.ok(publicNames.size > 0, `${packageName}/${profile}: public API must not be empty.`);
+    const rootPolicy = profileContract[packageName].root;
+    assert.equal(typeof rootPolicy, 'boolean', `${packageName}/${profile}: root policy required.`);
+    for (const name of Object.keys(module)) assert.equal(rootNames.has(name), rootPolicy,
+      `${packageName}/${profile}: root export ${rootPolicy ? 'missing' : 'forbidden'} ${name}.`);
+    assert.equal(declarationModel.hasDefault, false, `${packageName}/${profile}: default export is forbidden.`);
+    assert.equal(declarationModel.hasWildcard, false, `${packageName}/${profile}: wildcard export is forbidden.`);
+    const allowedImports = new Set(profileContract[packageName].imports);
+    for (const specifier of declarationModel.imports) {
+      assert.equal(!specifier.startsWith('.') && (specifier.includes('/src/') || specifier.includes('/internal/')), false,
+        `${packageName}/${profile}: deep import forbidden: ${specifier}`);
+      if (!specifier.startsWith('.')) assert.ok(allowedImports.has(specifier),
+        `${packageName}/${profile}: undeclared declaration import ${specifier}.`);
+    }
+  }
+  const terminal = JSON.parse(await readFile('packages/terminal/package.json', 'utf8'));
+  assert.equal(terminal.exports?.[`./${profile}`], undefined,
+    `${profile}: terminal projection is intentionally unsupported.`);
+}
+
 function declarationExports(source) {
   const names = [];
   for (const match of source.matchAll(/export\s+(?:declare\s+)?(?:abstract\s+)?(?:const|function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/gu)) {
     if (match[1] !== undefined) names.push(match[1]);
   }
-  for (const match of source.matchAll(/export\s*\{([\s\S]*?)\}\s*from\s*['"][^'"]+['"]/gu)) {
+  for (const match of source.matchAll(/export\s*(?:type\s*)?\{([\s\S]*?)\}\s*from\s*['"][^'"]+['"]/gu)) {
     for (const raw of (match[1] ?? '').split(',')) {
       const entry = raw.trim().replace(/^type\s+/u, '');
       if (entry.length === 0) continue;

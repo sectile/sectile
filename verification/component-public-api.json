@@ -1,5 +1,22 @@
 {
   "schemaVersion": 1,
+  "profiles": {
+    "data-table": {
+      "tabular": { "root": false, "imports": ["@sectile/core/result"] },
+      "dom": { "root": true, "imports": ["@sectile/tabular", "@sectile/tabular/data-table"] },
+      "vue": { "root": true, "imports": ["@sectile/dom/data-table", "@sectile/tabular", "@sectile/tabular/data-table", "vue"] }
+    },
+    "data-grid": {
+      "tabular": { "root": false, "imports": ["@sectile/core/result"] },
+      "dom": { "root": true, "imports": ["@sectile/tabular", "@sectile/tabular/data-grid"] },
+      "vue": { "root": true, "imports": ["@sectile/dom/data-grid", "@sectile/tabular", "@sectile/tabular/data-grid", "vue"] }
+    },
+    "data-tree-grid": {
+      "tabular": { "root": false, "imports": ["@sectile/core/result"] },
+      "dom": { "root": true, "imports": ["@sectile/tabular", "@sectile/tabular/data-tree-grid"] },
+      "vue": { "root": true, "imports": ["@sectile/dom/data-tree-grid", "@sectile/tabular", "@sectile/tabular/data-tree-grid", "vue"] }
+    }
+  },
   "families": {
     "meter": {
       "core": {

@@ -91,6 +91,15 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
+    text: 'Tabular',
+    collapsed: false,
+    items: [
+      { text: 'Overview and profiles', link: '/packages/tabular' },
+      { text: 'Vue composition', link: '/packages/tabular/vue' },
+      { text: 'Optional virtualization', link: '/packages/tabular/virtual' },
+    ],
+  },
+  {
     text: 'Host adapters',
     items: [
       { text: 'DOM', link: '/packages/dom' },
@@ -134,6 +143,15 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
       { text: 'DOM 연결', link: '/ko/packages/virtual/dom' },
       { text: 'Vue 연결', link: '/ko/packages/virtual/vue' },
       { text: '벤치마크', link: '/ko/packages/virtual/benchmark' },
+    ],
+  },
+  {
+    text: '표 형식 데이터',
+    collapsed: false,
+    items: [
+      { text: '개요와 프로필', link: '/ko/packages/tabular' },
+      { text: 'Vue 구성', link: '/ko/packages/tabular/vue' },
+      { text: '선택적 가상화', link: '/ko/packages/tabular/virtual' },
     ],
   },
   {

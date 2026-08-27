@@ -397,7 +397,8 @@
   "dependencies": {
     "@sectile/core": "workspace:*",
     "@sectile/dom": "workspace:*",
-    "@sectile/tabular": "workspace:*"
+    "@sectile/tabular": "workspace:*",
+    "@sectile/temporal": "workspace:*"
   },
   "peerDependencies": {
     "@sectile/virtual": "workspace:*",
