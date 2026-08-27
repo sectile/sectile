@@ -43,7 +43,7 @@ const popupRootDefaults = Object.freeze({
   avoidCollisions: 'true',
   arrowPadding: '8',
   hideWhenDetached: 'true',
-  strategy: "'fixed'",
+  strategy: "'absolute'",
   middleware: 'undefined',
   autoUpdate: 'undefined',
   unmountOnExit: 'false',

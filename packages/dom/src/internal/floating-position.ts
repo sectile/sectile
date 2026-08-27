@@ -47,7 +47,7 @@ export interface FloatingPositionConnection {
 export function createFloatingPosition(options: FloatingPositionOptions): FloatingPositionConnection {
   let cleanupAutoUpdate: (() => void) | undefined;
   let positionRequest = 0;
-  const strategy = options.strategy ?? 'fixed';
+  const strategy = options.strategy ?? 'absolute';
 
   if (options.reference !== undefined && options.root.style !== undefined) {
     options.root.style.position = strategy;

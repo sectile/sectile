@@ -140,8 +140,8 @@ test('portalled Select keeps typeahead, selection, and positioning connected', a
   try {
     await nextTick(); const trigger = host.querySelector('[data-part="trigger"]'); assert.ok(trigger instanceof HTMLButtonElement);
     trigger.click(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
-    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, 'fixed');
-    assert.deepEqual(inserted, [{ scope: 'select', position: 'fixed', visibility: 'hidden' }]);
+    const content = portal.querySelector('[data-part="content"]'); assert.ok(content instanceof HTMLElement); assert.equal(content.hidden, false); assert.equal(content.style.position, 'absolute');
+    assert.deepEqual(inserted, [{ scope: 'select', position: 'absolute', visibility: 'hidden' }]);
     assert.equal(content.style.visibility, '');
     content.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true })); await nextTick();
     assert.equal(highlighted.value, 'beta');
@@ -176,13 +176,13 @@ test('portalled Popover and Tooltip leave document flow before insertion', async
     await nextTick(); await nextTick(); await new Promise((resolve) => setTimeout(resolve, 0));
 
     assert.deepEqual(inserted, [
-      { scope: 'popover', position: 'fixed', visibility: 'hidden' },
-      { scope: 'tooltip', position: 'fixed', visibility: 'hidden' },
+      { scope: 'popover', position: 'absolute', visibility: 'hidden' },
+      { scope: 'tooltip', position: 'absolute', visibility: 'hidden' },
     ]);
     const contents = portal.querySelectorAll('[data-part="content"]');
     assert.equal(contents.length, 2);
     for (const content of contents) {
-      assert.equal(content.style.position, 'fixed');
+      assert.equal(content.style.position, 'absolute');
       assert.equal(content.style.visibility, '');
     }
     popoverText.value = 'Updated'; await nextTick();

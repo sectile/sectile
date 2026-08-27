@@ -193,7 +193,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       avoidCollisions: { type: Boolean, default: true },
       arrowPadding: { type: [Number, Object] as PropType<Padding>, default: 8 },
       hideWhenDetached: { type: Boolean, default: true },
-      strategy: { type: String as PropType<Strategy>, default: 'fixed' },
+      strategy: { type: String as PropType<Strategy>, default: 'absolute' },
       middleware: { type: Array as PropType<Middleware[]>, default: undefined },
       autoUpdate: { type: [Boolean, Object] as PropType<boolean | AutoUpdateOptions>, default: undefined },
       unmountOnExit: { type: Boolean, default: false },
