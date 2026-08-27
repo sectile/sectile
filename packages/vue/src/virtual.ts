@@ -43,6 +43,7 @@ import {
   createLinearLayout,
   type LinearAxis,
   type LinearLayoutState,
+  type LinearMeasurement,
   type LinearPatch,
 } from '@sectile/virtual/linear-layout';
 import {
@@ -642,7 +643,7 @@ const VirtualListRuntime = defineComponent({
     const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
     const state = shallowRef(createVirtualListState(prepared.value, props.items, props));
     const measure = props.itemSize === undefined
-      ? createAxisMeasurementResolver<LinearLayoutState<string>, string>(props.axis)
+      ? createVirtualListMeasurementResolver(props.axis)
       : undefined;
     const virtualizer = useVirtualizer({
       state,
@@ -944,6 +945,24 @@ function updatePreparedVirtualList(
     });
   }
   const changedEnd = items.length - suffix;
+  if (previous.items.length === items.length) {
+    let sameDomain = true;
+    for (let index = prefix; index < changedEnd; index += 1) {
+      if (validateVirtualListKey(getKey(items[index], index)) !== previous.ids[index]) {
+        sameDomain = false;
+        break;
+      }
+    }
+    if (sameDomain) {
+      return Object.freeze({
+        items,
+        ids: previous.ids,
+        getKey,
+        change: null,
+        initialIndex: previous.initialIndex,
+      });
+    }
+  }
   const inserted: string[] = [];
   const insertedIDs = new Set<string>();
   for (let index = prefix; index < changedEnd; index += 1) {
@@ -970,6 +989,21 @@ function updatePreparedVirtualList(
       inserted: frozenInserted,
     }),
   });
+}
+
+function createVirtualListMeasurementResolver(
+  axis: LinearAxis,
+): VirtualMeasurementResolver<LinearLayoutState<string>, string, LinearMeasurement> {
+  return ({ element, placement, state }) => {
+    const bounds = element.getBoundingClientRect();
+    const value = axis === 'vertical' ? bounds.height : bounds.width;
+    const current = state.extents.extentAt(placement.index);
+    if (current?.kind === 'exact' && Math.abs(current.value - value) < 0.01) return null;
+    return Object.freeze({
+      index: placement.index,
+      extent: Object.freeze({ kind: 'exact' as const, value }),
+    });
+  };
 }
 
 function validateVirtualListKey(id: string): string {

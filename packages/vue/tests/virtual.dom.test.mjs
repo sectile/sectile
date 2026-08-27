@@ -134,6 +134,88 @@ test('VirtualList renders intrinsic rows without per-item Sectile wrappers and r
   }
 });
 
+test('VirtualList keeps the layout domain for value-only replacements and measures the changed row once', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const list = ref();
+  const items = shallowRef(Array.from({ length: 20 }, (_, index) => ({
+    id: `row-${index}`,
+    label: `Row ${index}`,
+    height: 20,
+  })));
+  const app = createApp({
+    render: () => h(VirtualList, {
+      ref: list,
+      items: items.value,
+      getKey: (value) => value.id,
+      estimateSize: 20,
+      overscan: 0,
+      itemAttributes: (value) => ({
+        'data-id': value.id,
+        style: { height: `${value.height}px` },
+      }),
+    }, { default: ({ value }) => value.label }),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    const root = host.querySelector('[data-scope="virtual-list"][data-part="root"]');
+    root.scrollTo = ({ left = root.scrollLeft, top = root.scrollTop }) => {
+      root.scrollLeft = left;
+      root.scrollTop = top;
+    };
+    list.value.flush();
+    await settle();
+    const firstRow = root.querySelector('[data-id="row-0"]');
+    firstRow.getBoundingClientRect = () => {
+      const height = Number.parseFloat(firstRow.style.height);
+      return {
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 120,
+        bottom: height,
+        left: 0,
+        width: 120,
+        height,
+        toJSON() {},
+      };
+    };
+    FakeResizeObserver.notify(firstRow);
+    list.value.flush();
+    await settle();
+
+    const domain = list.value.state.domain;
+    const generation = list.value.state.generation;
+    items.value = items.value.map((item, index) => index === 0
+      ? { ...item, label: 'Changed row', height: 40 }
+      : item);
+    await settle();
+
+    assert.equal(list.value.state.domain, domain);
+    assert.equal(list.value.state.generation, generation + 1);
+    assert.deepEqual(list.value.state.extents.extentAt(0), { kind: 'exact', value: 40 });
+    assert.match(firstRow.textContent, /Changed row/);
+
+    FakeResizeObserver.notify(firstRow);
+    list.value.flush();
+    await settle();
+    assert.equal(list.value.state.generation, generation + 1);
+  } finally {
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
 test('VirtualList separates fixed sizes from automatic DOM measurement', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
