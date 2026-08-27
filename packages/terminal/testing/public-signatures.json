@@ -27,6 +27,10 @@
       "types": "dist/carousel.d.ts"
     },
     {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts"
+    },
+    {
       "subpath": "./cascade-select",
       "types": "dist/cascade-select.d.ts"
     },
@@ -287,7 +291,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "f54ff3310892e6165d148e990c263140481b62202063ac8d0dd2ee33cfc5741c",
+  "fingerprint": "b35d852d619e7a46204b54b20122d3651b150711c278942f97c2d8124047622f",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -310,8 +314,12 @@
       "sha256": "9ab8312017921194cd9122438807fe4daa98b710e651e977e83c03927133f807"
     },
     {
+      "path": "dist/cascade-list.d.ts",
+      "sha256": "23dd6d4d7cfa1319de899f15bf3736572a87e7dde259cfd9ed03be1a686f0ec8"
+    },
+    {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "6dd00b040dd9f6b0c8c3d4cda6d993773ba8972737ed8929a7f0247de3041dc3"
+      "sha256": "7c193e909b64c8efa4d63c6808f6827d0de41f5ac93ceb16df739b4604c67409"
     },
     {
       "path": "dist/checkbox-group.d.ts",
@@ -387,7 +395,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "b31450aa98e2e2acd2365a7e5ca9f7be96b0b513133783ffac54ab9377a93b58"
+      "sha256": "59e1bdb6ab11a2f2cc5d1540e61d23d327471cdb9900923b405d4243d2703627"
     },
     {
       "path": "dist/internal/checked-control.d.ts",

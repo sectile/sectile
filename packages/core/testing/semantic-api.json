@@ -10,13 +10,14 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "93f14b11827b1dd7015c41ed1ffa2a0f286dd9b57f20ac30ca3bced655ddd736",
+    "publicSignatureFingerprint": "c2b2c8ae433ed6684b1f4f564a1b29d0be22fabd92bce81caa7306d63314c75e",
     "subpaths": [
       ".",
       "./accordion",
       "./adapter-runtime",
       "./alert-dialog",
       "./carousel",
+      "./cascade-list",
       "./cascade-select",
       "./checkbox",
       "./checkbox-group",
@@ -98,6 +99,13 @@
       "carousel-autoplay-delay-invalid",
       "carousel-cursor-outside-slides",
       "carousel-target-unavailable",
+      "cascade-list-highlight-outside-tree",
+      "cascade-list-leaf-in-path",
+      "cascade-list-path-outside-tree",
+      "cascade-list-target-disabled",
+      "cascade-list-target-unavailable",
+      "cascade-list-target-unselectable",
+      "cascade-list-value-outside-tree",
       "cascade-select-highlight-outside-tree",
       "cascade-select-leaf-in-path",
       "cascade-select-path-outside-tree",
@@ -230,6 +238,7 @@
       "invalid-calculator-number",
       "invalid-candidate-label",
       "invalid-canonical-quantity",
+      "invalid-cascade-list-path",
       "invalid-cascade-select-open",
       "invalid-cascade-select-path",
       "invalid-checked-event",
@@ -534,7 +543,7 @@
     }
   ],
   "acceptance": {
-    "classification": "minor",
-    "reason": "public-selection-facade-for-tabular-composition"
+    "classification": "contract-impact-reviewed",
+    "reason": "Add the CascadeList public state model and component-specific validation errors."
   }
 }

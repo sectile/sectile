@@ -335,6 +335,7 @@ export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type Tim
 export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './time-range-field.js';
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
 export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
+export { createCascadeList, tryCreateCascadeList, toCascadeListEvent, type CascadeListConnection, type CascadeListControlledValues, type CascadeListItemDefinition, type CascadeListOptions, type CascadeListPolicies } from './cascade-list.js';
 export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
 export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
 export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions, type PickerPositionOptions } from './date-picker.js';
@@ -374,6 +375,11 @@ export type {
   CarouselUpdateHandler,
   CarouselValueChangeHandler,
 } from './carousel.js';
+export type {
+  CascadeListHighlightedValueChangeHandler,
+  CascadeListUpdateHandler,
+  CascadeListValueChangeHandler,
+} from './cascade-list.js';
 export type {
   CascadeSelectHighlightedValueChangeHandler,
   CascadeSelectOpenChangeHandler,

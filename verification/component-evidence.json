@@ -134,10 +134,10 @@
     },
     "tree-choice": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
-      "core": ["packages/core/tests/composites/cascade-select.test.mjs"],
-      "dom": ["packages/dom/tests/cascade-select.test.mjs"],
-      "terminal": ["packages/terminal/tests/cascade-select.test.mjs"],
-      "vue": ["packages/vue/tests/cascade-select.test.mjs", "packages/vue/tests/dynamic-collections.dom.test.mjs"]
+      "core": ["packages/core/tests/composites/cascade-list.test.mjs", "packages/core/tests/composites/cascade-select.test.mjs"],
+      "dom": ["packages/dom/tests/cascade-list.test.mjs", "packages/dom/tests/cascade-select.test.mjs", "verification/cross-host/cascade-list.test.mjs"],
+      "terminal": ["packages/terminal/tests/cascade-list.test.mjs", "packages/terminal/tests/cascade-select.test.mjs", "verification/cross-host/cascade-list.test.mjs"],
+      "vue": ["packages/vue/tests/cascade-list.dom.test.mjs", "packages/vue/tests/cascade-list.test.mjs", "packages/vue/tests/cascade-select.test.mjs", "packages/vue/tests/dynamic-collections.dom.test.mjs"]
     }
   }
 }

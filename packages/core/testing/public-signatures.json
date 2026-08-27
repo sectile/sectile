@@ -23,6 +23,10 @@
       "types": "dist/carousel.d.ts"
     },
     {
+      "subpath": "./cascade-list",
+      "types": "dist/cascade-list.d.ts"
+    },
+    {
       "subpath": "./cascade-select",
       "types": "dist/cascade-select.d.ts"
     },
@@ -247,7 +251,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "4236e26f0103529b70c5b13d059f3cd6a49904c32390f9fb66899f916be2d4de",
+  "fingerprint": "4015085ca6aaea0bfdc03cf86d5bc67bd96ddae4b97920b140fd7a299b6a5d6e",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -264,6 +268,10 @@
     {
       "path": "dist/carousel.d.ts",
       "sha256": "542a7863c611200225615aa59cf1df782b3e716fd48468a9da3018fd8cee7e85"
+    },
+    {
+      "path": "dist/cascade-list.d.ts",
+      "sha256": "bae1bc824825154bd53029e37f7e79a0ff576d7093c9b86e11fd8dcd67fe2982"
     },
     {
       "path": "dist/cascade-select.d.ts",
@@ -307,7 +315,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "318c7d317c6152929d6d71384c7301cc69572698b2d084d8b5b0cad8c1f23d5a"
+      "sha256": "aca08c5a740b106f1ed5eb02700f58505acc3e5ee74a10ac45e219f8e13500e5"
     },
     {
       "path": "dist/feed.d.ts",
@@ -319,11 +327,15 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "be91a51ea9890a5284b4bac5d1843f56c8818f26d300cddbd1f8660757678f8f"
+      "sha256": "3edf3e28ef5101a09298f7202688ed3789fa98f753795e178f8eb79acc7641d6"
     },
     {
       "path": "dist/interaction.d.ts",
       "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+    },
+    {
+      "path": "dist/internal/composites/cascade-choice.d.ts",
+      "sha256": "1b94aa76398d126313275da5b068b237ef37f1a4c015d8523f53387d637f2fd6"
     },
     {
       "path": "dist/internal/composites/combobox.d.ts",

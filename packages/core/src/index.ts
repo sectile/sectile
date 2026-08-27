@@ -114,6 +114,10 @@ export type {
 } from './quantity-field.js';
 
 export type {
+  CascadeListEligiblePredicate,
+  CascadeListSelectablePredicate,
+} from './cascade-list.js';
+export type {
   CascadeSelectEligiblePredicate,
   CascadeSelectSelectablePredicate,
 } from './cascade-select.js';
