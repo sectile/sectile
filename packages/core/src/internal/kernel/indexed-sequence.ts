@@ -27,6 +27,22 @@ export interface SequenceView<ID extends StableID> {
   ): MoveResult<ID>;
 }
 
+export type IndexedSequencePatch<ID extends StableID> =
+  | {
+      readonly type: 'splice';
+      readonly index: number;
+      readonly deleteCount: number;
+      readonly inserted: readonly ID[];
+    }
+  | {
+      readonly type: 'move';
+      readonly from: number;
+      readonly to: number;
+      readonly count: number;
+    };
+
+const MAX_PATCH_DEPTH = 64;
+
 export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   public readonly ids: readonly ID[];
   public readonly maxItems: number;
@@ -86,6 +102,149 @@ export class IndexedSequence<ID extends StableID> implements SequenceView<ID> {
   ): MoveResult<ID> {
     return moveInSequence(this.ids, this.#index, current, direction, boundary, options);
   }
+}
+
+export class PatchedSequence<ID extends StableID> implements SequenceView<ID> {
+  public readonly size: number;
+  public readonly maxItems: number;
+  public readonly maxIDCodeUnits: number;
+  public readonly depth: number;
+  readonly #parent: SequenceView<ID>;
+  readonly #patch: IndexedSequencePatch<ID>;
+  readonly #insertedIndex: ReadonlyMap<ID, number> | null;
+  #materialized: readonly ID[] | null = null;
+
+  public constructor(
+    parent: SequenceView<ID>,
+    patch: IndexedSequencePatch<ID>,
+    maxItems: number,
+    maxIDCodeUnits: number,
+  ) {
+    this.#parent = parent instanceof PatchedSequence && parent.depth >= MAX_PATCH_DEPTH
+      ? new IndexedSequence(parent.ids, parent.maxItems, parent.maxIDCodeUnits)
+      : parent;
+    this.#patch = patch;
+    this.size = patch.type === 'splice'
+      ? this.#parent.size - patch.deleteCount + patch.inserted.length
+      : this.#parent.size;
+    this.maxItems = maxItems;
+    this.maxIDCodeUnits = maxIDCodeUnits;
+    this.depth = this.#parent instanceof PatchedSequence ? this.#parent.depth + 1 : 1;
+    this.#insertedIndex = patch.type === 'splice'
+      ? new Map(patch.inserted.map((id, index) => [id, index]))
+      : null;
+    Object.freeze(this);
+  }
+
+  public get ids(): readonly ID[] {
+    if (this.#materialized !== null) return this.#materialized;
+    const ids = [...this.#parent.ids];
+    if (this.#patch.type === 'splice') {
+      ids.splice(
+        this.#patch.index,
+        this.#patch.deleteCount,
+        ...this.#patch.inserted,
+      );
+    } else if (this.#patch.count > 0 && this.#patch.from !== this.#patch.to) {
+      const moved = ids.splice(this.#patch.from, this.#patch.count);
+      ids.splice(this.#patch.to, 0, ...moved);
+    }
+    this.#materialized = Object.freeze(ids);
+    return this.#materialized;
+  }
+
+  public at(index: number): ID | null {
+    if (!Number.isSafeInteger(index) || index < 0 || index >= this.size) return null;
+    if (this.#patch.type === 'splice') {
+      const insertedEnd = this.#patch.index + this.#patch.inserted.length;
+      if (index < this.#patch.index) return this.#parent.at(index);
+      if (index < insertedEnd) return this.#patch.inserted[index - this.#patch.index] ?? null;
+      return this.#parent.at(index - this.#patch.inserted.length + this.#patch.deleteCount);
+    }
+    return this.#parent.at(parentIndexForMove(index, this.#patch));
+  }
+
+  public indexOf(id: ID): number | null {
+    if (this.#patch.type === 'splice') {
+      const inserted = this.#insertedIndex?.get(id);
+      if (inserted !== undefined) return this.#patch.index + inserted;
+      const previous = this.#parent.indexOf(id);
+      if (previous === null) return null;
+      const deletedEnd = this.#patch.index + this.#patch.deleteCount;
+      if (previous >= this.#patch.index && previous < deletedEnd) return null;
+      return previous < this.#patch.index
+        ? previous
+        : previous - this.#patch.deleteCount + this.#patch.inserted.length;
+    }
+    const previous = this.#parent.indexOf(id);
+    return previous === null ? null : movedIndex(previous, this.#patch);
+  }
+
+  public contains(id: ID): boolean {
+    return this.indexOf(id) !== null;
+  }
+
+  public compare(left: ID, right: ID): -1 | 0 | 1 | null {
+    const leftIndex = this.indexOf(left);
+    const rightIndex = this.indexOf(right);
+    if (leftIndex === null || rightIndex === null) return null;
+    return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
+  }
+
+  public project(predicate: (id: ID, index: number) => boolean): IndexedSequence<ID> {
+    return new IndexedSequence(
+      this.ids.filter(predicate),
+      this.maxItems,
+      this.maxIDCodeUnits,
+    );
+  }
+
+  public move(
+    current: ID,
+    direction: Direction,
+    boundary: BoundaryPolicy = 'stop',
+    options: ScanOptions<ID> = {},
+  ): MoveResult<ID> {
+    return moveInSequence(
+      this.ids,
+      null,
+      current,
+      direction,
+      boundary,
+      options,
+    );
+  }
+}
+
+function parentIndexForMove<ID extends StableID>(
+  index: number,
+  patch: Extract<IndexedSequencePatch<ID>, { readonly type: 'move' }>,
+): number {
+  if (patch.count === 0 || patch.from === patch.to) return index;
+  const movedEnd = patch.to + patch.count;
+  if (index >= patch.to && index < movedEnd) return patch.from + index - patch.to;
+  if (patch.to < patch.from) {
+    if (index >= movedEnd && index < patch.from + patch.count) return index - patch.count;
+    return index;
+  }
+  if (index >= patch.from && index < patch.to) return index + patch.count;
+  return index;
+}
+
+function movedIndex<ID extends StableID>(
+  index: number,
+  patch: Extract<IndexedSequencePatch<ID>, { readonly type: 'move' }>,
+): number {
+  if (patch.count === 0 || patch.from === patch.to) return index;
+  if (index >= patch.from && index < patch.from + patch.count)
+    return patch.to + index - patch.from;
+  if (patch.to < patch.from) {
+    if (index >= patch.to && index < patch.from) return index + patch.count;
+    return index;
+  }
+  const shiftedEnd = patch.to + patch.count;
+  if (index >= patch.from + patch.count && index < shiftedEnd) return index - patch.count;
+  return index;
 }
 
 export function moveInSequence<ID extends StableID>(

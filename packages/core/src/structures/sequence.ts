@@ -10,7 +10,11 @@ import {
   type StableID,
 } from '../shared.js';
 import { fail, ok, validateSafeCeiling, validateUniqueIDs } from '../internal/kernel/foundation.js';
-import { IndexedSequence, type SequenceView } from '../internal/kernel/indexed-sequence.js';
+import {
+  IndexedSequence,
+  PatchedSequence,
+  type SequenceView,
+} from '../internal/kernel/indexed-sequence.js';
 
 export interface SequenceOptions extends ResourceCeilings {
   readonly maxItems?: number;
@@ -97,6 +101,81 @@ export function tryApplySequencePatch<ID extends StableID>(
   patch: SequencePatch<ID>,
   options: SequenceOptions = {},
 ): Result<Sequence<ID>> {
+  const maxItems = options.maxItems ?? sequence.maxItems;
+  const ceilingError = validateSafeCeiling(maxItems, 'maxItems');
+  if (ceilingError !== null) return { ok: false, error: ceilingError };
+  const maxIDCodeUnits = options.maxIDCodeUnits ?? sequence.maxIDCodeUnits;
+  const idCeilingError = validateSafeCeiling(maxIDCodeUnits, 'maxIDCodeUnits', 1);
+  if (idCeilingError !== null) return { ok: false, error: idCeilingError };
+  const size = sequence.size;
+  if (maxIDCodeUnits < sequence.maxIDCodeUnits) {
+    return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
+  }
+  if (patch.type === 'splice') {
+    if (
+      !Number.isSafeInteger(patch.index)
+      || !Number.isSafeInteger(patch.deleteCount)
+      || patch.index < 0
+      || patch.deleteCount < 0
+      || patch.index > size
+      || patch.deleteCount > size - patch.index
+    ) return invalidPatch(patch, size);
+    const nextSize = size - patch.deleteCount + patch.inserted.length;
+    if (nextSize > maxItems) {
+      return fail('resource-rejection', 'item-ceiling-exceeded', 'Sequence exceeds maxItems.', {
+        size: nextSize,
+        maxItems,
+      });
+    }
+    const inserted = validateUniqueIDs(patch.inserted, maxIDCodeUnits);
+    if (!inserted.ok) {
+      return fail('transition-rejection', inserted.error.code, inserted.error.message, inserted.error.details);
+    }
+    const deletedEnd = patch.index + patch.deleteCount;
+    for (let index = 0; index < inserted.value.length; index += 1) {
+      const id = inserted.value[index]!;
+      const previousIndex = sequence.indexOf(id);
+      if (previousIndex !== null && (previousIndex < patch.index || previousIndex >= deletedEnd)) {
+        return fail('transition-rejection', 'duplicate-id', 'Stable identities must be unique.', {
+          id,
+          index: patch.index + index,
+        });
+      }
+    }
+    return ok(new PatchedSequence(
+      sequence,
+      Object.freeze({ ...patch, inserted: inserted.value }),
+      maxItems,
+      maxIDCodeUnits,
+    ));
+  } else {
+    if (
+      !Number.isSafeInteger(patch.from)
+      || !Number.isSafeInteger(patch.to)
+      || !Number.isSafeInteger(patch.count)
+      || patch.from < 0
+      || patch.count < 0
+      || patch.from > size
+      || patch.count > size - patch.from
+      || patch.to < 0
+      || patch.to > size - patch.count
+    ) return invalidPatch(patch, size);
+    if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
+    return ok(new PatchedSequence(
+      sequence,
+      Object.freeze({ ...patch }),
+      maxItems,
+      maxIDCodeUnits,
+    ));
+  }
+}
+
+function applyMaterializedSequencePatch<ID extends StableID>(
+  sequence: Sequence<ID>,
+  patch: SequencePatch<ID>,
+  maxItems: number,
+  maxIDCodeUnits: number,
+): Result<Sequence<ID>> {
   const ids = [...sequence.ids];
   if (patch.type === 'splice') {
     if (
@@ -124,10 +203,7 @@ export function tryApplySequencePatch<ID extends StableID>(
     const moved = ids.splice(patch.from, patch.count);
     ids.splice(patch.to, 0, ...moved);
   }
-  const result = tryCreateSequence(ids, {
-    maxItems: options.maxItems ?? sequence.maxItems,
-    maxIDCodeUnits: options.maxIDCodeUnits ?? sequence.maxIDCodeUnits,
-  });
+  const result = tryCreateSequence(ids, { maxItems, maxIDCodeUnits });
   if (result.ok) return result;
   return fail('transition-rejection', result.error.code, result.error.message, result.error.details);
 }

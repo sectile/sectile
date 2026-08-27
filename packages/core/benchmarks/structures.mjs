@@ -1,7 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { createGrid } from '../dist/structures/grid.js';
 import { createRange } from '../dist/structures/range.js';
-import { createSequence } from '../dist/structures/sequence.js';
+import { applySequencePatch, createSequence } from '../dist/structures/sequence.js';
 import { createTree } from '../dist/structures/tree.js';
 
 const unwrap = (result) => {
@@ -21,6 +21,9 @@ const treeNodes = Array.from({ length: 100_000 }, (_, index) => ({
 const tree = createTree(treeNodes);
 
 measure('sequence indexOf', 100_000, () => sequence.indexOf('i99999'));
+measure('sequence prepend patch', 1_000, () => applySequencePatch(sequence, {
+  type: 'splice', index: 0, deleteCount: 0, inserted: ['inserted'],
+}, { maxItems: 100_001 }));
 measure('range valueAt', 100_000, () => range.valueAt(9_999_999));
 measure('grid positionOf', 100_000, () => grid.positionOf('c299-299'));
 measure('tree parentOf', 100_000, () => tree.parentOf('n99999'));

@@ -99,6 +99,81 @@ test('SEQ-10: patches match array splice and post-removal move semantics', () =>
   assert.equal(tryApplySequencePatch(sequence, {
     type: 'move', from: 4, to: 2, count: 2,
   }).error.code, 'sequence-patch-invalid');
+
+  const movedEarlier = applySequencePatch(sequence, {
+    type: 'move', from: 3, to: 1, count: 2,
+  });
+  assert.deepEqual(movedEarlier.ids, ['a', 'd', 'e', 'b', 'c']);
+  movedEarlier.ids.forEach((id, index) => assert.equal(movedEarlier.indexOf(id), index));
+  const movedLater = applySequencePatch(sequence, {
+    type: 'move', from: 1, to: 3, count: 2,
+  });
+  assert.deepEqual(movedLater.ids, ['a', 'd', 'e', 'b', 'c']);
+  movedLater.ids.forEach((id, index) => assert.equal(movedLater.indexOf(id), index));
+});
+
+test('incremental patches preserve uniqueness and observations across long chains', () => {
+  let sequence = createSequence(Array.from({ length: 128 }, (_, index) => `id-${index}`), {
+    maxItems: 256,
+  });
+  const expected = [...sequence.ids];
+  for (let iteration = 0; iteration < 160; iteration += 1) {
+    const inserted = `new-${iteration}`;
+    const index = iteration % (expected.length + 1);
+    sequence = applySequencePatch(sequence, {
+      type: 'splice', index, deleteCount: 0, inserted: [inserted],
+    });
+    expected.splice(index, 0, inserted);
+    if (expected.length > 180) {
+      const remove = (iteration * 7) % expected.length;
+      sequence = applySequencePatch(sequence, {
+        type: 'splice', index: remove, deleteCount: 1, inserted: [],
+      });
+      expected.splice(remove, 1);
+    }
+  }
+  assert.deepEqual(sequence.ids, expected);
+  expected.forEach((id, index) => {
+    assert.equal(sequence.at(index), id);
+    assert.equal(sequence.indexOf(id), index);
+    assert.equal(sequence.contains(id), true);
+  });
+  assert.equal(tryApplySequencePatch(sequence, {
+    type: 'splice', index: 0, deleteCount: 0, inserted: [expected.at(-1)],
+  }).error.code, 'duplicate-id');
+});
+
+test('patches revalidate retained IDs when the ID ceiling is lowered', () => {
+  const sequence = createSequence(['short', 'longer-id'], { maxIDCodeUnits: 32 });
+  const result = tryApplySequencePatch(sequence, {
+    type: 'splice', index: 0, deleteCount: 1, inserted: ['new'],
+  }, { maxIDCodeUnits: 5 });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'id-code-unit-ceiling-exceeded');
+});
+
+test('incremental move patches preserve every valid post-removal destination', () => {
+  for (let size = 0; size <= 9; size += 1) {
+    const ids = canonicalIDs(size);
+    const sequence = createSequence(ids);
+    for (let from = 0; from <= size; from += 1) {
+      for (let count = 0; count <= size - from; count += 1) {
+        for (let to = 0; to <= size - count; to += 1) {
+          const expected = [...ids];
+          const moved = expected.splice(from, count);
+          expected.splice(to, 0, ...moved);
+          const actual = applySequencePatch(sequence, {
+            type: 'move', from, to, count,
+          });
+          assert.deepEqual(actual.ids, expected);
+          expected.forEach((id, index) => {
+            assert.equal(actual.at(index), id);
+            assert.equal(actual.indexOf(id), index);
+          });
+        }
+      }
+    }
+  }
 });
 
 test('sequence construction and scan ceilings use explicit failure classes', () => {
