@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "virtual-witnesses",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-VIW-01",
+      "title": "TAB-VIW-01: raw Virtual consumes adapter state strategy and locators without an application mapper",
+      "file": "tests/virtual-witnesses/dom-composition.test.mjs",
+      "sha256": "228c6f83cc0c72870a3e86de11ad2517a7130b4edc0fca49c3c21c42cf1d9b55"
+    },
+    {
+      "id": "TAB-VIW-02",
+      "title": "TAB-VIW-02: off-window reveal uses adapter locator then registration completes DOM focus",
+      "file": "tests/virtual-witnesses/dom-composition.test.mjs",
+      "sha256": "228c6f83cc0c72870a3e86de11ad2517a7130b4edc0fca49c3c21c42cf1d9b55"
+    }
+  ],
+  "expectedFailures": [
+    "projection generation propagation",
+    "off-window reveal register focus",
+    "no application-authored mapper"
+  ]
+}

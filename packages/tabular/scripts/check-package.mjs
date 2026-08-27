@@ -8,7 +8,7 @@ assert.equal(manifest.sideEffects, false);
 assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:*');
 assert.equal(manifest.peerDependencies?.['@sectile/virtual'], 'workspace:*');
 assert.equal(manifest.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
-assert.equal(manifest.exports['./virtual'], undefined);
+assert.deepEqual(Object.keys(manifest.exports['./virtual']).sort(), ['default', 'import', 'types']);
 
 for (const [subpath, target] of Object.entries(manifest.exports)) {
   if (subpath === './package.json') continue;
@@ -20,6 +20,11 @@ for (const [subpath, target] of Object.entries(manifest.exports)) {
 const rootJavaScript = await readFile('dist/index.js', 'utf8');
 const rootModule = await import('../dist/index.js');
 assert.deepEqual(Object.keys(rootModule), []);
+assert.equal(rootJavaScript.includes('@sectile/virtual'), false);
+const virtualModule = await import('../dist/virtual.js');
+assert.equal(typeof virtualModule.createDataTableVirtualAdapter, 'function');
+assert.equal(typeof virtualModule.createDataGridVirtualAdapter, 'function');
+assert.equal(typeof virtualModule.createDataTreeGridVirtualAdapter, 'function');
 
 let javascriptBytes = 0;
 let declarationBytes = 0;

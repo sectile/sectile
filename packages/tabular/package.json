@@ -56,6 +56,11 @@
       "import": "./dist/data-tree-grid.js",
       "default": "./dist/data-tree-grid.js"
     },
+    "./virtual": {
+      "types": "./dist/virtual.d.ts",
+      "import": "./dist/virtual.js",
+      "default": "./dist/virtual.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

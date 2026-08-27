@@ -50,6 +50,12 @@
     "TAB-TGR-01": "tests/profiles/data-tree-grid.test.mjs",
     "TAB-TGR-02": "tests/profiles/data-tree-grid.test.mjs",
     "TAB-TGR-03": "tests/profiles/data-tree-grid.test.mjs",
-    "TAB-TGR-04": "tests/profiles/data-tree-grid.test.mjs"
+    "TAB-TGR-04": "tests/profiles/data-tree-grid.test.mjs",
+    "TAB-VIR-01": "tests/virtual/adapter.test.mjs",
+    "TAB-VIR-02": "tests/virtual/adapter.test.mjs",
+    "TAB-VIR-03": "tests/virtual/adapter.test.mjs",
+    "TAB-VIR-04": "tests/virtual/adapter.test.mjs",
+    "TAB-VIW-01": "tests/virtual-witnesses/dom-composition.test.mjs",
+    "TAB-VIW-02": "tests/virtual-witnesses/dom-composition.test.mjs"
   }
 }

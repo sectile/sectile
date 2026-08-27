@@ -13,6 +13,10 @@ const paths = (await readdir(directory))
 assert.ok(paths.length > 0, `${group} has no test files`);
 const build = spawnSync('pnpm', ['--silent', 'run', 'build:verification'], { stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
+if (group === 'virtual-witnesses') {
+  const domBuild = spawnSync('pnpm', ['--filter', '@sectile/dom', '--silent', 'run', 'build'], { stdio: 'inherit' });
+  if (domBuild.status !== 0) process.exit(domBuild.status ?? 1);
+}
 const test = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...paths], { stdio: 'inherit' });
 if (test.status !== 0) process.exit(test.status ?? 1);
 const evidence = await writeGroupEvidence(group, paths);

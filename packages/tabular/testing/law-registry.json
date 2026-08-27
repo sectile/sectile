@@ -50,6 +50,12 @@
     { "id": "TAB-TGR-01", "name": "tree-grid ancestry and navigation" },
     { "id": "TAB-TGR-02", "name": "tree-grid leaf edit authority" },
     { "id": "TAB-TGR-03", "name": "tree-grid expansion and ancestry rejection" },
-    { "id": "TAB-TGR-04", "name": "renderer-neutral tree-grid commands" }
+    { "id": "TAB-TGR-04", "name": "renderer-neutral tree-grid commands" },
+    { "id": "TAB-VIR-01", "name": "stable measured linear reconciliation" },
+    { "id": "TAB-VIR-02", "name": "Virtual and projection generation separation" },
+    { "id": "TAB-VIR-03", "name": "partitioned measured pin reconciliation" },
+    { "id": "TAB-VIR-04", "name": "partition and projected-cell ceiling separation" },
+    { "id": "TAB-VIW-01", "name": "raw Virtual adapter composition" },
+    { "id": "TAB-VIW-02", "name": "off-window reveal registration focus" }
   ]
 }
