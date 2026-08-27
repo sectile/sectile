@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 인라인 편집
+# Editable
 
 인라인 내용을 미리 보기와 검증 가능한 편집 상태로 전환합니다.
 

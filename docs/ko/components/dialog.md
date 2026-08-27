@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 대화상자
+# Dialog
 
 모달 또는 비모달 방식으로 페이지 위에 포커스된 내용을 엽니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 드로어
+# Drawer
 
 화면 가장자리에서 내용을 열고 바깥 방향 스와이프로 닫습니다.
 

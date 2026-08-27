@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 타이머
+# Timer
 
 시작·일시 정지·초기화 동작으로 경과 시간이나 남은 시간을 잽니다.
 

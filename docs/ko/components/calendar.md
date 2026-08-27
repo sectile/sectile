@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 달력
+# Calendar
 
 날짜 격자를 이동하고 사용할 수 없는 날을 건너뛰어 날짜를 고릅니다.
 

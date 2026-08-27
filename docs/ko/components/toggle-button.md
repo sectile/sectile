@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 토글 버튼
+# Toggle Button
 
 같은 작업을 다시 실행할 때까지 눌림 상태를 유지합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 단계 진행
+# Stepper
 
 진행 상태와 사용 가능 조건을 보여 주며 순서가 있는 작업을 안내합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 콤보박스
+# Combobox
 
 문자열로 항목을 걸러 내고 결과를 이동해 하나를 확정합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 시간 범위 입력
+# Time Range Field
 
 간격과 순서 규칙을 지키며 시작·종료 시각을 편집합니다.
 

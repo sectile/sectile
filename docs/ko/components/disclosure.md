@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 상세 내용 펼치기
+# Disclosure
 
 하나의 실행 요소로 선택적인 내용을 펼치고 접습니다.
 

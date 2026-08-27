@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 도움말
+# Tooltip
 
 키보드 포커스나 마우스 올림으로 짧은 도움말을 표시합니다.
 

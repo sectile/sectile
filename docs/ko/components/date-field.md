@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜 입력
+# Date Field
 
 시간대와 무관한 날짜를 구조화된 문자열로 입력하고 검증합니다.
 

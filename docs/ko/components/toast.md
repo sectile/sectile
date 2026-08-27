@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 토스트 알림
+# Toast
 
 현재 작업을 막지 않고 짧은 피드백을 순서대로 알립니다.
 

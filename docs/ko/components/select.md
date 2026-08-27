@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 선택 상자
+# Select
 
 실행 요소가 여는 팝업 목록에서 값 하나를 고릅니다.
 

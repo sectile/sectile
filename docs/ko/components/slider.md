@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 슬라이더
+# Slider
 
 포인터나 키보드로 일정 간격의 숫자 하나를 조절합니다.
 

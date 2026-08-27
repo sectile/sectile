@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 격자
+# Grid
 
 2차원 칸을 이동하고 값을 선택하거나 편집 상태로 들어갑니다.
 

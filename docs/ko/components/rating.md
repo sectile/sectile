@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 평점
+# Rating
 
 순서가 있는 평점 척도에서 점수를 고치거나 지웁니다.
 

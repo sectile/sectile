@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 아코디언
+# Accordion
 
 관련 내용을 각각 펼치고 접을 수 있는 여러 영역으로 구성합니다.
 

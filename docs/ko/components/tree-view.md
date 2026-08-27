@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 계층 보기
+# Tree View
 
 포커스와 선택을 나눠 유지하면서 펼칠 수 있는 계층을 탐색합니다.
 

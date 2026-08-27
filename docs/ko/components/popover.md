@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 팝오버
+# Popover
 
 페이지를 막지 않고 실행 요소에 상호작용 가능한 내용을 붙입니다.
 

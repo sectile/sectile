@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 라디오 버튼 묶음
+# Radio Group
 
 이름이 있는 선택지 묶음에서 정확히 하나를 고릅니다.
 

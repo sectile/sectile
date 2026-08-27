@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 메뉴 막대
+# Menubar
 
 최상위 메뉴 사이를 이동한 뒤 각 명령 계층을 탐색합니다.
 

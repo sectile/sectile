@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜 범위 입력
+# Date Range Field
 
 완성되지 않았거나 잘못된 입력을 유지하면서 두 날짜를 편집합니다.
 

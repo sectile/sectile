@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 증감 입력
+# Spin Button
 
 숫자를 직접 입력하거나 증가·감소 버튼으로 바꿉니다.
 

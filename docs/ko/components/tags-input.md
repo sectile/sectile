@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 태그 입력
+# Tags Input
 
 하나의 입력 필드에서 자유 형식 태그를 만들고 이동하고 지웁니다.
 

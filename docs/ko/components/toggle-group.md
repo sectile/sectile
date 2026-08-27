@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 토글 버튼 묶음
+# Toggle Group
 
 포커스가 이어지는 묶음에서 하나 또는 여러 작업의 눌림 상태를 관리합니다.
 

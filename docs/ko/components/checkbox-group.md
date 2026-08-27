@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 체크박스 묶음
+# Checkbox Group
 
 하나의 묶음에서 서로 독립된 선택지를 원하는 만큼 고릅니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 메뉴
+# Menu
 
 계층형 명령을 이동하고 하위 메뉴를 열어 작업을 실행합니다.
 

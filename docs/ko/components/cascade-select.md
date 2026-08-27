@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 단계별 선택
+# Cascade Select
 
 계층을 열 단위로 좁혀 가며 마지막 값을 선택합니다.
 

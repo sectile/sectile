@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 계층 격자
+# Tree Grid
 
 계층형 리소스를 정리하고 편집하면서 2차원 격자 이동을 유지합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 회전 목록
+# Carousel
 
 이전·다음·직접 이동 제어로 연속된 슬라이드를 탐색합니다.
 

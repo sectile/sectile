@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 텍스트 입력
+# Text
 
 선택 영역과 한글 조합을 유지하면서 유니코드 문자열을 편집합니다.
 

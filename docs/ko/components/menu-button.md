@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 메뉴 버튼
+# Menu Button
 
 하나의 버튼에서 명령 메뉴를 열고 닫을 때 포커스를 복원합니다.
 

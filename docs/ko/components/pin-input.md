@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 인증 번호 입력
+# Pin Input
 
 여러 한 글자 입력 칸을 연결해 짧은 인증 번호를 입력합니다.
 

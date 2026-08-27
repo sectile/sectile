@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜·시간 선택기
+# Date Time Picker
 
 입력 필드와 달력을 연결해 현지 날짜와 시각을 고릅니다.
 

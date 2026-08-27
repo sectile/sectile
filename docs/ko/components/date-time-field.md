@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜·시간 입력
+# Date Time Field
 
 시간대 변환 없이 날짜와 현지 시각을 함께 편집합니다.
 

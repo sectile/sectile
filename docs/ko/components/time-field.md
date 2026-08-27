@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 시간 입력
+# Time Field
 
 시간대와 무관한 시각을 입력하고 검증합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 목록 상자
+# Listbox
 
 화면에 보이는 항목을 이동해 하나 또는 여러 값을 선택합니다.
 

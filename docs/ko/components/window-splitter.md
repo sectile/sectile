@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 영역 크기 조절
+# Window Splitter
 
 키보드로도 조작할 수 있는 구분선으로 인접 영역의 크기를 바꿉니다.
 

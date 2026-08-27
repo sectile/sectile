@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 숫자 입력
+# Number Field
 
 문자열 입력을 검증하거나 계산하면서 정확한 십진수를 유지합니다.
 

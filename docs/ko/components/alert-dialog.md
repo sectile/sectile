@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 확인 대화상자
+# Alert Dialog
 
 되돌릴 수 없는 작업을 실행하기 전에 명확한 확인을 받습니다.
 

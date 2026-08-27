@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜 선택기
+# Date Picker
 
 주·월·연 보기에서 사용할 수 있는 날짜 하나를 고릅니다.
 

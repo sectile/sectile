@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 색상 선택기
+# Color Picker
 
 기본 입력, 텍스트, 채널, 색상 영역으로 정확한 색을 편집합니다.
 

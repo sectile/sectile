@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 이동 메뉴
+# Navigation Menu
 
 기본 링크와 펼쳐지는 이동 패널을 하나의 막대에 구성합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜 범위 선택기
+# Date Range Picker
 
 여러 달을 이동하며 양 끝을 포함하는 날짜 범위를 고릅니다.
 

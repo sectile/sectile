@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 다중 슬라이더
+# Multi Thumb Slider
 
 하나의 수치 트랙에서 순서가 있는 여러 값을 조절합니다.
 

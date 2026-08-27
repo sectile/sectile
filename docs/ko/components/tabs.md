@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 탭
+# Tabs
 
 포커스와 실행 방식을 조정하며 같은 단계의 패널을 전환합니다.
 

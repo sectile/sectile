@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 스위치
+# Switch
 
 설정 하나를 즉시 전환합니다.
 

@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 수량 입력
+# Quantity Field
 
 정확한 물리량을 입력하고 호환되는 표시 단위로 변환합니다.
 

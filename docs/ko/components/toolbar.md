@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 도구 막대
+# Toolbar
 
 관련 작업을 짧은 막대에 모아 이동하고 현재 도구를 실행합니다.
 

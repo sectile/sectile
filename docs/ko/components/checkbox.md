@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 체크박스
+# Checkbox
 
 하나의 선택 여부를 바꾸거나 일부만 선택된 부모 상태를 나타냅니다.
 

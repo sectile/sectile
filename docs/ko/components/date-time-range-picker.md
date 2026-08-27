@@ -1,5 +1,5 @@
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# 날짜·시간 범위 선택기
+# Date Time Range Picker
 
 시작·종료 날짜와 각각의 현지 시각을 선택합니다.
 
