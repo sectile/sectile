@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/dom",
+  "status": "passed",
+  "browser": "Codex In-app Browser",
+  "url": "http://127.0.0.1:8765/packages/dom/verification/tabular-browser.html",
+  "scenarios": {
+    "tabular-native-table": {
+      "nativeElement": true,
+      "noGridRole": true,
+      "formValue": true,
+      "cellHeaders": true
+    },
+    "tabular-grid": {
+      "role": true,
+      "rovingFocus": true,
+      "revealOnce": true,
+      "staleRevealNoop": true,
+      "listenerTeardown": true
+    },
+    "tabular-treegrid": {
+      "role": true,
+      "level": true,
+      "expanded": true,
+      "rowCount": true
+    }
+  },
+  "consoleWarningsOrErrors": []
+}

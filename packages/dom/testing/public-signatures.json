@@ -47,6 +47,18 @@
       "types": "dist/combobox.d.ts"
     },
     {
+      "subpath": "./data-grid",
+      "types": "dist/data-grid.d.ts"
+    },
+    {
+      "subpath": "./data-table",
+      "types": "dist/data-table.d.ts"
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "types": "dist/data-tree-grid.d.ts"
+    },
+    {
       "subpath": "./date-field",
       "types": "dist/date-field.d.ts"
     },
@@ -271,7 +283,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "a73307fa093f032a11b18650fdaaae2bb6e33874bdbcaf49df0ac33b1552cbdd",
+  "fingerprint": "8a936e0b421016ee7b04104e86e62d910d06ff8a9447ae525de142d6108dbbd2",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -312,6 +324,18 @@
     {
       "path": "dist/combobox.d.ts",
       "sha256": "566c215b386ddea0d295205778e94e450b39448c4bd9faca6e52ca82e049c450"
+    },
+    {
+      "path": "dist/data-grid.d.ts",
+      "sha256": "b3e71283912699ea306dbac4591764891fb881dbe9d5b9dde7d4d66839b0d427"
+    },
+    {
+      "path": "dist/data-table.d.ts",
+      "sha256": "7f1b889708e131ef1bde0a48822a6d7b8b9be7b2133a7ad311f6d60b50a7e0c5"
+    },
+    {
+      "path": "dist/data-tree-grid.d.ts",
+      "sha256": "b92430f6a072c8921fffaa075f1b0576e5d097e842cf02c52ac55124c60d33ac"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -371,7 +395,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "54c979e9776f87258427fe8f87ff7267506a49c39562a635782483a131a7aa65"
+      "sha256": "b46f4b4fa67f32fc70d65c5e71a9779bada645c52476aa2921ecc249eb217018"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -404,6 +428,14 @@
     {
       "path": "dist/internal/result.d.ts",
       "sha256": "11c0a813181db076264b0655e7e62f84946993f772457bab3cb2d8886aaa7eaf"
+    },
+    {
+      "path": "dist/internal/tabular-dom.d.ts",
+      "sha256": "deaef6c7cc0c12da40e13915ecfc67afd639237e80f8a677de2f56abfa505377"
+    },
+    {
+      "path": "dist/internal/tabular-grid-dom.d.ts",
+      "sha256": "bd416fde8a20a81da03f63427b3185283a4e318de798b4b0922dac3d30255433"
     },
     {
       "path": "dist/listbox.d.ts",

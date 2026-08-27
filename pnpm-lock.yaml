@@ -158,6 +158,9 @@ importers:
       '@sectile/core':
         specifier: workspace:*
         version: link:../core
+      '@sectile/tabular':
+        specifier: workspace:*
+        version: link:../tabular
       '@sectile/temporal':
         specifier: workspace:*
         version: link:../temporal

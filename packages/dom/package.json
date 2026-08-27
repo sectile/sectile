@@ -71,6 +71,21 @@
       "import": "./dist/grid.js",
       "default": "./dist/grid.js"
     },
+    "./data-table": {
+      "types": "./dist/data-table.d.ts",
+      "import": "./dist/data-table.js",
+      "default": "./dist/data-table.js"
+    },
+    "./data-grid": {
+      "types": "./dist/data-grid.d.ts",
+      "import": "./dist/data-grid.js",
+      "default": "./dist/data-grid.js"
+    },
+    "./data-tree-grid": {
+      "types": "./dist/data-tree-grid.d.ts",
+      "import": "./dist/data-tree-grid.js",
+      "default": "./dist/data-tree-grid.js"
+    },
     "./tabs": {
       "types": "./dist/tabs.d.ts",
       "import": "./dist/tabs.js",
@@ -368,6 +383,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
     "@sectile/core": "workspace:*",
+    "@sectile/tabular": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
     "@sectile/temporal": "workspace:*"
   },
