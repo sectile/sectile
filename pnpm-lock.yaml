@@ -219,9 +219,15 @@ importers:
 
   packages/vue:
     dependencies:
+      '@sectile/core':
+        specifier: workspace:*
+        version: link:../core
       '@sectile/dom':
         specifier: workspace:*
         version: link:../dom
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:../virtual
     devDependencies:
       '@vue/server-renderer':
         specifier: ^3.5.0

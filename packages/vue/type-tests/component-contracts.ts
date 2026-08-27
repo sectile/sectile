@@ -24,6 +24,20 @@ import {
 } from '../dist/spin-button.js';
 import { TimeField } from '../dist/time-field.js';
 import { useToast, type UseToastReturn } from '../dist/toast.js';
+import {
+  VirtualGrid,
+  VirtualList,
+  VirtualMasonry,
+  VirtualSpatial,
+  type VirtualGridProps,
+  type VirtualGridSlotProps,
+  type VirtualListProps,
+  type VirtualListSlotProps,
+  type VirtualMasonryProps,
+  type VirtualMasonrySlotProps,
+  type VirtualSpatialProps,
+  type VirtualSpatialSlotProps,
+} from '../dist/virtual.js';
 
 type Assert<T extends true> = T;
 type Equal<Left, Right> =
@@ -53,6 +67,30 @@ h(NumberField, { policies: numberFieldPolicies });
 h(DateField, { policies: dateFieldPolicies });
 h(TimeField, { policies: timeFieldPolicies });
 h(DateTimeField, { policies: dateTimeFieldPolicies });
+h(VirtualList, {
+  items: [{ id: 'row-1', title: 'First row' }],
+  getKey: (value: { id: string }) => value.id,
+});
+h(VirtualGrid, {
+  items: [{ id: 'cell-1' }],
+  getKey: (value: { id: string }) => value.id,
+  minLaneSize: 180,
+});
+h(VirtualMasonry, {
+  items: [{ id: 'card-1' }],
+  getKey: (value: { id: string }) => value.id,
+  estimateSize: 240,
+});
+h(VirtualSpatial, {
+  items: [{ id: 'node-1', x: 10, y: 20 }],
+  getKey: (value: { id: string }) => value.id,
+  getRect: (value: { x: number; y: number }) => ({
+    x: value.x,
+    y: value.y,
+    width: 120,
+    height: 80,
+  }),
+});
 
 // @ts-expect-error items is required at runtime.
 h(MenuRoot, {});
@@ -89,8 +127,31 @@ type DatePickerContentSlot = NonNullable<InstanceType<typeof DatePickerContent>[
 type DatePickerContentSlotValue = Parameters<DatePickerContentSlot>[0]['value'];
 type MenuProps = InstanceType<typeof MenuRoot>['$props'];
 type MenuButtonProps = InstanceType<typeof MenuButtonRoot>['$props'];
+interface VirtualRow { readonly id: string; readonly title: string; }
+type VirtualRowValue = VirtualListSlotProps<VirtualRow>['value'];
+type VirtualGridValue = VirtualGridSlotProps<VirtualRow>['value'];
+type VirtualMasonryValue = VirtualMasonrySlotProps<VirtualRow>['value'];
+type VirtualSpatialValue = VirtualSpatialSlotProps<VirtualRow>['value'];
+const virtualListProps: VirtualListProps<VirtualRow> = {
+  items: [{ id: 'row-1', title: 'First row' }],
+  getKey: (value) => value.id,
+};
+const virtualGridProps: VirtualGridProps<VirtualRow> = virtualListProps;
+const virtualMasonryProps: VirtualMasonryProps<VirtualRow> = virtualListProps;
+const virtualSpatialProps: VirtualSpatialProps<VirtualRow> = {
+  ...virtualListProps,
+  getRect: (_value) => ({ x: 0, y: 0, width: 1, height: 1 }),
+};
+void virtualListProps;
+void virtualGridProps;
+void virtualMasonryProps;
+void virtualSpatialProps;
 type _datePickerValue = Assert<Equal<DatePickerValue, DateValue | null>>;
 type _datePickerSlotValue = Assert<Equal<DatePickerSlotValue, DateValue | null>>;
 type _datePickerContentSlotValue = Assert<Equal<DatePickerContentSlotValue, DateValue | null>>;
 type _menuDoesNotExposeOpen = Assert<Equal<'open' extends keyof MenuProps ? true : false, false>>;
 type _menuButtonExposesOpen = Assert<Equal<'open' extends keyof MenuButtonProps ? true : false, true>>;
+type _virtualRowValue = Assert<Equal<VirtualRowValue, VirtualRow>>;
+type _virtualGridValue = Assert<Equal<VirtualGridValue, VirtualRow>>;
+type _virtualMasonryValue = Assert<Equal<VirtualMasonryValue, VirtualRow>>;
+type _virtualSpatialValue = Assert<Equal<VirtualSpatialValue, VirtualRow>>;

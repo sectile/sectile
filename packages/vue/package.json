@@ -360,7 +360,9 @@
     "verify": "pnpm run typecheck && pnpm run typecheck:public && pnpm run test && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
   },
   "dependencies": {
-    "@sectile/dom": "workspace:*"
+    "@sectile/core": "workspace:*",
+    "@sectile/dom": "workspace:*",
+    "@sectile/virtual": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
