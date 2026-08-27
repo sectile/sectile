@@ -473,7 +473,7 @@ const recordAction = (value: string): void => {
         :trap-focus="!preview"
         @update:open="dialogOpen = $event"
       >
-        <DialogTrigger>Open details</DialogTrigger>
+        <DialogTrigger v-if="!preview">Open details</DialogTrigger>
         <DialogOverlay v-if="!isScenario('non-modal')" class="catalog-dialog-overlay" />
         <DialogContent :class="['catalog-dialog', isScenario('non-modal') ? 'catalog-nonmodal-dialog' : 'catalog-modal-dialog']">
           <DialogTitle class="catalog-dialog-title">Deployment details</DialogTitle>
@@ -491,7 +491,7 @@ const recordAction = (value: string): void => {
         :side="isScenario('side') ? 'right' : 'bottom'"
         @update:open="drawerOpen = $event"
       >
-        <DrawerTrigger>{{ isScenario('side') ? 'Open inspector' : 'Open filters' }}</DrawerTrigger>
+        <DrawerTrigger v-if="!preview">{{ isScenario('side') ? 'Open inspector' : 'Open filters' }}</DrawerTrigger>
         <DrawerOverlay class="catalog-drawer-overlay" />
         <DrawerContent class="catalog-drawer">
           <DrawerHandle class="catalog-drawer-handle" />
@@ -508,7 +508,7 @@ const recordAction = (value: string): void => {
         :restore-focus="!preview"
         :trap-focus="!preview"
       >
-        <AlertDialogTrigger>{{ isScenario('unsaved') ? 'Discard draft' : 'Delete project' }}</AlertDialogTrigger>
+        <AlertDialogTrigger v-if="!preview">{{ isScenario('unsaved') ? 'Discard draft' : 'Delete project' }}</AlertDialogTrigger>
         <AlertDialogOverlay class="catalog-dialog-overlay" />
         <AlertDialogContent class="catalog-dialog catalog-alert-dialog">
           <AlertDialogTitle class="catalog-dialog-title">{{ isScenario('unsaved') ? 'Discard unsaved changes?' : 'Delete project?' }}</AlertDialogTitle>
@@ -580,7 +580,12 @@ const recordAction = (value: string): void => {
       <NavigationMenuRoot v-else-if="component === 'navigation-menu'" :items="navigationMenuItems" :disabled="isScenario('disabled')" label="Primary" class="catalog-navigation-menu" v-slot="{ openPath }">
         <NavigationMenuList class="catalog-navigation-list">
           <NavigationMenuItem class="catalog-navigation-item">
-            <NavigationMenuTrigger value="file" as="button" class="catalog-navigation-trigger">
+            <NavigationMenuTrigger
+              value="file"
+              as="button"
+              class="catalog-navigation-trigger"
+              :class="{ 'catalog-navigation-trigger--preview-open': preview }"
+            >
               {{ isScenario('links') ? 'Resources' : 'Products' }} <ChevronDown :size="15" aria-hidden="true" />
             </NavigationMenuTrigger>
           </NavigationMenuItem>
@@ -591,7 +596,11 @@ const recordAction = (value: string): void => {
           </NavigationMenuItem>
         </NavigationMenuList>
         <NavigationMenuViewport v-show="preview || openPath.includes('file')" class="catalog-navigation-viewport">
-          <NavigationMenuContent for="file" class="catalog-navigation-panel">
+          <NavigationMenuContent
+            for="file"
+            class="catalog-navigation-panel"
+            :class="{ 'catalog-navigation-panel--preview-open': preview }"
+          >
             <NavigationMenuLink value="new" as="a" href="#new" class="catalog-navigation-card">
               <PackageCheck :size="18" aria-hidden="true" />
               <span><strong>{{ isScenario('links') ? 'Guides' : 'New releases' }}</strong><small>{{ isScenario('links') ? 'Patterns for integrating Sectile' : 'What shipped in the latest version' }}</small></span>

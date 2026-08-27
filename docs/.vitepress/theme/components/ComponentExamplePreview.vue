@@ -148,7 +148,11 @@ const example = computed(resolveExample);
 </script>
 
 <template>
-  <div class="component-example-stage" :data-component="component">
+  <div
+    class="component-example-stage"
+    :data-component="component"
+    :data-preview="preview ? 'true' : undefined"
+  >
     <component :is="example.component" :key="`${component}:${scenario}:${preview}`" v-bind="example.props" />
   </div>
 </template>
