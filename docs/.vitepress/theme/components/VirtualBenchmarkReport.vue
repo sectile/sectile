@@ -4,6 +4,7 @@ import { MeterIndicator, MeterRoot, MeterTrack, MeterValueText } from '@sectile/
 import { useDocsLocale } from '../locale.js';
 import DemoCascadeList from './DemoCascadeList.vue';
 import {
+  baselineBenchmarkFailures,
   baselineBenchmarkResults,
   mutationBenchmarkResults,
   type BenchmarkHeightMode,
@@ -58,6 +59,7 @@ const copy = computed(() => isKorean.value ? {
   initialRenderLabel: '초기 렌더',
   unsupported: '이 조건은 높이 예상값 없이 시작할 수 없음',
   stableFailure: '정상 화면에 도달하지 못했습니다.',
+  baselineFailure: (failed: number, total: number) => `${total}회 중 ${failed}회에서 올바른 초기 화면을 만들지 못했습니다.`,
   recoveredFailure: (recovered: number, total: number) => recovered === total
     ? `${total}번 모두 처리 중 화면 오류가 발생했지만 최종 화면은 정상으로 돌아왔습니다.`
     : `${total}번 중 ${recovered}번에서 화면 오류가 발생했지만 최종 화면은 정상으로 돌아왔습니다.`,
@@ -80,14 +82,14 @@ const copy = computed(() => isKorean.value ? {
     data: '같은 행 100,000개',
     viewport: '720 × 480px · 여유 8행',
     height: {
-      fixed: '정확한 48px 전달',
-      estimated: '48px 예상값 뒤 DOM 실측',
-      automatic: '높이값 없이 DOM 실측',
+      fixed: '정확한 72px 전달',
+      estimated: '앱 제공 예상값 뒤 DOM 실측',
+      automatic: '라이브러리 기본값 뒤 DOM 실측',
     } as Record<BenchmarkHeightMode, string>,
     repeat: {
       mount: '라이브러리 순서를 바꿔 5회',
       scroll: '5회 · 준비 5번 뒤 40번 기록',
-      mutation: '같은 조건 50회',
+      mutation: '5개 독립 인스턴스 · 인스턴스마다 10회',
     },
     completion: {
       mount: '전체 높이와 화면 배치가 모두 맞은 시점',
@@ -111,6 +113,7 @@ const copy = computed(() => isKorean.value ? {
   initialRenderLabel: 'Initial render',
   unsupported: 'This condition cannot start without a height estimate',
   stableFailure: 'The screen did not reach a correct stable state.',
+  baselineFailure: (failed: number, total: number) => `${failed} of ${total} rounds failed to produce a correct initial screen.`,
   recoveredFailure: (recovered: number, total: number) => recovered === total
     ? `All ${total} runs showed a visual error, but the final screen recovered.`
     : `${recovered} of ${total} runs showed a visual error, but the final screen recovered.`,
@@ -133,14 +136,14 @@ const copy = computed(() => isKorean.value ? {
     data: '100,000 identical rows',
     viewport: '720 × 480px · 8-row overscan',
     height: {
-      fixed: 'Exact 48px supplied',
-      estimated: '48px estimate, then DOM measurement',
-      automatic: 'DOM measurement without a height value',
+      fixed: 'Exact 72px supplied',
+      estimated: 'Application estimate, then DOM measurement',
+      automatic: 'Library fallback, then DOM measurement',
     } as Record<BenchmarkHeightMode, string>,
     repeat: {
       mount: '5 rounds with rotated library order',
       scroll: '5 rounds · 5 warm-ups, then 40 samples',
-      mutation: '50 samples under the same condition',
+      mutation: '5 independent instances · 10 samples each',
     },
     completion: {
       mount: 'Correct total height and viewport geometry',
@@ -231,7 +234,19 @@ const benchmarkCriteria = computed(() => {
 
 function baselineResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
   const result = baselineBenchmarkResults.find((entry) => entry.library === metadata.library && entry.mode === baselineMode.value);
-  if (result === undefined) return unsupportedResult(metadata);
+  if (result === undefined) {
+    const failure = baselineBenchmarkFailures.find((entry) => entry.library === metadata.library && entry.mode === baselineMode.value);
+    if (failure === undefined) return unsupportedResult(metadata);
+    return {
+      ...metadata,
+      values: [null, null, null, null],
+      initialRenderMs: null,
+      slowTailMs: [],
+      state: copy.value.baselineFailure(failure.failedRounds, failure.totalRounds),
+      notice: null,
+      failed: true,
+    };
+  }
   const values = scenario.value === 'mount'
     ? [result.mountMs, null, null]
     : [result.scrollMedianMs, result.scrollP95Ms, null];

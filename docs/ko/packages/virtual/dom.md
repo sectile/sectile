@@ -46,4 +46,4 @@ const virtualizer = createVirtualizer({
 - `setOverscan()`은 현재 배치를 유지하면서 화면 밖 준비 범위를 바꿉니다.
 - `disconnect()`는 크기 관찰과 이벤트 처리를 끝냅니다.
 
-기본 화면 영역은 음수가 아닌 물리 좌표 `scrollLeft`와 `scrollTop`을 사용합니다. 오른쪽에서 왼쪽으로 흐르는 화면이나 별도 좌표 체계에는 `readViewport`와 `writeScroll`을 전달합니다.
+기본 화면 영역은 0 이상의 물리 좌표 `scrollLeft`와 `scrollTop`을 사용합니다. 오른쪽에서 왼쪽으로 흐르는 화면이나 별도 좌표 체계에는 `readViewport`와 `writeScroll`을 전달합니다.

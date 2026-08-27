@@ -44,6 +44,16 @@ interface BenchmarkResult {
   readonly domElements: number;
 }
 
+interface BaselineBenchmarkFailure {
+  readonly mode: HeightMode;
+  readonly library: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly round: number;
+  readonly elapsedMs: number;
+  readonly message: string;
+}
+
 interface ScrollMeasurement {
   readonly elapsedMs: number;
   readonly lowerBoundMs: number;
@@ -105,6 +115,7 @@ declare global {
     __sectileVirtualBenchmarkResults?: readonly BenchmarkResult[];
     __sectileVirtualBenchmarkReport?: {
       readonly baselineResults: readonly BenchmarkResult[];
+      readonly baselineFailures: readonly BaselineBenchmarkFailure[];
       readonly baselineSamples: Readonly<Record<string, readonly BaselineSample[]>>;
       readonly mutationResults: readonly MutationBenchmarkResult[];
       readonly heightModeSupport: readonly HeightModeSupport[];
@@ -118,6 +129,8 @@ const ROUNDS = QUICK_RUN ? 1 : 5;
 const WARMUP_SCROLLS = QUICK_RUN ? 1 : 5;
 const RECORDED_SCROLLS = QUICK_RUN ? 2 : 40;
 const FRAME_TIMEOUT_MS = 4_000;
+const STABLE_FAILURE_MIN_MS = 300;
+const STABLE_FAILURE_FRAMES = 8;
 const HEIGHT_TOLERANCE_PX = 2;
 
 const benchmarkCases = Object.freeze([
@@ -125,8 +138,10 @@ const benchmarkCases = Object.freeze([
   ...mutableAdapters.map((adapter) => dynamicCase(adapter)),
   ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter)),
 ]);
+const libraryFilter = search.get('library');
 const activeCases = benchmarkCases.filter((entry) => (
   (!search.has('sectile') || entry.name === 'Sectile Virtual')
+  && (libraryFilter === null || entry.name === libraryFilter)
   && (!search.has('fixed') || entry.mode === 'fixed')
 ));
 const BASELINE_ONLY = search.has('baseline-only');
@@ -160,7 +175,7 @@ if (root === null) throw new Error('Missing benchmark root.');
 root.innerHTML = `
   <header>
     <h1>Virtualization ecosystem benchmark</h1>
-    <p>100,000 identical rows · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
+    <p>100,000 identical 72px rows · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
     <button type="button" id="run">Run benchmark</button>
   </header>
   <section aria-live="polite">
@@ -211,17 +226,30 @@ async function runAll(): Promise<void> {
   mutationResultsBody!.replaceChildren();
   json!.textContent = '';
   const raw = new Map<string, RawBenchmarkResult[]>();
+  const baselineFailures: BaselineBenchmarkFailure[] = [];
   try {
-    for (let round = 0; round < (MUTATIONS_ONLY ? 0 : ROUNDS); round += 1) {
-      const order = rotate(activeCases, round * 3);
+    for (let roundIndex = 0; roundIndex < (MUTATIONS_ONLY ? 0 : ROUNDS); roundIndex += 1) {
+      const order = rotate(activeCases, roundIndex * 3);
       for (const benchmarkCase of order) {
-        status!.textContent = `Round ${round + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
+        status!.textContent = `Round ${roundIndex + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
+        const caseStartedAt = performance.now();
         let result: RawBenchmarkResult;
         try {
           result = await runCase(benchmarkCase, mountHost!);
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error);
-          throw new Error(`${benchmarkCase.mode} · ${benchmarkCase.name}: ${reason}`, { cause: error });
+          baselineFailures.push(Object.freeze({
+            mode: benchmarkCase.mode,
+            library: benchmarkCase.name,
+            version: benchmarkCase.version,
+            stack: benchmarkCase.stack,
+            round: roundIndex + 1,
+            elapsedMs: round(performance.now() - caseStartedAt),
+            message: reason,
+          }));
+          resultsBody!.append(renderBaselineFailure(benchmarkCase, reason));
+          await idleFrame();
+          continue;
         }
         const key = caseKey(benchmarkCase);
         const samples = raw.get(key) ?? [];
@@ -231,7 +259,10 @@ async function runAll(): Promise<void> {
       }
     }
     const baselineCases = MUTATIONS_ONLY ? [] : activeCases;
-    const baselineResults = baselineCases.map((entry) => aggregate(entry, raw.get(caseKey(entry)) ?? []));
+    const baselineResults = baselineCases.flatMap((entry) => {
+      const rounds = raw.get(caseKey(entry)) ?? [];
+      return rounds.length === ROUNDS ? [aggregate(entry, rounds)] : [];
+    });
     const baselineSamples = Object.freeze(Object.fromEntries(baselineCases.map((entry) => [
       caseKey(entry),
       Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
@@ -253,9 +284,10 @@ async function runAll(): Promise<void> {
         );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
-    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, baselineSamples, mutationResults, heightModeSupport });
+    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, baselineFailures, baselineSamples, mutationResults, heightModeSupport });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
+      protocolVersion: 2,
       environment: navigator.userAgent,
       conditions: {
         itemCount: ITEM_COUNT,
@@ -269,6 +301,8 @@ async function runAll(): Promise<void> {
           trigger: 'programmatic scrollTop change; the browser-generated scroll event is observed at document capture before target listeners',
           observation: 'timing starts when the browser begins native scroll-event delivery and ends after DOM geometry has been read; correctness validation runs outside the timed interval',
           diagnostics: 'raw samples retain round, sample, lower and upper timing bounds, geometry-probe cost, and correctness-check count; summaries retain per-round ranges',
+          stableFailureMinMs: STABLE_FAILURE_MIN_MS,
+          stableFailureFrames: STABLE_FAILURE_FRAMES,
           timing: {
             setupMs: 'synchronous adapter and framework setup',
             firstRowsMs: 'time until the first benchmark rows exist',
@@ -279,6 +313,7 @@ async function runAll(): Promise<void> {
       },
       heightModeSupport,
       baselineResults,
+      baselineFailures,
       baselineSamples,
       mutationResults,
     }, null, 2);
@@ -322,37 +357,40 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
   host.replaceChildren();
   const startedAt = performance.now();
   const mounted = benchmarkCase.mount(host);
-  const setupMs = performance.now() - startedAt;
-  await waitForAnyRows(host);
-  const firstRowsMs = performance.now() - startedAt;
-  await waitForBaselineLayout(mounted.scroller, 0);
-  const mountMs = performance.now() - startedAt;
-  const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
-  const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
-  const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * ((((index + 1) * 19) % 47) / 46)));
-  const measurements: ScrollMeasurement[] = [];
-  for (let index = 0; index < offsets.length; index += 1) {
-    const offset = offsets[index]!;
-    const expected = Math.floor(offset / ROW_HEIGHT);
-    const measurement = await measureScrollLayout(mounted.scroller, expected, offset);
-    if (index >= WARMUP_SCROLLS) measurements.push(measurement);
+  try {
+    const setupMs = performance.now() - startedAt;
+    await waitForAnyRows(host);
+    const firstRowsMs = performance.now() - startedAt;
+    await waitForBaselineLayout(mounted.scroller, 0);
+    const mountMs = performance.now() - startedAt;
+    const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
+    const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
+    const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * ((((index + 1) * 19) % 47) / 46)));
+    const measurements: ScrollMeasurement[] = [];
+    for (let index = 0; index < offsets.length; index += 1) {
+      const offset = offsets[index]!;
+      const expected = Math.floor(offset / ROW_HEIGHT);
+      const measurement = await measureScrollLayout(mounted.scroller, expected, offset);
+      if (index >= WARMUP_SCROLLS) measurements.push(measurement);
+    }
+    const renderedRows = host.querySelectorAll('.bench-row').length;
+    const domElements = host.querySelectorAll('*').length;
+    return Object.freeze({
+      mode: benchmarkCase.mode,
+      library: benchmarkCase.name,
+      version: benchmarkCase.version,
+      stack: benchmarkCase.stack,
+      setupMs,
+      firstRowsMs,
+      mountMs,
+      scrollMeasurements: Object.freeze(measurements),
+      renderedRows,
+      domElements,
+    });
+  } finally {
+    mounted.unmount();
+    host.replaceChildren();
   }
-  const renderedRows = host.querySelectorAll('.bench-row').length;
-  const domElements = host.querySelectorAll('*').length;
-  mounted.unmount();
-  host.replaceChildren();
-  return Object.freeze({
-    mode: benchmarkCase.mode,
-    library: benchmarkCase.name,
-    version: benchmarkCase.version,
-    stack: benchmarkCase.stack,
-    setupMs,
-    firstRowsMs,
-    mountMs,
-    scrollMeasurements: Object.freeze(measurements),
-    renderedRows,
-    domElements,
-  });
 }
 
 function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkResult[]): BenchmarkResult {
@@ -393,14 +431,38 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
 }
 
 function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Promise<void> {
-  return waitUntilFrame(() => {
-    try {
-      assertBaselineLayout(scroller, expectedIndex);
-      return true;
-    } catch {
-      return false;
-    }
-  }, 'a correct total height and viewport layout');
+  return new Promise((resolve, reject) => {
+    const startedAt = performance.now();
+    let lastFingerprint: string | undefined;
+    let stableFrames = 0;
+    const frame = (): void => {
+      const snapshot = captureBaselineLayout(scroller);
+      try {
+        assertBaselineSnapshot(snapshot, expectedIndex);
+        resolve();
+        return;
+      } catch (error) {
+        const fingerprint = baselineFailureFingerprint(snapshot);
+        if (fingerprint === lastFingerprint) stableFrames += 1;
+        else {
+          lastFingerprint = fingerprint;
+          stableFrames = 1;
+        }
+        const elapsed = performance.now() - startedAt;
+        const message = error instanceof Error ? error.message : String(error);
+        if (elapsed >= STABLE_FAILURE_MIN_MS && stableFrames >= STABLE_FAILURE_FRAMES) {
+          reject(new Error(`Stable incorrect initial layout: ${message}`));
+          return;
+        }
+        if (elapsed >= FRAME_TIMEOUT_MS) {
+          reject(new Error(`Timed out waiting for a correct initial layout: ${message}`));
+          return;
+        }
+      }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
 }
 
 async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number, offset: number): Promise<ScrollMeasurement> {
@@ -412,6 +474,9 @@ async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number,
     let frameID = 0;
     let timeoutID = 0;
     let startedAt: number | undefined;
+    let lastFailureFingerprint: string | undefined;
+    let stableFailureFrames = 0;
+    let lastFailureMessage = 'The scroll layout remained incorrect.';
     const observer = new MutationObserver(scheduleCheck);
     const resizeObserver = new ResizeObserver(scheduleCheck);
 
@@ -438,8 +503,20 @@ async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number,
           probeMs,
           checks,
         }));
-      } catch {
-        // Signals below keep checking until the visible layout is correct.
+      } catch (error) {
+        lastFailureMessage = error instanceof Error ? error.message : String(error);
+        const fingerprint = baselineFailureFingerprint(snapshot);
+        if (fingerprint === lastFailureFingerprint) stableFailureFrames += 1;
+        else {
+          lastFailureFingerprint = fingerprint;
+          stableFailureFrames = 1;
+        }
+        const elapsed = snapshot.observedAt - startedAt;
+        if (elapsed >= STABLE_FAILURE_MIN_MS && stableFailureFrames >= STABLE_FAILURE_FRAMES) {
+          settled = true;
+          cleanup();
+          reject(new Error(`Stable incorrect scroll layout: ${lastFailureMessage}`));
+        }
       }
     };
     const checkFrame = (): void => {
@@ -472,15 +549,11 @@ async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number,
       if (settled) return;
       settled = true;
       cleanup();
-      reject(new Error('Timed out waiting for a correct scroll layout.'));
+      reject(new Error(`Timed out waiting for a correct scroll layout: ${lastFailureMessage}`));
     }, FRAME_TIMEOUT_MS);
 
     scroller.scrollTop = offset;
   });
-}
-
-function assertBaselineLayout(scroller: HTMLElement, expectedIndex: number): void {
-  assertBaselineSnapshot(captureBaselineLayout(scroller), expectedIndex);
 }
 
 function captureBaselineLayout(scroller: HTMLElement): BaselineLayoutSnapshot {
@@ -502,6 +575,18 @@ function captureBaselineLayout(scroller: HTMLElement): BaselineLayoutSnapshot {
     viewportTop: viewport.top,
     viewportBottom: viewport.bottom,
     rows: Object.freeze(rows),
+  });
+}
+
+function baselineFailureFingerprint(snapshot: BaselineLayoutSnapshot): string {
+  return JSON.stringify({
+    scrollHeight: snapshot.scrollHeight,
+    rows: snapshot.rows.map((row) => Object.freeze({
+      index: row.index,
+      top: Math.round(row.top),
+      bottom: Math.round(row.bottom),
+      height: Math.round(row.height),
+    })),
   });
 }
 
@@ -569,6 +654,19 @@ function renderResult(result: BenchmarkResult): HTMLTableRowElement {
     `${result.mountMs.toFixed(2)} ms`,
     `${result.scrollMedianMs.toFixed(2)} ms`,
     `${result.scrollP95Ms.toFixed(2)} ms`,
+  ]);
+}
+
+function renderBaselineFailure(benchmarkCase: BenchmarkCase, reason: string): HTMLTableRowElement {
+  return renderCells([
+    benchmarkCase.mode,
+    `${benchmarkCase.name} ${benchmarkCase.version}`,
+    benchmarkCase.stack,
+    'failed',
+    'failed',
+    reason,
+    'failed',
+    'failed',
   ]);
 }
 

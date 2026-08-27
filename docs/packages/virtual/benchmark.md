@@ -35,17 +35,17 @@ Insert, move, remove, and height-change operations run at three collection posit
 
 Insert, remove, and height change affect one row at that position. Move swaps it with the adjacent row. Every sample starts from the same 100,000-row collection, and each scenario runs 50 times.
 
-Timing starts with the update request and ends on the first frame where DOM order, row heights, total scroll height, and anchor position are all correct. Clean and recovered samples are counted separately. A recovered sample retains both its recovery time and every observed correctness failure.
+Timing starts with the update request and ends on the first frame where DOM order, row heights, total scroll height, and anchor position are all correct. Five independent instances contribute ten samples each. Between samples, the runner restores and verifies the original collection; a failed restore discards that instance and mounts a fresh one. Clean and recovered samples are counted separately. A recovered sample retains both its recovery time and every observed correctness failure.
 
-The settle bars cover every sample that reached a correct screen. Recovery bars use only samples that showed an incorrect screen before recovering. A condition that does not recover within two seconds is shown as a failure instead of a timing bar.
+The settle bars cover every sample that reached a correct screen. Recovery bars use only samples that showed an incorrect screen before recovering. A failed condition is shown instead of a timing bar.
 
 ## Failure criteria
 
-Every frame is checked for missing or duplicate IDs, incorrect order or height, gaps, overlap, blank viewport regions, total scroll-height errors, and unexpected anchor movement. Any incorrect frame creates a correctness record. Observation continues for two seconds so the report can distinguish recovery from a hard failure. Sectile failures carry `fatal` severity in the raw result.
+Every frame is checked for missing or duplicate IDs, incorrect order or height, gaps, overlap, blank viewport regions, total scroll-height errors, and unexpected anchor movement. Any incorrect frame creates a correctness record. An incorrect layout that remains unchanged for at least 300ms and eight frames is a hard failure. A layout whose coordinates keep changing remains under observation for up to two seconds. Sectile failures carry `fatal` severity in the raw result.
 
 ## Initial render and scrolling
 
-The fixed-height suite renders 100,000 identical 48px rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared.
+The fixed-height suite renders 100,000 identical 72px rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared. The actual 72px height differs from Sectile's 48px internal fallback, so the application-estimate and omitted-height paths begin with different geometry.
 
 Library order rotates across five rounds. Initial rendering is split into synchronous setup, first row output, and the first state with correct total scroll height and viewport geometry. A visible row with an incorrect total height is not considered complete.
 

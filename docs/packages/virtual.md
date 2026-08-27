@@ -1,15 +1,15 @@
 ---
 title: Virtual
-description: Renderer-neutral viewport queries, dynamic measurement, layout strategies, and anchor correction.
+description: Automatic measurement, anchored collection changes, and four layout strategies for large dynamic surfaces.
 ---
 
 # Virtual
 
-`@sectile/virtual` is a framework-independent layout engine that calculates **where a large collection belongs and which placements should render now**. Give it stable IDs, order, estimated extents or rectangles, and a viewport; it returns the full content size and nearby placements as a `VirtualLayoutPlan`.
+`@sectile/virtual` manages layout for large surfaces whose item sizes and order keep changing. Insert items before the viewport, expand a row, or change the number of grid columns; Sectile calculates the new coordinates and render range. The returned `scrollDelta` preserves the viewport coordinate of the anchor item across that change.
 
-When measured geometry differs from its estimate—or items are inserted, removed, moved, or resized—the engine returns a new layout state and `scrollDelta`. The host applies that correction to keep the item being read at the same viewport position. Linear, track-grid, masonry, and arbitrary spatial layouts share one query, measurement, and mutation contract. DOM and Vue adapters connect those calculations to browser measurement and rendering.
+Vue applications can omit exact item heights from `VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial`. The DOM adapter measures rendered elements and Sectile updates layout from the changed region. Lists, responsive grids, masonry cards, and spatial surfaces share this measurement and mutation flow.
 
-## Where Sectile Virtual is strongest
+## Sectile Virtual strengths
 
 <VirtualStrengthOverview />
 
@@ -24,15 +24,9 @@ import { createExtentIndex } from '@sectile/virtual/extent-index'
 import { createLinearLayout } from '@sectile/virtual/linear-layout'
 ```
 
-## How it compares
+## Validation scope
 
-Conventional list virtualization has many good options. TanStack Virtual provides a broad headless virtualizer; react-window keeps conventional React lists and grids concise. React Virtuoso supplies higher-level list behavior, react-virtualized offers a mature component collection, Virtua spans several frameworks, and Vue Virtual Scroller connects directly to Vue collections.
-
-Sectile differs in **how much layout state one model owns**. Dynamic list measurement and anchor correction share state transitions with grids, masonry, and arbitrary spatial surfaces.
-
-<VirtualLibraryComparison />
-
-The browser suite separates fixed and dynamic height conditions, then compares initial rendering, scrolling, and the time required to settle after inserts, moves, removals, and height changes. Current results and execution details are published in the [virtualization benchmark](/packages/virtual/benchmark).
+The browser benchmark separates fixed and dynamic height conditions, then measures initial rendering and scrolling. It also records time to reach a correct screen after inserts, moves, removals, and height changes, along with every visual failure. Current results, failure criteria, and execution details are published in the [virtualization benchmark](/packages/virtual/benchmark).
 
 ## Customer request list
 
@@ -54,6 +48,6 @@ The same viewport contract drives 50k linear records, 48k grid cells, 30k masonr
 4. [Measurement and anchoring](virtual/measurement.md): generation-safe measurement and scroll correction.
 5. [DOM connection](virtual/dom.md): browser scheduling, reads, writes, and normalized scrolling.
 6. [Vue connection](virtual/vue.md): `useVirtualizer` and headless rendering parts.
-7. [Benchmark](virtual/benchmark.md): same-list browser observations across widely used libraries.
+7. [Benchmark](virtual/benchmark.md): timing and visual stability for initial rendering, scrolling, and dynamic changes.
 
 Runtime layout states are opaque handles. Use each strategy's `snapshot*Layout()` and `restore*Layout()` pair when state must cross a worker or serialization boundary.

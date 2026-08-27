@@ -14,9 +14,11 @@ This browser benchmark compares the complete adapter and framework path for seve
 
 Every adapter renders the same 100,000 rows in a 720 by 480 pixel viewport with the same row text and CSS. The runner separates three conditions:
 
-- `fixed`: the application supplies the exact 48px row height;
-- `estimated`: the application supplies 48px as an initial estimate and the library measures the DOM;
+- `fixed`: the application supplies the exact 72px row height;
+- `estimated`: the application supplies 72px as an initial estimate and the library measures the DOM;
 - `automatic`: the application supplies no height or estimate and the library discovers the size from the DOM.
+
+The 72px row height deliberately differs from Sectile's internal 48px fallback. This keeps the estimated and automatic paths distinct: the estimated path starts from an accurate application hint, while the automatic path must correct its initial layout from DOM measurements.
 
 The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
 
@@ -26,7 +28,9 @@ Each raw scroll sample retains its round and sample number, a lower bound taken 
 
 The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Raw results retain rendered-row and DOM-element counts as diagnostics; the documentation chart does not use them as performance scores.
 
-Mutation timings cover insertion, movement, removal, and height changes at the start, middle, and end of the collection. Every scenario runs 50 times. Once a mutation becomes visible in the DOM, every frame is checked for row order, geometry, total height, viewport coverage, and scroll anchoring. A sample that recovers keeps both the time to its first correct frame and a transient-failure record. A sample that does not recover within two seconds is a hard failure.
+Mutation timings cover insertion, movement, removal, and height changes at the start, middle, and end of the collection. Every scenario runs 50 times across five independent mounts. Each mount performs ten measured mutations and restores a verified initial collection between samples. A failed restore discards that instance and starts a new one. Once a mutation becomes visible in the DOM, every frame is checked for row order, geometry, total height, viewport coverage, and scroll anchoring. A sample that recovers keeps both the time to its first correct frame and a transient-failure record. An incorrect layout that remains identical for at least 300ms and eight consecutive frames is a hard failure. Layouts that continue changing retain the two-second recovery window.
+
+Initial-render failures are recorded per round and do not abort the remaining libraries. The same stable-failure rule shortens a layout that has stopped changing, while a layout that is still converging keeps the full recovery window.
 
 ## Run
 
@@ -41,6 +45,22 @@ To rerun one mutation without repeating the full suite, add focused query parame
 ```text
 ?sectile&mutations-only&mutation-mode=automatic&mutation-operation=resize&mutation-location=middle
 ```
+
+Use `library` to isolate any one adapter while validating the harness itself:
+
+```text
+?library=react-window&mutations-only&mutation-mode=estimated&mutation-operation=insert&mutation-location=start&quick
+```
+
+For a long observation, run and save the baseline first, then run mutations one library at a time. Each completed library can be merged immediately, so an interruption never forces the entire suite to restart:
+
+```text
+?baseline-only
+?library=Sectile%20Virtual&mutations-only
+?library=TanStack%20Virtual&mutations-only
+```
+
+Keep the browser otherwise idle and run these shards sequentially. Parallel browser runs compete for the same CPU and change the timing distribution.
 
 Merge that focused report into the matching mutation entry while preserving every other committed result:
 

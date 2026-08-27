@@ -1,5 +1,5 @@
 export const ITEM_COUNT = 100_000;
-export const ROW_HEIGHT = 48;
+export const ROW_HEIGHT = 72;
 export const VIEWPORT_HEIGHT = 480;
 export const VIEWPORT_WIDTH = 720;
 export const OVERSCAN_ROWS = 8;

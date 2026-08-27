@@ -10,6 +10,8 @@ export interface MutationScenario {
   readonly initialItems: readonly BenchmarkItem[];
   readonly nextItems: readonly BenchmarkItem[];
   readonly affectedIDs: readonly string[];
+  readonly initialTotalHeight: number;
+  readonly nextTotalHeight: number;
   readonly expectedScrollHeightDelta: number;
 }
 
@@ -40,6 +42,30 @@ export function createMutationScenario(operation: MutationOperation, location: M
   return freezeScenario({ operation, location, index: Math.min(index, otherIndex), nextItems, affectedIDs: [items[index]!.id, items[otherIndex]!.id], expectedScrollHeightDelta: 0 });
 }
 
-function freezeScenario(input: Omit<MutationScenario, 'initialItems'>): MutationScenario {
-  return Object.freeze({ ...input, initialItems: items, nextItems: Object.freeze(input.nextItems), affectedIDs: Object.freeze(input.affectedIDs) });
+export function reverseMutationScenario(scenario: MutationScenario): MutationScenario {
+  const operation = scenario.operation === 'insert'
+    ? 'remove'
+    : scenario.operation === 'remove'
+      ? 'insert'
+      : scenario.operation;
+  return Object.freeze({
+    ...scenario,
+    operation,
+    initialItems: scenario.nextItems,
+    nextItems: scenario.initialItems,
+    initialTotalHeight: scenario.nextTotalHeight,
+    nextTotalHeight: scenario.initialTotalHeight,
+    expectedScrollHeightDelta: -scenario.expectedScrollHeightDelta,
+  });
+}
+
+function freezeScenario(input: Omit<MutationScenario, 'initialItems' | 'initialTotalHeight' | 'nextTotalHeight'>): MutationScenario {
+  return Object.freeze({
+    ...input,
+    initialItems: items,
+    nextItems: Object.freeze(input.nextItems),
+    affectedIDs: Object.freeze(input.affectedIDs),
+    initialTotalHeight: ITEM_COUNT * ROW_HEIGHT,
+    nextTotalHeight: (ITEM_COUNT * ROW_HEIGHT) + input.expectedScrollHeightDelta,
+  });
 }

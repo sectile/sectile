@@ -12,7 +12,6 @@ import TheoryComposition from './components/TheoryComposition.vue';
 import TheoryContractDiagram from './components/TheoryContractDiagram.vue';
 import TheoryOverview from './components/TheoryOverview.vue';
 import VirtualConceptDiagram from './components/VirtualConceptDiagram.vue';
-import VirtualLibraryComparison from './components/VirtualLibraryComparison.vue';
 import VirtualBenchmarkReport from './components/VirtualBenchmarkReport.vue';
 import VirtualStrengthOverview from './components/VirtualStrengthOverview.vue';
 import VirtualStrategyLab from './components/VirtualStrategyLab.vue';
@@ -39,7 +38,6 @@ export default {
     app.component('TheoryContractDiagram', TheoryContractDiagram);
     app.component('TheoryOverview', TheoryOverview);
     app.component('VirtualConceptDiagram', VirtualConceptDiagram);
-    app.component('VirtualLibraryComparison', VirtualLibraryComparison);
     app.component('VirtualBenchmarkReport', VirtualBenchmarkReport);
     app.component('VirtualStrengthOverview', VirtualStrengthOverview);
     app.component('VirtualStrategyLab', VirtualStrategyLab);

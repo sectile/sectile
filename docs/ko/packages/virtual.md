@@ -1,15 +1,15 @@
 ---
 title: 가상화
-description: 수많은 항목의 배치와 측정, 화면 범위 조회, 스크롤 위치 보정을 하나의 상태 모델로 다룹니다.
+description: 동적 크기 항목의 자동 측정, 삽입·삭제·이동 뒤 위치 보정, 네 가지 배치 방식을 하나의 상태 모델로 다룹니다.
 ---
 
 # 가상화
 
-`@sectile/virtual`은 수많은 항목을 **어디에 놓고, 지금 어느 항목을 그릴지** 계산하는 프레임워크 독립형 배치 엔진입니다. 앱이 안정적인 ID와 항목 순서, 예상 크기 또는 좌표, 화면 영역을 넘기면 전체 스크롤 크기와 화면 주변에 배치할 항목의 좌표를 `VirtualLayoutPlan`으로 돌려줍니다.
+`@sectile/virtual`은 크기와 순서가 계속 바뀌는 대규모 화면의 배치를 관리합니다. 목록 앞에 항목을 넣고, 행을 펼치고, 격자의 열 수를 바꿔도 새 좌표와 그릴 범위를 계산합니다. 함께 반환하는 `scrollDelta`는 변경 전 기준 항목의 화면 좌표를 유지하는 보정값입니다.
 
-항목을 실제로 잰 크기가 예상과 다르거나 목록 앞쪽에서 삽입·삭제·이동이 일어나면 새 배치 상태와 `scrollDelta`를 계산합니다. 앱은 이 보정값만큼 스크롤을 옮겨 사용자가 읽던 항목을 같은 자리에 둘 수 있습니다. 선형 목록, 행·열 격자, 벽돌형 카드, 자유 좌표 화면이 같은 조회·측정·변경 계약을 사용하고, DOM과 Vue 연결은 이 계산을 브라우저 측정과 화면 출력으로 이어 줍니다.
+Vue의 `VirtualList`, `VirtualGrid`, `VirtualMasonry`, `VirtualSpatial`은 실제 요소를 자동으로 측정합니다. `@sectile/dom/virtual`과 `@sectile/vue/virtual`이 실제 높이를 읽고 Sectile이 달라진 구간부터 배치를 갱신합니다. 목록, 반응형 격자, 벽돌형 카드, 자유 좌표 화면이 이 측정·변경 흐름을 함께 사용합니다.
 
-## Sectile Virtual이 강한 이유
+## Sectile Virtual의 강점
 
 <VirtualStrengthOverview />
 
@@ -24,15 +24,9 @@ import { createExtentIndex } from '@sectile/virtual/extent-index'
 import { createLinearLayout } from '@sectile/virtual/linear-layout'
 ```
 
-## 다른 가상화 라이브러리와 비교하면
+## 검증 범위
 
-기본 목록 가상화만 필요하다면 선택지는 많습니다. TanStack Virtual은 헤드리스 목록을 폭넓게 다루고, react-window는 정형적인 React 목록과 격자를 간결하게 만듭니다. React Virtuoso는 완성도 높은 목록 동작을 컴포넌트로 제공하고, react-virtualized는 오래된 React 앱에서 쓸 수 있는 부품이 많습니다. Virtua는 여러 프레임워크를 지원하며, Vue Virtual Scroller는 Vue 목록에 바로 연결하기 쉽습니다.
-
-Sectile의 차이는 기능 하나가 아니라 **배치 상태가 담당하는 범위**에 있습니다. 목록의 동적 높이와 위치 보정뿐 아니라 격자, 벽돌형 카드, 자유 좌표 화면까지 같은 상태 전이로 다룹니다.
-
-<VirtualLibraryComparison />
-
-고정 높이와 동적 높이를 나눠 초기 렌더와 스크롤을 비교했습니다. 삽입·이동·삭제·높이 변경 뒤 화면이 안정되는 시간과 오류 여부도 같은 조건에서 확인했습니다. 최신 수치와 실행 조건은 [가상화 벤치마크](/ko/packages/virtual/benchmark)에 공개합니다.
+브라우저 벤치마크는 고정 높이와 동적 높이를 나눠 초기 렌더와 스크롤을 측정합니다. 삽입·이동·삭제·높이 변경 뒤 정상 화면에 도달하는 시간과 화면 오류도 함께 기록합니다. 최신 수치, 실패 조건, 실행 방법은 [가상화 벤치마크](/ko/packages/virtual/benchmark)에 공개합니다.
 
 ## 크기가 계속 달라지는 목록
 
@@ -58,6 +52,6 @@ Sectile의 차이는 기능 하나가 아니라 **배치 상태가 담당하는 
 4. [측정과 기준 항목 유지](virtual/measurement.md): 오래된 측정값 구분과 스크롤 위치 유지.
 5. [DOM 연결](virtual/dom.md): 브라우저 작업 순서, 읽기와 쓰기, 스크롤 좌표 정규화.
 6. [Vue 연결](virtual/vue.md): `useVirtualizer`와 스타일을 앱에서 정하는 Vue 구성 요소.
-7. [벤치마크](virtual/benchmark.md): 주요 라이브러리와 같은 목록을 실행한 결과와 측정 범위.
+7. [벤치마크](virtual/benchmark.md): 초기 렌더, 스크롤, 동적 변경의 시간과 화면 안정성.
 
 배치 상태를 다른 작업 스레드로 넘기거나 저장할 때는 배치 방식마다 제공하는 `snapshot*Layout()`과 `restore*Layout()`을 사용합니다. 이 공개 형식이 내부 구조가 바뀌어도 저장과 복원을 이어 주는 경계가 됩니다.
