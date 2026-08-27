@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "selection",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-SEL-01",
+      "title": "TAB-SEL-01: explicit selection toggles without depending on current visibility",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    },
+    {
+      "id": "TAB-SEL-02",
+      "title": "TAB-SEL-02: all-matching selection binds to source and query, not access or expansion",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    },
+    {
+      "id": "TAB-SEL-03",
+      "title": "TAB-SEL-03: source replacement clears both selection modes",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    },
+    {
+      "id": "TAB-SEL-04",
+      "title": "TAB-SEL-04: authoritative deletion reconciles selected IDs and exclusions only",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    },
+    {
+      "id": "TAB-SEL-05",
+      "title": "TAB-SEL-05: group bulk intent carries leaf binding and never stores a synthetic group ID",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    },
+    {
+      "id": "TAB-SEL-06",
+      "title": "TAB-SEL-06: selection identity and exclusion ceilings reject atomically",
+      "file": "tests/selection/row-selection.test.mjs",
+      "sha256": "b5e578f0d08ac7fc0c3867980338f5caf82fc17ef258218fbf9608396a4ccc05"
+    }
+  ],
+  "expectedFailures": [
+    "source reset",
+    "query reset",
+    "access preservation",
+    "authoritative deletion delta",
+    "unloaded group-leaf intent",
+    "selection and exclusion ceilings"
+  ]
+}
