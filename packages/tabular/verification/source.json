@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "source",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-QRY-01",
+      "title": "TAB-QRY-01: complete descriptors normalize into immutable ordered query state",
+      "file": "tests/source/query.test.mjs",
+      "sha256": "5f0cff1b583f49b647054efaa60f4f8dd84f6a84fdb6c36fd8e4e6daf4b3fa67"
+    },
+    {
+      "id": "TAB-QRY-02",
+      "title": "TAB-QRY-02: descriptor identity, policy, scope, and pivot references reject atomically",
+      "file": "tests/source/query.test.mjs",
+      "sha256": "5f0cff1b583f49b647054efaa60f4f8dd84f6a84fdb6c36fd8e4e6daf4b3fa67"
+    },
+    {
+      "id": "TAB-QRY-03",
+      "title": "TAB-QRY-03: bounded JSON-like values reject executable, cyclic, sparse, and exotic input",
+      "file": "tests/source/query.test.mjs",
+      "sha256": "5f0cff1b583f49b647054efaa60f4f8dd84f6a84fdb6c36fd8e4e6daf4b3fa67"
+    },
+    {
+      "id": "TAB-QRY-04",
+      "title": "TAB-QRY-04: value depth, node, and UTF-16 budgets have distinct failures",
+      "file": "tests/source/query.test.mjs",
+      "sha256": "5f0cff1b583f49b647054efaa60f4f8dd84f6a84fdb6c36fd8e4e6daf4b3fa67"
+    },
+    {
+      "id": "TAB-QRY-05",
+      "title": "TAB-QRY-05: update and reset events preserve prior state on rejection",
+      "file": "tests/source/query.test.mjs",
+      "sha256": "5f0cff1b583f49b647054efaa60f4f8dd84f6a84fdb6c36fd8e4e6daf4b3fa67"
+    },
+    {
+      "id": "TAB-SRC-01",
+      "title": "TAB-SRC-01: client pipeline filters, ordered stable-sorts, then slices access",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-02",
+      "title": "TAB-SRC-02: client source revisions advance strictly per source generation",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-03",
+      "title": "TAB-SRC-03: response synchronization rejects stale or mismatched envelopes atomically",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-04",
+      "title": "TAB-SRC-04: page responses require known totals while windows allow unknown totals",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-05",
+      "title": "TAB-SRC-05: identity, policy, scan, and wire failures are typed and failure-atomic",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-06",
+      "title": "TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-07",
+      "title": "TAB-SRC-07: page one may bootstrap an empty total while later unknown pages reject",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    },
+    {
+      "id": "TAB-SRC-08",
+      "title": "TAB-SRC-08: authoritative deletion deltas require unique valid row identities",
+      "file": "tests/source/client-source.test.mjs",
+      "sha256": "772b187ec491699a0a13c0d4719f9ddb25a20fb6e92e4d3e91ff15cbd7326047"
+    }
+  ],
+  "expectedFailures": [
+    "duplicate descriptor identity",
+    "non-JSON cyclic and over-limit query value",
+    "stale mismatched and out-of-order response",
+    "wrong generation and revision envelope",
+    "unknown page response",
+    "unknown-total window success"
+  ]
+}

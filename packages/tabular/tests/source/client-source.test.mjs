@@ -160,3 +160,65 @@ test('TAB-SRC-05: identity, policy, scan, and wire failures are typed and failur
     limits: { maxScanRecords: 2 },
   }), (error) => error.code === 'scan-record-ceiling-exceeded');
 });
+
+test('TAB-SRC-06: every response envelope coordinate and ordering rule rejects independently', () => {
+  const active = request({ requestID: 7, sourceGeneration: 2, queryRevision: 3, expansionRevision: 4 });
+  const resolved = resolveClientTabularRequest(source(), active);
+  assert.equal(resolved.ok, true);
+  const accepted = synchronizeTabularView(active, resolved.value);
+  assert.equal(accepted.ok, true);
+
+  const mismatches = [
+    { ...resolved.value, protocolVersion: 2 },
+    { ...resolved.value, requestID: 8 },
+    { ...resolved.value, sourceGeneration: 3 },
+    { ...resolved.value, queryRevision: 4 },
+    { ...resolved.value, expansionRevision: 5 },
+    { ...resolved.value, access: { kind: 'window', start: 0, count: 1 } },
+  ];
+  for (const response of mismatches) {
+    const result = synchronizeTabularView(active, response, accepted.value);
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, 'response-envelope-mismatch');
+    assert.equal(accepted.value.viewRevision, 1);
+  }
+
+  const outOfOrder = synchronizeTabularView(active, { ...resolved.value, viewRevision: 0 }, accepted.value);
+  assert.equal(outOfOrder.ok, false);
+  assert.equal(outOfOrder.error.code, 'stale-view-revision');
+
+  const schemaAhead = { ...active, columnSchemaRevision: 1 };
+  const staleSchema = synchronizeTabularView(schemaAhead, resolved.value);
+  assert.equal(staleSchema.ok, false);
+  assert.equal(staleSchema.error.code, 'response-envelope-mismatch');
+});
+
+test('TAB-SRC-07: page one may bootstrap an empty total while later unknown pages reject', () => {
+  const empty = source([]);
+  const first = resolveClientTabularRequest(empty, request({
+    access: { kind: 'page', page: 1, itemsPerPage: 25 },
+  }));
+  assert.equal(first.ok, true);
+  assert.deepEqual(first.value.visibleRowCount, { kind: 'known', value: 0 });
+
+  const later = resolveClientTabularRequest(empty, request({
+    access: { kind: 'page', page: 2, itemsPerPage: 25 },
+  }));
+  assert.equal(later.ok, false);
+  assert.equal(later.error.code, 'response-envelope-mismatch');
+});
+
+test('TAB-SRC-08: authoritative deletion deltas require unique valid row identities', () => {
+  const active = request({ requestID: 9 });
+  const resolved = resolveClientTabularRequest(source(), active);
+  assert.equal(resolved.ok, true);
+  assert.equal(synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['r4'] }).ok, true);
+
+  const duplicate = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: ['r4', 'r4'] });
+  assert.equal(duplicate.ok, false);
+  assert.equal(duplicate.error.code, 'duplicate-identity');
+
+  const malformed = synchronizeTabularView(active, { ...resolved.value, removedRowIDs: [''] });
+  assert.equal(malformed.ok, false);
+  assert.equal(malformed.error.code, 'invalid-id');
+});
