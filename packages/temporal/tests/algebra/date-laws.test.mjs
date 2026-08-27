@@ -79,6 +79,18 @@ test('TMP-06: empty calendars require an injected reference date', () => {
   assert.deepEqual(state.view, { year: 2026, month: 8 });
 });
 
+test('calendar canonicalizes mutable value inputs before storing them', () => {
+  const input = { year: 2024, month: 2, day: 29 };
+  const state = createCalendarState({ value: input });
+  input.year = 2023;
+
+  assert.deepEqual(state.value, { year: 2024, month: 2, day: 29 });
+  assert.deepEqual(state.highlighted, state.value);
+  assert.equal(Object.isFrozen(state.value), true);
+  assert.equal(Object.isFrozen(state.highlighted), true);
+  assert.notEqual(state.value, input);
+});
+
 test('TMP-07: unavailable scans stop at the declared ceiling', () => {
   const state = createCalendarState({ referenceDate: date(2026, 8, 26) });
   const moved = applyCalendarEvent(state, 'next-day', {

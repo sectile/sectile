@@ -83,11 +83,11 @@ export function createCalendarState(input: CalendarStateInput = {}): CalendarSta
 }
 
 export function tryCreateCalendarState(input: CalendarStateInput = {}): TemporalResult<CalendarState> {
-  const value = input.value ?? null;
-  if (value !== null) {
-    const valid = tryCreateDateValue(value.year, value.month, value.day);
-    if (!valid.ok) return valid;
-  }
+  const validValue = input.value === undefined || input.value === null
+    ? ok<DateValue | null>(null)
+    : tryCreateDateValue(input.value.year, input.value.month, input.value.day);
+  if (!validValue.ok) return validValue;
+  const value = validValue.value;
   const referenceDate = input.referenceDate === undefined
     ? ok<DateValue | null>(null)
     : tryCreateDateValue(
