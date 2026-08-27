@@ -19,6 +19,7 @@ type ChartResult = {
   readonly version: string;
   readonly stack: string;
   readonly values: readonly (number | null)[];
+  readonly initialRenderMs: number | null;
   readonly state: string | null;
   readonly notice: string | null;
   readonly failed: boolean;
@@ -52,6 +53,7 @@ const copy = computed(() => isKorean.value ? {
   mountLegend: ['처음 표시', null, null, null],
   scrollLegend: ['스크롤 중앙값', '느린 5% 경계', null, null],
   mutationLegend: ['안정화 중앙값', '느린 5% 경계', '복구 중앙값', '복구 느린 5% 경계'],
+  initialRenderLabel: '처음 표시',
   unsupported: '이 조건은 높이 예상값 없이 시작할 수 없음',
   stableFailure: '정상 화면에 도달하지 못함',
   recoveredFailure: (recovered: number, total: number) => `화면 이상 후 복구 ${recovered}/${total}회`,
@@ -98,6 +100,7 @@ const copy = computed(() => isKorean.value ? {
   mountLegend: ['Initial render', null, null, null],
   scrollLegend: ['Scroll median', 'Slower 5% boundary', null, null],
   mutationLegend: ['Settle median', 'Slower 5% boundary', 'Recovery median', 'Recovery slower 5% boundary'],
+  initialRenderLabel: 'Initial render',
   unsupported: 'This condition cannot start without a height estimate',
   stableFailure: 'Did not reach a correct stable state',
   recoveredFailure: (recovered: number, total: number) => `Recovered after a visual failure in ${recovered}/${total} runs`,
@@ -154,6 +157,11 @@ const chartResults = computed<readonly ChartResult[]>(() => libraryMetadata.valu
   if (isBaselineScenario(scenario.value)) return baselineResult(metadata);
   return mutationResult(metadata);
 }));
+const visibleLegendEntries = computed(() => legendSlots.value.flatMap((label, index) => (
+  label !== null && chartResults.value.some((result) => typeof result.values[index] === 'number')
+    ? [{ label, index }]
+    : []
+)));
 
 const measurements = computed(() => chartResults.value
   .flatMap((result) => result.values)
@@ -164,6 +172,14 @@ const maximum = computed(() => Math.max(
   ...measurements.value.filter((value) => !isOutlier(value)),
 ));
 const semanticMaximum = computed(() => Math.max(1, ...measurements.value));
+const initialRenderMeasurements = computed(() => chartResults.value
+  .map((result) => result.initialRenderMs)
+  .filter((value): value is number => value !== null));
+const initialRenderOutlierThreshold = computed(() => upperOutlierFence(initialRenderMeasurements.value));
+const initialRenderMaximum = computed(() => Math.max(
+  1,
+  ...initialRenderMeasurements.value.filter((value) => !isInitialRenderOutlier(value)),
+));
 
 const selectedDescription = computed(() => {
   const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
@@ -191,7 +207,7 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
   const values = scenario.value === 'mount'
     ? [result.mountMs, null, null]
     : [result.scrollMedianMs, result.scrollP95Ms, null];
-  return { ...metadata, values, state: null, notice: null, failed: false };
+  return { ...metadata, values, initialRenderMs: result.mountMs, state: null, notice: null, failed: false };
 }
 
 function mutationResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
@@ -207,6 +223,7 @@ function mutationResult(metadata: { readonly library: string; readonly version: 
   return {
     ...metadata,
     values: [result.medianMs, result.p95Ms, result.recoveryMedianMs, result.recoveryP95Ms],
+    initialRenderMs: null,
     state,
     notice,
     failed: result.failedSamples > 0,
@@ -217,6 +234,7 @@ function unsupportedResult(metadata: { readonly library: string; readonly versio
   return {
     ...metadata,
     values: [null, null, null, null],
+    initialRenderMs: null,
     state: copy.value.unsupported,
     notice: null,
     failed: false,
@@ -231,8 +249,17 @@ function meterIndicatorStyle(value: number): Readonly<Record<'--benchmark-meter-
   return { '--benchmark-meter-ratio': String(Math.max(0.018, ratio)) };
 }
 
+function initialRenderIndicatorStyle(value: number): Readonly<Record<'--initial-render-ratio', string>> {
+  const ratio = isInitialRenderOutlier(value) ? 1 : value / initialRenderMaximum.value;
+  return { '--initial-render-ratio': String(Math.max(0.025, ratio)) };
+}
+
 function isOutlier(value: number): boolean {
   return value > outlierThreshold.value;
+}
+
+function isInitialRenderOutlier(value: number): boolean {
+  return value > initialRenderOutlierThreshold.value;
 }
 
 function upperOutlierFence(values: readonly number[]): number {
@@ -254,6 +281,12 @@ function percentile(sorted: readonly number[], ratio: number): number {
 
 function formatTime(value: number | null): string {
   return value === null ? '—' : `${value.toFixed(1)} ms`;
+}
+
+function formatInitialRenderTime(value: number): string {
+  if (value < 1000) return formatTime(value);
+  const seconds = (value / 1000).toFixed(2);
+  return `${seconds} s`;
 }
 
 function nodeLabel(id: string): string {
@@ -305,7 +338,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
       </figcaption>
 
       <div class="chart-legend" aria-label="Legend">
-        <span v-for="(label, index) in legendSlots" :key="index" :class="[`is-series-${index}`, { 'is-placeholder': label === null }]" :aria-hidden="label === null"><i />{{ label ?? copy.mutationLegend[0] }}</span>
+        <span v-for="entry in visibleLegendEntries" :key="entry.index" :class="`is-series-${entry.index}`"><i />{{ entry.label }}</span>
       </div>
 
       <div class="benchmark-chart">
@@ -313,6 +346,27 @@ function failureLabel(result: MutationBenchmarkResult): string {
           <header>
             <strong>{{ result.library }}</strong>
             <small>v{{ result.version }} · {{ result.stack }}</small>
+            <div
+              class="initial-render-time"
+              :class="{
+                'is-placeholder': scenario !== 'scroll' || result.initialRenderMs === null,
+                'is-outlier': result.initialRenderMs !== null && isInitialRenderOutlier(result.initialRenderMs),
+              }"
+              :aria-hidden="scenario !== 'scroll' || result.initialRenderMs === null"
+            >
+              <span>{{ copy.initialRenderLabel }}</span>
+              <span class="initial-render-track" aria-hidden="true">
+                <span
+                  v-if="result.initialRenderMs !== null"
+                  class="initial-render-indicator"
+                  :style="initialRenderIndicatorStyle(result.initialRenderMs)"
+                />
+              </span>
+              <data
+                :value="result.initialRenderMs ?? undefined"
+                :title="result.initialRenderMs === null ? undefined : formatTime(result.initialRenderMs)"
+              >{{ result.initialRenderMs === null ? '—' : formatInitialRenderTime(result.initialRenderMs) }}</data>
+            </div>
           </header>
           <div class="result-content">
             <div v-if="result.state !== null" class="result-message" :class="{ 'is-failure': result.failed }" :title="result.state">{{ result.state }}</div>
@@ -388,12 +442,18 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .benchmark-row header strong { overflow: hidden; font-size: 0.78rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .benchmark-row.is-sectile header strong { color: var(--sectile-action); }
 .benchmark-row header small { min-width: 0; overflow: hidden; color: var(--sectile-content-tertiary); font-size: 0.64rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.benchmark-row header .initial-render-time { display: grid; grid-template-columns: auto minmax(24px, 1fr) 52px; align-items: center; gap: 5px; min-width: 0; min-height: 11px; margin-top: 2px; color: var(--sectile-content-secondary); font-size: 0.62rem; line-height: 1; }
+.initial-render-time span { color: var(--sectile-content-tertiary); }
+.initial-render-time data { overflow: hidden; color: var(--sectile-content-primary); font-size: 0.64rem; font-variant-numeric: tabular-nums; font-weight: 650; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.initial-render-time .initial-render-track { height: 2px; overflow: hidden; background: color-mix(in srgb, var(--sectile-content-tertiary) 10%, transparent); }
+.initial-render-time .initial-render-indicator { display: block; width: 100%; height: 100%; background: var(--sectile-content-secondary); transform: scaleX(var(--initial-render-ratio)); transform-origin: left center; }
+.initial-render-time.is-outlier data { color: var(--sectile-feedback-critical); }
 .result-content { min-width: 0; block-size: 42px; }
 .bar-series { display: grid; min-width: 0; grid-template-rows: repeat(4, 9px); align-content: center; gap: 1px; }
 .benchmark-meter { display: grid; grid-template-columns: minmax(0, 1fr) 50px; block-size: 9px; align-items: center; gap: 7px; min-height: 0; }
 .benchmark-meter-track { display: block; height: 3px; overflow: hidden; border-radius: 1px; background: color-mix(in srgb, var(--sectile-content-tertiary) 8%, transparent); }
 .benchmark-meter-indicator { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--bar-color); transform: scaleX(var(--benchmark-meter-ratio)); transform-origin: left center; transition: transform 220ms cubic-bezier(0.645, 0.045, 0.355, 1); }
-.benchmark-meter.is-outlier { --bar-color: var(--sectile-feedback-critical); }
+.benchmark-meter.is-outlier .benchmark-meter-value { color: var(--sectile-feedback-critical); font-weight: 700; }
 .benchmark-meter-value { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; line-height: 9px; text-align: right; white-space: nowrap; }
 .benchmark-meter-empty { visibility: hidden; }
 .result-message { display: grid; block-size: 42px; place-items: center; overflow: hidden; padding-inline: 10px; color: var(--sectile-content-primary); font-size: 0.8rem; font-weight: 720; line-height: 1.4; text-align: center; }
@@ -412,6 +472,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
   .benchmark-figure > figcaption { display: grid; gap: 2px; }
   .benchmark-row { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 9px 0; }
   .benchmark-row header { grid-template-columns: auto 1fr; align-items: baseline; gap: 7px; }
+  .benchmark-row header .initial-render-time { grid-column: 1 / -1; margin-top: -3px; }
   .benchmark-meter { grid-template-columns: minmax(0, 1fr) 46px; }
   .benchmark-criteria dl { grid-template-columns: minmax(0, 1fr); gap: 7px; }
 }
