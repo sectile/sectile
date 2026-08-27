@@ -255,7 +255,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "2424470c7977f0d975b5a93dc4433fb548118b68f20d95fa7eb9c0ba7d31e3c7",
+  "fingerprint": "b17db3007b193f2d51698996b0c948fc1b637327386c80abb020516442c5ed34",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -375,7 +375,7 @@
     },
     {
       "path": "dist/internal/picker-position.d.ts",
-      "sha256": "46d26050ba2350db080291c5a2114a6409c495555a4b2bbec0ebf44214a2b343"
+      "sha256": "821a99829523fd2ca6aaae1e8ea2e19bf0b429a48ac839f08c8f67e89018ee5a"
     },
     {
       "path": "dist/internal/popup-control.d.ts",
