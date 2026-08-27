@@ -15,6 +15,8 @@ description: 주요 가상화 라이브러리의 브라우저 실행 결과와 S
 
 처음 표시와 스크롤은 라이브러리 순서를 바꿔 가며 다섯 번 반복했습니다. 각 변경은 10회 실행하며, 행 순서와 높이, 전체 스크롤 높이, 기준 행 위치가 한 프레임이라도 어긋나면 시간과 별개로 실패를 기록합니다.
 
+스크롤 시간은 브라우저가 스크롤 이벤트를 전달하기 시작한 순간부터 DOM 좌표를 모두 읽은 순간까지 잽니다. 그래프에는 좌표 읽기 비용까지 포함한 상한을 씁니다. 원본 결과에는 좌표를 읽기 전의 하한, 좌표 읽기 비용, 검사 횟수, 중앙값 절대 편차, 라운드별 범위도 기록했습니다.
+
 2026년 8월 27일, Chrome 151, Apple Silicon, macOS에서 얻은 결과입니다. 프레임워크와 연결 코드의 처리 시간도 포함되므로 배치 알고리즘만 떼어 낸 수치로 읽으면 안 됩니다.
 
 비교 대상은 [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller)입니다. 실행 코드와 원본 JSON은 `benchmarks/virtual-ecosystem`에 있습니다.

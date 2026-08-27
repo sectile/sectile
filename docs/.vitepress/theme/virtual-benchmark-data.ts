@@ -11,7 +11,14 @@ export interface BaselineBenchmarkResult {
   readonly firstRowsMs: number;
   readonly mountMs: number;
   readonly scrollMedianMs: number;
+  readonly scrollMedianLowerBoundMs: number;
   readonly scrollP95Ms: number;
+  readonly scrollMadMs: number;
+  readonly scrollProbeMedianMs: number;
+  readonly scrollChecksMedian: number;
+  readonly scrollSampleCount: number;
+  readonly scrollRoundMedianRangeMs: readonly [number, number];
+  readonly scrollRoundP95RangeMs: readonly [number, number];
 }
 
 export interface MutationBenchmarkResult {
@@ -54,165 +61,360 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "Sectile Virtual",
     "version": "0.7.0",
     "stack": "Vue 3.5.22",
-    "setupMs": 7.2,
-    "firstRowsMs": 7.5,
-    "mountMs": 7.6,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.8
+    "setupMs": 8.4,
+    "firstRowsMs": 8.5,
+    "mountMs": 8.6,
+    "scrollMedianMs": 0.9,
+    "scrollMedianLowerBoundMs": 0.5,
+    "scrollP95Ms": 1.2,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      0.9,
+      1.1
+    ],
+    "scrollRoundP95RangeMs": [
+      1,
+      1.3
+    ]
   },
   {
     "mode": "fixed",
     "library": "TanStack Virtual",
     "version": "3.14.10",
     "stack": "React 19.2.8",
-    "setupMs": 0,
+    "setupMs": 0.1,
+    "firstRowsMs": 6.5,
+    "mountMs": 6.5,
+    "scrollMedianMs": 1.2,
+    "scrollMedianLowerBoundMs": 0.9,
+    "scrollP95Ms": 1.5,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.1,
+      1.4
+    ],
+    "scrollRoundP95RangeMs": [
+      1.3,
+      1.6
+    ]
+  },
+  {
+    "mode": "fixed",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
     "firstRowsMs": 5.8,
-    "mountMs": 5.9,
-    "scrollMedianMs": 0.3,
-    "scrollP95Ms": 0.5
-  },
-  {
-    "mode": "fixed",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 1.8,
-    "mountMs": 2,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.8
+    "mountMs": 5.8,
+    "scrollMedianMs": 4.2,
+    "scrollMedianLowerBoundMs": 3.8,
+    "scrollP95Ms": 5.5,
+    "scrollMadMs": 0.8,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3.9,
+      4.3
+    ],
+    "scrollRoundP95RangeMs": [
+      5.1,
+      6
+    ]
   },
   {
     "mode": "fixed",
     "library": "React Virtuoso",
     "version": "4.18.12",
     "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 22.7,
-    "mountMs": 22.7,
-    "scrollMedianMs": 0.5,
-    "scrollP95Ms": 0.6
+    "setupMs": 0,
+    "firstRowsMs": 20,
+    "mountMs": 20,
+    "scrollMedianMs": 1.9,
+    "scrollMedianLowerBoundMs": 1.6,
+    "scrollP95Ms": 2.3,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      2.2
+    ],
+    "scrollRoundP95RangeMs": [
+      2,
+      2.4
+    ]
   },
   {
     "mode": "fixed",
     "library": "react-virtualized",
     "version": "9.22.6",
     "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 5,
-    "mountMs": 5.1,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.8
+    "setupMs": 0.1,
+    "firstRowsMs": 4.9,
+    "mountMs": 5,
+    "scrollMedianMs": 1.7,
+    "scrollMedianLowerBoundMs": 1.4,
+    "scrollP95Ms": 2.1,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.5,
+      1.8
+    ],
+    "scrollRoundP95RangeMs": [
+      1.7,
+      2.6
+    ]
   },
   {
     "mode": "fixed",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 14.4,
-    "mountMs": 14.5,
-    "scrollMedianMs": 0.4,
-    "scrollP95Ms": 0.6
-  },
-  {
-    "mode": "fixed",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "setupMs": 10.6,
-    "firstRowsMs": 13.1,
-    "mountMs": 13.2,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.8
-  },
-  {
-    "mode": "estimated",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "setupMs": 7.5,
-    "firstRowsMs": 7.7,
-    "mountMs": 7.8,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.9
-  },
-  {
-    "mode": "estimated",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 7.3,
-    "mountMs": 7.4,
-    "scrollMedianMs": 2.3,
-    "scrollP95Ms": 2.6
-  },
-  {
-    "mode": "estimated",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 4,
-    "mountMs": 4.1,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.7
-  },
-  {
-    "mode": "estimated",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 24.2,
-    "mountMs": 24.3,
-    "scrollMedianMs": 0.5,
-    "scrollP95Ms": 0.7
-  },
-  {
-    "mode": "estimated",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 6.6,
-    "mountMs": 6.7,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.9
-  },
-  {
-    "mode": "estimated",
     "library": "Virtua",
     "version": "0.50.5",
     "stack": "React 19.2.8",
     "setupMs": 0.1,
     "firstRowsMs": 13.5,
     "mountMs": 13.6,
-    "scrollMedianMs": 0.4,
-    "scrollP95Ms": 0.6
+    "scrollMedianMs": 1.9,
+    "scrollMedianLowerBoundMs": 1.6,
+    "scrollP95Ms": 2.2,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      1.9
+    ],
+    "scrollRoundP95RangeMs": [
+      2.1,
+      2.2
+    ]
+  },
+  {
+    "mode": "fixed",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "setupMs": 7.7,
+    "firstRowsMs": 12.7,
+    "mountMs": 12.8,
+    "scrollMedianMs": 0.1,
+    "scrollMedianLowerBoundMs": 0,
+    "scrollP95Ms": 1.6,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 1,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      0.1,
+      1.4
+    ],
+    "scrollRoundP95RangeMs": [
+      0.1,
+      1.9
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "setupMs": 7.1,
+    "firstRowsMs": 7.5,
+    "mountMs": 7.6,
+    "scrollMedianMs": 1.2,
+    "scrollMedianLowerBoundMs": 1.1,
+    "scrollP95Ms": 1.4,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.2,
+      1.3
+    ],
+    "scrollRoundP95RangeMs": [
+      1.3,
+      1.4
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 10.3,
+    "mountMs": 10.5,
+    "scrollMedianMs": 3.1,
+    "scrollMedianLowerBoundMs": 2.7,
+    "scrollP95Ms": 3.5,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3,
+      3.3
+    ],
+    "scrollRoundP95RangeMs": [
+      3.3,
+      3.5
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 4.6,
+    "mountMs": 4.7,
+    "scrollMedianMs": 4.2,
+    "scrollMedianLowerBoundMs": 3.7,
+    "scrollP95Ms": 5.8,
+    "scrollMadMs": 0.8,
+    "scrollProbeMedianMs": 0.5,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3.9,
+      4.3
+    ],
+    "scrollRoundP95RangeMs": [
+      5.7,
+      6
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 20.4,
+    "mountMs": 20.4,
+    "scrollMedianMs": 1.9,
+    "scrollMedianLowerBoundMs": 1.6,
+    "scrollP95Ms": 2.1,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      2
+    ],
+    "scrollRoundP95RangeMs": [
+      2.1,
+      2.2
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 5.8,
+    "mountMs": 5.9,
+    "scrollMedianMs": 5.3,
+    "scrollMedianLowerBoundMs": 5.3,
+    "scrollP95Ms": 6.8,
+    "scrollMadMs": 1.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      4.9,
+      5.7
+    ],
+    "scrollRoundP95RangeMs": [
+      5.9,
+      7
+    ]
+  },
+  {
+    "mode": "estimated",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 11.1,
+    "mountMs": 11.2,
+    "scrollMedianMs": 1.8,
+    "scrollMedianLowerBoundMs": 1.5,
+    "scrollP95Ms": 2,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.7,
+      1.8
+    ],
+    "scrollRoundP95RangeMs": [
+      1.9,
+      2.1
+    ]
   },
   {
     "mode": "estimated",
     "library": "Vue Virtual Scroller",
     "version": "3.0.5",
     "stack": "Vue 3.5.22",
-    "setupMs": 553,
-    "firstRowsMs": 1458.5,
-    "mountMs": 1458.5,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 11.9
+    "setupMs": 583.6,
+    "firstRowsMs": 1437.9,
+    "mountMs": 1437.9,
+    "scrollMedianMs": 0.1,
+    "scrollMedianLowerBoundMs": 0,
+    "scrollP95Ms": 0.1,
+    "scrollMadMs": 0,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 1,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      0,
+      0.1
+    ],
+    "scrollRoundP95RangeMs": [
+      0.1,
+      0.1
+    ]
   },
   {
     "mode": "automatic",
     "library": "Sectile Virtual",
     "version": "0.7.0",
     "stack": "Vue 3.5.22",
-    "setupMs": 8.3,
-    "firstRowsMs": 8.6,
-    "mountMs": 8.7,
-    "scrollMedianMs": 8.3,
-    "scrollP95Ms": 9.8
+    "setupMs": 8.4,
+    "firstRowsMs": 8.8,
+    "mountMs": 8.8,
+    "scrollMedianMs": 1.3,
+    "scrollMedianLowerBoundMs": 1.2,
+    "scrollP95Ms": 1.5,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.2,
+      1.4
+    ],
+    "scrollRoundP95RangeMs": [
+      1.4,
+      1.6
+    ]
   },
   {
     "mode": "automatic",
@@ -220,21 +422,47 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "version": "4.18.12",
     "stack": "React 19.2.8",
     "setupMs": 0.1,
-    "firstRowsMs": 24.1,
-    "mountMs": 24.2,
-    "scrollMedianMs": 0.4,
-    "scrollP95Ms": 0.6
+    "firstRowsMs": 22.6,
+    "mountMs": 22.7,
+    "scrollMedianMs": 1.9,
+    "scrollMedianLowerBoundMs": 1.6,
+    "scrollP95Ms": 2.2,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      2.1
+    ],
+    "scrollRoundP95RangeMs": [
+      2,
+      2.3
+    ]
   },
   {
     "mode": "automatic",
     "library": "Virtua",
     "version": "0.50.5",
     "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 10.2,
-    "mountMs": 10.3,
-    "scrollMedianMs": 0.4,
-    "scrollP95Ms": 0.6
+    "setupMs": 0.1,
+    "firstRowsMs": 12.8,
+    "mountMs": 12.8,
+    "scrollMedianMs": 1.8,
+    "scrollMedianLowerBoundMs": 1.6,
+    "scrollP95Ms": 2.1,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      1.9
+    ],
+    "scrollRoundP95RangeMs": [
+      2,
+      2.1
+    ]
   }
 ]);
 

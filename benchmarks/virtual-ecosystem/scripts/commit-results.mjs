@@ -3,10 +3,30 @@ import { resolve } from 'node:path';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(packageRoot, '../..');
-const inputPath = resolve(process.argv[2] ?? '/tmp/sectile-virtual-benchmark.json');
+const args = process.argv.slice(2);
+const baselineOnly = args.includes('--baseline-only');
+const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
 const rawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
 const docsOutputPath = resolve(repoRoot, 'docs/.vitepress/theme/virtual-benchmark-data.ts');
-const report = JSON.parse(await readFile(inputPath, 'utf8'));
+const incomingReport = JSON.parse(await readFile(inputPath, 'utf8'));
+const previousReport = baselineOnly
+  ? JSON.parse(await readFile(rawOutputPath, 'utf8'))
+  : undefined;
+if (baselineOnly && incomingReport.mutationResults.length !== 0) {
+  throw new Error('A baseline-only report must not contain mutation results.');
+}
+const report = baselineOnly
+  ? {
+      ...previousReport,
+      ...incomingReport,
+      conditions: {
+        ...previousReport.conditions,
+        ...incomingReport.conditions,
+        mutations: previousReport.conditions.mutations,
+      },
+      mutationResults: previousReport.mutationResults,
+    }
+  : incomingReport;
 const observedAt = '2026-08-27';
 const conditions = {
   ...report.conditions,
@@ -31,7 +51,14 @@ const baselineResults = report.baselineResults.map((result) => ({
   firstRowsMs: result.firstRowsMs,
   mountMs: result.mountMs,
   scrollMedianMs: result.scrollMedianMs,
+  scrollMedianLowerBoundMs: result.scrollMedianLowerBoundMs,
   scrollP95Ms: result.scrollP95Ms,
+  scrollMadMs: result.scrollMadMs,
+  scrollProbeMedianMs: result.scrollProbeMedianMs,
+  scrollChecksMedian: result.scrollChecksMedian,
+  scrollSampleCount: result.scrollSampleCount,
+  scrollRoundMedianRangeMs: result.scrollRoundMedianRangeMs,
+  scrollRoundP95RangeMs: result.scrollRoundP95RangeMs,
 }));
 
 const mutationResults = report.mutationResults.map((result) => ({
@@ -67,7 +94,14 @@ export interface BaselineBenchmarkResult {
   readonly firstRowsMs: number;
   readonly mountMs: number;
   readonly scrollMedianMs: number;
+  readonly scrollMedianLowerBoundMs: number;
   readonly scrollP95Ms: number;
+  readonly scrollMadMs: number;
+  readonly scrollProbeMedianMs: number;
+  readonly scrollChecksMedian: number;
+  readonly scrollSampleCount: number;
+  readonly scrollRoundMedianRangeMs: readonly [number, number];
+  readonly scrollRoundP95RangeMs: readonly [number, number];
 }
 
 export interface MutationBenchmarkResult {

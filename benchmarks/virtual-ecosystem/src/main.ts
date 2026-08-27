@@ -31,16 +31,64 @@ interface BenchmarkResult {
   readonly firstRowsMs: number;
   readonly mountMs: number;
   readonly scrollMedianMs: number;
+  readonly scrollMedianLowerBoundMs: number;
   readonly scrollP95Ms: number;
+  readonly scrollMadMs: number;
+  readonly scrollProbeMedianMs: number;
+  readonly scrollChecksMedian: number;
+  readonly scrollSampleCount: number;
+  readonly scrollRoundMedianRangeMs: readonly [number, number];
+  readonly scrollRoundP95RangeMs: readonly [number, number];
   readonly renderedRows: number;
   readonly domElements: number;
 }
 
-interface RawBenchmarkResult extends Omit<BenchmarkResult, 'setupMs' | 'firstRowsMs' | 'mountMs' | 'scrollMedianMs' | 'scrollP95Ms'> {
+interface ScrollMeasurement {
+  readonly elapsedMs: number;
+  readonly lowerBoundMs: number;
+  readonly probeMs: number;
+  readonly checks: number;
+}
+
+interface BaselineSample extends ScrollMeasurement {
+  readonly round: number;
+  readonly sample: number;
+}
+
+interface RawBenchmarkResult extends Omit<BenchmarkResult,
+  | 'setupMs'
+  | 'firstRowsMs'
+  | 'mountMs'
+  | 'scrollMedianMs'
+  | 'scrollMedianLowerBoundMs'
+  | 'scrollP95Ms'
+  | 'scrollMadMs'
+  | 'scrollProbeMedianMs'
+  | 'scrollChecksMedian'
+  | 'scrollSampleCount'
+  | 'scrollRoundMedianRangeMs'
+  | 'scrollRoundP95RangeMs'
+> {
   readonly setupMs: number;
   readonly firstRowsMs: number;
   readonly mountMs: number;
-  readonly scrollSamples: readonly number[];
+  readonly scrollMeasurements: readonly ScrollMeasurement[];
+}
+
+interface BaselineRowSnapshot {
+  readonly index: number;
+  readonly rawIndex: string | undefined;
+  readonly top: number;
+  readonly bottom: number;
+  readonly height: number;
+}
+
+interface BaselineLayoutSnapshot {
+  readonly observedAt: number;
+  readonly scrollHeight: number;
+  readonly viewportTop: number;
+  readonly viewportBottom: number;
+  readonly rows: readonly BaselineRowSnapshot[];
 }
 
 interface HeightModeSupport {
@@ -56,6 +104,7 @@ declare global {
     __sectileVirtualBenchmarkResults?: readonly BenchmarkResult[];
     __sectileVirtualBenchmarkReport?: {
       readonly baselineResults: readonly BenchmarkResult[];
+      readonly baselineSamples: Readonly<Record<string, readonly BaselineSample[]>>;
       readonly mutationResults: readonly MutationBenchmarkResult[];
       readonly heightModeSupport: readonly HeightModeSupport[];
     };
@@ -75,9 +124,11 @@ const benchmarkCases = Object.freeze([
   ...mutableAdapters.map((adapter) => dynamicCase(adapter)),
   ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter)),
 ]);
-const activeCases = search.has('sectile')
-  ? benchmarkCases.filter((entry) => entry.name === 'Sectile Virtual')
-  : benchmarkCases;
+const activeCases = benchmarkCases.filter((entry) => (
+  (!search.has('sectile') || entry.name === 'Sectile Virtual')
+  && (!search.has('fixed') || entry.mode === 'fixed')
+));
+const BASELINE_ONLY = search.has('baseline-only');
 
 const automaticNames = new Set(automaticMutableAdapters.map((adapter) => adapter.name));
 const automaticNotes: Readonly<Record<string, string>> = Object.freeze({
@@ -173,15 +224,27 @@ async function runAll(): Promise<void> {
       }
     }
     const baselineResults = activeCases.map((entry) => aggregate(entry, raw.get(caseKey(entry)) ?? []));
+    const baselineSamples = Object.freeze(Object.fromEntries(activeCases.map((entry) => [
+      caseKey(entry),
+      Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
+        round.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
+          round: roundIndex + 1,
+          sample: sampleIndex + 1,
+          ...measurement,
+        }))
+      ))),
+    ])));
     for (const result of baselineResults) resultsBody!.append(renderResult(result));
-    const mutationResults = await runMutationBenchmarks(
-      mountHost!,
-      (message) => { status!.textContent = message; },
-      [...new Set(activeCases.map((entry) => entry.name))],
-    );
+    const mutationResults = BASELINE_ONLY
+      ? Object.freeze([])
+      : await runMutationBenchmarks(
+          mountHost!,
+          (message) => { status!.textContent = message; },
+          [...new Set(activeCases.map((entry) => entry.name))],
+        );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
-    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, mutationResults, heightModeSupport });
+    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, baselineSamples, mutationResults, heightModeSupport });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
       environment: navigator.userAgent,
@@ -194,6 +257,9 @@ async function runAll(): Promise<void> {
           rounds: ROUNDS,
           scrollSamplesPerRound: RECORDED_SCROLLS,
           completion: 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage',
+          trigger: 'programmatic scrollTop change; the browser-generated scroll event is observed at document capture before target listeners',
+          observation: 'timing starts when the browser begins native scroll-event delivery and ends after DOM geometry has been read; correctness validation runs outside the timed interval',
+          diagnostics: 'raw samples retain round, sample, lower and upper timing bounds, geometry-probe cost, and correctness-check count; summaries retain per-round ranges',
           timing: {
             setupMs: 'synchronous adapter and framework setup',
             firstRowsMs: 'time until the first benchmark rows exist',
@@ -204,6 +270,7 @@ async function runAll(): Promise<void> {
       },
       heightModeSupport,
       baselineResults,
+      baselineSamples,
       mutationResults,
     }, null, 2);
     status!.textContent = 'Complete.';
@@ -241,17 +308,13 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
   const mountMs = performance.now() - startedAt;
   const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
   const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
-  const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * (((index * 19) % 47) / 46)));
-  const samples: number[] = [];
+  const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * ((((index + 1) * 19) % 47) / 46)));
+  const measurements: ScrollMeasurement[] = [];
   for (let index = 0; index < offsets.length; index += 1) {
     const offset = offsets[index]!;
     const expected = Math.floor(offset / ROW_HEIGHT);
-    const scrollStartedAt = performance.now();
-    mounted.scroller.scrollTop = offset;
-    mounted.scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
-    await waitForBaselineLayout(mounted.scroller, expected);
-    const elapsed = performance.now() - scrollStartedAt;
-    if (index >= WARMUP_SCROLLS) samples.push(elapsed);
+    const measurement = await measureScrollLayout(mounted.scroller, expected, offset);
+    if (index >= WARMUP_SCROLLS) measurements.push(measurement);
   }
   const renderedRows = host.querySelectorAll('.bench-row').length;
   const domElements = host.querySelectorAll('*').length;
@@ -265,7 +328,7 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
     setupMs,
     firstRowsMs,
     mountMs,
-    scrollSamples: Object.freeze(samples),
+    scrollMeasurements: Object.freeze(measurements),
     renderedRows,
     domElements,
   });
@@ -276,7 +339,15 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
   const setups = rounds.map((round) => round.setupMs).sort(ascending);
   const firstRows = rounds.map((round) => round.firstRowsMs).sort(ascending);
   const mounts = rounds.map((round) => round.mountMs).sort(ascending);
-  const scrolls = rounds.flatMap((round) => round.scrollSamples).sort(ascending);
+  const measurements = rounds.flatMap((round) => round.scrollMeasurements);
+  const scrolls = measurements.map((measurement) => measurement.elapsedMs).sort(ascending);
+  const lowerBounds = measurements.map((measurement) => measurement.lowerBoundMs).sort(ascending);
+  const probes = measurements.map((measurement) => measurement.probeMs).sort(ascending);
+  const checks = measurements.map((measurement) => measurement.checks).sort(ascending);
+  const roundMedians = rounds.map((result) => percentile(result.scrollMeasurements.map((measurement) => measurement.elapsedMs).sort(ascending), 0.5));
+  const roundP95s = rounds.map((result) => percentile(result.scrollMeasurements.map((measurement) => measurement.elapsedMs).sort(ascending), 0.95));
+  const scrollMedianMs = percentile(scrolls, 0.5);
+  const deviations = scrolls.map((value) => Math.abs(value - scrollMedianMs)).sort(ascending);
   const last = rounds.at(-1)!;
   return Object.freeze({
     mode: benchmarkCase.mode,
@@ -286,8 +357,15 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
     setupMs: round(percentile(setups, 0.5)),
     firstRowsMs: round(percentile(firstRows, 0.5)),
     mountMs: round(percentile(mounts, 0.5)),
-    scrollMedianMs: round(percentile(scrolls, 0.5)),
+    scrollMedianMs: round(scrollMedianMs),
+    scrollMedianLowerBoundMs: round(percentile(lowerBounds, 0.5)),
     scrollP95Ms: round(percentile(scrolls, 0.95)),
+    scrollMadMs: round(percentile(deviations, 0.5)),
+    scrollProbeMedianMs: round(percentile(probes, 0.5)),
+    scrollChecksMedian: round(percentile(checks, 0.5)),
+    scrollSampleCount: measurements.length,
+    scrollRoundMedianRangeMs: Object.freeze([round(Math.min(...roundMedians)), round(Math.max(...roundMedians))] as const),
+    scrollRoundP95RangeMs: Object.freeze([round(Math.min(...roundP95s)), round(Math.max(...roundP95s))] as const),
     renderedRows: last.renderedRows,
     domElements: last.domElements,
   });
@@ -304,22 +382,121 @@ function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Pr
   }, 'a correct total height and viewport layout');
 }
 
+async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number, offset: number): Promise<ScrollMeasurement> {
+  await nextAnimationFrame();
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let checkQueued = false;
+    let checks = 0;
+    let frameID = 0;
+    let timeoutID = 0;
+    let startedAt: number | undefined;
+    const observer = new MutationObserver(scheduleCheck);
+    const resizeObserver = new ResizeObserver(scheduleCheck);
+
+    const cleanup = (): void => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+      document.removeEventListener('scroll', startTiming, true);
+      cancelAnimationFrame(frameID);
+      clearTimeout(timeoutID);
+    };
+    const check = (): void => {
+      if (settled || startedAt === undefined) return;
+      checks += 1;
+      const probeStartedAt = performance.now();
+      const snapshot = captureBaselineLayout(scroller);
+      const probeMs = snapshot.observedAt - probeStartedAt;
+      try {
+        assertBaselineSnapshot(snapshot, expectedIndex);
+        settled = true;
+        cleanup();
+        resolve(Object.freeze({
+          elapsedMs: snapshot.observedAt - startedAt,
+          lowerBoundMs: probeStartedAt - startedAt,
+          probeMs,
+          checks,
+        }));
+      } catch {
+        // Signals below keep checking until the visible layout is correct.
+      }
+    };
+    const checkFrame = (): void => {
+      check();
+      if (!settled) frameID = requestAnimationFrame(checkFrame);
+    };
+
+    function scheduleCheck(): void {
+      if (settled || checkQueued) return;
+      checkQueued = true;
+      queueMicrotask(() => {
+        checkQueued = false;
+        check();
+      });
+    }
+
+    function startTiming(event: Event): void {
+      if (settled || startedAt !== undefined || event.target !== scroller) return;
+      startedAt = performance.now();
+      scheduleCheck();
+      queueMicrotask(() => {
+        if (!settled && frameID === 0) frameID = requestAnimationFrame(checkFrame);
+      });
+    }
+
+    observer.observe(scroller, { subtree: true, childList: true, attributes: true, characterData: true });
+    resizeObserver.observe(scroller);
+    document.addEventListener('scroll', startTiming, { capture: true, passive: true });
+    timeoutID = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error('Timed out waiting for a correct scroll layout.'));
+    }, FRAME_TIMEOUT_MS);
+
+    scroller.scrollTop = offset;
+  });
+}
+
 function assertBaselineLayout(scroller: HTMLElement, expectedIndex: number): void {
-  const expectedHeight = ITEM_COUNT * ROW_HEIGHT;
-  if (Math.abs(scroller.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
-    throw new Error(`Scroll height ${scroller.scrollHeight}px did not match ${expectedHeight}px.`);
-  }
+  assertBaselineSnapshot(captureBaselineLayout(scroller), expectedIndex);
+}
+
+function captureBaselineLayout(scroller: HTMLElement): BaselineLayoutSnapshot {
+  const scrollHeight = scroller.scrollHeight;
   const viewport = scroller.getBoundingClientRect();
-  const seen = new Set<number>();
-  const rows = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row')).flatMap((row) => {
-    const index = Number(row.dataset['index']);
+  const rows = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row'), (row) => {
     const rect = row.getBoundingClientRect();
-    if (rect.bottom < viewport.top - VIEWPORT_HEIGHT * 2 || rect.top > viewport.bottom + VIEWPORT_HEIGHT * 2) return [];
-    if (!Number.isInteger(index) || index < 0 || index >= ITEM_COUNT) throw new Error(`Invalid benchmark row index ${row.dataset['index'] ?? 'missing'}.`);
-    if (seen.has(index)) throw new Error(`Benchmark row ${index} appeared more than once.`);
-    seen.add(index);
-    if (Math.abs(rect.height - ROW_HEIGHT) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark row ${index} measured ${round(rect.height)}px instead of ${ROW_HEIGHT}px.`);
-    return [{ index, top: rect.top, bottom: rect.bottom }];
+    return Object.freeze({
+      index: Number(row.dataset['index']),
+      rawIndex: row.dataset['index'],
+      top: rect.top,
+      bottom: rect.bottom,
+      height: rect.height,
+    });
+  });
+  return Object.freeze({
+    observedAt: performance.now(),
+    scrollHeight,
+    viewportTop: viewport.top,
+    viewportBottom: viewport.bottom,
+    rows: Object.freeze(rows),
+  });
+}
+
+function assertBaselineSnapshot(snapshot: BaselineLayoutSnapshot, expectedIndex: number): void {
+  const expectedHeight = ITEM_COUNT * ROW_HEIGHT;
+  if (Math.abs(snapshot.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
+    throw new Error(`Scroll height ${snapshot.scrollHeight}px did not match ${expectedHeight}px.`);
+  }
+  const seen = new Set<number>();
+  const rows = snapshot.rows.flatMap((row) => {
+    if (row.bottom < snapshot.viewportTop - VIEWPORT_HEIGHT * 2 || row.top > snapshot.viewportBottom + VIEWPORT_HEIGHT * 2) return [];
+    if (!Number.isInteger(row.index) || row.index < 0 || row.index >= ITEM_COUNT) throw new Error(`Invalid benchmark row index ${row.rawIndex ?? 'missing'}.`);
+    if (seen.has(row.index)) throw new Error(`Benchmark row ${row.index} appeared more than once.`);
+    seen.add(row.index);
+    if (Math.abs(row.height - ROW_HEIGHT) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark row ${row.index} measured ${round(row.height)}px instead of ${ROW_HEIGHT}px.`);
+    return [{ index: row.index, top: row.top, bottom: row.bottom }];
   });
   rows.sort((left, right) => left.top - right.top || left.index - right.index);
   for (let index = 1; index < rows.length; index += 1) {
@@ -329,13 +506,13 @@ function assertBaselineLayout(scroller: HTMLElement, expectedIndex: number): voi
     const gap = current.top - previous.bottom;
     if (Math.abs(gap) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark rows ${previous.index} and ${current.index} have a ${round(gap)}px gap or overlap.`);
   }
-  const visible = rows.filter((row) => row.bottom > viewport.top + HEIGHT_TOLERANCE_PX && row.top < viewport.bottom - HEIGHT_TOLERANCE_PX);
+  const visible = rows.filter((row) => row.bottom > snapshot.viewportTop + HEIGHT_TOLERANCE_PX && row.top < snapshot.viewportBottom - HEIGHT_TOLERANCE_PX);
   if (visible.length === 0) throw new Error('No benchmark row covers the viewport.');
   if (!visible.some((row) => row.index === expectedIndex)) throw new Error(`Expected benchmark row ${expectedIndex} is absent from the viewport.`);
   const first = visible[0]!;
   const last = visible.at(-1)!;
-  if (first.top > viewport.top + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
-  if (last.bottom < viewport.bottom - HEIGHT_TOLERANCE_PX) throw new Error(`Blank space follows benchmark row ${last.index}.`);
+  if (first.top > snapshot.viewportTop + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
+  if (last.bottom < snapshot.viewportBottom - HEIGHT_TOLERANCE_PX) throw new Error(`Blank space follows benchmark row ${last.index}.`);
   for (let index = 1; index < visible.length; index += 1) {
     if (visible[index]!.index !== visible[index - 1]!.index + 1) throw new Error(`Visible benchmark rows ${visible[index - 1]!.index} and ${visible[index]!.index} are not contiguous.`);
   }
@@ -423,3 +600,4 @@ function percentile(sorted: readonly number[], ratio: number): number {
 }
 function round(value: number): number { return Number(value.toFixed(3)); }
 function idleFrame(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 50)); }
+function nextAnimationFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }

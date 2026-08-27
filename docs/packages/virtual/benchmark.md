@@ -49,7 +49,9 @@ The fixed-height suite renders 100,000 identical 48px rows in a 720 × 480px vie
 
 Library order rotates across five rounds. Initial rendering is split into synchronous setup, first row output, and the first state with correct total scroll height and viewport geometry. A visible row with an incorrect total height is not considered complete.
 
-Each round discards five warm-up scrolls and records the next 40. Scroll time starts when `scrollTop` changes and ends when the exact target row, contiguous row geometry, total scroll height, and viewport coverage are all correct.
+Each round discards five warm-up scrolls and records the next 40. The harness changes `scrollTop` after a frame boundary. Timing starts when the browser begins delivering the native scroll event and ends immediately after the runner reads the resulting DOM geometry. The exact target row, contiguous row geometry, total scroll height, and viewport coverage are then validated against that snapshot outside the timed interval.
+
+The chart uses the conservative upper bound taken after geometry reads. Raw samples also retain the lower bound before those reads, probe cost, correctness-check count, round and sample number, MAD, and per-round ranges. This keeps validation work out of the score without hiding measurement uncertainty or a slow round.
 
 Measurements were recorded on 2026-08-27 in Chrome 151 on Apple Silicon macOS. Absolute timings vary by machine and browser state; compare the relative results together with correctness failures.
 

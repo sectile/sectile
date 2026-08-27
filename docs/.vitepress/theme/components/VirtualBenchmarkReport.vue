@@ -83,7 +83,7 @@ const copy = computed(() => isKorean.value ? {
     },
     completion: {
       mount: '전체 높이와 화면 배치가 모두 맞은 시점',
-      scroll: '목표 행이 DOM에 나타난 시점',
+      scroll: '목표 행·전체 높이·화면 배치 좌표를 모두 읽은 시점',
       mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 첫 프레임',
     },
     environment: 'Chrome 151 · Apple Silicon · macOS',
@@ -130,7 +130,7 @@ const copy = computed(() => isKorean.value ? {
     },
     completion: {
       mount: 'Correct total height and viewport geometry',
-      scroll: 'Target row appears in the DOM',
+      scroll: 'Target row, total height, and viewport geometry have been read',
       mutation: 'Correct order, geometry, total height, and anchor',
     },
     environment: 'Chrome 151 · Apple Silicon · macOS',
@@ -383,12 +383,13 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .benchmark-row.is-sectile header strong { color: var(--sectile-action); }
 .benchmark-row header small { min-width: 0; overflow: hidden; color: var(--sectile-content-tertiary); font-size: 0.64rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .result-content { min-width: 0; block-size: 42px; }
-.bar-series { display: grid; min-width: 0; align-content: center; gap: 1px; }
-.benchmark-meter { display: grid; grid-template-columns: minmax(0, 1fr) 50px; align-items: center; gap: 7px; min-height: 6px; }
+.bar-series { display: grid; min-width: 0; grid-template-rows: repeat(4, 9px); align-content: center; gap: 1px; }
+.benchmark-meter { display: grid; grid-template-columns: minmax(0, 1fr) 50px; block-size: 9px; align-items: center; gap: 7px; min-height: 0; }
 .benchmark-meter-track { display: block; height: 3px; overflow: hidden; border-radius: 1px; background: color-mix(in srgb, var(--sectile-content-tertiary) 8%, transparent); }
 .benchmark-meter-indicator { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--bar-color); transform: scaleX(var(--benchmark-meter-ratio)); transform-origin: left center; transition: transform 220ms cubic-bezier(0.645, 0.045, 0.355, 1); }
 .benchmark-meter.is-outlier { --bar-color: var(--sectile-feedback-critical); }
-.benchmark-meter-value { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.benchmark-meter-value { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; line-height: 9px; text-align: right; white-space: nowrap; }
+.benchmark-meter-empty { visibility: hidden; }
 .result-message { display: grid; block-size: 42px; place-items: center; overflow: hidden; padding-inline: 10px; color: var(--sectile-content-primary); font-size: 0.8rem; font-weight: 720; line-height: 1.4; text-align: center; }
 .result-message.is-failure { color: var(--sectile-feedback-critical); }
 .result-notice { overflow: hidden; margin-top: 1px; color: var(--sectile-feedback-warning); font-size: 0.58rem; font-weight: 650; line-height: 1.2; text-align: right; text-overflow: ellipsis; white-space: nowrap; }

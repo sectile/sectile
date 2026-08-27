@@ -15,6 +15,8 @@ Every adapter renders the same 100,000 rows in a 720 × 480px viewport. Fixed, e
 
 Initial render and scrolling rotate library order across five rounds. Each mutation runs ten times. Any incorrect frame—row order, height, total scroll height, or anchor position—is recorded as a failure independently of timing.
 
+Scroll timing begins when the browser starts delivering the native scroll event and ends after the runner has read the resulting DOM geometry. The chart uses this conservative upper bound. Raw results also retain the lower bound before geometry reads, probe cost, correctness-check count, MAD, and per-round ranges.
+
 Observed on 2026-08-27 in Chrome 151 on Apple Silicon macOS. Framework and adapter scheduling remain inside the timing boundary, so these are not isolated layout-algorithm measurements.
 
 The comparison covers [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), and [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller). The runner and committed JSON live in `benchmarks/virtual-ecosystem`.

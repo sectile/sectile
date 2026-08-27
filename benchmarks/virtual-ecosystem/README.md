@@ -20,7 +20,9 @@ Every adapter renders the same 100,000 rows in a 720 by 480 pixel viewport with 
 
 The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
 
-The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. A scroll sample starts when `scrollTop` changes and ends when the exact target row, contiguous row geometry, total scroll height, and viewport coverage are all correct. Initial rendering reports synchronous setup, first row output, and the first correct viewport layout.
+The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. The harness changes `scrollTop` after a frame boundary, then starts timing when the browser begins delivering the native scroll event. It reads row geometry and records the time immediately after those DOM reads. Correctness validation runs against that snapshot outside the timed interval.
+
+Each raw scroll sample retains its round and sample number, a lower bound taken before geometry reads, a conservative upper bound taken after those reads, the probe cost between both bounds, and the number of correctness checks. The reported median and p95 use the conservative upper bound. MAD and per-round ranges remain in the result so a slow round is not hidden by the pooled median. Initial rendering reports synchronous setup, first row output, and the first correct viewport layout.
 
 The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Raw results retain rendered-row and DOM-element counts as diagnostics; the documentation chart does not use them as performance scores.
 
