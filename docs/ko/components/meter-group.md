@@ -5,29 +5,29 @@
 
 ## 용법
 
-### grouped capacity
+### 공용 용량
 
 하나의 공용 용량을 순서와 이름이 있는 측정값 및 명시적인 잔여 공간으로 나눕니다.
 
-<ComponentExample component="meter-group" scenario="grouped-capacity" title="grouped capacity" description="하나의 공용 용량을 순서와 이름이 있는 측정값 및 명시적인 잔여 공간으로 나눕니다." :index="0" />
+<ComponentExample component="meter-group" scenario="grouped-capacity" title="공용 용량" description="하나의 공용 용량을 순서와 이름이 있는 측정값 및 명시적인 잔여 공간으로 나눕니다." :index="0" />
 
-### zero values
+### 0인 값
 
 값이 0인 항목도 순서를 유지하되 시각적 용량은 할당하지 않습니다.
 
-<ComponentExample component="meter-group" scenario="zero-values" title="zero values" description="값이 0인 항목도 순서를 유지하되 시각적 용량은 할당하지 않습니다." :index="1" />
+<ComponentExample component="meter-group" scenario="zero-values" title="0인 값" description="값이 0인 항목도 순서를 유지하되 시각적 용량은 할당하지 않습니다." :index="1" />
 
-### 정확한 값 정확한 소수
+### 정확한 소수
 
 0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다.
 
-<ComponentExample component="meter-group" scenario="exact-decimal" title="정확한 값 정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="2" />
+<ComponentExample component="meter-group" scenario="exact-decimal" title="정확한 소수" description="0.1을 이진 부동소수점으로 바꾸지 않고 입력한 십진수 그대로 유지합니다." :index="2" />
 
-### 잘못된 입력값
+### 잘못된 입력
 
 정확한 합계가 공용 용량을 넘는 구성을 거부합니다.
 
-<ComponentExample component="meter-group" scenario="invalid-input" title="잘못된 입력값" description="정확한 합계가 공용 용량을 넘는 구성을 거부합니다." :index="3" />
+<ComponentExample component="meter-group" scenario="invalid-input" title="잘못된 입력" description="정확한 합계가 공용 용량을 넘는 구성을 거부합니다." :index="3" />
 
 ## API
 

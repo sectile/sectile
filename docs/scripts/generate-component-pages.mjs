@@ -1067,6 +1067,10 @@ function koScenarioTitle(component, scenario) {
   if (component.id === 'meter' && scenario === 'threshold-zones') return '임계 구간';
   if (component.id === 'meter' && scenario === 'exact-decimal') return '정확한 소수';
   if (component.id === 'meter' && scenario === 'degenerate-range') return '같은 최솟값과 최댓값';
+  if (component.id === 'meter-group' && scenario === 'grouped-capacity') return '공용 용량';
+  if (component.id === 'meter-group' && scenario === 'zero-values') return '0인 값';
+  if (component.id === 'meter-group' && scenario === 'exact-decimal') return '정확한 소수';
+  if (component.id === 'meter-group' && scenario === 'invalid-input') return '잘못된 입력';
   if (component.id === 'progress' && scenario === 'determinate') return '확정된 진행량';
   if (component.id === 'progress' && scenario === 'indeterminate') return '알 수 없는 진행량';
   if (component.id === 'progress' && scenario === 'complete') return '완료';
