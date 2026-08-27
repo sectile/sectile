@@ -3,17 +3,17 @@ import ComponentGalleryPreview from './ComponentGalleryPreview.vue';
 
 defineProps<{
   readonly component: string;
-  readonly family: string;
   readonly familyLabel: string;
   readonly href: string;
+  readonly scenario: string;
   readonly title: string;
 }>();
 </script>
 
 <template>
   <li class="component-gallery-card">
+    <ComponentGalleryPreview :component="component" :scenario="scenario" />
     <a class="component-gallery-card__link" :href="href">
-      <ComponentGalleryPreview :component="component" :family="family" />
       <span class="component-gallery-card__body">
         <strong>{{ title }}</strong>
         <span>{{ familyLabel }}</span>
@@ -26,22 +26,22 @@ defineProps<{
 .component-gallery-card {
   min-width: 0;
   margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 14px;
+  background: var(--vp-c-bg);
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.component-gallery-card:has(.component-gallery-card__link:hover) {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg-soft);
 }
 
 .component-gallery-card__link {
   display: block;
-  height: 100%;
-  overflow: hidden;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 14px;
   color: var(--vp-c-text-1) !important;
   text-decoration: none !important;
-  transition: border-color 140ms ease, background-color 140ms ease;
-}
-
-.component-gallery-card__link:hover {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-bg-soft);
 }
 
 .component-gallery-card__link:focus-visible {

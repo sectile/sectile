@@ -73,9 +73,9 @@ const sections = computed(() => {
           v-for="component in section.components"
           :key="component.id"
           :component="component.id"
-          :family="component.family"
           :family-label="familyName(component.family)"
           :href="`./${component.id}`"
+          :scenario="component.scenarios.dom[0] ?? ''"
           :title="title(component.id)"
         />
       </ul>
