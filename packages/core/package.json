@@ -236,6 +236,11 @@
       "import": "./dist/progress.js",
       "default": "./dist/progress.js"
     },
+    "./cascade-list": {
+      "types": "./dist/cascade-list.d.ts",
+      "import": "./dist/cascade-list.js",
+      "default": "./dist/cascade-list.js"
+    },
     "./cascade-select": {
       "types": "./dist/cascade-select.d.ts",
       "import": "./dist/cascade-select.js",

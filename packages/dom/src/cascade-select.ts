@@ -8,10 +8,12 @@ import {
   getCascadeSelectValuePath, type CascadeSelectCommand, type CascadeSelectEvent,
   type CascadeSelectPolicies, type CascadeSelectState,
 } from '@sectile/core/cascade-select';
-import { findDelegatedID } from './internal/delegated-event.js';
-import { setInteractionAttributes } from './internal/interaction.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
+import {
+  createDOMCascadeChoiceBinding,
+  type DOMCascadeChoiceBinding,
+} from './internal/cascade-choice-binding.js';
 
 export type { TreeNodeInput as CascadeSelectItemDefinition } from '@sectile/core/tree';
 export type { CascadeSelectPolicies } from '@sectile/core/cascade-select';
@@ -60,7 +62,7 @@ export interface CascadeSelectConnection<ID extends StableID = StableID> {
   getColumns(): readonly (readonly ID[])[];
   getValuePath(): readonly ID[];
   syncControlledValues(values: CascadeSelectControlledValues<ID>): Result<RevisionSnapshot<CascadeSelectState<ID>>>;
-  setColumnAttributes(element: HTMLElement, parentID?: ID | null): void;
+  setColumnAttributes(element: HTMLElement, parentID?: ID | null, label?: string): void;
   setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void;
   handleEvent(event: CascadeSelectEvent<ID>): boolean;
   disconnect(): void;
@@ -116,25 +118,32 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
   readonly tree: Tree<ID>;
   readonly #options: CascadeSelectOptions<ID>;
   readonly #runtime: SemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectEffect<ID>>;
-  readonly #disabled: ReadonlySet<ID>;
   readonly #controlled: { value: boolean; highlighted: boolean; open: boolean };
   readonly #triggerClick: () => void;
-  readonly #keydown: (event: KeyboardEvent) => void;
-  readonly #click: (event: MouseEvent) => void;
   readonly #layer: DOMLayerBinding;
+  readonly #choice: DOMCascadeChoiceBinding<ID>;
 
   public constructor(options: CascadeSelectOptions<ID>, tree: Tree<ID>, runtime: SemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) {
-    this.#options = options; this.tree = tree; this.#runtime = runtime; this.#disabled = disabled; this.#controlled = controlled;
+    this.#options = options; this.tree = tree; this.#runtime = runtime; this.#controlled = controlled;
     this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
-    setInteractionAttributes(options.root, options, { readOnly: true });
+    this.#choice = createDOMCascadeChoiceBinding<ID, CascadeSelectEvent<ID>>({
+      root: options.root,
+      surface: options.popup,
+      tree,
+      disabledItems: disabled,
+      disabled: options.disabled,
+      readOnly: options.readOnly,
+      label: options.label,
+      scope: 'cascade-select',
+      readState: () => this.getSnapshot().state,
+      handleEvent: (event) => this.handleEvent(event),
+      toEvent: toCascadeSelectEvent,
+    });
     options.trigger.disabled = options.disabled === true;
     options.trigger.setAttribute('aria-haspopup', 'listbox');
-    options.popup.setAttribute('role', 'group');
-    if (options.label !== undefined) { options.trigger.setAttribute('aria-label', options.label); options.popup.setAttribute('aria-label', options.label); }
+    if (options.label !== undefined) options.trigger.setAttribute('aria-label', options.label);
     this.#triggerClick = () => { this.handleEvent('toggle'); };
-    this.#keydown = (event) => { const semantic = toCascadeSelectEvent<ID>(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
-    this.#click = (event) => { const id = findDelegatedID(event.target, options.popup, 'cascadeSelectId') as ID | null; if (id !== null && !this.#disabled.has(id)) this.handleEvent({ type: 'select', id }); };
-    options.trigger.addEventListener('click', this.#triggerClick); options.root.addEventListener('keydown', this.#keydown); options.popup.addEventListener('click', this.#click); this.#render();
+    options.trigger.addEventListener('click', this.#triggerClick); this.#render();
   }
   public getSnapshot(): RevisionSnapshot<CascadeSelectState<ID>> { return this.#runtime.getSnapshot(); }
   public getColumns(): readonly (readonly ID[])[] { return getCascadeSelectColumns(this.tree, this.getSnapshot().state); }
@@ -145,23 +154,17 @@ class DOMCascadeSelectConnection<ID extends StableID> implements CascadeSelectCo
     const result = this.#runtime.replace(tryCreateCascadeSelectState(this.tree, { value: this.#controlled.value ? values.value ?? null : state.value, highlighted: this.#controlled.highlighted ? values.highlightedValue ?? null : state.highlighted, open: this.#controlled.open ? values.open ?? false : state.open }));
     if (result.ok) { this.#render(); this.#options.onUpdate?.(); } return result;
   }
-  public setColumnAttributes(element: HTMLElement, parentID: ID | null = null): void { element.setAttribute('role', 'listbox'); element.dataset['cascadeSelectParent'] = parentID ?? ''; }
-  public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
-    const state = this.getSnapshot().state; const selected = state.value === id; const highlighted = state.highlighted === id; const unavailable = disabled || this.#disabled.has(id) || this.#options.disabled === true;
-    element.dataset['cascadeSelectId'] = id; element.setAttribute('role', 'option'); element.setAttribute('aria-selected', String(selected)); element.setAttribute('aria-haspopup', this.tree.isLeaf(id) === false ? 'listbox' : 'false'); element.tabIndex = unavailable ? -1 : highlighted ? 0 : -1;
-    if (unavailable) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled');
-    if (selected) element.dataset['selected'] = ''; else delete element.dataset['selected'];
-    if (highlighted) element.dataset['highlighted'] = ''; else delete element.dataset['highlighted'];
-  }
+  public setColumnAttributes(element: HTMLElement, parentID: ID | null = null, label?: string): void { this.#choice.setColumnAttributes(element, parentID, label); }
+  public setItemAttributes(element: HTMLElement, id: ID, disabled = false): void { this.#choice.setItemAttributes(element, id, disabled); }
   public handleEvent(event: CascadeSelectEvent<ID>): boolean {
     const result = this.#runtime.handle(event); if (!result.ok) return false; this.#render();
     for (const effect of result.commands) {
-      if (effect.type === 'focus-option') queueMicrotask(() => { for (const element of this.#options.popup.querySelectorAll<HTMLElement>('[data-cascade-select-id]')) if (element.dataset['cascadeSelectId'] === effect.id) element.focus(); });
+      if (effect.type === 'focus-option') this.#choice.focusItem(effect.id);
       else if (effect.type === 'close-popup') this.#options.trigger.focus();
     }
     this.#options.onUpdate?.(); return true;
   }
-  public disconnect(): void { this.#layer.disconnect(); this.#options.trigger.removeEventListener('click', this.#triggerClick); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('click', this.#click); }
+  public disconnect(): void { this.#layer.disconnect(); this.#choice.disconnect(); this.#options.trigger.removeEventListener('click', this.#triggerClick); }
   #render(): void { const state = this.getSnapshot().state; this.#options.trigger.setAttribute('aria-expanded', String(state.open)); this.#options.popup.hidden = !state.open; this.#layer.sync(); }
 }
 

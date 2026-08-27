@@ -1,7 +1,7 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
+import type { Tree, TreeNodeInput } from '@sectile/core/tree';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import {
   applyCascadeSelectEvent, tryCreateCascadeSelectState, getCascadeSelectColumns,
@@ -10,6 +10,11 @@ import {
 } from '@sectile/core/cascade-select';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import {
+  toTerminalCascadeChoiceEvent,
+  tryCreateTerminalCascadeChoiceDomain,
+  withDisabledCascadeChoicePolicies,
+} from './internal/cascade-choice.js';
 
 export interface CascadeSelectOptions<ID extends StableID = StableID> {
   readonly nodes: readonly TreeNodeInput<ID>[];
@@ -52,19 +57,19 @@ export function tryCreateCascadeSelect<ID extends StableID>(options: CascadeSele
 }
 
 function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeSelectOptions<ID>): Result<CascadeSelectConnection<ID>> {
-  const tree = tryCreateTree(options.nodes); if (!tree.ok) return tree;
-  const disabled = new Set(options.disabledItems ?? []); for (const id of disabled) if (!tree.value.has(id)) return { ok: false, error: { class: 'construction', code: 'disabled-item-outside-domain', message: 'Every disabled cascade select item must exist in the tree.' } };
-  const suppliedEligibility = options.policies?.eligible; const policies: CascadeSelectPolicies<ID> = { ...options.policies, eligible: (id) => !disabled.has(id) && (suppliedEligibility?.(id) ?? true) };
+  const domain = tryCreateTerminalCascadeChoiceDomain(options.nodes, options.disabledItems, 'cascade select'); if (!domain.ok) return domain;
+  const tree = domain.value.tree;
+  const policies = withDisabledCascadeChoicePolicies(options.policies, domain.value.disabledItems);
   const controlled = { value: options.value !== undefined, highlighted: options.highlightedValue !== undefined, open: options.open !== undefined };
   const runtime = createSemanticController<CascadeSelectState<ID>, CascadeSelectEvent<ID>, CascadeSelectCommand<ID>, CascadeSelectCommand<ID>>({
     interaction: options, interactionIntent: (event) => event === 'select' || (typeof event === 'object' && event.type === 'select') ? 'mutate' : 'navigate',
-    initial: tryCreateCascadeSelectState(tree.value, { value: options.value ?? options.defaultValue ?? null, highlighted: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null, open: options.open ?? options.defaultOpen ?? false }),
-    reducer: (state, event) => applyCascadeSelectEvent(tree.value, state, event, policies),
-    reconcile: (previous, proposed) => tryCreateCascadeSelectState(tree.value, { value: controlled.value ? previous.value : proposed.value, highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted, open: controlled.open ? previous.open : proposed.open, path: proposed.path }),
+    initial: tryCreateCascadeSelectState(tree, { value: options.value ?? options.defaultValue ?? null, highlighted: options.highlightedValue ?? options.defaultHighlightedValue ?? options.value ?? options.defaultValue ?? null, open: options.open ?? options.defaultOpen ?? false }),
+    reducer: (state, event) => applyCascadeSelectEvent(tree, state, event, policies),
+    reconcile: (previous, proposed) => tryCreateCascadeSelectState(tree, { value: controlled.value ? previous.value : proposed.value, highlighted: controlled.highlighted ? previous.highlighted : proposed.highlighted, open: controlled.open ? previous.open : proposed.open, path: proposed.path }),
     notify: (previous, proposed) => { if (previous.value !== proposed.value) options.onValueChange?.(proposed.value); if (previous.highlighted !== proposed.highlighted) options.onHighlightedValueChange?.(proposed.highlighted); if (previous.open !== proposed.open) options.onOpenChange?.(proposed.open); },
     toEffect: (command) => command,
   });
-  return runtime.ok ? { ok: true, value: new TerminalCascadeSelectConnection(options, tree.value, runtime.value, controlled) } : runtime;
+  return runtime.ok ? { ok: true, value: new TerminalCascadeSelectConnection(options, tree, runtime.value, controlled) } : runtime;
 }
 
 class TerminalCascadeSelectConnection<ID extends StableID> implements CascadeSelectConnection<ID> {
@@ -80,5 +85,5 @@ class TerminalCascadeSelectConnection<ID extends StableID> implements CascadeSel
 }
 
 function toCascadeSelectEvent<ID extends StableID>(input: TerminalKeyboardInput): CascadeSelectEvent<ID> | null {
-  if (input.key === 'down') return 'next'; if (input.key === 'up') return 'previous'; if (input.key === 'right') return 'right'; if (input.key === 'left') return 'left'; if (input.key === 'home') return 'first'; if (input.key === 'end') return 'last'; if (input.key === 'enter' || input.key === 'space') return 'select'; if (input.key === 'escape') return 'close'; return null;
+  return input.key === 'escape' ? 'close' : toTerminalCascadeChoiceEvent(input);
 }
