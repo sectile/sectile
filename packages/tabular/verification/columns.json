@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "columns",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-COL-01",
+      "title": "TAB-COL-01: surviving columns preserve relative order across static and pivot schema changes",
+      "file": "tests/columns/reconciliation.test.mjs",
+      "sha256": "1d7c7f97180f51f41b52a86f4d48b55bcd4e809e161f8d5386abfee25287fdda"
+    },
+    {
+      "id": "TAB-COL-02",
+      "title": "TAB-COL-02: removed state disappears and inserted defaults apply deterministically",
+      "file": "tests/columns/reconciliation.test.mjs",
+      "sha256": "1d7c7f97180f51f41b52a86f4d48b55bcd4e809e161f8d5386abfee25287fdda"
+    },
+    {
+      "id": "TAB-COL-03",
+      "title": "TAB-COL-03: hidden columns retain logical pin assignment but leave visible partitions",
+      "file": "tests/columns/reconciliation.test.mjs",
+      "sha256": "1d7c7f97180f51f41b52a86f4d48b55bcd4e809e161f8d5386abfee25287fdda"
+    },
+    {
+      "id": "TAB-COL-04",
+      "title": "TAB-COL-04: all-pinned and center-only schemas are lawful degenerate partitions",
+      "file": "tests/columns/reconciliation.test.mjs",
+      "sha256": "1d7c7f97180f51f41b52a86f4d48b55bcd4e809e161f8d5386abfee25287fdda"
+    },
+    {
+      "id": "TAB-COL-05",
+      "title": "TAB-COL-05: duplicate dynamic columns and ceilings reject without partial state",
+      "file": "tests/columns/reconciliation.test.mjs",
+      "sha256": "1d7c7f97180f51f41b52a86f4d48b55bcd4e809e161f8d5386abfee25287fdda"
+    }
+  ],
+  "expectedFailures": [
+    "duplicate dynamic identity",
+    "removed descriptor reconciliation",
+    "hidden logical pin",
+    "all-pinned and center-only partitions"
+  ]
+}
