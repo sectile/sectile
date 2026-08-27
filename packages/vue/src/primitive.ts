@@ -66,14 +66,22 @@ export function renderPrimitive(
   attributes: Readonly<Record<string, unknown>>,
   slots: Slots,
 ): VNodeChild {
-  const children = slots['default']?.() ?? [];
   if (!props.asChild) {
-    return typeof props.as === 'string'
-      ? h(props.as, attributes, children)
-      : h(props.as, attributes, slots);
+    if (typeof props.as !== 'string') return h(props.as, attributes, slots);
+    return h(
+      props.as,
+      attributes,
+      htmlVoidElements.has(props.as.toLowerCase()) ? undefined : slots['default']?.() ?? [],
+    );
   }
+  const children = slots['default']?.() ?? [];
   return adoptSingleElement(children, guardAdoptedEventHandlers(attributes));
 }
+
+const htmlVoidElements = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
 
 function guardAdoptedEventHandlers(
   attributes: Readonly<Record<string, unknown>>,
