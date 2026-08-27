@@ -25,10 +25,6 @@ import {
 } from 'vue';
 import {
   createSequence,
-  type BoundaryPolicy,
-  type Direction,
-  type MoveResult,
-  type ScanOptions,
   type Sequence,
 } from '@sectile/core/sequence';
 import {
@@ -576,8 +572,9 @@ export function useVirtualizer<State, ID extends string, Measurement, Mutation>(
 }
 
 interface PreparedVirtualList {
+  readonly items: readonly unknown[];
   readonly ids: readonly string[];
-  readonly index: ReadonlyMap<string, number>;
+  readonly getKey: VirtualListKeyResolver<unknown>;
 }
 
 const VirtualListRuntime = defineComponent({
@@ -681,7 +678,7 @@ const VirtualListRuntime = defineComponent({
     watch(
       () => props.items,
       (items) => {
-        const next = prepareVirtualList(items, props.getKey);
+        const next = updatePreparedVirtualList(prepared.value, items, props.getKey);
         const patch = reconcileVirtualList(state.value, next, items, props);
         if (patch === null) {
           prepared.value = next;
@@ -695,9 +692,8 @@ const VirtualListRuntime = defineComponent({
           return;
         }
         if (virtualizer.connection.value === undefined) state.value = result.value.state;
-        const active = new Set(next.ids);
-        for (const id of prepared.value.ids) {
-          if (!active.has(id)) itemRefs.delete(id);
+        for (const id of itemRefs.keys()) {
+          if (result.value.state.domain.indexOf(id) === null) itemRefs.delete(id);
         }
         prepared.value = next;
       },
@@ -886,9 +882,70 @@ function prepareVirtualList(
     indexByID.set(id, index);
   }
   return Object.freeze({
+    items,
     ids: Object.freeze(ids),
-    index: indexByID,
+    getKey,
   });
+}
+
+function updatePreparedVirtualList(
+  previous: PreparedVirtualList,
+  items: readonly unknown[],
+  getKey: VirtualListKeyResolver<unknown>,
+): PreparedVirtualList {
+  if (previous.items === items && previous.getKey === getKey) return previous;
+  if (previous.getKey !== getKey) return prepareVirtualList(items, getKey);
+  let prefix = 0;
+  while (
+    prefix < previous.items.length
+    && prefix < items.length
+    && Object.is(previous.items[prefix], items[prefix])
+  ) prefix += 1;
+  let suffix = 0;
+  while (
+    suffix < previous.items.length - prefix
+    && suffix < items.length - prefix
+    && Object.is(
+      previous.items[previous.items.length - suffix - 1],
+      items[items.length - suffix - 1],
+    )
+  ) suffix += 1;
+  if (prefix === previous.items.length && prefix === items.length) {
+    return Object.freeze({ items, ids: previous.ids, getKey });
+  }
+  const changedEnd = items.length - suffix;
+  const inserted: string[] = [];
+  const insertedIDs = new Set<string>();
+  for (let index = prefix; index < changedEnd; index += 1) {
+    const id = validateVirtualListKey(getKey(items[index], index));
+    if (insertedIDs.has(id)) {
+      throw new TypeError(`VirtualList getKey returned the duplicate key ${JSON.stringify(id)}.`);
+    }
+    inserted.push(id);
+    insertedIDs.add(id);
+  }
+  return Object.freeze({
+    items,
+    ids: Object.freeze([
+      ...previous.ids.slice(0, prefix),
+      ...inserted,
+      ...previous.ids.slice(previous.ids.length - suffix),
+    ]),
+    getKey,
+  });
+}
+
+function validateVirtualListKey(id: string): string {
+  if (typeof id !== 'string' || id.length === 0) {
+    throw new TypeError('VirtualList getKey must return a non-empty string.');
+  }
+  if (id.length > 1_024) {
+    throw new TypeError('VirtualList keys must contain at most 1,024 UTF-16 code units.');
+  }
+  if (!isWellFormedVirtualListKey(id)) {
+    throw new TypeError('VirtualList keys must be well-formed UTF-16 strings.');
+  }
+  return id;
 }
 
 function createVirtualListState(
@@ -935,41 +992,7 @@ function createPreparedVirtualListSequence(
   if (prepared.ids.length > maxItems) {
     throw new RangeError(`VirtualList received ${prepared.ids.length} items, exceeding maxItems ${maxItems}.`);
   }
-  let materialized: Sequence<string> | undefined;
-  const complete = (): Sequence<string> => {
-    materialized ??= createSequence(prepared.ids, { maxItems });
-    return materialized;
-  };
-  return Object.freeze({
-    size: prepared.ids.length,
-    ids: prepared.ids,
-    maxItems,
-    maxIDCodeUnits: 1_024,
-    at: (index: number): string | null => (
-      Number.isSafeInteger(index) && index >= 0 && index < prepared.ids.length
-        ? prepared.ids[index] ?? null
-        : null
-    ),
-    indexOf: (id: string): number | null => prepared.index.get(id) ?? null,
-    contains: (id: string): boolean => prepared.index.has(id),
-    compare: (left: string, right: string): -1 | 0 | 1 | null => {
-      const leftIndex = prepared.index.get(left);
-      const rightIndex = prepared.index.get(right);
-      if (leftIndex === undefined || rightIndex === undefined) return null;
-      return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
-    },
-    project(predicate: (id: string, index: number) => boolean): Sequence<string> {
-      return complete().project(predicate);
-    },
-    move(
-      current: string,
-      direction: Direction,
-      boundary?: BoundaryPolicy,
-      options?: ScanOptions<string>,
-    ): MoveResult<string> {
-      return complete().move(current, direction, boundary, options);
-    },
-  });
+  return createSequence(prepared.ids, { maxItems, maxIDCodeUnits: 1_024 });
 }
 
 function isWellFormedVirtualListKey(value: string): boolean {
@@ -1134,7 +1157,7 @@ const VirtualGridRuntime = defineComponent({
     const sync = (): void => {
       const exposed = root.value;
       if (exposed === undefined) return;
-      const next = prepareVirtualList(props.items, props.getKey);
+      const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
       const geometry = resolveResponsiveLanes(
         viewportWidth.value,
         props.laneCount,
@@ -1271,7 +1294,7 @@ const VirtualMasonryRuntime = defineComponent({
       () => {
         const exposed = root.value;
         if (exposed === undefined) return;
-        const next = prepareVirtualList(props.items, props.getKey);
+        const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
         const patch = reconcileVirtualList(
           exposed.state as MasonryLayoutState<string>,
           next,
@@ -1431,7 +1454,7 @@ const VirtualSpatialRuntime = defineComponent({
       () => {
         const exposed = root.value;
         if (exposed === undefined) return;
-        const next = prepareVirtualList(props.items, props.getKey);
+        const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
         const spatialItems = createSpatialItems(next, props.items, props);
         const previousByID = new Map(
           (exposed.state as SpatialLayoutState<string>).items.map((item) => [item.id, item] as const),
@@ -1792,8 +1815,8 @@ function renderHighLevelItems(
     return child === undefined || child === null ? [] : [child];
   }
   return placements.flatMap((placement) => {
-    const index = prepared.index.get(placement.id);
-    if (index === undefined || index >= items.length) return [];
+    const index = placement.index;
+    if (index >= items.length || prepared.ids[index] !== placement.id) return [];
     const value = items[index];
     const attributes = itemAttributes?.(value, index) ?? {};
     return [h(VirtualizerItem, {
