@@ -8,6 +8,7 @@ import {
 import {
   mutationConditions,
   runMutationBenchmarks,
+  type MutationBenchmarkFilter,
   type MutationBenchmarkResult,
 } from './mutation-runner.js';
 import './style.css';
@@ -129,6 +130,12 @@ const activeCases = benchmarkCases.filter((entry) => (
   && (!search.has('fixed') || entry.mode === 'fixed')
 ));
 const BASELINE_ONLY = search.has('baseline-only');
+const MUTATIONS_ONLY = search.has('mutations-only');
+const mutationFilter: MutationBenchmarkFilter = Object.freeze({
+  sizeMode: parseHeightMode(search.get('mutation-mode')),
+  operation: parseMutationOperation(search.get('mutation-operation')),
+  location: parseMutationLocation(search.get('mutation-location')),
+});
 
 const automaticNames = new Set(automaticMutableAdapters.map((adapter) => adapter.name));
 const automaticNotes: Readonly<Record<string, string>> = Object.freeze({
@@ -205,7 +212,7 @@ async function runAll(): Promise<void> {
   json!.textContent = '';
   const raw = new Map<string, RawBenchmarkResult[]>();
   try {
-    for (let round = 0; round < ROUNDS; round += 1) {
+    for (let round = 0; round < (MUTATIONS_ONLY ? 0 : ROUNDS); round += 1) {
       const order = rotate(activeCases, round * 3);
       for (const benchmarkCase of order) {
         status!.textContent = `Round ${round + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
@@ -223,8 +230,9 @@ async function runAll(): Promise<void> {
         await idleFrame();
       }
     }
-    const baselineResults = activeCases.map((entry) => aggregate(entry, raw.get(caseKey(entry)) ?? []));
-    const baselineSamples = Object.freeze(Object.fromEntries(activeCases.map((entry) => [
+    const baselineCases = MUTATIONS_ONLY ? [] : activeCases;
+    const baselineResults = baselineCases.map((entry) => aggregate(entry, raw.get(caseKey(entry)) ?? []));
+    const baselineSamples = Object.freeze(Object.fromEntries(baselineCases.map((entry) => [
       caseKey(entry),
       Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
         round.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
@@ -241,6 +249,7 @@ async function runAll(): Promise<void> {
           mountHost!,
           (message) => { status!.textContent = message; },
           [...new Set(activeCases.map((entry) => entry.name))],
+          mutationFilter,
         );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
@@ -281,6 +290,18 @@ async function runAll(): Promise<void> {
   } finally {
     runButton!.disabled = false;
   }
+}
+
+function parseHeightMode(value: string | null): MutationBenchmarkFilter['sizeMode'] {
+  return value === 'estimated' || value === 'automatic' ? value : undefined;
+}
+
+function parseMutationOperation(value: string | null): MutationBenchmarkFilter['operation'] {
+  return value === 'insert' || value === 'move' || value === 'remove' || value === 'resize' ? value : undefined;
+}
+
+function parseMutationLocation(value: string | null): MutationBenchmarkFilter['location'] {
+  return value === 'start' || value === 'middle' || value === 'end' ? value : undefined;
 }
 
 function fixedCase(adapter: BenchmarkAdapter): BenchmarkCase {

@@ -5,15 +5,22 @@ const packageRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(packageRoot, '../..');
 const args = process.argv.slice(2);
 const baselineOnly = args.includes('--baseline-only');
+const mergeMutations = args.includes('--merge-mutations');
 const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
 const rawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
 const docsOutputPath = resolve(repoRoot, 'docs/.vitepress/theme/virtual-benchmark-data.ts');
 const incomingReport = JSON.parse(await readFile(inputPath, 'utf8'));
-const previousReport = baselineOnly
+if (baselineOnly && mergeMutations) {
+  throw new Error('--baseline-only and --merge-mutations cannot be combined.');
+}
+const previousReport = baselineOnly || mergeMutations
   ? JSON.parse(await readFile(rawOutputPath, 'utf8'))
   : undefined;
 if (baselineOnly && incomingReport.mutationResults.length !== 0) {
   throw new Error('A baseline-only report must not contain mutation results.');
+}
+if (mergeMutations && incomingReport.mutationResults.length === 0) {
+  throw new Error('A mutation merge report must contain at least one mutation result.');
 }
 const report = baselineOnly
   ? {
@@ -26,8 +33,18 @@ const report = baselineOnly
       },
       mutationResults: previousReport.mutationResults,
     }
+  : mergeMutations
+    ? {
+        ...previousReport,
+        environment: incomingReport.environment,
+        conditions: {
+          ...previousReport.conditions,
+          mutations: incomingReport.conditions.mutations,
+        },
+        mutationResults: mergeMutationResults(previousReport.mutationResults, incomingReport.mutationResults),
+      }
   : incomingReport;
-const observedAt = '2026-08-27';
+const observedAt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
 const conditions = {
   ...report.conditions,
   mutations: {
@@ -72,6 +89,12 @@ const mutationResults = report.mutationResults.map((result) => ({
   p95Ms: result.p95Ms,
   recoveryMedianMs: result.recoveryMedianMs,
   recoveryP95Ms: result.recoveryP95Ms,
+  slowTailMs: result.p95Ms === null
+    ? []
+    : result.samples
+        .map((sample) => sample.elapsedMs)
+        .filter((value) => typeof value === 'number' && value > result.p95Ms)
+        .sort((left, right) => left - right),
   settledSamples: result.settledSamples,
   correctSamples: result.correctSamples,
   recoveredSamples: result.recoveredSamples,
@@ -115,6 +138,7 @@ export interface MutationBenchmarkResult {
   readonly p95Ms: number | null;
   readonly recoveryMedianMs: number | null;
   readonly recoveryP95Ms: number | null;
+  readonly slowTailMs: readonly number[];
   readonly settledSamples: number;
   readonly correctSamples: number;
   readonly recoveredSamples: number;
@@ -152,3 +176,17 @@ await Promise.all([
 
 console.log(`Wrote ${rawOutputPath}`);
 console.log(`Wrote ${docsOutputPath}`);
+
+function mergeMutationResults(previousResults, incomingResults) {
+  const incomingByKey = new Map(incomingResults.map((result) => [mutationKey(result), result]));
+  const merged = previousResults.map((result) => incomingByKey.get(mutationKey(result)) ?? result);
+  const previousKeys = new Set(previousResults.map(mutationKey));
+  for (const result of incomingResults) {
+    if (!previousKeys.has(mutationKey(result))) merged.push(result);
+  }
+  return merged;
+}
+
+function mutationKey(result) {
+  return `${result.library}\u0000${result.sizeMode}\u0000${result.operation}\u0000${result.location}`;
+}

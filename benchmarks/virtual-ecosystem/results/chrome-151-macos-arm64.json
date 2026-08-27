@@ -72860,8 +72860,8 @@
       "sizeMode": "automatic",
       "operation": "resize",
       "location": "middle",
-      "medianMs": 5,
-      "p95Ms": 21.8,
+      "medianMs": 2.1,
+      "p95Ms": 3.1,
       "recoveryMedianMs": null,
       "recoveryP95Ms": null,
       "settledSamples": 50,
@@ -72885,295 +72885,295 @@
         {
           "sample": 2,
           "outcome": "clean",
-          "elapsedMs": 5.7,
+          "elapsedMs": 4.2,
           "failureCodes": []
         },
         {
           "sample": 3,
           "outcome": "clean",
-          "elapsedMs": 6,
+          "elapsedMs": 3.1,
           "failureCodes": []
         },
         {
           "sample": 4,
           "outcome": "clean",
-          "elapsedMs": 4.9,
+          "elapsedMs": 2.7,
           "failureCodes": []
         },
         {
           "sample": 5,
           "outcome": "clean",
-          "elapsedMs": 5.1,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 6,
           "outcome": "clean",
-          "elapsedMs": 5,
+          "elapsedMs": 2.3,
           "failureCodes": []
         },
         {
           "sample": 7,
           "outcome": "clean",
-          "elapsedMs": 4.8,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 8,
           "outcome": "clean",
-          "elapsedMs": 5,
+          "elapsedMs": 2.8,
           "failureCodes": []
         },
         {
           "sample": 9,
           "outcome": "clean",
-          "elapsedMs": 4.7,
+          "elapsedMs": 2.2,
           "failureCodes": []
         },
         {
           "sample": 10,
           "outcome": "clean",
-          "elapsedMs": 5.4,
+          "elapsedMs": 2.2,
           "failureCodes": []
         },
         {
           "sample": 11,
           "outcome": "clean",
-          "elapsedMs": 5.4,
+          "elapsedMs": 2.6,
           "failureCodes": []
         },
         {
           "sample": 12,
           "outcome": "clean",
-          "elapsedMs": 4.8,
+          "elapsedMs": 2.2,
           "failureCodes": []
         },
         {
           "sample": 13,
           "outcome": "clean",
-          "elapsedMs": 5,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 14,
           "outcome": "clean",
-          "elapsedMs": 4.7,
+          "elapsedMs": 2.9,
           "failureCodes": []
         },
         {
           "sample": 15,
           "outcome": "clean",
-          "elapsedMs": 5.3,
+          "elapsedMs": 2.4,
           "failureCodes": []
         },
         {
           "sample": 16,
           "outcome": "clean",
-          "elapsedMs": 4.6,
+          "elapsedMs": 2.4,
           "failureCodes": []
         },
         {
           "sample": 17,
           "outcome": "clean",
-          "elapsedMs": 5,
+          "elapsedMs": 1.7,
           "failureCodes": []
         },
         {
           "sample": 18,
           "outcome": "clean",
-          "elapsedMs": 21.8,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 19,
           "outcome": "clean",
-          "elapsedMs": 4.6,
+          "elapsedMs": 1.8,
           "failureCodes": []
         },
         {
           "sample": 20,
           "outcome": "clean",
-          "elapsedMs": 4.9,
+          "elapsedMs": 1.8,
           "failureCodes": []
         },
         {
           "sample": 21,
           "outcome": "clean",
-          "elapsedMs": 21.9,
+          "elapsedMs": 2.4,
           "failureCodes": []
         },
         {
           "sample": 22,
           "outcome": "clean",
-          "elapsedMs": 6.7,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 23,
           "outcome": "clean",
-          "elapsedMs": 5.3,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 24,
           "outcome": "clean",
-          "elapsedMs": 5.6,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 25,
           "outcome": "clean",
-          "elapsedMs": 4.9,
+          "elapsedMs": 2.3,
           "failureCodes": []
         },
         {
           "sample": 26,
           "outcome": "clean",
-          "elapsedMs": 4.7,
+          "elapsedMs": 2.5,
           "failureCodes": []
         },
         {
           "sample": 27,
           "outcome": "clean",
-          "elapsedMs": 4.7,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 28,
           "outcome": "clean",
-          "elapsedMs": 4.5,
+          "elapsedMs": 1.6,
           "failureCodes": []
         },
         {
           "sample": 29,
           "outcome": "clean",
-          "elapsedMs": 4.6,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 30,
           "outcome": "clean",
-          "elapsedMs": 4.5,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 31,
           "outcome": "clean",
-          "elapsedMs": 10.9,
+          "elapsedMs": 2.5,
           "failureCodes": []
         },
         {
           "sample": 32,
           "outcome": "clean",
-          "elapsedMs": 7.4,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 33,
           "outcome": "clean",
-          "elapsedMs": 6.4,
+          "elapsedMs": 1.8,
           "failureCodes": []
         },
         {
           "sample": 34,
           "outcome": "clean",
-          "elapsedMs": 6.7,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 35,
           "outcome": "clean",
-          "elapsedMs": 5.1,
+          "elapsedMs": 2.3,
           "failureCodes": []
         },
         {
           "sample": 36,
           "outcome": "clean",
-          "elapsedMs": 6.6,
+          "elapsedMs": 2.2,
           "failureCodes": []
         },
         {
           "sample": 37,
           "outcome": "clean",
-          "elapsedMs": 6.4,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 38,
           "outcome": "clean",
-          "elapsedMs": 6.1,
+          "elapsedMs": 2.7,
           "failureCodes": []
         },
         {
           "sample": 39,
           "outcome": "clean",
-          "elapsedMs": 4.9,
+          "elapsedMs": 2.5,
           "failureCodes": []
         },
         {
           "sample": 40,
           "outcome": "clean",
-          "elapsedMs": 5.3,
+          "elapsedMs": 1.9,
           "failureCodes": []
         },
         {
           "sample": 41,
           "outcome": "clean",
-          "elapsedMs": 4.8,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 42,
           "outcome": "clean",
-          "elapsedMs": 4.4,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 43,
           "outcome": "clean",
-          "elapsedMs": 4.5,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 44,
           "outcome": "clean",
-          "elapsedMs": 4.5,
+          "elapsedMs": 1.7,
           "failureCodes": []
         },
         {
           "sample": 45,
           "outcome": "clean",
-          "elapsedMs": 5.4,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 46,
           "outcome": "clean",
-          "elapsedMs": 4.7,
+          "elapsedMs": 2.1,
           "failureCodes": []
         },
         {
           "sample": 47,
           "outcome": "clean",
-          "elapsedMs": 446.4,
+          "elapsedMs": 1.8,
           "failureCodes": []
         },
         {
           "sample": 48,
           "outcome": "clean",
-          "elapsedMs": 4.4,
+          "elapsedMs": 2.2,
           "failureCodes": []
         },
         {
           "sample": 49,
           "outcome": "clean",
-          "elapsedMs": 4.4,
+          "elapsedMs": 2,
           "failureCodes": []
         },
         {
           "sample": 50,
           "outcome": "clean",
-          "elapsedMs": 4.2,
+          "elapsedMs": 1.9,
           "failureCodes": []
         }
       ],
@@ -94440,7 +94440,7 @@
       "failures": []
     }
   ],
-  "observedAt": "2026-08-27",
+  "observedAt": "2026-08-28",
   "baselineSamples": {
     "fixed:Sectile Virtual": [
       {

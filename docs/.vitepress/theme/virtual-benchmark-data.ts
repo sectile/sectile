@@ -32,6 +32,7 @@ export interface MutationBenchmarkResult {
   readonly p95Ms: number | null;
   readonly recoveryMedianMs: number | null;
   readonly recoveryP95Ms: number | null;
+  readonly slowTailMs: readonly number[];
   readonly settledSamples: number;
   readonly correctSamples: number;
   readonly recoveredSamples: number;
@@ -478,6 +479,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.7,
+      9.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -502,6 +507,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.5,
+      8.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -526,6 +535,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.4,
+      8.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -550,6 +563,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.6,
+      10
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -574,6 +591,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      6.1,
+      10.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -598,6 +619,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.4,
+      9.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -622,6 +647,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.6,
+      10.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -646,6 +675,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      6.1,
+      6.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -670,6 +703,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 6.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      7.7,
+      14.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -694,6 +731,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      6.2,
+      9.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -718,6 +759,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      8.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -742,6 +787,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      9.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -766,6 +815,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -793,6 +843,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -820,6 +871,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 3.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.6,
+      7.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -844,6 +899,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -871,6 +927,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -898,6 +955,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      3.1,
+      3.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -922,6 +983,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 3.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      3.9,
+      9.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -946,6 +1011,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -973,6 +1039,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.4,
+      7.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -997,6 +1067,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1021,6 +1094,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 6.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      7.3,
+      8.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1045,6 +1122,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8,
+      8.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1069,6 +1150,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1096,6 +1178,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1123,6 +1206,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 16.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      16.5,
+      17.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1147,6 +1234,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1174,6 +1262,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1201,6 +1290,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 15.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      16,
+      16.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1225,6 +1318,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4,
+      4.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1249,6 +1346,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1276,6 +1374,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 15.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      16.4,
+      25.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1300,6 +1402,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1327,6 +1430,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1354,6 +1458,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 43,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      43.6,
+      50.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1378,6 +1486,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1405,6 +1514,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1432,6 +1542,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.5,
+      6.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1456,6 +1570,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1483,6 +1598,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1510,6 +1626,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.6,
+      8.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1534,6 +1654,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 2.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      3.3,
+      3.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1558,6 +1682,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1585,6 +1710,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.3,
+      6.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1609,6 +1738,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.8,
+      7.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1633,6 +1766,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 5.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      5.5,
+      11
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1657,6 +1794,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.9,
+      4.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1681,6 +1822,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1708,6 +1850,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1735,6 +1878,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.9,
+      11.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1759,6 +1906,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1786,6 +1934,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1813,6 +1962,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.3,
+      1.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1837,6 +1990,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 3.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.2,
+      5.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1861,6 +2018,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -1888,6 +2046,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.4,
+      8.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1912,6 +2074,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.9,
+      2.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1936,6 +2102,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      3.8,
+      4.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1960,6 +2130,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      2.3,
+      3.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -1984,6 +2158,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      2.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2008,6 +2185,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2035,6 +2213,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 2.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      2.2,
+      2.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2059,6 +2241,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2086,6 +2269,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2113,6 +2297,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2137,6 +2324,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.2,
+      4.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2161,6 +2352,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2188,6 +2380,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.7,
     "recoveryMedianMs": 3,
     "recoveryP95Ms": 8.7,
+    "slowTailMs": [
+      9,
+      9
+    ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
@@ -2214,6 +2410,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.6,
+      1.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2238,6 +2438,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.5,
+      1.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2262,6 +2466,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2286,6 +2493,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1387.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1750,
+      1828.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2310,6 +2521,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1112.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      2539.5,
+      2580.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2334,6 +2549,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 863.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      905.1,
+      2690.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2358,6 +2577,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1350,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1359.2,
+      1698.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2382,6 +2605,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 714.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1009.8,
+      1165.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2406,6 +2633,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 685.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      695.7,
+      707.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2430,6 +2661,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 3419.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4255.6,
+      4704.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2454,6 +2689,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2481,6 +2717,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 731.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      736.5,
+      798.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2505,6 +2745,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1499.4,
     "recoveryMedianMs": 1196.8,
     "recoveryP95Ms": 1499.4,
+    "slowTailMs": [
+      1534.9,
+      1675.3
+    ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
@@ -2532,6 +2776,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1825.2,
     "recoveryMedianMs": 1215.2,
     "recoveryP95Ms": 1825.2,
+    "slowTailMs": [
+      2710.6,
+      2876.3
+    ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
@@ -2559,6 +2807,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1453.1,
     "recoveryMedianMs": 1266.7,
     "recoveryP95Ms": 1453.1,
+    "slowTailMs": [
+      1549.6,
+      1765
+    ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
@@ -2585,6 +2837,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 9.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.1,
+      10.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2609,6 +2865,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2633,6 +2892,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 9.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.9,
+      18.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2657,6 +2920,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.2,
+      12.1
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2681,6 +2948,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9,
+      9.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2705,6 +2976,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 9.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      12.1,
+      12.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2729,6 +3004,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 9.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.3,
+      18.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2753,6 +3032,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.5,
+      10
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2777,6 +3060,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2801,6 +3087,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.6,
+      8.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2821,10 +3111,14 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 5,
-    "p95Ms": 21.8,
+    "medianMs": 2.1,
+    "p95Ms": 3.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.2,
+      5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2849,6 +3143,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 7.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.8,
+      10.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2873,6 +3171,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2900,6 +3199,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2927,6 +3227,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      3.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -2951,6 +3254,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -2978,6 +3282,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3005,6 +3310,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.6,
+      1.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3029,6 +3338,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.2,
+      4.9
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3053,6 +3366,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3080,6 +3394,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3104,6 +3419,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.1,
+      1.2
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3128,6 +3447,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.9,
+      2.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3152,6 +3475,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.5,
+      1.6
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3176,6 +3503,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.9,
+      2.5
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3200,6 +3531,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3227,6 +3559,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.4
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3251,6 +3586,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3278,6 +3614,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3305,6 +3642,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.5,
+      1.8
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3329,6 +3670,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      4.3,
+      4.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3353,6 +3698,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": null,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [],
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
@@ -3380,6 +3726,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 8.3,
     "recoveryMedianMs": 2.7,
     "recoveryP95Ms": 8.3,
+    "slowTailMs": [
+      8.4,
+      20.7
+    ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
@@ -3406,6 +3756,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3430,6 +3783,10 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.7,
+      1.7
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
@@ -3454,6 +3811,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "p95Ms": 1.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
+    "slowTailMs": [
+      1.3
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,

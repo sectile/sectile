@@ -36,4 +36,16 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem dev
 
 Open the printed URL in Chrome and choose **Run benchmark**. Commit raw results only with the browser version, operating system, viewport, package versions, and conditions emitted by the page.
 
+To rerun one mutation without repeating the full suite, add focused query parameters. This example runs only Sectile's automatic-height resize at the middle of the collection:
+
+```text
+?sectile&mutations-only&mutation-mode=automatic&mutation-operation=resize&mutation-location=middle
+```
+
+Merge that focused report into the matching mutation entry while preserving every other committed result:
+
+```sh
+node benchmarks/virtual-ecosystem/scripts/commit-results.mjs --merge-mutations /tmp/sectile-virtual-benchmark.json
+```
+
 The observation committed in `results/chrome-151-macos-arm64.json` is descriptive, not a release threshold. Compare revisions on the same machine before treating a difference as a regression.

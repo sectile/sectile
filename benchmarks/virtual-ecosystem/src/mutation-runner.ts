@@ -52,6 +52,12 @@ export interface MutationSampleRecord {
   readonly failureCodes: readonly FailureCode[];
 }
 
+export interface MutationBenchmarkFilter {
+  readonly sizeMode?: DynamicSizeMode;
+  readonly operation?: MutationOperation;
+  readonly location?: MutationLocation;
+}
+
 type FailureCode =
   | 'exception'
   | 'timeout'
@@ -115,12 +121,19 @@ export async function runMutationBenchmarks(
   host: HTMLElement,
   onProgress: (message: string) => void,
   libraries?: readonly string[],
+  filter: MutationBenchmarkFilter = {},
 ): Promise<readonly MutationBenchmarkResult[]> {
-  const selectedAdapters = libraries === undefined
+  const libraryAdapters = libraries === undefined
     ? [...mutableAdapters, ...automaticMutableAdapters]
     : [...mutableAdapters, ...automaticMutableAdapters].filter((adapter) => libraries.includes(adapter.name));
-  const scenarios = mutationOperations.flatMap((operation) =>
-    mutationLocations.map((location) => createMutationScenario(operation, location)));
+  const selectedAdapters = libraryAdapters.filter((adapter) => (
+    filter.sizeMode === undefined || adapter.sizeMode === filter.sizeMode
+  ));
+  const scenarios = mutationOperations
+    .filter((operation) => filter.operation === undefined || operation === filter.operation)
+    .flatMap((operation) => mutationLocations
+      .filter((location) => filter.location === undefined || location === filter.location)
+      .map((location) => createMutationScenario(operation, location)));
   const raw = new Map<string, RawScenarioResult>();
   const total = selectedAdapters.length * scenarios.length * MUTATION_ROUNDS * SAMPLES_PER_ROUND;
   let completed = 0;
