@@ -744,45 +744,6 @@
   line-height: 1.65;
 }
 
-.component-catalog__search {
-  width: 100%;
-  margin: 10px 0 28px;
-  padding: 12px 14px;
-  border: 1px solid var(--vp-c-border);
-  border-radius: 10px;
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-1);
-  font: inherit;
-}
-
-.component-catalog__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.component-catalog__link {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
-  color: var(--vp-c-text-1) !important;
-  text-decoration: none !important;
-  transition: border-color 140ms ease, background 140ms ease;
-}
-
-.component-catalog__link:hover {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
-
-.component-catalog__family {
-  color: var(--vp-c-text-3);
-  font-size: 12px;
-}
-
 .diagram-connector {
   position: relative;
   flex: none;
@@ -1987,10 +1948,6 @@
 
   .VPHomeHero .actions {
     justify-content: flex-start;
-  }
-
-  .component-catalog__grid {
-    grid-template-columns: 1fr;
   }
 
   .composition-map,
