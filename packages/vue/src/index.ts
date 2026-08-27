@@ -753,6 +753,10 @@ export {
 } from './tree-grid.js';
 
 export type {
+  CarouselIndicatorLabelResolver,
+  CarouselSlideLabelResolver,
+} from './carousel.js';
+export type {
   CascadeSelectTextValueResolver,
 } from './cascade-select.js';
 export type {
@@ -768,6 +772,10 @@ export type {
   MultiThumbSliderThumbLabelResolver,
   MultiThumbSliderValueFormatter,
 } from './multi-thumb-slider.js';
+export type {
+  PaginationControlLabelResolver,
+  PaginationPageLabelResolver,
+} from './pagination.js';
 export type {
   PrimitiveElementExpose,
   PrimitiveElementRefHandler,

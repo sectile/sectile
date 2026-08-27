@@ -21,9 +21,13 @@ export interface PaginationRootProps {
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly label?: string;
+  readonly getPageLabel?: (page: number) => string;
+  readonly getControlLabel?: (control: PaginationControl) => string;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+export type PaginationPageLabelResolver = NonNullable<PaginationRootProps['getPageLabel']>;
+export type PaginationControlLabelResolver = NonNullable<PaginationRootProps['getControlLabel']>;
 export interface PaginationRootSlotProps {
   readonly page: number;
   readonly itemsPerPage: number;
@@ -51,6 +55,8 @@ export const PaginationRoot = defineComponent({
     siblingCount: { type: Number, default: 1 }, showEdges: { type: Boolean, default: true },
     showControls: { type: Boolean, default: true }, disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false }, label: { type: String, default: 'Pagination' },
+    getPageLabel: { type: Function as PropType<PaginationPageLabelResolver>, default: undefined },
+    getControlLabel: { type: Function as PropType<PaginationControlLabelResolver>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'nav' }, asChild: { type: Boolean, default: false },
   },
   emits: {
@@ -105,6 +111,8 @@ export const PaginationRoot = defineComponent({
           : { defaultPage: page, defaultItemsPerPage: itemsPerPage }),
         siblingCount: props.siblingCount, showEdges: props.showEdges, showControls: props.showControls,
         disabled: props.disabled, readOnly: props.readonly, label: props.label,
+        ...(props.getPageLabel === undefined ? {} : { getPageLabel: props.getPageLabel }),
+        ...(props.getControlLabel === undefined ? {} : { getControlLabel: props.getControlLabel }),
         onPageChange: (page) => { localPage.value = page; emit('update:modelValue', page); },
         onItemsPerPageChange: (value) => { localItemsPerPage.value = value; emit('update:itemsPerPage', value); },
         onUpdate: () => refreshItems(),
@@ -127,7 +135,8 @@ export const PaginationRoot = defineComponent({
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
     watch([() => props.total, () => props.siblingCount, () => props.showEdges, () => props.showControls,
-      () => props.disabled, () => props.readonly], connect);
+      () => props.disabled, () => props.readonly, () => props.label,
+      () => props.getPageLabel, () => props.getControlLabel], connect);
     watch([() => props.modelValue, () => props.itemsPerPage], () => {
       if (!controlled || connection.value === undefined) return;
       const result = connection.value.syncControlledValues({

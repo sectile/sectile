@@ -24,9 +24,13 @@ export interface CarouselRootProps {
   readonly autoplay?: boolean | CarouselAutoplayOptions;
   readonly policies?: CarouselPolicies;
   readonly label?: string;
+  readonly getSlideLabel?: (id: string, index: number, count: number) => string;
+  readonly getIndicatorLabel?: (id: string, index: number, count: number) => string;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+export type CarouselSlideLabelResolver = NonNullable<CarouselRootProps['getSlideLabel']>;
+export type CarouselIndicatorLabelResolver = NonNullable<CarouselRootProps['getIndicatorLabel']>;
 export interface CarouselRootSlotProps {
   readonly value: string | null;
   readonly index: number | null;
@@ -55,6 +59,8 @@ export const CarouselRoot = defineComponent({
     orientation: { type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal' },
     autoplay: { type: [Boolean, Object] as PropType<boolean | CarouselAutoplayOptions>, default: false },
     policies: { type: Object as PropType<CarouselPolicies>, default: undefined }, label: { type: String, default: undefined },
+    getSlideLabel: { type: Function as PropType<CarouselSlideLabelResolver>, default: undefined },
+    getIndicatorLabel: { type: Function as PropType<CarouselIndicatorLabelResolver>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'section' }, asChild: { type: Boolean, default: false },
   },
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:paused': (_value: boolean): boolean => true, announce: (_value: string): boolean => true },
@@ -103,6 +109,8 @@ export const CarouselRoot = defineComponent({
         ...(controlled.paused ? { paused: props.paused as boolean } : { defaultPaused: localPaused.value }),
         disabled: props.disabled, orientation: props.orientation, direction: direction.value, autoplay: props.autoplay,
         ...(props.policies === undefined ? {} : { policies: props.policies }), ...(props.label === undefined ? {} : { label: props.label }),
+        ...(props.getSlideLabel === undefined ? {} : { getSlideLabel: props.getSlideLabel }),
+        ...(props.getIndicatorLabel === undefined ? {} : { getIndicatorLabel: props.getIndicatorLabel }),
         ...(elements.get('previous') === undefined ? {} : { previousButton: elements.get('previous') as HTMLElement }),
         ...(elements.get('next') === undefined ? {} : { nextButton: elements.get('next') as HTMLElement }),
         ...(elements.get('pause') === undefined ? {} : { pauseButton: elements.get('pause') as HTMLElement }),
@@ -120,7 +128,9 @@ export const CarouselRoot = defineComponent({
       registerIndicator: (element, id) => connection.value?.setIndicatorAttributes(element, id),
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.slides, () => props.disabled, () => props.orientation, () => props.autoplay, () => props.policies, () => props.label, direction], connect);
+    watch([() => props.slides, () => props.disabled, () => props.orientation, () => props.autoplay,
+      () => props.policies, () => props.label, () => props.getSlideLabel,
+      () => props.getIndicatorLabel, direction], connect);
     watch([() => props.modelValue, () => props.paused], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue } : {}), ...(controlled.paused ? { paused: props.paused } : {}) });
