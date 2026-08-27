@@ -41,9 +41,6 @@ for (const name of packageNames) {
     publicExports.push(`@sectile/${name}${subpath === '.' ? '' : subpath.slice(1)}`);
   }
 }
-const terminal = JSON.parse(await readFile(resolve(root, 'packages/terminal/package.json'), 'utf8'));
-for (const subpath of ['./data-table', './data-grid', './data-tree-grid']) assert.equal(terminal.exports[subpath], undefined);
-
 const tabular = JSON.parse(await readFile(resolve(root, 'packages/tabular/package.json'), 'utf8'));
 assert.equal(tabular.dependencies['@sectile/core'], 'workspace:*');
 assert.equal(tabular.peerDependencies['@sectile/virtual'], 'workspace:*');

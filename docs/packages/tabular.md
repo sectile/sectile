@@ -91,7 +91,6 @@ placeholders, retry UI, suspense, caching, or transport.
 - `@sectile/vue/data-table`, `/data-grid`, and `/data-tree-grid` expose
   controller composables, source composables, Providers, typed column helpers,
   compound parts, and public injected contexts. See [Vue composition](./tabular/vue).
-- Terminal integration is intentionally absent.
 - Virtualization is opt-in. See [optional virtualization](./tabular/virtual).
 
 ## Limits and failures

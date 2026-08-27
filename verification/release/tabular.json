@@ -82,11 +82,11 @@
   "evidence": [
     {
       "path": "docs/ko/packages/tabular.md",
-      "sha256": "e33ee5db64388fbcbe7b6a0985a4a5bd14d92416cf96c7e241edb767537c62a7"
+      "sha256": "51580f82f6aaebf3515bf0429d92a53088d3414ad9123cfc67279cea6c8e2542"
     },
     {
       "path": "docs/packages/tabular.md",
-      "sha256": "86d0bcea8d158c5524a721a369c19567a7c07d3a287a96603b413edeb17a970e"
+      "sha256": "5c1e1dbbbaab438972c302b996c8654752209717b625dbee515b05711bcb96c3"
     },
     {
       "path": "packages/core/testing/public-api.json",

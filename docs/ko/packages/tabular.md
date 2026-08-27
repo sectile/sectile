@@ -54,5 +54,5 @@ context-only ancestor를 결합합니다. collapse나 제거 뒤에도 cursor와
 
 loading, empty, error, retry, cache, suspense는 응용 프로그램 책임입니다.
 DOM은 `@sectile/dom/data-*`, Vue는 `@sectile/vue/data-*`에서 제공합니다.
-terminal 통합은 제공하지 않습니다. Vue 전체 구성은 [Vue 구성](./tabular/vue),
-가상화는 [선택적 가상화](./tabular/virtual)를 참고하세요.
+Vue 전체 구성은 [Vue 구성](./tabular/vue), 가상화는
+[선택적 가상화](./tabular/virtual)를 참고하세요.
