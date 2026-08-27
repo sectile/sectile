@@ -396,6 +396,17 @@
   .cascade-select-item[data-selected] { color: var(--demo-text); background: transparent; }
   .color-picker-demo { display: grid; width: min(100%, 44rem); margin: 0 auto; gap: 0.9rem; }
   .color-picker-demo > label { color: var(--demo-text-2); font-size: 0.8rem; font-weight: 700; }
+  .color-picker-demo--preview { width: min(100%, 52rem); grid-template-columns: minmax(0, 1.3fr) minmax(15rem, 0.7fr); grid-template-areas: "label label" "visual formats" "visual editor" "visual value"; align-items: start; gap: 0.55rem 0.8rem; }
+  .color-picker-demo--preview .color-picker-label { grid-area: label; }
+  .color-picker-demo--preview .color-picker-visual { grid-area: visual; }
+  .color-picker-demo--preview .color-picker-formats { grid-area: formats; }
+  .color-picker-demo--preview .color-picker-editor { grid-area: editor; }
+  .color-picker-demo--preview .color-picker-value { grid-area: value; }
+  .color-picker-demo--preview .color-picker-area { min-height: 8.5rem; }
+  .color-picker-demo--preview .color-picker-formats button { min-height: 2rem; flex-basis: 3.5rem; padding-block: 0.3rem; font-size: 0.68rem; }
+  .color-picker-demo--preview .color-picker-editor { gap: 0.5rem; padding: 0.55rem; }
+  .color-picker-demo--preview .color-picker-control { grid-template-columns: 2.5rem minmax(0, 1fr) 3.5rem; gap: 0.5rem; }
+  .color-picker-demo--preview :is(.color-picker-swatch, .color-picker-text, .color-picker-native) { min-height: 2.5rem; }
   .color-picker-visual { display: grid; gap: 0.85rem; }
   .color-picker-area { position: relative; min-height: 17rem; overflow: hidden; border: 1px solid #43506a; border-radius: 0.9rem; cursor: crosshair; touch-action: none; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), var(--sectile-color-area-hue); }
   .color-picker-area:focus-visible { outline: 3px solid #9aa7ff; outline-offset: 3px; }

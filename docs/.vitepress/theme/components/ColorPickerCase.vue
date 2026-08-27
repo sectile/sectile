@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { ColorPickerAlphaSlider, ColorPickerArea, ColorPickerAreaThumb, ColorPickerControl, ColorPickerCoordinateInput, ColorPickerCoordinateSlider, ColorPickerFormatTrigger, ColorPickerHueSlider, ColorPickerLabel, ColorPickerNativeInput, ColorPickerRoot, ColorPickerSwatch, ColorPickerTextInput, ColorPickerValueText, type ColorCoordinateValue, type ColorFormat, type ColorModel } from '@sectile/vue/color-picker';
 import DemoCard from './DemoCard.vue'; import type { EventEntry } from '../types.js';
-const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly initialValue?: string; readonly alpha?: boolean; readonly controlled?: boolean; readonly readonly?: boolean }>(), { initialValue: '#5b6df6', alpha: true, controlled: false, readonly: false });
+const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly initialValue?: string; readonly alpha?: boolean; readonly controlled?: boolean; readonly readonly?: boolean; readonly preview?: boolean }>(), { initialValue: '#5b6df6', alpha: true, controlled: false, readonly: false, preview: false });
 const formats = ['hex', 'rgb', 'hsl', 'hsv', 'cmyk', 'oklch'] as const satisfies readonly ColorFormat[];
 const value = ref(props.initialValue); const draft = ref<string | null>(null); const format = ref<ColorFormat>('hex'); const revision = ref(0); const entries = ref<EventEntry[]>([]);
 const state = computed(() => ({ value: value.value, draft: draft.value, format: format.value, ownership: props.controlled ? 'controlled' : 'uncontrolled', alpha: props.alpha }));
@@ -29,9 +29,9 @@ function updateFormat(next: ColorFormat): void { format.value = next; record('fo
 </script>
 <template>
   <DemoCard :title="title" :revision="revision" :state="state" :entries="entries" interaction="enabled" :code="code">
-    <ColorPickerRoot v-slot="color" class="color-picker-demo" :default-value="initialValue" v-bind="controlled ? { modelValue: value } : {}" :allow-alpha="alpha" :readonly="readonly" label="Accent color" name="accent" @update:model-value="updateValue" @update:draft="updateDraft" @update:format="updateFormat">
+    <ColorPickerRoot v-slot="color" class="color-picker-demo" :class="{ 'color-picker-demo--preview': preview }" :default-value="initialValue" v-bind="controlled ? { modelValue: value } : {}" :allow-alpha="alpha" :readonly="readonly" label="Accent color" name="accent" @update:model-value="updateValue" @update:draft="updateDraft" @update:format="updateFormat">
       <p class="demo-copy">{{ description }}</p>
-      <ColorPickerLabel>Accent color</ColorPickerLabel>
+      <ColorPickerLabel class="color-picker-label">Accent color</ColorPickerLabel>
       <div class="color-picker-visual" :data-format="color.format">
         <template v-if="color.format === 'hex' || color.format === 'hsv'">
           <ColorPickerArea class="color-picker-area">
