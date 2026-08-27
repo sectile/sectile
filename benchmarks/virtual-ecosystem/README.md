@@ -10,13 +10,19 @@ This browser benchmark compares the complete adapter and framework path for seve
 - Virtua 0.50.5 with React 19.2.8
 - Vue Virtual Scroller 3.0.5 with Vue 3.5.22
 
-## Fixed-row baseline
+## Height conditions
 
-Every adapter receives 100,000 rows, a 720 by 480 pixel viewport, a 48 pixel row height, the same row text and CSS, and an eight-row overscan target. Each library uses its public API and recommended framework adapter.
+Every adapter renders the same 100,000 rows in a 720 by 480 pixel viewport with the same row text and CSS. The runner separates three conditions:
 
-The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. A scroll sample starts when `scrollTop` changes and ends when the expected row appears in the DOM. Initial render starts before the adapter mounts and ends after its first rows appear and one animation frame completes.
+- `fixed`: the application supplies the exact 48px row height;
+- `estimated`: the application supplies 48px as an initial estimate and the library measures the DOM;
+- `automatic`: the application supplies no height or estimate and the library discovers the size from the DOM.
 
-The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Overscan options differ between libraries, so the result also reports the actual rendered row and DOM element counts. Dynamic measurement, collection anchoring, grids, masonry, and spatial layouts are outside this common-denominator scenario.
+The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
+
+The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. A scroll sample starts when `scrollTop` changes and ends when the expected row appears in the DOM. Initial rendering reports synchronous setup, first row output, and the point at which the total scroll height and viewport geometry are correct.
+
+The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Overscan options differ between libraries, so the result also reports the actual rendered row and DOM element counts. Mutation timings cover insertion, movement, removal, and height changes at the start, middle, and end of the collection. A sample fails when row order, geometry, total height, viewport coverage, or scroll anchoring is wrong.
 
 ## Run
 

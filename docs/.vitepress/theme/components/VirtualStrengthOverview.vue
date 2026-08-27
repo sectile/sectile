@@ -2,18 +2,22 @@
 import { computed } from 'vue';
 import { withBase } from 'vitepress';
 import { useDocsLocale } from '../locale.js';
+import { baselineBenchmarkResults } from '../virtual-benchmark-data.js';
 
 const { isKorean } = useDocsLocale();
-const chartMaximum = 50;
-const results = Object.freeze([
-  { library: 'Sectile Virtual', version: '0.7.0', framework: 'Vue 3.5.22', mount: 2.6, median: 1.3, p95: 2.1, sectile: true },
-  { library: 'TanStack Virtual', version: '3.14.10', framework: 'React 19.2.8', mount: 8.2, median: 0.8, p95: 1.1 },
-  { library: 'react-window', version: '2.3.0', framework: 'React 19.2.8', mount: 10.9, median: 3.7, p95: 7.5 },
-  { library: 'React Virtuoso', version: '4.18.12', framework: 'React 19.2.8', mount: 45.1, median: 1.5, p95: 2.0 },
-  { library: 'react-virtualized', version: '9.22.6', framework: 'React 19.2.8', mount: 11.4, median: 0.7, p95: 1.4 },
-  { library: 'Virtua', version: '0.50.5', framework: 'React 19.2.8', mount: 27.6, median: 1.5, p95: 1.9 },
-  { library: 'Vue Virtual Scroller', version: '3.0.5', framework: 'Vue 3.5.22', mount: 13.0, median: 16.7, p95: 18.6 },
-]);
+const results = computed(() => baselineBenchmarkResults
+  .filter((result) => result.mode === 'fixed')
+  .map((result) => ({
+    library: result.library,
+    version: result.version,
+    framework: result.stack,
+    mount: result.mountMs,
+    median: result.scrollMedianMs,
+    p95: result.scrollP95Ms,
+    sectile: result.library === 'Sectile Virtual',
+  })));
+const chartMaximum = computed(() => Math.max(1, ...results.value.flatMap((result) => [result.mount, result.median, result.p95])));
+const axisTicks = computed(() => Array.from({ length: 5 }, (_, index) => chartMaximum.value * index / 4));
 
 const copy = computed(() => isKorean.value ? {
   aria: 'Sectile Virtual의 강점과 라이브러리 비교 벤치마크',
@@ -26,7 +30,6 @@ const copy = computed(() => isKorean.value ? {
   benchmarkTitle: '주요 가상화 라이브러리와 같은 조건에서 비교',
   benchmarkContext: '10만 개 고정 높이 행 · Chrome 151 · 720 × 480px · 라이브러리마다 스크롤 200회',
   legend: { mount: '초기 표시', median: '스크롤 중앙값', p95: '스크롤 p95' },
-  conclusion: '처음 표시한 시간은 Sectile이 2.6ms로 가장 짧았습니다. 스크롤 중앙값은 react-virtualized가 0.7ms, TanStack Virtual이 0.8ms, Sectile이 1.3ms였습니다.',
   scope: '이 그래프는 고정 높이 목록 비교입니다. 동적 높이와 삽입·이동·삭제 실험은 상세 페이지에서 성능과 화면 오류를 함께 공개합니다.',
   benchmarkLink: '측정 방법과 원본 결과 보기',
 } : {
@@ -40,13 +43,21 @@ const copy = computed(() => isKorean.value ? {
   benchmarkTitle: 'Same-condition comparison with widely used virtualizers',
   benchmarkContext: '100k fixed rows · Chrome 151 · 720 × 480px · 200 scroll samples per library',
   legend: { mount: 'Initial render', median: 'Scroll median', p95: 'Scroll p95' },
-  conclusion: 'Sectile had the shortest prepared-data initial render at 2.6ms. react-virtualized recorded a 0.7ms median scroll response, TanStack Virtual 0.8ms, and Sectile 1.3ms.',
   scope: 'This chart covers the fixed-height list. The detailed report publishes dynamic-height and collection-mutation timing together with visual correctness failures.',
   benchmarkLink: 'See the method and raw result',
 });
 
 const benchmarkHref = computed(() => withBase(isKorean.value ? '/ko/packages/virtual/benchmark' : '/packages/virtual/benchmark'));
-const width = (value: number): string => `${Math.max(1.5, (value / chartMaximum) * 100)}%`;
+const conclusion = computed(() => {
+  const sectile = results.value.find((result) => result.sectile);
+  const fastestMount = [...results.value].sort((left, right) => left.mount - right.mount)[0];
+  const fastestScroll = [...results.value].sort((left, right) => left.median - right.median)[0];
+  if (sectile === undefined || fastestMount === undefined || fastestScroll === undefined) return '';
+  return isKorean.value
+    ? `처음 표시가 가장 빨랐던 라이브러리는 ${fastestMount.library} ${fastestMount.mount.toFixed(1)}ms, 스크롤 중앙값이 가장 짧았던 라이브러리는 ${fastestScroll.library} ${fastestScroll.median.toFixed(1)}ms입니다. Sectile은 각각 ${sectile.mount.toFixed(1)}ms와 ${sectile.median.toFixed(1)}ms였습니다.`
+    : `${fastestMount.library} had the shortest initial render at ${fastestMount.mount.toFixed(1)}ms, while ${fastestScroll.library} had the shortest median scroll response at ${fastestScroll.median.toFixed(1)}ms. Sectile recorded ${sectile.mount.toFixed(1)}ms and ${sectile.median.toFixed(1)}ms respectively.`;
+});
+const width = (value: number): string => `${Math.max(1.5, (value / chartMaximum.value) * 100)}%`;
 </script>
 
 <template>
@@ -66,7 +77,7 @@ const width = (value: number): string => `${Math.max(1.5, (value / chartMaximum)
         <span class="is-p95"><i />{{ copy.legend.p95 }}</span>
       </div>
       <div class="virtual-strength-overview__axis" aria-hidden="true">
-        <div><span>0</span><span>12.5</span><span>25</span><span>37.5</span><span>50 ms</span></div>
+        <div><span v-for="(tick, index) in axisTicks" :key="index">{{ index === axisTicks.length - 1 ? `${tick.toFixed(1)} ms` : tick.toFixed(1) }}</span></div>
       </div>
       <div class="virtual-strength-overview__chart" role="group">
         <div v-for="result in results" :key="result.library" class="virtual-strength-overview__group" :class="{ 'is-sectile': result.sectile }">
@@ -81,7 +92,7 @@ const width = (value: number): string => `${Math.max(1.5, (value / chartMaximum)
           </div>
         </div>
       </div>
-      <p class="virtual-strength-overview__conclusion">{{ copy.conclusion }}</p>
+      <p class="virtual-strength-overview__conclusion">{{ conclusion }}</p>
       <p class="virtual-strength-overview__scope">{{ copy.scope }}</p>
       <a :href="benchmarkHref">{{ copy.benchmarkLink }} <span aria-hidden="true">→</span></a>
     </figure>

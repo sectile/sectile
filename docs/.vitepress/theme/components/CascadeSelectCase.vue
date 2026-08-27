@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { CascadeSelectColumn, CascadeSelectContent, CascadeSelectItem, CascadeSelectItemChevron, CascadeSelectItemIndicator, CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectValue } from '@sectile/vue/cascade-select';
 import DemoCard from './DemoCard.vue'; import type { EventEntry } from '../types.js';
+import DemoCascadeSelect from './DemoCascadeSelect.vue';
 const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly initialValue?: string | null; readonly controlled?: boolean; readonly disabledItems?: readonly string[] }>(), { initialValue: null, controlled: false, disabledItems: () => [] });
 const nodes = [{ id: 'asia', parentID: null }, { id: 'europe', parentID: null }, { id: 'america', parentID: null }, { id: 'kr', parentID: 'asia' }, { id: 'jp', parentID: 'asia' }, { id: 'fr', parentID: 'europe' }, { id: 'us', parentID: 'america' }, { id: 'seoul', parentID: 'kr' }, { id: 'busan', parentID: 'kr' }, { id: 'tokyo', parentID: 'jp' }, { id: 'paris', parentID: 'fr' }, { id: 'nyc', parentID: 'us' }];
 const labels: Readonly<Record<string, string>> = { asia: 'Asia', europe: 'Europe', america: 'Americas', kr: 'South Korea', jp: 'Japan', fr: 'France', us: 'United States', seoul: 'Seoul', busan: 'Busan', tokyo: 'Tokyo', paris: 'Paris', nyc: 'New York' };
@@ -26,16 +26,9 @@ function update(next: string | null): void { value.value = next; revision.value 
 </script>
 <template>
   <DemoCard :title="title" :revision="revision" :state="state" :entries="entries" interaction="enabled" :code="code">
-    <CascadeSelectRoot v-bind="bindings" class="cascade-select-demo" label="Destination" @update:model-value="update" @update:open="open = $event" v-slot="{ columns }">
+    <div class="cascade-select-demo">
       <p class="demo-copy">{{ description }}</p>
-      <CascadeSelectTrigger class="secondary cascade-select-trigger"><CascadeSelectValue placeholder="Choose a destination" /></CascadeSelectTrigger>
-      <CascadeSelectContent class="cascade-select-content">
-        <CascadeSelectColumn v-for="(_, depth) in columns" :key="depth" :depth="depth" :label="`Level ${depth + 1}`" class="cascade-select-column" v-slot="{ items }">
-          <CascadeSelectItem v-for="item in items" :key="item" :value="item" class="cascade-select-item" v-slot="{ branch, selected }">
-            <span>{{ labels[item] ?? item }}</span><CascadeSelectItemIndicator v-if="selected">✓</CascadeSelectItemIndicator><CascadeSelectItemChevron v-if="branch">›</CascadeSelectItemChevron>
-          </CascadeSelectItem>
-        </CascadeSelectColumn>
-      </CascadeSelectContent>
-    </CascadeSelectRoot>
+      <DemoCascadeSelect v-bind="bindings" label="Destination" :column-labels="['Region', 'Country', 'City']" placeholder="Choose a destination" @update:model-value="update" @update:open="open = $event" />
+    </div>
   </DemoCard>
 </template>

@@ -32,7 +32,7 @@ Sectile differs in **how much layout state one model owns**. Dynamic list measur
 
 <VirtualLibraryComparison />
 
-In the fixed-row browser comparison, Sectile had the shortest prepared-data initial render while TanStack Virtual and react-virtualized had shorter median scroll response. Versions, conditions, raw observations, and limitations are published in the [virtualization benchmark](/packages/virtual/benchmark).
+The browser suite separates fixed and dynamic height conditions, then compares initial rendering, scrolling, and the time required to settle after inserts, moves, removals, and height changes. Current results and execution details are published in the [virtualization benchmark](/packages/virtual/benchmark).
 
 ## Customer request list
 

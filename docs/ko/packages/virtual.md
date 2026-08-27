@@ -32,7 +32,7 @@ Sectile의 차이는 기능 하나가 아니라 **배치 상태가 담당하는 
 
 <VirtualLibraryComparison />
 
-고정 높이 목록의 브라우저 속도는 별도로 비교했습니다. 준비된 데이터를 처음 표시하는 시간은 Sectile이 가장 짧았고, 스크롤 중앙값은 TanStack Virtual과 react-virtualized가 더 짧았습니다. 버전, 실행 조건, 원본 수치와 비교 범위는 [가상화 벤치마크](/ko/packages/virtual/benchmark)에 공개합니다.
+고정 높이와 동적 높이를 나눠 처음 표시와 스크롤을 비교했습니다. 삽입·이동·삭제·높이 변경 뒤 화면이 안정되는 시간과 오류 여부도 같은 조건에서 확인했습니다. 최신 수치와 실행 조건은 [가상화 벤치마크](/ko/packages/virtual/benchmark)에 공개합니다.
 
 ## 크기가 계속 달라지는 목록
 

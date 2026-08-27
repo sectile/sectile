@@ -1,7 +1,4 @@
-import { createSequence } from '@sectile/core/sequence';
-import { createAxisMeasurementResolver, VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '@sectile/vue/virtual';
-import { createExtentIndex } from '@sectile/virtual/extent-index';
-import { createLinearLayout, linearLayoutStrategy, type LinearPatch } from '@sectile/virtual/linear-layout';
+import { VirtualList } from '@sectile/vue/virtual';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { createElement, useLayoutEffect, useRef, useSyncExternalStore, type ComponentType, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -32,9 +29,12 @@ export interface MutableBenchmarkAdapter {
   readonly name: string;
   readonly version: string;
   readonly stack: string;
+  readonly sizeMode: DynamicSizeMode;
   readonly heightHandling: HeightHandling;
   mount(host: HTMLElement, items: readonly BenchmarkItem[]): MutableMountedAdapter;
 }
+
+export type DynamicSizeMode = 'estimated' | 'automatic';
 
 export interface HeightHandling {
   readonly sizeInput: 'dom-measurement' | 'application-size';
@@ -43,19 +43,26 @@ export interface HeightHandling {
   readonly applicationCalculatesHeight: boolean;
 }
 
-const automaticHeightHandling: HeightHandling = Object.freeze({
+const estimatedHeightHandling: HeightHandling = Object.freeze({
   sizeInput: 'dom-measurement',
   initialEstimate: true,
   resizeNotification: 'automatic',
   applicationCalculatesHeight: false,
 });
 
+const automaticHeightHandling: HeightHandling = Object.freeze({
+  sizeInput: 'dom-measurement',
+  initialEstimate: false,
+  resizeNotification: 'automatic',
+  applicationCalculatesHeight: false,
+});
+
+const benchmarkItemKey = (item: BenchmarkItem): string => item.id;
+
 const ReactVirtualizedListComponent = ReactVirtualizedList as unknown as ComponentType<Record<string, unknown>>;
 const CellMeasurerComponent = CellMeasurer as unknown as ComponentType<Record<string, unknown>>;
 const VListComponent = VList as unknown as ComponentType<Record<string, unknown>>;
-const SectileRoot = VirtualizerRoot as unknown as Parameters<typeof h>[0];
-const SectileContent = VirtualizerContent as unknown as Parameters<typeof h>[0];
-const SectileItem = VirtualizerItem as unknown as Parameters<typeof h>[0];
+const SectileList = VirtualList as unknown as Parameters<typeof h>[0];
 const VueDynamicScroller = DynamicScroller as unknown as Parameters<typeof h>[0];
 const VueDynamicScrollerItem = DynamicScrollerItem as unknown as Parameters<typeof h>[0];
 
@@ -171,6 +178,18 @@ function ReactVirtuosoMutable({ store }: { readonly store: MutableStore }) {
   });
 }
 
+function ReactVirtuosoAutomatic({ store }: { readonly store: MutableStore }) {
+  const snapshot = useMutableSnapshot(store);
+  return createElement(Virtuoso<BenchmarkItem>, {
+    className: 'bench-scroller',
+    style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    data: snapshot.items,
+    increaseViewportBy: OVERSCAN_PX,
+    computeItemKey: (_index, item) => item.id,
+    itemContent: (index, item) => reactRow(item, index),
+  });
+}
+
 function ReactVirtualizedMutable({ store }: { readonly store: MutableStore }) {
   const snapshot = useMutableSnapshot(store);
   const listRef = useRef<ReactVirtualizedList>(null);
@@ -212,6 +231,7 @@ function ReactVirtualizedMutable({ store }: { readonly store: MutableStore }) {
   });
 }
 
+
 function VirtuaMutable({ store }: { readonly store: MutableStore }) {
   const snapshot = useMutableSnapshot(store);
   const shift = snapshot.location === 'start' && (snapshot.operation === 'insert' || snapshot.operation === 'remove');
@@ -220,6 +240,19 @@ function VirtuaMutable({ store }: { readonly store: MutableStore }) {
     style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     data: snapshot.items,
     itemSize: ROW_HEIGHT,
+    bufferSize: OVERSCAN_PX,
+    shift,
+    children: (item: BenchmarkItem, index: number) => reactRow(item, index),
+  });
+}
+
+function VirtuaAutomatic({ store }: { readonly store: MutableStore }) {
+  const snapshot = useMutableSnapshot(store);
+  const shift = snapshot.location === 'start' && (snapshot.operation === 'insert' || snapshot.operation === 'remove');
+  return createElement(VListComponent, {
+    className: 'bench-scroller',
+    style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    data: snapshot.items,
     bufferSize: OVERSCAN_PX,
     shift,
     children: (item: BenchmarkItem, index: number) => reactRow(item, index),
@@ -249,56 +282,44 @@ function reactMutableAdapter(
   name: string,
   version: string,
   component: (props: { readonly store: MutableStore }) => ReactElement,
-  heightHandling: HeightHandling = automaticHeightHandling,
+  heightHandling: HeightHandling = estimatedHeightHandling,
+  sizeMode: DynamicSizeMode = 'estimated',
 ): MutableBenchmarkAdapter {
   return Object.freeze({
     name,
     version,
     stack: 'React 19.2.8',
+    sizeMode,
     heightHandling,
     mount: (host: HTMLElement, initialItems: readonly BenchmarkItem[]) => mountMutableReact(host, initialItems, component),
   });
 }
 
-const sectileMutableAdapter: MutableBenchmarkAdapter = Object.freeze({
-  name: 'Sectile Virtual', version: '0.7.0', stack: 'Vue 3.5.22', heightHandling: automaticHeightHandling,
+function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmarkAdapter {
+  return Object.freeze({
+  name: 'Sectile Virtual', version: '0.7.0', stack: 'Vue 3.5.22', sizeMode,
+  heightHandling: sizeMode === 'estimated' ? estimatedHeightHandling : automaticHeightHandling,
   mount(host: HTMLElement, initialItems: readonly BenchmarkItem[]) {
     const data = shallowRef(initialItems);
-    const mutateLayout = shallowRef<(mutation: LinearPatch<string>) => unknown>();
-    const state = createLinearLayout(
-      createSequence(initialItems.map((item) => item.id), { maxItems: ITEM_COUNT + 1 }),
-      createExtentIndex(initialItems.map(() => Object.freeze({ kind: 'unknown' as const, fallback: ROW_HEIGHT })), { maxItems: ITEM_COUNT + 1 }),
-      { crossExtent: VIEWPORT_WIDTH },
-    );
-    const measure = createAxisMeasurementResolver('vertical');
     const component = defineComponent({
       setup() {
-        return () => h(SectileRoot, {
-          defaultState: state,
-          strategy: linearLayoutStrategy,
-          measure,
+        return () => h(SectileList, {
+          items: data.value,
+          getKey: benchmarkItemKey,
+          ...(sizeMode === 'estimated' ? { estimateSize: ROW_HEIGHT } : {}),
           overscan: OVERSCAN_PX,
+          maxItems: ITEM_COUNT + 1,
           initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
           class: 'bench-scroller',
           style: { width: `${VIEWPORT_WIDTH}px`, height: `${VIEWPORT_HEIGHT}px`, overflow: 'auto' },
+          itemAttributes: (item: BenchmarkItem, index: number) => ({
+            class: 'bench-row',
+            'data-id': item.id,
+            'data-index': index,
+            style: { height: `${item.height}px` },
+          }),
         }, {
-          default: ({ placements, mutate }: { placements: readonly { id: string; index: number; rect: { x: number; y: number; width: number; height: number }; visible: boolean }[]; mutate: (mutation: LinearPatch<string>) => unknown }) => {
-            mutateLayout.value = mutate;
-            const byID = new Map(data.value.map((item) => [item.id, item]));
-            return h(SectileContent, null, {
-              default: () => placements.map((placement) => {
-                const item = byID.get(placement.id)!;
-                return h(SectileItem, {
-                  key: placement.id,
-                  placement,
-                  size: 'width',
-                  class: 'bench-row',
-                  'data-id': item.id,
-                  style: { height: `${item.height}px` },
-                }, { default: () => h('span', item.label) });
-              }),
-            });
-          },
+          default: ({ value }: { value: BenchmarkItem }) => h('span', value.label),
         });
       },
     });
@@ -310,30 +331,21 @@ const sectileMutableAdapter: MutableBenchmarkAdapter = Object.freeze({
         if (element === null) throw new Error('Mutable Sectile adapter did not create .bench-scroller.');
         return element;
       },
-      update(nextItems: readonly BenchmarkItem[], scenario: MutationScenario) {
+      update(nextItems: readonly BenchmarkItem[], _scenario: MutationScenario) {
         data.value = nextItems;
-        if (scenario.operation === 'resize') return;
-        const mutation: LinearPatch<string> = scenario.operation === 'move'
-          ? { patch: { type: 'move', from: scenario.location === 'end' ? scenario.index + 1 : scenario.index, to: scenario.location === 'end' ? scenario.index : scenario.index + 1, count: 1 } }
-          : {
-              patch: {
-                type: 'splice',
-                index: scenario.index,
-                deleteCount: scenario.operation === 'remove' ? 1 : 0,
-                inserted: scenario.operation === 'insert' ? [scenario.nextItems[scenario.index]!.id] : [],
-              },
-              ...(scenario.operation === 'insert' ? { insertedExtents: [{ kind: 'exact', value: ROW_HEIGHT }] as const } : {}),
-            };
-        mutateLayout.value?.(mutation);
       },
       unmount: () => app.unmount(),
     });
   },
-});
+  });
+}
+
+const sectileMutableAdapter = createSectileMutableAdapter('estimated');
+const sectileAutomaticAdapter = createSectileMutableAdapter('automatic');
 
 const vueVirtualScrollerMutableAdapter: MutableBenchmarkAdapter = Object.freeze({
   name: 'Vue Virtual Scroller', version: '3.0.5', stack: 'Vue 3.5.22',
-  heightHandling: automaticHeightHandling,
+  sizeMode: 'estimated', heightHandling: estimatedHeightHandling,
   mount(host: HTMLElement, initialItems: readonly BenchmarkItem[]) {
     const data = shallowRef(initialItems);
     const shift = shallowRef(false);
@@ -382,9 +394,27 @@ export const mutableAdapters: readonly MutableBenchmarkAdapter[] = Object.freeze
   reactMutableAdapter('react-window', '2.3.0', ReactWindowMutable),
   reactMutableAdapter('React Virtuoso', '4.18.12', ReactVirtuosoMutable),
   reactMutableAdapter('react-virtualized', '9.22.6', ReactVirtualizedMutable, Object.freeze({
-    ...automaticHeightHandling,
+    ...estimatedHeightHandling,
     resizeNotification: 'cache-invalidation',
   })),
   reactMutableAdapter('Virtua', '0.50.5', VirtuaMutable),
   vueVirtualScrollerMutableAdapter,
+]);
+
+export const automaticMutableAdapters: readonly MutableBenchmarkAdapter[] = Object.freeze([
+  sectileAutomaticAdapter,
+  reactMutableAdapter(
+    'React Virtuoso',
+    '4.18.12',
+    ReactVirtuosoAutomatic,
+    automaticHeightHandling,
+    'automatic',
+  ),
+  reactMutableAdapter(
+    'Virtua',
+    '0.50.5',
+    VirtuaAutomatic,
+    automaticHeightHandling,
+    'automatic',
+  ),
 ]);

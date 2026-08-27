@@ -7,27 +7,15 @@ description: Browser comparisons across widely used virtualizers and isolated Se
 
 The browser suite and Sectile's internal layout benchmark answer different questions. The browser suite includes each framework adapter. The internal suite excludes DOM rendering and measures `@sectile/virtual` layout work.
 
-## Fixed-row browser comparison
+## Browser comparison
 
-Every adapter renders 100,000 fixed 48px rows with identical text and CSS in a 720 × 480px viewport. Each receives an eight-row overscan target. Library order rotates across five rounds; five warm-up scrolls are discarded before 40 samples per round. Scroll time starts when `scrollTop` changes and ends when the expected row appears in the DOM.
+<VirtualBenchmarkReport />
 
-Observed on 2026-08-27 in Chrome 151 on Apple Silicon macOS:
+Every adapter renders the same 100,000 rows in a 720 × 480px viewport. Fixed, estimated, and omitted-height conditions are measured separately. Insert, move, remove, and height-change operations also run at the start, middle, and end of the collection.
 
-| Library | Adapter stack | Initial render | Scroll median | Scroll p95 | Rows | DOM elements |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Sectile Virtual 0.7.0 | Vue 3.5.22 | 3.6 ms | 1.5 ms | 2.7 ms | 27 | 56 |
-| TanStack Virtual 3.14.10 | React 19.2.8 | 13.3 ms | 0.9 ms | 1.4 ms | 27 | 56 |
-| react-window 2.3.0 | React 19.2.8 | 10.6 ms | 3.7 ms | 7.6 ms | 27 | 56 |
-| React Virtuoso 4.18.12 | React 19.2.8 | 40.6 ms | 1.6 ms | 2.2 ms | 27 | 84 |
-| react-virtualized 9.22.6 | React 19.2.8 | 15.8 ms | 0.9 ms | 1.5 ms | 20 | 42 |
-| Virtua 0.50.5 | React 19.2.8 | 25.9 ms | 1.4 ms | 1.9 ms | 19 | 59 |
-| Vue Virtual Scroller 3.0.5 | Vue 3.5.22 | 11.8 ms | 16.7 ms | 17.6 ms | 27 | 84 |
+Initial render and scrolling rotate library order across five rounds. Each mutation runs ten times. Any incorrect frame—row order, height, total scroll height, or anchor position—is recorded as a failure independently of timing.
 
-Sectile had the shortest prepared-data initial render at 3.6ms. TanStack Virtual and react-virtualized recorded 0.9ms median scroll response; Sectile recorded 1.5ms and a 2.7ms p95.
-
-Initial render includes adapter mount, the first rows, and one following animation frame. Scroll observations include framework and adapter scheduling, so they are not isolated layout-algorithm timings. Overscan semantics differ; actual rendered rows and DOM elements are disclosed instead of assuming equivalent node counts.
-
-This common-denominator scenario excludes dynamic measurement, collection anchoring after insert/remove/move operations, grids, masonry, and spatial layouts. Forcing those different APIs into one artificial scenario would obscure rather than improve the comparison.
+Observed on 2026-08-27 in Chrome 151 on Apple Silicon macOS. Framework and adapter scheduling remain inside the timing boundary, so these are not isolated layout-algorithm measurements.
 
 The comparison covers [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), and [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller). The runner and committed JSON live in `benchmarks/virtual-ecosystem`.
 

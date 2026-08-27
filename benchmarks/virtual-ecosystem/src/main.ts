@@ -1,5 +1,10 @@
-import { adapters, type BenchmarkAdapter } from './adapters.js';
-import { ITEM_COUNT, ROW_HEIGHT, VIEWPORT_HEIGHT } from './constants.js';
+import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './adapters.js';
+import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT } from './constants.js';
+import {
+  automaticMutableAdapters,
+  mutableAdapters,
+  type MutableBenchmarkAdapter,
+} from './mutable-adapters.js';
 import {
   mutationConditions,
   runMutationBenchmarks,
@@ -7,10 +12,23 @@ import {
 } from './mutation-runner.js';
 import './style.css';
 
+type HeightMode = 'fixed' | 'estimated' | 'automatic';
+
+interface BenchmarkCase {
+  readonly mode: HeightMode;
+  readonly name: string;
+  readonly version: string;
+  readonly stack: string;
+  readonly mount: (host: HTMLElement) => MountedAdapter;
+}
+
 interface BenchmarkResult {
+  readonly mode: HeightMode;
   readonly library: string;
   readonly version: string;
   readonly stack: string;
+  readonly setupMs: number;
+  readonly firstRowsMs: number;
   readonly mountMs: number;
   readonly scrollMedianMs: number;
   readonly scrollP95Ms: number;
@@ -18,9 +36,19 @@ interface BenchmarkResult {
   readonly domElements: number;
 }
 
-interface RawBenchmarkResult extends Omit<BenchmarkResult, 'mountMs' | 'scrollMedianMs' | 'scrollP95Ms'> {
+interface RawBenchmarkResult extends Omit<BenchmarkResult, 'setupMs' | 'firstRowsMs' | 'mountMs' | 'scrollMedianMs' | 'scrollP95Ms'> {
+  readonly setupMs: number;
+  readonly firstRowsMs: number;
   readonly mountMs: number;
   readonly scrollSamples: readonly number[];
+}
+
+interface HeightModeSupport {
+  readonly library: string;
+  readonly fixed: true;
+  readonly estimated: true;
+  readonly automatic: boolean;
+  readonly automaticNote: string;
 }
 
 declare global {
@@ -29,14 +57,44 @@ declare global {
     __sectileVirtualBenchmarkReport?: {
       readonly baselineResults: readonly BenchmarkResult[];
       readonly mutationResults: readonly MutationBenchmarkResult[];
+      readonly heightModeSupport: readonly HeightModeSupport[];
     };
   }
 }
 
-const QUICK_RUN = new URLSearchParams(window.location.search).has('quick');
+const search = new URLSearchParams(window.location.search);
+const QUICK_RUN = search.has('quick');
 const ROUNDS = QUICK_RUN ? 1 : 5;
 const WARMUP_SCROLLS = QUICK_RUN ? 1 : 5;
 const RECORDED_SCROLLS = QUICK_RUN ? 2 : 40;
+const FRAME_TIMEOUT_MS = 4_000;
+const HEIGHT_TOLERANCE_PX = 2;
+
+const benchmarkCases = Object.freeze([
+  ...fixedAdapters.map((adapter) => fixedCase(adapter)),
+  ...mutableAdapters.map((adapter) => dynamicCase(adapter)),
+  ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter)),
+]);
+const activeCases = search.has('sectile')
+  ? benchmarkCases.filter((entry) => entry.name === 'Sectile Virtual')
+  : benchmarkCases;
+
+const automaticNames = new Set(automaticMutableAdapters.map((adapter) => adapter.name));
+const automaticNotes: Readonly<Record<string, string>> = Object.freeze({
+  'TanStack Virtual': 'estimateSize is required by the public API.',
+  'react-window': 'A numeric rowHeight or dynamic defaultRowHeight is required.',
+  'react-virtualized': 'CellMeasurerCache needs a defaultHeight to estimate unmeasured rows.',
+  'Vue Virtual Scroller': 'DynamicScroller requires minItemSize for its initial layout.',
+});
+const heightModeSupport: readonly HeightModeSupport[] = Object.freeze(fixedAdapters.map((adapter) => Object.freeze({
+  library: adapter.name,
+  fixed: true,
+  estimated: true,
+  automatic: automaticNames.has(adapter.name),
+  automaticNote: automaticNames.has(adapter.name)
+    ? 'The application does not provide a height or estimate.'
+    : automaticNotes[adapter.name] ?? 'No automatic adapter is available.',
+})));
 
 const root = document.querySelector<HTMLElement>('#app');
 if (root === null) throw new Error('Missing benchmark root.');
@@ -44,19 +102,25 @@ if (root === null) throw new Error('Missing benchmark root.');
 root.innerHTML = `
   <header>
     <h1>Virtualization ecosystem benchmark</h1>
-    <p>100,000 fixed-height rows · 720 × 480 viewport · 8-row overscan · identical row content</p>
+    <p>100,000 identical rows · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
     <button type="button" id="run">Run benchmark</button>
   </header>
   <section aria-live="polite">
     <p id="status">Ready.</p>
     <div id="mount"></div>
+    <h2>Initial render and scrolling</h2>
     <table>
-      <thead><tr><th>Library</th><th>Stack</th><th>Mount</th><th>Scroll median</th><th>Scroll p95</th><th>Rows</th><th>DOM elements</th></tr></thead>
+      <thead><tr><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th><th>Rows</th><th>DOM elements</th></tr></thead>
       <tbody id="results"></tbody>
+    </table>
+    <h2>Height input support</h2>
+    <table>
+      <thead><tr><th>Library</th><th>Fixed</th><th>Estimated</th><th>No height input</th><th>Note</th></tr></thead>
+      <tbody id="support-results"></tbody>
     </table>
     <h2>Mutation results</h2>
     <table>
-      <thead><tr><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Correct</th><th>Failures</th></tr></thead>
+      <thead><tr><th>Height input</th><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Correct</th><th>Failures</th></tr></thead>
       <tbody id="mutation-results"></tbody>
     </table>
     <pre id="json"></pre>
@@ -67,10 +131,20 @@ const runButton = document.querySelector<HTMLButtonElement>('#run');
 const status = document.querySelector<HTMLElement>('#status');
 const mountHost = document.querySelector<HTMLElement>('#mount');
 const resultsBody = document.querySelector<HTMLElement>('#results');
+const supportResultsBody = document.querySelector<HTMLElement>('#support-results');
 const mutationResultsBody = document.querySelector<HTMLElement>('#mutation-results');
 const json = document.querySelector<HTMLElement>('#json');
-if (runButton === null || status === null || mountHost === null || resultsBody === null || mutationResultsBody === null || json === null) throw new Error('Benchmark UI is incomplete.');
+if (
+  runButton === null
+  || status === null
+  || mountHost === null
+  || resultsBody === null
+  || supportResultsBody === null
+  || mutationResultsBody === null
+  || json === null
+) throw new Error('Benchmark UI is incomplete.');
 
+for (const support of heightModeSupport) supportResultsBody.append(renderSupport(support));
 runButton.addEventListener('click', () => { void runAll(); });
 
 async function runAll(): Promise<void> {
@@ -81,73 +155,91 @@ async function runAll(): Promise<void> {
   const raw = new Map<string, RawBenchmarkResult[]>();
   try {
     for (let round = 0; round < ROUNDS; round += 1) {
-      const order = adapters.map((_, index) => adapters[(index + round * 3) % adapters.length]!);
-      for (const adapter of order) {
-        status!.textContent = `Round ${round + 1}/${ROUNDS} · ${adapter.name}…`;
-        const result = await runAdapter(adapter, mountHost!);
-        const samples = raw.get(adapter.name) ?? [];
+      const order = rotate(activeCases, round * 3);
+      for (const benchmarkCase of order) {
+        status!.textContent = `Round ${round + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
+        let result: RawBenchmarkResult;
+        try {
+          result = await runCase(benchmarkCase, mountHost!);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          throw new Error(`${benchmarkCase.mode} · ${benchmarkCase.name}: ${reason}`, { cause: error });
+        }
+        const key = caseKey(benchmarkCase);
+        const samples = raw.get(key) ?? [];
         samples.push(result);
-        raw.set(adapter.name, samples);
+        raw.set(key, samples);
         await idleFrame();
       }
     }
-    const baselineResults = adapters.map((adapter) => aggregate(adapter, raw.get(adapter.name) ?? []));
+    const baselineResults = activeCases.map((entry) => aggregate(entry, raw.get(caseKey(entry)) ?? []));
     for (const result of baselineResults) resultsBody!.append(renderResult(result));
-    const mutationResults = await runMutationBenchmarks(mountHost!, (message) => { status!.textContent = message; });
+    const mutationResults = await runMutationBenchmarks(
+      mountHost!,
+      (message) => { status!.textContent = message; },
+      [...new Set(activeCases.map((entry) => entry.name))],
+    );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
-    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, mutationResults });
+    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, mutationResults, heightModeSupport });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
       environment: navigator.userAgent,
       conditions: {
         itemCount: ITEM_COUNT,
-        initialRowHeight: ROW_HEIGHT,
+        actualRowHeight: ROW_HEIGHT,
         viewport: [720, VIEWPORT_HEIGHT],
         overscanRows: 8,
-        baseline: { rounds: ROUNDS, scrollSamplesPerRound: RECORDED_SCROLLS },
+        baseline: {
+          rounds: ROUNDS,
+          scrollSamplesPerRound: RECORDED_SCROLLS,
+          completion: 'same row DOM, correct total scroll height, and a non-empty viewport',
+          timing: {
+            setupMs: 'synchronous adapter and framework setup',
+            firstRowsMs: 'time until the first benchmark rows exist',
+            mountMs: 'time until total scroll height and viewport geometry are correct',
+          },
+        },
         mutations: mutationConditions,
       },
+      heightModeSupport,
       baselineResults,
       mutationResults,
     }, null, 2);
     status!.textContent = 'Complete.';
   } catch (error) {
-    status!.textContent = `Failed: ${error instanceof Error ? error.message : String(error)}`;
+    const activeCase = status!.textContent;
+    status!.textContent = `Failed during ${activeCase}: ${error instanceof Error ? error.message : String(error)}`;
     throw error;
   } finally {
     runButton!.disabled = false;
   }
 }
 
-function renderMutationResult(result: MutationBenchmarkResult): HTMLTableRowElement {
-  const row = document.createElement('tr');
-  const values = [
-    `${result.library} ${result.version}`,
-    result.operation,
-    result.location,
-    result.medianMs === null ? '—' : `${result.medianMs.toFixed(2)} ms`,
-    result.p95Ms === null ? '—' : `${result.p95Ms.toFixed(2)} ms`,
-    `${result.correctSamples}/${result.totalSamples}`,
-    result.failures.length === 0 ? '0' : `${result.failures.length} (${result.failures[0]!.code})`,
-  ];
-  for (const value of values) {
-    const cell = document.createElement('td');
-    cell.textContent = value;
-    row.append(cell);
-  }
-  if (result.failures.some((failure) => failure.severity === 'fatal')) row.dataset['severity'] = 'fatal';
-  return row;
+function fixedCase(adapter: BenchmarkAdapter): BenchmarkCase {
+  return Object.freeze({ mode: 'fixed', ...adapter });
 }
 
-async function runAdapter(adapter: BenchmarkAdapter, host: HTMLElement): Promise<RawBenchmarkResult> {
+function dynamicCase(adapter: MutableBenchmarkAdapter): BenchmarkCase {
+  return Object.freeze({
+    mode: adapter.sizeMode,
+    name: adapter.name,
+    version: adapter.version,
+    stack: adapter.stack,
+    mount: (host: HTMLElement) => adapter.mount(host, items),
+  });
+}
+
+async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise<RawBenchmarkResult> {
   host.replaceChildren();
   const startedAt = performance.now();
-  const mounted = adapter.mount(host);
+  const mounted = benchmarkCase.mount(host);
+  const setupMs = performance.now() - startedAt;
   await waitForRows(host, 0);
-  await nextFrame();
+  const firstRowsMs = performance.now() - startedAt;
+  await waitForStableLayout(mounted.scroller);
   const mountMs = performance.now() - startedAt;
-  const maximum = (ITEM_COUNT * ROW_HEIGHT) - VIEWPORT_HEIGHT;
+  const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
   const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
   const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * (((index * 19) % 47) / 46)));
   const samples: number[] = [];
@@ -158,6 +250,7 @@ async function runAdapter(adapter: BenchmarkAdapter, host: HTMLElement): Promise
     mounted.scroller.scrollTop = offset;
     mounted.scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
     await waitForRows(host, expected);
+    assertBaselineLayout(mounted.scroller);
     const elapsed = performance.now() - scrollStartedAt;
     if (index >= WARMUP_SCROLLS) samples.push(elapsed);
   }
@@ -166,9 +259,12 @@ async function runAdapter(adapter: BenchmarkAdapter, host: HTMLElement): Promise
   mounted.unmount();
   host.replaceChildren();
   return Object.freeze({
-    library: adapter.name,
-    version: adapter.version,
-    stack: adapter.stack,
+    mode: benchmarkCase.mode,
+    library: benchmarkCase.name,
+    version: benchmarkCase.version,
+    stack: benchmarkCase.stack,
+    setupMs,
+    firstRowsMs,
     mountMs,
     scrollSamples: Object.freeze(samples),
     renderedRows,
@@ -176,15 +272,20 @@ async function runAdapter(adapter: BenchmarkAdapter, host: HTMLElement): Promise
   });
 }
 
-function aggregate(adapter: BenchmarkAdapter, rounds: readonly RawBenchmarkResult[]): BenchmarkResult {
-  if (rounds.length !== ROUNDS) throw new Error(`${adapter.name} produced ${rounds.length}/${ROUNDS} rounds.`);
-  const mounts = rounds.map((round) => round.mountMs).sort((left, right) => left - right);
-  const scrolls = rounds.flatMap((round) => round.scrollSamples).sort((left, right) => left - right);
+function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkResult[]): BenchmarkResult {
+  if (rounds.length !== ROUNDS) throw new Error(`${benchmarkCase.name} (${benchmarkCase.mode}) produced ${rounds.length}/${ROUNDS} rounds.`);
+  const setups = rounds.map((round) => round.setupMs).sort(ascending);
+  const firstRows = rounds.map((round) => round.firstRowsMs).sort(ascending);
+  const mounts = rounds.map((round) => round.mountMs).sort(ascending);
+  const scrolls = rounds.flatMap((round) => round.scrollSamples).sort(ascending);
   const last = rounds.at(-1)!;
   return Object.freeze({
-    library: adapter.name,
-    version: adapter.version,
-    stack: adapter.stack,
+    mode: benchmarkCase.mode,
+    library: benchmarkCase.name,
+    version: benchmarkCase.version,
+    stack: benchmarkCase.stack,
+    setupMs: round(percentile(setups, 0.5)),
+    firstRowsMs: round(percentile(firstRows, 0.5)),
     mountMs: round(percentile(mounts, 0.5)),
     scrollMedianMs: round(percentile(scrolls, 0.5)),
     scrollP95Ms: round(percentile(scrolls, 0.95)),
@@ -193,37 +294,95 @@ function aggregate(adapter: BenchmarkAdapter, rounds: readonly RawBenchmarkResul
   });
 }
 
+function waitForStableLayout(scroller: HTMLElement): Promise<void> {
+  return waitUntilFrame(() => {
+    try {
+      assertBaselineLayout(scroller);
+      return true;
+    } catch {
+      return false;
+    }
+  }, 'a correct total height and viewport layout');
+}
+
+function assertBaselineLayout(scroller: HTMLElement): void {
+  const expectedHeight = ITEM_COUNT * ROW_HEIGHT;
+  if (Math.abs(scroller.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
+    throw new Error(`Scroll height ${scroller.scrollHeight}px did not match ${expectedHeight}px.`);
+  }
+  const viewport = scroller.getBoundingClientRect();
+  const visible = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row')).some((row) => {
+    const rect = row.getBoundingClientRect();
+    return rect.height > 0 && rect.bottom > viewport.top && rect.top < viewport.bottom;
+  });
+  if (!visible) throw new Error('No benchmark row covers the viewport.');
+}
+
 function waitForRows(host: HTMLElement, expectedIndex: number): Promise<void> {
   const matches = (): boolean => Array.from(host.querySelectorAll<HTMLElement>('.bench-row'))
     .some((row) => Math.abs(Number(row.dataset['index']) - expectedIndex) <= 20);
   if (matches()) return Promise.resolve();
+  return waitUntilFrame(matches, `row ${expectedIndex}`);
+}
+
+function waitUntilFrame(predicate: () => boolean, label: string): Promise<void> {
+  if (predicate()) return Promise.resolve();
   return new Promise((resolve, reject) => {
-    const observer = new MutationObserver(() => {
-      if (!matches()) return;
-      clearTimeout(timeout);
-      observer.disconnect();
-      resolve();
-    });
-    const timeout = window.setTimeout(() => {
-      observer.disconnect();
-      const indexes = Array.from(host.querySelectorAll<HTMLElement>('.bench-row')).map((row) => row.dataset['index']);
-      reject(new Error(`Timed out waiting for row ${expectedIndex}; rendered ${indexes.join(', ') || 'none'}.`));
-    }, 4_000);
-    observer.observe(host, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-index'] });
+    const startedAt = performance.now();
+    const frame = (): void => {
+      if (predicate()) { resolve(); return; }
+      if (performance.now() - startedAt >= FRAME_TIMEOUT_MS) {
+        reject(new Error(`Timed out waiting for ${label}.`));
+        return;
+      }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
   });
 }
 
 function renderResult(result: BenchmarkResult): HTMLTableRowElement {
-  const row = document.createElement('tr');
-  const values = [
+  return renderCells([
+    result.mode,
     `${result.library} ${result.version}`,
     result.stack,
+    `${result.setupMs.toFixed(2)} ms`,
+    `${result.firstRowsMs.toFixed(2)} ms`,
     `${result.mountMs.toFixed(2)} ms`,
     `${result.scrollMedianMs.toFixed(2)} ms`,
     `${result.scrollP95Ms.toFixed(2)} ms`,
     String(result.renderedRows),
     String(result.domElements),
-  ];
+  ]);
+}
+
+function renderSupport(result: HeightModeSupport): HTMLTableRowElement {
+  return renderCells([
+    result.library,
+    'yes',
+    'yes',
+    result.automatic ? 'yes' : 'unsupported',
+    result.automaticNote,
+  ]);
+}
+
+function renderMutationResult(result: MutationBenchmarkResult): HTMLTableRowElement {
+  const row = renderCells([
+    result.sizeMode,
+    `${result.library} ${result.version}`,
+    result.operation,
+    result.location,
+    result.medianMs === null ? '—' : `${result.medianMs.toFixed(2)} ms`,
+    result.p95Ms === null ? '—' : `${result.p95Ms.toFixed(2)} ms`,
+    `${result.correctSamples}/${result.totalSamples}`,
+    result.failures.length === 0 ? '0' : `${result.failures.length} (${result.failures[0]!.code})`,
+  ]);
+  if (result.failures.some((failure) => failure.severity === 'fatal')) row.dataset['severity'] = 'fatal';
+  return row;
+}
+
+function renderCells(values: readonly string[]): HTMLTableRowElement {
+  const row = document.createElement('tr');
   for (const value of values) {
     const cell = document.createElement('td');
     cell.textContent = value;
@@ -232,10 +391,15 @@ function renderResult(result: BenchmarkResult): HTMLTableRowElement {
   return row;
 }
 
+function caseKey(entry: BenchmarkCase): string { return `${entry.mode}:${entry.name}`; }
+function rotate<T>(values: readonly T[], offset: number): readonly T[] {
+  if (values.length === 0) return values;
+  const start = offset % values.length;
+  return [...values.slice(start), ...values.slice(0, start)];
+}
+function ascending(left: number, right: number): number { return left - right; }
 function percentile(sorted: readonly number[], ratio: number): number {
   return sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * ratio) - 1))] ?? 0;
 }
-
 function round(value: number): number { return Number(value.toFixed(3)); }
-function nextFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }
 function idleFrame(): Promise<void> { return new Promise((resolve) => setTimeout(resolve, 50)); }

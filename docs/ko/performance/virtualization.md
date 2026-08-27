@@ -7,31 +7,15 @@ description: 주요 가상화 라이브러리의 브라우저 실행 결과와 S
 
 브라우저 비교와 Sectile 내부 계산 측정을 나눠서 실행합니다. 브라우저 비교에는 각 라이브러리의 프레임워크 연결 코드까지 포함됩니다. 내부 측정은 DOM을 제외하고 `@sectile/virtual`의 배치 계산만 잽니다.
 
-## 같은 목록으로 비교한 결과
+## 브라우저 비교 결과
 
-10만 개의 고정 높이 행을 720 × 480px 화면에 표시했습니다. 모든 행은 높이 48px, 같은 문구, 같은 CSS를 사용합니다. 각 라이브러리에는 8행 분량의 여유 구간을 요청했습니다.
+<VirtualBenchmarkReport />
 
-라이브러리 실행 순서를 바꿔 가며 다섯 번 반복했습니다. 한 번 실행할 때 처음 다섯 번의 스크롤은 준비 과정으로 빼고, 다음 40번을 기록했습니다. 표의 스크롤 시간은 `scrollTop`을 바꾼 뒤 목표 행이 DOM에 나타날 때까지 걸린 시간입니다.
+10만 개의 같은 행을 720 × 480px 화면에 표시했습니다. 고정 높이와 예상 높이, 높이 입력을 생략한 조건을 나눠 재고, 삽입·이동·삭제·높이 변경도 목록의 시작·중간·끝에서 각각 실행했습니다.
 
-2026년 8월 27일, Chrome 151, Apple Silicon, macOS에서 얻은 결과입니다.
+처음 표시와 스크롤은 라이브러리 순서를 바꿔 가며 다섯 번 반복했습니다. 각 변경은 10회 실행하며, 행 순서와 높이, 전체 스크롤 높이, 기준 행 위치가 한 프레임이라도 어긋나면 시간과 별개로 실패를 기록합니다.
 
-| 라이브러리 | 연결 환경 | 초기 표시 | 스크롤 중앙값 | 스크롤 p95 | 화면에 유지한 행 | 전체 요소 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Sectile Virtual 0.7.0 | Vue 3.5.22 | 3.6 ms | 1.5 ms | 2.7 ms | 27 | 56 |
-| TanStack Virtual 3.14.10 | React 19.2.8 | 13.3 ms | 0.9 ms | 1.4 ms | 27 | 56 |
-| react-window 2.3.0 | React 19.2.8 | 10.6 ms | 3.7 ms | 7.6 ms | 27 | 56 |
-| React Virtuoso 4.18.12 | React 19.2.8 | 40.6 ms | 1.6 ms | 2.2 ms | 27 | 84 |
-| react-virtualized 9.22.6 | React 19.2.8 | 15.8 ms | 0.9 ms | 1.5 ms | 20 | 42 |
-| Virtua 0.50.5 | React 19.2.8 | 25.9 ms | 1.4 ms | 1.9 ms | 19 | 59 |
-| Vue Virtual Scroller 3.0.5 | Vue 3.5.22 | 11.8 ms | 16.7 ms | 17.6 ms | 27 | 84 |
-
-준비된 데이터를 처음 표시하는 시간은 Sectile이 3.6ms로 가장 짧았습니다. 스크롤 중앙값은 TanStack Virtual과 react-virtualized가 0.9ms, Sectile이 1.5ms였습니다. Sectile의 p95는 2.7ms였습니다.
-
-초기 표시는 라이브러리를 연결하기 직전부터 첫 행이 나타난 다음 프레임까지 잽니다. 스크롤 수치에는 프레임워크와 연결 코드의 처리 시간도 들어갑니다. React와 Vue의 비용이 섞여 있으므로 배치 알고리즘만 따로 비교한 값으로 읽으면 안 됩니다.
-
-`화면에 유지한 행`은 보이는 행과 여유 구간의 행을 합친 수입니다. `전체 요소`는 스크롤 영역과 배치용 래퍼를 포함해 벤치마크 영역 아래에 실제로 생긴 HTML 요소 수입니다. 여유 구간 옵션의 뜻이 라이브러리마다 조금씩 달라 이 두 값을 함께 적었습니다.
-
-이 표는 모든 라이브러리가 같은 방식으로 처리할 수 있는 고정 높이 목록만 비교합니다. 동적 높이 측정, 목록 앞쪽 삽입·삭제·이동 뒤의 위치 보정, 격자, 벽돌형, 자유 좌표 배치는 범위에서 뺐습니다. 이 기능들은 API와 책임 범위가 달라 같은 조건을 억지로 만들면 오히려 결과가 흐려집니다.
+2026년 8월 27일, Chrome 151, Apple Silicon, macOS에서 얻은 결과입니다. 프레임워크와 연결 코드의 처리 시간도 포함되므로 배치 알고리즘만 떼어 낸 수치로 읽으면 안 됩니다.
 
 비교 대상은 [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller)입니다. 실행 코드와 원본 JSON은 `benchmarks/virtual-ecosystem`에 있습니다.
 

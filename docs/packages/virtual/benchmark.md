@@ -1,17 +1,25 @@
 ---
 title: Virtualization benchmark
-description: Same-condition measurements of display speed, DOM output, dynamic height handling, and collection mutation stability across widely used virtualizers.
+description: Same-condition measurements of display speed, dynamic height handling, and collection mutation stability across widely used virtualizers.
 ---
 
 # Virtualization benchmark
 
-Seven libraries render the same 100,000 rows. The suite measures initial display, scroll response, actual DOM output, and the time required to settle after inserts, moves, removals, and height changes.
+Seven libraries render the same 100,000 rows. The suite measures initial display, scroll response, and the time required to settle after inserts, moves, removals, and height changes. Change the controls to compare every result in the same chart.
 
 <VirtualBenchmarkReport />
 
-## Dynamic height scenario
+## Why height input is split into three modes
 
-Every row begins with a 48px estimate. The height-change scenario expands one visible row to 96px. The browser DOM supplies the measured height; the exact 96px value is not passed back into the virtualization API.
+The suite measures exact heights, estimates, and omitted height input separately. Combining them would hide the cost difference between a fixed-size fast path and DOM measurement.
+
+- Fixed: the application supplies the exact 48px height.
+- Estimated: the application supplies 48px for the initial layout, then the library reads the actual DOM height.
+- No height input: the application omits both an exact height and an estimate, and the library completes the layout from DOM measurement.
+
+Libraries that cannot start without a height or estimate are not given a synthetic value. The support table records the required input instead.
+
+The height-change scenario expands one visible row to 96px. The browser DOM supplies the measured height; the exact 96px value is not passed back into the virtualization API.
 
 Each adapter follows its library’s required integration. `react-virtualized` requires an explicit measurement-cache invalidation and layout recomputation call. The other adapters use APIs that observe DOM size changes automatically. That application-side work remains inside the timing boundary.
 
@@ -31,13 +39,13 @@ Timing starts with the update request and ends on the first frame where DOM orde
 
 Every frame is checked for missing or duplicate IDs, incorrect order or height, gaps, overlap, blank viewport regions, total scroll-height errors, and unexpected anchor movement. Any incorrect frame fails the correctness check. Three identical invalid frames in succession mark a scenario as unable to settle. Sectile failures carry `fatal` severity in the raw result.
 
-## Fixed-height comparison
+## Initial render and scrolling
 
 The fixed-height suite renders 100,000 identical 48px rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared.
 
-Library order rotates across five rounds. Each round discards five warm-up scrolls and records the next 40. Scroll time starts when `scrollTop` changes and ends when the target row appears in the DOM.
+Library order rotates across five rounds. Initial rendering is split into synchronous setup, first row output, and the first state with correct total scroll height and viewport geometry. A visible row with an incorrect total height is not considered complete.
 
-Rendered rows include the visible and overscan rows. DOM elements include each library’s internal wrappers. Those differences remain part of the end-to-end cost of producing the same HTML rows.
+Each round discards five warm-up scrolls and records the next 40. Scroll time starts when `scrollTop` changes and ends when the target row appears in the DOM.
 
 Measurements were recorded on 2026-08-27 in Chrome 151 on Apple Silicon macOS. Absolute timings vary by machine and browser state; compare the relative results together with correctness failures.
 

@@ -1,7 +1,4 @@
-import { createSequence } from '@sectile/core/sequence';
-import { VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '@sectile/vue/virtual';
-import { createExtentIndex } from '@sectile/virtual/extent-index';
-import { createLinearLayout, linearLayoutStrategy } from '@sectile/virtual/linear-layout';
+import { VirtualList } from '@sectile/vue/virtual';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { createElement, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -9,7 +6,7 @@ import { List as ReactVirtualizedList, type ListRowProps } from 'react-virtualiz
 import { Virtuoso } from 'react-virtuoso';
 import { List as ReactWindowList, type RowComponentProps } from 'react-window';
 import { VList } from 'virtua';
-import { createApp, defineComponent, h, shallowRef, type App } from 'vue';
+import { createApp, defineComponent, h, type App } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import {
@@ -19,16 +16,10 @@ import {
 
 const ReactVirtualizedListComponent = ReactVirtualizedList as unknown as React.ComponentType<Record<string, unknown>>;
 const VListComponent = VList as unknown as React.ComponentType<Record<string, unknown>>;
-const SectileRoot = VirtualizerRoot as unknown as Parameters<typeof h>[0];
-const SectileContent = VirtualizerContent as unknown as Parameters<typeof h>[0];
-const SectileItem = VirtualizerItem as unknown as Parameters<typeof h>[0];
+const SectileList = VirtualList as unknown as Parameters<typeof h>[0];
 const VueRecycleScroller = RecycleScroller as unknown as Parameters<typeof h>[0];
 const mutableItems = [...items];
-const preparedSectileState = createLinearLayout(
-  createSequence(items.map((item) => item.id)),
-  createExtentIndex(items.map(() => Object.freeze({ kind: 'exact' as const, value: ROW_HEIGHT }))),
-  { crossExtent: VIEWPORT_WIDTH },
-);
+const benchmarkItemKey = (item: BenchmarkItem): string => item.id;
 
 export interface MountedAdapter {
   readonly scroller: HTMLElement;
@@ -172,26 +163,23 @@ const sectileAdapter: BenchmarkAdapter = Object.freeze({
   version: '0.7.0',
   stack: 'Vue 3.5.22',
   mount(host: HTMLElement) {
-    const state = shallowRef(preparedSectileState);
     const component = defineComponent({
       setup() {
-        return () => h(SectileRoot, {
-          defaultState: state.value,
-          strategy: linearLayoutStrategy,
+        return () => h(SectileList, {
+          items,
+          getKey: benchmarkItemKey,
+          itemSize: ROW_HEIGHT,
           overscan: OVERSCAN_PX,
           initialViewport: { x: 0, y: 0, width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
           class: 'bench-scroller',
           style: { width: `${VIEWPORT_WIDTH}px`, height: `${VIEWPORT_HEIGHT}px`, overflow: 'auto' },
-          onStateChange: (value: unknown) => { state.value = value as typeof state.value; },
-        }, {
-          default: ({ placements }: { placements: readonly { id: string; index: number; rect: { x: number; y: number; width: number; height: number }; visible: boolean }[] }) => h(SectileContent, null, {
-            default: () => placements.map((placement) => h(SectileItem, {
-              key: placement.id,
-              placement,
-              size: 'both',
-              class: 'bench-row',
-            }, { default: () => h('span', rowText(placement.index)) })),
+          itemAttributes: (_item: BenchmarkItem, index: number) => ({
+            class: 'bench-row',
+            'data-index': index,
+            style: { height: `${ROW_HEIGHT}px` },
           }),
+        }, {
+          default: ({ value }: { value: BenchmarkItem }) => h('span', value.label),
         });
       },
     });
@@ -234,7 +222,7 @@ const vueVirtualScrollerAdapter: BenchmarkAdapter = Object.freeze({
   },
 });
 
-export const adapters: readonly BenchmarkAdapter[] = Object.freeze([
+export const fixedAdapters: readonly BenchmarkAdapter[] = Object.freeze([
   sectileAdapter,
   reactAdapter('TanStack Virtual', '3.14.10', createElement(TanStackList)),
   reactAdapter('react-window', '2.3.0', createElement(ReactWindowApp)),
@@ -243,3 +231,6 @@ export const adapters: readonly BenchmarkAdapter[] = Object.freeze([
   reactAdapter('Virtua', '0.50.5', createElement(VirtuaApp)),
   vueVirtualScrollerAdapter,
 ]);
+
+/** @deprecated Use fixedAdapters to make the height condition explicit. */
+export const adapters = fixedAdapters;

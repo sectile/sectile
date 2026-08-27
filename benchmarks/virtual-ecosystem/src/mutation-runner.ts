@@ -1,5 +1,11 @@
 import { ITEM_COUNT, ROW_HEIGHT, VIEWPORT_HEIGHT, type BenchmarkItem } from './constants.js';
-import { mutableAdapters, type HeightHandling, type MutableBenchmarkAdapter } from './mutable-adapters.js';
+import {
+  automaticMutableAdapters,
+  mutableAdapters,
+  type DynamicSizeMode,
+  type HeightHandling,
+  type MutableBenchmarkAdapter,
+} from './mutable-adapters.js';
 import {
   createMutationScenario,
   mutationLocations,
@@ -22,6 +28,7 @@ export interface MutationBenchmarkResult {
   readonly library: string;
   readonly version: string;
   readonly stack: string;
+  readonly sizeMode: DynamicSizeMode;
   readonly operation: MutationOperation;
   readonly location: MutationLocation;
   readonly medianMs: number | null;
@@ -94,15 +101,19 @@ export const mutationConditions = Object.freeze({
 export async function runMutationBenchmarks(
   host: HTMLElement,
   onProgress: (message: string) => void,
+  libraries?: readonly string[],
 ): Promise<readonly MutationBenchmarkResult[]> {
+  const selectedAdapters = libraries === undefined
+    ? [...mutableAdapters, ...automaticMutableAdapters]
+    : [...mutableAdapters, ...automaticMutableAdapters].filter((adapter) => libraries.includes(adapter.name));
   const scenarios = mutationOperations.flatMap((operation) =>
     mutationLocations.map((location) => createMutationScenario(operation, location)));
   const raw = new Map<string, RawScenarioResult>();
-  const total = mutableAdapters.length * scenarios.length * MUTATION_ROUNDS * SAMPLES_PER_ROUND;
+  const total = selectedAdapters.length * scenarios.length * MUTATION_ROUNDS * SAMPLES_PER_ROUND;
   let completed = 0;
 
   for (let round = 0; round < MUTATION_ROUNDS; round += 1) {
-    const adapterOrder = rotate(mutableAdapters, round * 3);
+    const adapterOrder = rotate(selectedAdapters, round * 3);
     const scenarioOrder = rotate(scenarios, round * 5);
     for (const adapter of adapterOrder) {
       for (const scenario of scenarioOrder) {
@@ -112,7 +123,7 @@ export async function runMutationBenchmarks(
         for (let localSample = 0; localSample < SAMPLES_PER_ROUND; localSample += 1) {
           const sample = round * SAMPLES_PER_ROUND + localSample + 1;
           completed += 1;
-          onProgress(`Mutation ${completed}/${total} · ${adapter.name} · ${scenario.operation}/${scenario.location}`);
+          onProgress(`Mutation ${completed}/${total} · ${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location}`);
           const outcome = await runMutationSample(adapter, scenario, host, sample);
           if (outcome.elapsedMs !== null) result.samples.push(outcome.elapsedMs);
           result.failures.push(...outcome.failures);
@@ -121,13 +132,14 @@ export async function runMutationBenchmarks(
     }
   }
 
-  return Object.freeze(mutableAdapters.flatMap((adapter) => scenarios.map((scenario) => {
+  return Object.freeze(selectedAdapters.flatMap((adapter) => scenarios.map((scenario) => {
     const collected = raw.get(resultKey(adapter, scenario)) ?? { samples: [], failures: [] };
     const sorted = [...collected.samples].sort((left, right) => left - right);
     return Object.freeze({
       library: adapter.name,
       version: adapter.version,
       stack: adapter.stack,
+      sizeMode: adapter.sizeMode,
       operation: scenario.operation,
       location: scenario.location,
       medianMs: sorted.length === 0 ? null : round(percentile(sorted, 0.5)),
@@ -481,7 +493,7 @@ function indexByID(items: readonly BenchmarkItem[]): ReadonlyMap<string, number>
 }
 
 function resultKey(adapter: MutableBenchmarkAdapter, scenario: MutationScenario): string {
-  return `${adapter.name}:${scenario.operation}:${scenario.location}`;
+  return `${adapter.name}:${adapter.sizeMode}:${scenario.operation}:${scenario.location}`;
 }
 
 function rotate<T>(values: readonly T[], offset: number): readonly T[] {
