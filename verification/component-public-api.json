@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "families": {
+    "meter": {
+      "core": {
+        "subpath": "./meter",
+        "root": false,
+        "runtime": ["createMeterState", "tryCreateMeterState"],
+        "types": ["MeterInput", "MeterState", "MeterZone"]
+      },
+      "dom": {
+        "subpath": "./meter",
+        "root": true,
+        "runtime": ["createMeter", "getMeterIndicatorAttributes", "getMeterNativeAttributes", "getMeterRootAttributes", "tryCreateMeter"],
+        "types": ["MeterAttributeRecord", "MeterConnection", "MeterControlledValues", "MeterIndicatorAttributesOptions", "MeterOptions", "MeterRootAttributesOptions", "MeterValueFormatter"]
+      },
+      "vue": {
+        "subpath": "./meter",
+        "root": true,
+        "runtime": ["MeterIndicator", "MeterRoot", "MeterTrack", "MeterValueText"],
+        "types": ["MeterPartProps", "MeterRootProps", "MeterRootSlotProps", "MeterValueFormatter"]
+      },
+      "terminal": {
+        "subpath": "./meter",
+        "root": true,
+        "runtime": ["createMeter", "tryCreateMeter"],
+        "types": ["MeterConnection", "MeterControlledValues", "MeterOptions", "MeterRenderPlan"]
+      }
+    },
+    "progress": {
+      "core": {
+        "subpath": "./progress",
+        "root": false,
+        "runtime": ["createProgressState", "tryCreateProgressState"],
+        "types": ["ProgressInput", "ProgressState", "ProgressStatus"]
+      },
+      "dom": {
+        "subpath": "./progress",
+        "root": true,
+        "runtime": ["createProgress", "getProgressIndicatorAttributes", "getProgressNativeAttributes", "getProgressRootAttributes", "tryCreateProgress"],
+        "types": ["ProgressAttributeRecord", "ProgressConnection", "ProgressControlledValues", "ProgressIndicatorAttributesOptions", "ProgressOptions", "ProgressRootAttributesOptions", "ProgressValueFormatter"]
+      },
+      "vue": {
+        "subpath": "./progress",
+        "root": true,
+        "runtime": ["ProgressIndicator", "ProgressRoot", "ProgressTrack", "ProgressValueText"],
+        "types": ["ProgressPartProps", "ProgressRootProps", "ProgressRootSlotProps", "ProgressValueFormatter"]
+      },
+      "terminal": {
+        "subpath": "./progress",
+        "root": true,
+        "runtime": ["createProgress", "tryCreateProgress"],
+        "types": ["ProgressConnection", "ProgressControlledValues", "ProgressOptions", "ProgressRenderPlan"]
+      }
+    },
+    "meter-group": {
+      "core": {
+        "subpath": "./meter-group",
+        "root": false,
+        "runtime": ["createMeterGroupState", "tryCreateMeterGroupState"],
+        "types": ["MeterGroupInput", "MeterGroupItemInput", "MeterGroupSegment", "MeterGroupState"]
+      },
+      "dom": {
+        "subpath": "./meter-group",
+        "root": true,
+        "runtime": ["createMeterGroup", "getMeterGroupRootAttributes", "getMeterGroupSegmentAttributes", "getMeterGroupTrackAttributes", "tryCreateMeterGroup"],
+        "types": ["MeterGroupAttributeRecord", "MeterGroupConnection", "MeterGroupControlledValues", "MeterGroupOptions", "MeterGroupRootAttributesOptions", "MeterGroupSegmentAttributesOptions", "MeterGroupValueFormatter"]
+      },
+      "vue": {
+        "subpath": "./meter-group",
+        "root": true,
+        "runtime": ["MeterGroupIndicator", "MeterGroupItem", "MeterGroupItemIndicator", "MeterGroupItemLabel", "MeterGroupItemValue", "MeterGroupList", "MeterGroupRoot", "MeterGroupSegment", "MeterGroupTrack", "MeterGroupValueText"],
+        "types": ["MeterGroupEntry", "MeterGroupItemProps", "MeterGroupItemSlotProps", "MeterGroupPartProps", "MeterGroupRootProps", "MeterGroupRootSlotProps", "MeterGroupSegmentProps", "MeterGroupSegmentSlotProps", "MeterGroupTotalFormatter", "MeterGroupValueFormatter"]
+      },
+      "terminal": {
+        "subpath": "./meter-group",
+        "root": true,
+        "runtime": ["createMeterGroup", "tryCreateMeterGroup"],
+        "types": ["MeterGroupConnection", "MeterGroupControlledValues", "MeterGroupOptions", "MeterGroupRenderPlan", "MeterGroupRenderSegment"]
+      }
+    }
+  },
+  "forbiddenImports": {
+    "core": ["@sectile/dom", "@sectile/terminal", "@sectile/vue"],
+    "dom": ["@sectile/terminal", "@sectile/vue"],
+    "terminal": ["@sectile/dom", "@sectile/vue"],
+    "vue": ["@sectile/terminal"]
+  }
+}
