@@ -38,6 +38,12 @@ const profiles = Object.freeze({
     row('Enter / Space', 'Select or activate the current option.', '현재 항목을 선택하거나 실행합니다.'),
     row('Printable text', 'Move to the next matching option when typeahead is available.', '글자 검색을 지원하면 다음 일치 항목으로 이동합니다.'),
   ],
+  cascadeChoice: [
+    row('Arrow Up / Arrow Down', 'Move between eligible items in the current column.', '현재 열에서 선택 가능한 항목 사이를 이동합니다.'),
+    row('Arrow Left / Arrow Right', 'Move to the parent column or enter the highlighted branch.', '부모 열로 돌아가거나 현재 가지의 다음 열로 이동합니다.'),
+    row('Home / End', 'Move to the first or last eligible item in the current column.', '현재 열의 선택 가능한 첫 항목 또는 마지막 항목으로 이동합니다.'),
+    row('Enter / Space', 'Open the highlighted branch or select the highlighted leaf.', '현재 가지를 펼치거나 마지막 항목을 선택합니다.'),
+  ],
   checkboxGroup: [
     row('Tab', 'Move focus into and out of the group.', '묶음 안팎으로 포커스를 이동합니다.'),
     row('Space', 'Toggle the focused checkbox item.', '포커스된 체크박스 항목을 전환합니다.'),
@@ -179,6 +185,7 @@ const profiles = Object.freeze({
 
 const profileByComponent = Object.freeze({
   accordion: 'accordion', 'alert-dialog': 'popup', calendar: 'calendar', carousel: 'carousel',
+  'cascade-list': 'cascadeChoice',
   'cascade-select': 'listChoice', 'color-picker': 'color', checkbox: 'toggle', 'checkbox-group': 'checkboxGroup',
   combobox: 'combobox', 'date-field': 'segmentedInput', 'date-range-field': 'segmentedInput',
   'date-time-field': 'segmentedInput', 'date-time-picker': 'datePicker', 'date-time-range-picker': 'datePicker',
@@ -200,6 +207,7 @@ const accessibilityByComponent = Object.freeze({
   'alert-dialog': ['The alert dialog names its title and description, keeps modal focus inside, and restores focus on close.', '확인 대화상자는 제목과 설명을 연결하고 모달 포커스를 내부에 유지한 뒤 닫힐 때 복원합니다.'],
   calendar: ['The inline content owns a labeled grid whose cells expose selected, highlighted, unavailable, and outside-month state.', '인라인 콘텐츠가 이름 있는 격자를 소유하며 각 칸은 선택·강조·선택 불가·현재 달 외부 상태를 노출합니다.'],
   carousel: ['Slides, navigation controls, pause control, and indicators remain individually named and operable.', '슬라이드, 이동 버튼, 일시 정지 버튼, 표시 항목을 각각 이름이 있고 조작 가능한 요소로 유지합니다.'],
+  'cascade-list': ['Every visible hierarchy level is a labeled listbox; options expose selection, branch, expanded, and disabled state.', '화면에 보이는 계층의 각 단계는 이름이 있는 목록 상자이며 항목은 선택·가지·펼침·비활성 상태를 전달합니다.'],
   'cascade-select': ['Each visible column is a labeled listbox; options expose selection, branch, and disabled state.', '각 열은 이름이 있는 목록 상자이며 항목은 선택·하위 가지·비활성 상태를 노출합니다.'],
   'color-picker': ['Text inputs and sliders expose labels, ranges, current values, and channel purpose without relying on color alone.', '텍스트 입력과 슬라이더가 이름, 범위, 현재 값, 색상 채널 역할을 노출해 색만으로 정보를 전달하지 않습니다.'],
   checkbox: ['The root exposes checkbox semantics, including the mixed value through `aria-checked="mixed"`.', '루트는 체크박스 의미를 제공하며 일부 선택 값은 `aria-checked="mixed"`로 노출합니다.'],

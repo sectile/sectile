@@ -4,6 +4,7 @@ import { createCalculatorExpression, type NumberFieldPolicies } from '@sectile/c
 import { numberFieldExampleConfig } from '../number-field-examples.js';
 import type { PinInputExampleOptions } from '../pin-input-example-options.js';
 import AccordionCase from './AccordionCase.vue';
+import CascadeListCase from './CascadeListCase.vue';
 import CascadeSelectCase from './CascadeSelectCase.vue';
 import CatalogCase from './CatalogCase.vue';
 import CheckedControlCase from './CheckedControlCase.vue';
@@ -82,6 +83,7 @@ function resolveExample(): ResolvedExample {
     case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
     case 'tree-view': return specialized(TreeViewCase, { scenario: props.scenario });
     case 'listbox': return specialized(ListboxCase, { multiple: props.scenario === 'multiple', controlled });
+    case 'cascade-list': return specialized(CascadeListCase, { initialValue: props.scenario === 'controlled' ? 'paris' : 'seoul', disabledItems: props.scenario === 'disabled' ? ['jp', 'tokyo'] : [], controlled });
     case 'cascade-select': return specialized(CascadeSelectCase, { initialValue: props.scenario === 'controlled' ? 'paris' : 'seoul', disabledItems: props.scenario === 'disabled' ? ['jp', 'tokyo'] : [], controlled, preview: props.preview });
     case 'radio-group': return specialized(RadioGroupCase, { controlled });
     case 'toggle-group': return specialized(ToggleGroupCase, { multiple: props.scenario === 'multiple', controlled });

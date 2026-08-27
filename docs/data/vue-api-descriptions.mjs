@@ -311,7 +311,7 @@ const enSlots = Object.freeze({
   active: 'Whether this item is currently active.', activeThumb: 'Index of the thumb currently being adjusted.',
   area: 'Current two-dimensional color area state.', branch: 'Whether this item owns descendants.',
   channel: 'Current color channel.', character: 'Character displayed by this input.', checked: 'Whether the control is checked.',
-  clearable: 'Whether the current value can be cleared.', columnIndex: 'Zero-based column position.', columns: 'Visible cascade-select columns.',
+  clearable: 'Whether the current value can be cleared.', columnIndex: 'Zero-based column position.', columns: 'Visible cascade hierarchy columns.',
   complete: 'Whether every required character or step is complete.', completed: 'Whether the timer reached its target.',
   controlId: 'ID assigned to the semantic control.', coordinates: 'Current coordinates in the active color model.', count: 'Number of values in the collection.',
   cssColor: 'Current color serialized for CSS.', current: 'Whether this item represents the current position.', dates: 'Dates projected by the active view.',

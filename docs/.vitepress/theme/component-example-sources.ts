@@ -11,6 +11,7 @@ const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze
   'alert-dialog': 'AlertDialog',
   calendar: 'Calendar',
   carousel: 'Carousel',
+  'cascade-list': 'CascadeList',
   'cascade-select': 'CascadeSelect',
   checkbox: 'Checkbox',
   'checkbox-group': 'CheckboxGroup',

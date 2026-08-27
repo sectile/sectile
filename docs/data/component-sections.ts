@@ -29,6 +29,7 @@ export const componentSections = [
       'select',
       'combobox',
       'listbox',
+      'cascade-list',
       'cascade-select',
       'rating',
       'switch',

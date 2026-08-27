@@ -183,6 +183,7 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
     },
   }),
   carousel: anatomy('carousel', ['root', 'viewport', 'track', 'slide', 'previous', 'next', 'pause', 'indicator-group', 'indicator']),
+  'cascade-list': anatomy('cascade-list', ['root', 'value', 'column', 'item', 'item-indicator', 'item-chevron']),
   'cascade-select': anatomy('cascade-select', ['root', 'trigger', 'value', 'content', 'column', 'item', 'item-indicator', 'item-chevron']),
   'checkbox-group': anatomy('checkbox-group', ['root', 'item', 'indicator']),
   checkbox: anatomy('checkbox', ['root', 'indicator']),

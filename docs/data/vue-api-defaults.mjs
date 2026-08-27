@@ -94,6 +94,11 @@ export function vueApiDefault(locale, component, typeName, property, extracted) 
     if (property === 'asChild') return { code: 'false' };
   }
 
+  if (['cascade-list', 'cascade-select'].includes(component) && /(?:Column|Item)Props$/u.test(typeName)) {
+    if (property === 'as') return { code: "'div'" };
+    if (property === 'asChild' || property === 'disabled') return { code: 'false' };
+  }
+
   if (typeName.endsWith('PartProps') && property === 'as') {
     return locale === 'ko' ? { text: '파트별로 다름' } : { text: 'Varies by part' };
   }

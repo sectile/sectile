@@ -32,6 +32,7 @@ import { createTreeGrid } from '@sectile/terminal/tree-grid';
 import { createTreeView } from '@sectile/terminal/tree-view';
 import { createTabs } from '@sectile/terminal/tabs'; import { createRadioGroup } from '@sectile/terminal/radio-group'; import { createToolbar } from '@sectile/terminal/toolbar'; import { createAccordion } from '@sectile/terminal/accordion'; import { createDisclosure } from '@sectile/terminal/disclosure'; import { createCheckbox } from '@sectile/terminal/checkbox'; import { createSwitch } from '@sectile/terminal/switch'; import { createToggleButton } from '@sectile/terminal/toggle-button'; import { createWindowSplitter } from '@sectile/terminal/window-splitter'; import { createSpinButton } from '@sectile/terminal/spin-button'; import { createDialog } from '@sectile/terminal/dialog'; import { createAlertDialog } from '@sectile/terminal/alert-dialog'; import { createTooltip } from '@sectile/terminal/tooltip'; import { createMultiThumbSlider } from '@sectile/terminal/multi-thumb-slider'; import { createGridControl } from '@sectile/terminal/grid'; import { createMenu } from '@sectile/terminal/menu'; import { createMenubar } from '@sectile/terminal/menubar'; import { createMenuButton } from '@sectile/terminal/menu-button'; import { createCarousel } from '@sectile/terminal/carousel'; import { createFeed } from '@sectile/terminal/feed';
 import { createCheckboxGroup } from '@sectile/terminal/checkbox-group'; import { createSelect } from '@sectile/terminal/select'; import { createPagination } from '@sectile/terminal/pagination'; import { createStepper } from '@sectile/terminal/stepper'; import { createRating } from '@sectile/terminal/rating'; import { createPinInput } from '@sectile/terminal/pin-input'; import { createTagsInput } from '@sectile/terminal/tags-input';
+import { createCascadeList } from '@sectile/terminal/cascade-list';
 import { createCascadeSelect } from '@sectile/terminal/cascade-select';
 import { createColorPicker } from '@sectile/terminal/color-picker';
 import { createDateRangeField } from '@sectile/terminal/date-range-field';
@@ -108,6 +109,7 @@ export const demos = Object.freeze([
   { id: 'rating', label: 'Rating', description: 'ordered score · clearable · controlled · [/] cases', readOnly: true, create: createRatingDemo },
   { id: 'pin-input', label: 'Pin input', description: 'cells · validation · completion · [/] cases', readOnly: true, create: createPinInputDemo },
   { id: 'tags-input', label: 'Tags input', description: 'draft · add/remove · limits · [/] cases', readOnly: true, create: createTagsInputDemo },
+  { id: 'cascade-list', label: 'Cascade list', description: 'visible columns · hierarchy · selection · [/] cases', readOnly: true, create: createCascadeListDemo },
   { id: 'cascade-select', label: 'Cascade select', description: 'columns · hierarchy · selection · [/] cases', readOnly: true, create: createCascadeSelectDemo },
   { id: 'color-picker', label: 'Color picker', description: 'channels · formats · text input · [/] cases', readOnly: true, create: createColorPickerDemo },
   { id: 'date-range-field', label: 'Date range field', description: 'start/end · text editing · commit · [/] cases', readOnly: true, create: (host) => createRangeFieldDemo(host, 'date') },
@@ -582,7 +584,15 @@ function createTagsInputDemo(host) {
   });
 }
 
+function createCascadeListDemo(host) {
+  return createCascadeChoiceDemo(host, false);
+}
+
 function createCascadeSelectDemo(host) {
+  return createCascadeChoiceDemo(host, true);
+}
+
+function createCascadeChoiceDemo(host, popup) {
   const labels = new Map([
     ['platform', 'Platform'], ['web', 'Web'], ['terminal', 'Terminal'],
     ['product', 'Product'], ['dashboard', 'Dashboard'], ['settings', 'Settings'],
@@ -597,15 +607,17 @@ function createCascadeSelectDemo(host) {
     { title: 'Empty destination', initial: null, disabled: [] },
     { title: 'Unavailable terminal target', initial: 'dashboard', disabled: ['terminal'] },
   ], (scenario) => {
-    const connection = createCascadeSelect({
+    const options = {
       ...scenario.interaction,
       nodes,
       disabledItems: scenario.disabled,
       defaultValue: scenario.initial,
       defaultHighlightedValue: scenario.initial ?? 'platform',
-      defaultOpen: true,
       onUpdate: host.render,
-    });
+    };
+    const connection = popup
+      ? createCascadeSelect({ ...options, defaultOpen: true })
+      : createCascadeList(options);
     return {
       handle: (input) => connection.handleKeyboardInput(input),
       lines(width) {
@@ -623,7 +635,7 @@ function createCascadeSelectDemo(host) {
           `${ansi.bold}${scenario.title}${ansi.reset}`,
           `${ansi.dim}←/→ columns · ↑/↓ options · Enter select${ansi.reset}`, '',
           ...rows, '',
-          `value=${(connection.getValuePath().map((id) => labels.get(id))).join(' / ') || '−'}  open=${state.open}`,
+          `value=${(connection.getValuePath().map((id) => labels.get(id))).join(' / ') || '−'}${popup ? `  open=${state.open}` : ''}`,
         ];
       },
     };

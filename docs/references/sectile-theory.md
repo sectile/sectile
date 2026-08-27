@@ -3855,6 +3855,14 @@ DatePicker는 date value, highlighted date, visible month, popup open state를 �
 
 locale별 숫자·월 이름 formatting, 비-Gregorian calendar, time zone conversion, recurrence는 현재 core 범위 밖이다.
 
+## Cascade List
+
+Cascade List는 `Tree + cursor + single selection + expansion path`를 화면에 계속 보이는 열로 표현한다. 현재 가지의 형제 항목이 한 열을 이루고, 가지를 고르면 그 자식 항목이 다음 열에 나타난다. 마지막 항목을 고를 때 최종 값이 확정된다.
+
+각 열은 독립된 listbox이며 위·아래 키는 현재 열의 항목 사이를 이동한다. 오른쪽 키는 현재 가지의 자식 열로, 왼쪽 키는 부모 열로 이동한다. 사용할 수 없는 항목은 계층 안에 남아 있으면서 포커스와 선택 순서에서 빠진다. 열은 페이지 배치에 계속 참여하므로 필터 패널, 설정 탐색, 조건 구성 화면처럼 앞에서 고른 경로와 다음 선택지를 함께 보여 주는 데 적합하다.
+
+Core의 트리 검증, 이동, 선택 규칙은 Cascade Select와 공유한다. DOM과 Vue는 같은 상태를 항상 보이는 여러 열로 투영하고, terminal은 같은 reducer를 키 입력과 열 출력으로 연결한다.
+
 ## Cascade Select
 
 Cascade Select는 새로운 기초 구조가 아니라 `Tree + cursor + single selection + expansion path`의 합성이다. 각 열은 현재 open branch path가 만드는 sibling sequence이며, branch 선택은 다음 열을 열고 leaf 선택만 최종 값을 commit한다.

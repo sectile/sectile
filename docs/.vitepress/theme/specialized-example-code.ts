@@ -1,6 +1,7 @@
 const specializedComponents = new Set([
   'accordion',
   'calendar',
+  'cascade-list',
   'cascade-select',
   'checkbox',
   'color-picker',
@@ -728,6 +729,20 @@ const value = ref(${multiple ? "['bold', 'italic']" : "['left']"})
 }
 
 const staticSources: Readonly<Record<string, string>> = {
+  'cascade-list': `<script setup lang="ts">
+import { CascadeListColumn, CascadeListItem, CascadeListRoot, CascadeListValue } from '@sectile/vue/cascade-list'
+const nodes = [{ id: 'asia', parentID: null }, { id: 'kr', parentID: 'asia' }, { id: 'seoul', parentID: 'kr' }]
+<\/script>
+<template>
+  <CascadeListRoot :nodes="nodes" default-value="seoul" label="Destination" v-slot="{ columns }">
+    <CascadeListValue placeholder="Choose a destination" />
+    <div class="cascade-list-columns">
+      <CascadeListColumn v-for="(_, depth) in columns" :key="depth" :depth="depth" v-slot="{ items }">
+        <CascadeListItem v-for="item in items" :key="item" :value="item">{{ item }}</CascadeListItem>
+      </CascadeListColumn>
+    </div>
+  </CascadeListRoot>
+</template>`,
   'cascade-select': `<script setup lang="ts">
 import { CascadeSelectColumn, CascadeSelectContent, CascadeSelectItem, CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectValue } from '@sectile/vue/cascade-select'
 const nodes = [{ id: 'asia', parentID: null }, { id: 'kr', parentID: 'asia' }, { id: 'seoul', parentID: 'kr' }]

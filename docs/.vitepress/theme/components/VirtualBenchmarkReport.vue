@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { MeterIndicator, MeterRoot, MeterTrack, MeterValueText } from '@sectile/vue/meter';
 import { useDocsLocale } from '../locale.js';
-import DemoCascadeSelect from './DemoCascadeSelect.vue';
+import DemoCascadeList from './DemoCascadeList.vue';
 import {
   baselineBenchmarkResults,
   mutationBenchmarkResults,
@@ -45,7 +45,6 @@ const copy = computed(() => isKorean.value ? {
   title: '같은 조건에서 결과 비교',
   description: '조건을 바꾸면 같은 그래프에서 일곱 라이브러리의 결과를 바로 비교할 수 있습니다.',
   conditionLabel: '비교 조건',
-  conditionPlaceholder: '비교할 조건 선택',
   columnLabel: ['측정 항목', '높이 입력', '변경 위치'],
   scenario: { mount: '처음 표시', scroll: '스크롤', insert: '삽입', move: '이동', remove: '삭제', resize: '높이 변경' } as Record<Scenario, string>,
   mode: { fixed: '고정 높이', estimated: '예상값 제공', automatic: '높이 생략' } as Record<BenchmarkHeightMode, string>,
@@ -92,7 +91,6 @@ const copy = computed(() => isKorean.value ? {
   title: 'Compare results under the same conditions',
   description: 'Change the scenario to compare all seven libraries in the same chart.',
   conditionLabel: 'Comparison conditions',
-  conditionPlaceholder: 'Choose conditions',
   columnLabel: ['Scenario', 'Height input', 'Mutation position'],
   scenario: { mount: 'Initial render', scroll: 'Scroll', insert: 'Insert', move: 'Move', remove: 'Remove', resize: 'Height change' } as Record<Scenario, string>,
   mode: { fixed: 'Fixed height', estimated: 'Estimate provided', automatic: 'Height omitted' } as Record<BenchmarkHeightMode, string>,
@@ -289,7 +287,15 @@ function failureLabel(result: MutationBenchmarkResult): string {
 
     <div class="ds-field benchmark-condition">
       <span>{{ copy.conditionLabel }}</span>
-      <DemoCascadeSelect v-model="cascadeValue" :nodes="cascadeNodes" :text-value="nodeLabel" :label="copy.conditionLabel" :column-labels="copy.columnLabel" :placeholder="copy.conditionPlaceholder" separator=" · " floating />
+      <DemoCascadeList
+        v-model="cascadeValue"
+        :nodes="cascadeNodes"
+        :text-value="nodeLabel"
+        :label="copy.conditionLabel"
+        :column-labels="copy.columnLabel"
+        :column-count="3"
+        :show-value="false"
+      />
     </div>
 
     <figure class="benchmark-figure" aria-labelledby="selected-benchmark-title">

@@ -87,6 +87,26 @@ timer.setActionAttributes(document.querySelector<HTMLButtonElement>('[data-pause
 timer.setActionAttributes(document.querySelector<HTMLButtonElement>('[data-restart]')!, 'restart')
 window.addEventListener('pagehide', () => timer.disconnect(), { once: true })`),
 
+  'cascade-list': example('cascade-list', 'createCascadeList', `const root = document.querySelector<HTMLElement>('[data-cascade-list]')!
+const cascade = createCascadeList({
+  root,
+  nodes: [
+    { id: 'asia', parentID: null },
+    { id: 'kr', parentID: 'asia' },
+    { id: 'seoul', parentID: 'kr' },
+  ],
+  defaultValue: 'seoul',
+  onValueChange: (value) => console.log('destination', value),
+})
+
+for (const column of root.querySelectorAll<HTMLElement>('[data-parent-id]')) {
+  cascade.setColumnAttributes(column, column.dataset.parentId || null, column.dataset.label)
+}
+for (const item of root.querySelectorAll<HTMLElement>('[data-value]')) {
+  cascade.setItemAttributes(item, item.dataset.value!)
+}
+window.addEventListener('pagehide', () => cascade.disconnect(), { once: true })`),
+
   'cascade-select': example('cascade-select', 'createCascadeSelect', `const root = document.querySelector<HTMLElement>('[data-cascade-select]')!
 const trigger = document.querySelector<HTMLButtonElement>('[data-trigger]')!
 const popup = document.querySelector<HTMLElement>('[data-content]')!

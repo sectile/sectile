@@ -358,6 +358,22 @@ const update = applyCarouselEvent(slides, state, '${paused ? 'resume' : 'next'}'
 
 console.log(getCarouselPosition(slides, update.state), update.commands)`;
     }
+    case 'cascade-list': {
+      const disabled = scenario === 'disabled';
+      return `import { applyCascadeListEvent, createCascadeListState, getCascadeListColumns } from '@sectile/core/cascade-list'
+import { createTree } from '@sectile/core/tree'
+
+const locations = createTree([
+  { id: 'korea', parentID: null },
+  { id: 'seoul', parentID: 'korea' },
+  { id: 'busan', parentID: 'korea' },
+  { id: 'jongno', parentID: 'seoul' },
+])
+const state = createCascadeListState(locations, { highlighted: 'seoul', path: ['korea'] })
+const update = applyCascadeListEvent(locations, state, 'right'${disabled ? ", { eligible: (id) => id !== 'busan' }" : ''}).value
+
+console.log(getCascadeListColumns(locations, update.state), update.commands)`;
+    }
     case 'cascade-select': {
       const disabled = scenario === 'disabled';
       return `import { applyCascadeSelectEvent, createCascadeSelectState, getCascadeSelectColumns } from '@sectile/core/cascade-select'
