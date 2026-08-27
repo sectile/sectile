@@ -30,6 +30,7 @@ export const formValueControlInventory = Object.freeze({
   ListboxRoot: { family: 'selection', phase: 'simple' },
   SelectRoot: { family: 'selection', phase: 'simple' },
   ComboboxRoot: { family: 'selection', phase: 'simple' },
+  CascadeListRoot: { family: 'selection', phase: 'simple' },
   CascadeSelectRoot: { family: 'selection', phase: 'simple' },
   RatingRoot: { family: 'selection', phase: 'simple' },
   ToggleGroupRoot: { family: 'selection', phase: 'simple' },

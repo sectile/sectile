@@ -91,6 +91,7 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
     'ListboxRoot',
     'SelectRoot',
     'ComboboxRoot',
+    'CascadeListRoot',
     'CascadeSelectRoot',
     'RatingRoot',
     'ToggleGroupRoot',
