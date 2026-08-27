@@ -24,19 +24,50 @@ export function applyControllerEvent<State, Event, Command, Effect, Code extends
   notify: (previous: State, proposed: State) => void,
   toEffect: (command: Command) => Effect,
 ): RevisionResult<State, Effect, CoreErrorCode | Code> {
+  const prepared = prepareControllerEvent(
+    current,
+    expectedRevision,
+    event,
+    reducer,
+    reconcile,
+    toEffect,
+  );
+  if (!prepared.result.ok) return prepared.result;
+  notify(current.state, prepared.proposed);
+  return prepared.result;
+}
+
+function prepareControllerEvent<State, Event, Command, Effect, Code extends string>(
+  current: RevisionSnapshot<State>,
+  expectedRevision: number,
+  event: Event,
+  reducer: EventReducer<State, Event, Command, Code>,
+  reconcile: (previous: State, proposed: State) => Result<State, Code>,
+  toEffect: (command: Command) => Effect,
+): {
+  readonly result: RevisionResult<State, Effect, CoreErrorCode | Code>;
+  readonly proposed: State;
+} {
   const semantic = applyRevisionedEvent(current, expectedRevision, event, reducer);
-  if (!semantic.ok) return semantic;
+  if (!semantic.ok) return { result: semantic, proposed: current.state };
   const committed = reconcile(current.state, semantic.snapshot.state);
-  if (!committed.ok) return rejectRevisionInput(current, committed.error);
+  if (!committed.ok) {
+    return {
+      result: rejectRevisionInput(current, committed.error),
+      proposed: semantic.snapshot.state,
+    };
+  }
   const snapshot = Object.freeze({
     revision: semantic.snapshot.revision,
     state: committed.value,
   });
-  notify(current.state, semantic.snapshot.state);
-  return mapRevisionCommands(
-    Object.freeze({ ok: true as const, snapshot, commands: semantic.commands }),
-    toEffect,
-  );
+  return {
+    result: mapRevisionCommands(
+      Object.freeze({ ok: true as const, snapshot, commands: semantic.commands }),
+      toEffect,
+    ),
+    proposed: semantic.snapshot.state,
+  };
 }
 
 export function synchronizeControllerState<State, Code extends string>(
@@ -150,17 +181,19 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
           options.interactionIntent?.(event) ?? 'mutate',
         );
         if (!permitted.ok) return rejectRevisionInput(current, permitted.error);
-        const result = applyControllerEvent(
+        const previous = current;
+        const prepared = prepareControllerEvent(
           current,
           expectedRevision,
           event,
           options.reducer,
           options.reconcile ?? ((_previous, proposed) => ({ ok: true, value: proposed })),
-          options.notify ?? (() => undefined),
           options.toEffect,
         );
-        if (result.ok) current = result.snapshot;
-        return result;
+        if (!prepared.result.ok) return prepared.result;
+        current = prepared.result.snapshot;
+        options.notify?.(previous.state, prepared.proposed);
+        return prepared.result;
       },
       reject: <Code extends string>(
         code: Code,
@@ -266,6 +299,7 @@ export function createFacadeConnection<
   let connection: Connection | undefined;
   let active = true;
   const onUpdate = (): void => {
+    if (!active) return;
     options.onUpdate?.();
     if (connection === undefined) return;
     const snapshot = connection.getSnapshot() as SnapshotOf<Connection>;
@@ -279,8 +313,11 @@ export function createFacadeConnection<
     get: (_target, property) => {
       if (property === 'state') return connection?.getSnapshot().state;
       if (property === 'send') return (input: unknown): boolean => active && Boolean(callFirst(target, ['handleEvent', 'handleKeyboardInput', 'handleKeyboardEvent', 'handleBeforeInput'], input));
-      if (property === 'update') return (input: unknown): unknown => callFirst(target, ['syncControlledValues', 'syncControlledValue', 'syncWindow'], input);
+      if (property === 'update') return (input: unknown): unknown => active
+        ? callFirst(target, ['syncControlledValues', 'syncControlledValue', 'syncWindow'], input)
+        : destroyedConnectionResult();
       if (property === 'subscribe') return (listener: FacadeSnapshotListener<Connection>): (() => void) => {
+        if (!active) return (): void => undefined;
         subscribers.add(listener);
         return (): void => { subscribers.delete(listener); };
       };
@@ -294,10 +331,34 @@ export function createFacadeConnection<
       const value = Reflect.get(target, property, target);
       const ownDescriptor = Reflect.getOwnPropertyDescriptor(target, property);
       if (ownDescriptor !== undefined && ownDescriptor.configurable === false) return value;
-      return typeof value === 'function' ? value.bind(target) : value;
+      if (typeof value !== 'function') return value;
+      return (...args: readonly unknown[]): unknown => {
+        if (active || isPostDestroyRead(property)) return Reflect.apply(value, target, args);
+        if (typeof property === 'string' && property.startsWith('handle')) return false;
+        if (typeof property === 'string' && property.startsWith('sync')) {
+          return destroyedConnectionResult();
+        }
+        return undefined;
+      };
     },
   });
   return { ok: true, value: facade as unknown as FacadeConnection<Connection> };
+}
+
+function destroyedConnectionResult(): Result<never> {
+  return {
+    ok: false,
+    error: {
+      class: 'resource-rejection',
+      code: 'connection-destroyed',
+      message: 'A destroyed facade connection cannot be updated.',
+    },
+  };
+}
+
+function isPostDestroyRead(property: PropertyKey): boolean {
+  return property === 'getSnapshot'
+    || (typeof property === 'string' && property.startsWith('get'));
 }
 
 function callFirst(

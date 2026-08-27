@@ -251,7 +251,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "4015085ca6aaea0bfdc03cf86d5bc67bd96ddae4b97920b140fd7a299b6a5d6e",
+  "fingerprint": "754b683d339b86619f4053e1f1e596cb7eb8a9bcefc3239e8357a6494efeb9a4",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -315,7 +315,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "aca08c5a740b106f1ed5eb02700f58505acc3e5ee74a10ac45e219f8e13500e5"
+      "sha256": "248072aeb7a3fec541bc15ec6b6d2a97c095b5023a65759c1551bb25343890e8"
     },
     {
       "path": "dist/feed.d.ts",

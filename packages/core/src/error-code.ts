@@ -68,6 +68,7 @@ export type CoreErrorCode =
   | 'combobox-cursor-outside-domain'
   | 'composition-active'
   | 'composition-inactive'
+  | 'connection-destroyed'
   | 'controlled-shape-mismatch'
   | 'controlled-edit-mode-required'
   | 'controlled-expanded-value-required'

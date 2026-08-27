@@ -56,6 +56,68 @@ test('semantic controller keeps its snapshot when reconciliation rejects', () =>
   assert.deepEqual(result.commands, []);
 });
 
+test('semantic controller commits before notification and preserves nested revisions', () => {
+  let controlled;
+  controlled = createSemanticController({
+    initial: { ok: true, value: false },
+    reducer: (state) => ({
+      ok: true,
+      value: { state: !state, commands: [] },
+    }),
+    reconcile: (previous) => ({ ok: true, value: previous }),
+    notify: (_previous, proposed) => {
+      const synchronized = controlled.value.replace({ ok: true, value: proposed });
+      assert.equal(synchronized.ok, true);
+    },
+    toEffect: (command) => command,
+  });
+  assert.equal(controlled.ok, true);
+
+  const controlledResult = controlled.value.handle('toggle');
+  assert.equal(controlledResult.ok, true);
+  assert.equal(controlledResult.snapshot.state, false);
+  assert.equal(controlled.value.getSnapshot().state, true);
+  assert.equal(controlled.value.getSnapshot().revision, 2);
+
+  let nested = false;
+  let uncontrolled;
+  uncontrolled = createSemanticController({
+    initial: { ok: true, value: 0 },
+    reducer: (state, amount) => ({
+      ok: true,
+      value: { state: state + amount, commands: [] },
+    }),
+    notify: () => {
+      if (nested) return;
+      nested = true;
+      const result = uncontrolled.value.handle(1);
+      assert.equal(result.ok, true);
+    },
+    toEffect: (command) => command,
+  });
+  assert.equal(uncontrolled.ok, true);
+
+  const outer = uncontrolled.value.handle(1);
+  assert.equal(outer.ok, true);
+  assert.equal(outer.snapshot.state, 1);
+  assert.equal(uncontrolled.value.getSnapshot().state, 2);
+  assert.equal(uncontrolled.value.getSnapshot().revision, 2);
+});
+
+test('semantic controller retains its committed snapshot when notification throws', () => {
+  const constructed = createSemanticController({
+    initial: { ok: true, value: 0 },
+    reducer: (state) => ({ ok: true, value: { state: state + 1, commands: [] } }),
+    notify: () => { throw new Error('observer failed'); },
+    toEffect: (command) => command,
+  });
+  assert.equal(constructed.ok, true);
+
+  assert.throws(() => constructed.value.handle('increment'), /observer failed/);
+  assert.equal(constructed.value.getSnapshot().state, 1);
+  assert.equal(constructed.value.getSnapshot().revision, 1);
+});
+
 test('facade connection exposes live state, subscriptions, and idempotent destruction', () => {
   let state = 0;
   let onUpdate = () => undefined;
@@ -89,4 +151,47 @@ test('facade connection exposes live state, subscriptions, and idempotent destru
   constructed.value.destroy();
   assert.equal(constructed.value.send(4), false);
   assert.equal(disconnects, 1);
+});
+
+test('destroyed facade connections reject every mutation path and new subscription', () => {
+  let state = 0;
+  let onUpdate = () => undefined;
+  let updates = 0;
+  const constructed = createFacadeConnection(
+    { onUpdate: () => { updates += 1; } },
+    (options) => {
+      onUpdate = options.onUpdate;
+      return {
+        ok: true,
+        value: {
+          getSnapshot: () => ({ state }),
+          handleEvent: (value) => { state = value; onUpdate(); return true; },
+          syncControlledValue: (value) => {
+            state = value;
+            onUpdate();
+            return { ok: true, value: { state } };
+          },
+          refresh: () => { state += 100; onUpdate(); },
+          disconnect: () => undefined,
+        },
+      };
+    },
+  );
+  assert.equal(constructed.ok, true);
+  const directHandle = constructed.value.handleEvent;
+  const snapshots = [];
+
+  constructed.value.destroy();
+  constructed.value.subscribe((snapshot) => snapshots.push(snapshot.state));
+  assert.equal(constructed.value.send(1), false);
+  assert.equal(directHandle(2), false);
+  assert.equal(constructed.value.handleEvent(3), false);
+  assert.equal(constructed.value.syncControlledValue(4).error.code, 'connection-destroyed');
+  assert.equal(constructed.value.update(5).error.code, 'connection-destroyed');
+  constructed.value.refresh();
+
+  assert.equal(constructed.value.state, 0);
+  assert.equal(constructed.value.getSnapshot().state, 0);
+  assert.deepEqual(snapshots, []);
+  assert.equal(updates, 0);
 });
