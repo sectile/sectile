@@ -255,7 +255,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "3d1d9c02b1bd219b4e5241f9d3a59f7560c3bb019c688497aadefc1f27eaa8fb",
+  "fingerprint": "1907610ce8fb0ca70ce0bdc621866cade339ff6bc213a1dc8fd3696d134590cd",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -427,7 +427,7 @@
     },
     {
       "path": "dist/popover.d.ts",
-      "sha256": "8c5324fd6e69a6c02467a99caedabb0a21079b93c5257c30a9ad59326068017d"
+      "sha256": "aac36d20bd746d5eb5dfa45577eb7c3cb8b3dc8f4e3198aeb131c6344f565d9c"
     },
     {
       "path": "dist/quantity-field.d.ts",

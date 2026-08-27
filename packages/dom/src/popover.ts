@@ -54,6 +54,7 @@ export interface PopoverOptions {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly disabled?: boolean;
+  readonly modal?: boolean;
   readonly label?: string;
   readonly labelledBy?: string;
   readonly describedBy?: string;
@@ -105,11 +106,12 @@ export function tryCreatePopover(options: PopoverOptions): Result<FacadeConnecti
 
 function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConnection> {
   let connection: PositionedPopover | undefined;
+  const modal = options.modal ?? false;
   const popup = createDOMPopup<PopoverState, PopoverEvent, PopoverCommand>({
     root: options.root,
     ...(options.trigger === undefined ? {} : { trigger: options.trigger }),
     role: 'dialog',
-    modal: false,
+    modal,
     ...(options.label === undefined ? {} : { label: options.label }),
     ...(options.labelledBy === undefined ? {} : { labelledBy: options.labelledBy }),
     ...(options.describedBy === undefined ? {} : { describedBy: options.describedBy }),
@@ -123,7 +125,7 @@ function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConn
     ...(options.initialFocus === undefined ? {} : { initialFocus: options.initialFocus }),
     autoFocus: options.autoFocus ?? false,
     restoreFocus: options.restoreFocus ?? true,
-    trapFocus: options.trapFocus ?? false,
+    trapFocus: options.trapFocus ?? modal,
     closeOnInteractOutside: options.closeOnInteractOutside ?? true,
     ...(options.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: options.interactOutsideExclusions }),
     ...(options.onInteractOutside === undefined ? {} : { onInteractOutside: options.onInteractOutside }),

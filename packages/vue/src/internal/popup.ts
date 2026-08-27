@@ -47,6 +47,7 @@ export interface PopupFactoryOptions {
   readonly label?: string;
   readonly labelledBy?: string;
   readonly describedBy?: string;
+  readonly initialFocus?: HTMLElement;
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
@@ -95,6 +96,7 @@ export interface PopupRootProps {
   readonly disabled?: boolean;
   readonly modal?: boolean;
   readonly label?: string;
+  readonly initialFocus?: HTMLElement;
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
@@ -174,6 +176,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       disabled: { type: Boolean, default: false },
       modal: { type: Boolean, default: config.modal },
       label: { type: String, default: undefined },
+      initialFocus: { type: Object as PropType<HTMLElement>, default: undefined },
       autoFocus: { type: Boolean, default: true },
       restoreFocus: { type: Boolean, default: true },
       trapFocus: { type: Boolean, default: config.modal },
@@ -246,6 +249,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           modal: props.modal,
           ...(props.label === undefined ? { labelledBy: titleID } : { label: props.label }),
           describedBy: descriptionID,
+          ...(props.initialFocus === undefined ? {} : { initialFocus: props.initialFocus }),
           autoFocus: props.autoFocus,
           restoreFocus: props.restoreFocus,
           trapFocus: props.trapFocus,
@@ -270,7 +274,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             if (!controlled) localOpen.value = next;
             emit('update:open', next);
           },
-          onPositionChange: (position) => { positioned.value = true; emit('positionChange', position); },
+          onPositionChange: (position) => {
+            const becamePositioned = !positioned.value;
+            positioned.value = true;
+            emit('positionChange', position);
+            if (becamePositioned) void nextTick(() => connection.value?.refresh());
+          },
           onInteractOutside: (event) => { emit('interactOutside', event); },
           onUpdate: update,
         });
@@ -320,7 +329,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         localOpen.value = next;
       });
       watch([
-        () => props.disabled, () => props.modal, () => props.label, () => props.autoFocus, () => props.restoreFocus,
+        () => props.disabled, () => props.modal, () => props.label, () => props.initialFocus,
+        () => props.autoFocus, () => props.restoreFocus,
         () => props.trapFocus, () => props.closeOnInteractOutside, () => props.interactOutsideExclusions, () => props.side,
         () => props.swipeToDismiss, () => props.swipeThreshold, () => props.swipeVelocityThreshold, () => props.align,
         () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary,
