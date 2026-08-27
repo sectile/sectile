@@ -1,4 +1,5 @@
-import type { SectileError, StableID } from '@sectile/core';
+import '@sectile/virtual';
+import type { Result, SectileError, StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
 import type { ExtentUpdate } from '@sectile/virtual/extent-index';
 import type {
@@ -12,7 +13,8 @@ import type {
   VirtualScrollAlignment,
 } from '@sectile/virtual/layout';
 import type { VirtualErrorCode } from '@sectile/virtual';
-import type { DOMVirtualResult } from './internal/result.js';
+
+type DOMVirtualResult<T> = Result<T, VirtualErrorCode>;
 
 export interface VirtualizerEnvironment {
   requestFrame(callback: FrameRequestCallback): number;

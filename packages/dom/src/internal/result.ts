@@ -7,7 +7,6 @@ import {
   type SemanticControllerOptions,
 } from '@sectile/core/adapter-runtime';
 import type { TemporalErrorCode } from '@sectile/temporal';
-import type { VirtualErrorCode } from '@sectile/virtual';
 
 interface DOMFacadeOptions {
   readonly onUpdate?: () => void;
@@ -18,7 +17,6 @@ interface DOMSnapshotConnection {
 }
 
 export type DOMTemporalResult<T> = Result<T, TemporalErrorCode>;
-export type DOMVirtualResult<T> = Result<T, VirtualErrorCode>;
 export type DOMTemporalController<State, Event, Effect> = SemanticController<State, Event, Effect, TemporalErrorCode>;
 
 export function createDOMTemporalController<State, Event, Command, Effect>(

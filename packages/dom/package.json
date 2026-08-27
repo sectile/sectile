@@ -349,10 +349,18 @@
     "@floating-ui/dom": "^1.8.0",
     "@sectile/core": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
-    "@sectile/temporal": "workspace:*",
+    "@sectile/temporal": "workspace:*"
+  },
+  "peerDependencies": {
     "@sectile/virtual": "workspace:*"
   },
+  "peerDependenciesMeta": {
+    "@sectile/virtual": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@sectile/virtual": "workspace:*",
     "happy-dom": "^20.11.6",
     "typescript": "7.0.2"
   }

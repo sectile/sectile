@@ -15,4 +15,6 @@ Components expose stable `data-scope`, `data-part`, and `data-state` attributes.
 `@sectile/vue/virtual` provides the typed `useVirtualizer` composable and
 `VirtualizerRoot`, `VirtualizerContent`, and `VirtualizerItem` headless parts.
 `VirtualizerItem` supports `asChild`, so existing collection items keep their
-semantic element while receiving virtual placement and measurement refs.
+semantic element while receiving virtual placement and measurement refs. Install
+`@sectile/virtual` separately when using this subpath; the rest of `@sectile/vue`
+does not require it.

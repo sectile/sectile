@@ -19,7 +19,9 @@ The package does not provide markup, components, styles, themes, or application 
 to a scroll element. It coalesces scroll and resize work per animation frame,
 batches item measurements, applies anchor correction before publishing the next
 plan, and exposes manual measurement and mutation operations for track grids and
-other non-linear layouts. Content and item style helpers remain opt-in.
+other non-linear layouts. Content and item style helpers remain opt-in. Install
+`@sectile/virtual` separately when using this subpath; the rest of `@sectile/dom`
+does not require it.
 
 ## Floating surface positioning
 
