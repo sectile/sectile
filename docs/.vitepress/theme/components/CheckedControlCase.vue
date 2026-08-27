@@ -16,11 +16,23 @@ const props = withDefaults(defineProps<{
   readonly controlled?: boolean;
   readonly disabled?: boolean;
   readonly?: boolean;
+  readonly preview?: boolean;
 }>(), {
   controlled: false,
   disabled: false,
   readonly: false,
+  preview: false,
 });
+
+const booleanPreviewStates = [
+  { value: false, label: 'Off' },
+  { value: true, label: 'On' },
+] as const;
+const checkboxPreviewStates = [
+  { value: false, label: 'Unchecked', description: 'No value selected' },
+  { value: true, label: 'Checked', description: 'Value selected' },
+  { value: 'indeterminate', label: 'Mixed', description: 'Partial selection' },
+] as const satisfies readonly { readonly value: CheckboxValue; readonly label: string; readonly description: string }[];
 
 const value = ref<CheckboxValue>(props.initialValue);
 const revision = ref(0);
@@ -71,10 +83,55 @@ function handleBooleanUpdate(next: boolean): void {
     :interaction="interaction"
     :code="sourceCode"
   >
-    <div class="checked-demo">
-      <p class="demo-copy">{{ description }}</p>
+    <div class="checked-demo" :class="{ 'checked-demo--preview': preview }">
+      <p v-if="!preview" class="demo-copy">{{ description }}</p>
+      <template v-if="preview">
+        <SwitchRoot
+          v-if="kind === 'switch'"
+          v-for="item in booleanPreviewStates"
+          :key="item.label"
+          :default-value="item.value"
+          class="switch-control"
+        >
+          <span class="checked-control-label">
+            <Bell :size="17" aria-hidden="true" />
+            <span class="state-preview-copy"><strong>Notifications</strong><small>{{ item.label }}</small></span>
+          </span>
+          <span class="switch-track" aria-hidden="true"><SwitchThumb class="switch-thumb" /></span>
+        </SwitchRoot>
+
+        <CheckboxRoot
+          v-else-if="kind === 'checkbox'"
+          v-for="item in checkboxPreviewStates"
+          :key="item.label"
+          v-slot="{ isIndeterminate }"
+          :default-value="item.value"
+          class="checkbox-control"
+        >
+          <span class="checkbox-marker" aria-hidden="true">
+            <CheckboxIndicator class="checkbox-indicator">
+              <Minus v-if="isIndeterminate" :size="15" :stroke-width="2.5" />
+              <Check v-else :size="15" :stroke-width="2.5" />
+            </CheckboxIndicator>
+          </span>
+          <span class="state-preview-copy"><strong>{{ item.label }}</strong><small>{{ item.description }}</small></span>
+        </CheckboxRoot>
+
+        <ToggleButton
+          v-else
+          v-for="item in booleanPreviewStates"
+          :key="item.label"
+          :default-value="item.value"
+          class="toggle-control"
+        >
+          <Bold :size="18" aria-hidden="true" />
+          <span>Bold</span>
+          <span class="toggle-value">{{ item.label }}</span>
+        </ToggleButton>
+      </template>
+
       <SwitchRoot
-        v-if="kind === 'switch'"
+        v-else-if="kind === 'switch'"
         v-bind="booleanOwnershipProps"
         :disabled="disabled"
         :readonly="readonly"

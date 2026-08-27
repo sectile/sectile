@@ -17,11 +17,18 @@ const props = withDefaults(defineProps<{
   readonly controlled?: boolean;
   readonly disabled?: boolean;
   readonly?: boolean;
+  readonly preview?: boolean;
 }>(), {
   controlled: false,
   disabled: false,
   readonly: false,
+  preview: false,
 });
+
+const previewStates = [
+  { open: false, label: 'Closed' },
+  { open: true, label: 'Open' },
+] as const;
 
 const value = ref(props.initialValue);
 const revision = ref(0);
@@ -59,9 +66,26 @@ function handleUpdate(next: boolean): void {
     :interaction="interaction"
     :code="sourceCode"
   >
-    <div class="disclosure-demo">
-      <p class="demo-copy">{{ description }}</p>
+    <div class="disclosure-demo" :class="{ 'disclosure-demo--preview': preview }">
+      <p v-if="!preview" class="demo-copy">{{ description }}</p>
+      <template v-if="preview">
+        <DisclosureRoot
+          v-for="item in previewStates"
+          :key="item.label"
+          :default-value="item.open"
+          class="disclosure-control"
+        >
+          <DisclosureTrigger class="disclosure-trigger">
+            <span class="disclosure-preview-heading"><span>Advanced options</span><small>{{ item.label }}</small></span>
+            <ChevronDown :size="17" aria-hidden="true" />
+          </DisclosureTrigger>
+          <DisclosureContent class="disclosure-content">
+            Browser-defined focus with Sectile-owned open state.
+          </DisclosureContent>
+        </DisclosureRoot>
+      </template>
       <DisclosureRoot
+        v-else
         v-bind="ownershipProps"
         :disabled="disabled"
         :readonly="readonly"

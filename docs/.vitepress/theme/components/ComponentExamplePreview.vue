@@ -68,11 +68,11 @@ function resolveExample(): ResolvedExample {
   const controlled = props.scenario.includes('controlled');
   const initialOn = ['on', 'open', 'initially-open'].includes(props.scenario) || controlled;
   switch (props.component) {
-    case 'checkbox': return specialized(CheckedControlCase, { kind: 'checkbox', label: 'Include analytics', initialValue: props.scenario === 'mixed' ? 'indeterminate' : controlled, controlled });
-    case 'switch': return specialized(CheckedControlCase, { kind: 'switch', label: 'Deployment notifications', initialValue: initialOn, controlled });
-    case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled });
+    case 'checkbox': return specialized(CheckedControlCase, { kind: 'checkbox', label: 'Include analytics', initialValue: props.scenario === 'mixed' ? 'indeterminate' : controlled, controlled, preview: props.preview });
+    case 'switch': return specialized(CheckedControlCase, { kind: 'switch', label: 'Deployment notifications', initialValue: initialOn, controlled, preview: props.preview });
+    case 'toggle-button': return specialized(CheckedControlCase, { kind: 'toggle-button', label: props.scenario === 'alert' ? 'Watch alerts' : 'Bold', initialValue: initialOn, controlled, preview: props.preview });
     case 'accordion': return specialized(AccordionCase, { type: props.scenario === 'multiple' ? 'multiple' : 'single', initialValue: props.preview ? 'general' : props.scenario === 'required' ? 'deployments' : '', collapsible: props.scenario !== 'required', controlled });
-    case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: props.preview || initialOn, controlled });
+    case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled, preview: props.preview });
     case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
     case 'form': return specialized(FormCase, { scenario: props.scenario });

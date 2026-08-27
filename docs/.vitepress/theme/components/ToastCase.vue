@@ -6,6 +6,8 @@ import DemoCard from './DemoCard.vue'; import type { EventEntry } from '../types
 const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly persistent?: boolean; readonly maxVisible?: number; readonly preview?: boolean }>(), { persistent: false, maxVisible: 3, preview: false });
 const previewToasts = Object.freeze([
   Object.freeze({ id: 'gallery-preview', title: 'Release saved', description: 'Version 0.2.0 is ready to publish.', kind: 'success' as const, durationMs: null }),
+  Object.freeze({ id: 'gallery-warning', title: 'Review required', description: 'A teammate requested approval.', kind: 'warning' as const, durationMs: null }),
+  Object.freeze({ id: 'gallery-error', title: 'Deployment failed', description: 'Open the build log for details.', kind: 'error' as const, durationMs: null }),
 ]);
 const revision = ref(0); const sequence = ref(0); const entries = ref<EventEntry[]>([]);
 const state = computed(() => ({ persistent: props.persistent, maxVisible: props.maxVisible }));
