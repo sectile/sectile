@@ -51,6 +51,11 @@
       "import": "./dist/result.js",
       "default": "./dist/result.js"
     },
+    "./selection": {
+      "types": "./dist/selection.d.ts",
+      "import": "./dist/selection.js",
+      "default": "./dist/selection.js"
+    },
     "./interaction": {
       "types": "./dist/interaction.d.ts",
       "import": "./dist/interaction.js",

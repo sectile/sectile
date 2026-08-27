@@ -167,6 +167,10 @@
       "types": "dist/select.d.ts"
     },
     {
+      "subpath": "./selection",
+      "types": "dist/selection.d.ts"
+    },
+    {
       "subpath": "./sequence",
       "types": "dist/structures/sequence.d.ts"
     },
@@ -243,7 +247,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "4e06fa01b17347eb5578f01a181bde645372e8f15a60706220b3992d9f9ce4fe",
+  "fingerprint": "4236e26f0103529b70c5b13d059f3cd6a49904c32390f9fb66899f916be2d4de",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -315,7 +319,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "7b0deb3c9ad13b8081911916adb06877ae0f205e71e4c4dac96149e3544ad9b1"
+      "sha256": "be91a51ea9890a5284b4bac5d1843f56c8818f26d300cddbd1f8660757678f8f"
     },
     {
       "path": "dist/interaction.d.ts",
@@ -480,6 +484,10 @@
     {
       "path": "dist/select.d.ts",
       "sha256": "e2730237c0df75d3eccd9625a346fd72bc2a80d10fbe017686a6d4abd7f2069c"
+    },
+    {
+      "path": "dist/selection.d.ts",
+      "sha256": "6742ca262a742079585442f48f7cb2722aa2dee39fcacd25f8cab977479e883e"
     },
     {
       "path": "dist/shared.d.ts",

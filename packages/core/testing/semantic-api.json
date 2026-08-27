@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "280d8ba098650b06e1fda550db25d21a298ce83e52c51ebc74d3a662ea9bccd9",
+    "publicSignatureFingerprint": "93f14b11827b1dd7015c41ed1ffa2a0f286dd9b57f20ac30ca3bced655ddd736",
     "subpaths": [
       ".",
       "./accordion",
@@ -54,6 +54,7 @@
       "./result",
       "./revision",
       "./select",
+      "./selection",
       "./sequence",
       "./slider",
       "./spin-button",
@@ -533,7 +534,7 @@
     }
   ],
   "acceptance": {
-    "classification": "contract-impact-reviewed",
-    "reason": "Add_MeterGroup_exact_partition_subpath_and_explicit_construction_errors"
+    "classification": "minor",
+    "reason": "public-selection-facade-for-tabular-composition"
   }
 }

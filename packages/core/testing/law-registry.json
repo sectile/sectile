@@ -192,6 +192,51 @@
       "statement": "expansion reconciliation"
     },
     {
+      "id": "SEL-01",
+      "theory": "selection",
+      "statement": "selected identities and anchor remain inside the domain"
+    },
+    {
+      "id": "SEL-02",
+      "theory": "selection",
+      "statement": "single mode contains at most one selected identity"
+    },
+    {
+      "id": "SEL-03",
+      "theory": "selection",
+      "statement": "reconciliation is idempotent for a fixed domain and mode"
+    },
+    {
+      "id": "SEL-04",
+      "theory": "selection",
+      "statement": "multiple-selection toggle is an involution"
+    },
+    {
+      "id": "SEL-05",
+      "theory": "selection",
+      "statement": "clearing an empty selection is idempotent"
+    },
+    {
+      "id": "SEL-06",
+      "theory": "selection",
+      "statement": "interval selection follows contiguous domain order"
+    },
+    {
+      "id": "SEL-07",
+      "theory": "selection",
+      "statement": "out-of-domain operations preserve the current state"
+    },
+    {
+      "id": "SEL-08",
+      "theory": "selection",
+      "statement": "identity renaming commutes with selection operations"
+    },
+    {
+      "id": "SEL-09",
+      "theory": "selection",
+      "statement": "selection state owns no cursor authority"
+    },
+    {
       "id": "FRM-01",
       "theory": "form",
       "statement": "validation generations increase and reject stale completion"

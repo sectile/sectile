@@ -9,7 +9,7 @@ import {
   selectInterval,
   selectOne,
   toggleMultipleSelection,
-} from '../../.verification-dist/internal/state/selection.js';
+} from '../../.verification-dist/selection.js';
 import {
   ReferenceSelectionState,
   reconcileReferenceSelection,

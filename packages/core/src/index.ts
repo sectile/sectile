@@ -19,6 +19,12 @@ export type {
 export type { CoreErrorCode } from './error-code.js';
 export type { SequencePatch } from './structures/sequence.js';
 export type {
+  SelectionDomain,
+  SelectionMode,
+  SelectionSnapshotInput,
+  SelectionState,
+} from './selection.js';
+export type {
   InteractionIntent,
   InteractionState,
   InteractionStateInput,
