@@ -14,9 +14,16 @@ const familyArgument = process.argv.find((argument) => argument.startsWith('--fa
 const requestedFamily = familyArgument?.slice('--family='.length);
 const families = requestedFamily === undefined ? Object.keys(manifest.families) : [requestedFamily];
 for (const family of families) assert.ok(manifest.families[family] !== undefined, `Unknown family ${family}.`);
+const packageArgument = process.argv.find((argument) => argument.startsWith('--package='));
+const requestedPackage = packageArgument?.slice('--package='.length);
+const supportedPackages = ['core', 'dom', 'terminal', 'vue'];
+const packageNames = requestedPackage === undefined ? supportedPackages : [requestedPackage];
+for (const packageName of packageNames) {
+  assert.ok(supportedPackages.includes(packageName), `Unknown package ${packageName}.`);
+}
 
 for (const family of families) {
-  for (const packageName of ['core', 'dom', 'terminal', 'vue']) {
+  for (const packageName of packageNames) {
     const packageRoot = resolve('packages', packageName);
     const packageJson = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
     const contract = manifest.families[family][packageName];

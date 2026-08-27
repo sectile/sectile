@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "29b44c27396339fb7db7aede30425eff50e3dbae7e31633fa49c245705d691a6",
+    "publicSignatureFingerprint": "280d8ba098650b06e1fda550db25d21a298ce83e52c51ebc74d3a662ea9bccd9",
     "subpaths": [
       ".",
       "./accordion",
@@ -37,6 +37,7 @@
       "./menu-button",
       "./menubar",
       "./meter",
+      "./meter-group",
       "./multi-thumb-slider",
       "./navigation-menu",
       "./number-field",
@@ -381,6 +382,9 @@
       "menu-closed",
       "menu-cursor-hidden",
       "menu-target-hidden",
+      "meter-group-maximum-not-positive",
+      "meter-group-total-exceeds-maximum",
+      "meter-group-value-negative",
       "meter-threshold-order-invalid",
       "meter-threshold-outside-range",
       "meter-value-outside-range",
@@ -530,6 +534,6 @@
   ],
   "acceptance": {
     "classification": "contract-impact-reviewed",
-    "reason": "Add_progress_subpath_and_explicit_construction_errors"
+    "reason": "Add_MeterGroup_exact_partition_subpath_and_explicit_construction_errors"
   }
 }

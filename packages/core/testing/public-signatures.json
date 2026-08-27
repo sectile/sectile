@@ -103,6 +103,10 @@
       "types": "dist/meter.d.ts"
     },
     {
+      "subpath": "./meter-group",
+      "types": "dist/meter-group.d.ts"
+    },
+    {
       "subpath": "./multi-thumb-slider",
       "types": "dist/multi-thumb-slider.d.ts"
     },
@@ -239,7 +243,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d2585af03b2823d683f004c8135449b34c2d0d602e2efda7895b46e2ae2f2318",
+  "fingerprint": "4e06fa01b17347eb5578f01a181bde645372e8f15a60706220b3992d9f9ce4fe",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -299,7 +303,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "81397438e88b14682d775d6cf6479bbf983009fa53271164d649c6b04a9d4d9c"
+      "sha256": "318c7d317c6152929d6d71384c7301cc69572698b2d084d8b5b0cad8c1f23d5a"
     },
     {
       "path": "dist/feed.d.ts",
@@ -412,6 +416,10 @@
     {
       "path": "dist/menubar.d.ts",
       "sha256": "50a1c2af32b2a24ec3abe51588090d7b4b458e08da414ce802e4c37f382491d3"
+    },
+    {
+      "path": "dist/meter-group.d.ts",
+      "sha256": "4d309e510ff818218bc0e801339ef61b7637ab914622f73b93ad0f10bf20395d"
     },
     {
       "path": "dist/meter.d.ts",

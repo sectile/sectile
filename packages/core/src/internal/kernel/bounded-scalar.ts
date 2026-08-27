@@ -134,5 +134,5 @@ export function decimalInClosedRange(value: ExactDecimal, min: ExactDecimal, max
   return compareDecimal(value, min) >= 0 && compareDecimal(value, max) <= 0;
 }
 
-export { compareDecimal, decimalToString, parseDecimal, subtractDecimal };
+export { addDecimal, compareDecimal, decimalToString, parseDecimal, subtractDecimal };
 export type { ExactDecimal };
