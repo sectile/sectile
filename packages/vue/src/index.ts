@@ -518,6 +518,7 @@ export {
   type CalendarViewMode,
 } from './calendar.js';
 export {
+  DatePickerAnchor,
   DatePickerCell,
   DatePickerContent,
   DatePickerGrid,
@@ -542,6 +543,7 @@ export {
   type DatePickerRootSlotProps,
 } from './date-picker.js';
 export {
+  DateRangePickerAnchor,
   DateRangePickerCell,
   DateRangePickerContent,
   DateRangePickerEndInput,
@@ -581,6 +583,7 @@ export {
   type RangeCalendarRootSlotProps,
 } from './range-calendar.js';
 export {
+  MonthPickerAnchor,
   MonthPickerCell,
   MonthPickerContent,
   MonthPickerGrid,
@@ -598,6 +601,7 @@ export {
   type MonthPickerValue,
 } from './month-picker.js';
 export {
+  MonthRangePickerAnchor,
   MonthRangePickerCell,
   MonthRangePickerContent,
   MonthRangePickerEndInput,
@@ -616,6 +620,7 @@ export {
   type MonthRangePickerValue,
 } from './month-range-picker.js';
 export {
+  YearPickerAnchor,
   YearPickerCell,
   YearPickerContent,
   YearPickerGrid,
@@ -633,6 +638,7 @@ export {
   type YearPickerValue,
 } from './year-picker.js';
 export {
+  YearRangePickerAnchor,
   YearRangePickerCell,
   YearRangePickerContent,
   YearRangePickerEndInput,
@@ -651,6 +657,7 @@ export {
   type YearRangePickerValue,
 } from './year-range-picker.js';
 export {
+  DateTimePickerAnchor,
   DateTimePickerCell,
   DateTimePickerContent,
   DateTimePickerDateInput,
@@ -677,6 +684,7 @@ export {
   type DateTimePickerRootSlotProps,
 } from './date-time-picker.js';
 export {
+  DateTimeRangePickerAnchor,
   DateTimeRangePickerCell,
   DateTimeRangePickerContent,
   DateTimeRangePickerEndDateInput,

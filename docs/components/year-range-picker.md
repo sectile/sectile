@@ -32,6 +32,7 @@ Vue package: `@sectile/vue/year-range-picker`
 <ul class="component-api-list">
   <li><code class="component-api-token">YearRangePickerRoot</code></li>
   <li><code class="component-api-token">YearRangePickerTrigger</code></li>
+  <li><code class="component-api-token">YearRangePickerAnchor</code></li>
   <li><code class="component-api-token">YearRangePickerPortal</code></li>
   <li><code class="component-api-token">YearRangePickerContent</code></li>
   <li><code class="component-api-token">YearRangePickerGrid</code></li>
@@ -51,7 +52,7 @@ Vue package: `@sectile/vue/year-range-picker`
 <div class="component-api-definition">
 <dt><code>align</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">Default</span><code>'start'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">Default</span><code>'center'</code></span></div>
 <p>Alignment of positioned content relative to its anchor.</p>
 </dd>
 </div>
@@ -219,7 +220,7 @@ Vue package: `@sectile/vue/year-range-picker`
 <div class="component-api-definition">
 <dt><code>sideOffset</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>4</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
 <p>Distance between positioned content and its anchor.</p>
 </dd>
 </div>
@@ -462,6 +463,12 @@ Shared scope: <code class="component-scope-token">[data-scope="year-range-picker
   <td><code class="component-part-token">end-input</code></td>
   <td><code>[data-part="end-input"]</code></td>
   <td>Edits the end value.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">anchor</code></td>
+  <td><code>[data-part="anchor"]</code></td>
+  <td>Provides the positioning reference for floating content.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>

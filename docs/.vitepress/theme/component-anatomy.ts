@@ -163,13 +163,13 @@ const partPurposes = Object.freeze<Record<string, Readonly<{ en: string; ko: str
 const popupParts = ['trigger', 'overlay', 'content', 'title', 'description', 'close'] as const;
 const fieldParts = ['input'] as const;
 const rangePickerParts = [
-  'start-input', 'end-input', 'trigger', 'content', 'week-view-trigger',
+  'start-input', 'end-input', 'anchor', 'trigger', 'content', 'week-view-trigger',
   'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week',
   'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell',
   'month-cell',
 ] as const;
 const pickerParts = [
-  'input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger',
+  'input', 'anchor', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger',
   'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month',
   'previous-year', 'next-year', 'grid', 'cell', 'month-cell',
 ] as const;
@@ -192,8 +192,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'date-range-field': anatomy('date-range-field', ['root', 'start-input', 'end-input']),
   'date-range-picker': anatomy('date-range-picker', rangePickerParts),
   'date-time-field': anatomy('date-time-field', fieldParts),
-  'date-time-picker': anatomy('date-time-picker', ['date-time-input', 'date-input', 'time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
-  'date-time-range-picker': anatomy('date-time-range-picker', ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
+  'date-time-picker': anatomy('date-time-picker', ['date-time-input', 'date-input', 'time-input', 'anchor', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
+  'date-time-range-picker': anatomy('date-time-range-picker', ['start-date-time-input', 'end-date-time-input', 'start-date-input', 'end-date-input', 'start-time-input', 'end-time-input', 'anchor', 'trigger', 'content', 'week-view-trigger', 'month-view-trigger', 'year-view-trigger', 'previous-week', 'next-week', 'previous-month', 'next-month', 'previous-year', 'next-year', 'grid', 'cell', 'month-cell']),
   'date-picker': anatomy('date-picker', pickerParts),
   dialog: anatomy('dialog', popupParts),
   drawer: anatomy('drawer', ['trigger', 'overlay', 'content', 'handle', 'title', 'description', 'close'], {
@@ -211,8 +211,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   menu: anatomy('menu', ['root', 'item', 'sub-content', 'separator'], menuPartDetails()),
   'menu-button': anatomy('menu-button', ['trigger', 'content', 'item', 'sub-content', 'separator'], menuPartDetails('menu-button')),
   menubar: anatomy('menubar', ['root', 'item', 'sub-content', 'separator'], menuPartDetails('menubar')),
-  'month-picker': anatomy('month-picker', ['input', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
-  'month-range-picker': anatomy('month-range-picker', ['start-input', 'end-input', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
+  'month-picker': anatomy('month-picker', ['input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
+  'month-range-picker': anatomy('month-range-picker', ['start-input', 'end-input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'multi-thumb-slider': anatomy('multi-thumb-slider', ['root', 'track', 'range', 'thumb']),
   'navigation-menu': anatomy('navigation-menu', ['root', 'list', 'item-container', 'item', 'sub-content', 'viewport', 'indicator'], menuPartDetails('navigation-menu')),
   'number-field': anatomy('number-field', fieldParts),
@@ -251,8 +251,8 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   'tree-grid': anatomy('tree-grid', ['root', 'row', 'cell', 'disclosure', 'editor']),
   'tree-view': anatomy('tree-view', ['root', 'group', 'item', 'disclosure']),
   'window-splitter': anatomy('window-splitter', ['root', 'pane', 'handle']),
-  'year-picker': anatomy('year-picker', ['input', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
-  'year-range-picker': anatomy('year-range-picker', ['start-input', 'end-input', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
+  'year-picker': anatomy('year-picker', ['input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
+  'year-range-picker': anatomy('year-range-picker', ['start-input', 'end-input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-page', 'next-page']),
 });
 
 function menuPartDetails(rootScope = 'menu'): Readonly<Record<string, AnatomyPartDetail>> {

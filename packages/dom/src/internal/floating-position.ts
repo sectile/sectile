@@ -4,7 +4,6 @@ import {
   computePosition,
   flip as flipMiddleware,
   hide as hideMiddleware,
-  limitShift as limitShiftMiddleware,
   offset as offsetMiddleware,
   shift as shiftMiddleware,
   size as sizeMiddleware,
@@ -117,7 +116,7 @@ function defaultMiddleware(options: FloatingPositionOptions): Middleware[] {
   if (options.avoidCollisions ?? true) {
     middleware.push(
       flipMiddleware({ ...overflow, crossAxis: 'alignment', fallbackAxisSideDirection: 'end' }),
-      shiftMiddleware({ ...overflow, crossAxis: true, limiter: limitShiftMiddleware() }),
+      shiftMiddleware(overflow),
       sizeMiddleware({
         ...overflow,
         apply: ({ availableHeight, availableWidth, elements, rects }) => {

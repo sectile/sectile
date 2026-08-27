@@ -32,6 +32,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <ul class="component-api-list">
   <li><code class="component-api-token">DateRangePickerRoot</code></li>
   <li><code class="component-api-token">DateRangePickerTrigger</code></li>
+  <li><code class="component-api-token">DateRangePickerAnchor</code></li>
   <li><code class="component-api-token">DateRangePickerPortal</code></li>
   <li><code class="component-api-token">DateRangePickerContent</code></li>
   <li><code class="component-api-token">DateRangePickerGrid</code></li>
@@ -59,7 +60,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <div class="component-api-definition">
 <dt><code>align</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">기본값</span><code>'start'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">기본값</span><code>'center'</code></span></div>
 <p>기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다.</p>
 </dd>
 </div>
@@ -227,7 +228,7 @@ Vue 패키지: `@sectile/vue/date-range-picker`
 <div class="component-api-definition">
 <dt><code>sideOffset</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>4</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
 <p>팝업과 기준 요소 사이 거리입니다.</p>
 </dd>
 </div>
@@ -510,6 +511,12 @@ type DateRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof Date
   <td><code class="component-part-token">end-input</code></td>
   <td><code>[data-part="end-input"]</code></td>
   <td>종료 값을 편집합니다.</td>
+  <td><span aria-label="None">—</span></td>
+</tr>
+<tr>
+  <td><code class="component-part-token">anchor</code></td>
+  <td><code>[data-part="anchor"]</code></td>
+  <td>떠 있는 콘텐츠의 배치 기준을 제공합니다.</td>
   <td><span aria-label="None">—</span></td>
 </tr>
 <tr>

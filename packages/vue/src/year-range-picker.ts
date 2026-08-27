@@ -1,7 +1,7 @@
 import type { DateRangePickerOptions } from '@sectile/dom/date-range-picker';
 import type { DateRange, DateValue } from '@sectile/dom/date-field';
 import {
-  PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
+  PickerAnchor, PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
   createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './internal/date-picker.js';
 
@@ -27,6 +27,7 @@ export type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof Y
 export type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export type YearRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onPositionChange']>;
 export const YearRangePickerTrigger = specializePickerRootPart('date-range', PickerTrigger);
+export const YearRangePickerAnchor = specializePickerRootPart('date-range', PickerAnchor);
 export const YearRangePickerPortal = PickerPortal;
 export const YearRangePickerContent = specializePickerRootPart('date-range', PickerContent);
 export const YearRangePickerGrid = specializePickerRootPart('date-range', PickerGrid);

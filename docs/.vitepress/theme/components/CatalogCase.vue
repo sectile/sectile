@@ -14,15 +14,15 @@ import { TagsInputClear, TagsInputInput, TagsInputItem, TagsInputItemDelete, Tag
 import { GridCell, GridRoot, GridRow } from '@sectile/vue/grid';
 import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '@sectile/vue/toolbar';
 import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '@sectile/vue/window-splitter';
-import { DatePickerContent, DatePickerInput, DatePickerRoot, DatePickerTrigger } from '@sectile/vue/date-picker';
-import { DateRangePickerContent, DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger, type DateValue } from '@sectile/vue/date-range-picker';
+import { DatePickerAnchor, DatePickerContent, DatePickerInput, DatePickerRoot, DatePickerTrigger } from '@sectile/vue/date-picker';
+import { DateRangePickerAnchor, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger, type DateValue } from '@sectile/vue/date-range-picker';
 import { RangeCalendarCell, RangeCalendarContent, RangeCalendarGrid, RangeCalendarNextMonth, RangeCalendarPreviousMonth, RangeCalendarRoot } from '@sectile/vue/range-calendar';
-import { MonthPickerCell, MonthPickerContent, MonthPickerGrid, MonthPickerInput, MonthPickerNextYear, MonthPickerPreviousYear, MonthPickerRoot, MonthPickerTrigger } from '@sectile/vue/month-picker';
-import { MonthRangePickerCell, MonthRangePickerContent, MonthRangePickerEndInput, MonthRangePickerGrid, MonthRangePickerNextYear, MonthRangePickerPreviousYear, MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerTrigger } from '@sectile/vue/month-range-picker';
-import { YearPickerCell, YearPickerContent, YearPickerGrid, YearPickerInput, YearPickerNextPage, YearPickerPreviousPage, YearPickerRoot, YearPickerTrigger } from '@sectile/vue/year-picker';
-import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, YearRangePickerGrid, YearRangePickerNextPage, YearRangePickerPreviousPage, YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerTrigger } from '@sectile/vue/year-range-picker';
-import { DateTimePickerContent, DateTimePickerDateInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger, type DateTimeValue } from '@sectile/vue/date-time-picker';
-import { DateTimeRangePickerContent, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
+import { MonthPickerAnchor, MonthPickerCell, MonthPickerContent, MonthPickerGrid, MonthPickerInput, MonthPickerNextYear, MonthPickerPreviousYear, MonthPickerRoot, MonthPickerTrigger } from '@sectile/vue/month-picker';
+import { MonthRangePickerAnchor, MonthRangePickerCell, MonthRangePickerContent, MonthRangePickerEndInput, MonthRangePickerGrid, MonthRangePickerNextYear, MonthRangePickerPreviousYear, MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerTrigger } from '@sectile/vue/month-range-picker';
+import { YearPickerAnchor, YearPickerCell, YearPickerContent, YearPickerGrid, YearPickerInput, YearPickerNextPage, YearPickerPreviousPage, YearPickerRoot, YearPickerTrigger } from '@sectile/vue/year-picker';
+import { YearRangePickerAnchor, YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, YearRangePickerGrid, YearRangePickerNextPage, YearRangePickerPreviousPage, YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerTrigger } from '@sectile/vue/year-range-picker';
+import { DateTimePickerAnchor, DateTimePickerContent, DateTimePickerDateInput, DateTimePickerRoot, DateTimePickerTimeInput, DateTimePickerTrigger, type DateTimeValue } from '@sectile/vue/date-time-picker';
+import { DateTimeRangePickerAnchor, DateTimeRangePickerContent, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerRoot, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerTrigger } from '@sectile/vue/date-time-range-picker';
 import { QuantityFieldInput, QuantityFieldRoot, QuantityFieldValue, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogRoot, DialogTitle, DialogTrigger } from '@sectile/vue/dialog';
 import { DrawerClose, DrawerContent, DrawerDescription, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTitle, DrawerTrigger } from '@sectile/vue/drawer';
@@ -143,15 +143,15 @@ const parts: Record<string, readonly string[]> = {
   pagination: ['PaginationRoot', 'PaginationItem', 'PaginationPrevious', 'PaginationNext'], stepper: ['StepperRoot', 'StepperList', 'StepperStep', 'StepperContent', 'StepperPrevious', 'StepperNext'],
   rating: ['RatingRoot', 'RatingItem', 'RatingIndicator', 'RatingClear'], 'pin-input': ['PinInputRoot', 'PinInputInput'], 'tags-input': ['TagsInputRoot', 'TagsInputItem', 'TagsInputInput'],
   grid: ['GridRoot', 'GridRow', 'GridCell'], toolbar: ['ToolbarRoot', 'ToolbarItem', 'ToolbarSeparator'], 'window-splitter': ['WindowSplitterRoot', 'WindowSplitterPane', 'WindowSplitterHandle'],
-  'date-picker': ['DatePickerRoot', 'DatePickerTrigger', 'DatePickerInput', 'DatePickerContent', 'DatePickerPreviousWeek', 'DatePickerPreviousMonth', 'DatePickerPreviousYear', 'DatePickerNextWeek', 'DatePickerNextMonth', 'DatePickerNextYear', 'DatePickerWeekViewTrigger', 'DatePickerMonthViewTrigger', 'DatePickerYearViewTrigger', 'DatePickerGrid', 'DatePickerCell', 'DatePickerMonthCell'],
-  'date-range-picker': ['DateRangePickerRoot', 'DateRangePickerStartInput', 'DateRangePickerEndInput', 'DateRangePickerTrigger', 'DateRangePickerContent', 'DateRangePickerPreviousWeek', 'DateRangePickerPreviousMonth', 'DateRangePickerPreviousYear', 'DateRangePickerNextWeek', 'DateRangePickerNextMonth', 'DateRangePickerNextYear', 'DateRangePickerWeekViewTrigger', 'DateRangePickerMonthViewTrigger', 'DateRangePickerYearViewTrigger', 'DateRangePickerGrid', 'DateRangePickerCell', 'DateRangePickerMonthCell'],
+  'date-picker': ['DatePickerRoot', 'DatePickerAnchor', 'DatePickerTrigger', 'DatePickerInput', 'DatePickerContent', 'DatePickerPreviousWeek', 'DatePickerPreviousMonth', 'DatePickerPreviousYear', 'DatePickerNextWeek', 'DatePickerNextMonth', 'DatePickerNextYear', 'DatePickerWeekViewTrigger', 'DatePickerMonthViewTrigger', 'DatePickerYearViewTrigger', 'DatePickerGrid', 'DatePickerCell', 'DatePickerMonthCell'],
+  'date-range-picker': ['DateRangePickerRoot', 'DateRangePickerAnchor', 'DateRangePickerStartInput', 'DateRangePickerEndInput', 'DateRangePickerTrigger', 'DateRangePickerContent', 'DateRangePickerPreviousWeek', 'DateRangePickerPreviousMonth', 'DateRangePickerPreviousYear', 'DateRangePickerNextWeek', 'DateRangePickerNextMonth', 'DateRangePickerNextYear', 'DateRangePickerWeekViewTrigger', 'DateRangePickerMonthViewTrigger', 'DateRangePickerYearViewTrigger', 'DateRangePickerGrid', 'DateRangePickerCell', 'DateRangePickerMonthCell'],
   'range-calendar': ['RangeCalendarRoot', 'RangeCalendarContent', 'RangeCalendarGrid', 'RangeCalendarCell', 'RangeCalendarPreviousMonth', 'RangeCalendarNextMonth', 'RangeCalendarPreviousYear', 'RangeCalendarNextYear'],
-  'month-picker': ['MonthPickerRoot', 'MonthPickerInput', 'MonthPickerTrigger', 'MonthPickerContent', 'MonthPickerGrid', 'MonthPickerCell', 'MonthPickerPreviousYear', 'MonthPickerNextYear'],
-  'month-range-picker': ['MonthRangePickerRoot', 'MonthRangePickerStartInput', 'MonthRangePickerEndInput', 'MonthRangePickerTrigger', 'MonthRangePickerContent', 'MonthRangePickerGrid', 'MonthRangePickerCell', 'MonthRangePickerPreviousYear', 'MonthRangePickerNextYear'],
-  'year-picker': ['YearPickerRoot', 'YearPickerInput', 'YearPickerTrigger', 'YearPickerContent', 'YearPickerGrid', 'YearPickerCell', 'YearPickerPreviousPage', 'YearPickerNextPage'],
-  'year-range-picker': ['YearRangePickerRoot', 'YearRangePickerStartInput', 'YearRangePickerEndInput', 'YearRangePickerTrigger', 'YearRangePickerContent', 'YearRangePickerGrid', 'YearRangePickerCell', 'YearRangePickerPreviousPage', 'YearRangePickerNextPage'],
-  'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerDateInput', 'DateTimePickerTimeInput', 'DateTimePickerTrigger', 'DateTimePickerContent', 'DateTimePickerPreviousWeek', 'DateTimePickerPreviousMonth', 'DateTimePickerPreviousYear', 'DateTimePickerNextWeek', 'DateTimePickerNextMonth', 'DateTimePickerNextYear', 'DateTimePickerWeekViewTrigger', 'DateTimePickerMonthViewTrigger', 'DateTimePickerYearViewTrigger', 'DateTimePickerGrid', 'DateTimePickerCell', 'DateTimePickerMonthCell'],
-  'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerStartDateTimeInput', 'DateTimeRangePickerEndDateTimeInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerPreviousWeek', 'DateTimeRangePickerPreviousMonth', 'DateTimeRangePickerPreviousYear', 'DateTimeRangePickerNextWeek', 'DateTimeRangePickerNextMonth', 'DateTimeRangePickerNextYear', 'DateTimeRangePickerWeekViewTrigger', 'DateTimeRangePickerMonthViewTrigger', 'DateTimeRangePickerYearViewTrigger', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell', 'DateTimeRangePickerMonthCell'],
+  'month-picker': ['MonthPickerRoot', 'MonthPickerAnchor', 'MonthPickerInput', 'MonthPickerTrigger', 'MonthPickerContent', 'MonthPickerGrid', 'MonthPickerCell', 'MonthPickerPreviousYear', 'MonthPickerNextYear'],
+  'month-range-picker': ['MonthRangePickerRoot', 'MonthRangePickerAnchor', 'MonthRangePickerStartInput', 'MonthRangePickerEndInput', 'MonthRangePickerTrigger', 'MonthRangePickerContent', 'MonthRangePickerGrid', 'MonthRangePickerCell', 'MonthRangePickerPreviousYear', 'MonthRangePickerNextYear'],
+  'year-picker': ['YearPickerRoot', 'YearPickerAnchor', 'YearPickerInput', 'YearPickerTrigger', 'YearPickerContent', 'YearPickerGrid', 'YearPickerCell', 'YearPickerPreviousPage', 'YearPickerNextPage'],
+  'year-range-picker': ['YearRangePickerRoot', 'YearRangePickerAnchor', 'YearRangePickerStartInput', 'YearRangePickerEndInput', 'YearRangePickerTrigger', 'YearRangePickerContent', 'YearRangePickerGrid', 'YearRangePickerCell', 'YearRangePickerPreviousPage', 'YearRangePickerNextPage'],
+  'date-time-picker': ['DateTimePickerRoot', 'DateTimePickerAnchor', 'DateTimePickerDateInput', 'DateTimePickerTimeInput', 'DateTimePickerTrigger', 'DateTimePickerContent', 'DateTimePickerPreviousWeek', 'DateTimePickerPreviousMonth', 'DateTimePickerPreviousYear', 'DateTimePickerNextWeek', 'DateTimePickerNextMonth', 'DateTimePickerNextYear', 'DateTimePickerWeekViewTrigger', 'DateTimePickerMonthViewTrigger', 'DateTimePickerYearViewTrigger', 'DateTimePickerGrid', 'DateTimePickerCell', 'DateTimePickerMonthCell'],
+  'date-time-range-picker': ['DateTimeRangePickerRoot', 'DateTimeRangePickerAnchor', 'DateTimeRangePickerStartDateTimeInput', 'DateTimeRangePickerEndDateTimeInput', 'DateTimeRangePickerTrigger', 'DateTimeRangePickerContent', 'DateTimeRangePickerPreviousWeek', 'DateTimeRangePickerPreviousMonth', 'DateTimeRangePickerPreviousYear', 'DateTimeRangePickerNextWeek', 'DateTimeRangePickerNextMonth', 'DateTimeRangePickerNextYear', 'DateTimeRangePickerWeekViewTrigger', 'DateTimeRangePickerMonthViewTrigger', 'DateTimeRangePickerYearViewTrigger', 'DateTimeRangePickerGrid', 'DateTimeRangePickerCell', 'DateTimeRangePickerMonthCell'],
   'quantity-field': ['QuantityFieldRoot', 'QuantityFieldInput'], dialog: ['DialogRoot', 'DialogTrigger', 'DialogContent'], drawer: ['DrawerRoot', 'DrawerTrigger', 'DrawerContent', 'DrawerHandle'], 'alert-dialog': ['AlertDialogRoot', 'AlertDialogTrigger', 'AlertDialogContent'],
   tooltip: ['TooltipRoot', 'TooltipTrigger', 'TooltipContent', 'TooltipArrow'], 'multi-thumb-slider': ['MultiThumbSliderRoot', 'MultiThumbSliderTrack', 'MultiThumbSliderThumb'], menu: ['MenuRoot', 'MenuItem', 'MenuSubContent'],
   menubar: ['MenubarRoot', 'MenubarItem', 'MenubarContent', 'MenubarSeparator'], 'menu-button': ['MenuButtonRoot', 'MenuButtonTrigger', 'MenuButtonContent'], carousel: ['CarouselRoot', 'CarouselSlide', 'CarouselPrevious', 'CarouselNext'],
@@ -354,15 +354,15 @@ const recordAction = (value: string): void => {
       </WindowSplitterRoot>
 
       <DatePickerRoot v-else-if="component === 'date-picker'" :default-value="isScenario('weekdays') ? dateRange.end : date" :default-view="isScenario('weekdays') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-inline"><DatePickerInput class="text-field temporal-input" /><DatePickerTrigger class="catalog-picker-trigger" aria-label="Open date picker"><CalendarDays :size="18" aria-hidden="true" /></DatePickerTrigger></div>
-        <DatePickerContent class="catalog-popup catalog-picker-popup">
+        <DatePickerAnchor class="catalog-inline"><DatePickerInput class="text-field temporal-input" /><DatePickerTrigger class="catalog-picker-trigger" aria-label="Open date picker"><CalendarDays :size="18" aria-hidden="true" /></DatePickerTrigger></DatePickerAnchor>
+        <DatePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
           <PickerCalendarDemo component="date-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" />
         </DatePickerContent>
       </DatePickerRoot>
 
       <DateRangePickerRoot v-else-if="component === 'date-range-picker'" :default-value="dateRange" :policies="dateRangePickerPolicies" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-inline"><DateRangePickerStartInput class="text-field temporal-input" /><DateRangePickerEndInput class="text-field temporal-input" /><DateRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date range picker"><CalendarDays :size="18" aria-hidden="true" /></DateRangePickerTrigger></div>
-        <DateRangePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateRangePickerContent>
+        <DateRangePickerAnchor class="catalog-inline"><DateRangePickerStartInput class="text-field temporal-input" /><DateRangePickerEndInput class="text-field temporal-input" /><DateRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date range picker"><CalendarDays :size="18" aria-hidden="true" /></DateRangePickerTrigger></DateRangePickerAnchor>
+        <DateRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating"><PickerCalendarDemo component="date-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateRangePickerContent>
       </DateRangePickerRoot>
 
       <RangeCalendarRoot v-else-if="component === 'range-calendar'" :default-value="dateRange" v-slot="{ dates, view }" class="catalog-stack catalog-temporal-picker">
@@ -384,39 +384,39 @@ const recordAction = (value: string): void => {
       </RangeCalendarRoot>
 
       <MonthPickerRoot v-else-if="component === 'month-picker'" :default-value="monthValue" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-inline"><MonthPickerInput class="text-field temporal-input" aria-label="Billing month" /><MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker"><CalendarDays :size="18" aria-hidden="true" /></MonthPickerTrigger></div>
-        <MonthPickerContent class="catalog-popup catalog-picker-popup catalog-period-picker">
+        <MonthPickerAnchor class="catalog-inline"><MonthPickerInput class="text-field temporal-input" aria-label="Billing month" /><MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker"><CalendarDays :size="18" aria-hidden="true" /></MonthPickerTrigger></MonthPickerAnchor>
+        <MonthPickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><MonthPickerPreviousYear aria-label="Previous year"><ChevronLeft :size="17" /></MonthPickerPreviousYear><strong>{{ view.year }}</strong><MonthPickerNextYear aria-label="Next year"><ChevronRight :size="17" /></MonthPickerNextYear></div>
           <MonthPickerGrid class="catalog-month-grid"><MonthPickerCell v-for="month in months.flat()" :key="`${month.year}-${month.month}`" :value="month">{{ monthNames[month.month - 1] }}</MonthPickerCell></MonthPickerGrid>
         </MonthPickerContent>
       </MonthPickerRoot>
 
       <MonthRangePickerRoot v-else-if="component === 'month-range-picker'" :default-value="monthRange" v-slot="{ months, view }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><MonthRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><MonthRangePickerEndInput class="text-field temporal-input" /></label><MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker"><CalendarDays :size="18" aria-hidden="true" /></MonthRangePickerTrigger></div>
-        <MonthRangePickerContent class="catalog-popup catalog-picker-popup catalog-period-picker">
+        <MonthRangePickerAnchor class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><MonthRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><MonthRangePickerEndInput class="text-field temporal-input" /></label><MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker"><CalendarDays :size="18" aria-hidden="true" /></MonthRangePickerTrigger></MonthRangePickerAnchor>
+        <MonthRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><MonthRangePickerPreviousYear aria-label="Previous year"><ChevronLeft :size="17" /></MonthRangePickerPreviousYear><strong>{{ view.year }}</strong><MonthRangePickerNextYear aria-label="Next year"><ChevronRight :size="17" /></MonthRangePickerNextYear></div>
           <MonthRangePickerGrid class="catalog-month-grid"><MonthRangePickerCell v-for="month in months.flat()" :key="`${month.year}-${month.month}`" :value="month">{{ monthNames[month.month - 1] }}</MonthRangePickerCell></MonthRangePickerGrid>
         </MonthRangePickerContent>
       </MonthRangePickerRoot>
 
       <YearPickerRoot v-else-if="component === 'year-picker'" :default-value="yearValue" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-inline"><YearPickerInput class="text-field temporal-input" aria-label="Graduation year" /><YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker"><CalendarDays :size="18" aria-hidden="true" /></YearPickerTrigger></div>
-        <YearPickerContent class="catalog-popup catalog-picker-popup catalog-period-picker">
+        <YearPickerAnchor class="catalog-inline"><YearPickerInput class="text-field temporal-input" aria-label="Graduation year" /><YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker"><CalendarDays :size="18" aria-hidden="true" /></YearPickerTrigger></YearPickerAnchor>
+        <YearPickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><YearPickerPreviousPage aria-label="Previous years"><ChevronLeft :size="17" /></YearPickerPreviousPage><strong>{{ years.flat()[0]?.year }}–{{ years.flat()[years.flat().length - 1]?.year }}</strong><YearPickerNextPage aria-label="Next years"><ChevronRight :size="17" /></YearPickerNextPage></div>
           <YearPickerGrid class="catalog-month-grid catalog-year-grid"><YearPickerCell v-for="year in years.flat()" :key="year.year" :value="year">{{ year.year }}</YearPickerCell></YearPickerGrid>
         </YearPickerContent>
       </YearPickerRoot>
 
       <YearRangePickerRoot v-else-if="component === 'year-range-picker'" :default-value="yearRange" v-slot="{ years }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><YearRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><YearRangePickerEndInput class="text-field temporal-input" /></label><YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker"><CalendarDays :size="18" aria-hidden="true" /></YearRangePickerTrigger></div>
-        <YearRangePickerContent class="catalog-popup catalog-picker-popup catalog-period-picker">
+        <YearRangePickerAnchor class="catalog-range-fields"><label class="catalog-endpoint"><span>From</span><YearRangePickerStartInput class="text-field temporal-input" /></label><label class="catalog-endpoint"><span>To</span><YearRangePickerEndInput class="text-field temporal-input" /></label><YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker"><CalendarDays :size="18" aria-hidden="true" /></YearRangePickerTrigger></YearRangePickerAnchor>
+        <YearRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating catalog-period-picker">
           <div class="catalog-picker-navigation"><YearRangePickerPreviousPage aria-label="Previous years"><ChevronLeft :size="17" /></YearRangePickerPreviousPage><strong>{{ years.flat()[0]?.year }}–{{ years.flat()[years.flat().length - 1]?.year }}</strong><YearRangePickerNextPage aria-label="Next years"><ChevronRight :size="17" /></YearRangePickerNextPage></div>
           <YearRangePickerGrid class="catalog-month-grid catalog-year-grid"><YearRangePickerCell v-for="year in years.flat()" :key="year.year" :value="year">{{ year.year }}</YearRangePickerCell></YearRangePickerGrid>
         </YearRangePickerContent>
       </YearRangePickerRoot>
 
       <DateTimePickerRoot v-else-if="component === 'date-time-picker'" v-bind="dateTimePickerProps" :default-view="isScenario('morning') ? 'week' : 'month'" @update:model-value="updateControlledDateTime" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-range-fields catalog-range-fields--single">
+        <DateTimePickerAnchor class="catalog-range-fields catalog-range-fields--single">
           <label class="catalog-endpoint">
             <span>Date and time</span>
             <span class="catalog-date-time-control">
@@ -425,11 +425,11 @@ const recordAction = (value: string): void => {
             </span>
           </label>
           <DateTimePickerTrigger class="catalog-picker-trigger" aria-label="Open date and time picker"><CalendarDays :size="18" aria-hidden="true" /></DateTimePickerTrigger>
-        </div>
-        <DateTimePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-time-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimePickerContent>
+        </DateTimePickerAnchor>
+        <DateTimePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating"><PickerCalendarDemo component="date-time-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimePickerContent>
       </DateTimePickerRoot>
       <DateTimeRangePickerRoot v-else-if="component === 'date-time-range-picker'" :default-value="isScenario('office-hours') ? sameDayDateTimeRange : dateTimeRange" :default-view="isScenario('office-hours') ? 'week' : 'month'" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-        <div class="catalog-range-fields">
+        <DateTimeRangePickerAnchor class="catalog-range-fields">
           <label class="catalog-endpoint">
             <span>Start</span>
             <DateTimeRangePickerStartDateTimeInput class="text-field temporal-input" aria-label="Start date and time" />
@@ -439,8 +439,8 @@ const recordAction = (value: string): void => {
             <DateTimeRangePickerEndDateTimeInput class="text-field temporal-input" aria-label="End date and time" />
           </label>
           <DateTimeRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date and time range picker"><CalendarDays :size="18" aria-hidden="true" /></DateTimeRangePickerTrigger>
-        </div>
-        <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup"><PickerCalendarDemo component="date-time-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimeRangePickerContent>
+        </DateTimeRangePickerAnchor>
+        <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating"><PickerCalendarDemo component="date-time-range-picker" :dates="dates" :months="months" :view="view" :view-mode="viewMode" /></DateTimeRangePickerContent>
       </DateTimeRangePickerRoot>
 
       <QuantityFieldRoot

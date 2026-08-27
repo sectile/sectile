@@ -172,7 +172,7 @@ interface Context {
   readonly positioned: ComputedRef<boolean>;
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
-  register(part: PickerInputPart | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
+  register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   registerCell(element: HTMLElement, value: DateValue): void;
   move(unit: PickerNavigationUnit, direction: -1 | 1): void;
   handleGridKey(event: KeyboardEvent): void;
@@ -204,8 +204,8 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       label: { type: String, default: undefined }, policies: { type: Object as PropType<PickerPoliciesFor<Kind>>, default: undefined },
       position: { type: Boolean, default: true },
       side: { type: String as PropType<NonNullable<PickerPositionOptions['side']>>, default: 'bottom' },
-      align: { type: String as PropType<NonNullable<PickerPositionOptions['align']>>, default: 'start' },
-      sideOffset: { type: Number, default: 4 },
+      align: { type: String as PropType<NonNullable<PickerPositionOptions['align']>>, default: 'center' },
+      sideOffset: { type: Number, default: 8 },
       collisionPadding: { type: [Number, Object] as PropType<PickerPositionOptions['collisionPadding']>, default: 8 },
       collisionBoundary: { type: [String, Object, Array] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
       avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: true },
@@ -295,6 +295,8 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         };
         if (kind !== 'calendar') {
           base['trigger'] = trigger;
+          const anchor = elements.get('anchor');
+          if (anchor !== undefined) base['anchor'] = anchor;
           Object.assign(base, {
             position: runtimeProps.position, side: runtimeProps.side, align: runtimeProps.align, sideOffset: runtimeProps.sideOffset,
             collisionPadding: runtimeProps.collisionPadding, avoidCollisions: runtimeProps.avoidCollisions,
@@ -435,6 +437,14 @@ export const PickerTrigger = defineComponent({
     type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled,
     'aria-haspopup': 'dialog', 'aria-expanded': String(root.state.value.open), 'data-scope': root.scope, 'data-part': 'trigger',
   }), { default: () => slots['default']?.(root.state.value) }); },
+});
+
+export const PickerAnchor = defineComponent({
+  name: 'SectilePickerAnchor', inheritAttrs: false, props: partProps,
+  setup(props, { attrs, slots }) { const root = useRoot('PickerAnchor'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.register('anchor', node instanceof HTMLElement ? node : undefined),
+    'data-scope': root.scope, 'data-part': 'anchor',
+  }), slots); },
 });
 
 export const PickerContent = defineComponent({

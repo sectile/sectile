@@ -790,6 +790,13 @@
   .catalog-calendar button:disabled,
   .catalog-calendar button[aria-disabled="true"] { color: var(--demo-disabled); text-decoration: line-through; background: transparent; cursor: not-allowed; }
   .catalog-picker-popup { position: static; display: grid; width: 100%; min-width: 0; gap: 0.6rem; padding: 0.8rem; box-shadow: none; }
+  .catalog-picker-popup--floating {
+    width: min(40rem, var(--sectile-floating-available-width, calc(100vw - 1rem)));
+    max-width: calc(100vw - 1rem);
+    max-height: var(--sectile-floating-available-height, calc(100vh - 1rem));
+    overflow: auto;
+    box-shadow: var(--demo-floating-shadow);
+  }
   .catalog-period-picker { max-width: 34rem; margin-inline: auto; }
   .catalog-period-picker > .catalog-picker-navigation { padding: 0.1rem; }
   .catalog-picker-toolbar { display: grid; min-width: 0; min-height: 2.35rem; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; }

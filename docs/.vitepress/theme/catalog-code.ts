@@ -219,15 +219,15 @@ const lastAction = ref('')`,
   </WindowSplitterRoot>`,
   ),
   'date-picker': sfc(
-    'DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPreviousWeek, DatePickerPreviousMonth, DatePickerPreviousYear, DatePickerNextWeek, DatePickerNextMonth, DatePickerNextYear, DatePickerWeekViewTrigger, DatePickerMonthViewTrigger, DatePickerYearViewTrigger, DatePickerGrid, DatePickerCell, DatePickerMonthCell',
+    'DatePickerRoot, DatePickerAnchor, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPreviousWeek, DatePickerPreviousMonth, DatePickerPreviousYear, DatePickerNextWeek, DatePickerNextMonth, DatePickerNextYear, DatePickerWeekViewTrigger, DatePickerMonthViewTrigger, DatePickerYearViewTrigger, DatePickerGrid, DatePickerCell, DatePickerMonthCell',
     `  <DatePickerRoot :default-value="initialDate" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-    <div class="catalog-inline">
+    <DatePickerAnchor class="catalog-inline">
       <DatePickerInput class="catalog-input" />
       <DatePickerTrigger class="catalog-picker-trigger" aria-label="Open date picker">
         <CalendarDays :size="18" aria-hidden="true" />
       </DatePickerTrigger>
-    </div>
-    <DatePickerContent class="catalog-popup catalog-picker-popup">
+    </DatePickerAnchor>
+    <DatePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
       <div class="catalog-picker-toolbar">
         <div class="catalog-inline">
           <DatePickerPreviousWeek v-if="viewMode === 'week'">‹</DatePickerPreviousWeek>
@@ -270,16 +270,16 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'date-range-picker': sfc(
-    'DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerPreviousWeek, DateRangePickerPreviousMonth, DateRangePickerPreviousYear, DateRangePickerNextWeek, DateRangePickerNextMonth, DateRangePickerNextYear, DateRangePickerWeekViewTrigger, DateRangePickerMonthViewTrigger, DateRangePickerYearViewTrigger, DateRangePickerGrid, DateRangePickerCell, DateRangePickerMonthCell',
+    'DateRangePickerRoot, DateRangePickerAnchor, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerPreviousWeek, DateRangePickerPreviousMonth, DateRangePickerPreviousYear, DateRangePickerNextWeek, DateRangePickerNextMonth, DateRangePickerNextYear, DateRangePickerWeekViewTrigger, DateRangePickerMonthViewTrigger, DateRangePickerYearViewTrigger, DateRangePickerGrid, DateRangePickerCell, DateRangePickerMonthCell',
     `  <DateRangePickerRoot :default-value="initialRange" :policies="policies" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-    <div class="catalog-inline">
+    <DateRangePickerAnchor class="catalog-inline">
       <DateRangePickerStartInput class="catalog-input" />
       <DateRangePickerEndInput class="catalog-input" />
       <DateRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date range picker">
         <CalendarDays :size="18" aria-hidden="true" />
       </DateRangePickerTrigger>
-    </div>
-    <DateRangePickerContent class="catalog-popup catalog-picker-popup">
+    </DateRangePickerAnchor>
+    <DateRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
       <div class="catalog-picker-toolbar">
         <div class="catalog-inline">
           <DateRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateRangePickerPreviousWeek>
@@ -353,12 +353,14 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 }`,
   ),
   'month-picker': sfc(
-    'MonthPickerRoot, MonthPickerInput, MonthPickerTrigger, MonthPickerContent, MonthPickerPreviousYear, MonthPickerNextYear, MonthPickerGrid, MonthPickerCell',
+    'MonthPickerRoot, MonthPickerAnchor, MonthPickerInput, MonthPickerTrigger, MonthPickerContent, MonthPickerPreviousYear, MonthPickerNextYear, MonthPickerGrid, MonthPickerCell',
     `  <MonthPickerRoot :default-value="billingMonth" v-slot="{ months, view }">
-    <MonthPickerInput aria-label="Billing month" />
-    <MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker">
-      <CalendarDays :size="18" aria-hidden="true" />
-    </MonthPickerTrigger>
+    <MonthPickerAnchor>
+      <MonthPickerInput aria-label="Billing month" />
+      <MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker">
+        <CalendarDays :size="18" aria-hidden="true" />
+      </MonthPickerTrigger>
+    </MonthPickerAnchor>
     <MonthPickerContent>
       <MonthPickerPreviousYear>‹</MonthPickerPreviousYear>
       <strong>{{ view.year }}</strong>
@@ -375,13 +377,15 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'month-range-picker': sfc(
-    'MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerEndInput, MonthRangePickerTrigger, MonthRangePickerContent, MonthRangePickerPreviousYear, MonthRangePickerNextYear, MonthRangePickerGrid, MonthRangePickerCell',
+    'MonthRangePickerRoot, MonthRangePickerAnchor, MonthRangePickerStartInput, MonthRangePickerEndInput, MonthRangePickerTrigger, MonthRangePickerContent, MonthRangePickerPreviousYear, MonthRangePickerNextYear, MonthRangePickerGrid, MonthRangePickerCell',
     `  <MonthRangePickerRoot :default-value="reportingPeriod" v-slot="{ months, view }">
-    <MonthRangePickerStartInput aria-label="First month" />
-    <MonthRangePickerEndInput aria-label="Last month" />
-    <MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker">
-      <CalendarDays :size="18" aria-hidden="true" />
-    </MonthRangePickerTrigger>
+    <MonthRangePickerAnchor>
+      <MonthRangePickerStartInput aria-label="First month" />
+      <MonthRangePickerEndInput aria-label="Last month" />
+      <MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker">
+        <CalendarDays :size="18" aria-hidden="true" />
+      </MonthRangePickerTrigger>
+    </MonthRangePickerAnchor>
     <MonthRangePickerContent>
       <MonthRangePickerPreviousYear aria-label="Previous year">‹</MonthRangePickerPreviousYear>
       <strong>{{ view.year }}</strong>
@@ -401,12 +405,14 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'year-picker': sfc(
-    'YearPickerRoot, YearPickerInput, YearPickerTrigger, YearPickerContent, YearPickerPreviousPage, YearPickerNextPage, YearPickerGrid, YearPickerCell',
+    'YearPickerRoot, YearPickerAnchor, YearPickerInput, YearPickerTrigger, YearPickerContent, YearPickerPreviousPage, YearPickerNextPage, YearPickerGrid, YearPickerCell',
     `  <YearPickerRoot :default-value="graduationYear" v-slot="{ years }">
-    <YearPickerInput aria-label="Graduation year" />
-    <YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker">
-      <CalendarDays :size="18" aria-hidden="true" />
-    </YearPickerTrigger>
+    <YearPickerAnchor>
+      <YearPickerInput aria-label="Graduation year" />
+      <YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker">
+        <CalendarDays :size="18" aria-hidden="true" />
+      </YearPickerTrigger>
+    </YearPickerAnchor>
     <YearPickerContent>
       <YearPickerPreviousPage aria-label="Previous years">‹</YearPickerPreviousPage>
       <strong>{{ years.flat()[0].year }}–{{ years.flat().at(-1).year }}</strong>
@@ -421,13 +427,15 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     `const graduationYear = { year: 2028, month: 1, day: 1 }`,
   ),
   'year-range-picker': sfc(
-    'YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerEndInput, YearRangePickerTrigger, YearRangePickerContent, YearRangePickerPreviousPage, YearRangePickerNextPage, YearRangePickerGrid, YearRangePickerCell',
+    'YearRangePickerRoot, YearRangePickerAnchor, YearRangePickerStartInput, YearRangePickerEndInput, YearRangePickerTrigger, YearRangePickerContent, YearRangePickerPreviousPage, YearRangePickerNextPage, YearRangePickerGrid, YearRangePickerCell',
     `  <YearRangePickerRoot :default-value="roadmap" v-slot="{ years }">
-    <YearRangePickerStartInput aria-label="First year" />
-    <YearRangePickerEndInput aria-label="Last year" />
-    <YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker">
-      <CalendarDays :size="18" aria-hidden="true" />
-    </YearRangePickerTrigger>
+    <YearRangePickerAnchor>
+      <YearRangePickerStartInput aria-label="First year" />
+      <YearRangePickerEndInput aria-label="Last year" />
+      <YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker">
+        <CalendarDays :size="18" aria-hidden="true" />
+      </YearRangePickerTrigger>
+    </YearRangePickerAnchor>
     <YearRangePickerContent>
       <YearRangePickerPreviousPage aria-label="Previous years">‹</YearRangePickerPreviousPage>
       <strong>{{ years.flat()[0].year }}–{{ years.flat().at(-1).year }}</strong>
@@ -445,9 +453,9 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 }`,
   ),
   'date-time-picker': sfc(
-    'DateTimePickerRoot, DateTimePickerDateInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPreviousWeek, DateTimePickerPreviousMonth, DateTimePickerPreviousYear, DateTimePickerNextWeek, DateTimePickerNextMonth, DateTimePickerNextYear, DateTimePickerWeekViewTrigger, DateTimePickerMonthViewTrigger, DateTimePickerYearViewTrigger, DateTimePickerGrid, DateTimePickerCell, DateTimePickerMonthCell',
+    'DateTimePickerRoot, DateTimePickerAnchor, DateTimePickerDateInput, DateTimePickerTimeInput, DateTimePickerTrigger, DateTimePickerContent, DateTimePickerPreviousWeek, DateTimePickerPreviousMonth, DateTimePickerPreviousYear, DateTimePickerNextWeek, DateTimePickerNextMonth, DateTimePickerNextYear, DateTimePickerWeekViewTrigger, DateTimePickerMonthViewTrigger, DateTimePickerYearViewTrigger, DateTimePickerGrid, DateTimePickerCell, DateTimePickerMonthCell',
     `  <DateTimePickerRoot :default-value="initialValue" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-    <div class="catalog-range-fields catalog-range-fields--single">
+    <DateTimePickerAnchor class="catalog-range-fields catalog-range-fields--single">
       <label class="catalog-endpoint">
         <span>Date and time</span>
         <span class="catalog-date-time-control">
@@ -458,8 +466,8 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <DateTimePickerTrigger class="catalog-picker-trigger" aria-label="Open date and time picker">
         <CalendarDays :size="18" aria-hidden="true" />
       </DateTimePickerTrigger>
-    </div>
-    <DateTimePickerContent class="catalog-popup catalog-picker-popup">
+    </DateTimePickerAnchor>
+    <DateTimePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
       <div class="catalog-picker-toolbar">
         <div class="catalog-inline">
           <DateTimePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimePickerPreviousWeek>
@@ -505,9 +513,9 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']`,
   ),
   'date-time-range-picker': sfc(
-    'DateTimeRangePickerRoot, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousMonth, DateTimeRangePickerPreviousYear, DateTimeRangePickerNextWeek, DateTimeRangePickerNextMonth, DateTimeRangePickerNextYear, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerMonthViewTrigger, DateTimeRangePickerYearViewTrigger, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerMonthCell',
+    'DateTimeRangePickerRoot, DateTimeRangePickerAnchor, DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerEndDateTimeInput, DateTimeRangePickerTrigger, DateTimeRangePickerContent, DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousMonth, DateTimeRangePickerPreviousYear, DateTimeRangePickerNextWeek, DateTimeRangePickerNextMonth, DateTimeRangePickerNextYear, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerMonthViewTrigger, DateTimeRangePickerYearViewTrigger, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerMonthCell',
     `  <DateTimeRangePickerRoot :default-value="initialRange" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
-    <div class="catalog-range-fields">
+    <DateTimeRangePickerAnchor class="catalog-range-fields">
       <label class="catalog-endpoint">
         <span>Start</span>
         <DateTimeRangePickerStartDateTimeInput class="catalog-input" aria-label="Start date and time" />
@@ -519,8 +527,8 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       <DateTimeRangePickerTrigger class="catalog-picker-trigger" aria-label="Open date and time range picker">
         <CalendarDays :size="18" aria-hidden="true" />
       </DateTimeRangePickerTrigger>
-    </div>
-    <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup">
+    </DateTimeRangePickerAnchor>
+    <DateTimeRangePickerContent class="catalog-popup catalog-picker-popup catalog-picker-popup--floating">
       <div class="catalog-picker-toolbar">
         <div class="catalog-inline">
           <DateTimeRangePickerPreviousWeek v-if="viewMode === 'week'">‹</DateTimeRangePickerPreviousWeek>

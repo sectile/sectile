@@ -4,6 +4,7 @@ import type {
   ComputePositionReturn,
   Middleware,
   Padding,
+  ReferenceElement,
   Strategy,
 } from '@floating-ui/dom';
 import {
@@ -15,6 +16,7 @@ import {
 
 export interface PickerPositionOptions {
   readonly position?: boolean;
+  readonly anchor?: ReferenceElement;
   readonly side?: FloatingSide;
   readonly align?: FloatingAlign;
   readonly sideOffset?: number;
@@ -38,7 +40,7 @@ export function createPickerPosition(
   if (options.position === false) return manualPosition;
   return createFloatingPosition({
     root,
-    reference: trigger,
+    reference: options.anchor ?? trigger,
     side: options.side,
     align: options.align,
     sideOffset: options.sideOffset,
