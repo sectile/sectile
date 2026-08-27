@@ -25,6 +25,11 @@
       "id": "HYD-05",
       "contract": "hidden form controls preserve SSR hydration and native submission state",
       "evidence": "tests/hydration.dom.test.mjs"
+    },
+    {
+      "id": "HYD-06",
+      "contract": "Tabular profiles preserve SSR structure and defer resolver execution until client mount",
+      "evidence": "tests/tabular-ssr.test.mjs"
     }
   ],
   "unverified": []

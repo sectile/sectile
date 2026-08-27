@@ -13,7 +13,10 @@
     "tests/listbox.test.mjs",
     "tests/tree-view.dom.test.mjs",
     "tests/date-pickers.dom.test.mjs",
-    "tests/combobox.dom.test.mjs"
+    "tests/combobox.dom.test.mjs",
+    "tests/data-table.test.mjs",
+    "tests/data-grid.test.mjs",
+    "tests/data-tree-grid.test.mjs"
   ],
   "excluded": [
     { "source": "src/menu.ts", "reason": "collection highlight is internal; controlled state only owns popup open state" }

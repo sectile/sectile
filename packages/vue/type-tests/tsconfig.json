@@ -6,5 +6,5 @@
     "isolatedDeclarations": false,
     "noEmit": true
   },
-  "include": ["component-contracts.ts"]
+  "include": ["component-contracts.ts", "tabular-components.ts"]
 }

@@ -33,3 +33,13 @@ test('virtualization is exposed only through its optional subpath', async () => 
   const virtualSource = await readFile(new URL('../dist/virtual.js', import.meta.url), 'utf8');
   assert.match(virtualSource, /@sectile\/virtual/);
 });
+
+test('base Tabular profiles are complete and remain Virtual-free', async () => {
+  for (const profile of ['data-table', 'data-grid', 'data-tree-grid']) {
+    const source = await readFile(new URL(`../dist/${profile}.js`, import.meta.url), 'utf8');
+    assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual\.js/);
+    const module = await import(`../dist/${profile}.js`);
+    assert.equal(module[`${profile === 'data-table' ? 'DataTable' : profile === 'data-grid' ? 'DataGrid' : 'DataTreeGrid'}Loading`], undefined);
+    assert.equal(typeof module[profile === 'data-table' ? 'useDataTableSource' : profile === 'data-grid' ? 'useDataGridSource' : 'useDataTreeGridSource'], 'function');
+  }
+});
