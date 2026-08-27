@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { Window } from 'happy-dom';
 import { createMenuButton } from '../dist/menu-button.js';
 import { createMenubar } from '../dist/menubar.js';
 import { createNavigationMenu } from '../dist/navigation-menu.js';
@@ -59,13 +60,11 @@ test('DOM menu button owns disabled, edge, typeahead, and controlled open state'
   assert.equal(menu.getSnapshot().state.open, true);
 });
 
-test('DOM menu owns hidden submenu surfaces and collision-safe placement', () => {
-  const view = new FakeView(500, 300);
-  const root = new FakeElement(undefined, view);
-  const trigger = new FakeElement();
-  const file = new FakeElement({ left: 400, right: 480, top: 120, bottom: 160, width: 80, height: 40 });
-  const child = new FakeElement();
-  const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
+test('DOM menu owns hidden submenu surfaces and collision-safe placement', async () => {
+  const { window, root, trigger, file, child, submenu } = menuDOM(500, 300, {
+    file: { left: 400, right: 480, top: 120, bottom: 160, width: 80, height: 40 },
+    submenu: { left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 },
+  });
   const menu = createMenuButton({
     root,
     trigger,
@@ -76,26 +75,29 @@ test('DOM menu owns hidden submenu surfaces and collision-safe placement', () =>
   menu.setItemAttributes(child, 'new');
   menu.setSubmenuAttributes(submenu, 'file');
   assert.equal(submenu.hidden, true);
-  assert.equal(submenu.attributes.get('role'), 'menu');
-  assert.equal(file.attributes.get('aria-controls'), submenu.id);
+  assert.equal(submenu.getAttribute('role'), 'menu');
+  assert.equal(file.getAttribute('aria-controls'), submenu.id);
 
   menu.handleEvent('open-popup');
   menu.handleEvent('open-submenu');
+  await settlePosition();
   assert.equal(submenu.hidden, false);
   assert.equal(submenu.dataset.placement, 'left-start');
   assert.equal(submenu.style.left, '256px');
   assert.equal(submenu.style.top, '120px');
 
-  view.innerWidth = 800;
-  view.emit('resize');
+  window.innerWidth = 800;
+  window.dispatchEvent(new window.Event('resize'));
+  await settlePosition();
   assert.equal(submenu.dataset.placement, 'right-start');
   assert.equal(submenu.style.left, '484px');
 });
 
-test('DOM menu button positions its popup without occupying trigger layout', () => {
-  const view = new FakeView(500, 300);
-  const root = new FakeElement({ left: 0, right: 180, top: 0, bottom: 120, width: 180, height: 120 }, view);
-  const trigger = new FakeElement({ left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 });
+test('DOM menu button positions its popup without occupying trigger layout', async () => {
+  const { root, trigger } = menuDOM(500, 300, {
+    root: { left: 0, right: 180, top: 0, bottom: 120, width: 180, height: 120 },
+    trigger: { left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 },
+  });
   const menu = createMenuButton({
     root,
     trigger,
@@ -104,20 +106,20 @@ test('DOM menu button positions its popup without occupying trigger layout', () 
 
   assert.equal(root.hidden, true);
   menu.handleEvent('open-popup');
+  await settlePosition();
 
   assert.equal(root.hidden, false);
   assert.equal(root.dataset.placement, 'bottom-center');
-  assert.equal(root.style.position, 'fixed');
+  assert.equal(root.style.position, 'absolute');
   assert.equal(root.style.left, '50px');
   assert.equal(root.style.top, '104px');
 });
 
-test('DOM menubar opens its top-level submenu below the horizontal item', () => {
-  const view = new FakeView(500, 300);
-  const root = new FakeElement(undefined, view);
-  const file = new FakeElement({ left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 });
-  const child = new FakeElement();
-  const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
+test('DOM menubar opens its top-level submenu below the horizontal item', async () => {
+  const { root, file, child, submenu } = menuDOM(500, 300, {
+    file: { left: 100, right: 180, top: 60, bottom: 100, width: 80, height: 40 },
+    submenu: { left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 },
+  });
   const menubar = createMenubar({
     root,
     items: [{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }],
@@ -131,6 +133,7 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   assert.equal(child.dataset.level, '1');
   assert.equal(submenu.dataset.level, '1');
   menubar.handleEvent('open-submenu');
+  await settlePosition();
 
   assert.equal(submenu.hidden, false);
   assert.equal(submenu.dataset.placement, 'bottom-start');
@@ -138,27 +141,28 @@ test('DOM menubar opens its top-level submenu below the horizontal item', () => 
   assert.equal(submenu.style.top, '104px');
 });
 
-test('DOM menus reverse horizontal navigation and submenu placement in RTL', () => {
-  const view = new FakeView(800, 300);
-  const root = new FakeElement(undefined, view);
-  const file = new FakeElement({ left: 400, right: 480, top: 60, bottom: 100, width: 80, height: 40 });
-  const child = new FakeElement();
-  const submenu = new FakeElement({ left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 });
+test('DOM menus reverse horizontal navigation and submenu placement in RTL', async () => {
+  const { window, root, file, child, submenu } = menuDOM(800, 300, {
+    file: { left: 400, right: 480, top: 60, bottom: 100, width: 80, height: 40 },
+    submenu: { left: 0, right: 140, top: 0, bottom: 120, width: 140, height: 120 },
+  });
   const menu = createMenubar({
     root,
     direction: 'rtl',
     items: [{ id: 'file', parentID: null }, { id: 'edit', parentID: null }, { id: 'new', parentID: 'file' }],
     defaultHighlightedValue: 'edit',
   });
+  file.style.direction = 'rtl';
 
   menu.setItemAttributes(file, 'file');
   menu.setItemAttributes(child, 'new');
   menu.setSubmenuAttributes(submenu, 'file');
-  root.emit('keydown', { key: 'ArrowRight', altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} });
+  root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   assert.equal(menu.getSnapshot().state.cursor.current, 'file');
   menu.handleEvent('open-submenu');
+  await settlePosition();
   assert.equal(submenu.style.left, '340px');
-  assert.equal(root.attributes.get('dir'), 'rtl');
+  assert.equal(root.getAttribute('dir'), 'rtl');
 });
 
 test('DOM navigation menu preserves native navigation roles and toggles panels', () => {
@@ -193,6 +197,44 @@ class FakeView {
   addEventListener(type, listener) { const set = this.listeners.get(type) ?? new Set(); set.add(listener); this.listeners.set(type, set); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   emit(type) { for (const listener of this.listeners.get(type) ?? []) listener(); }
+}
+
+function menuDOM(width, height, rects = {}) {
+  const window = new Window({ url: 'https://sectile.dev/' });
+  window.innerWidth = width;
+  window.innerHeight = height;
+  Object.defineProperties(window.document.documentElement, {
+    clientWidth: { configurable: true, get: () => window.innerWidth },
+    clientHeight: { configurable: true, get: () => window.innerHeight },
+  });
+  Object.assign(globalThis, {
+    window,
+    document: window.document,
+    Node: window.Node,
+    Element: window.Element,
+    HTMLElement: window.HTMLElement,
+    ResizeObserver: window.ResizeObserver,
+    getComputedStyle: window.getComputedStyle.bind(window),
+  });
+  const make = (name) => {
+    const element = window.document.createElement(name === 'trigger' || name === 'file' || name === 'child' ? 'button' : 'div');
+    const rect = rects[name] ?? { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 };
+    element.getBoundingClientRect = () => ({ ...rect, x: rect.left, y: rect.top, toJSON() {} });
+    Object.defineProperties(element, {
+      offsetWidth: { configurable: true, value: rect.width },
+      offsetHeight: { configurable: true, value: rect.height },
+    });
+    return element;
+  };
+  const root = make('root'); const trigger = make('trigger'); const file = make('file'); const child = make('child'); const submenu = make('submenu');
+  file.append(child, submenu);
+  root.append(file);
+  window.document.body.append(trigger, root);
+  return { window, root, trigger, file, child, submenu };
+}
+
+async function settlePosition() {
+  await new Promise((resolve) => setTimeout(resolve, 20));
 }
 
 class FakeElement {

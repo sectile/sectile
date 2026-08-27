@@ -1,11 +1,11 @@
 import type { DatePickerOptions } from '@sectile/dom/date-picker';
 import type { DateValue } from '@sectile/dom/date-field';
 import {
-  PickerContent, PickerGrid, PickerTrigger, createPickerInput, createPickerMonthCell, createPickerMove, specializePickerRootPart,
-  createPickerRoot, type PickerMonthCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
+  PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMonthCell, createPickerMove, specializePickerRootPart,
+  createPickerRoot, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './internal/date-picker.js';
 
-export interface MonthPickerRootProps extends PickerPartProps {
+export interface MonthPickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateValue | null;
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
@@ -25,7 +25,9 @@ export type MonthPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type MonthPickerValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:modelValue']>;
 export type MonthPickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:open']>;
 export type MonthPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onUpdate:highlightedValue']>;
+export type MonthPickerPositionChangeHandler = NonNullable<InstanceType<typeof MonthPickerRoot>['$props']['onPositionChange']>;
 export const MonthPickerTrigger = specializePickerRootPart('date', PickerTrigger);
+export const MonthPickerPortal = PickerPortal;
 export const MonthPickerContent = specializePickerRootPart('date', PickerContent);
 export const MonthPickerGrid = specializePickerRootPart('date', PickerGrid);
 export const MonthPickerCell = createPickerMonthCell('cell', 'SectileMonthPickerCell');
@@ -37,4 +39,5 @@ export type {
   DateValue as MonthPickerValue,
   PickerMonthCellSlotProps as MonthPickerCellSlotProps,
   PickerPartProps as MonthPickerPartProps,
+  PickerPortalProps as MonthPickerPortalProps,
 };

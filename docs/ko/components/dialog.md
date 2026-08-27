@@ -137,6 +137,13 @@ Vue 패키지: `@sectile/vue/dialog`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>initialFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>HTMLElement</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>컴포넌트가 열릴 때 포커스를 받을 요소 또는 요소를 반환하는 함수입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>interactOutsideExclusions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -195,7 +202,7 @@ Vue 패키지: `@sectile/vue/dialog`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'fixed'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
 <p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
 </dd>
 </div>

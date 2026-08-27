@@ -12,7 +12,17 @@ const pickerComponents = new Set([
 ]);
 
 const popupComponents = new Set(['alert-dialog', 'dialog', 'drawer', 'popover', 'tooltip']);
-const portalComponents = new Set([...popupComponents, 'select', 'toast']);
+const positionedPickerComponents = new Set([
+  'date-picker',
+  'date-range-picker',
+  'date-time-picker',
+  'date-time-range-picker',
+  'month-picker',
+  'month-range-picker',
+  'year-picker',
+  'year-range-picker',
+]);
+const portalComponents = new Set([...popupComponents, ...positionedPickerComponents, 'select', 'toast']);
 
 const pickerRootDefaults = Object.freeze({
   modelValue: 'undefined',
@@ -26,6 +36,17 @@ const pickerRootDefaults = Object.freeze({
   required: 'false',
   label: 'undefined',
   policies: 'undefined',
+  position: 'true',
+  side: "'bottom'",
+  align: "'start'",
+  sideOffset: '4',
+  collisionPadding: '8',
+  collisionBoundary: 'undefined',
+  avoidCollisions: 'true',
+  hideWhenDetached: 'true',
+  strategy: "'absolute'",
+  middleware: 'undefined',
+  autoUpdate: 'undefined',
 });
 
 const popupRootDefaults = Object.freeze({

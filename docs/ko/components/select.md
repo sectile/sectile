@@ -225,7 +225,7 @@ Vue 패키지: `@sectile/vue/select`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'fixed'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>Strategy</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
 <p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
 </dd>
 </div>

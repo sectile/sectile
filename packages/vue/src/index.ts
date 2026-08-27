@@ -530,12 +530,14 @@ export {
   DatePickerPreviousMonth,
   DatePickerPreviousWeek,
   DatePickerPreviousYear,
+  DatePickerPortal,
   DatePickerRoot,
   DatePickerTrigger,
   DatePickerWeekViewTrigger,
   DatePickerYearViewTrigger,
   type DatePickerCellSlotProps,
   type DatePickerPartProps,
+  type DatePickerPortalProps,
   type DatePickerRootProps,
   type DatePickerRootSlotProps,
 } from './date-picker.js';
@@ -552,6 +554,7 @@ export {
   DateRangePickerPreviousMonth,
   DateRangePickerPreviousWeek,
   DateRangePickerPreviousYear,
+  DateRangePickerPortal,
   DateRangePickerRoot,
   DateRangePickerStartInput,
   DateRangePickerTrigger,
@@ -559,6 +562,7 @@ export {
   DateRangePickerYearViewTrigger,
   type DateRangePickerCellSlotProps,
   type DateRangePickerPartProps,
+  type DateRangePickerPortalProps,
   type DateRangePickerRootProps,
   type DateRangePickerRootSlotProps,
 } from './date-range-picker.js';
@@ -583,10 +587,12 @@ export {
   MonthPickerInput,
   MonthPickerNextYear,
   MonthPickerPreviousYear,
+  MonthPickerPortal,
   MonthPickerRoot,
   MonthPickerTrigger,
   type MonthPickerCellSlotProps,
   type MonthPickerPartProps,
+  type MonthPickerPortalProps,
   type MonthPickerRootProps,
   type MonthPickerRootSlotProps,
   type MonthPickerValue,
@@ -598,11 +604,13 @@ export {
   MonthRangePickerGrid,
   MonthRangePickerNextYear,
   MonthRangePickerPreviousYear,
+  MonthRangePickerPortal,
   MonthRangePickerRoot,
   MonthRangePickerStartInput,
   MonthRangePickerTrigger,
   type MonthRangePickerCellSlotProps,
   type MonthRangePickerPartProps,
+  type MonthRangePickerPortalProps,
   type MonthRangePickerRootProps,
   type MonthRangePickerRootSlotProps,
   type MonthRangePickerValue,
@@ -614,10 +622,12 @@ export {
   YearPickerInput,
   YearPickerNextPage,
   YearPickerPreviousPage,
+  YearPickerPortal,
   YearPickerRoot,
   YearPickerTrigger,
   type YearPickerCellSlotProps,
   type YearPickerPartProps,
+  type YearPickerPortalProps,
   type YearPickerRootProps,
   type YearPickerRootSlotProps,
   type YearPickerValue,
@@ -629,11 +639,13 @@ export {
   YearRangePickerGrid,
   YearRangePickerNextPage,
   YearRangePickerPreviousPage,
+  YearRangePickerPortal,
   YearRangePickerRoot,
   YearRangePickerStartInput,
   YearRangePickerTrigger,
   type YearRangePickerCellSlotProps,
   type YearRangePickerPartProps,
+  type YearRangePickerPortalProps,
   type YearRangePickerRootProps,
   type YearRangePickerRootSlotProps,
   type YearRangePickerValue,
@@ -652,6 +664,7 @@ export {
   DateTimePickerPreviousMonth,
   DateTimePickerPreviousWeek,
   DateTimePickerPreviousYear,
+  DateTimePickerPortal,
   DateTimePickerRoot,
   DateTimePickerTimeInput,
   DateTimePickerTrigger,
@@ -659,6 +672,7 @@ export {
   DateTimePickerYearViewTrigger,
   type DateTimePickerCellSlotProps,
   type DateTimePickerPartProps,
+  type DateTimePickerPortalProps,
   type DateTimePickerRootProps,
   type DateTimePickerRootSlotProps,
 } from './date-time-picker.js';
@@ -677,6 +691,7 @@ export {
   DateTimeRangePickerPreviousMonth,
   DateTimeRangePickerPreviousWeek,
   DateTimeRangePickerPreviousYear,
+  DateTimeRangePickerPortal,
   DateTimeRangePickerRoot,
   DateTimeRangePickerStartDateInput,
   DateTimeRangePickerStartDateTimeInput,
@@ -686,6 +701,7 @@ export {
   DateTimeRangePickerYearViewTrigger,
   type DateTimeRangePickerCellSlotProps,
   type DateTimeRangePickerPartProps,
+  type DateTimeRangePickerPortalProps,
   type DateTimeRangePickerRootProps,
   type DateTimeRangePickerRootSlotProps,
 } from './date-time-range-picker.js';
@@ -947,41 +963,49 @@ export type {
 export type {
   DatePickerHighlightedValueChangeHandler,
   DatePickerOpenChangeHandler,
+  DatePickerPositionChangeHandler,
   DatePickerValueChangeHandler,
 } from './date-picker.js';
 export type {
   DateRangePickerHighlightedValueChangeHandler,
   DateRangePickerOpenChangeHandler,
+  DateRangePickerPositionChangeHandler,
   DateRangePickerValueChangeHandler,
 } from './date-range-picker.js';
 export type {
   DateTimePickerHighlightedValueChangeHandler,
   DateTimePickerOpenChangeHandler,
+  DateTimePickerPositionChangeHandler,
   DateTimePickerValueChangeHandler,
 } from './date-time-picker.js';
 export type {
   DateTimeRangePickerHighlightedValueChangeHandler,
   DateTimeRangePickerOpenChangeHandler,
+  DateTimeRangePickerPositionChangeHandler,
   DateTimeRangePickerValueChangeHandler,
 } from './date-time-range-picker.js';
 export type {
   MonthPickerHighlightedValueChangeHandler,
   MonthPickerOpenChangeHandler,
+  MonthPickerPositionChangeHandler,
   MonthPickerValueChangeHandler,
 } from './month-picker.js';
 export type {
   MonthRangePickerHighlightedValueChangeHandler,
   MonthRangePickerOpenChangeHandler,
+  MonthRangePickerPositionChangeHandler,
   MonthRangePickerValueChangeHandler,
 } from './month-range-picker.js';
 export type {
   YearPickerHighlightedValueChangeHandler,
   YearPickerOpenChangeHandler,
+  YearPickerPositionChangeHandler,
   YearPickerValueChangeHandler,
 } from './year-picker.js';
 export type {
   YearRangePickerHighlightedValueChangeHandler,
   YearRangePickerOpenChangeHandler,
+  YearRangePickerPositionChangeHandler,
   YearRangePickerValueChangeHandler,
 } from './year-range-picker.js';
 export type {

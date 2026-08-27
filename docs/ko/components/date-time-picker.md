@@ -32,6 +32,7 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 <ul class="component-api-list">
   <li><code class="component-api-token">DateTimePickerRoot</code></li>
   <li><code class="component-api-token">DateTimePickerTrigger</code></li>
+  <li><code class="component-api-token">DateTimePickerPortal</code></li>
   <li><code class="component-api-token">DateTimePickerContent</code></li>
   <li><code class="component-api-token">DateTimePickerGrid</code></li>
   <li><code class="component-api-token">DateTimePickerCell</code></li>
@@ -57,6 +58,13 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">기본값</span><code>'start'</code></span></div>
+<p>기준 요소를 중심으로 팝업 내용을 정렬할 위치입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>as</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -68,6 +76,34 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoUpdate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['autoUpdate']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>레이아웃 변화에 맞춰 팝업 위치를 갱신할 방법입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>팝업이 화면 안에 남도록 위치를 뒤집거나 이동할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['collisionBoundary']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>팝업을 화면 안에 유지할 때 사용할 경계입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['collisionPadding']</code></span><span><span class="component-api-definition__label">기본값</span><code>8</code></span></div>
+<p>팝업과 충돌 경계 사이에 둘 간격입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -106,6 +142,13 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>highlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>DateValue</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
@@ -117,6 +160,13 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
 <p>보조 기술이 읽는 컨트롤 이름입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>middleware</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['middleware']</code></span><span><span class="component-api-definition__label">기본값</span><code>undefined</code></span></div>
+<p>기본 배치 규칙 뒤에 적용할 위치 계산 미들웨어입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -141,6 +191,13 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>true</code></span></div>
+<p>실행 요소를 기준으로 팝업 위치를 계산할지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
@@ -161,6 +218,27 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 <p>제출 전에 올바른 값이 반드시 있어야 하는지 여부입니다.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['side']</code></span><span><span class="component-api-definition__label">기본값</span><code>'bottom'</code></span></div>
+<p>기준 요소를 중심으로 팝업을 우선 배치할 방향입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>number</code></span><span><span class="component-api-definition__label">기본값</span><code>4</code></span></div>
+<p>팝업과 기준 요소 사이 거리입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>PickerPositionOptions['strategy']</code></span><span><span class="component-api-definition__label">기본값</span><code>'absolute'</code></span></div>
+<p>기준 요소에 연결된 콘텐츠의 CSS 위치 전략입니다.</p>
+</dd>
+</div>
 </dl>
 
 #### `DateTimePickerPartProps`
@@ -178,6 +256,32 @@ Vue 패키지: `@sectile/vue/date-time-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
 <p>래퍼를 만들지 않고 하나의 자식 요소에 파트 속성을 합칠지 여부입니다.</p>
+</dd>
+</div>
+</dl>
+
+#### `DateTimePickerPortalProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>defer</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>Teleport 대상을 현재 mount 또는 update tick이 끝날 때 찾을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span><span><span class="component-api-definition__label">기본값</span><code>false</code></span></div>
+<p>사용자 조작을 막을지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">기본값</span><code>'body'</code></span></div>
+<p>포털 콘텐츠를 옮길 대상입니다.</p>
 </dd>
 </div>
 </dl>
@@ -364,6 +468,12 @@ type DateTimePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimeP
 
 ```ts
 type DateTimePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
+#### `DateTimePickerPositionChangeHandler`
+
+```ts
+type DateTimePickerPositionChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onPositionChange']>
 ```
 
 #### `DateTimeValue`

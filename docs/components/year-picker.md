@@ -32,6 +32,7 @@ Vue package: `@sectile/vue/year-picker`
 <ul class="component-api-list">
   <li><code class="component-api-token">YearPickerRoot</code></li>
   <li><code class="component-api-token">YearPickerTrigger</code></li>
+  <li><code class="component-api-token">YearPickerPortal</code></li>
   <li><code class="component-api-token">YearPickerContent</code></li>
   <li><code class="component-api-token">YearPickerGrid</code></li>
   <li><code class="component-api-token">YearPickerCell</code></li>
@@ -47,6 +48,13 @@ Vue package: `@sectile/vue/year-picker`
 
 <dl class="component-api-definitions component-api-definitions--props">
 <div class="component-api-definition">
+<dt><code>align</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['align']</code></span><span><span class="component-api-definition__label">Default</span><code>'start'</code></span></div>
+<p>Alignment of positioned content relative to its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>as</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PrimitiveAs</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -58,6 +66,34 @@ Vue package: `@sectile/vue/year-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>autoUpdate</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['autoUpdate']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Whether and how positioned content tracks layout changes.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>avoidCollisions</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content may flip or shift to remain visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionBoundary</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['collisionBoundary']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Boundary used to keep positioned content visible.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>collisionPadding</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['collisionPadding']</code></span><span><span class="component-api-definition__label">Default</span><code>8</code></span></div>
+<p>Space kept between positioned content and its collision boundary.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -96,6 +132,13 @@ Vue package: `@sectile/vue/year-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>hideWhenDetached</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether positioned content hides when its anchor leaves the layout.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>highlightedValue</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>DateValue</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -107,6 +150,13 @@ Vue package: `@sectile/vue/year-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Accessible name announced for the control.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>middleware</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['middleware']</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Positioning middleware applied after the built-in placement rules.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -131,6 +181,13 @@ Vue package: `@sectile/vue/year-picker`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>position</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>true</code></span></div>
+<p>Whether the popup is positioned relative to its trigger.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>readonly</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
@@ -151,6 +208,27 @@ Vue package: `@sectile/vue/year-picker`
 <p>Whether the control must contain a valid value before submission.</p>
 </dd>
 </div>
+<div class="component-api-definition">
+<dt><code>side</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['side']</code></span><span><span class="component-api-definition__label">Default</span><code>'bottom'</code></span></div>
+<p>Preferred side of the anchor for positioned content.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>sideOffset</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>number</code></span><span><span class="component-api-definition__label">Default</span><code>4</code></span></div>
+<p>Distance between positioned content and its anchor.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>strategy</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>PickerPositionOptions['strategy']</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
+<p>CSS positioning strategy used for anchored content.</p>
+</dd>
+</div>
 </dl>
 
 #### `YearPickerPartProps`
@@ -168,6 +246,32 @@ Vue package: `@sectile/vue/year-picker`
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
 <p>Whether to merge this part into its single child instead of rendering a wrapper.</p>
+</dd>
+</div>
+</dl>
+
+#### `YearPickerPortalProps`
+
+<dl class="component-api-definitions component-api-definitions--props">
+<div class="component-api-definition">
+<dt><code>defer</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether Teleport target resolution waits until the end of the current mount or update tick.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>disabled</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>boolean</code></span><span><span class="component-api-definition__label">Default</span><code>false</code></span></div>
+<p>Whether interaction is unavailable.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>to</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>string | HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>'body'</code></span></div>
+<p>Teleport target for portalled content.</p>
 </dd>
 </div>
 </dl>
@@ -314,6 +418,12 @@ type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoo
 
 ```ts
 type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>
+```
+
+#### `YearPickerPositionChangeHandler`
+
+```ts
+type YearPickerPositionChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onPositionChange']>
 ```
 
 #### `YearPickerValue`

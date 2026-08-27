@@ -6,6 +6,7 @@ import { createSemanticController, type SemanticController } from '@sectile/core
 import { setInteractionAttributes } from './interaction.js';
 import { horizontalArrow, type ReadingDirection } from './direction.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './layer-binding.js';
+import { createFloatingPosition, type FloatingPositionConnection } from './floating-position.js';
 
 export type MenuKind = 'menu' | 'menubar' | 'navigation-menu' | 'menu-button';
 export interface MenuTypeaheadOptions<ID extends StableID> { readonly textValue: (id: ID) => string; readonly timeout?: number; readonly now?: () => number; readonly normalize?: (text: string) => string }
@@ -61,18 +62,30 @@ export function createMenuControl<ID extends StableID>(options: MenuControlOptio
 
 class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #options: MenuControlOptions<ID>; readonly #tree: Tree<ID>; readonly #runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>; readonly #policies: MenuPolicies<ID>; readonly #openControlled: boolean; readonly #elements = new Map<ID, HTMLElement>(); readonly #submenus = new Map<ID, HTMLElement>();
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #reposition: () => void; readonly #view: Window | null; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined;
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: FloatingPositionConnection | undefined; readonly #submenuPositions = new Map<ID, FloatingPositionConnection>();
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   public constructor(options: MenuControlOptions<ID>, tree: Tree<ID>, runtime: SemanticController<MenuState<ID>, MenuEvent<ID>, MenuCommand<ID>>, policies: MenuPolicies<ID>, openControlled: boolean) {
     this.#options = options; this.#tree = tree; this.#runtime = runtime; this.#policies = policies; this.#openControlled = openControlled;
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
-    this.#view = options.root.ownerDocument?.defaultView ?? null; this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
+    this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
+    this.#popupPosition = options.kind === 'menu-button' && options.trigger !== undefined
+      ? createFloatingPosition({
+        root: options.root,
+        reference: options.trigger,
+        side: 'bottom',
+        align: 'center',
+        sideOffset: 4,
+        onPositionChange: (position) => {
+          const side = position.placement.split('-')[0];
+          options.root.dataset['placement'] = `${side}-center`;
+        },
+      })
+      : undefined;
     this.#keydown = (event) => { if (this.#handleTypeahead(event)) { event.preventDefault(); return; } const semantic = toMenuEvent(event, options.kind, options.direction); if (semantic !== null && this.handleEvent(semantic)) event.preventDefault(); };
     this.#click = (event) => { for (const [id, element] of this.#elements) if (event.target === element || (typeof Node !== 'undefined' && event.target instanceof Node && element.contains(event.target))) { const wasOpen = this.getSnapshot().state.openPath.includes(id); this.handleEvent({ type: 'focus', id }); if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu'); return; } };
     this.#triggerClick = () => { this.handleEvent(this.getSnapshot().state.open ? 'close-popup' : 'open-popup'); };
-    this.#reposition = () => { this.#positionPopup(); this.#positionSubmenus(); };
-    options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.trigger?.addEventListener('click', this.#triggerClick); this.#view?.addEventListener('resize', this.#reposition); this.#view?.addEventListener('scroll', this.#reposition, true); this.#refresh();
+    options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.trigger?.addEventListener('click', this.#triggerClick); this.#refresh();
   }
   public getSnapshot(): RevisionSnapshot<MenuState<ID>> { return this.#runtime.getSnapshot(); }
   public syncControlledValue(open: boolean): Result<RevisionSnapshot<MenuState<ID>>> {
@@ -82,15 +95,16 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (result.ok) { this.#refresh(); this.#options.onUpdate?.(); }
     return result;
   }
-  public setItemAttributes(element: HTMLElement, id: ID): void { if (this.#tree.has(id)) { this.#elements.set(id, element); this.#refresh(); } }
+  public setItemAttributes(element: HTMLElement, id: ID): void { if (this.#tree.has(id)) { this.#elements.set(id, element); this.#connectSubmenuPosition(id); this.#refresh(); } }
   public setSubmenuAttributes(element: HTMLElement, parentID: ID): void {
     if (!this.#tree.has(parentID) || this.#tree.isLeaf(parentID)) return;
     this.#submenus.set(parentID, element);
     if (element.id.length === 0) element.id = `sectile-menu-${this.#instanceID}-submenu-${this.#submenus.size}`;
+    this.#connectSubmenuPosition(parentID);
     this.#refresh();
   }
   public handleEvent(event: MenuEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refresh(); for (const effect of result.commands) { if (effect.type === 'invoke') this.#options.onInvoke?.(effect.id); if (effect.type === 'focus') this.#elements.get(effect.id)?.focus(); if (effect.type === 'restore-focus') this.#options.trigger?.focus(); } this.#options.onUpdate?.(); } return result.ok; }
-  public disconnect(): void { this.#layer?.disconnect(); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#view?.removeEventListener('resize', this.#reposition); this.#view?.removeEventListener('scroll', this.#reposition, true); this.#elements.clear(); this.#submenus.clear(); }
+  public disconnect(): void { this.#layer?.disconnect(); this.#popupPosition?.disconnect(); for (const position of this.#submenuPositions.values()) position.disconnect(); this.#submenuPositions.clear(); this.#options.root.removeEventListener('keydown', this.#keydown); this.#options.root.removeEventListener('click', this.#click); this.#options.trigger?.removeEventListener('click', this.#triggerClick); this.#elements.clear(); this.#submenus.clear(); }
   #refresh(): void {
     const state = this.getSnapshot().state;
     this.#options.root.setAttribute('role', this.#options.kind === 'navigation-menu' ? 'navigation' : this.#options.kind === 'menubar' ? 'menubar' : 'menu');
@@ -116,49 +130,26 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     }
     if (!state.open) this.#options.root.removeAttribute('data-placement');
     this.#layer?.sync();
-    this.#reposition();
+    this.#popupPosition?.update();
+    for (const position of this.#submenuPositions.values()) position.update();
   }
-  #positionPopup(): void {
-    const viewport = this.#view; const trigger = this.#options.trigger;
-    if (this.#options.kind !== 'menu-button' || this.#options.root.hidden || viewport === null || trigger === undefined) return;
-    const gutter = 8; const gap = 4;
-    const anchorRect = trigger.getBoundingClientRect(); const popupRect = this.#options.root.getBoundingClientRect();
-    const spaceBelow = viewport.innerHeight - anchorRect.bottom - gutter; const spaceAbove = anchorRect.top - gutter;
-    const placeAbove = popupRect.height > spaceBelow && spaceAbove > spaceBelow;
-    const rawLeft = anchorRect.left + ((anchorRect.width - popupRect.width) / 2);
-    const rawTop = placeAbove ? anchorRect.top - popupRect.height - gap : anchorRect.bottom + gap;
-    const left = Math.max(gutter, Math.min(rawLeft, viewport.innerWidth - popupRect.width - gutter));
-    const top = Math.max(gutter, Math.min(rawTop, viewport.innerHeight - popupRect.height - gutter));
-    this.#options.root.style.position = 'fixed'; this.#options.root.style.left = `${left}px`; this.#options.root.style.top = `${top}px`;
-    this.#options.root.dataset['placement'] = placeAbove ? 'top-center' : 'bottom-center';
-  }
-  #positionSubmenus(): void {
-    const viewport = this.#view;
-    if (viewport === null) return;
-    const gutter = 8; const gap = 4;
-    for (const [parentID, submenu] of this.#submenus) {
-      if (submenu.hidden) continue;
-      const anchor = this.#elements.get(parentID); if (anchor === undefined) continue;
-      const anchorRect = anchor.getBoundingClientRect(); const submenuRect = submenu.getBoundingClientRect();
-      const opensFromMenubar = (this.#options.kind === 'menubar' || this.#options.kind === 'navigation-menu') && this.#tree.parentOf(parentID) === null;
-      let rawLeft: number; let rawTop: number; let placement: 'bottom-start' | 'top-start' | 'left-start' | 'right-start';
-      if (opensFromMenubar) {
-        const spaceBelow = viewport.innerHeight - anchorRect.bottom - gutter; const spaceAbove = anchorRect.top - gutter;
-        const placeAbove = submenuRect.height > spaceBelow && spaceAbove > spaceBelow;
-        rawLeft = this.#options.direction === 'rtl' ? anchorRect.right - submenuRect.width : anchorRect.left; rawTop = placeAbove ? anchorRect.top - submenuRect.height - gap : anchorRect.bottom + gap;
-        placement = placeAbove ? 'top-start' : 'bottom-start';
-      } else {
-        const spaceRight = viewport.innerWidth - anchorRect.right - gutter; const spaceLeft = anchorRect.left - gutter;
-        const preferLeft = this.#options.direction === 'rtl';
-        const placeLeft = preferLeft ? !(submenuRect.width > spaceLeft && spaceRight > spaceLeft) : submenuRect.width > spaceRight && spaceLeft > spaceRight;
-        rawLeft = placeLeft ? anchorRect.left - submenuRect.width - gap : anchorRect.right + gap; rawTop = anchorRect.top;
-        placement = placeLeft ? 'left-start' : 'right-start';
-      }
-      const left = Math.max(gutter, Math.min(rawLeft, viewport.innerWidth - submenuRect.width - gutter));
-      const top = Math.max(gutter, Math.min(rawTop, viewport.innerHeight - submenuRect.height - gutter));
-      submenu.style.position = 'fixed'; submenu.style.left = `${left}px`; submenu.style.top = `${top}px`; submenu.dataset['placement'] = placement;
-      anchor.dataset['submenuPlacement'] = placement;
-    }
+  #connectSubmenuPosition(parentID: ID): void {
+    const anchor = this.#elements.get(parentID); const submenu = this.#submenus.get(parentID);
+    if (anchor === undefined || submenu === undefined) return;
+    this.#submenuPositions.get(parentID)?.disconnect();
+    const opensFromMenubar = (this.#options.kind === 'menubar' || this.#options.kind === 'navigation-menu') && this.#tree.parentOf(parentID) === null;
+    const position = createFloatingPosition({
+      root: submenu,
+      reference: anchor,
+      side: opensFromMenubar ? 'bottom' : this.#options.direction === 'rtl' ? 'left' : 'right',
+      align: 'start',
+      sideOffset: 4,
+      onPositionChange: (next) => {
+        submenu.dataset['placement'] = next.placement;
+        anchor.dataset['submenuPlacement'] = next.placement;
+      },
+    });
+    this.#submenuPositions.set(parentID, position);
   }
   #handleTypeahead(event: KeyboardEvent): boolean {
     const config = this.#options.typeahead;

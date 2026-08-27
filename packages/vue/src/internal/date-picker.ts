@@ -1,11 +1,11 @@
 import {
-  Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
+  Fragment, Teleport, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
   nextTick, provide, shallowRef, watch, type AllowedComponentProps, type Component,
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
   type VNodeProps,
 } from 'vue';
 import { createCalendar, type CalendarPolicies } from '@sectile/dom/calendar';
-import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
+import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
 import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/date-range-picker';
 import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/date-time-picker';
 import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/date-time-range-picker';
@@ -19,7 +19,7 @@ import {
 } from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
-import { useHostReferenceDate } from '../host-provider.js';
+import { useHostPortalTarget, useHostReferenceDate } from '../host-provider.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -42,6 +42,20 @@ export interface PickerCellSlotProps { readonly value: DateValue; readonly selec
 export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface PickerPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
+export interface PickerPositionProps {
+  readonly position?: boolean;
+  readonly side?: PickerPositionOptions['side'];
+  readonly align?: PickerPositionOptions['align'];
+  readonly sideOffset?: number;
+  readonly collisionPadding?: PickerPositionOptions['collisionPadding'];
+  readonly collisionBoundary?: PickerPositionOptions['collisionBoundary'];
+  readonly avoidCollisions?: boolean;
+  readonly hideWhenDetached?: boolean;
+  readonly strategy?: PickerPositionOptions['strategy'];
+  readonly middleware?: PickerPositionOptions['middleware'];
+  readonly autoUpdate?: PickerPositionOptions['autoUpdate'];
+}
 
 export interface PickerRootConfig {
   readonly scope?: string;
@@ -52,7 +66,7 @@ export interface PickerRootConfig {
   readonly inline?: boolean;
 }
 
-export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue, Policies = Readonly<Record<string, unknown>>> {
+export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue, Policies = Readonly<Record<string, unknown>>> extends PickerPositionProps {
   readonly modelValue?: Value;
   readonly defaultValue?: Value;
   readonly open?: boolean;
@@ -84,6 +98,17 @@ interface ResolvedPickerRootProps<Kind extends PickerKind> {
   readonly required: boolean;
   readonly label?: string;
   readonly policies?: PickerPoliciesFor<Kind>;
+  readonly position: boolean;
+  readonly side: NonNullable<PickerPositionOptions['side']>;
+  readonly align: NonNullable<PickerPositionOptions['align']>;
+  readonly sideOffset: number;
+  readonly collisionPadding: PickerPositionOptions['collisionPadding'];
+  readonly collisionBoundary: PickerPositionOptions['collisionBoundary'];
+  readonly avoidCollisions: boolean;
+  readonly hideWhenDetached: boolean;
+  readonly strategy: NonNullable<PickerPositionOptions['strategy']>;
+  readonly middleware: PickerPositionOptions['middleware'];
+  readonly autoUpdate: PickerPositionOptions['autoUpdate'];
   readonly as: PrimitiveAs;
   readonly asChild: boolean;
 }
@@ -97,6 +122,7 @@ export type PickerRootPublicProps<Kind extends PickerKind> =
     readonly 'onUpdate:modelValue'?: (value: PickerValueFor<Kind>) => unknown;
     readonly 'onUpdate:open'?: (value: boolean) => unknown;
     readonly 'onUpdate:highlightedValue'?: (value: DateValue) => unknown;
+    readonly onPositionChange?: NonNullable<PickerPositionOptions['onPositionChange']>;
   };
 
 export interface PickerRootComponent<Kind extends PickerKind> {
@@ -142,6 +168,9 @@ interface Context {
   readonly scope: string;
   readonly granularity: 'day' | 'month' | 'year';
   readonly inline: boolean;
+  readonly position: ComputedRef<boolean>;
+  readonly positioned: ComputedRef<boolean>;
+  readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
   register(part: PickerInputPart | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   registerCell(element: HTMLElement, value: DateValue): void;
@@ -173,13 +202,24 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       defaultView: { type: String as PropType<CalendarViewMode>, default: defaultView },
       disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false },
       label: { type: String, default: undefined }, policies: { type: Object as PropType<PickerPoliciesFor<Kind>>, default: undefined },
+      position: { type: Boolean, default: true },
+      side: { type: String as PropType<NonNullable<PickerPositionOptions['side']>>, default: 'bottom' },
+      align: { type: String as PropType<NonNullable<PickerPositionOptions['align']>>, default: 'start' },
+      sideOffset: { type: Number, default: 4 },
+      collisionPadding: { type: [Number, Object] as PropType<PickerPositionOptions['collisionPadding']>, default: 8 },
+      collisionBoundary: { type: [String, Object, Array] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
+      avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: true },
+      strategy: { type: String as PropType<NonNullable<PickerPositionOptions['strategy']>>, default: 'absolute' },
+      middleware: { type: Array as PropType<PickerPositionOptions['middleware']>, default: undefined },
+      autoUpdate: { type: [Boolean, Object] as PropType<PickerPositionOptions['autoUpdate']>, default: undefined },
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
     },
-    emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
+    emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true, positionChange: (_position: Parameters<NonNullable<PickerPositionOptions['onPositionChange']>>[0]): boolean => true },
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
+      const positioned = shallowRef(inline || !runtimeProps.position);
       const hostReferenceDate = useHostReferenceDate();
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
@@ -242,6 +282,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         connection.value?.disconnect();
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
         if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
+        positioned.value = inline || !runtimeProps.position;
         const base: Record<string, unknown> = {
           root: content, grid, disabled: runtimeProps.disabled, readOnly: runtimeProps.readonly, required: runtimeProps.required,
           referenceDate: referenceDate.value,
@@ -254,6 +295,17 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         };
         if (kind !== 'calendar') {
           base['trigger'] = trigger;
+          Object.assign(base, {
+            position: runtimeProps.position, side: runtimeProps.side, align: runtimeProps.align, sideOffset: runtimeProps.sideOffset,
+            collisionPadding: runtimeProps.collisionPadding, avoidCollisions: runtimeProps.avoidCollisions,
+            hideWhenDetached: runtimeProps.hideWhenDetached, strategy: runtimeProps.strategy,
+            middleware: runtimeProps.middleware, autoUpdate: runtimeProps.autoUpdate,
+            onPositionChange: (position: Parameters<NonNullable<PickerPositionOptions['onPositionChange']>>[0]) => {
+              positioned.value = true;
+              emit('positionChange', position);
+            },
+          });
+          if (runtimeProps.collisionBoundary !== undefined) base['collisionBoundary'] = runtimeProps.collisionBoundary;
           if (controlled.open) base['open'] = runtimeProps.open;
           else base['defaultOpen'] = localOpen.value;
           base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
@@ -271,6 +323,12 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         connection.value = created as unknown as PickerConnection;
         if (runtimeProps.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: runtimeProps.defaultView });
         refreshCells(); refresh();
+      };
+      let connectQueued = false;
+      const scheduleConnect = (): void => {
+        if (connectQueued) return;
+        connectQueued = true;
+        void nextTick(() => { connectQueued = false; connect(); });
       };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
         const direction = delta < 0 ? -1 : 1;
@@ -291,7 +349,13 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       };
       provide<Context>(key, {
         kind, scope, granularity, inline, state, periodAvailable,
-        register: (part, element) => { if (element === undefined) elements.delete(part); else elements.set(part, element); },
+        position: computed(() => runtimeProps.position), positioned: computed(() => positioned.value), strategy: computed(() => runtimeProps.strategy),
+        register: (part, element) => {
+          if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
+          if (element === undefined) elements.delete(part); else elements.set(part, element);
+          if (part === 'content') positioned.value = inline || !runtimeProps.position;
+          scheduleConnect();
+        },
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => {
           const repetitions = granularity === 'year' && unit === 'year' ? yearPageSize : 1;
@@ -332,7 +396,12 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         selectYear,
       });
       onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-      watch([() => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies], connect);
+      watch([
+        () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies,
+        () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
+        () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
+        () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.middleware, () => runtimeProps.autoUpdate,
+      ], connect);
       watch(referenceDate, (value) => {
         if (
           runtimeProps.highlightedValue === undefined
@@ -374,7 +443,23 @@ export const PickerContent = defineComponent({
   setup(props, { attrs, slots }) { const root = useRoot('PickerContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.register('content', node instanceof HTMLElement ? node : undefined),
     role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: root.inline ? false : !root.state.value.open, 'data-scope': root.scope, 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
+    style: !root.inline && root.position.value ? { position: root.strategy.value, visibility: root.positioned.value ? undefined : 'hidden' } : undefined,
   }), { default: () => slots['default']?.(root.state.value) }); },
+});
+
+export const PickerPortal = defineComponent({
+  name: 'SectilePickerPortal', inheritAttrs: false,
+  props: {
+    to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
+    disabled: { type: Boolean, default: false }, defer: { type: Boolean, default: false },
+  },
+  setup(props, { slots }) {
+    useRoot('PickerPortal');
+    const portalTarget = useHostPortalTarget();
+    return (): VNodeChild => h(Teleport as Component, {
+      to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled, defer: props.defer,
+    }, slots['default']?.());
+  },
 });
 
 export const PickerGrid = defineComponent({

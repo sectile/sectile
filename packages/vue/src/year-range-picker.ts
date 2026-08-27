@@ -1,11 +1,11 @@
 import type { DateRangePickerOptions } from '@sectile/dom/date-range-picker';
 import type { DateRange, DateValue } from '@sectile/dom/date-field';
 import {
-  PickerContent, PickerGrid, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
-  createPickerRoot, type PickerPartProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
+  PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
+  createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './internal/date-picker.js';
 
-export interface YearRangePickerRootProps extends PickerPartProps {
+export interface YearRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null;
   readonly defaultValue?: DateRange | null;
   readonly highlightedValue?: DateValue;
@@ -25,7 +25,9 @@ export type YearRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>
 export type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:open']>;
 export type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
+export type YearRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onPositionChange']>;
 export const YearRangePickerTrigger = specializePickerRootPart('date-range', PickerTrigger);
+export const YearRangePickerPortal = PickerPortal;
 export const YearRangePickerContent = specializePickerRootPart('date-range', PickerContent);
 export const YearRangePickerGrid = specializePickerRootPart('date-range', PickerGrid);
 export const YearRangePickerCell = createPickerYearCell('cell', 'SectileYearRangePickerCell');
@@ -38,5 +40,6 @@ export type {
   DateRange as YearRangePickerValue,
   DateValue as YearPickerValue,
   PickerPartProps as YearRangePickerPartProps,
+  PickerPortalProps as YearRangePickerPortalProps,
   PickerYearCellSlotProps as YearRangePickerCellSlotProps,
 };

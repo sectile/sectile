@@ -93,6 +93,13 @@ Vue package: `@sectile/vue/drawer`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>initialFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or resolver that receives focus when the component opens.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>interactOutsideExclusions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>

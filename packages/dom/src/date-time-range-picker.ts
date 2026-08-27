@@ -21,8 +21,10 @@ import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-bi
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 import { currentReferenceDate } from './internal/reference-date.js';
+import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
+import type { FloatingPositionConnection } from './internal/floating-position.js';
 
-export interface DateTimeRangePickerOptions {
+export interface DateTimeRangePickerOptions extends PickerPositionOptions {
   readonly root: HTMLElement;
   readonly grid: HTMLElement;
   readonly trigger: HTMLElement;
@@ -156,6 +158,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly #startDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
+  readonly #position: FloatingPositionConnection;
   #syncingFields = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
@@ -187,6 +190,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.runtime = runtime;
     this.controls = controls;
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); } });
+    this.#position = createPickerPosition(options.root, options.trigger, options);
     const state = runtime.getSnapshot().state;
     this.#startDateField = options.startDateInput === undefined ? null : createDateField({
       input: options.startDateInput,
@@ -341,10 +345,12 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     syncTimeField(this.#endTimeField, state.endTime);
     this.#syncingFields = false;
     this.#layer.sync();
+    this.#position.update();
   }
 
   public disconnect(): void {
     this.#layer.disconnect();
+    this.#position.disconnect();
     this.#startTimeField?.disconnect();
     this.#endTimeField?.disconnect();
     this.#startDateField?.disconnect();

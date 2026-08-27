@@ -13,8 +13,12 @@ import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createDOMLayerBinding, type DOMLayerBinding } from './internal/layer-binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
+import { createPickerPosition, type PickerPositionOptions } from './internal/picker-position.js';
+import type { FloatingPositionConnection } from './internal/floating-position.js';
 
-export interface DatePickerOptions {
+export type { PickerPositionOptions } from './internal/picker-position.js';
+
+export interface DatePickerOptions extends PickerPositionOptions {
   readonly root: HTMLElement;
   readonly grid: HTMLElement;
   readonly trigger: HTMLElement;
@@ -68,6 +72,7 @@ class DOMDatePicker implements DatePickerConnection {
   readonly options: DatePickerOptions; readonly runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean };
   readonly #field: FacadeConnection<DateFieldConnection> | null;
   readonly #layer: DOMLayerBinding;
+  readonly #position: FloatingPositionConnection;
   #syncingField = false;
   readonly #trigger = (): void => { this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => { const semantic = keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
@@ -77,6 +82,7 @@ class DOMDatePicker implements DatePickerConnection {
     this.runtime = runtime;
     this.controls = controls;
     this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); } });
+    this.#position = createPickerPosition(options.root, options.trigger, options);
     this.#field = options.input === undefined ? null : createDateField({
       input: options.input,
       defaultValue: runtime.getSnapshot().state.value,
@@ -122,9 +128,11 @@ class DOMDatePicker implements DatePickerConnection {
       this.#syncingField = false;
     }
     this.#layer.sync();
+    this.#position.update();
   }
   public disconnect(): void {
     this.#layer.disconnect();
+    this.#position.disconnect();
     this.#field?.disconnect();
     this.options.trigger.removeEventListener('click', this.#trigger);
     this.options.grid.removeEventListener('keydown', this.#keydown);

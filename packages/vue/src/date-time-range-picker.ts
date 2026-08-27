@@ -2,11 +2,11 @@ import type { DateTimeRangePickerOptions } from '@sectile/dom/date-time-range-pi
 import type { DateValue } from '@sectile/dom/date-field';
 import type { DateTimeRange } from '@sectile/dom/date-time-field';
 import {
-  PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, specializePickerRootPart,
-  createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
+  PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, specializePickerRootPart,
+  createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './internal/date-picker.js';
 
-export interface DateTimeRangePickerRootProps extends PickerPartProps {
+export interface DateTimeRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateTimeRange | null; readonly defaultValue?: DateTimeRange | null;
   readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
@@ -18,7 +18,9 @@ export type DateTimeRangePickerRootSlotProps = PickerRootSlotProps<DateTimeRange
 export type DateTimeRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DateTimeRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:open']>;
 export type DateTimeRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
+export type DateTimeRangePickerPositionChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onPositionChange']>;
 export const DateTimeRangePickerTrigger = specializePickerRootPart('date-time-range', PickerTrigger);
+export const DateTimeRangePickerPortal = PickerPortal;
 export const DateTimeRangePickerContent = specializePickerRootPart('date-time-range', PickerContent);
 export const DateTimeRangePickerGrid = specializePickerRootPart('date-time-range', PickerGrid);
 export const DateTimeRangePickerCell = PickerCell;
@@ -38,4 +40,4 @@ export const DateTimeRangePickerNextYear = specializePickerRootPart('date-time-r
 export const DateTimeRangePickerWeekViewTrigger = specializePickerRootPart('date-time-range', createPickerViewTrigger('week', 'SectileDateTimeRangePickerWeekViewTrigger'));
 export const DateTimeRangePickerMonthViewTrigger = specializePickerRootPart('date-time-range', createPickerViewTrigger('month', 'SectileDateTimeRangePickerMonthViewTrigger'));
 export const DateTimeRangePickerYearViewTrigger = specializePickerRootPart('date-time-range', createPickerViewTrigger('year', 'SectileDateTimeRangePickerYearViewTrigger'));
-export type { DateTimeRange, DateValue, PickerCellSlotProps as DateTimeRangePickerCellSlotProps, PickerMonthCellSlotProps as DateTimeRangePickerMonthCellSlotProps, PickerPartProps as DateTimeRangePickerPartProps };
+export type { DateTimeRange, DateValue, PickerCellSlotProps as DateTimeRangePickerCellSlotProps, PickerMonthCellSlotProps as DateTimeRangePickerMonthCellSlotProps, PickerPartProps as DateTimeRangePickerPartProps, PickerPortalProps as DateTimeRangePickerPortalProps };

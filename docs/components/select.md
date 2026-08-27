@@ -225,7 +225,7 @@ Vue package: `@sectile/vue/select`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'fixed'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
 <p>CSS positioning strategy used for anchored content.</p>
 </dd>
 </div>

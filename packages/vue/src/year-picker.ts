@@ -1,11 +1,11 @@
 import type { DatePickerOptions } from '@sectile/dom/date-picker';
 import type { DateValue } from '@sectile/dom/date-field';
 import {
-  PickerContent, PickerGrid, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
-  createPickerRoot, type PickerPartProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
+  PickerContent, PickerGrid, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerYearCell, specializePickerRootPart,
+  createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './internal/date-picker.js';
 
-export interface YearPickerRootProps extends PickerPartProps {
+export interface YearPickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateValue | null;
   readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue;
@@ -25,7 +25,9 @@ export type YearPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type YearPickerValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:open']>;
 export type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>;
+export type YearPickerPositionChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onPositionChange']>;
 export const YearPickerTrigger = specializePickerRootPart('date', PickerTrigger);
+export const YearPickerPortal = PickerPortal;
 export const YearPickerContent = specializePickerRootPart('date', PickerContent);
 export const YearPickerGrid = specializePickerRootPart('date', PickerGrid);
 export const YearPickerCell = createPickerYearCell('cell', 'SectileYearPickerCell');
@@ -36,5 +38,6 @@ export const YearPickerNextPage = specializePickerRootPart('date', createPickerM
 export type {
   DateValue as YearPickerValue,
   PickerPartProps as YearPickerPartProps,
+  PickerPortalProps as YearPickerPortalProps,
   PickerYearCellSlotProps as YearPickerCellSlotProps,
 };

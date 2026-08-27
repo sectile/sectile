@@ -137,6 +137,13 @@ Vue package: `@sectile/vue/alert-dialog`
 </dd>
 </div>
 <div class="component-api-definition">
+<dt><code>initialFocus</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>HTMLElement</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<p>Element or resolver that receives focus when the component opens.</p>
+</dd>
+</div>
+<div class="component-api-definition">
 <dt><code>interactOutsideExclusions</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>readonly HTMLElement[]</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
@@ -188,7 +195,7 @@ Vue package: `@sectile/vue/alert-dialog`
 <div class="component-api-definition">
 <dt><code>strategy</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'fixed'</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>Strategy</code></span><span><span class="component-api-definition__label">Default</span><code>'absolute'</code></span></div>
 <p>CSS positioning strategy used for anchored content.</p>
 </dd>
 </div>

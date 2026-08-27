@@ -363,7 +363,7 @@ export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } 
 export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
 export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
 export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
-export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions } from './date-picker.js';
+export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions, type PickerPositionOptions } from './date-picker.js';
 export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
 export { createRangeCalendar, tryCreateRangeCalendar, type RangeCalendarConnection, type RangeCalendarControlledValues, type RangeCalendarOptions } from './range-calendar.js';
 export { createMonthPicker, tryCreateMonthPicker, createMonthPickerYear, type MonthPickerConnection, type MonthPickerControlledValues, type MonthPickerOptions, type MonthPickerValue } from './month-picker.js';
