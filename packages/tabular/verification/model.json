@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "group": "model",
+  "seed": "sectile-tabular-v1",
+  "tests": [
+    {
+      "id": "TAB-MOD-01",
+      "title": "TAB-MOD-01: canonical limits, immutable columns, and deterministic initial state",
+      "file": "tests/model/foundation.test.mjs",
+      "sha256": "3a4086652adde06191cd0154ff9fdce9e3d37e90ea2298dbc644df91aff69f69"
+    },
+    {
+      "id": "TAB-MOD-02",
+      "title": "TAB-MOD-02: every resource limit is a positive safe integer",
+      "file": "tests/model/foundation.test.mjs",
+      "sha256": "3a4086652adde06191cd0154ff9fdce9e3d37e90ea2298dbc644df91aff69f69"
+    },
+    {
+      "id": "TAB-MOD-03",
+      "title": "TAB-MOD-03: column and header identities reject malformed, duplicate, and over-depth input",
+      "file": "tests/model/foundation.test.mjs",
+      "sha256": "3a4086652adde06191cd0154ff9fdce9e3d37e90ea2298dbc644df91aff69f69"
+    },
+    {
+      "id": "TAB-MOD-04",
+      "title": "TAB-MOD-04: cell IDs round-trip without collisions across delimiter and Unicode data",
+      "file": "tests/model/foundation.test.mjs",
+      "sha256": "3a4086652adde06191cd0154ff9fdce9e3d37e90ea2298dbc644df91aff69f69"
+    },
+    {
+      "id": "TAB-MOD-05",
+      "title": "TAB-MOD-05: controlled ownership is fixed and stale revisions reject atomically",
+      "file": "tests/model/foundation.test.mjs",
+      "sha256": "3a4086652adde06191cd0154ff9fdce9e3d37e90ea2298dbc644df91aff69f69"
+    }
+  ],
+  "expectedFailures": [
+    "codec collision and round-trip",
+    "malformed identity",
+    "resource ceiling",
+    "stale controlled proposal"
+  ]
+}
