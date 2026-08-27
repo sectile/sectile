@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "c2b2c8ae433ed6684b1f4f564a1b29d0be22fabd92bce81caa7306d63314c75e",
+    "publicSignatureFingerprint": "eacac4a058b1e7ff5a6194f46440a9a754993a4086a412f4157e11e5a61f750b",
     "subpaths": [
       ".",
       "./accordion",
@@ -146,6 +146,7 @@
       "combobox-cursor-outside-domain",
       "composition-active",
       "composition-inactive",
+      "connection-destroyed",
       "controlled-edit-mode-required",
       "controlled-expanded-value-required",
       "controlled-expanded-values-required",
@@ -544,6 +545,6 @@
   ],
   "acceptance": {
     "classification": "contract-impact-reviewed",
-    "reason": "Add the CascadeList public state model and component-specific validation errors."
+    "reason": "Adapter connections now reject every post-destroy operation with the typed connection-destroyed failure; this is an additive lifecycle contract."
   }
 }
