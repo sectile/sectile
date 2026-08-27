@@ -970,8 +970,27 @@ ${options === '' ? '' : `${options}\n`}${controlledChange}  onComplete: (value) 
 window.addEventListener('pagehide', () => pinInput.disconnect(), { once: true })`);
 }
 
+function meterDomSource(scenario: string): string {
+  const values = scenario === 'exact-decimal'
+    ? `value: '0.1', min: '0', max: '0.3', low: '0.1', high: '0.2', optimum: '0.15'`
+    : scenario === 'degenerate-range'
+      ? `value: '7', min: '7', max: '7'`
+      : `value: '82', min: '0', max: '100', low: '35', high: '75', optimum: '20'`;
+  return example('meter', 'createMeter', `const root = document.querySelector<HTMLElement>('[data-meter]')!
+const indicator = document.querySelector<HTMLElement>('[data-meter-indicator]')!
+const meter = createMeter({
+  root,
+  indicator,
+  ${values},
+  label: 'Storage health',
+})
+
+window.addEventListener('pagehide', () => meter.disconnect(), { once: true })`);
+}
+
 export function domExampleCodeFor(component: string, scenario: string): string {
   if (component === 'pin-input') return pinInputDomSource(scenario);
+  if (component === 'meter') return meterDomSource(scenario);
   const source = domDemoCode[component];
   if (source === undefined) throw new Error(`Missing exact DOM example: ${component}/${scenario}`);
   return source;

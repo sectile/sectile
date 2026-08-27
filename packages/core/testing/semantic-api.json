@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "3cc3b37f29694ca820b3702eac422e3a1be1ff862f0b724fd937a8e5fee28f39",
+    "publicSignatureFingerprint": "c473a329499cef1644095936a66243365be5f1503abf7474e3ac91aa986b98b9",
     "subpaths": [
       ".",
       "./accordion",
@@ -36,6 +36,7 @@
       "./menu",
       "./menu-button",
       "./menubar",
+      "./meter",
       "./multi-thumb-slider",
       "./navigation-menu",
       "./number-field",
@@ -379,6 +380,9 @@
       "menu-closed",
       "menu-cursor-hidden",
       "menu-target-hidden",
+      "meter-threshold-order-invalid",
+      "meter-threshold-outside-range",
+      "meter-value-outside-range",
       "missing-candidate-label",
       "missing-parent",
       "missing-quantity-expression-result",
@@ -488,7 +492,7 @@
       "id": "sequence.boundary",
       "source": "src/internal/kernel/indexed-sequence.ts",
       "evidence": "boundary: BoundaryPolicy = 'stop',",
-      "occurrences": 1
+      "occurrences": 2
     },
     {
       "id": "grid.resourceCeilings",
@@ -522,7 +526,7 @@
     }
   ],
   "acceptance": {
-    "classification": "type-change-reviewed",
-    "reason": "ToastKind_accepts_user-defined_strings"
+    "classification": "contract-impact-reviewed",
+    "reason": "Meter_adds_bounded_value_and_threshold_validation_errors"
   }
 }

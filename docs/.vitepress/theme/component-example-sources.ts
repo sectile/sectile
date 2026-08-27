@@ -33,6 +33,7 @@ const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze
   menu: 'Menu',
   'menu-button': 'MenuButton',
   menubar: 'Menubar',
+  meter: 'Meter',
   'month-picker': 'MonthPicker',
   'month-range-picker': 'MonthRangePicker',
   'multi-thumb-slider': 'MultiThumbSlider',

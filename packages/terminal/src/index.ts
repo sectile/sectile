@@ -511,3 +511,11 @@ export type {
   TreeViewControllerValueChangeHandler,
 } from './tree-view.js';
 export type { FacadeSnapshotListener } from '@sectile/core/adapter-runtime';
+export {
+  createMeter,
+  tryCreateMeter,
+  type MeterConnection,
+  type MeterControlledValues,
+  type MeterOptions,
+  type MeterRenderPlan,
+} from './meter.js';

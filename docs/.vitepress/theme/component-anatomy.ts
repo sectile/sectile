@@ -211,6 +211,19 @@ export const componentAnatomy = Object.freeze<Record<string, ComponentAnatomyDef
   menu: anatomy('menu', ['root', 'item', 'sub-content', 'separator'], menuPartDetails()),
   'menu-button': anatomy('menu-button', ['trigger', 'content', 'item', 'sub-content', 'separator'], menuPartDetails('menu-button')),
   menubar: anatomy('menubar', ['root', 'item', 'sub-content', 'separator'], menuPartDetails('menubar')),
+  meter: anatomy('meter', ['root', 'track', 'indicator', 'value-text'], {
+    root: {
+      attributes: [['role', 'meter'], ['data-zone', '<zone>'], ['data-percentage', '<percentage>']],
+      purpose: copy('Exposes the named read-only measurement and its exact range value.', '이름이 있는 읽기 전용 측정값과 정확한 범위를 노출합니다.'),
+    },
+    track: {
+      purpose: copy('Provides the visual path for the bounded measurement.', '범위가 있는 측정값의 시각적 경로를 제공합니다.'),
+    },
+    indicator: {
+      attributes: [['aria-hidden', 'true'], ['data-zone', '<zone>'], ['data-percentage', '<percentage>']],
+      purpose: copy('Fills the exact percentage without adding another accessible value.', '접근 가능한 값을 중복하지 않고 정확한 백분율만큼 채웁니다.'),
+    },
+  }),
   'month-picker': anatomy('month-picker', ['input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'month-range-picker': anatomy('month-range-picker', ['start-input', 'end-input', 'anchor', 'trigger', 'content', 'grid', 'cell', 'previous-year', 'next-year']),
   'multi-thumb-slider': anatomy('multi-thumb-slider', ['root', 'track', 'range', 'thumb']),

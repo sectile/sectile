@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "composite": false,
+    "isolatedDeclarations": false,
+    "noEmit": true
+  },
+  "files": ["positive/meter.ts", "negative/meter.ts"]
+}

@@ -15,6 +15,7 @@ import type { DateTimeRange } from '../dist/date-time-range-picker.js';
 import { DateTimeField } from '../dist/date-time-field.js';
 import type { DateValue } from '../dist/date-field.js';
 import { MenuButtonRoot, MenuRoot } from '../dist/menu.js';
+import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '../dist/meter.js';
 import { NumberField, type NumberFieldProps } from '../dist/number-field.js';
 import { SelectRoot } from '../dist/select.js';
 import {
@@ -62,6 +63,9 @@ h(SpinButtonRoot, { min: 0, max: 10, draft: null, defaultDraft: null });
 h(SpinButtonInput, { name: 'quantity', form: 'order', required: true });
 h(MenuRoot, { items: [] });
 h(MenuButtonRoot, { items: [], open: false });
+h(MeterRoot, { value: '25', min: 0, max: '100', label: 'Quota' });
+// @ts-expect-error Meter value is required.
+h(MeterRoot, {});
 h(DatePickerRoot, { modelValue: date, policies: datePickerPolicies });
 h(NumberField, { policies: numberFieldPolicies });
 h(DateField, { policies: dateFieldPolicies });
@@ -103,8 +107,21 @@ const spinButtonInputProps: SpinButtonInputProps = {
   required: true,
 };
 const numberFieldProps: NumberFieldProps = { native: true };
+const meterProps: MeterRootProps = { value: '25' };
+const invalidMeterProps: MeterRootProps = {
+  value: '25',
+  // @ts-expect-error Meter has no model ownership API.
+  modelValue: '30',
+};
+const meterSlot: MeterRootSlotProps = {
+  value: '25', min: '0', max: '100', low: '0', high: '100', optimum: '50',
+  valueText: '25', percentage: 25, zone: 'optimum',
+};
 void spinButtonInputProps;
 void numberFieldProps;
+void meterProps;
+void invalidMeterProps;
+void meterSlot;
 void useToast;
 
 declare const toast: UseToastReturn;

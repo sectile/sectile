@@ -87,6 +87,7 @@ const enProps = Object.freeze({
   getPosition: 'Returns the numeric position represented by an item.',
   getSlideLabel: 'Returns the accessible label announced for a carousel slide.',
   getThumbLabel: 'Returns the accessible label for a slider thumb.',
+  high: 'Lower boundary of the high-value region.',
   hideWhenDetached: 'Whether positioned content hides when its anchor leaves the layout.',
   hotkey: 'Document hotkey that moves focus to the notification viewport, or false to disable it.',
   id: 'Stable ID used to connect related parts.',
@@ -101,6 +102,7 @@ const enProps = Object.freeze({
   items: 'Ordered item values managed by the component.',
   itemsPerPage: 'Controlled number of records shown per page.',
   length: 'Number of coordinated character inputs.',
+  low: 'Upper boundary of the low-value region.',
   mask: 'Whether entered characters use password-style masking.',
   max: 'Largest value accepted by the component.',
   maxVisible: 'Maximum number of notifications shown at once.',
@@ -114,6 +116,7 @@ const enProps = Object.freeze({
   native: 'Whether to use the browser native date or time input UI.',
   nodes: 'Flat hierarchy used to build the tree.',
   orientation: 'Axis used for layout and keyboard movement.',
+  optimum: 'Value that determines which threshold region is optimal.',
   onSubmit: 'Handles a validated native submission and may report asynchronous success or server issues.',
   mapSubmitError: 'Maps a thrown or rejected submission error to safe application-facing issues.',
   otp: 'Whether to opt the first input into one-time-code autocomplete.',
@@ -222,6 +225,7 @@ const koProps = Object.freeze({
   getPosition: '항목이 나타내는 수치 위치를 반환하는 함수입니다.',
   getSlideLabel: '각 캐러셀 슬라이드에 제공할 접근 가능한 이름을 만드는 함수입니다.',
   getThumbLabel: '슬라이더 핸들의 접근 가능한 이름을 반환하는 함수입니다.',
+  high: '높은 값 구간의 하한입니다.',
   hideWhenDetached: '기준 요소가 레이아웃에서 벗어나면 팝업을 숨길지 여부입니다.',
   hotkey: '알림 표시 영역으로 포커스를 옮길 문서 단축키입니다. false면 사용하지 않습니다.',
   id: '관련 파트를 연결하는 안정적인 ID입니다.',
@@ -236,6 +240,7 @@ const koProps = Object.freeze({
   items: '컴포넌트가 관리할 순서 있는 항목 값입니다.',
   itemsPerPage: '한 페이지에 표시할 외부 제어 항목 수입니다.',
   length: '서로 연결된 한 글자 입력의 개수입니다.',
+  low: '낮은 값 구간의 상한입니다.',
   mask: '입력한 문자를 비밀번호 형태로 가릴지 여부입니다.',
   max: '컴포넌트가 받을 수 있는 최댓값입니다.',
   maxVisible: '한 번에 표시할 수 있는 최대 알림 수입니다.',
@@ -249,6 +254,7 @@ const koProps = Object.freeze({
   native: '브라우저 기본 날짜 또는 시간 입력 UI를 사용할지 여부입니다.',
   nodes: '계층을 구성할 평면 노드 목록입니다.',
   orientation: '배치와 키보드 이동에 사용할 축입니다.',
+  optimum: '어느 임계 구간이 최적인지 결정하는 값입니다.',
   onSubmit: '검증을 통과한 네이티브 제출을 처리하고 비동기 성공 또는 서버 이슈를 반환하는 함수입니다.',
   mapSubmitError: '제출 중 throw 또는 reject된 오류를 사용자에게 노출해도 되는 이슈로 변환하는 함수입니다.',
   otp: '첫 입력에서 일회용 코드 자동 완성을 명시적으로 사용할지 여부입니다.',
@@ -316,6 +322,7 @@ const enSlots = Object.freeze({
   inputValue: 'Current editable input text.', invalid: 'Whether the current draft fails validation.', isChecked: 'Whether this checkbox value is selected.',
   isIndeterminate: 'Whether only part of a grouped value is selected.', issues: 'Current validation issues.', item: 'Current pagination item.',
   items: 'Current derived item collection.', itemsPerPage: 'Number of records currently shown per page.', labelId: 'ID assigned to the field label.',
+  high: 'Lower boundary of the high-value region.', low: 'Upper boundary of the low-value region.', max: 'Maximum of the meter range.', min: 'Minimum of the meter range.', optimum: 'Value that determines the optimal threshold region.',
   messageId: 'ID assigned to the field error message.', months: 'Months projected by the active view.', openPath: 'Ordered values in the open menu path.',
   orientation: 'Current layout and movement axis.', outsideMonth: 'Whether this date belongs to an adjacent month.', page: 'Current one-based page number.',
   pageCount: 'Total number of available pages.', parentValue: 'Value that owns the current cascade column.', parts: 'Formatted segments of the current value.',
@@ -333,7 +340,7 @@ const enSlots = Object.freeze({
   submitFailed: 'Marks the identified submission as failed.', submitStarted: 'Starts submission and returns its generation token.', submitSucceeded: 'Marks the identified submission as successful.',
   submitted: 'Whether submission has been attempted.', text: 'Formatted text for the current value.', toast: 'Notification represented by this item.', toasts: 'Current notification collection.',
   touched: 'Whether the user has interacted with the field.', update: 'Updates one notification without replacing its identifier.', valid: 'Whether current validation has no issues.', valueMs: 'Current timer value in milliseconds.',
-  valuePath: 'Current selected values from root to leaf.', values: 'Current ordered value collection.', view: 'Current calendar anchor.', viewMode: 'Active calendar view mode.', years: 'Years projected by the active view.',
+  valuePath: 'Current selected values from root to leaf.', valueText: 'Formatted text for the current meter value.', values: 'Current ordered value collection.', view: 'Current calendar anchor.', viewMode: 'Active calendar view mode.', years: 'Years projected by the active view.', zone: 'Quality region derived from the thresholds and optimum value.',
 });
 
 const koSlots = Object.freeze({
@@ -351,6 +358,7 @@ const koSlots = Object.freeze({
   id: '현재 필드 또는 항목의 안정적인 ID입니다.', inRange: '선택한 범위 안에 있는 값인지 여부입니다.', index: '부모 컬렉션 안의 0부터 시작하는 위치입니다.',
   inputValue: '현재 편집 입력 문자열입니다.', invalid: '현재 입력이 검증에 실패했는지 여부입니다.', isChecked: '이 체크박스 값이 선택됐는지 여부입니다.',
   isIndeterminate: '묶음 값의 일부만 선택됐는지 여부입니다.', issues: '현재 검증 이슈입니다.', item: '현재 페이지 항목입니다.', items: '현재 계산된 항목 컬렉션입니다.',
+  high: '높은 값 구간의 하한입니다.', low: '낮은 값 구간의 상한입니다.', max: 'Meter 범위의 최댓값입니다.', min: 'Meter 범위의 최솟값입니다.', optimum: '어느 임계 구간이 최적인지 결정하는 값입니다.',
   itemsPerPage: '현재 페이지당 레코드 수입니다.', labelId: '필드 레이블에 지정한 ID입니다.', messageId: '필드 오류 메시지에 지정한 ID입니다.',
   months: '현재 보기에 표시할 달입니다.', openPath: '열린 메뉴 경로의 순서 있는 값입니다.', orientation: '현재 배치와 이동 축입니다.', outsideMonth: '인접한 달의 날짜인지 여부입니다.',
   page: '1부터 시작하는 현재 페이지 번호입니다.', pageCount: '사용 가능한 전체 페이지 수입니다.', parentValue: '현재 단계별 선택 열을 소유한 값입니다.',
@@ -368,7 +376,7 @@ const koSlots = Object.freeze({
   submitStarted: '제출을 시작하고 generation 토큰을 반환하는 함수입니다.', submitSucceeded: '식별한 제출을 성공으로 기록하는 함수입니다.', submitted: '제출을 시도했는지 여부입니다.',
   text: '현재 값을 표시한 문자열입니다.', toast: '이 항목이 나타내는 알림입니다.', toasts: '현재 알림 컬렉션입니다.', touched: '사용자가 필드를 조작했는지 여부입니다.',
   update: '식별자를 유지하면서 알림 하나를 갱신하는 함수입니다.', valid: '현재 검증 이슈가 없는지 여부입니다.', valueMs: '밀리초 단위의 현재 타이머 값입니다.', valuePath: '루트부터 마지막 항목까지의 현재 선택값입니다.',
-  values: '현재 순서 있는 값 컬렉션입니다.', view: '현재 달력 기준점입니다.', viewMode: '현재 달력 보기 방식입니다.', years: '현재 보기에 표시할 연도입니다.',
+  valueText: '현재 meter 값을 형식화한 문자열입니다.', values: '현재 순서 있는 값 컬렉션입니다.', view: '현재 달력 기준점입니다.', viewMode: '현재 달력 보기 방식입니다.', years: '현재 보기에 표시할 연도입니다.', zone: '임계값과 최적값에서 계산한 품질 구간입니다.',
 });
 
 const enEvents = Object.freeze({

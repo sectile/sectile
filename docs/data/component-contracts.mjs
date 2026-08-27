@@ -166,6 +166,9 @@ const profiles = Object.freeze({
     row('Tab', 'Move between the component\'s native action controls.', '컴포넌트의 기본 작업 컨트롤 사이를 이동합니다.'),
     row('Enter / Space', 'Invoke the focused action.', '포커스된 작업을 실행합니다.'),
   ],
+  readonly: [
+    row('None', 'The meter is read-only and defines no keyboard interaction.', 'Meter는 읽기 전용이며 키보드 조작을 정의하지 않습니다.'),
+  ],
   toast: [
     row('F8', 'Move focus to the notification viewport.', '알림 표시 영역으로 포커스를 옮깁니다.'),
     row('Tab / Shift+Tab', 'Move between notification action controls.', '알림 작업 컨트롤 사이에서 포커스를 이동합니다.'),
@@ -183,7 +186,7 @@ const profileByComponent = Object.freeze({
   'range-calendar': 'datePicker', 'month-picker': 'monthPicker', 'month-range-picker': 'monthPicker',
   'year-picker': 'yearPicker', 'year-range-picker': 'yearPicker',
   editable: 'editable', form: 'form', feed: 'feed', grid: 'grid', listbox: 'listChoice', menu: 'menu',
-  'menu-button': 'menu', menubar: 'menubar', 'multi-thumb-slider': 'range', 'navigation-menu': 'menubar',
+  'menu-button': 'menu', menubar: 'menubar', meter: 'readonly', 'multi-thumb-slider': 'range', 'navigation-menu': 'menubar',
   'number-field': 'textInput', pagination: 'pagination', 'pin-input': 'pin', popover: 'popup',
   'quantity-field': 'textInput', 'radio-group': 'listChoice', rating: 'listChoice', select: 'listChoice',
   slider: 'range', 'spin-button': 'range', stepper: 'tabs', switch: 'toggle', tabs: 'tabs',
@@ -225,6 +228,7 @@ const accessibilityByComponent = Object.freeze({
   menu: ['Menu items, separators, and nested menu state use hierarchical menu semantics and roving focus.', '메뉴 항목, 구분선, 하위 메뉴 상태가 계층형 메뉴 의미와 이동 포커스를 사용합니다.'],
   'menu-button': ['The trigger exposes popup and expanded state; the opened content uses menu semantics and returns focus on close.', '실행 요소가 팝업과 열림 상태를 노출하고 열린 내용은 메뉴 의미를 사용한 뒤 닫힐 때 포커스를 돌려줍니다.'],
   menubar: ['The root exposes menubar semantics while opened branches use hierarchical menu items and roving focus.', '루트는 메뉴 막대 의미를 제공하고 열린 가지는 계층형 메뉴 항목과 이동 포커스를 사용합니다.'],
+  meter: ['The named read-only meter exposes its minimum, maximum, current value, and formatted value text without inventing ARIA threshold attributes.', '이름이 있는 읽기 전용 meter가 최솟값·최댓값·현재 값·형식화된 값을 노출하며 ARIA에 없는 임계값 속성을 만들지 않습니다.'],
   'multi-thumb-slider': ['Every thumb is separately named and exposes its own minimum, maximum, current value, and orientation.', '각 핸들에 독립적인 이름을 제공하고 최솟값·최댓값·현재 값·방향을 노출합니다.'],
   'navigation-menu': ['Native links keep link semantics while disclosure triggers expose expanded state for compound panels.', '기본 링크 의미를 유지하고 펼침 실행 요소가 복합 패널의 열림 상태를 노출합니다.'],
   'number-field': ['The labeled input preserves native editing and exposes invalid, disabled, and readonly state.', '이름이 있는 입력은 기본 편집 동작을 유지하며 오류·비활성·읽기 전용 상태를 노출합니다.'],

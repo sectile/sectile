@@ -62,6 +62,7 @@ export const componentSections = [
     text: 'Range & Layout',
     koText: '범위와 배치',
     componentIds: [
+      'meter',
       'multi-thumb-slider',
       'slider',
       'spin-button',

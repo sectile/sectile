@@ -1024,3 +1024,13 @@ export type {
   NavigationMenuInvokeHandler,
   NavigationMenuOpenChangeHandler,
 } from './menu.js';
+export {
+  MeterIndicator,
+  MeterRoot,
+  MeterTrack,
+  MeterValueText,
+  type MeterPartProps,
+  type MeterRootProps,
+  type MeterRootSlotProps,
+  type MeterValueFormatter,
+} from './meter.js';

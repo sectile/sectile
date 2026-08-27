@@ -624,6 +624,18 @@ console.log(update.state, update.commands)`;
       return menuExample(component, 'MenuButton', scenario);
     case 'menubar':
       return menuExample(component, 'Menubar', scenario);
+    case 'meter': {
+      const input = scenario === 'exact-decimal'
+        ? `{ value: '0.1', min: '0', max: '0.3', low: '0.1', high: '0.2', optimum: '0.15' }`
+        : scenario === 'degenerate-range'
+          ? `{ value: '7', min: '7', max: '7' }`
+          : `{ value: '82', min: '0', max: '100', low: '35', high: '75', optimum: '20' }`;
+      return `import { createMeterState } from '@sectile/core/meter'
+
+const meter = createMeterState(${input})
+
+console.log(meter.value, meter.ratio, meter.zone)`;
+    }
     case 'navigation-menu':
       return menuExample(component, 'NavigationMenu', scenario);
     case 'multi-thumb-slider': {

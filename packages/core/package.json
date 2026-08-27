@@ -216,6 +216,11 @@
       "import": "./dist/timer.js",
       "default": "./dist/timer.js"
     },
+    "./meter": {
+      "types": "./dist/meter.d.ts",
+      "import": "./dist/meter.js",
+      "default": "./dist/meter.js"
+    },
     "./cascade-select": {
       "types": "./dist/cascade-select.d.ts",
       "import": "./dist/cascade-select.js",

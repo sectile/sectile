@@ -115,6 +115,10 @@
       "types": "dist/menubar.d.ts"
     },
     {
+      "subpath": "./meter",
+      "types": "dist/meter.d.ts"
+    },
+    {
       "subpath": "./month-picker",
       "types": "dist/month-picker.d.ts"
     },
@@ -255,7 +259,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "b17db3007b193f2d51698996b0c948fc1b637327386c80abb020516442c5ed34",
+  "fingerprint": "f6f5759c32aca062bb991093a0453c32257841ac28c9030a78ca43f32a04eaff",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -351,7 +355,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "213f5d52c8098af8fb8626805a9baacd5309d54146f310a749ae2e193abb984b"
+      "sha256": "106a0ccca1d93a8d6fd8b8c65d8227713ebedc90d6e5ff3f3e163355b99cb0e7"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -383,7 +387,7 @@
     },
     {
       "path": "dist/internal/result.d.ts",
-      "sha256": "4adf208bed628652053f612546efab44fcb3ccd09efc0a03450d713614f748dd"
+      "sha256": "11c0a813181db076264b0655e7e62f84946993f772457bab3cb2d8886aaa7eaf"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -400,6 +404,10 @@
     {
       "path": "dist/menubar.d.ts",
       "sha256": "4149695bc2286c361533a4e5116d57d6c1b6ce2b7589e795d7b8e236387a2809"
+    },
+    {
+      "path": "dist/meter.d.ts",
+      "sha256": "f4a9190ed7de29419a4242448adc34dc68a59f2abb19e7c4202cb2d1347ccf3d"
     },
     {
       "path": "dist/month-picker.d.ts",
@@ -527,7 +535,7 @@
     },
     {
       "path": "dist/virtual.d.ts",
-      "sha256": "fb28924f242556816a6e081b8870f0583a051a8981a756300044cb3cf86fb1dd"
+      "sha256": "7117005dd52b0c81afe32921fbafc4830a9f3d04d008dc5a377d28c01a79ba50"
     },
     {
       "path": "dist/window-splitter.d.ts",

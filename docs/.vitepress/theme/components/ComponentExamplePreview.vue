@@ -14,6 +14,7 @@ import EditableCase from './EditableCase.vue';
 import FeedCase from './FeedCase.vue';
 import FormCase from './FormCase.vue';
 import ListboxCase from './ListboxCase.vue';
+import MeterCase from './MeterCase.vue';
 import MultiThumbSliderCase from './MultiThumbSliderCase.vue';
 import NativeFieldCase from './NativeFieldCase.vue';
 import PaginationCase from './PaginationCase.vue';
@@ -86,6 +87,7 @@ function resolveExample(): ResolvedExample {
     case 'popover': return specialized(PopoverCase, { side: props.scenario === 'collision' ? 'right' : 'bottom', controlled, preview: props.preview });
     case 'toast': return specialized(ToastCase, { persistent: props.scenario === 'persistent', maxVisible: props.scenario === 'limited' ? 2 : 3, preview: props.preview });
     case 'timer': return specialized(TimerCase, { countdown: props.scenario === 'countdown', startMs: props.scenario === 'countdown' ? 10_000 : 0, targetMs: props.scenario === 'target' ? 15_000 : undefined });
+    case 'meter': return specialized(MeterCase, { scenario: props.scenario });
     case 'color-picker': return specialized(ColorPickerCase, { initialValue: props.scenario === 'alpha' ? '#26c6a080' : '#5b6df6', alpha: props.scenario === 'alpha', controlled, readonly: props.scenario === 'readonly', preview: props.preview });
     case 'tabs': return specialized(TabsCase, { manual: props.scenario === 'manual', controlled });
     case 'slider': return specialized(SliderCase);

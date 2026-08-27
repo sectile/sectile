@@ -1371,6 +1371,22 @@ function requiredCatalogSource(component: string): string {
   return source;
 }
 
+function meterSource(scenario: string): string {
+  const attributes = scenario === 'exact-decimal'
+    ? 'value="0.1" min="0" max="0.3" low="0.1" high="0.2" optimum="0.15"'
+    : scenario === 'degenerate-range'
+      ? 'value="7" min="7" max="7"'
+      : 'value="82" min="0" max="100" low="35" high="75" optimum="20"';
+  return sfc(
+    'MeterRoot, MeterTrack, MeterIndicator, MeterValueText',
+    `  <MeterRoot ${attributes} label="Storage health" v-slot="{ zone }">
+    <MeterTrack><MeterIndicator /></MeterTrack>
+    <MeterValueText />
+    <span aria-hidden="true">{{ zone }}</span>
+  </MeterRoot>`,
+  );
+}
+
 const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
   carousel: exactScenarios(requiredCatalogSource('carousel'), ['wrapping', 'bounded', 'paused', 'controlled']),
   'checkbox-group': exactScenarios(requiredCatalogSource('checkbox-group'), ['release-channels', 'disabled-choice', 'controlled']),
@@ -1386,6 +1402,11 @@ const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> =
   'year-range-picker': exactScenarios(requiredCatalogSource('year-range-picker'), ['roadmap-horizon', 'bounded', 'controlled']),
   grid: exactScenarios(requiredCatalogSource('grid'), ['selectable', 'disabled-wrap', 'editable', 'controlled']),
   menubar: exactScenarios(requiredCatalogSource('menubar'), ['application', 'disabled-root', 'typeahead']),
+  meter: Object.freeze({
+    'threshold-zones': meterSource('threshold-zones'),
+    'exact-decimal': meterSource('exact-decimal'),
+    'degenerate-range': meterSource('degenerate-range'),
+  }),
   pagination: exactScenarios(requiredCatalogSource('pagination'), ['compact', 'long-range', 'page-size', 'pages-only', 'controlled']),
   'quantity-field': Object.freeze({
     length: requiredCatalogSource('quantity-field'),
