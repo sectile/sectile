@@ -23,6 +23,10 @@
       "types": "dist/masonry-layout.d.ts"
     },
     {
+      "subpath": "./partitioned-track-grid-layout",
+      "types": "dist/partitioned-track-grid-layout.d.ts"
+    },
+    {
       "subpath": "./spatial-layout",
       "types": "dist/spatial-layout.d.ts"
     },
@@ -31,7 +35,7 @@
       "types": "dist/track-grid-layout.d.ts"
     }
   ],
-  "fingerprint": "3ce8345a6c65026c3c5660fcefea4d6007d881ad367b47b59a5e44a7f9d86310",
+  "fingerprint": "ebce6bc8c7cb578794ec4fb2a146d13e22eabafdc3d144ce70cbf1ea9133e251",
   "files": [
     {
       "path": "dist/error.d.ts",
@@ -43,7 +47,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "f9870ad54eecf178be1286d44c151caf74df98696c480103aef9078a7906c7dd"
+      "sha256": "63e7cc7833b5ef9cf6a38c8eea27a512760820da8788884911fb6cbc1bd5e4e5"
     },
     {
       "path": "dist/internal/track.d.ts",
@@ -51,7 +55,7 @@
     },
     {
       "path": "dist/layout.d.ts",
-      "sha256": "ec7c0f8f788ef431ce5e27d346aad471aa19e7a8376c73ccf0b8d7b85304f4f6"
+      "sha256": "a2b406cd2b60630e1b462179076cbe34a42bd36f1b275e42b29d68f9845b79bd"
     },
     {
       "path": "dist/linear-layout.d.ts",
@@ -60,6 +64,10 @@
     {
       "path": "dist/masonry-layout.d.ts",
       "sha256": "e76fcbaf7b1aec24584325e49c6a50ddff8395670b68be4aca2c37db943f7610"
+    },
+    {
+      "path": "dist/partitioned-track-grid-layout.d.ts",
+      "sha256": "9d0754e7ef6aa84da5dd5b3497bea192cff474444971774b7d37b6483e71e5f4"
     },
     {
       "path": "dist/spatial-layout.d.ts",

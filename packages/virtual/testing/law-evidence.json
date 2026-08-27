@@ -25,6 +25,10 @@
     "GRD-01": "tests/runtime/track-grid-layout.test.mjs",
     "GRD-02": "tests/runtime/track-grid-layout.test.mjs",
     "GRD-03": "tests/runtime/track-grid-layout.test.mjs",
-    "GRD-04": "tests/runtime/track-grid-layout.test.mjs"
+    "GRD-04": "tests/runtime/track-grid-layout.test.mjs",
+    "PTG-01": "tests/runtime/partitioned-track-grid-layout.test.mjs",
+    "PTG-02": "tests/runtime/partitioned-track-grid-layout.test.mjs",
+    "PTG-03": "tests/runtime/partitioned-track-grid-layout.test.mjs",
+    "PTG-04": "tests/runtime/partitioned-track-grid-layout.test.mjs"
   }
 }

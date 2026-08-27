@@ -25,6 +25,10 @@
     { "id": "GRD-01", "theory": "track-grid-layout", "statement": "sparse region queries equal a full region scan" },
     { "id": "GRD-02", "theory": "track-grid-layout", "statement": "merged regions reflect exactly under reversed row and column flows" },
     { "id": "GRD-03", "theory": "track-grid-layout", "statement": "overlap and region-splitting track mutations reject atomically" },
-    { "id": "GRD-04", "theory": "track-grid-layout", "statement": "row and column measurements preserve indexes, anchors, and generation" }
+    { "id": "GRD-04", "theory": "track-grid-layout", "statement": "row and column measurements preserve indexes, anchors, and generation" },
+    { "id": "PTG-01", "theory": "partitioned-track-grid-layout", "statement": "logical track partitions project to viewport edges with deterministic overlap layers" },
+    { "id": "PTG-02", "theory": "partitioned-track-grid-layout", "statement": "measurements follow stable track identity across reorder and partition mutation" },
+    { "id": "PTG-03", "theory": "partitioned-track-grid-layout", "statement": "stale measurements and cross-partition spans reject atomically" },
+    { "id": "PTG-04", "theory": "partitioned-track-grid-layout", "statement": "pinned axes suppress scrolling and snapshots preserve observations" }
   ]
 }

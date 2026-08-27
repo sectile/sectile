@@ -46,6 +46,11 @@
       "import": "./dist/masonry-layout.js",
       "default": "./dist/masonry-layout.js"
     },
+    "./partitioned-track-grid-layout": {
+      "types": "./dist/partitioned-track-grid-layout.d.ts",
+      "import": "./dist/partitioned-track-grid-layout.js",
+      "default": "./dist/partitioned-track-grid-layout.js"
+    },
     "./spatial-layout": {
       "types": "./dist/spatial-layout.d.ts",
       "import": "./dist/spatial-layout.js",

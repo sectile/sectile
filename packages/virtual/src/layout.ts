@@ -6,7 +6,7 @@ export interface VirtualSize { readonly width: number; readonly height: number; 
 export interface VirtualRect extends VirtualPoint, VirtualSize {}
 export interface VirtualInsets { readonly top: number; readonly right: number; readonly bottom: number; readonly left: number; }
 export interface VirtualQueryInput { readonly viewport: VirtualRect; readonly overscan?: number | Partial<VirtualInsets>; }
-export interface VirtualPlacement<ID extends StableID = StableID> { readonly id: ID; readonly index: number; readonly rect: VirtualRect; readonly visible: boolean; }
+export interface VirtualPlacement<ID extends StableID = StableID> { readonly id: ID; readonly index: number; readonly rect: VirtualRect; readonly visible: boolean; readonly zIndex?: number; }
 export interface VirtualAnchor<ID extends StableID = StableID> { readonly id: ID; readonly viewportOffset: VirtualPoint; }
 export interface VirtualLayoutPlan<ID extends StableID = StableID> {
   readonly generation: number;

@@ -4,5 +4,6 @@ export type * from './extent-index.js';
 export type * from './layout.js';
 export type * from './linear-layout.js';
 export type * from './masonry-layout.js';
+export type * from './partitioned-track-grid-layout.js';
 export type * from './spatial-layout.js';
 export type * from './track-grid-layout.js';

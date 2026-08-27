@@ -4,7 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 const registry = JSON.parse(await readFile('testing/law-registry.json', 'utf8'));
 const evidence = JSON.parse(await readFile('testing/law-evidence.json', 'utf8'));
 const ids = registry.laws.map((law) => law.id);
-assert.equal(ids.length, 25);
+assert.equal(ids.length, 29);
 assert.equal(new Set(ids).size, ids.length);
 assert.deepEqual(Object.keys(evidence.evidence).sort(), [...ids].sort());
 for (const law of registry.laws) {
