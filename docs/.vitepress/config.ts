@@ -57,7 +57,7 @@ const koTheorySidebar: DefaultTheme.SidebarItem[] = [
 const packageSidebar: DefaultTheme.SidebarItem[] = [
   { text: 'Package map', link: '/packages/' },
   {
-    text: 'Core',
+    text: '@sectile/core',
     collapsed: false,
     items: [
       { text: 'Overview', link: '/packages/core' },
@@ -67,7 +67,7 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: 'Temporal',
+    text: '@sectile/temporal',
     collapsed: false,
     items: [
       { text: 'Overview', link: '/packages/temporal' },
@@ -77,7 +77,7 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: 'Virtual',
+    text: '@sectile/virtual',
     collapsed: false,
     items: [
       { text: 'Overview and lab', link: '/packages/virtual' },
@@ -91,7 +91,7 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: 'Tabular',
+    text: '@sectile/tabular',
     collapsed: false,
     items: [
       { text: 'Overview and profiles', link: '/packages/tabular' },
@@ -112,7 +112,7 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
 const koPackageSidebar: DefaultTheme.SidebarItem[] = [
   { text: '패키지 지도', link: '/ko/packages/' },
   {
-    text: '코어',
+    text: '@sectile/core',
     collapsed: false,
     items: [
       { text: '개요', link: '/ko/packages/core' },
@@ -122,7 +122,7 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: '날짜와 시간',
+    text: '@sectile/temporal',
     collapsed: false,
     items: [
       { text: '개요', link: '/ko/packages/temporal' },
@@ -132,7 +132,7 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: '가상화',
+    text: '@sectile/virtual',
     collapsed: false,
     items: [
       { text: '개요와 체험', link: '/ko/packages/virtual' },
@@ -146,7 +146,7 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
     ],
   },
   {
-    text: '표 형식 데이터',
+    text: '@sectile/tabular',
     collapsed: false,
     items: [
       { text: '개요와 프로필', link: '/ko/packages/tabular' },
