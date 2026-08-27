@@ -559,6 +559,7 @@
   .catalog-warning-button { border-color: #a76b17; color: #fff; background: #a76b17; }
   .catalog-warning-button:hover:not(:disabled) { border-color: #82500e; background: #82500e; }
   .catalog-dialog[hidden], .catalog-drawer[hidden], .catalog-drawer-overlay[hidden], .catalog-popup[hidden], .catalog-tooltip[hidden], .catalog-submenu[hidden], .catalog-menubar-popup[hidden], .catalog-navigation-panel[hidden] { display: none; }
+  .catalog-dialog--preview[hidden], .catalog-drawer--preview[hidden] { display: grid; }
   .catalog-panel { min-height: 6rem; padding: 1rem; border: 1px solid var(--demo-border); border-radius: 0.75rem; background: var(--demo-surface); }
   .catalog-pin { width: 2.6rem; height: 2.6rem; box-sizing: border-box; border: 1px solid var(--demo-border); border-radius: 0.58rem; padding: 0; color: var(--demo-text); background: var(--demo-surface); font: inherit; text-align: center; }
   .catalog-chip { min-height: 2.35rem; padding: 0.35rem 0.55rem; color: var(--demo-brand); background: var(--demo-brand-soft); }

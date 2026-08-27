@@ -121,8 +121,8 @@ const weekdayNames = Object.freeze(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'S
 const dateTime = Object.freeze({ date, time: Object.freeze({ hour: 9, minute: 30, second: 0, millisecond: 0 }) });
 const morningDateTime = Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 7, minute: 45, second: 0, millisecond: 0 }) });
 const controlledDateTime = ref<DateTimeValue | null>(Object.freeze({ date: Object.freeze({ year: 2026, month: 9, day: 3 }), time: Object.freeze({ hour: 14, minute: 15, second: 0, millisecond: 0 }) }));
-const dialogOpen = ref(props.preview);
-const drawerOpen = ref(props.preview);
+const dialogOpen = ref(false);
+const drawerOpen = ref(false);
 const dateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date: dateRange.end, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const sameDayDateTimeRange = Object.freeze({ start: dateTime, end: Object.freeze({ date, time: Object.freeze({ hour: 17, minute: 30, second: 0, millisecond: 0 }) }) });
 const standardQuantityPolicies = createStandardQuantityPolicies('metre', 'metric');
@@ -466,7 +466,7 @@ const recordAction = (value: string): void => {
 
       <DialogRoot
         v-else-if="component === 'dialog'"
-        v-bind="isScenario('controlled') ? { open: dialogOpen } : { defaultOpen: preview }"
+        v-bind="isScenario('controlled') ? { open: dialogOpen } : { defaultOpen: false }"
         :modal="preview ? false : !isScenario('non-modal')"
         :auto-focus="!preview"
         :restore-focus="!preview"
@@ -474,8 +474,8 @@ const recordAction = (value: string): void => {
         @update:open="dialogOpen = $event"
       >
         <DialogTrigger v-if="!preview">Open details</DialogTrigger>
-        <DialogOverlay v-if="!isScenario('non-modal')" class="catalog-dialog-overlay" />
-        <DialogContent :class="['catalog-dialog', isScenario('non-modal') ? 'catalog-nonmodal-dialog' : 'catalog-modal-dialog']">
+        <DialogOverlay v-if="!preview && !isScenario('non-modal')" class="catalog-dialog-overlay" />
+        <DialogContent :class="['catalog-dialog', isScenario('non-modal') ? 'catalog-nonmodal-dialog' : 'catalog-modal-dialog', { 'catalog-dialog--preview': preview }]">
           <DialogTitle class="catalog-dialog-title">Deployment details</DialogTitle>
           <DialogDescription class="catalog-dialog-description">Review the release before continuing.</DialogDescription>
           <div class="catalog-dialog-actions"><DialogClose class="secondary">Close</DialogClose></div>
@@ -483,7 +483,7 @@ const recordAction = (value: string): void => {
       </DialogRoot>
       <DrawerRoot
         v-else-if="component === 'drawer'"
-        v-bind="isScenario('controlled') ? { open: drawerOpen } : { defaultOpen: preview }"
+        v-bind="isScenario('controlled') ? { open: drawerOpen } : { defaultOpen: false }"
         :modal="!preview"
         :auto-focus="!preview"
         :restore-focus="!preview"
@@ -492,8 +492,8 @@ const recordAction = (value: string): void => {
         @update:open="drawerOpen = $event"
       >
         <DrawerTrigger v-if="!preview">{{ isScenario('side') ? 'Open inspector' : 'Open filters' }}</DrawerTrigger>
-        <DrawerOverlay class="catalog-drawer-overlay" />
-        <DrawerContent class="catalog-drawer">
+        <DrawerOverlay v-if="!preview" class="catalog-drawer-overlay" />
+        <DrawerContent class="catalog-drawer" :class="{ 'catalog-drawer--preview': preview }">
           <DrawerHandle class="catalog-drawer-handle" />
           <DrawerTitle class="catalog-dialog-title">{{ isScenario('side') ? 'Deployment inspector' : 'Filters' }}</DrawerTitle>
           <DrawerDescription class="catalog-dialog-description">{{ isScenario('side') ? 'Review the selected deployment.' : 'Refine the deployment list.' }}</DrawerDescription>
@@ -502,15 +502,14 @@ const recordAction = (value: string): void => {
       </DrawerRoot>
       <AlertDialogRoot
         v-else-if="component === 'alert-dialog'"
-        :default-open="preview"
-        :modal="!preview"
+        :default-open="false"
         :auto-focus="!preview"
         :restore-focus="!preview"
         :trap-focus="!preview"
       >
         <AlertDialogTrigger v-if="!preview">{{ isScenario('unsaved') ? 'Discard draft' : 'Delete project' }}</AlertDialogTrigger>
-        <AlertDialogOverlay class="catalog-dialog-overlay" />
-        <AlertDialogContent class="catalog-dialog catalog-alert-dialog">
+        <AlertDialogOverlay v-if="!preview" class="catalog-dialog-overlay" />
+        <AlertDialogContent class="catalog-dialog catalog-alert-dialog" :class="{ 'catalog-dialog--preview': preview }">
           <AlertDialogTitle class="catalog-dialog-title">{{ isScenario('unsaved') ? 'Discard unsaved changes?' : 'Delete project?' }}</AlertDialogTitle>
           <AlertDialogDescription class="catalog-dialog-description">
             {{ isScenario('unsaved') ? 'Your edits to Release 0.3 will be lost.' : 'This permanently removes the project and its deployment history.' }}
