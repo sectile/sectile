@@ -220,7 +220,7 @@ const lastAction = ref('')`,
   ),
   'date-picker': sfc(
     'DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerPreviousWeek, DatePickerPreviousMonth, DatePickerPreviousYear, DatePickerNextWeek, DatePickerNextMonth, DatePickerNextYear, DatePickerWeekViewTrigger, DatePickerMonthViewTrigger, DatePickerYearViewTrigger, DatePickerGrid, DatePickerCell, DatePickerMonthCell',
-    `  <DatePickerRoot :default-value="initialDate" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+    `  <DatePickerRoot :default-value="initialDate" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
     <div class="catalog-inline">
       <DatePickerInput class="catalog-input" />
       <DatePickerTrigger class="catalog-picker-trigger" aria-label="Open date picker">
@@ -271,7 +271,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'date-range-picker': sfc(
     'DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerEndInput, DateRangePickerTrigger, DateRangePickerContent, DateRangePickerPreviousWeek, DateRangePickerPreviousMonth, DateRangePickerPreviousYear, DateRangePickerNextWeek, DateRangePickerNextMonth, DateRangePickerNextYear, DateRangePickerWeekViewTrigger, DateRangePickerMonthViewTrigger, DateRangePickerYearViewTrigger, DateRangePickerGrid, DateRangePickerCell, DateRangePickerMonthCell',
-    `  <DateRangePickerRoot :default-value="initialRange" :policies="policies" :default-open="true" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
+    `  <DateRangePickerRoot :default-value="initialRange" :policies="policies" v-slot="{ dates, months, view, viewMode }" class="catalog-stack catalog-temporal-picker">
     <div class="catalog-inline">
       <DateRangePickerStartInput class="catalog-input" />
       <DateRangePickerEndInput class="catalog-input" />
@@ -354,7 +354,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'month-picker': sfc(
     'MonthPickerRoot, MonthPickerInput, MonthPickerTrigger, MonthPickerContent, MonthPickerPreviousYear, MonthPickerNextYear, MonthPickerGrid, MonthPickerCell',
-    `  <MonthPickerRoot :default-value="billingMonth" default-open v-slot="{ months, view }">
+    `  <MonthPickerRoot :default-value="billingMonth" v-slot="{ months, view }">
     <MonthPickerInput aria-label="Billing month" />
     <MonthPickerTrigger class="catalog-picker-trigger" aria-label="Open month picker">
       <CalendarDays :size="18" aria-hidden="true" />
@@ -376,7 +376,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'month-range-picker': sfc(
     'MonthRangePickerRoot, MonthRangePickerStartInput, MonthRangePickerEndInput, MonthRangePickerTrigger, MonthRangePickerContent, MonthRangePickerPreviousYear, MonthRangePickerNextYear, MonthRangePickerGrid, MonthRangePickerCell',
-    `  <MonthRangePickerRoot :default-value="reportingPeriod" default-open v-slot="{ months, view }">
+    `  <MonthRangePickerRoot :default-value="reportingPeriod" v-slot="{ months, view }">
     <MonthRangePickerStartInput aria-label="First month" />
     <MonthRangePickerEndInput aria-label="Last month" />
     <MonthRangePickerTrigger class="catalog-picker-trigger" aria-label="Open month range picker">
@@ -402,7 +402,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'year-picker': sfc(
     'YearPickerRoot, YearPickerInput, YearPickerTrigger, YearPickerContent, YearPickerPreviousPage, YearPickerNextPage, YearPickerGrid, YearPickerCell',
-    `  <YearPickerRoot :default-value="graduationYear" default-open v-slot="{ years }">
+    `  <YearPickerRoot :default-value="graduationYear" v-slot="{ years }">
     <YearPickerInput aria-label="Graduation year" />
     <YearPickerTrigger class="catalog-picker-trigger" aria-label="Open year picker">
       <CalendarDays :size="18" aria-hidden="true" />
@@ -422,7 +422,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   'year-range-picker': sfc(
     'YearRangePickerRoot, YearRangePickerStartInput, YearRangePickerEndInput, YearRangePickerTrigger, YearRangePickerContent, YearRangePickerPreviousPage, YearRangePickerNextPage, YearRangePickerGrid, YearRangePickerCell',
-    `  <YearRangePickerRoot :default-value="roadmap" default-open v-slot="{ years }">
+    `  <YearRangePickerRoot :default-value="roadmap" v-slot="{ years }">
     <YearRangePickerStartInput aria-label="First year" />
     <YearRangePickerEndInput aria-label="Last year" />
     <YearRangePickerTrigger class="catalog-picker-trigger" aria-label="Open year range picker">
@@ -616,7 +616,7 @@ const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   ),
   popover: sfc(
     'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
-    `  <PopoverRoot default-open side="bottom" align="center" :close-on-interact-outside="false">
+    `  <PopoverRoot side="bottom" align="center" :close-on-interact-outside="false">
     <PopoverTrigger>Edit profile</PopoverTrigger>
     <PopoverContent>
       <PopoverArrow />
@@ -1040,7 +1040,7 @@ const menuButtonScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   actions: requiredCatalogSource('menu-button'),
   nested: sfc(
     'MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenuItem, MenuSeparator, MenuSubContent',
-    `  <MenuButtonRoot :items="items" default-open @invoke="lastAction = $event">
+    `  <MenuButtonRoot :items="items" @invoke="lastAction = $event">
     <MenuButtonTrigger>Export options</MenuButtonTrigger>
     <MenuButtonContent>
       <MenuItem value="download">Download copy <kbd>⇧D</kbd></MenuItem>
@@ -1261,7 +1261,6 @@ const popoverScenarioCode: Readonly<Record<string, string>> = Object.freeze({
   collision: sfc(
     'PopoverRoot, PopoverTrigger, PopoverContent, PopoverArrow, PopoverTitle, PopoverDescription, PopoverClose',
     `  <PopoverRoot
-    default-open
     side="right"
     align="center"
     :collision-padding="16"

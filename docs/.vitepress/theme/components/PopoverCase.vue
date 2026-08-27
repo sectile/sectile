@@ -7,7 +7,7 @@ import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 
 const props = withDefaults(defineProps<{ readonly title: string; readonly description: string; readonly side?: 'top' | 'right' | 'bottom' | 'left'; readonly controlled?: boolean }>(), { side: 'bottom', controlled: false });
-const open = ref(true);
+const open = ref(false);
 const resolvedSide = ref(props.side);
 const revision = ref(0);
 const entries = ref<EventEntry[]>([]);
@@ -16,7 +16,7 @@ import { ref } from 'vue'
 import { PopoverArrow, PopoverClose, PopoverContent, PopoverDescription, PopoverRoot, PopoverTitle, PopoverTrigger } from '@sectile/vue/popover'
 import { TextField } from '@sectile/vue/text'
 
-const open = ref(true)
+const open = ref(false)
 <\/script>
 
 <template>
@@ -44,7 +44,7 @@ function updatePosition(position: ComputePositionReturn): void {
   <DemoCard :title="title" :revision="revision" :state="{ open, side: resolvedSide, ownership: controlled ? 'controlled' : 'uncontrolled' }" :entries="entries" interaction="enabled" :code="source">
     <div class="popover-example" :class="{ 'popover-example--right': side === 'right' }">
       <p class="demo-copy">{{ description }}</p>
-      <PopoverRoot :open="controlled ? open : undefined" :default-open="controlled ? undefined : true" :side="side" align="center" :close-on-interact-outside="false" @update:open="update" @position-change="updatePosition">
+      <PopoverRoot :open="controlled ? open : undefined" :side="side" align="center" :close-on-interact-outside="false" @update:open="update" @position-change="updatePosition">
         <PopoverTrigger class="secondary popover-trigger">Edit profile</PopoverTrigger>
         <PopoverContent class="popover-content">
           <PopoverArrow class="popover-arrow" />
