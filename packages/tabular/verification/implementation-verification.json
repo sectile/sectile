@@ -42,7 +42,7 @@
     {
       "group": "virtual-witnesses",
       "tests": 2,
-      "sha256": "d944e833aa1b6d3dc23e7f9f7c6cecf9074ea3fb3568d341c439218e0145d35b"
+      "sha256": "4b28c486b42813dbcc9738901eb3443cdf2b2b6f4c38850911f77502a454c38c"
     }
   ],
   "benchmark": {

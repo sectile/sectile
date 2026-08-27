@@ -13,7 +13,7 @@
     "verify:reproducible-build": "pnpm -r --workspace-concurrency=1 --if-present verify:reproducible-build",
     "check:boundaries": "node scripts/check-workspace-boundaries.mjs",
     "check:components": "node scripts/check-component-completeness.mjs",
-    "check:component-api": "node scripts/check-component-public-api.mjs",
+    "check:component-api": "pnpm -r --workspace-concurrency=1 --filter @sectile/core --filter @sectile/temporal --filter @sectile/virtual --filter @sectile/tabular --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue --if-present build && node scripts/check-component-public-api.mjs",
     "check:signatures": "node scripts/check-public-signatures.mjs",
     "update:signatures": "node scripts/update-public-signatures.mjs",
     "update:tree": "node scripts/update-tree.mjs",

@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "package": "@sectile/tabular",
+  "status": "passed",
+  "coverage": {
+    "requirements": 24,
+    "acceptanceCriteria": 19,
+    "workItems": 17,
+    "validations": 18,
+    "publicExports": 14,
+    "evidenceFiles": 32
+  },
+  "requirementOwners": {
+    "REQ-001": "WI-001",
+    "REQ-002": "WI-004",
+    "REQ-003": "WI-009",
+    "REQ-004": "WI-005",
+    "REQ-005": "WI-005",
+    "REQ-006": "WI-006",
+    "REQ-007": "WI-013",
+    "REQ-008": "WI-007",
+    "REQ-009": "WI-007",
+    "REQ-010": "WI-008",
+    "REQ-011": "WI-006",
+    "REQ-012": "WI-011",
+    "REQ-013": "WI-009",
+    "REQ-014": "WI-012",
+    "REQ-015": "WI-005",
+    "REQ-016": "WI-014",
+    "REQ-017": "WI-016",
+    "REQ-018": "WI-005",
+    "REQ-019": "WI-001",
+    "REQ-020": "WI-016",
+    "REQ-021": "WI-011",
+    "REQ-022": "WI-014",
+    "REQ-023": "WI-014",
+    "REQ-024": "WI-014"
+  },
+  "acceptanceClosers": {
+    "AC-001": "VAL-016",
+    "AC-002": "VAL-017",
+    "AC-003": "VAL-009",
+    "AC-004": "VAL-008",
+    "AC-005": "VAL-005",
+    "AC-006": "VAL-008",
+    "AC-007": "VAL-013",
+    "AC-008": "VAL-007",
+    "AC-009": "VAL-008",
+    "AC-010": "VAL-011",
+    "AC-011": "VAL-012",
+    "AC-012": "VAL-005",
+    "AC-013": "VAL-014",
+    "AC-014": "VAL-018",
+    "AC-015": "VAL-001",
+    "AC-016": "VAL-016",
+    "AC-017": "VAL-016",
+    "AC-018": "VAL-016",
+    "AC-019": "VAL-014"
+  },
+  "publicExports": [
+    "@sectile/dom/data-grid",
+    "@sectile/dom/data-table",
+    "@sectile/dom/data-tree-grid",
+    "@sectile/tabular",
+    "@sectile/tabular/data-grid",
+    "@sectile/tabular/data-table",
+    "@sectile/tabular/data-tree-grid",
+    "@sectile/tabular/model",
+    "@sectile/tabular/query",
+    "@sectile/tabular/source",
+    "@sectile/tabular/virtual",
+    "@sectile/vue/data-grid",
+    "@sectile/vue/data-table",
+    "@sectile/vue/data-tree-grid"
+  ],
+  "packedDependencyClosure": {
+    "status": "passed",
+    "files": 310,
+    "imports": 477
+  },
+  "deterministicEvidenceFingerprint": "8619413715ea8c288ac8c49ce2eee6708c35401a6d52b2acfc05f20369c82e46",
+  "evidence": [
+    {
+      "path": "docs/ko/packages/tabular.md",
+      "sha256": "e33ee5db64388fbcbe7b6a0985a4a5bd14d92416cf96c7e241edb767537c62a7"
+    },
+    {
+      "path": "docs/packages/tabular.md",
+      "sha256": "86d0bcea8d158c5524a721a369c19567a7c07d3a287a96603b413edeb17a970e"
+    },
+    {
+      "path": "packages/core/testing/public-api.json",
+      "sha256": "1802bb4dc8ccfd7221b2420796b937984f2ba1b35ed7db7fa82f18406f9a8aca"
+    },
+    {
+      "path": "packages/core/testing/semantic-api.json",
+      "sha256": "e160d5bef9c3d0b9785ef7f48e6f8f6126c14c09b254557878a38bb5e07189a9"
+    },
+    {
+      "path": "packages/dom/testing/public-signatures.json",
+      "sha256": "8ab3960bb4b228a344cd2967cdd0d9bb86ef175453b2076f3f6dde6756c2d878"
+    },
+    {
+      "path": "packages/dom/verification/browser.json",
+      "sha256": "cac408b1ef33e049b8bad51d55b10fc20c2fca58d8cb761b4fe57678d8591063"
+    },
+    {
+      "path": "packages/dom/verification/tabular-editing-browser.json",
+      "sha256": "31f0cbd13ede4b8547929bd5145b4243c24bde158cde84a8f48d44d34b4b4a23"
+    },
+    {
+      "path": "packages/tabular/verification/advanced.json",
+      "sha256": "3097cb5d27b29b913e17a327962d8e913a61c6f6269295d5f6bd18491a076df5"
+    },
+    {
+      "path": "packages/tabular/verification/architecture.json",
+      "sha256": "890639c0f749e140a6c5559d2e05081b3c6a6b971bd07956c528ae813842d3ec"
+    },
+    {
+      "path": "packages/tabular/verification/benchmark.json",
+      "sha256": "db3fcaf53adca477e72b245d744f5d7703b15291c9eb134c834ed398a6617f30"
+    },
+    {
+      "path": "packages/tabular/verification/columns.json",
+      "sha256": "fb2e9ede12fbc3ac9cc313cc283955c6e3a69a577fcb04ec189d44ce97dc6d72"
+    },
+    {
+      "path": "packages/tabular/verification/implementation-verification.json",
+      "sha256": "8619413715ea8c288ac8c49ce2eee6708c35401a6d52b2acfc05f20369c82e46"
+    },
+    {
+      "path": "packages/tabular/verification/model.json",
+      "sha256": "77746642774572c2e29727ec723802d4895c6dbe593aa0f861d9001888fa2276"
+    },
+    {
+      "path": "packages/tabular/verification/profiles.json",
+      "sha256": "314d78e41bd20da5df225de3d355651a8d2d5b5e801ba9b4c5fe9df4278b7aa7"
+    },
+    {
+      "path": "packages/tabular/verification/selection.json",
+      "sha256": "132d9d3c7f6a7ee21f3ab4714fada6dd53f3fb52f749b25bfbf64c3f41875d7c"
+    },
+    {
+      "path": "packages/tabular/verification/source.json",
+      "sha256": "76839243c19cb3d675982dc89ae4ee18407da3400582d075b763208c1852b7a9"
+    },
+    {
+      "path": "packages/tabular/verification/virtual-witnesses.json",
+      "sha256": "4b28c486b42813dbcc9738901eb3443cdf2b2b6f4c38850911f77502a454c38c"
+    },
+    {
+      "path": "packages/tabular/verification/virtual.json",
+      "sha256": "f02c97ed36a2c670191a8761a6fe6e4274d877f74d59446fca5f91f93334edf4"
+    },
+    {
+      "path": "packages/virtual/testing/law-evidence.json",
+      "sha256": "c3b7beb195815a526be14def2757aba09ea59ff019bb71a407328d623e846afc"
+    },
+    {
+      "path": "packages/virtual/testing/public-signatures.json",
+      "sha256": "4754248e4d119fba8c1224f32b3f8dbd467ffa147928237d5de81714c3b7de67"
+    },
+    {
+      "path": "packages/vue/tests/data-grid.test.mjs",
+      "sha256": "f43ec6ecbf37c952a7d680d6ee75c2d8a59a7b7ba5ae77b225f791778ac57385"
+    },
+    {
+      "path": "packages/vue/tests/data-table.test.mjs",
+      "sha256": "7843c18ef840c89df616f4ecd8ef8487df22baaf69e7ce26ea9e7c67f243ffbb"
+    },
+    {
+      "path": "packages/vue/tests/data-tree-grid.test.mjs",
+      "sha256": "e96abd3f6e4a9bf4cc66c31e5f196e6780dccdcd76cda00da5d75b065f6463b7"
+    },
+    {
+      "path": "packages/vue/tests/tabular-source.test.mjs",
+      "sha256": "af3fa339848a2f06fe9272bccdcc5af4971131b78dd6d834976e84143d01b823"
+    },
+    {
+      "path": "packages/vue/tests/tabular-ssr.test.mjs",
+      "sha256": "988677c6b0f01a3e2c283cd6ca8b003530a47cf8d3b51604dadf435f6dfb5d5b"
+    },
+    {
+      "path": "packages/vue/type-tests/tabular-components.ts",
+      "sha256": "318751705c938ef655221ed0562a55a66af68d0774193c55fea61ec78a890c54"
+    },
+    {
+      "path": "packages/vue/verification/tabular-virtual-browser.json",
+      "sha256": "e16c7405b4ab7b02231b7b9c670d93cf48f737f09c8790b8acd609dea2af2295"
+    },
+    {
+      "path": "verification/component-completeness.json",
+      "sha256": "20602b410775786a8a2ce8a848a0a18fe6dbc1938f8ce79958e4f2b7b86727a3"
+    },
+    {
+      "path": "verification/component-evidence.json",
+      "sha256": "bd329f45ba25e85334fec9fee37ee9368df43044a05d011ca005d19cfc88d021"
+    },
+    {
+      "path": "verification/component-public-api.json",
+      "sha256": "da83db020bd5cf4b773ba11a73a8f3fc4ea3281ad81dd47bb578b51694d8ae8d"
+    },
+    {
+      "path": "verification/consumer-install/tabular.json",
+      "sha256": "984f547b5100e75b7e9ee14fbb30ea7ccf5573c8d95eae6a90ee6e43329f0509"
+    },
+    {
+      "path": "verification/tabular/architecture.json",
+      "sha256": "60a586aca98d34afcba78f7ff6d469a22544c833efd989a1986c58031c2c89f5"
+    }
+  ]
+}

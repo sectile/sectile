@@ -14,7 +14,7 @@
       "bytes": 198176
     },
     "@sectile/tabular": {
-      "bytes": 59996
+      "bytes": 60032
     },
     "@sectile/temporal": {
       "bytes": 41115
@@ -23,10 +23,10 @@
       "bytes": 54278
     },
     "@sectile/dom": {
-      "bytes": 284149
+      "bytes": 284148
     },
     "@sectile/vue": {
-      "bytes": 297711
+      "bytes": 297713
     }
   },
   "declarationClosure": {

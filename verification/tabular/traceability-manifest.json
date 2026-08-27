@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "requirements": {
+    "REQ-001": "WI-001", "REQ-002": "WI-004", "REQ-003": "WI-009", "REQ-004": "WI-005",
+    "REQ-005": "WI-005", "REQ-006": "WI-006", "REQ-007": "WI-013", "REQ-008": "WI-007",
+    "REQ-009": "WI-007", "REQ-010": "WI-008", "REQ-011": "WI-006", "REQ-012": "WI-011",
+    "REQ-013": "WI-009", "REQ-014": "WI-012", "REQ-015": "WI-005", "REQ-016": "WI-014",
+    "REQ-017": "WI-016", "REQ-018": "WI-005", "REQ-019": "WI-001", "REQ-020": "WI-016",
+    "REQ-021": "WI-011", "REQ-022": "WI-014", "REQ-023": "WI-014", "REQ-024": "WI-014"
+  },
+  "acceptance": {
+    "AC-001": "VAL-016", "AC-002": "VAL-017", "AC-003": "VAL-009", "AC-004": "VAL-008",
+    "AC-005": "VAL-005", "AC-006": "VAL-008", "AC-007": "VAL-013", "AC-008": "VAL-007",
+    "AC-009": "VAL-008", "AC-010": "VAL-011", "AC-011": "VAL-012", "AC-012": "VAL-005",
+    "AC-013": "VAL-014", "AC-014": "VAL-018", "AC-015": "VAL-001", "AC-016": "VAL-016",
+    "AC-017": "VAL-016", "AC-018": "VAL-016", "AC-019": "VAL-014"
+  },
+  "workItems": {
+    "WI-001": ["verification/tabular/architecture.json"],
+    "WI-002": ["packages/core/testing/public-api.json", "packages/core/testing/semantic-api.json"],
+    "WI-003": ["packages/tabular/verification/architecture.json"],
+    "WI-004": ["packages/tabular/verification/model.json"],
+    "WI-005": ["packages/tabular/verification/source.json"],
+    "WI-006": ["packages/tabular/verification/columns.json"],
+    "WI-007": ["packages/tabular/verification/selection.json"],
+    "WI-008": ["packages/tabular/verification/advanced.json"],
+    "WI-009": ["packages/tabular/verification/profiles.json"],
+    "WI-010": ["packages/virtual/testing/law-evidence.json", "packages/virtual/testing/public-signatures.json"],
+    "WI-011": ["packages/dom/verification/browser.json", "packages/dom/testing/public-signatures.json"],
+    "WI-012": ["packages/dom/verification/tabular-editing-browser.json"],
+    "WI-013": ["packages/tabular/verification/virtual.json", "packages/tabular/verification/virtual-witnesses.json"],
+    "WI-014": ["packages/vue/tests/data-table.test.mjs", "packages/vue/tests/data-grid.test.mjs", "packages/vue/tests/data-tree-grid.test.mjs", "packages/vue/tests/tabular-source.test.mjs", "packages/vue/tests/tabular-ssr.test.mjs", "packages/vue/type-tests/tabular-components.ts"],
+    "WI-015": ["packages/vue/verification/tabular-virtual-browser.json"],
+    "WI-016": ["verification/component-completeness.json", "verification/component-evidence.json", "verification/component-public-api.json", "verification/consumer-install/tabular.json", "docs/packages/tabular.md", "docs/ko/packages/tabular.md"],
+    "WI-017": ["packages/tabular/verification/implementation-verification.json", "packages/tabular/verification/benchmark.json"]
+  },
+  "validations": [
+    "VAL-001", "VAL-002", "VAL-003", "VAL-004", "VAL-005", "VAL-006", "VAL-007", "VAL-008", "VAL-009",
+    "VAL-010", "VAL-011", "VAL-012", "VAL-013", "VAL-014", "VAL-015", "VAL-016", "VAL-017", "VAL-018"
+  ]
+}
