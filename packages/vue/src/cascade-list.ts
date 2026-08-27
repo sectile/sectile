@@ -241,11 +241,12 @@ export const CascadeListRoot = defineComponent({
         'aria-hidden': 'true',
         style: visuallyHiddenInputStyle,
       }, [
-        h('option', { value: '' }),
+        h('option', { value: '', selected: state.value.value === null }),
         ...props.nodes
           .filter((node) => !branches.value.has(node.id))
           .map((node) => h('option', {
             value: node.id,
+            selected: state.value.value === node.id,
             disabled: props.disabledItems.includes(node.id),
           }, props.textValue?.(node.id) ?? node.id)),
       ])];
