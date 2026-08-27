@@ -110,7 +110,7 @@ root.innerHTML = `
     <div id="mount"></div>
     <h2>Initial render and scrolling</h2>
     <table>
-      <thead><tr><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th><th>Rows</th><th>DOM elements</th></tr></thead>
+      <thead><tr><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th></tr></thead>
       <tbody id="results"></tbody>
     </table>
     <h2>Height input support</h2>
@@ -120,7 +120,7 @@ root.innerHTML = `
     </table>
     <h2>Mutation results</h2>
     <table>
-      <thead><tr><th>Height input</th><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Correct</th><th>Failures</th></tr></thead>
+      <thead><tr><th>Height input</th><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Clean</th><th>Recovered</th><th>Failed</th><th>Failures</th></tr></thead>
       <tbody id="mutation-results"></tbody>
     </table>
     <pre id="json"></pre>
@@ -193,7 +193,7 @@ async function runAll(): Promise<void> {
         baseline: {
           rounds: ROUNDS,
           scrollSamplesPerRound: RECORDED_SCROLLS,
-          completion: 'same row DOM, correct total scroll height, and a non-empty viewport',
+          completion: 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage',
           timing: {
             setupMs: 'synchronous adapter and framework setup',
             firstRowsMs: 'time until the first benchmark rows exist',
@@ -235,9 +235,9 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
   const startedAt = performance.now();
   const mounted = benchmarkCase.mount(host);
   const setupMs = performance.now() - startedAt;
-  await waitForRows(host, 0);
+  await waitForAnyRows(host);
   const firstRowsMs = performance.now() - startedAt;
-  await waitForStableLayout(mounted.scroller);
+  await waitForBaselineLayout(mounted.scroller, 0);
   const mountMs = performance.now() - startedAt;
   const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
   const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
@@ -249,8 +249,7 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
     const scrollStartedAt = performance.now();
     mounted.scroller.scrollTop = offset;
     mounted.scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
-    await waitForRows(host, expected);
-    assertBaselineLayout(mounted.scroller);
+    await waitForBaselineLayout(mounted.scroller, expected);
     const elapsed = performance.now() - scrollStartedAt;
     if (index >= WARMUP_SCROLLS) samples.push(elapsed);
   }
@@ -294,10 +293,10 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
   });
 }
 
-function waitForStableLayout(scroller: HTMLElement): Promise<void> {
+function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Promise<void> {
   return waitUntilFrame(() => {
     try {
-      assertBaselineLayout(scroller);
+      assertBaselineLayout(scroller, expectedIndex);
       return true;
     } catch {
       return false;
@@ -305,24 +304,45 @@ function waitForStableLayout(scroller: HTMLElement): Promise<void> {
   }, 'a correct total height and viewport layout');
 }
 
-function assertBaselineLayout(scroller: HTMLElement): void {
+function assertBaselineLayout(scroller: HTMLElement, expectedIndex: number): void {
   const expectedHeight = ITEM_COUNT * ROW_HEIGHT;
   if (Math.abs(scroller.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
     throw new Error(`Scroll height ${scroller.scrollHeight}px did not match ${expectedHeight}px.`);
   }
   const viewport = scroller.getBoundingClientRect();
-  const visible = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row')).some((row) => {
+  const seen = new Set<number>();
+  const rows = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row')).flatMap((row) => {
+    const index = Number(row.dataset['index']);
     const rect = row.getBoundingClientRect();
-    return rect.height > 0 && rect.bottom > viewport.top && rect.top < viewport.bottom;
+    if (rect.bottom < viewport.top - VIEWPORT_HEIGHT * 2 || rect.top > viewport.bottom + VIEWPORT_HEIGHT * 2) return [];
+    if (!Number.isInteger(index) || index < 0 || index >= ITEM_COUNT) throw new Error(`Invalid benchmark row index ${row.dataset['index'] ?? 'missing'}.`);
+    if (seen.has(index)) throw new Error(`Benchmark row ${index} appeared more than once.`);
+    seen.add(index);
+    if (Math.abs(rect.height - ROW_HEIGHT) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark row ${index} measured ${round(rect.height)}px instead of ${ROW_HEIGHT}px.`);
+    return [{ index, top: rect.top, bottom: rect.bottom }];
   });
-  if (!visible) throw new Error('No benchmark row covers the viewport.');
+  rows.sort((left, right) => left.top - right.top || left.index - right.index);
+  for (let index = 1; index < rows.length; index += 1) {
+    const previous = rows[index - 1]!;
+    const current = rows[index]!;
+    if (current.index !== previous.index + 1) continue;
+    const gap = current.top - previous.bottom;
+    if (Math.abs(gap) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark rows ${previous.index} and ${current.index} have a ${round(gap)}px gap or overlap.`);
+  }
+  const visible = rows.filter((row) => row.bottom > viewport.top + HEIGHT_TOLERANCE_PX && row.top < viewport.bottom - HEIGHT_TOLERANCE_PX);
+  if (visible.length === 0) throw new Error('No benchmark row covers the viewport.');
+  if (!visible.some((row) => row.index === expectedIndex)) throw new Error(`Expected benchmark row ${expectedIndex} is absent from the viewport.`);
+  const first = visible[0]!;
+  const last = visible.at(-1)!;
+  if (first.top > viewport.top + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
+  if (last.bottom < viewport.bottom - HEIGHT_TOLERANCE_PX) throw new Error(`Blank space follows benchmark row ${last.index}.`);
+  for (let index = 1; index < visible.length; index += 1) {
+    if (visible[index]!.index !== visible[index - 1]!.index + 1) throw new Error(`Visible benchmark rows ${visible[index - 1]!.index} and ${visible[index]!.index} are not contiguous.`);
+  }
 }
 
-function waitForRows(host: HTMLElement, expectedIndex: number): Promise<void> {
-  const matches = (): boolean => Array.from(host.querySelectorAll<HTMLElement>('.bench-row'))
-    .some((row) => Math.abs(Number(row.dataset['index']) - expectedIndex) <= 20);
-  if (matches()) return Promise.resolve();
-  return waitUntilFrame(matches, `row ${expectedIndex}`);
+function waitForAnyRows(host: HTMLElement): Promise<void> {
+  return waitUntilFrame(() => host.querySelector('.bench-row[data-index]') !== null, 'the first benchmark rows');
 }
 
 function waitUntilFrame(predicate: () => boolean, label: string): Promise<void> {
@@ -351,8 +371,6 @@ function renderResult(result: BenchmarkResult): HTMLTableRowElement {
     `${result.mountMs.toFixed(2)} ms`,
     `${result.scrollMedianMs.toFixed(2)} ms`,
     `${result.scrollP95Ms.toFixed(2)} ms`,
-    String(result.renderedRows),
-    String(result.domElements),
   ]);
 }
 
@@ -375,6 +393,8 @@ function renderMutationResult(result: MutationBenchmarkResult): HTMLTableRowElem
     result.medianMs === null ? '—' : `${result.medianMs.toFixed(2)} ms`,
     result.p95Ms === null ? '—' : `${result.p95Ms.toFixed(2)} ms`,
     `${result.correctSamples}/${result.totalSamples}`,
+    `${result.recoveredSamples}/${result.totalSamples}`,
+    `${result.failedSamples}/${result.totalSamples}`,
     result.failures.length === 0 ? '0' : `${result.failures.length} (${result.failures[0]!.code})`,
   ]);
   if (result.failures.some((failure) => failure.severity === 'fatal')) row.dataset['severity'] = 'fatal';

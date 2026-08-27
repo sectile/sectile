@@ -33,11 +33,23 @@ export interface MutationBenchmarkResult {
   readonly location: MutationLocation;
   readonly medianMs: number | null;
   readonly p95Ms: number | null;
+  readonly recoveryMedianMs: number | null;
+  readonly recoveryP95Ms: number | null;
   readonly settledSamples: number;
   readonly correctSamples: number;
+  readonly recoveredSamples: number;
+  readonly failedSamples: number;
   readonly totalSamples: number;
   readonly heightHandling: HeightHandling;
+  readonly samples: readonly MutationSampleRecord[];
   readonly failures: readonly MutationFailure[];
+}
+
+export interface MutationSampleRecord {
+  readonly sample: number;
+  readonly outcome: 'clean' | 'recovered' | 'failed';
+  readonly elapsedMs: number | null;
+  readonly failureCodes: readonly FailureCode[];
 }
 
 type FailureCode =
@@ -73,6 +85,8 @@ interface RowGeometry {
 
 interface RawScenarioResult {
   readonly samples: number[];
+  readonly recoverySamples: number[];
+  readonly outcomes: MutationSampleRecord[];
   readonly failures: MutationFailure[];
 }
 
@@ -83,10 +97,9 @@ interface SampleOutcome {
 
 const QUICK_RUN = new URLSearchParams(window.location.search).has('quick');
 const MUTATION_ROUNDS = QUICK_RUN ? 1 : 5;
-const SAMPLES_PER_ROUND = QUICK_RUN ? 1 : 2;
+const SAMPLES_PER_ROUND = QUICK_RUN ? 1 : 10;
 const FRAME_TIMEOUT_MS = 2_000;
 const GEOMETRY_TOLERANCE_PX = 2;
-const INVALID_FRAME_LIMIT = 3;
 
 export const mutationConditions = Object.freeze({
   rounds: MUTATION_ROUNDS,
@@ -94,8 +107,8 @@ export const mutationConditions = Object.freeze({
   samplesPerScenario: MUTATION_ROUNDS * SAMPLES_PER_ROUND,
   frameTimeoutMs: FRAME_TIMEOUT_MS,
   geometryTolerancePx: GEOMETRY_TOLERANCE_PX,
-  consecutiveInvalidFramesToFail: INVALID_FRAME_LIMIT,
   completion: 'first animation frame with correct DOM order, row geometry, total height, viewport coverage, and anchor position',
+  recovery: 'every frame after the mutation becomes observable is checked; the first occurrence of each failure code is retained while recovery is observed until the frame timeout',
 });
 
 export async function runMutationBenchmarks(
@@ -118,7 +131,7 @@ export async function runMutationBenchmarks(
     for (const adapter of adapterOrder) {
       for (const scenario of scenarioOrder) {
         const key = resultKey(adapter, scenario);
-        const result = raw.get(key) ?? { samples: [], failures: [] };
+        const result = raw.get(key) ?? { samples: [], recoverySamples: [], outcomes: [], failures: [] };
         raw.set(key, result);
         for (let localSample = 0; localSample < SAMPLES_PER_ROUND; localSample += 1) {
           const sample = round * SAMPLES_PER_ROUND + localSample + 1;
@@ -126,6 +139,13 @@ export async function runMutationBenchmarks(
           onProgress(`Mutation ${completed}/${total} · ${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location}`);
           const outcome = await runMutationSample(adapter, scenario, host, sample);
           if (outcome.elapsedMs !== null) result.samples.push(outcome.elapsedMs);
+          if (outcome.elapsedMs !== null && outcome.failures.length > 0) result.recoverySamples.push(outcome.elapsedMs);
+          result.outcomes.push(Object.freeze({
+            sample,
+            outcome: outcome.elapsedMs === null ? 'failed' : outcome.failures.length === 0 ? 'clean' : 'recovered',
+            elapsedMs: outcome.elapsedMs,
+            failureCodes: Object.freeze([...new Set(outcome.failures.map((failure) => failure.code))]),
+          }));
           result.failures.push(...outcome.failures);
         }
       }
@@ -133,8 +153,12 @@ export async function runMutationBenchmarks(
   }
 
   return Object.freeze(selectedAdapters.flatMap((adapter) => scenarios.map((scenario) => {
-    const collected = raw.get(resultKey(adapter, scenario)) ?? { samples: [], failures: [] };
+    const collected = raw.get(resultKey(adapter, scenario)) ?? { samples: [], recoverySamples: [], outcomes: [], failures: [] };
     const sorted = [...collected.samples].sort((left, right) => left - right);
+    const recoveries = [...collected.recoverySamples].sort((left, right) => left - right);
+    const correctSamples = collected.outcomes.filter((sample) => sample.outcome === 'clean').length;
+    const recoveredSamples = collected.outcomes.filter((sample) => sample.outcome === 'recovered').length;
+    const failedSamples = collected.outcomes.filter((sample) => sample.outcome === 'failed').length;
     return Object.freeze({
       library: adapter.name,
       version: adapter.version,
@@ -144,10 +168,15 @@ export async function runMutationBenchmarks(
       location: scenario.location,
       medianMs: sorted.length === 0 ? null : round(percentile(sorted, 0.5)),
       p95Ms: sorted.length === 0 ? null : round(percentile(sorted, 0.95)),
+      recoveryMedianMs: recoveries.length === 0 ? null : round(percentile(recoveries, 0.5)),
+      recoveryP95Ms: recoveries.length === 0 ? null : round(percentile(recoveries, 0.95)),
       settledSamples: sorted.length,
-      correctSamples: (MUTATION_ROUNDS * SAMPLES_PER_ROUND) - new Set(collected.failures.map((failure) => failure.sample)).size,
+      correctSamples,
+      recoveredSamples,
+      failedSamples,
       totalSamples: MUTATION_ROUNDS * SAMPLES_PER_ROUND,
       heightHandling: adapter.heightHandling,
+      samples: Object.freeze(collected.outcomes),
       failures: Object.freeze(collected.failures),
     });
   })));
@@ -234,8 +263,6 @@ function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
   return new Promise((resolve) => {
     let lastInspection: LayoutInspection | undefined;
     const observedFailures = new Map<FailureCode, MutationFailure>();
-    let lastInvalidSignature = '';
-    let invalidFrames = 0;
     const frame = (): void => {
       const elapsed = performance.now() - options.startedAt;
       const observed = mutationObserved(options.host, options.scenario, options.nextIndex);
@@ -256,17 +283,6 @@ function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
           if (!observedFailures.has(failure.code)) {
             observedFailures.set(failure.code, makeFailure(options.adapter, options.sample, options.scroller, failure));
           }
-        }
-        const signature = JSON.stringify({
-          failures: inspection.failures.map((failure) => ({ code: failure.code, details: failure.details })),
-          scrollTop: options.scroller.scrollTop,
-          scrollHeight: options.scroller.scrollHeight,
-        });
-        invalidFrames = signature === lastInvalidSignature ? invalidFrames + 1 : 1;
-        lastInvalidSignature = signature;
-        if (invalidFrames >= INVALID_FRAME_LIMIT) {
-          resolve(Object.freeze({ elapsedMs: null, failures: Object.freeze([...observedFailures.values()]) }));
-          return;
         }
       }
       if (elapsed >= FRAME_TIMEOUT_MS) {

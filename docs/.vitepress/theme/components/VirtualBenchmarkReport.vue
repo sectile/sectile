@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { MeterIndicator, MeterRoot, MeterTrack, MeterValueText } from '@sectile/vue/meter';
 import { useDocsLocale } from '../locale.js';
 import DemoCascadeSelect from './DemoCascadeSelect.vue';
 import {
@@ -19,6 +20,7 @@ type ChartResult = {
   readonly stack: string;
   readonly values: readonly (number | null)[];
   readonly state: string | null;
+  readonly notice: string | null;
   readonly failed: boolean;
 };
 
@@ -48,12 +50,13 @@ const copy = computed(() => isKorean.value ? {
   scenario: { mount: '처음 표시', scroll: '스크롤', insert: '삽입', move: '이동', remove: '삭제', resize: '높이 변경' } as Record<Scenario, string>,
   mode: { fixed: '고정 높이', estimated: '예상값 제공', automatic: '높이 생략' } as Record<BenchmarkHeightMode, string>,
   location: { start: '시작', middle: '중간', end: '끝' } as Record<BenchmarkLocation, string>,
-  mountLegend: ['처음 표시', null, null],
-  scrollLegend: ['스크롤 중앙값', '느린 5% 경계', null],
-  mutationLegend: ['중앙값', '느린 5% 경계'],
+  mountLegend: ['처음 표시', null, null, null],
+  scrollLegend: ['스크롤 중앙값', '느린 5% 경계', null, null],
+  mutationLegend: ['안정화 중앙값', '느린 5% 경계', '복구 중앙값', '복구 느린 5% 경계'],
   unsupported: '이 조건은 높이 예상값 없이 시작할 수 없음',
   stableFailure: '정상 화면에 도달하지 못함',
-  transientFailure: (correct: number, total: number) => `화면 이상 ${total - correct}/${total}회`,
+  recoveredFailure: (recovered: number, total: number) => `화면 이상 후 복구 ${recovered}/${total}회`,
+  permanentFailure: (failed: number, total: number) => `복구 실패 ${failed}/${total}회`,
   failureCode: { 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
   criteriaTitle: '이 그래프의 측정 기준',
@@ -76,12 +79,12 @@ const copy = computed(() => isKorean.value ? {
     repeat: {
       mount: '라이브러리 순서를 바꿔 5회',
       scroll: '5회 · 준비 5번 뒤 40번 기록',
-      mutation: '같은 조건 10회',
+      mutation: '같은 조건 50회',
     },
     completion: {
       mount: '전체 높이와 화면 배치가 모두 맞은 시점',
       scroll: '목표 행이 DOM에 나타난 시점',
-      mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 프레임',
+      mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 첫 프레임',
     },
     environment: 'Chrome 151 · Apple Silicon · macOS',
   },
@@ -94,12 +97,13 @@ const copy = computed(() => isKorean.value ? {
   scenario: { mount: 'Initial render', scroll: 'Scroll', insert: 'Insert', move: 'Move', remove: 'Remove', resize: 'Height change' } as Record<Scenario, string>,
   mode: { fixed: 'Fixed height', estimated: 'Estimate provided', automatic: 'Height omitted' } as Record<BenchmarkHeightMode, string>,
   location: { start: 'Start', middle: 'Middle', end: 'End' } as Record<BenchmarkLocation, string>,
-  mountLegend: ['Initial render', null, null],
-  scrollLegend: ['Scroll median', 'Slower 5% boundary', null],
-  mutationLegend: ['Median', 'Slower 5% boundary'],
+  mountLegend: ['Initial render', null, null, null],
+  scrollLegend: ['Scroll median', 'Slower 5% boundary', null, null],
+  mutationLegend: ['Settle median', 'Slower 5% boundary', 'Recovery median', 'Recovery slower 5% boundary'],
   unsupported: 'This condition cannot start without a height estimate',
   stableFailure: 'Did not reach a correct stable state',
-  transientFailure: (correct: number, total: number) => `Visual failure in ${total - correct}/${total} runs`,
+  recoveredFailure: (recovered: number, total: number) => `Recovered after a visual failure in ${recovered}/${total} runs`,
+  permanentFailure: (failed: number, total: number) => `Failed to recover in ${failed}/${total} runs`,
   failureCode: { 'scroll-anchor': 'anchor moved', 'row-overlap': 'row overlap', 'scroll-height': 'scroll-height error', 'blank-viewport': 'blank viewport', timeout: 'failed to settle', 'row-gap': 'row gap', 'row-height': 'row-height error', 'row-order': 'row-order error', 'duplicate-id': 'duplicate ID', 'unexpected-id': 'unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
   criteriaTitle: 'Measurement criteria for this chart',
@@ -122,7 +126,7 @@ const copy = computed(() => isKorean.value ? {
     repeat: {
       mount: '5 rounds with rotated library order',
       scroll: '5 rounds · 5 warm-ups, then 40 samples',
-      mutation: '10 samples under the same condition',
+      mutation: '50 samples under the same condition',
     },
     completion: {
       mount: 'Correct total height and viewport geometry',
@@ -142,7 +146,7 @@ const logarithmic = computed(() => !isBaselineScenario(scenario.value));
 const legendSlots = computed<readonly (string | null)[]>(() => {
   if (scenario.value === 'mount') return copy.value.mountLegend;
   if (scenario.value === 'scroll') return copy.value.scrollLegend;
-  return [...copy.value.mutationLegend, null];
+  return copy.value.mutationLegend;
 });
 const libraryMetadata = computed(() => baselineBenchmarkResults
   .filter((result) => result.mode === 'fixed')
@@ -153,10 +157,15 @@ const chartResults = computed<readonly ChartResult[]>(() => libraryMetadata.valu
   return mutationResult(metadata);
 }));
 
+const measurements = computed(() => chartResults.value
+  .flatMap((result) => result.values)
+  .filter((value): value is number => value !== null));
+const outlierThreshold = computed(() => upperOutlierFence(measurements.value));
 const maximum = computed(() => Math.max(
   1,
-  ...chartResults.value.flatMap((result) => result.values.map((value) => value ?? 0)),
+  ...measurements.value.filter((value) => !isOutlier(value)),
 ));
+const semanticMaximum = computed(() => Math.max(1, ...measurements.value));
 
 const selectedDescription = computed(() => {
   const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
@@ -184,7 +193,7 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
   const values = scenario.value === 'mount'
     ? [result.mountMs, null, null]
     : [result.scrollMedianMs, result.scrollP95Ms, null];
-  return { ...metadata, values, state: null, failed: false };
+  return { ...metadata, values, state: null, notice: null, failed: false };
 }
 
 function mutationResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
@@ -193,29 +202,56 @@ function mutationResult(metadata: { readonly library: string; readonly version: 
     && entry.operation === scenario.value
     && entry.location === location.value);
   if (result === undefined) return unsupportedResult(metadata);
+  const state = result.settledSamples === 0 ? failureLabel(result) : null;
+  const notice = state === null && (result.recoveredSamples > 0 || result.failedSamples > 0)
+    ? failureLabel(result)
+    : null;
   return {
     ...metadata,
-    values: [result.medianMs, result.p95Ms, null],
-    state: result.correctSamples < result.totalSamples ? failureLabel(result) : null,
-    failed: result.correctSamples < result.totalSamples,
+    values: [result.medianMs, result.p95Ms, result.recoveryMedianMs, result.recoveryP95Ms],
+    state,
+    notice,
+    failed: result.failedSamples > 0,
   };
 }
 
 function unsupportedResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
   return {
     ...metadata,
-    values: [null, null, null],
+    values: [null, null, null, null],
     state: copy.value.unsupported,
+    notice: null,
     failed: false,
   };
 }
 
-function barTransform(value: number | null): string {
-  if (value === null) return 'scaleX(0)';
+function meterIndicatorStyle(value: number): Readonly<Record<'--benchmark-meter-ratio', string>> {
+  if (isOutlier(value)) return { '--benchmark-meter-ratio': '1' };
   const ratio = logarithmic.value
     ? Math.log10(value + 1) / Math.log10(maximum.value + 1)
     : value / maximum.value;
-  return `scaleX(${Math.max(0.018, ratio)})`;
+  return { '--benchmark-meter-ratio': String(Math.max(0.018, ratio)) };
+}
+
+function isOutlier(value: number): boolean {
+  return value > outlierThreshold.value;
+}
+
+function upperOutlierFence(values: readonly number[]): number {
+  if (values.length < 4) return Number.POSITIVE_INFINITY;
+  const sorted = [...values].sort((left, right) => left - right);
+  const lowerQuartile = percentile(sorted, 0.25);
+  const upperQuartile = percentile(sorted, 0.75);
+  return upperQuartile + (upperQuartile - lowerQuartile) * 3;
+}
+
+function percentile(sorted: readonly number[], ratio: number): number {
+  const position = (sorted.length - 1) * ratio;
+  const lowerIndex = Math.floor(position);
+  const upperIndex = Math.ceil(position);
+  const lower = sorted[lowerIndex] ?? 0;
+  const upper = sorted[upperIndex] ?? lower;
+  return lower + (upper - lower) * (position - lowerIndex);
 }
 
 function formatTime(value: number | null): string {
@@ -234,9 +270,13 @@ function isBaselineScenario(value: Scenario): value is BaselineScenario {
 }
 
 function failureLabel(result: MutationBenchmarkResult): string {
-  const state = result.settledSamples === 0 ? copy.value.stableFailure : copy.value.transientFailure(result.correctSamples, result.totalSamples);
+  const states = [];
+  if (result.settledSamples === 0) states.push(copy.value.stableFailure);
+  if (result.recoveredSamples > 0) states.push(copy.value.recoveredFailure(result.recoveredSamples, result.totalSamples));
+  if (result.failedSamples > 0) states.push(copy.value.permanentFailure(result.failedSamples, result.totalSamples));
   const failures = result.failureCodes.map((code) => copy.value.failureCode[code] ?? code).join(' · ');
-  return failures.length === 0 ? state : `${state} · ${failures}`;
+  if (failures.length > 0) states.push(failures);
+  return states.join(' · ');
 }
 </script>
 
@@ -270,12 +310,38 @@ function failureLabel(result: MutationBenchmarkResult): string {
           </header>
           <div class="result-content">
             <div v-if="result.state !== null" class="result-message" :class="{ 'is-failure': result.failed }" :title="result.state">{{ result.state }}</div>
-            <div v-else class="bar-series">
-              <div v-for="(value, index) in result.values" :key="index" class="bar" :class="[`is-series-${index}`, { 'is-placeholder': legendSlots[index] === null }]" :role="legendSlots[index] === null ? undefined : 'img'" :aria-label="legendSlots[index] === null ? undefined : `${legendSlots[index]}: ${formatTime(value)}`" :aria-hidden="legendSlots[index] === null">
-                <i :style="{ transform: barTransform(value) }" />
-                <span>{{ formatTime(value) }}</span>
+            <template v-else>
+              <div class="bar-series">
+                <template v-for="(value, index) in result.values" :key="index">
+                  <MeterRoot
+                    v-if="value !== null"
+                    :value="value"
+                    :max="semanticMaximum"
+                    :label="`${result.library} · ${legendSlots[index]}`"
+                    :format-value="() => formatTime(value)"
+                    class="benchmark-meter"
+                    :class="[`is-series-${index}`, { 'is-placeholder': legendSlots[index] === null, 'is-outlier': isOutlier(value) }]"
+                    :aria-hidden="legendSlots[index] === null"
+                  >
+                    <MeterTrack class="benchmark-meter-track">
+                      <MeterIndicator class="benchmark-meter-indicator" :style="meterIndicatorStyle(value)" />
+                    </MeterTrack>
+                    <MeterValueText class="benchmark-meter-value" />
+                  </MeterRoot>
+                  <div
+                    v-else
+                    class="benchmark-meter benchmark-meter-empty"
+                    :class="[`is-series-${index}`, { 'is-placeholder': legendSlots[index] === null }]"
+                    :aria-label="legendSlots[index] === null ? undefined : `${legendSlots[index]}: ${formatTime(value)}`"
+                    :aria-hidden="legendSlots[index] === null"
+                  >
+                    <span class="benchmark-meter-track" />
+                    <span class="benchmark-meter-value">{{ formatTime(value) }}</span>
+                  </div>
+                </template>
               </div>
-            </div>
+              <div v-if="result.notice !== null" class="result-notice" :class="{ 'is-failure': result.failed }" :title="result.notice">{{ result.notice }}</div>
+            </template>
           </div>
         </div>
       </div>
@@ -309,6 +375,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .is-series-0 { --bar-color: var(--sectile-feedback-info); }
 .is-series-1 { --bar-color: var(--sectile-feedback-success); }
 .is-series-2 { --bar-color: var(--sectile-feedback-warning); }
+.is-series-3 { --bar-color: var(--sectile-feedback-critical); }
 .benchmark-chart { border-top: 1px solid var(--sectile-border-subtle); }
 .benchmark-row { display: grid; grid-template-columns: minmax(152px, 0.32fr) minmax(0, 1fr); gap: 16px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--sectile-border-subtle); }
 .benchmark-row header { display: grid; min-width: 0; gap: 0; }
@@ -316,13 +383,16 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .benchmark-row.is-sectile header strong { color: var(--sectile-action); }
 .benchmark-row header small { min-width: 0; overflow: hidden; color: var(--sectile-content-tertiary); font-size: 0.64rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .result-content { min-width: 0; block-size: 42px; }
-.bar-series { display: grid; min-width: 0; block-size: 42px; align-content: center; gap: 1px; }
-.bar { display: grid; grid-template-columns: minmax(0, 1fr) 50px; align-items: center; gap: 7px; min-height: 6px; }
-.bar::before { grid-area: 1 / 1; width: 100%; height: 3px; border-radius: 1px; background: color-mix(in srgb, var(--sectile-content-tertiary) 8%, transparent); content: ''; }
-.bar i { grid-area: 1 / 1; z-index: 1; width: 100%; height: 3px; border-radius: 1px; background: var(--bar-color); transform-origin: left center; transition: transform 220ms cubic-bezier(0.645, 0.045, 0.355, 1); }
-.bar span { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.bar-series { display: grid; min-width: 0; align-content: center; gap: 1px; }
+.benchmark-meter { display: grid; grid-template-columns: minmax(0, 1fr) 50px; align-items: center; gap: 7px; min-height: 6px; }
+.benchmark-meter-track { display: block; height: 3px; overflow: hidden; border-radius: 1px; background: color-mix(in srgb, var(--sectile-content-tertiary) 8%, transparent); }
+.benchmark-meter-indicator { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--bar-color); transform: scaleX(var(--benchmark-meter-ratio)); transform-origin: left center; transition: transform 220ms cubic-bezier(0.645, 0.045, 0.355, 1); }
+.benchmark-meter.is-outlier { --bar-color: var(--sectile-feedback-critical); }
+.benchmark-meter-value { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .result-message { display: grid; block-size: 42px; place-items: center; overflow: hidden; padding-inline: 10px; color: var(--sectile-content-primary); font-size: 0.8rem; font-weight: 720; line-height: 1.4; text-align: center; }
 .result-message.is-failure { color: var(--sectile-feedback-critical); }
+.result-notice { overflow: hidden; margin-top: 1px; color: var(--sectile-feedback-warning); font-size: 0.58rem; font-weight: 650; line-height: 1.2; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.result-notice.is-failure { color: var(--sectile-feedback-critical); }
 .benchmark-criteria { display: grid; gap: 10px; padding-top: 14px; }
 .benchmark-criteria > strong { font-size: 0.76rem; line-height: 1.4; }
 .benchmark-criteria dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 36px; margin: 0; }
@@ -335,11 +405,11 @@ function failureLabel(result: MutationBenchmarkResult): string {
   .benchmark-figure > figcaption { display: grid; gap: 2px; }
   .benchmark-row { grid-template-columns: minmax(0, 1fr); gap: 5px; padding: 9px 0; }
   .benchmark-row header { grid-template-columns: auto 1fr; align-items: baseline; gap: 7px; }
-  .bar { grid-template-columns: minmax(0, 1fr) 46px; }
+  .benchmark-meter { grid-template-columns: minmax(0, 1fr) 46px; }
   .benchmark-criteria dl { grid-template-columns: minmax(0, 1fr); gap: 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bar i { transition: none; }
+  .benchmark-meter-indicator { transition: none; }
 }
 </style>

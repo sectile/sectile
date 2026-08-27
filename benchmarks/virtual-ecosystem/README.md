@@ -20,9 +20,11 @@ Every adapter renders the same 100,000 rows in a 720 by 480 pixel viewport with 
 
 The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
 
-The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. A scroll sample starts when `scrollTop` changes and ends when the expected row appears in the DOM. Initial rendering reports synchronous setup, first row output, and the point at which the total scroll height and viewport geometry are correct.
+The runner rotates library order across five rounds. Each round performs five warm-up scrolls followed by 40 recorded scrolls across the full collection. A scroll sample starts when `scrollTop` changes and ends when the exact target row, contiguous row geometry, total scroll height, and viewport coverage are all correct. Initial rendering reports synchronous setup, first row output, and the first correct viewport layout.
 
-The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Overscan options differ between libraries, so the result also reports the actual rendered row and DOM element counts. Mutation timings cover insertion, movement, removal, and height changes at the start, middle, and end of the collection. A sample fails when row order, geometry, total height, viewport coverage, or scroll anchoring is wrong.
+The reported values include framework and adapter work. They are not isolated layout-algorithm timings. Raw results retain rendered-row and DOM-element counts as diagnostics; the documentation chart does not use them as performance scores.
+
+Mutation timings cover insertion, movement, removal, and height changes at the start, middle, and end of the collection. Every scenario runs 50 times. Once a mutation becomes visible in the DOM, every frame is checked for row order, geometry, total height, viewport coverage, and scroll anchoring. A sample that recovers keeps both the time to its first correct frame and a transient-failure record. A sample that does not recover within two seconds is a hard failure.
 
 ## Run
 
