@@ -100,6 +100,31 @@ test('DOM quantity field exposes standard policies without a core dependency', (
   assert.equal(metric.registry.get('centimetre')?.symbol, 'cm');
 });
 
+test('controlled DOM quantity field rebases clean display text and preserves active drafts', () => {
+  const input = new FakeInput();
+  const field = createQuantityField({
+    input,
+    policies: { registry, canonicalUnit: 'meter' },
+    quantity: { value: '1', unit: 'meter' },
+    displayUnit: 'centimeter',
+  });
+  input.setSelectionRange(0, 3);
+  assert.equal(field.syncControlledValues({
+    quantity: { value: '2', unit: 'meter' },
+    displayUnit: 'centimeter',
+  }).ok, true);
+  assert.equal(input.value, '200');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [0, 3]);
+
+  input.setSelectionRange(0, input.value.length);
+  input.emit('beforeinput', beforeInput('2+'));
+  assert.equal(field.syncControlledValues({
+    quantity: { value: '3', unit: 'meter' },
+    displayUnit: 'meter',
+  }).ok, true);
+  assert.equal(input.value, '2+');
+});
+
 function replaceAll(previous, text) {
   return { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: previous.length, text, selection: { anchorCodeUnitOffset: text.length, focusCodeUnitOffset: text.length } };
 }

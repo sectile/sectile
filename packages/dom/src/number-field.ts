@@ -14,6 +14,7 @@ import {
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
 import { toTextEvent, type TextInput } from './text.js';
 
 export interface NumberFieldValueChangeDetails {
@@ -163,9 +164,18 @@ class DOMNumberField implements NumberFieldConnection {
       return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled number field values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
+    const value = this.#valueControlled ? values.value as string | null : state.value;
+    const normalized = tryCreateNumberFieldState(value);
+    if (!normalized.ok) return normalized;
     const result = this.#runtime.replace(tryCreateNumberFieldState(
-      this.#valueControlled ? values.value as string | null : state.value,
-      this.#inputControlled ? values.inputState as TextEditingState : state.inputState,
+      value,
+      this.#inputControlled
+        ? values.inputState as TextEditingState
+        : synchronizeControlledFieldInput(
+          synchronizeFieldInputSelection(state.inputState, this.#options.input),
+          state.value ?? '',
+          normalized.value.value ?? '',
+        ),
     ));
     if (result.ok) {
       this.refresh();
@@ -209,4 +219,5 @@ class DOMNumberField implements NumberFieldConnection {
     const event = toTextEvent(input);
     return event !== null && this.handleEvent({ type: 'text', event });
   }
+
 }

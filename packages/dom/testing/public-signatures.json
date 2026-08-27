@@ -283,7 +283,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "58a8a469597c8c19eba778579226a18a0c491ceb9dbfa35a8c29b2f88bfbd04f",
+  "fingerprint": "a6640959bcecbbf80d387a7cc5401f5f628491cf4aaa14d3c4c6c4325388d3a8",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -339,7 +339,7 @@
     },
     {
       "path": "dist/date-field.d.ts",
-      "sha256": "5d4b53bd8d53159ef7d68016d5f168f3ae46833ad5ed79eb4be76fa4d7de5f29"
+      "sha256": "74e8da57ca40fceb4f7bf1f0d5473dbe2a26ab56e9d6b795ffb7dc78ed4f024d"
     },
     {
       "path": "dist/date-picker.d.ts",
@@ -355,7 +355,7 @@
     },
     {
       "path": "dist/date-time-field.d.ts",
-      "sha256": "1bd8d89d948ddecde29ff5864173bd41cd2e40b1734ab97564a7677f42ff92db"
+      "sha256": "ac86658b37bc5b3bbb6d9b3ec0a729bed6ee6941e93a2698ce4926e3b0c64ff3"
     },
     {
       "path": "dist/date-time-picker.d.ts",
@@ -551,7 +551,7 @@
     },
     {
       "path": "dist/time-field.d.ts",
-      "sha256": "81d966e65cdd2f1e1e4609d55c9ba065fe7cdf1518c3bf553e1d93f0643d43cb"
+      "sha256": "1ab2ef3a06ac85ae9ed6009f3ec249e8493084949a2829a6b8cf358470d15713"
     },
     {
       "path": "dist/time-range-field.d.ts",

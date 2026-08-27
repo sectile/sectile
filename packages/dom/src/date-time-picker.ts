@@ -13,7 +13,7 @@ import {
   type DateTimePickerState,
 } from '@sectile/temporal/date-time-picker';
 export type { DateTimePickerPolicies } from '@sectile/temporal/date-time-picker';
-import type { TimeValue } from '@sectile/temporal/time-field';
+import { type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { setDatePickerCellAvailability } from './internal/date-picker-cell.js';
@@ -194,7 +194,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     const state = runtime.getSnapshot().state;
     this.#dateTimeField = options.dateTimeInput === undefined ? null : createDateTimeField({
       input: options.dateTimeInput,
-      defaultValue: state.value,
+      value: state.value,
       policies: {
         ...(options.policies?.min === undefined ? {} : { min: options.policies.min }),
         ...(options.policies?.max === undefined ? {} : { max: options.policies.max }),
@@ -206,30 +206,33 @@ class DOMDateTimePicker implements DateTimePickerConnection {
       ...(options.required === undefined ? {} : { required: options.required }),
       ...(options.label === undefined ? {} : { label: options.label }),
       onValueChange: (value) => {
-        if (!this.#syncingFields) this.handleEvent({ type: 'set-value', value });
+        if (!this.#syncingFields) return this.handleEvent({ type: 'set-value', value });
+        return true;
       },
     });
     this.#dateField = options.dateInput === undefined ? null : createDateField({
       input: options.dateInput,
-      defaultValue: state.value?.date ?? null,
+      value: state.value?.date ?? null,
       ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
       ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
       ...(options.required === undefined ? {} : { required: options.required }),
       ...(options.label === undefined ? {} : { label: options.label }),
       onValueChange: (value) => {
-        if (!this.#syncingFields && value !== null) this.handleEvent({ type: 'set-date', value });
+        if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-date', value });
+        return true;
       },
     });
     this.#timeField = options.timeInput === undefined ? null : createTimeField({
       input: options.timeInput,
-      defaultValue: state.time,
+      value: state.time,
       ...(options.policies?.time === undefined ? {} : { policies: options.policies.time }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
       ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
       required: true,
       onValueChange: (value) => {
-        if (!this.#syncingFields && value !== null) this.handleEvent({ type: 'set-time', value });
+        if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-time', value });
+        return true;
       },
     });
     options.trigger.addEventListener('click', this.#trigger);
@@ -326,13 +329,14 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     this.#syncingFields = true;
     if (this.#dateTimeField !== null && compareNullable(this.#dateTimeField.getValue(), state.value) !== 0) {
-      this.#dateTimeField.handleEvent({ type: 'set-value', value: state.value });
+      this.#dateTimeField.syncControlledValues({ value: state.value });
     }
     if (this.#dateField !== null && compareDateNullable(this.#dateField.getValue(), state.value?.date ?? null) !== 0) {
-      this.#dateField.handleEvent({ type: 'set-value', value: state.value?.date ?? null });
+      const value = state.value?.date ?? null;
+      this.#dateField.syncControlledValues({ value });
     }
     if (this.#timeField !== null && compareTime(this.#timeField.getValue(), state.time) !== 0) {
-      this.#timeField.handleEvent({ type: 'set-value', value: state.time });
+      this.#timeField.syncControlledValues({ value: state.time });
     }
     this.#syncingFields = false;
     this.#layer.sync();

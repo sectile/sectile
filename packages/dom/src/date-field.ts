@@ -2,10 +2,11 @@ import { unwrap } from '@sectile/core/result';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
+import { applyDateFieldEvent, formatDateValue, tryCreateDateFieldState, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
 import { toTextEvent, type TextInput } from './text.js';
 
 export { formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
@@ -23,7 +24,7 @@ export interface DateFieldOptions {
   readonly required?: boolean;
   readonly label?: string;
   readonly native?: boolean;
-  readonly onValueChange?: (value: DateValue | null) => void;
+  readonly onValueChange?: (value: DateValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
 }
@@ -87,12 +88,32 @@ class DOMDateField implements DateFieldConnection {
   public syncControlledValues(values: DateFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateFieldState>> {
     if (this.valueControlled !== (values.value !== undefined) || this.inputControlled !== (values.inputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date field values must preserve their construction-time shape.' } };
     const state = this.getSnapshot().state;
-    const result = this.runtime.replace(tryCreateDateFieldState(this.valueControlled ? values.value as DateValue | null : state.value, this.inputControlled ? values.inputState as TextEditingState : state.inputState));
+    const value = this.valueControlled ? values.value as DateValue | null : state.value;
+    const inputState = this.inputControlled
+      ? values.inputState as TextEditingState
+      : synchronizeControlledFieldInput(
+        synchronizeFieldInputSelection(state.inputState, this.options.input),
+        state.value === null ? '' : formatDateValue(state.value),
+        value === null ? '' : formatDateValue(value),
+      );
+    const result = this.runtime.replace(tryCreateDateFieldState(value, inputState));
     if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result;
   }
   public handleEvent(event: DateFieldEvent): boolean {
+    const previous = this.getSnapshot();
     const result = this.runtime.handle(event); setFieldValidity(this.options.input, result);
-    if (result.ok) { for (const command of result.commands) if (command.type === 'value-committed') this.options.onValueChange?.(command.value); this.refresh(); this.options.onUpdate?.(); }
+    if (result.ok) {
+      for (const command of result.commands) {
+        if (command.type === 'value-committed' && this.options.onValueChange?.(command.value) === false) {
+          this.runtime.replace({ ok: true, value: previous.state });
+          this.refresh();
+          setFieldValidity(this.options.input, { ok: false, error: { message: 'The parent control rejected the date value.' } });
+          this.options.onUpdate?.();
+          return false;
+        }
+      }
+      this.refresh(); this.options.onUpdate?.();
+    }
     return result.ok;
   }
   public refresh(): void { const input = this.options.input; input.type = this.options.native === true ? 'date' : 'text'; input.inputMode = this.options.native === true ? '' : 'numeric'; input.placeholder = this.options.native === true ? '' : 'YYYY-MM-DD'; input.required = this.options.required ?? this.options.policies?.required ?? false; setInteractionAttributes(input, this.options, { native: true, readOnly: true }); if (this.options.label !== undefined) input.setAttribute('aria-label', this.options.label); this.#binding.render(); }

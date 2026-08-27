@@ -183,6 +183,7 @@ interface Context {
   periodAvailable(value: CalendarMonthValue | PickerYearValue): boolean;
 }
 const key = Symbol('SectileDatePickerRoot');
+const noPendingPickerValue = Symbol('no-pending-picker-value');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
 export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
@@ -237,10 +238,14 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => runtimeProps.open),
         highlighted: useControlledStateInvariant(`${kind}PickerRoot`, 'highlightedValue', () => runtimeProps.highlightedValue),
       };
+      const pendingValue = shallowRef<PickerValue | typeof noPendingPickerValue>(noPendingPickerValue);
       const state = computed<PickerRootSlotProps>(() => {
         const highlighted = runtimeProps.highlightedValue ?? localHighlight.value;
+        const value = controlled.value && pendingValue.value !== noPendingPickerValue
+          ? pendingValue.value
+          : runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : localValue.value;
         return Object.freeze({
-          value: runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : localValue.value,
+          value,
           highlightedValue: highlighted, open: runtimeProps.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
           view: localView.value, viewMode: localViewMode.value, disabled: runtimeProps.disabled, readonly: runtimeProps.readonly,
         });
@@ -289,7 +294,11 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           ...(controlled.value ? { value: runtimeProps.modelValue } : { defaultValue: localValue.value }),
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
-          onValueChange: (value: PickerValue) => { localValue.value = value; emit('update:modelValue', value as PickerValueFor<Kind>); },
+          onValueChange: (value: PickerValue) => {
+            localValue.value = value;
+            if (controlled.value) pendingValue.value = value;
+            emit('update:modelValue', value as PickerValueFor<Kind>);
+          },
           onHighlightedValueChange: (value: DateValue) => { localHighlight.value = value; emit('update:highlightedValue', value); },
           onUpdate: refresh,
         };
@@ -412,8 +421,9 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
         ) localHighlight.value = value;
         connect();
       });
-      watch([() => runtimeProps.modelValue, () => runtimeProps.open, () => runtimeProps.highlightedValue], () => {
+      watch([() => runtimeProps.modelValue, () => runtimeProps.open, () => runtimeProps.highlightedValue], (values, previousValues) => {
         if (connection.value === undefined) return;
+        if (values[0] !== previousValues[0]) pendingValue.value = noPendingPickerValue;
         const result = connection.value.syncControlledValues({
           ...(controlled.value ? { value: runtimeProps.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: runtimeProps.open } : {}),
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : {}),

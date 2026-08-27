@@ -2,11 +2,12 @@ import { unwrap } from '@sectile/core/result';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { type DateRange, type DateValue } from '@sectile/temporal/date-field';
+import { formatDateValue, type DateRange, type DateValue } from '@sectile/temporal/date-field';
 import { applyDateRangeFieldEvent, tryCreateDateRangeFieldState, type DateRangeFieldCommand, type DateRangeFieldEndpoint, type DateRangeFieldEvent, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/temporal/date-range-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
 import { toTextEvent, type TextInput } from './text.js';
 
 export interface DateRangeFieldOptions {
@@ -65,7 +66,10 @@ class DOMDateRangeField implements DateRangeFieldConnection {
   public syncControlledValues(values: DateRangeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateRangeFieldState>> {
     if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.start !== (values.startInputState !== undefined) || this.#controlled.end !== (values.endInputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled date range field values must preserve their construction-time shape.' } };
     const current = this.getSnapshot().state; const value = this.#controlled.value ? values.value as DateRange | null : current.value;
-    const result = this.#runtime.replace(tryCreateDateRangeFieldState({ value, ...optionalInputState('startInputState', this.#controlled.start ? values.startInputState : current.start.inputState), ...optionalInputState('endInputState', this.#controlled.end ? values.endInputState : current.end.inputState), active: current.active }));
+    const startValue = value?.start ?? null; const endValue = value?.end ?? null;
+    const startInputState = this.#controlled.start ? values.startInputState : synchronizeControlledFieldInput(synchronizeFieldInputSelection(current.start.inputState, this.#options.startInput), current.start.value === null ? '' : formatDateValue(current.start.value), startValue === null ? '' : formatDateValue(startValue));
+    const endInputState = this.#controlled.end ? values.endInputState : synchronizeControlledFieldInput(synchronizeFieldInputSelection(current.end.inputState, this.#options.endInput), current.end.value === null ? '' : formatDateValue(current.end.value), endValue === null ? '' : formatDateValue(endValue));
+    const result = this.#runtime.replace(tryCreateDateRangeFieldState({ value, ...optionalInputState('startInputState', startInputState), ...optionalInputState('endInputState', endInputState), active: current.active }));
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); } return result;
   }
   public handleEvent(event: DateRangeFieldEvent): boolean { const result = this.#runtime.handle(event); if (typeof event === 'object' && event.type === 'field') setFieldValidity(this.#input(event.endpoint), result); if (result.ok) { for (const command of result.commands) { if (command.type === 'range-committed') this.#options.onValueChange?.(command.value); if (command.type === 'focus-endpoint') this.#input(command.endpoint).focus(); } this.refresh(); this.#options.onUpdate?.(); } return result.ok; }

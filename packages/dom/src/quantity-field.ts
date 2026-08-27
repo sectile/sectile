@@ -16,6 +16,7 @@ import { sameTextEditingState, type TextEditingState } from '@sectile/core/text'
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
 import { toTextEvent, type TextInput } from './text.js';
 import {
   createImperialUnitSystem,
@@ -184,11 +185,31 @@ class DOMQuantityField implements QuantityFieldConnection {
       return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled quantity field values must preserve their construction-time shape.' } };
     }
     const state = this.getSnapshot().state;
+    const quantity = this.#quantityControlled ? values.quantity as QuantityValue | null : state.quantity;
+    const displayUnit = this.#displayUnitControlled ? values.displayUnit as string : state.displayUnit;
+    const previousCommitted = tryCreateQuantityFieldState(
+      this.#options.policies,
+      state.quantity,
+      state.displayUnit,
+    );
+    if (!previousCommitted.ok) return previousCommitted;
+    const nextCommitted = tryCreateQuantityFieldState(
+      this.#options.policies,
+      quantity,
+      displayUnit,
+    );
+    if (!nextCommitted.ok) return nextCommitted;
     const result = this.#runtime.replace(tryCreateQuantityFieldState(
       this.#options.policies,
-      this.#quantityControlled ? values.quantity as QuantityValue | null : state.quantity,
-      this.#displayUnitControlled ? values.displayUnit as string : state.displayUnit,
-      this.#inputControlled ? values.inputState as TextEditingState : state.inputState,
+      quantity,
+      displayUnit,
+      this.#inputControlled
+        ? values.inputState as TextEditingState
+        : synchronizeControlledFieldInput(
+          synchronizeFieldInputSelection(state.inputState, this.#options.input),
+          previousCommitted.value.inputState.snapshot.text,
+          nextCommitted.value.inputState.snapshot.text,
+        ),
     ));
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); }
     return result;

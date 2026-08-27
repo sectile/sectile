@@ -13,6 +13,8 @@ import {
 import { useNativeInputFormControl } from './form-control.js';
 import { useControlledStateInvariant } from './controlled-state.js';
 
+const noPendingNativeFieldValue = Symbol('no-pending-native-field-value');
+
 export interface NativeFieldConnection<Value> {
   getSnapshot(): { readonly revision: number };
   getText(): string;
@@ -81,6 +83,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       const participation = useNativeInputFormControl(input);
       const connection = shallowRef<NativeFieldConnection<Value>>();
       const controlled = useControlledStateInvariant(config.name, 'modelValue', () => props.modelValue);
+      const pendingValue = shallowRef<Value | null | typeof noPendingNativeFieldValue>(noPendingNativeFieldValue);
 
       const connect = (preserved?: Value | null): void => {
         if (input.value === undefined) return;
@@ -96,7 +99,10 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           required: props.required,
           ...(props.label === undefined ? {} : { label: props.label }),
           native: props.native,
-          onValueChange: (value) => emit('update:modelValue', value),
+          onValueChange: (value) => {
+            if (controlled) pendingValue.value = value;
+            emit('update:modelValue', value);
+          },
           onUpdate: () => {
             if (connection.value !== undefined) void connection.value.getSnapshot().revision;
           },
@@ -108,6 +114,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       onBeforeUnmount(() => connection.value?.disconnect());
       watch(() => props.modelValue, (value) => {
         if (!controlled || value === undefined || connection.value === undefined) return;
+        pendingValue.value = noPendingNativeFieldValue;
         connection.value.syncControlledValues({ value: value as Value | null });
       });
       watch(
@@ -132,7 +139,9 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         'aria-readonly': String(props.readonly),
         'aria-label': props.label,
         value: (() => {
-          const value = controlled ? props.modelValue : props.defaultValue;
+          const value = controlled && pendingValue.value !== noPendingNativeFieldValue
+            ? pendingValue.value
+            : controlled ? props.modelValue : props.defaultValue;
           return value === null || value === undefined ? '' : config.formatValue(value as Value);
         })(),
       }, participation.controlProps.value));

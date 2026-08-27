@@ -85,7 +85,7 @@ class DOMDatePicker implements DatePickerConnection {
     this.#position = createPickerPosition(options.root, options.trigger, options);
     this.#field = options.input === undefined ? null : createDateField({
       input: options.input,
-      defaultValue: runtime.getSnapshot().state.value,
+      value: runtime.getSnapshot().state.value,
       policies: {
         ...(options.policies?.min === undefined ? {} : { min: options.policies.min }),
         ...(options.policies?.max === undefined ? {} : { max: options.policies.max }),
@@ -96,7 +96,8 @@ class DOMDatePicker implements DatePickerConnection {
       ...(options.required === undefined ? {} : { required: options.required }),
       ...(options.label === undefined ? {} : { label: options.label }),
       onValueChange: (value) => {
-        if (!this.#syncingField) this.handleEvent({ type: 'set-value', value });
+        if (!this.#syncingField) return this.handleEvent({ type: 'set-value', value });
+        return true;
       },
     });
     options.trigger.addEventListener('click', this.#trigger);
@@ -124,7 +125,7 @@ class DOMDatePicker implements DatePickerConnection {
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     if (this.#field !== null && compareNullable(this.#field.getValue(), state.value) !== 0) {
       this.#syncingField = true;
-      this.#field.handleEvent({ type: 'set-value', value: state.value });
+      this.#field.syncControlledValues({ value: state.value });
       this.#syncingField = false;
     }
     this.#layer.sync();

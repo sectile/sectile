@@ -4,6 +4,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   applyDateTimeFieldEvent,
+  formatDateTimeValue,
   tryCreateDateTimeFieldState,
   type DateTimeFieldCommand,
   type DateTimeFieldEvent,
@@ -14,6 +15,7 @@ import {
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from './internal/interaction.js';
 import { DOMTextElementBinding } from './internal/text-element.js';
+import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from './internal/controlled-field-input.js';
 import { toTextEvent, type TextInput } from './text.js';
 
 export { formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
@@ -31,7 +33,7 @@ export interface DateTimeFieldOptions {
   readonly required?: boolean;
   readonly label?: string;
   readonly native?: boolean;
-  readonly onValueChange?: (value: DateTimeValue | null) => void;
+  readonly onValueChange?: (value: DateTimeValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
 }
@@ -182,9 +184,17 @@ class DOMDateTimeField implements DateTimeFieldConnection {
       };
     }
     const state = this.getSnapshot().state;
+    const value = this.valueControlled ? values.value as DateTimeValue | null : state.value;
+    const inputState = this.inputControlled
+      ? values.inputState as TextEditingState
+      : synchronizeControlledFieldInput(
+        synchronizeFieldInputSelection(state.inputState, this.options.input),
+        state.value === null ? '' : formatDateTimeValue(state.value),
+        value === null ? '' : formatDateTimeValue(value),
+      );
     const result = this.runtime.replace(tryCreateDateTimeFieldState(
-      this.valueControlled ? values.value as DateTimeValue | null : state.value,
-      this.inputControlled ? values.inputState as TextEditingState : state.inputState,
+      value,
+      inputState,
     ));
     if (result.ok) {
       this.refresh();
@@ -194,11 +204,18 @@ class DOMDateTimeField implements DateTimeFieldConnection {
   }
 
   public handleEvent(event: DateTimeFieldEvent): boolean {
+    const previous = this.getSnapshot();
     const result = this.runtime.handle(event);
     setFieldValidity(this.options.input, result);
     if (result.ok) {
       for (const command of result.commands) {
-        if (command.type === 'value-committed') this.options.onValueChange?.(command.value);
+        if (command.type === 'value-committed' && this.options.onValueChange?.(command.value) === false) {
+          this.runtime.replace({ ok: true, value: previous.state });
+          this.refresh();
+          setFieldValidity(this.options.input, { ok: false, error: { message: 'The parent control rejected the date-time value.' } });
+          this.options.onUpdate?.();
+          return false;
+        }
       }
       this.refresh();
       this.options.onUpdate?.();

@@ -1365,6 +1365,34 @@ function exactScenarios(source: string, names: readonly string[]): Readonly<Reco
   return Object.freeze(Object.fromEntries(names.map((name) => [name, source])));
 }
 
+function controlledTemporalSource(
+  component: string,
+  initialValue: string,
+  transform?: (source: string) => string,
+): string {
+  const source = requiredCatalogSource(component)
+    .replace('<script setup lang="ts">\n', '<script setup lang="ts">\nimport { ref } from \'vue\'\n')
+    .replace(`:default-value="${initialValue}"`, 'v-model="value"')
+    .replace('\n</script>', `\n\nconst value = ref(${initialValue})\n</script>`);
+  return transform?.(source) ?? source;
+}
+
+function controlledDateTimeRangeSource(source: string): string {
+  return source
+    .replace(
+      'DateTimeRangePickerStartDateTimeInput, DateTimeRangePickerEndDateTimeInput',
+      'DateTimeRangePickerStartDateInput, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndDateInput, DateTimeRangePickerEndTimeInput',
+    )
+    .replace(
+      '<DateTimeRangePickerStartDateTimeInput class="catalog-input" aria-label="Start date and time" />',
+      '<span><DateTimeRangePickerStartDateInput class="catalog-input" aria-label="Start date" /><DateTimeRangePickerStartTimeInput class="catalog-input" aria-label="Start time" /></span>',
+    )
+    .replace(
+      '<DateTimeRangePickerEndDateTimeInput class="catalog-input" aria-label="End date and time" />',
+      '<span><DateTimeRangePickerEndDateInput class="catalog-input" aria-label="End date" /><DateTimeRangePickerEndTimeInput class="catalog-input" aria-label="End time" /></span>',
+    );
+}
+
 function requiredCatalogSource(component: string): string {
   const source = catalogCode[component];
   if (source === undefined) throw new Error(`Missing catalog Vue source: ${component}`);
@@ -1464,15 +1492,15 @@ const scenarioCode: Readonly<Record<string, Readonly<Record<string, string>>>> =
   carousel: exactScenarios(requiredCatalogSource('carousel'), ['wrapping', 'bounded', 'paused', 'controlled']),
   'checkbox-group': exactScenarios(requiredCatalogSource('checkbox-group'), ['release-channels', 'disabled-choice', 'controlled']),
   combobox: exactScenarios(requiredCatalogSource('combobox'), ['prefix', 'contains', 'ime', 'controlled']),
-  'date-time-picker': exactScenarios(requiredCatalogSource('date-time-picker'), ['schedule', 'morning', 'controlled']),
-  'date-time-range-picker': exactScenarios(requiredCatalogSource('date-time-range-picker'), ['maintenance', 'office-hours', 'controlled']),
-  'date-picker': exactScenarios(requiredCatalogSource('date-picker'), ['single', 'weekdays', 'controlled']),
-  'date-range-picker': exactScenarios(requiredCatalogSource('date-range-picker'), ['booking', 'bounded', 'controlled']),
-  'range-calendar': exactScenarios(requiredCatalogSource('range-calendar'), ['booking', 'bounded', 'controlled']),
-  'month-picker': exactScenarios(requiredCatalogSource('month-picker'), ['billing-month', 'fiscal-year', 'controlled']),
-  'month-range-picker': exactScenarios(requiredCatalogSource('month-range-picker'), ['reporting-period', 'bounded', 'controlled']),
-  'year-picker': exactScenarios(requiredCatalogSource('year-picker'), ['graduation-year', 'planning-window', 'controlled']),
-  'year-range-picker': exactScenarios(requiredCatalogSource('year-range-picker'), ['roadmap-horizon', 'bounded', 'controlled']),
+  'date-time-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('date-time-picker'), ['schedule', 'morning']), controlled: controlledTemporalSource('date-time-picker', 'initialValue') }),
+  'date-time-range-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('date-time-range-picker'), ['maintenance', 'office-hours']), controlled: controlledTemporalSource('date-time-range-picker', 'initialRange', controlledDateTimeRangeSource) }),
+  'date-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('date-picker'), ['single', 'weekdays']), controlled: controlledTemporalSource('date-picker', 'initialDate') }),
+  'date-range-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('date-range-picker'), ['booking', 'bounded']), controlled: controlledTemporalSource('date-range-picker', 'initialRange') }),
+  'range-calendar': Object.freeze({ ...exactScenarios(requiredCatalogSource('range-calendar'), ['booking', 'bounded']), controlled: controlledTemporalSource('range-calendar', 'stay') }),
+  'month-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('month-picker'), ['billing-month', 'fiscal-year']), controlled: controlledTemporalSource('month-picker', 'billingMonth') }),
+  'month-range-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('month-range-picker'), ['reporting-period', 'bounded']), controlled: controlledTemporalSource('month-range-picker', 'reportingPeriod') }),
+  'year-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('year-picker'), ['graduation-year', 'planning-window']), controlled: controlledTemporalSource('year-picker', 'graduationYear') }),
+  'year-range-picker': Object.freeze({ ...exactScenarios(requiredCatalogSource('year-range-picker'), ['roadmap-horizon', 'bounded']), controlled: controlledTemporalSource('year-range-picker', 'roadmap') }),
   grid: exactScenarios(requiredCatalogSource('grid'), ['selectable', 'disabled-wrap', 'editable', 'controlled']),
   menubar: exactScenarios(requiredCatalogSource('menubar'), ['application', 'disabled-root', 'typeahead']),
   meter: Object.freeze({

@@ -46,6 +46,30 @@ test('DOM number field ignores Enter while IME composition is active', () => {
   assert.equal(field.getSnapshot().state.inputState.snapshot.text, '12');
 });
 
+test('controlled DOM number field rebases clean text without replacing a draft or composition', () => {
+  const cleanInput = new FakeInput();
+  const clean = createNumberField({ input: cleanInput, value: '12' });
+  cleanInput.setSelectionRange(0, 2);
+  assert.equal(clean.syncControlledValues({ value: '34' }).ok, true);
+  assert.equal(cleanInput.value, '34');
+  assert.deepEqual([cleanInput.selectionStart, cleanInput.selectionEnd], [0, 2]);
+
+  const draftInput = new FakeInput();
+  const draft = createNumberField({ input: draftInput, value: '12' });
+  draftInput.setSelectionRange(0, 2);
+  draftInput.emit('beforeinput', beforeInput('1+'));
+  assert.equal(draft.syncControlledValues({ value: '34' }).ok, true);
+  assert.equal(draftInput.value, '1+');
+
+  draftInput.emit('compositionstart', { data: '' });
+  draftInput.emit('compositionupdate', { data: '한' });
+  const composing = draft.getSnapshot().state.inputState;
+  assert.notEqual(composing.composition, null);
+  assert.equal(draft.syncControlledValues({ value: '56' }).ok, true);
+  assert.deepEqual(draft.getSnapshot().state.inputState, composing);
+  assert.equal(draftInput.attributes.get('aria-invalid'), 'false');
+});
+
 function keyboard(key, isComposing = false) { return { key, isComposing, preventDefault() {} }; }
 function beforeInput(data) { return { inputType: 'insertText', data, cancelable: true, isComposing: false, preventDefault() {} }; }
 class FakeInput {

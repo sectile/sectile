@@ -23,6 +23,7 @@ const {
   DatePickerCell,
   DatePickerContent,
   DatePickerGrid,
+  DatePickerInput,
   DatePickerRoot,
   DatePickerTrigger,
 } = await import('../dist/date-picker.js');
@@ -38,18 +39,25 @@ const {
 const {
   DateTimePickerCell,
   DateTimePickerContent,
+  DateTimePickerDateInput,
+  DateTimePickerDateTimeInput,
   DateTimePickerGrid,
   DateTimePickerRoot,
+  DateTimePickerTimeInput,
   DateTimePickerTrigger,
 } = await import('../dist/date-time-picker.js');
 const {
   DateTimeRangePickerCell,
   DateTimeRangePickerContent,
   DateTimeRangePickerEndDateInput,
+  DateTimeRangePickerEndDateTimeInput,
+  DateTimeRangePickerEndTimeInput,
   DateTimeRangePickerGrid,
   DateTimeRangePickerMonthViewTrigger,
   DateTimeRangePickerRoot,
   DateTimeRangePickerStartDateInput,
+  DateTimeRangePickerStartDateTimeInput,
+  DateTimeRangePickerStartTimeInput,
   DateTimeRangePickerTrigger,
 } = await import('../dist/date-time-range-picker.js');
 const {
@@ -218,6 +226,160 @@ test('Vue calendar proposes controlled date state across month boundaries', asyn
   assert.deepEqual(value.value, { year: 2026, month: 9, day: 1 });
   assert.deepEqual(highlighted.value, { year: 2026, month: 9, day: 1 });
 
+  app.unmount();
+  host.remove();
+});
+
+test('Vue controlled date and date-time pickers preserve every stepped input segment', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const dateValue = ref({ year: 2026, month: 8, day: 18 });
+  const dateTimeValue = ref({
+    date: { year: 2026, month: 8, day: 18 },
+    time: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+  });
+  const rangeValue = ref({
+    start: {
+      date: { year: 2026, month: 8, day: 18 },
+      time: { hour: 9, minute: 30, second: 0, millisecond: 0 },
+    },
+    end: {
+      date: { year: 2026, month: 12, day: 21 },
+      time: { hour: 17, minute: 45, second: 0, millisecond: 0 },
+    },
+  });
+  const app = createApp({
+    render: () => h('div', [
+      h(DatePickerRoot, {
+        modelValue: dateValue.value,
+        defaultOpen: true,
+        position: false,
+        'onUpdate:modelValue': (value) => { dateValue.value = value; },
+      }, { default: () => [
+        h(DatePickerInput), h(DatePickerTrigger),
+        h(DatePickerContent, null, { default: () => h(DatePickerGrid) }),
+      ] }),
+      h(DateTimePickerRoot, {
+        modelValue: dateTimeValue.value,
+        defaultOpen: true,
+        position: false,
+        'onUpdate:modelValue': (value) => { dateTimeValue.value = value; },
+      }, { default: () => [
+        h(DateTimePickerDateTimeInput), h(DateTimePickerDateInput), h(DateTimePickerTimeInput),
+        h(DateTimePickerTrigger),
+        h(DateTimePickerContent, null, { default: () => h(DateTimePickerGrid) }),
+      ] }),
+      h(DateTimeRangePickerRoot, {
+        modelValue: rangeValue.value,
+        defaultOpen: true,
+        position: false,
+        'onUpdate:modelValue': (value) => { rangeValue.value = value; },
+      }, { default: () => [
+        h(DateTimeRangePickerStartDateInput), h(DateTimeRangePickerStartTimeInput),
+        h(DateTimeRangePickerEndDateInput), h(DateTimeRangePickerEndTimeInput),
+        h(DateTimeRangePickerTrigger),
+        h(DateTimeRangePickerContent, null, { default: () => h(DateTimeRangePickerGrid) }),
+      ] }),
+    ]),
+  });
+
+  app.mount(host);
+  await settle();
+  const step = async (selector, selection) => {
+    const input = host.querySelector(selector);
+    assert.ok(input, selector);
+    input.focus();
+    input.setSelectionRange(selection[0], selection[1]);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await settle();
+    assert.deepEqual([input.selectionStart, input.selectionEnd], selection, selector);
+  };
+
+  await step('[data-part="input"]', [5, 7]);
+  await step('[data-part="date-time-input"]', [5, 7]);
+  await step('[data-part="date-input"]', [5, 7]);
+  await step('[data-part="time-input"]', [0, 2]);
+  await step('[data-part="start-date-input"]', [5, 7]);
+  await step('[data-part="start-time-input"]', [0, 2]);
+  await step('[data-part="end-date-input"]', [5, 7]);
+  await step('[data-part="end-time-input"]', [0, 2]);
+
+  app.unmount();
+  host.remove();
+});
+
+test('Vue controlled picker retains a pending field proposal until delayed owner sync', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const value = ref({ year: 2026, month: 8, day: 18 });
+  const open = ref(true);
+  let proposal;
+  const app = createApp({
+    render: () => h(DatePickerRoot, {
+      modelValue: value.value,
+      open: open.value,
+      position: false,
+      'onUpdate:modelValue': (next) => { proposal = next; },
+    }, { default: () => [
+      h(DatePickerInput), h(DatePickerTrigger),
+      h(DatePickerContent, null, { default: () => h(DatePickerGrid) }),
+    ] }),
+  });
+
+  app.mount(host);
+  await settle();
+  const input = host.querySelector('[data-part="input"]');
+  input.setSelectionRange(5, 7);
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+  await settle();
+  assert.equal(input.value, '2026-09-18');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+  assert.deepEqual(value.value, { year: 2026, month: 8, day: 18 });
+
+  open.value = false;
+  await settle();
+  assert.equal(input.value, '2026-09-18');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+
+  value.value = proposal;
+  await settle();
+  assert.equal(input.value, '2026-09-18');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+  app.unmount();
+  host.remove();
+});
+
+test('Vue range picker display inputs remain read-only after DOM connection refresh', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h('div', [
+      h(DateRangePickerRoot, {
+        defaultValue: { start: { year: 2026, month: 8, day: 18 }, end: { year: 2026, month: 8, day: 21 } },
+        defaultOpen: true,
+        position: false,
+      }, { default: () => [
+        h(DateRangePickerStartInput), h(DateRangePickerEndInput), h(DateRangePickerTrigger),
+        h(DateRangePickerContent, null, { default: () => h(DateRangePickerGrid) }),
+      ] }),
+      h(DateTimeRangePickerRoot, {
+        defaultValue: { start, end },
+        defaultOpen: true,
+        position: false,
+      }, { default: () => [
+        h(DateTimeRangePickerStartDateTimeInput), h(DateTimeRangePickerEndDateTimeInput),
+        h(DateTimeRangePickerTrigger),
+        h(DateTimeRangePickerContent, null, { default: () => h(DateTimeRangePickerGrid) }),
+      ] }),
+    ]),
+  });
+
+  app.mount(host);
+  await settle();
+  for (const input of host.querySelectorAll('[data-part="start-input"], [data-part="end-input"], [data-part="start-date-time-input"], [data-part="end-date-time-input"]')) {
+    assert.equal(input.readOnly, true, input.dataset.part);
+    assert.equal(input.getAttribute('aria-readonly'), 'true', input.dataset.part);
+  }
   app.unmount();
   host.remove();
 });

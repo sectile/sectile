@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDateRange, createDateValue, formatDateValue } from '@sectile/temporal/date-field';
 import { createTimeValue, formatTimeValue } from '@sectile/temporal/time-field';
+import { createTimeRange } from '@sectile/temporal/time-range-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
 import { createDateField } from '../dist/date-field.js';
 import { createDateRangeField } from '../dist/date-range-field.js';
@@ -21,6 +22,94 @@ test('DOM date field projects native interaction and caret segment stepping', ()
   assert.equal(formatDateValue(field.getValue()), '2024-02-29');
   assert.equal(input.inputMode, 'numeric');
   assert.equal(input.placeholder, 'YYYY-MM-DD');
+});
+
+test('controlled DOM civil fields rebase clean inputs and preserve active selections', () => {
+  const dateInput = new FakeInput();
+  const dateField = createDateField({ input: dateInput, value: createDateValue(2026, 8, 18) });
+  dateInput.setSelectionRange(5, 7);
+  dateField.syncControlledValues({ value: createDateValue(2026, 9, 18) });
+  assert.equal(dateInput.value, '2026-09-18');
+  assert.deepEqual([dateInput.selectionStart, dateInput.selectionEnd], [5, 7]);
+
+  const timeInput = new FakeInput();
+  const timeField = createTimeField({ input: timeInput, value: createTimeValue(9, 30) });
+  timeInput.setSelectionRange(0, 2);
+  timeField.syncControlledValues({ value: createTimeValue(10, 30) });
+  assert.equal(timeInput.value, '10:30');
+  assert.deepEqual([timeInput.selectionStart, timeInput.selectionEnd], [0, 2]);
+
+  const dateTimeInput = new FakeInput();
+  const dateTimeField = createDateTimeField({
+    input: dateTimeInput,
+    value: createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30)),
+  });
+  dateTimeInput.setSelectionRange(5, 7);
+  dateTimeField.syncControlledValues({
+    value: createDateTimeValue(createDateValue(2026, 9, 18), createTimeValue(9, 30)),
+  });
+  assert.equal(dateTimeInput.value, '2026-09-18T09:30');
+  assert.deepEqual([dateTimeInput.selectionStart, dateTimeInput.selectionEnd], [5, 7]);
+});
+
+test('controlled DOM civil fields preserve active drafts during external value sync', () => {
+  const input = new FakeInput();
+  const field = createDateField({ input, value: createDateValue(2026, 8, 18) });
+  replaceInput(input, '2026-0');
+  field.syncControlledValues({ value: createDateValue(2026, 9, 18) });
+  assert.equal(input.value, '2026-0');
+  assert.equal(field.getText(), '2026-0');
+  assert.equal(formatDateValue(field.getValue()), '2026-09-18');
+});
+
+test('controlled DOM range fields rebase clean endpoints and preserve selected segments', () => {
+  const startDateInput = new FakeInput();
+  const endDateInput = new FakeInput();
+  const dateField = createDateRangeField({
+    startInput: startDateInput,
+    endInput: endDateInput,
+    value: createDateRange(createDateValue(2026, 8, 18), createDateValue(2026, 8, 21)),
+  });
+  startDateInput.setSelectionRange(5, 7);
+  endDateInput.setSelectionRange(8, 10);
+  dateField.syncControlledValues({
+    value: createDateRange(createDateValue(2026, 9, 18), createDateValue(2026, 9, 22)),
+  });
+  assert.equal(startDateInput.value, '2026-09-18');
+  assert.equal(endDateInput.value, '2026-09-22');
+  assert.deepEqual([startDateInput.selectionStart, startDateInput.selectionEnd], [5, 7]);
+  assert.deepEqual([endDateInput.selectionStart, endDateInput.selectionEnd], [8, 10]);
+
+  const startTimeInput = new FakeInput();
+  const endTimeInput = new FakeInput();
+  const timeField = createTimeRangeField({
+    startInput: startTimeInput,
+    endInput: endTimeInput,
+    value: createTimeRange(createTimeValue(9, 30), createTimeValue(17, 45)),
+  });
+  startTimeInput.setSelectionRange(0, 2);
+  endTimeInput.setSelectionRange(3, 5);
+  timeField.syncControlledValues({
+    value: createTimeRange(createTimeValue(10, 30), createTimeValue(17, 50)),
+  });
+  assert.equal(startTimeInput.value, '10:30');
+  assert.equal(endTimeInput.value, '17:50');
+  assert.deepEqual([startTimeInput.selectionStart, startTimeInput.selectionEnd], [0, 2]);
+  assert.deepEqual([endTimeInput.selectionStart, endTimeInput.selectionEnd], [3, 5]);
+});
+
+test('controlled DOM civil field sync does not disturb active composition metadata', () => {
+  const input = new FakeInput();
+  const field = createDateField({ input, value: createDateValue(2026, 8, 18) });
+  input.setSelectionRange(5, 7);
+  input.emit('compositionstart', { data: '' });
+  input.emit('compositionupdate', { data: '구' });
+  const composing = field.getSnapshot().state.inputState;
+  assert.notEqual(composing.composition, null);
+
+  field.syncControlledValues({ value: createDateValue(2026, 9, 18) });
+  assert.deepEqual(field.getSnapshot().state.inputState, composing);
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
 test('DOM date range field keeps endpoint drafts independent and commits an ordered range', () => {
@@ -114,6 +203,46 @@ test('DOM date picker composes an editable date field with calendar selection', 
 
   assert.equal(formatDateValue(picker.getSnapshot().state.value), '2024-02-12');
   assert.equal(input.readOnly, false);
+});
+
+test('controlled DOM date picker preserves the stepped segment until owner sync', () => {
+  const input = new FakeInput();
+  let value = createDateValue(2026, 8, 18);
+  const picker = createDatePicker({
+    root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(), input,
+    value,
+    onValueChange: (next) => { value = next; },
+  });
+
+  input.setSelectionRange(5, 7);
+  input.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(input.value, '2026-09-18');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+  assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-08-18');
+
+  picker.syncControlledValues({ value });
+  assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-09-18');
+  assert.deepEqual([input.selectionStart, input.selectionEnd], [5, 7]);
+});
+
+test('controlled DOM picker preserves active field composition during external value sync', () => {
+  const input = new FakeInput();
+  const picker = createDatePicker({
+    root: new FakeElement(),
+    grid: new FakeElement(),
+    trigger: new FakeElement(),
+    input,
+    value: createDateValue(2026, 8, 18),
+  });
+  input.setSelectionRange(5, 7);
+  input.emit('compositionstart', { data: '' });
+  input.emit('compositionupdate', { data: '구' });
+
+  assert.equal(picker.syncControlledValues({ value: createDateValue(2026, 9, 18) }).ok, true);
+  input.emit('compositionupdate', { data: '구월' });
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
+  input.emit('compositionend', { data: '구월' });
+  assert.equal(input.attributes.get('aria-invalid'), 'false');
 });
 
 test('DOM date picker projects unavailable dates as disabled cells', () => {
@@ -211,6 +340,46 @@ test('DOM date-time picker keeps the wall-clock time when a calendar date is sel
   assert.equal(picker.getSnapshot().state.calendar.open, true);
 });
 
+test('controlled DOM date-time picker preserves every editable segment across owner sync', () => {
+  const cases = [
+    ['dateTimeInput', createDateTimeField, [5, 7], '2026-09-18T09:30'],
+    ['dateInput', createDateField, [5, 7], '2026-09-18'],
+    ['timeInput', createTimeField, [0, 2], '10:30'],
+  ];
+  for (const [part, _factory, selection, expected] of cases) {
+    const input = new FakeInput();
+    let value = createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30));
+    const picker = createDateTimePicker({
+      root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+      [part]: input,
+      value,
+      onValueChange: (next) => { value = next; },
+    });
+    input.setSelectionRange(selection[0], selection[1]);
+    input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(input.value, expected, part);
+    assert.deepEqual([input.selectionStart, input.selectionEnd], selection, part);
+    picker.syncControlledValues({ value });
+    assert.deepEqual([input.selectionStart, input.selectionEnd], selection, `${part} after sync`);
+  }
+});
+
+test('date-time picker rolls back child values rejected by parent policies', () => {
+  const dateInput = new FakeInput();
+  const initial = createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30));
+  const picker = createDateTimePicker({
+    root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(), dateInput,
+    value: initial,
+    policies: { unavailable: (value) => value.date.month === 9 },
+  });
+  dateInput.setSelectionRange(5, 7);
+  dateInput.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(dateInput.value, '2026-08-18');
+  assert.deepEqual([dateInput.selectionStart, dateInput.selectionEnd], [5, 7]);
+  assert.equal(dateInput.attributes.get('aria-invalid'), 'true');
+  assert.equal(formatDateTimeValue(picker.getSnapshot().state.value), formatDateTimeValue(initial));
+});
+
 test('DOM date-time range picker updates independent endpoint times', () => {
   const initial = createDateTimeRange(
     createDateTimeValue(createDateValue(2026, 8, 25), createTimeValue(9, 0)),
@@ -231,6 +400,77 @@ test('DOM date-time range picker updates independent endpoint times', () => {
     formatDateTimeRange(picker.getSnapshot().state.value),
     '2026-08-25T10:15/2026-08-28T18:45',
   );
+});
+
+test('controlled DOM date-time range picker preserves all split endpoint segments', () => {
+  const start = createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30));
+  const end = createDateTimeValue(createDateValue(2026, 12, 21), createTimeValue(17, 45));
+  const cases = [
+    ['startDateInput', [5, 7], '2026-09-18'],
+    ['startTimeInput', [0, 2], '10:30'],
+    ['endDateInput', [5, 7], '2027-01-21'],
+    ['endTimeInput', [0, 2], '18:45'],
+  ];
+  for (const [part, selection, expected] of cases) {
+    const input = new FakeInput();
+    let value = createDateTimeRange(start, end);
+    const picker = createDateTimeRangePicker({
+      root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+      [part]: input,
+      value,
+      onValueChange: (next) => { value = next; },
+    });
+    input.setSelectionRange(selection[0], selection[1]);
+    input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(input.value, expected, part);
+    assert.deepEqual([input.selectionStart, input.selectionEnd], selection, part);
+    picker.syncControlledValues({ value });
+    assert.deepEqual([input.selectionStart, input.selectionEnd], selection, `${part} after sync`);
+  }
+});
+
+test('date-time range picker rolls back inverted split endpoint proposals', () => {
+  const startDateInput = new FakeInput();
+  const value = createDateTimeRange(
+    createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30)),
+    createDateTimeValue(createDateValue(2026, 8, 21), createTimeValue(17, 45)),
+  );
+  const picker = createDateTimeRangePicker({
+    root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+    startDateInput,
+    value,
+  });
+  startDateInput.setSelectionRange(5, 7);
+  startDateInput.emit('keydown', keyboard('ArrowUp'));
+  assert.equal(startDateInput.value, '2026-08-18');
+  assert.deepEqual([startDateInput.selectionStart, startDateInput.selectionEnd], [5, 7]);
+  assert.equal(startDateInput.attributes.get('aria-invalid'), 'true');
+  assert.equal(formatDateTimeRange(picker.getSnapshot().state.value), formatDateTimeRange(value));
+});
+
+test('picker display-only range inputs stay natively read-only', () => {
+  const startInput = new FakeInput(); const endInput = new FakeInput();
+  createDateRangePicker({
+    root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+    startInput, endInput,
+    defaultValue: createDateRange(createDateValue(2026, 8, 18), createDateValue(2026, 8, 21)),
+  });
+  assert.equal(startInput.readOnly, true);
+  assert.equal(endInput.readOnly, true);
+  assert.equal(startInput.attributes.get('aria-readonly'), 'true');
+
+  const startDateTimeInput = new FakeInput(); const endDateTimeInput = new FakeInput();
+  createDateTimeRangePicker({
+    root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
+    startDateTimeInput, endDateTimeInput,
+    defaultValue: createDateTimeRange(
+      createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30)),
+      createDateTimeValue(createDateValue(2026, 8, 21), createTimeValue(17, 45)),
+    ),
+  });
+  assert.equal(startDateTimeInput.readOnly, true);
+  assert.equal(endDateTimeInput.readOnly, true);
+  assert.equal(startDateTimeInput.attributes.get('aria-readonly'), 'true');
 });
 
 test('DOM date field exposes invalid drafts and restores the committed value on blur', () => {
