@@ -10,7 +10,7 @@ import {
   FormRoot,
   FormSubmit,
   FormSummary,
-  type FormSubmitHandler,
+  defineFormSubmission,
 } from '@sectile/vue/form';
 import { SwitchRoot, SwitchThumb } from '@sectile/vue/switch';
 import { TextField } from '@sectile/vue/text';
@@ -22,21 +22,6 @@ const props = defineProps<{
   readonly description: string;
   readonly scenario: 'profile' | 'notifications' | 'team-invite';
 }>();
-
-interface FormDemoValues {
-  readonly profile?: {
-    readonly displayName?: string;
-    readonly email?: string;
-  };
-  readonly notifications?: {
-    readonly channel?: string;
-    readonly digest?: string;
-  };
-  readonly invitation?: {
-    readonly email?: string;
-    readonly role?: string;
-  };
-}
 
 const revision = ref(0);
 const weeklyDigest = ref(true);
@@ -67,15 +52,16 @@ const panelCopy = computed(() => ({
   },
 })[props.scenario]);
 
-const submit: FormSubmitHandler = ({ values }) => {
-  const formValues = values as FormDemoValues;
-  savedMessage.value = props.scenario === 'profile'
-    ? `Saved ${formValues.profile?.displayName ?? 'profile'}`
-    : props.scenario === 'notifications'
-      ? 'Notification preferences saved'
-      : `Invitation sent to ${formValues.invitation?.email ?? 'teammate'}`;
-  revision.value += 1;
-};
+const submission = defineFormSubmission({
+  onSubmit: ({ formData }) => {
+    savedMessage.value = props.scenario === 'profile'
+      ? `Saved ${formData.get('profile.displayName') ?? 'profile'}`
+      : props.scenario === 'notifications'
+        ? 'Notification preferences saved'
+        : `Invitation sent to ${formData.get('invitation.email') ?? 'teammate'}`;
+    revision.value += 1;
+  },
+});
 </script>
 
 <template>
@@ -87,7 +73,7 @@ const submit: FormSubmitHandler = ({ values }) => {
     interaction="enabled"
     code=""
   >
-    <FormRoot v-slot="{ state }" class="form-demo" :on-submit="submit">
+    <FormRoot v-slot="{ state }" v-bind="submission" class="form-demo">
       <header class="form-demo__header">
         <div>
           <strong>{{ panelCopy.title }}</strong>

@@ -18,6 +18,62 @@ const hidden = document.querySelector('input[type="hidden"][name="pin"]');
 if (!(hidden instanceof HTMLInputElement) || hidden.value !== '1234') failures.push('hidden form control');
 const form = document.querySelector('#pin-form');
 if (!(form instanceof HTMLFormElement) || new FormData(form).get('pin') !== '1234') failures.push('native form submission');
+const coordinatedForm = document.querySelector('#browser-form');
+const nativeInput = document.querySelector('#browser-native-input');
+const sectileInput = document.querySelector('#browser-sectile-input');
+let formInvalidFocus = false;
+await nextTick();
+await nextTick();
+const externalInput = document.querySelector('#browser-external-input');
+if (!(coordinatedForm instanceof HTMLFormElement)) failures.push('Form hydration root');
+if (!(nativeInput instanceof HTMLInputElement)) failures.push('native Form field');
+if (!(sectileInput instanceof HTMLInputElement)) failures.push('Sectile Form field');
+if (!(externalInput instanceof HTMLInputElement) || externalInput.form !== coordinatedForm) {
+  failures.push('teleported Form field');
+}
+if (coordinatedForm instanceof HTMLFormElement) {
+  const initialFormData = new FormData(coordinatedForm);
+  if (initialFormData.get('native') !== 'native-default'
+    || initialFormData.get('sectile') !== 'sectile-default'
+    || initialFormData.get('external') !== 'external-default') {
+    failures.push('mixed FormData');
+  }
+}
+if (nativeInput instanceof HTMLInputElement
+  && sectileInput instanceof HTMLInputElement
+  && externalInput instanceof HTMLInputElement) {
+  nativeInput.value = 'native-changed';
+  nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  sectileInput.value = 'sectile-changed';
+  sectileInput.dispatchEvent(new Event('input', { bubbles: true }));
+  externalInput.value = 'external-changed';
+  externalInput.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('#browser-form-reset')?.click();
+  await nextTick();
+  if (nativeInput.value !== 'native-default'
+    || sectileInput.value !== 'sectile-default'
+    || externalInput.value !== 'external-default') {
+    failures.push('Form reset defaults');
+  }
+
+  nativeInput.value = '';
+  nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('#browser-form-submit')?.click();
+  await new Promise((resolveFrame) => requestAnimationFrame(() => resolveFrame()));
+  formInvalidFocus = document.activeElement === nativeInput;
+  if (!formInvalidFocus) failures.push('first invalid Form focus');
+
+  nativeInput.value = 'native-submitted';
+  nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+  document.querySelector('#browser-form-submit')?.click();
+  await nextTick();
+  const submission = document.querySelector('#browser-form-submission')?.textContent ?? '';
+  if (!submission.includes('native-submitted')
+    || !submission.includes('sectile-default')
+    || !submission.includes('external-default')) {
+    failures.push('managed Form submission');
+  }
+}
 if (document.querySelector('#reference-date')?.textContent !== '2026-8-26') failures.push('reference date');
 const meter = document.querySelector('[role="meter"][aria-label="Browser meter"]');
 const progress = document.querySelector('[role="progressbar"][aria-label="Browser progress"]');
@@ -60,6 +116,15 @@ const result = Object.freeze({
     progressValue: progress?.getAttribute('aria-valuenow') ?? null,
     groupOrder: Object.freeze([...group?.querySelectorAll('[role="meter"]') ?? []]
       .map((element) => element.getAttribute('data-id'))),
+  }),
+  form: Object.freeze({
+    hydrated: coordinatedForm instanceof HTMLFormElement,
+    mixed: coordinatedForm instanceof HTMLFormElement
+      ? Object.freeze([...new FormData(coordinatedForm).entries()])
+      : Object.freeze([]),
+    teleported: externalInput instanceof HTMLInputElement && externalInput.form === coordinatedForm,
+    invalidFocus: formInvalidFocus,
+    submission: document.querySelector('#browser-form-submission')?.textContent ?? '',
   }),
   tabularVirtual,
 });

@@ -1,4 +1,4 @@
-import { h, ref } from 'vue';
+import { Teleport, defineComponent, h, nextTick, onMounted, ref, shallowRef } from 'vue';
 import { CalendarRoot } from '../../dist/temporal.js';
 import { DialogContent, DialogRoot, DialogTrigger } from '../../dist/dialog.js';
 import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../../dist/disclosure.js';
@@ -12,11 +12,53 @@ import {
 } from '../../dist/meter-group.js';
 import { PinInputInput, PinInputRoot } from '../../dist/pin-input.js';
 import { ProgressRoot } from '../../dist/progress.js';
+import {
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormReset,
+  FormRoot,
+  FormSubmit,
+  defineFormSubmission,
+  useNativeInputFormControl,
+} from '../../dist/form.js';
+import { TextField } from '../../dist/text.js';
 
 export const referenceDate = Object.freeze({ year: 2026, month: 8, day: 26 });
 
+const ExternalFormControl = defineComponent({
+  name: 'BrowserExternalFormControl',
+  setup() {
+    const mounted = ref(false);
+    const element = shallowRef(null);
+    const participation = useNativeInputFormControl(element);
+    onMounted(() => {
+      mounted.value = true;
+      void nextTick(() => {
+        if (element.value === null) return;
+        element.value.defaultValue = 'external-default';
+        element.value.value = 'external-default';
+      });
+    });
+    return () => mounted.value
+      ? h(Teleport, { to: '#external-form-control' }, h('input', {
+          ...participation.controlProps.value,
+          id: 'browser-external-input',
+          ref: element,
+          form: 'browser-form',
+        }))
+      : null;
+  },
+});
+
 export function createHydrationFixture() {
   const updated = ref(false);
+  const submitted = ref('');
+  const submission = defineFormSubmission({
+    onSubmit: ({ formData }) => {
+      submitted.value = JSON.stringify(Object.fromEntries(formData));
+    },
+  });
   return {
     render: () => h(HostProvider, null, {
       default: () => h('main', { id: 'verification-root' }, [
@@ -56,6 +98,40 @@ export function createHydrationFixture() {
             ),
           }),
         ]),
+        h(FormRoot, { id: 'browser-form', ...submission }, {
+          default: () => [
+            h(FormField, { id: 'browser-native', name: 'native', required: true }, {
+              default: () => [
+                h(FormLabel, null, { default: () => 'Native value' }),
+                h('input', {
+                  id: 'browser-native-input',
+                  onVnodeMounted: ({ el }) => {
+                    el.defaultValue = 'native-default';
+                    el.value = 'native-default';
+                  },
+                }),
+                h(FormMessage),
+              ],
+            }),
+            h(FormField, { id: 'browser-sectile', name: 'sectile', required: true }, {
+              default: () => [
+                h(FormLabel, null, { default: () => 'Sectile value' }),
+                h(TextField, { id: 'browser-sectile-input', defaultValue: 'sectile-default' }),
+                h(FormMessage),
+              ],
+            }),
+            h(FormField, { id: 'browser-external', name: 'external', required: true }, {
+              default: () => [
+                h(FormLabel, null, { default: () => 'External value' }),
+                h(ExternalFormControl),
+                h(FormMessage),
+              ],
+            }),
+            h(FormReset, { id: 'browser-form-reset' }, { default: () => 'Reset form' }),
+            h(FormSubmit, { id: 'browser-form-submit' }, { default: () => 'Submit form' }),
+            h('output', { id: 'browser-form-submission' }, submitted.value),
+          ],
+        }),
         h(CalendarRoot, { referenceDate }, {
           default: ({ highlightedValue }) => h(
             'output',

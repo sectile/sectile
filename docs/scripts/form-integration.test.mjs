@@ -44,8 +44,9 @@ test('Form documentation exposes the optional package and host boundaries in bot
 });
 
 test('Form examples use static components and a single submission definition', async () => {
-  const [catalog, sources, generated, generatedKo, generator, componentData] = await Promise.all([
+  const [catalog, preview, sources, generated, generatedKo, generator, componentData] = await Promise.all([
     readDocs('.vitepress/theme/catalog-code.ts'),
+    readDocs('.vitepress/theme/components/FormCase.vue'),
     readDocs('.vitepress/theme/component-example-sources.ts'),
     readDocs('components/form.md'),
     readDocs('ko/components/form.md'),
@@ -53,12 +54,14 @@ test('Form examples use static components and a single submission definition', a
     readDocs('data/components.json'),
   ]);
 
-  for (const source of [catalog, generated, generatedKo, generator]) {
+  for (const source of [catalog, preview, generated, generatedKo, generator]) {
     assert.match(source, /defineFormSubmission/u);
     assert.doesNotMatch(source, /createTypedForm|createFormComponents|useFormComponents/u);
   }
   assert.match(catalog, /<FormRoot v-bind="(?:account|profile|notifications|invitation)Submission">/u);
   assert.doesNotMatch(catalog, /FormSchemaSubmitHandler|FormSubmitHandler|:on-submit=/u);
+  assert.match(preview, /<FormRoot[^>]+v-bind="submission"/u);
+  assert.doesNotMatch(preview, /FormSchemaSubmitHandler|FormSubmitHandler|:on-submit=/u);
   assert.match(sources, /if \(component === 'form'\)[\s\S]+vue: exactVueSource[\s\S]+dom: domExampleCodeFor/u);
   const form = JSON.parse(componentData).components.find((component) => component.id === 'form');
   assert.deepEqual(form.scenarios.terminal, []);

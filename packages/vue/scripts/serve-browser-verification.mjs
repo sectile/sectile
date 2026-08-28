@@ -29,6 +29,7 @@ const template = `<!doctype html>
   <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"></head>
   <body>
     <div id="app">${rendered}</div>
+    <div id="external-form-control"></div>
     <pre id="result">pending</pre>
     <script type="module" src="/client.mjs?wi=15e"></script>
   </body>
