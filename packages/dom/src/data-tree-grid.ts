@@ -34,7 +34,7 @@ export type DataTreeGridSnapshotChangeHandler = (snapshot: DataTreeGridState) =>
 export type DataTreeGridColumnSizeChangeHandler = (state: DataTreeGridColumnSizeState) => void;
 export type DataTreeGridColumnSizeState = TabularDOMColumnSizeState;
 export interface DataTreeGridControlledValues extends GridDOMControlledValues {}
-export interface DataTreeGridColumnHeaderOptions extends GridDOMColumnHeaderOptions {}
+export type DataTreeGridColumnHeaderOptions = GridDOMColumnHeaderOptions;
 export interface DataTreeGridRowOptions extends GridDOMRowOptions {}
 export interface DataTreeGridTreeRowOptions extends GridDOMRowOptions {}
 export interface DataTreeGridCellOptions extends GridDOMCellOptions {}

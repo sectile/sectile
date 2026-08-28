@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCalendar as createDOMCalendar } from '@sectile/dom/calendar';
+import { createCalendar as createDOMCalendar } from '@sectile/dom/temporal';
 import { createCalendar as createTerminalCalendar } from '@sectile/terminal/calendar';
 
 const INPUTS = [

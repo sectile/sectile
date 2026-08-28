@@ -3,7 +3,7 @@ import { ArrowRight, Clock3 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import {
   TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput, type TimeRange,
-} from '@sectile/vue/time-range-field';
+} from '@sectile/vue/temporal';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 import { formatDemoTimeRange } from '../temporal-demo-format.js';
@@ -24,7 +24,7 @@ const state = computed(() => ({ value: value.value, ownership: props.controlled 
 const displayValue = computed(() => formatDemoTimeRange(value.value));
 const code = computed(() => `<script setup lang="ts">
 import { ref } from 'vue'
-import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/time-range-field'
+import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/temporal'
 
 const hours = ref({ start: { hour: 9, minute: 30 }, end: { hour: 17, minute: 45 } })${props.stepped ? `
 const policies = { step: { minute: 15 } }` : ''}

@@ -8,7 +8,7 @@ import {
   useDataTable,
   useDataTableSource,
   type DataTableViewResponse,
-} from '@sectile/vue/data-table';
+} from '@sectile/vue/tabular';
 import { useDocsLocale } from '../locale.js';
 import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
 import DocsCheckbox from './DocsCheckbox.vue';
@@ -132,7 +132,7 @@ const statusIntent = (status: UserCells['status']) => status === 'active' ? 'suc
                   <DocsCheckbox :model-value="bulkSelectionValue(rowSelection, rows)" />
                 </DataTable.BulkSelectionControl>
               </th>
-              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
+              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
                 <DataTable.SortTrigger :column="column.id">
                   {{ copy.columns[index] }}
                   <ArrowUp v-if="direction(column.id) === 'ascending'" :size="14" aria-hidden="true" />

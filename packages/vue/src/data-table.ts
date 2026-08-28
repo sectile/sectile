@@ -247,7 +247,10 @@ export interface DataTableRootSlotProps<LeafCells extends object = TabularCellRe
 export interface DataTableRootExpose<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> { readonly controller: DataTableController<LeafCells, GroupCells>; refresh(): void }
 export interface DataTablePartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export type DataTableHeaderRowProps = DataTablePartProps;
-export interface DataTableColumnHeaderProps extends DataTablePartProps { readonly headerNodeID: TabularHeaderNodeID }
+export type DataTableColumnHeaderProps<Column extends string = string> = DataTablePartProps & (
+  | { readonly column: Column; readonly header?: never }
+  | { readonly header: TabularHeaderNodeID; readonly column?: never }
+);
 export interface DataTableSortTriggerProps<Column extends string = string> extends DataTablePartProps { readonly column: Column; readonly comparator?: string }
 export type DataTableFilterControlProps<Column extends string = string> = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: Column; readonly id: string; readonly predicate: string });
 export interface DataTableColumnResizeHandleProps<Column extends string = string> extends DataTablePartProps { readonly column: Column; readonly minSize?: number; readonly maxSize?: number }
@@ -271,7 +274,7 @@ export interface DataTableComponents<LeafCells extends object, GroupCells extend
   readonly Caption: TabularComponent<DataTableCaptionProps, DataTableCaptionSlotProps<LeafCells, GroupCells>>;
   readonly Header: TabularComponent<DataTableHeaderProps, DataTableHeaderSlotProps<LeafCells, GroupCells>>;
   readonly HeaderRow: TabularComponent<DataTableHeaderRowProps, DataTableHeaderRowSlotProps<LeafCells, GroupCells>>;
-  readonly ColumnHeader: TabularComponent<DataTableColumnHeaderProps, DataTableColumnHeaderSlotProps<LeafCells, GroupCells>>;
+  readonly ColumnHeader: TabularComponent<DataTableColumnHeaderProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableColumnHeaderSlotProps<LeafCells, GroupCells>>;
   readonly SortTrigger: TabularComponent<DataTableSortTriggerProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableSortTriggerSlotProps<LeafCells, GroupCells>>;
   readonly FilterControl: TabularComponent<DataTableFilterControlProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableFilterControlSlotProps<LeafCells, GroupCells>>;
   readonly ColumnResizeHandle: TabularComponent<DataTableColumnResizeHandleProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableColumnResizeHandleSlotProps<LeafCells, GroupCells>>;

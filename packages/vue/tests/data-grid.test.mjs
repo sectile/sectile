@@ -16,7 +16,7 @@ test('Vue DataGrid exposes only the bound grid component namespace', () => {
 });
 
 test('Vue DataGrid owns ARIA grid composition without a repeated controller prop', async () => {
-  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); const DataGrid = createDataGridComponents(controller); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, null, { default: () => [h(DataGrid.Header, null, () => h(DataGrid.HeaderRow, null, () => h(DataGrid.ColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataGrid.Body, null, { default: ({ row }) => h(DataGrid.Cell, { column: 'name' }, () => row.cells.name) })] }) }); } });
+  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); const DataGrid = createDataGridComponents(controller); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, null, { default: () => [h(DataGrid.Header, null, () => h(DataGrid.HeaderRow, null, () => h(DataGrid.ColumnHeader, { column: 'name' }, () => 'Name'))), h(DataGrid.Body, null, { default: ({ row }) => h(DataGrid.Cell, { column: 'name' }, () => row.cells.name) })] }) }); } });
   const html = await renderToString(app);
   assert.match(html, /role="grid"/);
   assert.match(html, /role="rowgroup"/);

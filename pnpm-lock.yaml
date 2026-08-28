@@ -170,13 +170,13 @@ importers:
       '@sectile/tabular':
         specifier: workspace:*
         version: link:../tabular
-      '@sectile/temporal':
-        specifier: workspace:*
-        version: link:../temporal
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
     devDependencies:
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:../temporal
       '@sectile/virtual':
         specifier: workspace:*
         version: link:../virtual
@@ -247,13 +247,13 @@ importers:
       '@sectile/dom':
         specifier: workspace:*
         version: link:../dom
+    devDependencies:
       '@sectile/tabular':
         specifier: workspace:*
         version: link:../tabular
       '@sectile/temporal':
         specifier: workspace:*
         version: link:../temporal
-    devDependencies:
       '@sectile/virtual':
         specifier: workspace:*
         version: link:../virtual

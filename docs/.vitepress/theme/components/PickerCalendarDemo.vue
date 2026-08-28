@@ -5,23 +5,23 @@ import {
   DatePickerCell, DatePickerGrid, DatePickerMonthCell, DatePickerMonthViewTrigger,
   DatePickerNextMonth, DatePickerNextWeek, DatePickerNextYear, DatePickerPreviousMonth,
   DatePickerPreviousWeek, DatePickerPreviousYear, DatePickerWeekViewTrigger, DatePickerYearViewTrigger,
-} from '@sectile/vue/date-picker';
+} from '@sectile/vue/temporal';
 import {
   DateRangePickerCell, DateRangePickerGrid, DateRangePickerMonthCell, DateRangePickerMonthViewTrigger,
   DateRangePickerNextMonth, DateRangePickerNextWeek, DateRangePickerNextYear, DateRangePickerPreviousMonth,
   DateRangePickerPreviousWeek, DateRangePickerPreviousYear, DateRangePickerWeekViewTrigger, DateRangePickerYearViewTrigger,
-} from '@sectile/vue/date-range-picker';
+} from '@sectile/vue/temporal';
 import {
   DateTimePickerCell, DateTimePickerGrid, DateTimePickerMonthCell, DateTimePickerMonthViewTrigger,
   DateTimePickerNextMonth, DateTimePickerNextWeek, DateTimePickerNextYear, DateTimePickerPreviousMonth,
   DateTimePickerPreviousWeek, DateTimePickerPreviousYear, DateTimePickerWeekViewTrigger, DateTimePickerYearViewTrigger,
   type DateTimePickerRootSlotProps,
-} from '@sectile/vue/date-time-picker';
+} from '@sectile/vue/temporal';
 import {
   DateTimeRangePickerCell, DateTimeRangePickerGrid, DateTimeRangePickerMonthCell, DateTimeRangePickerMonthViewTrigger,
   DateTimeRangePickerNextMonth, DateTimeRangePickerNextWeek, DateTimeRangePickerNextYear, DateTimeRangePickerPreviousMonth,
   DateTimeRangePickerPreviousWeek, DateTimeRangePickerPreviousYear, DateTimeRangePickerWeekViewTrigger, DateTimeRangePickerYearViewTrigger,
-} from '@sectile/vue/date-time-range-picker';
+} from '@sectile/vue/temporal';
 
 type PickerName = 'date-picker' | 'date-range-picker' | 'date-time-picker' | 'date-time-range-picker';
 type ViewMode = DateTimePickerRootSlotProps['viewMode'];

@@ -14,6 +14,60 @@ import TabularRemoteDataDemo from '../../../.vitepress/theme/components/TabularR
 <<< ../../../.vitepress/theme/components/TabularRemoteDataDemo.vue
 :::
 
+## Tabular core에서 비동기 source 실행
+
+`useData*Source`는 Vue용 수명 주기 helper입니다. core만 사용할 때는 controller의 유일한 request executor에 transport를 직접 연결합니다.
+
+```ts
+import { createDataTable } from '@sectile/tabular/data-table'
+
+const table = createDataTable({ columns })
+let active: AbortController | undefined
+
+const attached = table.attachRequestExecutor(async ({ request }) => {
+  active?.abort()
+  const transport = new AbortController()
+  active = transport
+
+  try {
+    const response = await fetch(`/api/users?${toSearchParams(request)}`, {
+      signal: transport.signal,
+    })
+    if (!response.ok) throw new Error(`사용자 요청 실패: ${response.status}`)
+    const page: UsersPage = await response.json()
+    if (!transport.signal.aborted) table.synchronizeView(toViewResponse(request, page))
+  } catch (error) {
+    if (transport.signal.aborted) return
+    const pending = table.getSnapshot().state.requestState.pendingRequest
+    if (pending?.requestID === request.requestID) table.abandonRequest(request.requestID)
+    reportError(error)
+  }
+})
+
+if (!attached.ok) throw new Error(attached.error.message)
+```
+
+core는 request envelope와 stale 응답 거부를 소유하고, abort controller·cache·retry timing은 application이 소유합니다. DataGrid와 DataTreeGrid의 `attachRequestExecutor`도 같은 계약입니다.
+
+## DOM과 결합
+
+DOM connection은 별도 source 종류가 아닙니다. connection이 노출하는 semantic controller에 executor를 붙이고, snapshot 변경 시 등록된 element를 갱신합니다.
+
+```ts
+import { createDataTable } from '@sectile/dom/data-table'
+
+const connection = createDataTable({
+  columns,
+  table: document.querySelector<HTMLTableElement>('#users')!,
+})
+
+connection.controller.attachRequestExecutor(({ request }) => {
+  void resolveRemoteUsers(request).then((response) => {
+    connection.synchronizeView(response)
+  })
+})
+```
+
 ## request를 서버 query로 변환
 
 `request.query.sort`는 배열이므로 서버가 허용하면 다중 정렬을 그대로 보낼 수 있습니다. filter, group, aggregate, pivot도 descriptor ID와 policy key를 유지한 채 서버 계약으로 변환합니다.
@@ -54,7 +108,7 @@ import {
   useDataTableSource,
   type DataTableSourceResolver,
   type DataTableViewResponse,
-} from '@sectile/vue/data-table'
+} from '@sectile/vue/tabular'
 
 const resolveUsers: DataTableSourceResolver<UserCells> = async (request, { signal }) => {
   const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal })

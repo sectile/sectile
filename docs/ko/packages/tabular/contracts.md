@@ -7,7 +7,7 @@ DataTable, DataGrid, DataTreeGrid는 같은 행·열 schema, query, source, 선�
 열 ID는 source, cell, 정렬, 필터, 열 상태에서 계속 유지되는 안정된 식별자입니다. `capabilities`는 source가 허용할 연산을 선언하고, `initialVisible`과 `initialPin`은 첫 열 상태를 정합니다.
 
 ```ts
-import { defineDataTableColumns } from '@sectile/vue/data-table'
+import { defineDataTableColumns } from '@sectile/vue/tabular'
 
 const columns = defineDataTableColumns([
   { id: 'name', label: '이름', capabilities: ['sort', 'filter'], initialPin: 'start' },
@@ -26,6 +26,8 @@ const headers = [
 ```
 
 중첩 header의 depth, `colspan`, `rowspan`, ARIA metadata는 schema에서 계산합니다. `HeaderRow`에 깊이를 직접 지정하지 않습니다.
+
+Vue에서는 leaf node를 `ColumnHeader column="team"`으로 연결하고 group node만 `ColumnHeader header="employment"`로 연결합니다. DOM에서는 각각 `{ columnID: 'team' }`, `{ headerNodeID: 'employment' }`입니다. leaf 사용자가 schema node ID를 반복할 필요는 없습니다.
 
 ## query
 

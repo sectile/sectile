@@ -32,7 +32,7 @@ export type DataGridSnapshotChangeHandler = (snapshot: DataGridState) => void;
 export type DataGridColumnSizeChangeHandler = (state: DataGridColumnSizeState) => void;
 export type DataGridColumnSizeState = TabularDOMColumnSizeState;
 export interface DataGridControlledValues extends GridDOMControlledValues {}
-export interface DataGridColumnHeaderOptions extends GridDOMColumnHeaderOptions {}
+export type DataGridColumnHeaderOptions = GridDOMColumnHeaderOptions;
 export interface DataGridRowOptions extends GridDOMRowOptions {}
 export interface DataGridCellOptions extends GridDOMCellOptions {}
 export interface DataGridSortTriggerOptions extends GridDOMSortTriggerOptions {}

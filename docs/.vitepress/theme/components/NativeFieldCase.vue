@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
-import { DateField, type DateValue } from '@sectile/vue/date-field';
-import { DateTimeField, type DateTimeValue } from '@sectile/vue/date-time-field';
+import { DateField, type DateValue } from '@sectile/vue/temporal';
+import { DateTimeField, type DateTimeValue } from '@sectile/vue/temporal';
 import { NumberField, type NumberFieldProps } from '@sectile/vue/number-field';
-import { TimeField, type TimeValue } from '@sectile/vue/time-field';
+import { TimeField, type TimeValue } from '@sectile/vue/temporal';
 import DemoCard from './DemoCard.vue';
 import {
   formatDemoDate, formatDemoDateTime, formatDemoTime,

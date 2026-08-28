@@ -16,8 +16,8 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/date-range-field';
-import type { DateRange } from '@sectile/dom/date-field';
+import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldConnection, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/temporal';
+import type { DateRange } from '@sectile/dom/temporal';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,

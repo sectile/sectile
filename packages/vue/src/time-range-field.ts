@@ -1,5 +1,5 @@
 import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
-import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/time-range-field';
+import { createTimeRangeField, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldConnection, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/dom/temporal';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';

@@ -39,6 +39,31 @@ import { HostProvider } from '@sectile/vue/host-provider'
 
 `useHostDirection`, `useHostPortalTarget`, and `useHostId` expose the resolved values to application-owned compound parts. Nested providers inherit each omitted prop independently.
 
+## Date and time components
+
+Install `@sectile/temporal` to use date fields, time fields, calendars, and pickers. The complete Vue surface is available from `@sectile/vue/temporal`; the base Vue package remains independent of date and time logic.
+
+```sh
+pnpm add @sectile/core @sectile/temporal @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import {
+  DatePickerRoot,
+  TemporalProvider,
+} from '@sectile/vue/temporal'
+</script>
+
+<template>
+  <TemporalProvider :reference-date="{ year: 2026, month: 8, day: 28 }">
+    <DatePickerRoot />
+  </TemporalProvider>
+</template>
+```
+
+`TemporalProvider` supplies one deterministic reference date to its subtree. A picker-level `referenceDate` prop takes priority when one control needs a different calendar baseline.
+
 ## Basic usage
 
 The root owns interaction state and shares it with its compound parts. `v-model` uses controlled Vue state; `default-value` creates an uncontrolled component.

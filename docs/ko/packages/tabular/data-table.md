@@ -14,7 +14,75 @@ DataTable은 읽기 중심 프로필입니다. native table 의미와 행 단위
 <<< ../../../.vitepress/theme/components/TabularDataTableDemo.vue
 :::
 
-## 기본 구성
+## Tabular core만 사용
+
+`@sectile/tabular/data-table`은 element나 framework를 알지 못합니다. controller에 source executor를 붙이고 event를 dispatch한 뒤 projection을 원하는 renderer에 전달합니다.
+
+```ts
+import { createDataTable } from '@sectile/tabular/data-table'
+import { createClientTabularSource, resolveClientTabularRequest } from '@sectile/tabular/source'
+
+const columns = [
+  { id: 'name', capabilities: ['sort', 'filter'] },
+  { id: 'role', capabilities: ['sort', 'filter'] },
+] as const
+const source = createClientTabularSource({
+  records: [
+    { id: 'ada', name: 'Ada Lovelace', role: 'Platform' },
+    { id: 'grace', name: 'Grace Hopper', role: 'Compiler' },
+  ],
+  columnSchema: { revision: 0, columns, headers: [] },
+  getRowID: (record) => record.id,
+  getValue: (record, columnID) => columnID === 'name' ? record.name : record.role,
+})
+const table = createDataTable({ columns })
+
+const attached = table.attachRequestExecutor(({ request }) => {
+  const response = resolveClientTabularRequest(source, request)
+  if (response.ok) table.synchronizeView(response.value)
+})
+if (!attached.ok) throw new Error(attached.error.message)
+
+table.dispatch({ type: 'toggle-row-selection', rowID: 'ada' })
+renderRows(table.getProjection().rows)
+```
+
+## DOM에 직접 연결
+
+`@sectile/dom/data-table`은 같은 controller 계약을 native table element, form control, event에 연결합니다. 직접 만든 HTML과 design system 스타일을 그대로 사용할 수 있습니다.
+
+```ts
+import { createDataTable } from '@sectile/dom/data-table'
+
+const connection = createDataTable({
+  columns,
+  table: document.querySelector<HTMLTableElement>('#users')!,
+  onCommand: handleTableCommand,
+  onSnapshotChange: renderTable,
+})
+
+const nameHeader = document.querySelector<HTMLTableCellElement>('#name-header')!
+const nameSort = nameHeader.querySelector<HTMLButtonElement>('button')!
+const rowElement = document.querySelector<HTMLTableRowElement>('[data-user-id="ada"]')!
+const nameCell = rowElement.querySelector<HTMLTableCellElement>('[data-column="name"]')!
+connection.setHeaderCellAttributes(nameHeader, { columnID: 'name' })
+const releaseRow = connection.registerRow(rowElement, { rowID: 'ada' })
+const releaseCell = connection.registerCell(nameCell, {
+  cell: { rowID: 'ada', columnID: 'name' },
+})
+const releaseSort = connection.bindSortTrigger(nameSort, {
+  columnID: 'name', comparator: 'locale',
+})
+
+function disconnectTable() {
+  if (releaseRow.ok) releaseRow.value()
+  if (releaseCell.ok) releaseCell.value()
+  releaseSort()
+  connection.disconnect()
+}
+```
+
+## Vue 구성
 
 `createDataTableComponents`는 controller의 schema type과 결합된 compound component namespace를 만듭니다. Provider는 prop 없이 그 controller를 provide/inject로 전달합니다. source는 revision이 포함된 request를 view로 변환합니다. Body가 accepted row를 반복하고 slot에 schema type이 보존된 `row`를 전달하며, 내부 cell과 control은 그 행의 식별자를 자동으로 상속합니다.
 
@@ -23,7 +91,7 @@ DataTable은 읽기 중심 프로필입니다. native table 의미와 행 단위
 import {
   defineDataTableColumns, useDataTable,
   createDataTableComponents, useDataTableSource,
-} from '@sectile/vue/data-table'
+} from '@sectile/vue/tabular'
 
 interface UserCells {
   readonly name: string
@@ -48,8 +116,8 @@ useDataTableSource(table, async (request) => {
     <DataTable.Root>
       <DataTable.Caption>사용자</DataTable.Caption>
       <DataTable.Header><DataTable.HeaderRow>
-        <DataTable.ColumnHeader headerNodeID="name">이름</DataTable.ColumnHeader>
-        <DataTable.ColumnHeader headerNodeID="role">역할</DataTable.ColumnHeader>
+        <DataTable.ColumnHeader column="name">이름</DataTable.ColumnHeader>
+        <DataTable.ColumnHeader column="role">역할</DataTable.ColumnHeader>
       </DataTable.HeaderRow></DataTable.Header>
       <DataTable.Body v-slot="{ row }">
         <DataTable.Cell column="name">{{ row.cells.name }}</DataTable.Cell>
@@ -102,7 +170,18 @@ column filter는 열 ID를 함께 전달합니다.
 
 source가 반환한 group row는 `DataTable.Disclosure`로 펼치고 새 view를 요청할 수 있습니다. `DataTable.Editor`는 input, textarea, select에서 value commit 의도를 보내지만 검증과 저장은 응용 프로그램이 맡습니다. 2차원 cursor와 edit mode는 제공하지 않으므로 셀 편집이 중심이면 DataGrid를 사용하세요.
 
-Header row에는 depth prop이 없습니다. 여러 단계의 `colspan`, `rowspan`, ARIA metadata는 header schema와 각 `headerNodeID`에서 계산합니다. native DataTable의 접근 가능한 이름은 `DataTable.Caption`으로 제공하고, table 밖의 보이는 제목이 이미 있다면 `aria-labelledby`로 연결합니다.
+Header row에는 depth prop이 없습니다. leaf header는 `column`으로 연결하고 중첩 group header만 `header`로 schema node를 지정합니다. 여러 단계의 `colspan`, `rowspan`, ARIA metadata는 header schema에서 계산합니다. native DataTable의 접근 가능한 이름은 `DataTable.Caption`으로 제공하고, table 밖의 보이는 제목이 이미 있다면 `aria-labelledby`로 연결합니다.
+
+```vue
+<DataTable.HeaderRow>
+  <DataTable.ColumnHeader column="name">이름</DataTable.ColumnHeader>
+  <DataTable.ColumnHeader header="employment">재직 정보</DataTable.ColumnHeader>
+</DataTable.HeaderRow>
+<DataTable.HeaderRow>
+  <DataTable.ColumnHeader column="team">팀</DataTable.ColumnHeader>
+  <DataTable.ColumnHeader column="role">역할</DataTable.ColumnHeader>
+</DataTable.HeaderRow>
+```
 
 일반적인 행 반복은 Body가 맡습니다. virtual window처럼 저수준 렌더링이 필요할 때만 `<DataTable.Body manual>`과 `DataTable.Row rowID="…"`를 직접 사용합니다.
 
@@ -132,7 +211,7 @@ Header row에는 depth prop이 없습니다. 여러 단계의 `colspan`, `rowspa
 열 순서·숨김·start/end pinning은 semantic `columnState`입니다. 픽셀 크기는 DOM host state이고 `ColumnResizeHandle`이 변경합니다.
 
 ```vue
-<DataTable.ColumnHeader headerNodeID="name">
+<DataTable.ColumnHeader column="name">
   이름
   <DataTable.ColumnResizeHandle
     column="name"
@@ -179,11 +258,12 @@ Root와 각 part slot은 `acceptedViewState`, `requestState`, `query`, `rowSelec
 | `ColumnResizeHandle` | host column size 변경 |
 | `Editor` | native input의 parsed commit intent |
 
-## 공개 Vue API
+## 계층별 공개 API
 
-- 생성: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
-- context: 반환된 namespace의 `DataTable.Provider`, `DataTable.Root`
-- 구조: `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- 조작: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataTable`, `tryCreateDataTable`, controller의 `dispatch`, `synchronizeView`, `requestView`, `abandonRequest`, `subscribeCommands`, `attachRequestExecutor`, `getSnapshot`, `getProjection`
+- DOM: `createDataTable`, `connectDataTable`, `setHeaderCellAttributes`, `registerRow`, `registerCell`, `bindSortTrigger`, `bindFilterControl`, `bindSelectionControl`, `bindBulkSelectionControl`, `bindDisclosure`, `bindColumnResizeHandle`, `bindEditor`
+- Vue 생성: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
+- Vue 구조: `Provider`, `Root`, `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue 조작: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
 
-모든 part는 `Props`와 `SlotProps` type을 함께 내보냅니다. 같은 subpath에서 query, view, source, status, error, command, controller, accepted-view, access/request state, change handler, resolver와 options type도 가져올 수 있습니다.
+Vue part는 `Props`와 `SlotProps` type을 함께 내보냅니다. 각 계층의 같은 subpath에서 query, view, source, error, command, controller, access/request state와 options type도 가져올 수 있습니다.

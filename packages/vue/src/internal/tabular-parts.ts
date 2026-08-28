@@ -14,7 +14,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import type { TabularCellAddress, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID } from '@sectile/tabular';
+import type { TabularCellAddress, TabularColumnID, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID } from '@sectile/tabular';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import {
   provideProfile,
@@ -29,8 +29,8 @@ export interface HostConnection {
   disconnect(): void;
   refresh(): void;
   getProjection(): { readonly generation: number };
-  setHeaderCellAttributes?(element: HTMLTableCellElement, options: { readonly headerNodeID: TabularHeaderNodeID }): void;
-  setColumnHeaderAttributes?(element: HTMLElement, options: { readonly headerNodeID: TabularHeaderNodeID }): void;
+  setHeaderCellAttributes?(element: HTMLTableCellElement, options: HeaderReference): void;
+  setColumnHeaderAttributes?(element: HTMLElement, options: HeaderReference): void;
   registerRow(element: HTMLElement, options: { readonly rowID: TabularRowID | TabularGroupID; readonly expectedProjectionGeneration?: number }): { readonly ok: boolean; readonly value?: () => void };
   registerCell(element: HTMLElement, options: { readonly cell: TabularCellAddress; readonly expectedProjectionGeneration?: number }): { readonly ok: boolean; readonly value?: () => void };
   bindSortTrigger(element: HTMLElement, options: { readonly columnID: string; readonly comparator: string }): () => void;
@@ -43,6 +43,10 @@ export interface HostConnection {
   bindEditor(element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, options: unknown): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: unknown): () => void;
 }
+
+type HeaderReference =
+  | { readonly columnID: TabularColumnID; readonly headerNodeID?: never }
+  | { readonly headerNodeID: TabularHeaderNodeID; readonly columnID?: never };
 
 interface PartConfig<State, Event, Command> {
   readonly profile: 'data-table' | 'data-grid' | 'data-tree-grid';
@@ -182,10 +186,19 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     setup(props, { attrs, slots }) { const context = usePublic('HeaderRow'); return () => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: table ? undefined : 'row', 'data-scope': config.profile, 'data-part': 'header-row' }), { default: () => slots['default']?.(rootSlot(context)) }); },
   });
   const ColumnHeader = boundPart('ColumnHeader', 'column-header', table ? 'th' : 'div', {
-    headerNodeID: { type: String, required: true },
+    column: { type: String, default: undefined },
+    header: { type: String, default: undefined },
   }, (connection, element, props) => {
-    if (table && element instanceof HTMLTableCellElement) connection.setHeaderCellAttributes?.(element, { headerNodeID: String(props['headerNodeID']) });
-    else connection.setColumnHeaderAttributes?.(element, { headerNodeID: String(props['headerNodeID']) });
+    const column = props['column'];
+    const header = props['header'];
+    if ((column === undefined) === (header === undefined)) {
+      throw new TypeError(`${config.prefix}ColumnHeader requires exactly one of column or header.`);
+    }
+    const reference: HeaderReference = column === undefined
+      ? { headerNodeID: String(header) }
+      : { columnID: String(column) };
+    if (table && element instanceof HTMLTableCellElement) connection.setHeaderCellAttributes?.(element, reference);
+    else connection.setColumnHeaderAttributes?.(element, reference);
     return undefined;
   });
   const Row = boundPart('Row', 'row', table ? 'tr' : 'div', { rowID: { type: String, required: true } }, (connection, element, props) => {

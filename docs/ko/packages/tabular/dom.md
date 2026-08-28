@@ -35,6 +35,7 @@ const releaseRow = connection.registerRow(rowElement, { rowID: row.id })
 const releaseCell = connection.registerCell(cellElement, {
   cell: { rowID: row.id, columnID: 'name' },
 })
+connection.setHeaderCellAttributes(nameHeader, { columnID: 'name' })
 
 if (!releaseRow.ok || !releaseCell.ok) throw new Error('현재 projection과 DOM이 일치하지 않습니다.')
 
@@ -45,6 +46,8 @@ onRowUnmount(() => {
 ```
 
 DataTable은 `HTMLTableRowElement`와 `HTMLTableCellElement`를 사용하고 native table 의미를 유지합니다. DataGrid와 DataTreeGrid는 일반 HTMLElement에 grid/treegrid role, row/column index, selected, expanded, level, position metadata를 투영합니다.
+
+leaf header는 `{ columnID: 'name' }`으로 연결하면 실제 schema의 header node를 찾습니다. 여러 열을 묶는 중첩 group header만 `{ headerNodeID: 'employment' }`를 사용합니다. Vue에서는 각각 `column="name"`, `header="employment"`에 대응합니다.
 
 ## 기능 binding
 

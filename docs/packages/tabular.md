@@ -13,6 +13,16 @@ import TabularDataTreeGridDemo from '../.vitepress/theme/components/TabularDataT
 pnpm add @sectile/tabular
 ```
 
+## Choose a layer
+
+| Needed surface | Install | API |
+| --- | --- | --- |
+| State, query, and projection only | `@sectile/tabular` | `createDataTable`, `createDataGrid`, `createDataTreeGrid` |
+| Bind existing HTML without a framework | `@sectile/dom` | `createData*` or `connectData*`, element registration, and `bind*` |
+| Compose Vue components | `@sectile/vue @sectile/tabular vue` | `useData*`, `createData*Components`, and `useData*Source` from `@sectile/vue/tabular` |
+
+`@sectile/tabular` is the renderer-neutral Tabular core. DOM and Vue are optional hosts over the same controllers; core consumers do not install Vue.
+
 <TabularFeatureMap />
 
 ## Find the capability
@@ -21,8 +31,8 @@ pnpm add @sectile/tabular
 | --- | --- |
 | Column schema, query, page/window access, selection, column state, controlled state | [Shared contracts](./tabular/contracts) |
 | Server sorting, filtering, pagination, cancellation, stale data, errors, and retry | [Async data sources](./tabular/data-source) |
-| Typed compound components, Providers, slots, and SSR | [Vue composition](./tabular/vue) |
 | Element registration and event/focus/form bindings without a framework | [DOM composition](./tabular/dom) |
+| Typed compound components, Providers, slots, and SSR | [Vue composition](./tabular/vue) |
 | Compose a large view with raw Virtual | [Optional virtualization](./tabular/virtual) |
 
 ## DataTable
@@ -83,4 +93,4 @@ DOM measurement, scrolling, and rendering also remain host responsibilities. Vir
 | `/data-tree-grid` | Hierarchical application-grid controller and reducer |
 | `/virtual` | Optional adapters from Tabular projections to Virtual strategies |
 
-Use `@sectile/dom/data-*` for direct DOM connection or `@sectile/vue/data-*` for composables, Providers, compound parts, and injected contexts. Application code using Vue installs only `@sectile/vue` and `vue`; the Vue package carries its public Tabular and DOM types directly. See [Vue composition](./tabular/vue) and [optional virtualization](./tabular/virtual).
+Use `@sectile/dom/data-*` for direct DOM connection. Vue applications install `@sectile/tabular` alongside `@sectile/vue`, then import composables, Providers, compound parts, and injected contexts from `@sectile/vue/tabular`. `@sectile/tabular` remains optional for `@sectile/vue` consumers that do not use Tabular. See [Vue composition](./tabular/vue) and [optional virtualization](./tabular/virtual).

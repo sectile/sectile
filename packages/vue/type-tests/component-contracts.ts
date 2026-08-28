@@ -1,19 +1,19 @@
 import { h } from 'vue';
-import type { DatePickerPolicies } from '@sectile/dom/date-picker';
-import type { DateFieldOptions } from '@sectile/dom/date-field';
-import type { DateTimeFieldOptions } from '@sectile/dom/date-time-field';
+import type { DatePickerPolicies } from '@sectile/dom/temporal';
+import type { DateFieldOptions } from '@sectile/dom/temporal';
+import type { DateTimeFieldOptions } from '@sectile/dom/temporal';
 import type { NumberFieldOptions } from '@sectile/dom/number-field';
-import type { TimeFieldOptions } from '@sectile/dom/time-field';
-import { DateField } from '../dist/date-field.js';
+import type { TimeFieldOptions } from '@sectile/dom/temporal';
+import { DateField } from '../dist/temporal.js';
 import {
   DatePickerContent,
   DatePickerRoot,
   type DatePickerRootSlotProps,
   type DatePickerValueChangeHandler,
-} from '../dist/date-picker.js';
-import type { DateTimeRange } from '../dist/date-time-range-picker.js';
-import { DateTimeField } from '../dist/date-time-field.js';
-import type { DateValue } from '../dist/date-field.js';
+} from '../dist/temporal.js';
+import type { DateTimeRange } from '../dist/temporal.js';
+import { DateTimeField } from '../dist/temporal.js';
+import type { DateValue } from '../dist/temporal.js';
 import { MenuButtonRoot, MenuRoot } from '../dist/menu.js';
 import {
   MeterGroupRoot,
@@ -31,7 +31,7 @@ import {
   SpinButtonRoot,
   type SpinButtonInputProps,
 } from '../dist/spin-button.js';
-import { TimeField } from '../dist/time-field.js';
+import { TimeField } from '../dist/temporal.js';
 import { useToast, type UseToastReturn } from '../dist/toast.js';
 import {
   VirtualGrid,

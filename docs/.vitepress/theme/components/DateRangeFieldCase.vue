@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowRight, CalendarRange } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput, type DateRange } from '@sectile/vue/date-range-field';
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput, type DateRange } from '@sectile/vue/temporal';
 import DemoCard from './DemoCard.vue';
 import type { EventEntry } from '../types.js';
 import { formatDemoDateRange } from '../temporal-demo-format.js';
@@ -17,7 +17,7 @@ const state = computed(() => ({ value: value.value, ownership: props.controlled 
 const displayValue = computed(() => formatDemoDateRange(value.value));
 const code = computed(() => `<script setup lang="ts">
 import { ref } from 'vue'
-import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/date-range-field';
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/temporal';
 const range = ref({
   start: { year: 2026, month: ${props.bounded ? 9 : 8}, day: ${props.bounded ? 8 : 22} },
   end: { year: 2026, month: ${props.bounded ? 9 : 8}, day: ${props.bounded ? 18 : 25} },

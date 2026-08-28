@@ -34,6 +34,27 @@ const buildComponentSidebar = (locale: 'en' | 'ko'): DefaultTheme.SidebarItem[] 
 const componentSidebar = buildComponentSidebar('en');
 const koComponentSidebar = buildComponentSidebar('ko');
 
+const packageIds = ['core', 'temporal', 'virtual', 'tabular', 'dom', 'terminal', 'vue'] as const;
+
+const buildPackageNav = (locale: 'en' | 'ko'): DefaultTheme.NavItem => {
+  const linkPrefix = locale === 'ko' ? '/ko/packages' : '/packages';
+
+  return {
+    text: locale === 'ko' ? '패키지' : 'Packages',
+    activeMatch: `^${linkPrefix}/`,
+    items: [
+      { text: locale === 'ko' ? '패키지 지도' : 'Package map', link: `${linkPrefix}/` },
+      ...packageIds.map((id) => ({
+        text: `@sectile/${id}`,
+        link: `${linkPrefix}/${id}`,
+      })),
+    ],
+  };
+};
+
+const packageNav = buildPackageNav('en');
+const koPackageNav = buildPackageNav('ko');
+
 const theorySidebar: DefaultTheme.SidebarItem[] = [
   { text: 'Core theory', link: '/theory/' },
   { text: 'Canonical structures', link: '/theory/structures' },
@@ -181,7 +202,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
     { text: 'Guide', link: '/guide/getting-started' },
     { text: 'Core theory', link: '/theory/' },
     { text: 'Components', link: '/components/', activeMatch: '^/components/' },
-    { text: 'Packages', link: '/packages/' },
+    packageNav,
   ],
   sidebar: {
     '/guide/': [
@@ -206,7 +227,7 @@ const koLocaleTheme: DefaultTheme.Config = {
     { text: '사용 안내', link: '/ko/guide/getting-started' },
     { text: '코어 이론', link: '/ko/theory/' },
     { text: '컴포넌트', link: '/ko/components/', activeMatch: '^/ko/components/' },
-    { text: '패키지', link: '/ko/packages/' },
+    koPackageNav,
   ],
   sidebar: {
     '/ko/guide/': [

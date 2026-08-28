@@ -14,6 +14,58 @@ Change the sort direction, type several search values quickly, move between page
 <<< ../../.vitepress/theme/components/TabularRemoteDataDemo.vue
 :::
 
+## Run an async source with Tabular core
+
+`useData*Source` is a Vue lifecycle helper. A core-only application attaches transport directly to the controller's sole request executor.
+
+```ts
+import { createDataTable } from '@sectile/tabular/data-table'
+
+const table = createDataTable({ columns })
+let active: AbortController | undefined
+
+const attached = table.attachRequestExecutor(async ({ request }) => {
+  active?.abort()
+  const transport = new AbortController()
+  active = transport
+
+  try {
+    const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal: transport.signal })
+    if (!response.ok) throw new Error(`User request failed: ${response.status}`)
+    const page: UsersPage = await response.json()
+    if (!transport.signal.aborted) table.synchronizeView(toViewResponse(request, page))
+  } catch (error) {
+    if (transport.signal.aborted) return
+    const pending = table.getSnapshot().state.requestState.pendingRequest
+    if (pending?.requestID === request.requestID) table.abandonRequest(request.requestID)
+    reportError(error)
+  }
+})
+
+if (!attached.ok) throw new Error(attached.error.message)
+```
+
+Core owns request envelopes and stale-response rejection. The application owns abort controllers, caches, and retry timing. DataGrid and DataTreeGrid expose the same executor contract.
+
+## Compose with DOM
+
+A DOM connection is not another source mode. Attach the executor to its semantic controller and refresh registered elements when snapshots change.
+
+```ts
+import { createDataTable } from '@sectile/dom/data-table'
+
+const connection = createDataTable({
+  columns,
+  table: document.querySelector<HTMLTableElement>('#users')!,
+})
+
+connection.controller.attachRequestExecutor(({ request }) => {
+  void resolveRemoteUsers(request).then((response) => {
+    connection.synchronizeView(response)
+  })
+})
+```
+
 ## Serialize a request
 
 `request.query.sort` is an array, so a server that supports multi-sort can preserve the descriptors in order. Filter, group, aggregate, and pivot descriptors keep their IDs and policy keys as they cross the transport boundary.
@@ -50,7 +102,7 @@ import {
   useDataTableSource,
   type DataTableSourceResolver,
   type DataTableViewResponse,
-} from '@sectile/vue/data-table'
+} from '@sectile/vue/tabular'
 
 const resolveUsers: DataTableSourceResolver<UserCells> = async (request, { signal }) => {
   const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal })

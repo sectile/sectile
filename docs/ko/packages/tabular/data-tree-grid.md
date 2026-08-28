@@ -14,6 +14,74 @@ DataTreeGrid는 grid cursor·editor와 정렬된 계층을 결합합니다. 부�
 <<< ../../../.vitepress/theme/components/TabularDataTreeGridDemo.vue
 :::
 
+## Tabular core만 사용
+
+renderer-neutral controller는 계층 검증, expansion revision, cursor와 editor 복구를 계산합니다. application은 request에 맞는 ordered hierarchy를 응답으로 동기화합니다.
+
+```ts
+import { createDataTreeGrid } from '@sectile/tabular/data-tree-grid'
+
+const columns = [
+  { id: 'service', capabilities: ['sort', 'filter', 'edit'] },
+  { id: 'owner', capabilities: ['sort', 'filter'] },
+] as const
+const tree = createDataTreeGrid({ columns })
+
+tree.attachRequestExecutor(({ request }) => {
+  const expanded = request.expansion.includes('commerce')
+  tree.synchronizeView({
+    protocolVersion: 1,
+    requestID: request.requestID,
+    sourceGeneration: request.sourceGeneration,
+    queryRevision: request.queryRevision,
+    expansionRevision: request.expansionRevision,
+    viewRevision: request.requestID,
+    access: request.access,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: expanded ? 2 : 1 },
+    rows: [
+      { kind: 'group', id: 'commerce', parentGroupID: null, depth: 0, expanded, cells: { service: 'Commerce', owner: '' } },
+      ...(expanded ? [{ kind: 'leaf' as const, id: 'checkout', cells: { service: 'Checkout', owner: 'Alex' } }] : []),
+    ],
+    columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
+    removedRowIDs: [],
+  })
+})
+
+tree.dispatch({ type: 'set-expansion', expansion: ['commerce'] })
+renderTreeGrid(tree.getProjection())
+```
+
+## DOM에 직접 연결
+
+DOM connection은 같은 projection을 ARIA treegrid metadata, disclosure, keyboard 이동과 편집 element에 연결합니다.
+
+```ts
+import { createDataTreeGrid } from '@sectile/dom/data-tree-grid'
+
+const connection = createDataTreeGrid({
+  columns,
+  root: document.querySelector<HTMLElement>('#service-tree-grid')!,
+  onCommand: handleTreeGridCommand,
+  onSnapshotChange: renderTreeGrid,
+})
+
+const serviceHeader = document.querySelector<HTMLElement>('[data-header="service"]')!
+const groupRow = document.querySelector<HTMLElement>('[data-row="commerce"]')!
+const disclosureButton = groupRow.querySelector<HTMLButtonElement>('button')!
+const leafRow = document.querySelector<HTMLElement>('[data-row="checkout"]')!
+const ownerCell = leafRow.querySelector<HTMLElement>('[data-column="owner"]')!
+connection.setColumnHeaderAttributes(serviceHeader, { columnID: 'service' })
+const releaseGroup = connection.registerRow(groupRow, { rowID: 'commerce' })
+const releaseDisclosure = connection.bindRowDisclosure(disclosureButton, {
+  rowID: 'commerce',
+})
+const releaseLeaf = connection.registerRow(leafRow, { rowID: 'checkout' })
+const releaseCell = connection.registerCell(ownerCell, {
+  cell: { rowID: 'checkout', columnID: 'owner' },
+})
+```
+
 ## 계층형 view
 
 source는 group row 바로 뒤에 보이는 descendant를 순서대로 반환합니다. group에는 `parentGroupID`, `depth`, `expanded`가 있고 leaf의 ancestry는 보이는 순서 context로 결정합니다. 잘못된 ancestry는 상태를 일부 변경하지 않고 거부됩니다.
@@ -118,11 +186,12 @@ projection은 ARIA treegrid 속성에 필요한 parent row, depth, position, siz
 | `ColumnResizeHandle` | host column size 변경 |
 | `Editor` | leaf cell만 navigation/edit mode에 연결 |
 
-## 공개 Vue API
+## 계층별 공개 API
 
-- 생성: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
-- context: `DataTreeGrid.Provider`, `DataTreeGrid.Root`
-- 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataTreeGrid`, `tryCreateDataTreeGrid`, controller의 view/source API와 `dispatch`, expansion/cursor/edit projection
+- DOM: `createDataTreeGrid`, `connectDataTreeGrid`, header/row/cell 속성과 등록, sort/filter/selection/disclosure/editor/resize binding, cell/row reveal
+- Vue 생성: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
+- Vue 구조: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
 
-모든 part의 `Props`와 `SlotProps`, expansion, cursor/edit state, projection, row metadata, query, view, source, command, controller, error, resolver, status, controlled-state handler와 options type을 같은 subpath에서 제공합니다.
+각 계층의 같은 subpath에서 expansion, cursor/edit state, projection, row metadata, query, view, source, command, controller, error와 options type을 제공합니다. Vue는 각 part의 `Props`와 `SlotProps` type을 추가합니다.

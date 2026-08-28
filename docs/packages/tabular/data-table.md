@@ -14,7 +14,58 @@ Try sorting more than once to cycle ascending, descending, and off. Filter the r
 <<< ../../.vitepress/theme/components/TabularDataTableDemo.vue
 :::
 
-## Basic composition
+## Use Tabular core only
+
+`@sectile/tabular/data-table` knows nothing about elements or frameworks. Attach a source executor, dispatch events, and send its projection to any renderer.
+
+```ts
+import { createDataTable } from '@sectile/tabular/data-table'
+import { createClientTabularSource, resolveClientTabularRequest } from '@sectile/tabular/source'
+
+const columns = [
+  { id: 'name', capabilities: ['sort', 'filter'] },
+  { id: 'role', capabilities: ['sort', 'filter'] },
+] as const
+const source = createClientTabularSource({
+  records: [
+    { id: 'ada', name: 'Ada Lovelace', role: 'Platform' },
+    { id: 'grace', name: 'Grace Hopper', role: 'Compiler' },
+  ],
+  columnSchema: { revision: 0, columns, headers: [] },
+  getRowID: (record) => record.id,
+  getValue: (record, columnID) => columnID === 'name' ? record.name : record.role,
+})
+const table = createDataTable({ columns })
+const attached = table.attachRequestExecutor(({ request }) => {
+  const response = resolveClientTabularRequest(source, request)
+  if (response.ok) table.synchronizeView(response.value)
+})
+if (!attached.ok) throw new Error(attached.error.message)
+
+table.dispatch({ type: 'toggle-row-selection', rowID: 'ada' })
+renderRows(table.getProjection().rows)
+```
+
+## Connect existing DOM
+
+`@sectile/dom/data-table` binds the same controller contract to native table elements, form controls, and events while preserving application styling.
+
+```ts
+import { createDataTable } from '@sectile/dom/data-table'
+
+const connection = createDataTable({
+  columns,
+  table: document.querySelector<HTMLTableElement>('#users')!,
+  onCommand: handleTableCommand,
+  onSnapshotChange: renderTable,
+})
+const nameHeader = document.querySelector<HTMLTableCellElement>('#name-header')!
+const nameSort = nameHeader.querySelector<HTMLButtonElement>('button')!
+connection.setHeaderCellAttributes(nameHeader, { columnID: 'name' })
+const releaseSort = connection.bindSortTrigger(nameSort, { columnID: 'name', comparator: 'locale' })
+```
+
+## Vue composition
 
 `createDataTableComponents` creates the typed compound component namespace for a controller. Its Provider carries that controller through injection without a prop. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each schema-typed `row` to its slot; nested cells and controls inherit that row identity.
 
@@ -23,7 +74,7 @@ Try sorting more than once to cycle ascending, descending, and off. Filter the r
 import {
   defineDataTableColumns, useDataTable,
   createDataTableComponents, useDataTableSource,
-} from '@sectile/vue/data-table'
+} from '@sectile/vue/tabular'
 
 interface UserCells {
   readonly name: string
@@ -48,8 +99,8 @@ useDataTableSource(table, async (request) => {
     <DataTable.Root>
       <DataTable.Caption>Users</DataTable.Caption>
       <DataTable.Header><DataTable.HeaderRow>
-        <DataTable.ColumnHeader headerNodeID="name">Name</DataTable.ColumnHeader>
-        <DataTable.ColumnHeader headerNodeID="role">Role</DataTable.ColumnHeader>
+        <DataTable.ColumnHeader column="name">Name</DataTable.ColumnHeader>
+        <DataTable.ColumnHeader column="role">Role</DataTable.ColumnHeader>
       </DataTable.HeaderRow></DataTable.Header>
       <DataTable.Body v-slot="{ row }">
         <DataTable.Cell column="name">{{ row.cells.name }}</DataTable.Cell>
@@ -107,7 +158,18 @@ Use `DataTable.SelectionControl` for explicit rows and `DataTable.BulkSelectionC
 
 DataTable may render group rows returned by the source. `DataTable.Disclosure` changes expansion and requests a new view. `DataTable.Editor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
 
-Header rows do not take a depth prop. Multi-level `colspan`, `rowspan`, and ARIA metadata are derived from the header schema and each `headerNodeID`. Give a native DataTable its accessible name with `DataTable.Caption`, or use `aria-labelledby` when a visible title outside the table already names it.
+Header rows do not take a depth prop. Bind leaf headers with `column`; only nested group headers use `header` to identify a schema node. The schema derives multi-level spans and ARIA metadata. Give a native DataTable its accessible name with `DataTable.Caption`, or use `aria-labelledby` when a visible title outside the table already names it.
+
+```vue
+<DataTable.HeaderRow>
+  <DataTable.ColumnHeader column="name">Name</DataTable.ColumnHeader>
+  <DataTable.ColumnHeader header="employment">Employment</DataTable.ColumnHeader>
+</DataTable.HeaderRow>
+<DataTable.HeaderRow>
+  <DataTable.ColumnHeader column="team">Team</DataTable.ColumnHeader>
+  <DataTable.ColumnHeader column="role">Role</DataTable.ColumnHeader>
+</DataTable.HeaderRow>
+```
 
 Body owns normal row repetition. Use `<DataTable.Body manual>` with explicit `DataTable.Row rowID="…"` only for low-level rendering such as a virtualized window.
 
@@ -132,7 +194,7 @@ A `request-value-commit` command carries the cell address and parsed wire value.
 Semantic column state owns order, visibility, and start/end pinning. Pixel size is host state.
 
 ```vue
-<DataTable.ColumnHeader headerNodeID="name">
+<DataTable.ColumnHeader column="name">
   Name
   <DataTable.ColumnResizeHandle column="name" :min-size="160" :max-size="480" aria-label="Resize name column" />
 </DataTable.ColumnHeader>
@@ -161,11 +223,12 @@ Root and part slots expose `acceptedViewState`, `requestState`, `query`, `rowSel
 | `ColumnResizeHandle` | Host-owned column size |
 | `Editor` | Parsed native input commit intent |
 
-## Public Vue API
+## Public API by layer
 
-- Creation: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
-- Context: `DataTable.Provider`, `DataTable.Root` from the returned namespace
-- Structure: `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Controls: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataTable`, `tryCreateDataTable`, and controller `dispatch`, view/source lifecycle, snapshots, and projections
+- DOM: `createDataTable`, `connectDataTable`, header/row/cell attributes and registration, plus sort/filter/selection/disclosure/resize/editor bindings
+- Vue creation: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
+- Vue structure: `Provider`, `Root`, `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue controls: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
 
-Every part also exports `Props` and `SlotProps` types. The same subpath exports query, view, source, status, error, command, controller, accepted-view, access/request state, change-handler, resolver, and options types.
+Each layer exports its query, view, source, error, command, controller, state, and option types from the same subpath. Vue adds `Props` and `SlotProps` for every part.

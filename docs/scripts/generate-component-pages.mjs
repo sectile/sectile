@@ -569,6 +569,24 @@ export function useAppToast() {
 ~~~`;
 }
 
+const temporalComponentIDs = new Set([
+  'calendar',
+  'date-field',
+  'date-picker',
+  'date-range-field',
+  'date-range-picker',
+  'date-time-field',
+  'date-time-picker',
+  'date-time-range-picker',
+  'month-picker',
+  'month-range-picker',
+  'range-calendar',
+  'time-field',
+  'time-range-field',
+  'year-picker',
+  'year-range-picker',
+]);
+
 function apiSection(component, korean = false) {
   const {
     values,
@@ -599,9 +617,10 @@ ${values.map((value) => `  <li><code class="component-api-token">${value}</code>
 </ul>
 </div>`;
   const heading = '## API';
+  const packageSubpath = temporalComponentIDs.has(component.id) ? 'temporal' : component.id;
   const introduction = korean
-    ? `Vue 패키지: \`@sectile/vue/${component.id}\``
-    : `Vue package: \`@sectile/vue/${component.id}\``;
+    ? `Vue 패키지: \`@sectile/vue/${packageSubpath}\``
+    : `Vue package: \`@sectile/vue/${packageSubpath}\``;
   const groups = [
     tokenList(components, korean ? '컴포넌트' : 'Components'),
     apiFunctionGroup(functions, functionSignatures, korean),

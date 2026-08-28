@@ -362,7 +362,7 @@ import {
   CalendarCell, CalendarContent, CalendarGrid,
   CalendarNext${week ? 'Week' : 'Month'}, CalendarPrevious${week ? 'Week' : 'Month'}, CalendarRoot,
   type DateValue,
-} from '@sectile/vue/calendar'
+} from '@sectile/vue/temporal'
 
 const selected = ref<DateValue | null>(null)
 const initial = { year: 2026, month: 8, day: 24 }${disabled ? `
@@ -523,7 +523,7 @@ function dateRangeFieldSource(scenario: string): string {
   const bounded = scenario === 'bounded';
   return `<script setup lang="ts">
 import { ref } from 'vue'
-import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/date-range-field'
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/temporal'
 
 const range = ref({
   start: { year: 2026, month: ${bounded ? 9 : 8}, day: ${bounded ? 8 : 22} },
@@ -547,7 +547,7 @@ function timeRangeFieldSource(scenario: string): string {
   const stepped = scenario === 'stepped';
   return `<script setup lang="ts">
 import { ref } from 'vue'
-import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/time-range-field'
+import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/temporal'
 
 const hours = ref({ start: { hour: 9, minute: 30 }, end: { hour: 17, minute: 45 } })${stepped ? `
 const policies = { step: { minute: 15 } }` : ''}
@@ -769,7 +769,7 @@ import { ColorPickerAlphaSlider, ColorPickerArea, ColorPickerAreaThumb, ColorPic
   </ColorPickerRoot>
 </template>`,
   'date-range-field': `<script setup lang="ts">
-import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/date-range-field'
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '@sectile/vue/temporal'
 const range = { start: { year: 2026, month: 8, day: 22 }, end: { year: 2026, month: 8, day: 25 } }
 <\/script>
 <template>
@@ -823,7 +823,7 @@ const tabs = ['overview', 'activity', 'settings']
 <\/script>
 <template><TabsRoot :items="tabs" default-value="overview"><TabsList><TabsTrigger v-for="tab in tabs" :key="tab" :value="tab">{{ tab }}</TabsTrigger><TabsIndicator /></TabsList><TabsContent v-for="tab in tabs" :key="tab" :value="tab">{{ tab }}</TabsContent></TabsRoot></template>`,
   'time-range-field': `<script setup lang="ts">
-import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/time-range-field'
+import { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } from '@sectile/vue/temporal'
 const hours = { start: { hour: 9, minute: 30 }, end: { hour: 17, minute: 45 } }
 <\/script>
 <template><TimeRangeFieldRoot :default-value="hours"><TimeRangeFieldStartInput name="start" /><span>to</span><TimeRangeFieldEndInput name="end" /></TimeRangeFieldRoot></template>`,

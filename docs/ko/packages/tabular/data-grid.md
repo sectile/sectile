@@ -14,13 +14,69 @@ DataGrid는 평면 application grid 프로필입니다. 셀 사이를 이동하�
 <<< ../../../.vitepress/theme/components/TabularDataGridDemo.vue
 :::
 
-## grid 구성
+## Tabular core만 사용
+
+core controller는 cursor, edit mode, selection과 command를 계산하지만 DOM focus나 element를 소유하지 않습니다.
+
+```ts
+import { createDataGrid } from '@sectile/tabular/data-grid'
+
+const columns = [
+  { id: 'task', capabilities: ['sort', 'edit'] },
+  { id: 'owner', capabilities: ['sort'] },
+] as const
+const grid = createDataGrid({ columns })
+
+grid.subscribeCommands((command) => {
+  if (command.type === 'request-view') loadGridView(command.request)
+  if (command.type === 'commit-edit') saveCell(command.cell, command.value)
+})
+
+grid.synchronizeView(initialGridResponse)
+grid.dispatch({ type: 'focus-cell', cell: { rowID: 'release', columnID: 'task' } })
+grid.dispatch({ type: 'move-cell', direction: 'right' })
+
+const { cursor, edit } = grid.getSnapshot()
+renderGrid(grid.getProjection(), { cursor, edit })
+```
+
+## DOM에 직접 연결
+
+DOM connection은 ARIA grid, roving tab stop, keyboard 이동과 editor 수명을 기존 element에 투영합니다.
+
+```ts
+import { createDataGrid } from '@sectile/dom/data-grid'
+
+const connection = createDataGrid({
+  columns,
+  root: document.querySelector<HTMLElement>('#release-grid')!,
+  onCommand: handleGridCommand,
+  onSnapshotChange: renderGrid,
+})
+
+const taskHeader = document.querySelector<HTMLElement>('[data-header="task"]')!
+const rowElement = document.querySelector<HTMLElement>('[data-row="release"]')!
+const taskCell = rowElement.querySelector<HTMLElement>('[data-column="task"]')!
+const taskInput = taskCell.querySelector<HTMLInputElement>('input')!
+connection.setColumnHeaderAttributes(taskHeader, { columnID: 'task' })
+const releaseRow = connection.registerRow(rowElement, { rowID: 'release' })
+const releaseCell = connection.registerCell(taskCell, {
+  cell: { rowID: 'release', columnID: 'task' },
+})
+const releaseEditor = connection.bindEditor(taskInput, {
+  cell: { rowID: 'release', columnID: 'task' },
+})
+
+connection.focusCurrent()
+```
+
+## Vue grid 구성
 
 DataGrid는 native table element가 아니라 ARIA grid 의미를 사용합니다. accepted view의 모든 행은 leaf여야 하며 계층형 response는 상태를 일부 변경하지 않고 원자적으로 거부됩니다. `createDataGridComponents(grid)`로 controller type이 결합된 namespace를 만듭니다.
 
 ```vue
 <script setup lang="ts">
-import { createDataGridComponents } from '@sectile/vue/data-grid'
+import { createDataGridComponents } from '@sectile/vue/tabular'
 
 const DataGrid = createDataGridComponents(grid)
 </script>
@@ -29,8 +85,8 @@ const DataGrid = createDataGridComponents(grid)
 <DataGrid.Provider>
   <DataGrid.Root aria-label="출시 작업" @command="handleCommand">
     <DataGrid.Header><DataGrid.HeaderRow>
-      <DataGrid.ColumnHeader headerNodeID="task">작업</DataGrid.ColumnHeader>
-      <DataGrid.ColumnHeader headerNodeID="owner">담당자</DataGrid.ColumnHeader>
+      <DataGrid.ColumnHeader column="task">작업</DataGrid.ColumnHeader>
+      <DataGrid.ColumnHeader column="owner">담당자</DataGrid.ColumnHeader>
     </DataGrid.HeaderRow></DataGrid.Header>
     <DataGrid.Body v-slot="{ row }">
       <DataGrid.Cell column="task">{{ row.cells.task }}</DataGrid.Cell>
@@ -145,11 +201,12 @@ DataGrid도 DataTable과 같은 query/source 계약을 사용합니다. `SortTri
 | `ColumnResizeHandle` | host column size 변경 |
 | `Editor` | navigation/edit mode와 commit/cancel 연결 |
 
-## 공개 Vue API
+## 계층별 공개 API
 
-- 생성: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
-- context: `DataGrid.Provider`, `DataGrid.Root`
-- 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataGrid`, `tryCreateDataGrid`, controller의 view/source API와 `dispatch`, cursor/edit projection
+- DOM: `createDataGrid`, `connectDataGrid`, header/row/cell 속성과 등록, sort/filter/selection/editor/resize binding, `focusCurrent`, `requestRevealCell`
+- Vue 생성: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
+- Vue 구조: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
 
-각 part의 `Props`와 `SlotProps`, cursor/edit state, projection, query, view, source, command, controller, error, resolver, status, controlled-state handler와 options type을 같은 subpath에서 제공합니다.
+각 계층의 같은 subpath에서 cursor/edit state, projection, query, view, source, command, controller, error와 options type을 제공합니다. Vue는 여기에 각 part의 `Props`와 `SlotProps` type을 더합니다.

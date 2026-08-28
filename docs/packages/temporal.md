@@ -29,3 +29,5 @@ This boundary prevents a field or calendar from silently reading the machine clo
 3. [Deterministic rendering](temporal/determinism.md): `referenceDate`, SSR, hydration, and host defaults.
 
 DOM and Terminal adapters may inject the host's current civil date as a convenience. Deterministic or server-rendered applications should provide one stable reference date explicitly.
+
+Browser integrations are optional host entry points. Install `@sectile/dom` for `@sectile/dom/temporal`, or install `@sectile/vue` and Vue for `@sectile/vue/temporal`. The Vue entry point also exports `TemporalProvider` for sharing one `referenceDate` across a subtree.

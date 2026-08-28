@@ -138,7 +138,10 @@ export interface DataGridRootSlotProps<LeafCells extends object = TabularCellRec
 export interface DataGridRootExpose<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> { readonly controller: DataGridController<LeafCells, GroupCells>; refresh(): void }
 export interface DataGridPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export type DataGridHeaderRowProps = DataGridPartProps;
-export interface DataGridColumnHeaderProps extends DataGridPartProps { readonly headerNodeID: TabularHeaderNodeID }
+export type DataGridColumnHeaderProps<Column extends string = string> = DataGridPartProps & (
+  | { readonly column: Column; readonly header?: never }
+  | { readonly header: TabularHeaderNodeID; readonly column?: never }
+);
 export interface DataGridSortTriggerProps<Column extends string = string> extends DataGridPartProps { readonly column: Column; readonly comparator?: string }
 export type DataGridFilterControlProps<Column extends string = string> = DataGridPartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: Column; readonly id: string; readonly predicate: string });
 export interface DataGridColumnResizeHandleProps<Column extends string = string> extends DataGridPartProps { readonly column: Column; readonly minSize?: number; readonly maxSize?: number }
@@ -156,7 +159,7 @@ export interface DataGridComponents<LeafCells extends object, GroupCells extends
   readonly Root: TabularComponent<DataGridRootProps, DataGridRootSlotProps<LeafCells, GroupCells>>;
   readonly Header: TabularComponent<DataGridHeaderProps, DataGridHeaderSlotProps<LeafCells, GroupCells>>;
   readonly HeaderRow: TabularComponent<DataGridHeaderRowProps, DataGridHeaderRowSlotProps<LeafCells, GroupCells>>;
-  readonly ColumnHeader: TabularComponent<DataGridColumnHeaderProps, DataGridColumnHeaderSlotProps<LeafCells, GroupCells>>;
+  readonly ColumnHeader: TabularComponent<DataGridColumnHeaderProps<DataTableColumnID<LeafCells, GroupCells>>, DataGridColumnHeaderSlotProps<LeafCells, GroupCells>>;
   readonly SortTrigger: TabularComponent<DataGridSortTriggerProps<DataTableColumnID<LeafCells, GroupCells>>, DataGridSortTriggerSlotProps<LeafCells, GroupCells>>;
   readonly FilterControl: TabularComponent<DataGridFilterControlProps<DataTableColumnID<LeafCells, GroupCells>>, DataGridFilterControlSlotProps<LeafCells, GroupCells>>;
   readonly ColumnResizeHandle: TabularComponent<DataGridColumnResizeHandleProps<DataTableColumnID<LeafCells, GroupCells>>, DataGridColumnResizeHandleSlotProps<LeafCells, GroupCells>>;

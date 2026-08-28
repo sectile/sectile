@@ -35,6 +35,7 @@ const releaseRow = connection.registerRow(rowElement, { rowID: row.id })
 const releaseCell = connection.registerCell(cellElement, {
   cell: { rowID: row.id, columnID: 'name' },
 })
+connection.setHeaderCellAttributes(nameHeader, { columnID: 'name' })
 
 if (!releaseRow.ok || !releaseCell.ok) throw new Error('DOM and projection do not match.')
 
@@ -45,6 +46,8 @@ onRowUnmount(() => {
 ```
 
 DataTable keeps native table elements. Grid profiles project grid/treegrid roles, indices, selection, expansion, level, and position metadata to ordinary HTMLElements.
+
+Bind a leaf header with `{ columnID: 'name' }`; the connection resolves its actual schema node. Only a nested group header uses `{ headerNodeID: 'employment' }`. The equivalent Vue props are `column="name"` and `header="employment"`.
 
 ## Bind behavior
 

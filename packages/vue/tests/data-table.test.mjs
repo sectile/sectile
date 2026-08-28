@@ -32,7 +32,7 @@ test('Vue DataTable renders one native table tree and propagates controller cont
       controller = useDataTable({ columns });
       const DataTable = createDataTableComponents(controller);
       accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]);
-      return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root, null, { default: () => [h(DataTable.Caption, null, () => 'Users'), h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataTable.Body, null, { default: ({ row }) => h(DataTable.Cell, { column: 'name' }, () => row.cells.name) }), h(Probe)] }) });
+      return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root, null, { default: () => [h(DataTable.Caption, null, () => 'Users'), h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { column: 'name' }, () => 'Name'))), h(DataTable.Body, null, { default: ({ row }) => h(DataTable.Cell, { column: 'name' }, () => row.cells.name) }), h(Probe)] }) });
     },
   });
   const html = await renderToString(app);

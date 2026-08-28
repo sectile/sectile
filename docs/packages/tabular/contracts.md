@@ -7,7 +7,7 @@ DataTable, DataGrid, and DataTreeGrid use the same row and column schema, query,
 Column IDs remain stable across sources, cells, queries, and column state. `capabilities` declares the operations a source accepts; `initialVisible` and `initialPin` seed the first column state.
 
 ```ts
-import { defineDataTableColumns } from '@sectile/vue/data-table'
+import { defineDataTableColumns } from '@sectile/vue/tabular'
 
 const columns = defineDataTableColumns([
   { id: 'name', label: 'Name', capabilities: ['sort', 'filter'], initialPin: 'start' },
@@ -26,6 +26,8 @@ const headers = [
 ```
 
 The schema derives nested-header depth, spans, and ARIA metadata. `HeaderRow` never needs a manual depth prop.
+
+In Vue, bind a leaf with `ColumnHeader column="team"` and only a group with `ColumnHeader header="employment"`. The DOM forms are `{ columnID: 'team' }` and `{ headerNodeID: 'employment' }`. Leaf consumers do not repeat schema-node IDs.
 
 ## Query
 

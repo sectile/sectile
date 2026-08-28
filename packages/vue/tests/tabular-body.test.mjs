@@ -36,7 +36,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
         default: () => h(DataTable.Root, null, {
           default: () => [
             h(DataTable.Caption, null, () => 'People'),
-            h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { headerNodeID: 'name' }, () => 'Name'))),
+            h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { column: 'name' }, () => 'Name'))),
             h(DataTable.Body, null, {
               default: ({ row, rowIndex }) => [
                 h(DataTable.Cell, { column: 'name' }, () => `${rowIndex}:${row.cells.name}`),
@@ -56,7 +56,10 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   await nextTick();
 
   assert.equal(host.querySelector('caption')?.textContent, 'People');
+  const header = host.querySelector('[data-part="column-header"]');
   assert.equal(host.querySelector('[data-part="header-row"]')?.hasAttribute('data-depth'), false);
+  assert.equal(header?.getAttribute('data-header-node-id'), 'name');
+  assert.equal(header?.id, 'sectile-tabular-header-name');
   assert.deepEqual([...host.querySelectorAll('[data-part="row"]')].map((row) => row.getAttribute('data-row-id')), ['ada', 'grace']);
   assert.deepEqual([...host.querySelectorAll('[data-part="cell"]')].map((cell) => cell.textContent), ['0:Ada', 'Engineer', '1:Grace', 'Admiral']);
   assert.deepEqual([...host.querySelectorAll('input[name="people"]')].map((input) => input.value), ['ada', 'grace']);

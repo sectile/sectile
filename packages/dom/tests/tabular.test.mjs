@@ -65,6 +65,11 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   const connection = createDataTable({ columns, table, onCommand: (command) => commands.push(command) });
   assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
 
+  const header = document.createElement('th');
+  connection.setHeaderCellAttributes(header, { columnID: 'name' });
+  assert.equal(header.id, 'sectile-tabular-header-header%3Aname');
+  assert.equal(header.getAttribute('data-header-node-id'), 'header:name');
+
   const row = document.createElement('tr');
   const cell = document.createElement('td');
   row.append(cell);
@@ -137,6 +142,11 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
   const commands = [];
   const connection = createDataGrid({ columns, root, onCommand: (command) => commands.push(command) });
   assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
+
+  const header = document.createElement('div');
+  connection.setColumnHeaderAttributes(header, { columnID: 'name' });
+  assert.equal(header.id, 'sectile-tabular-header-header%3Aname');
+  assert.equal(header.getAttribute('aria-colindex'), '1');
 
   const first = document.createElement('div');
   root.append(first);

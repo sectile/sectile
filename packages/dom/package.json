@@ -146,71 +146,6 @@
       "import": "./dist/number-field.js",
       "default": "./dist/number-field.js"
     },
-    "./date-field": {
-      "types": "./dist/date-field.d.ts",
-      "import": "./dist/date-field.js",
-      "default": "./dist/date-field.js"
-    },
-    "./date-time-field": {
-      "types": "./dist/date-time-field.d.ts",
-      "import": "./dist/date-time-field.js",
-      "default": "./dist/date-time-field.js"
-    },
-    "./time-field": {
-      "types": "./dist/time-field.d.ts",
-      "import": "./dist/time-field.js",
-      "default": "./dist/time-field.js"
-    },
-    "./time-range-field": {
-      "types": "./dist/time-range-field.d.ts",
-      "import": "./dist/time-range-field.js",
-      "default": "./dist/time-range-field.js"
-    },
-    "./date-picker": {
-      "types": "./dist/date-picker.d.ts",
-      "import": "./dist/date-picker.js",
-      "default": "./dist/date-picker.js"
-    },
-    "./date-range-picker": {
-      "types": "./dist/date-range-picker.d.ts",
-      "import": "./dist/date-range-picker.js",
-      "default": "./dist/date-range-picker.js"
-    },
-    "./range-calendar": {
-      "types": "./dist/range-calendar.d.ts",
-      "import": "./dist/range-calendar.js",
-      "default": "./dist/range-calendar.js"
-    },
-    "./month-picker": {
-      "types": "./dist/month-picker.d.ts",
-      "import": "./dist/month-picker.js",
-      "default": "./dist/month-picker.js"
-    },
-    "./month-range-picker": {
-      "types": "./dist/month-range-picker.d.ts",
-      "import": "./dist/month-range-picker.js",
-      "default": "./dist/month-range-picker.js"
-    },
-    "./year-picker": {
-      "types": "./dist/year-picker.d.ts",
-      "import": "./dist/year-picker.js",
-      "default": "./dist/year-picker.js"
-    },
-    "./year-range-picker": {
-      "types": "./dist/year-range-picker.d.ts",
-      "import": "./dist/year-range-picker.js",
-      "default": "./dist/year-range-picker.js"
-    },
-    "./date-time-picker": {
-      "types": "./dist/date-time-picker.d.ts",
-      "import": "./dist/date-time-picker.js",
-      "default": "./dist/date-time-picker.js"
-    },
-    "./date-time-range-picker": {
-      "types": "./dist/date-time-range-picker.d.ts",
-      "import": "./dist/date-time-range-picker.js",
-      "default": "./dist/date-time-range-picker.js"
-    },
     "./quantity-field": {
       "types": "./dist/quantity-field.d.ts",
       "import": "./dist/quantity-field.js",
@@ -326,11 +261,6 @@
       "import": "./dist/reorder.js",
       "default": "./dist/reorder.js"
     },
-    "./calendar": {
-      "types": "./dist/calendar.d.ts",
-      "import": "./dist/calendar.js",
-      "default": "./dist/calendar.js"
-    },
     "./combobox": {
       "types": "./dist/combobox.d.ts",
       "import": "./dist/combobox.js",
@@ -356,11 +286,6 @@
       "import": "./dist/text.js",
       "default": "./dist/text.js"
     },
-    "./date-range-field": {
-      "types": "./dist/date-range-field.d.ts",
-      "import": "./dist/date-range-field.js",
-      "default": "./dist/date-range-field.js"
-    },
     "./editable": {
       "types": "./dist/editable.d.ts",
       "import": "./dist/editable.js",
@@ -370,6 +295,11 @@
       "types": "./dist/virtual.d.ts",
       "import": "./dist/virtual.js",
       "default": "./dist/virtual.js"
+    },
+    "./temporal": {
+      "types": "./dist/temporal.d.ts",
+      "import": "./dist/temporal.js",
+      "default": "./dist/temporal.js"
     },
     "./package.json": "./package.json"
   },
@@ -384,20 +314,24 @@
     "@floating-ui/dom": "^1.8.0",
     "@sectile/core": "workspace:*",
     "@sectile/tabular": "workspace:*",
-    "@standard-schema/spec": "^1.1.0",
-    "@sectile/temporal": "workspace:*"
+    "@standard-schema/spec": "^1.1.0"
   },
   "peerDependencies": {
-    "@sectile/virtual": "workspace:*"
+    "@sectile/virtual": "workspace:*",
+    "@sectile/temporal": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@sectile/virtual": {
+      "optional": true
+    },
+    "@sectile/temporal": {
       "optional": true
     }
   },
   "devDependencies": {
     "@sectile/virtual": "workspace:*",
     "happy-dom": "^20.11.6",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "@sectile/temporal": "workspace:*"
   }
 }

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './temporal', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../dist/index.js');
@@ -36,4 +36,21 @@ test('virtualization is exposed only through its optional subpath', async () => 
 
   const virtualSource = await readFile(new URL('../dist/virtual.js', import.meta.url), 'utf8');
   assert.match(virtualSource, /@sectile\/virtual/);
+});
+
+test('temporal controls are exposed only through their optional subpath', async () => {
+  assert.equal(packageManifest.dependencies?.['@sectile/temporal'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/temporal'], 'workspace:*');
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/temporal']?.optional, true);
+
+  const rootModule = await import('../dist/index.js');
+  assert.equal(rootModule.createDateField, undefined);
+  assert.equal(rootModule.createCalendar, undefined);
+
+  const temporalModule = await import('../dist/temporal.js');
+  assert.equal(typeof temporalModule.createDateField, 'function');
+  assert.equal(typeof temporalModule.createCalendar, 'function');
+
+  const temporalSource = await readFile(new URL('../dist/temporal.js', import.meta.url), 'utf8');
+  assert.match(temporalSource, /@sectile\/temporal/);
 });

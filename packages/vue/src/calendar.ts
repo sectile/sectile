@@ -2,8 +2,8 @@ import type {
   CalendarMonthValue,
   CalendarPolicies,
   CalendarViewMode,
-} from '@sectile/dom/calendar';
-import type { DateValue } from '@sectile/dom/date-field';
+} from '@sectile/dom/temporal';
+import type { DateValue } from '@sectile/dom/temporal';
 import {
   defineComponent,
   h,

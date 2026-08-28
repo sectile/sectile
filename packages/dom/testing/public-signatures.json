@@ -15,10 +15,6 @@
       "types": "dist/alert-dialog.d.ts"
     },
     {
-      "subpath": "./calendar",
-      "types": "dist/calendar.d.ts"
-    },
-    {
       "subpath": "./carousel",
       "types": "dist/carousel.d.ts"
     },
@@ -57,34 +53,6 @@
     {
       "subpath": "./data-tree-grid",
       "types": "dist/data-tree-grid.d.ts"
-    },
-    {
-      "subpath": "./date-field",
-      "types": "dist/date-field.d.ts"
-    },
-    {
-      "subpath": "./date-picker",
-      "types": "dist/date-picker.d.ts"
-    },
-    {
-      "subpath": "./date-range-field",
-      "types": "dist/date-range-field.d.ts"
-    },
-    {
-      "subpath": "./date-range-picker",
-      "types": "dist/date-range-picker.d.ts"
-    },
-    {
-      "subpath": "./date-time-field",
-      "types": "dist/date-time-field.d.ts"
-    },
-    {
-      "subpath": "./date-time-picker",
-      "types": "dist/date-time-picker.d.ts"
-    },
-    {
-      "subpath": "./date-time-range-picker",
-      "types": "dist/date-time-range-picker.d.ts"
     },
     {
       "subpath": "./dialog",
@@ -139,14 +107,6 @@
       "types": "dist/meter-group.d.ts"
     },
     {
-      "subpath": "./month-picker",
-      "types": "dist/month-picker.d.ts"
-    },
-    {
-      "subpath": "./month-range-picker",
-      "types": "dist/month-range-picker.d.ts"
-    },
-    {
       "subpath": "./multi-thumb-slider",
       "types": "dist/multi-thumb-slider.d.ts"
     },
@@ -181,10 +141,6 @@
     {
       "subpath": "./radio-group",
       "types": "dist/radio-group.d.ts"
-    },
-    {
-      "subpath": "./range-calendar",
-      "types": "dist/range-calendar.d.ts"
     },
     {
       "subpath": "./rating",
@@ -223,16 +179,12 @@
       "types": "dist/tags-input.d.ts"
     },
     {
+      "subpath": "./temporal",
+      "types": "dist/temporal.d.ts"
+    },
+    {
       "subpath": "./text",
       "types": "dist/text.d.ts"
-    },
-    {
-      "subpath": "./time-field",
-      "types": "dist/time-field.d.ts"
-    },
-    {
-      "subpath": "./time-range-field",
-      "types": "dist/time-range-field.d.ts"
     },
     {
       "subpath": "./timer",
@@ -273,17 +225,9 @@
     {
       "subpath": "./window-splitter",
       "types": "dist/window-splitter.d.ts"
-    },
-    {
-      "subpath": "./year-picker",
-      "types": "dist/year-picker.d.ts"
-    },
-    {
-      "subpath": "./year-range-picker",
-      "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "a6640959bcecbbf80d387a7cc5401f5f628491cf4aaa14d3c4c6c4325388d3a8",
+  "fingerprint": "d4c7c6c8a62f471331aaa50606ba1c67f673d019b70b8da43e52dd1151c88ddc",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -327,15 +271,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "5febc8fca48c6986c7c1f008408dd796a565de9ce5fe8a8c471feb40e82e63f6"
+      "sha256": "c9b78daa542d7272e805fb7d975e14610dfbd322a6f774a24497e7474e1179a2"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "c5a4c5c404d9eb0d51b417c3ae5377b05093a671469ee33552e07029070c66ea"
+      "sha256": "cdfc246399a44757cd9a7e06bbb7a1c28353faa4ca50f7a714f91be815533387"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "32b8d3ac0ac2918becf3fb5c91db9123b3a523f57799755f023a8fc77f98f5af"
+      "sha256": "65908a1a1d76336b8f39f2564effdf0ec4ccdfbd315e405bb535691756030963"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -395,7 +339,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "2a158167e7177fdf621789dbf34e51fc98235997122b709d2f0f21b892e8f496"
+      "sha256": "983424e391c1f9bf0824e3fea431dd3ae8026581ce02b7bf74ff46e1203abc4a"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -431,11 +375,11 @@
     },
     {
       "path": "dist/internal/tabular-dom.d.ts",
-      "sha256": "9e5e6ed34c41ec776d90fff538cf68036e4d140935c967e9fab576844f81cf33"
+      "sha256": "8a01322d8bba07aeeb4aac5de3a91c5bcf88e69b4e3ed1544d37858f359f1a66"
     },
     {
       "path": "dist/internal/tabular-grid-dom.d.ts",
-      "sha256": "6359f4d7f47f014f2225dce850872d982d352422a2bc8cc32d922356a105baed"
+      "sha256": "92efb38de37e4978ce15af5f1e4f2a3886f7f46be8209f625a04481f8488b0ca"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -544,6 +488,10 @@
     {
       "path": "dist/tags-input.d.ts",
       "sha256": "a28b0c98f56500d89fe8337c185228a86a28abd558bf560bc5c0a4eb7f3abc67"
+    },
+    {
+      "path": "dist/temporal.d.ts",
+      "sha256": "da8930959d5f7157e042b50cf725e67836144eb9cc35096b524dd995030a3ed4"
     },
     {
       "path": "dist/text.d.ts",

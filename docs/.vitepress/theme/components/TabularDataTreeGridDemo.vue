@@ -10,7 +10,7 @@ import {
   type DataTreeGridEditState,
   type DataTreeGridRootExpose,
   type DataTreeGridViewResponse,
-} from '@sectile/vue/data-tree-grid';
+} from '@sectile/vue/tabular';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';
@@ -121,7 +121,7 @@ const statusIntent = (status: string) => status === 'Healthy' ? 'success' : stat
     <DataTreeGrid.Provider>
       <div class="tabular-demo__viewport">
         <DataTreeGrid.Root ref="treeRoot" class="tabular-grid tabular-tree-grid" aria-labelledby="tabular-data-tree-grid-demo-title" @command="handleCommand">
-          <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">{{ copy.columns[index] }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
+          <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">{{ copy.columns[index] }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
           <DataTreeGrid.Body v-slot="{ row }">
             <DataTreeGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
               <template v-if="column.id === 'name'">

@@ -57,6 +57,15 @@ export interface TabularHeaderMetrics {
   readonly depth: number;
 }
 
+export type TabularDOMHeaderReference =
+  | { readonly columnID: TabularColumnID; readonly headerNodeID?: never }
+  | { readonly headerNodeID: TabularHeaderNodeID; readonly columnID?: never };
+
+export interface ResolvedTabularHeaderReference {
+  readonly headerNodeID: TabularHeaderNodeID;
+  readonly metric: TabularHeaderMetrics | undefined;
+}
+
 export type TabularDOMBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
 
 export class ColumnSizeStore {
@@ -355,6 +364,21 @@ export function headerMetrics(snapshot: TabularSnapshot): readonly TabularHeader
   };
   for (const node of source) visit(node, 0);
   return Object.freeze(output);
+}
+
+export function resolveHeaderReference(
+  snapshot: TabularSnapshot,
+  reference: TabularDOMHeaderReference,
+): ResolvedTabularHeaderReference {
+  const metrics = headerMetrics(snapshot);
+  const metric = reference.columnID === undefined
+    ? metrics.find((entry) => entry.headerNodeID === reference.headerNodeID)
+    : metrics.find((entry) => entry.columnID === reference.columnID);
+  const fallback = reference.columnID === undefined ? reference.headerNodeID : reference.columnID;
+  return Object.freeze({
+    headerNodeID: metric?.headerNodeID ?? fallback,
+    metric,
+  });
 }
 
 export function headerElementID(headerNodeID: TabularHeaderNodeID): string {

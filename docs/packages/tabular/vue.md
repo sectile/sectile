@@ -1,9 +1,9 @@
 # Tabular with Vue
 
-Install Vue for the base profiles. `@sectile/tabular` and `@sectile/dom` are direct dependencies of `@sectile/vue`, so application code does not install them merely to receive public component types.
+The Vue Tabular API is collected under `@sectile/vue/tabular`. Install its optional peer dependency, `@sectile/tabular`, when using this subpath. Applications that do not use Tabular do not need it.
 
 ```sh
-pnpm add @sectile/vue vue
+pnpm add @sectile/vue @sectile/tabular vue
 ```
 
 ## Choose a profile
@@ -25,7 +25,7 @@ import {
   useDataGrid,
   createDataGridComponents,
   useDataGridSource,
-} from '@sectile/vue/data-grid'
+} from '@sectile/vue/tabular'
 
 interface UserCells {
   readonly name: string
@@ -63,7 +63,7 @@ Nested Providers form nested scopes and each part resolves the nearest matching 
 | DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
 | DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
-Every part exports its `Props` and `SlotProps` types. Each profile also exports row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, a source resolver, and `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` from the same `@sectile/vue/data-*` subpath and the Vue package root.
+Every part exports its `Props` and `SlotProps` types. `@sectile/vue/tabular` also exports the row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, source resolvers, `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` for all three profiles. The Vue package root does not export these APIs.
 
 ## Source execution and UI states
 
@@ -133,8 +133,8 @@ Use `useData*Context()` when a descendant component needs the same values in scr
 
 - `as` selects the rendered element; `asChild` adopts exactly one valid child.
 - Body repeats accepted rows by default. Its slot exposes `{ row, rowIndex, isGroup }`; `manual` enables explicit low-level Row composition.
-- Cell-oriented parts use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition. Header nodes keep `headerNodeID` because a node may represent a column or a group.
-- `HeaderRow` has no depth prop. Header schema and `headerNodeID` determine nested depth, spans, and ARIA metadata.
+- Cells and leaf headers use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition.
+- Only a nested group header uses `header="employment"` to identify its schema node. `HeaderRow` has no depth prop; the schema determines depth, spans, and ARIA metadata.
 - Body slot rows preserve the cell schema carried by the controller. Getter-based columns infer their value types; remote projections can declare the schema with `useData*<Cells>()`. Leaf and group schemas can be distinct.
 - Name a native DataTable with `Caption` or `aria-labelledby`. Grid and TreeGrid use `aria-label` or `aria-labelledby`.
 - Native DataTable markup retains table semantics and form submission.

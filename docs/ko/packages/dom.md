@@ -126,6 +126,22 @@ Popover와 Tooltip 연결 객체는 Floating UI를 사용합니다. 기본 오�
 
 `@sectile/dom/reorder`는 sequence와 tree 순서 변경을 Alt 조합 이동 키와 포인터 배치로 연결합니다. 포인터 캡처와 위치 판정은 DOM 어댑터가 담당하고 Core에는 안정 식별자와 before/after 또는 부모 배치만 전달합니다.
 
+## 날짜와 시간 컨트롤
+
+날짜 입력란, 시간 입력란, 달력, 선택기를 브라우저 요소에 연결할 때 `@sectile/temporal`을 설치합니다. 관련 어댑터는 하나의 선택 진입점에 모여 있어 기본 DOM 패키지는 날짜와 시간 계산을 불러오지 않습니다.
+
+```sh
+pnpm add @sectile/core @sectile/temporal @sectile/dom
+```
+
+```ts
+import {
+  createCalendar,
+  createDateField,
+  createDatePicker,
+} from '@sectile/dom/temporal'
+```
+
 ## 가상화 host
 
 `@sectile/dom/virtual`은 모든 `@sectile/virtual` layout strategy를 scroll element에 연결합니다. Connection은 브라우저 scheduling을 맡고, 논리 collection과 markup은 응용 프로그램이 관리합니다.

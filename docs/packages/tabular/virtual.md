@@ -5,7 +5,7 @@ Virtual component. Install Virtual only when the application chooses to window
 rows or cells.
 
 ```sh
-pnpm add @sectile/vue @sectile/virtual vue
+pnpm add @sectile/vue @sectile/tabular @sectile/virtual vue
 ```
 
 Use `@sectile/vue/virtual` directly for viewport/content/item lifecycle. Use the
@@ -63,6 +63,6 @@ start, center, and end pinning. Reconcile projection changes with the matching
 `reconcileData*VirtualAdapter` function.
 
 Importing base `@sectile/tabular`, `@sectile/dom/data-*`, or
-`@sectile/vue/data-*` never loads Virtual. Importing `@sectile/tabular/virtual`,
+`@sectile/vue/tabular` never loads Virtual. Importing `@sectile/tabular/virtual`,
 `@sectile/dom/virtual`, or `@sectile/vue/virtual` without installing
 `@sectile/virtual` fails with the missing optional peer, making opt-in explicit.

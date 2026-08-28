@@ -288,15 +288,6 @@ export {
   type DataTreeGridTreeRowOptions,
 } from './data-tree-grid.js';
 export {
-  createCalendar, tryCreateCalendar,
-  toCalendarEvent,
-  type CalendarControlledValues,
-  type CalendarConnection,
-  type CalendarOptions,
-  type CalendarPolicies,
-  type DateValue as CalendarValue,
-} from './calendar.js';
-export {
   connectCombobox,
   createCombobox, tryCreateCombobox,
   createComboboxController,
@@ -406,25 +397,11 @@ export {
   type TextValueChangeDetails,
 } from './text.js';
 export { createEditable, tryCreateEditable, type EditableConnection, type EditableOptions } from './editable.js';
-export { createDateField, tryCreateDateField, type DateFieldConnection, type DateFieldControlledValues, type DateFieldOptions } from './date-field.js';
-export { createDateRangeField, tryCreateDateRangeField, type DateRangeFieldConnection, type DateRangeFieldControlledValues, type DateRangeFieldOptions } from './date-range-field.js';
-export { createDateTimeField, tryCreateDateTimeField, type DateTimeFieldConnection, type DateTimeFieldControlledValues, type DateTimeFieldOptions } from './date-time-field.js';
-export { createTimeField, tryCreateTimeField, type TimeFieldConnection, type TimeFieldControlledValues, type TimeFieldOptions } from './time-field.js';
-export { createTimeRangeField, tryCreateTimeRangeField, type TimeRangeFieldConnection, type TimeRangeFieldControlledValues, type TimeRangeFieldOptions } from './time-range-field.js';
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
 export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
 export { createCascadeList, tryCreateCascadeList, toCascadeListEvent, type CascadeListConnection, type CascadeListControlledValues, type CascadeListItemDefinition, type CascadeListOptions, type CascadeListPolicies } from './cascade-list.js';
 export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
 export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
-export { createDatePicker, tryCreateDatePicker, type DatePickerConnection, type DatePickerControlledValues, type DatePickerOptions, type PickerPositionOptions } from './date-picker.js';
-export { createDateRangePicker, tryCreateDateRangePicker, type DateRangePickerConnection, type DateRangePickerControlledValues, type DateRangePickerOptions } from './date-range-picker.js';
-export { createRangeCalendar, tryCreateRangeCalendar, type RangeCalendarConnection, type RangeCalendarControlledValues, type RangeCalendarOptions } from './range-calendar.js';
-export { createMonthPicker, tryCreateMonthPicker, createMonthPickerYear, type MonthPickerConnection, type MonthPickerControlledValues, type MonthPickerOptions, type MonthPickerValue } from './month-picker.js';
-export { createMonthRangePicker, tryCreateMonthRangePicker, createMonthRangePickerYear, type MonthRangePickerConnection, type MonthRangePickerControlledValues, type MonthRangePickerOptions } from './month-range-picker.js';
-export { createYearPicker, tryCreateYearPicker, type YearPickerConnection, type YearPickerControlledValues, type YearPickerOptions } from './year-picker.js';
-export { createYearRangePicker, tryCreateYearRangePicker, type YearRangePickerConnection, type YearRangePickerControlledValues, type YearRangePickerOptions } from './year-range-picker.js';
-export { createDateTimePicker, tryCreateDateTimePicker, type DateTimePickerConnection, type DateTimePickerControlledValues, type DateTimePickerOptions } from './date-time-picker.js';
-export { createDateTimeRangePicker, tryCreateDateTimeRangePicker, type DateTimeRangePickerConnection, type DateTimeRangePickerControlledValues, type DateTimeRangePickerOptions } from './date-time-range-picker.js';
 
 export type {
   AccordionControllerHighlightedValueChangeHandler,
@@ -440,11 +417,6 @@ export type {
   AlertDialogOpenChangeHandler,
   AlertDialogUpdateHandler,
 } from './alert-dialog.js';
-export type {
-  CalendarHighlightedValueChangeHandler,
-  CalendarUpdateHandler,
-  CalendarValueChangeHandler,
-} from './calendar.js';
 export type {
   CarouselAnnounceHandler,
   CarouselIndicatorLabelResolver,
@@ -485,46 +457,6 @@ export type {
   ComboboxControllerOpenChangeHandler,
   ComboboxControllerValueChangeHandler,
 } from './combobox.js';
-export type {
-  DateFieldInputStateChangeHandler,
-  DateFieldUpdateHandler,
-  DateFieldValueChangeHandler,
-} from './date-field.js';
-export type {
-  DatePickerHighlightedValueChangeHandler,
-  DatePickerOpenChangeHandler,
-  DatePickerUpdateHandler,
-  DatePickerValueChangeHandler,
-} from './date-picker.js';
-export type {
-  DateRangeFieldEndInputStateChangeHandler,
-  DateRangeFieldStartInputStateChangeHandler,
-  DateRangeFieldUpdateHandler,
-  DateRangeFieldValueChangeHandler,
-} from './date-range-field.js';
-export type {
-  DateRangePickerHighlightedValueChangeHandler,
-  DateRangePickerOpenChangeHandler,
-  DateRangePickerUpdateHandler,
-  DateRangePickerValueChangeHandler,
-} from './date-range-picker.js';
-export type {
-  DateTimeFieldInputStateChangeHandler,
-  DateTimeFieldUpdateHandler,
-  DateTimeFieldValueChangeHandler,
-} from './date-time-field.js';
-export type {
-  DateTimePickerHighlightedValueChangeHandler,
-  DateTimePickerOpenChangeHandler,
-  DateTimePickerUpdateHandler,
-  DateTimePickerValueChangeHandler,
-} from './date-time-picker.js';
-export type {
-  DateTimeRangePickerHighlightedValueChangeHandler,
-  DateTimeRangePickerOpenChangeHandler,
-  DateTimeRangePickerUpdateHandler,
-  DateTimeRangePickerValueChangeHandler,
-} from './date-time-range-picker.js';
 export type {
   DialogFocusRestoreHandler,
   DialogInitialFocusHandler,
@@ -659,17 +591,6 @@ export type {
   TextConnectionUpdateHandler,
   TextControllerValueChangeHandler,
 } from './text.js';
-export type {
-  TimeFieldInputStateChangeHandler,
-  TimeFieldUpdateHandler,
-  TimeFieldValueChangeHandler,
-} from './time-field.js';
-export type {
-  TimeRangeFieldEndInputStateChangeHandler,
-  TimeRangeFieldStartInputStateChangeHandler,
-  TimeRangeFieldUpdateHandler,
-  TimeRangeFieldValueChangeHandler,
-} from './time-range-field.js';
 export type {
   TimerCompleteHandler,
   TimerTickHandler,

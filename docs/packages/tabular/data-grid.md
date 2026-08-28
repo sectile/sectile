@@ -14,13 +14,53 @@ Click a cell, move with the arrow keys, press Enter to edit, and press Escape to
 <<< ../../.vitepress/theme/components/TabularDataGridDemo.vue
 :::
 
-## Grid composition
+## Use Tabular core only
+
+The core controller computes cursor, edit mode, selection, and commands without owning DOM focus or elements.
+
+```ts
+import { createDataGrid } from '@sectile/tabular/data-grid'
+
+const columns = [
+  { id: 'task', capabilities: ['sort', 'edit'] },
+  { id: 'owner', capabilities: ['sort'] },
+] as const
+const grid = createDataGrid({ columns })
+
+grid.subscribeCommands((command) => {
+  if (command.type === 'request-view') loadGridView(command.request)
+  if (command.type === 'commit-edit') saveCell(command.cell, command.value)
+})
+grid.synchronizeView(initialGridResponse)
+grid.dispatch({ type: 'focus-cell', cell: { rowID: 'release', columnID: 'task' } })
+grid.dispatch({ type: 'move-cell', direction: 'right' })
+renderGrid(grid.getProjection(), grid.getSnapshot())
+```
+
+## Connect existing DOM
+
+The DOM connection projects ARIA grid semantics, roving focus, keyboard navigation, and editor lifetime onto existing elements.
+
+```ts
+import { createDataGrid } from '@sectile/dom/data-grid'
+
+const root = document.querySelector<HTMLElement>('#release-grid')!
+const connection = createDataGrid({ columns, root, onCommand: handleGridCommand })
+const taskHeader = root.querySelector<HTMLElement>('[data-header="task"]')!
+const taskCell = root.querySelector<HTMLElement>('[data-cell="release:task"]')!
+
+connection.setColumnHeaderAttributes(taskHeader, { columnID: 'task' })
+connection.registerCell(taskCell, { cell: { rowID: 'release', columnID: 'task' } })
+connection.focusCurrent()
+```
+
+## Vue grid composition
 
 DataGrid uses ARIA grid semantics rather than native table elements. Rows in an accepted view must all be leaves; a hierarchical response is rejected atomically. Create its typed namespace with `createDataGridComponents(grid)`.
 
 ```vue
 <script setup lang="ts">
-import { createDataGridComponents } from '@sectile/vue/data-grid'
+import { createDataGridComponents } from '@sectile/vue/tabular'
 
 const DataGrid = createDataGridComponents(grid)
 </script>
@@ -30,8 +70,8 @@ const DataGrid = createDataGridComponents(grid)
   <DataGrid.Root aria-label="Release tasks" @command="handleCommand">
     <DataGrid.Header>
       <DataGrid.HeaderRow>
-        <DataGrid.ColumnHeader headerNodeID="task">Task</DataGrid.ColumnHeader>
-        <DataGrid.ColumnHeader headerNodeID="owner">Owner</DataGrid.ColumnHeader>
+        <DataGrid.ColumnHeader column="task">Task</DataGrid.ColumnHeader>
+        <DataGrid.ColumnHeader column="owner">Owner</DataGrid.ColumnHeader>
       </DataGrid.HeaderRow>
     </DataGrid.Header>
     <DataGrid.Body v-slot="{ row }">
@@ -138,11 +178,12 @@ DataGrid shares the same query and source envelope as DataTable. Sort and filter
 | `ColumnResizeHandle` | Host-owned column size |
 | `Editor` | Navigation/edit mode and commit/cancel wiring |
 
-## Public Vue API
+## Public API by layer
 
-- Creation: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
-- Context: `DataGrid.Provider`, `DataGrid.Root`
-- Structure: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataGrid`, `tryCreateDataGrid`, controller view/source lifecycle, `dispatch`, and cursor/edit projection
+- DOM: `createDataGrid`, `connectDataGrid`, header/row/cell registration, interaction bindings, `focusCurrent`, and `requestRevealCell`
+- Vue creation: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
+- Vue structure: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
 
-Each part exports `Props` and `SlotProps`; the subpath also exports cursor/edit state, projection, query, view, source, command, controller, error, resolver, status, controlled-state handlers, and options types.
+Each layer exports cursor/edit state, projection, query, view, source, command, controller, error, and option types from the same subpath. Vue adds every part's `Props` and `SlotProps`.

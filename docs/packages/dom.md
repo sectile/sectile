@@ -126,6 +126,22 @@ Every trigger-owned popup also joins one layer stack per document. Mixed nesting
 
 `@sectile/dom/reorder` maps sequence and tree reorder semantics onto Alt-modified movement keys and pointer placement. Pointer capture and hit-testing stay in the DOM adapter; Core receives only stable identities and semantic before/after or parent placement.
 
+## Date and time controls
+
+Install `@sectile/temporal` when browser elements need date fields, time fields, calendars, or pickers. These adapters are grouped under one optional entry point, so the base DOM package does not load date and time logic.
+
+```sh
+pnpm add @sectile/core @sectile/temporal @sectile/dom
+```
+
+```ts
+import {
+  createCalendar,
+  createDateField,
+  createDatePicker,
+} from '@sectile/dom/temporal'
+```
+
 ## Virtualization host
 
 `@sectile/dom/virtual` connects any `@sectile/virtual` layout strategy to a scroll element. The connection owns browser scheduling, not the logical collection or application markup.

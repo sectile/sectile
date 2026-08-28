@@ -4,14 +4,14 @@ import {
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
   type VNodeProps,
 } from 'vue';
-import { createCalendar, type CalendarPolicies } from '@sectile/dom/calendar';
-import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/date-picker';
-import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/date-range-picker';
-import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/date-time-picker';
-import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/date-time-range-picker';
-import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/date-field';
-import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/date-time-field';
-import { formatTimeValue, type TimeValue } from '@sectile/dom/time-field';
+import { createCalendar, type CalendarPolicies } from '@sectile/dom/temporal';
+import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/temporal';
+import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/temporal';
+import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/temporal';
+import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/temporal';
+import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal';
+import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/temporal';
+import { formatTimeValue, type TimeValue } from '@sectile/dom/temporal';
 import type { FormSubmissionRegistration } from '../form.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -19,7 +19,8 @@ import {
 } from './form-control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from './controlled-state.js';
-import { useHostPortalTarget, useHostReferenceDate } from '../host-provider.js';
+import { useHostPortalTarget } from '../host-provider.js';
+import { useTemporalReferenceDate } from '../temporal-provider.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -221,7 +222,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
       const positioned = shallowRef(inline || !runtimeProps.position);
-      const hostReferenceDate = useHostReferenceDate();
+      const hostReferenceDate = useTemporalReferenceDate();
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);

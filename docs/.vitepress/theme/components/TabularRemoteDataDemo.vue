@@ -9,7 +9,7 @@ import {
   useDataTableSource,
   type DataTableSourceResolver,
   type DataTableViewResponse,
-} from '@sectile/vue/data-table';
+} from '@sectile/vue/tabular';
 import { useDocsLocale } from '../locale.js';
 import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';
@@ -271,7 +271,7 @@ function previewFailure(): void {
                   <DocsCheckbox :model-value="bulkSelectionValue(rowSelection, visibleRows)" />
                 </DataTable.BulkSelectionControl>
               </th>
-              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
+              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
                 <DataTable.SortTrigger :column="column.id">
                   {{ copy.columns[index] }}
                   <ArrowUp v-if="direction(column.id) === 'ascending'" :size="14" aria-hidden="true" />

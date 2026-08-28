@@ -1,5 +1,5 @@
 import { h, ref } from 'vue';
-import { CalendarRoot } from '../../dist/calendar.js';
+import { CalendarRoot } from '../../dist/temporal.js';
 import { DialogContent, DialogRoot, DialogTrigger } from '../../dist/dialog.js';
 import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../../dist/disclosure.js';
 import { HostProvider } from '../../dist/host-provider.js';
@@ -18,7 +18,7 @@ export const referenceDate = Object.freeze({ year: 2026, month: 8, day: 26 });
 export function createHydrationFixture() {
   const updated = ref(false);
   return {
-    render: () => h(HostProvider, { referenceDate }, {
+    render: () => h(HostProvider, null, {
       default: () => h('main', { id: 'verification-root' }, [
         h(DisclosureRoot, null, {
           default: () => [

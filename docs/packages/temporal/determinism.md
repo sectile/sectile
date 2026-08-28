@@ -17,6 +17,6 @@ const state = createDatePickerState({
 
 Use the same `referenceDate` on the server and client. This produces the same initial month during SSR and hydration.
 
-DOM and Terminal facades may inject the host's current civil date when called without one. Vue picker roots and `HostProvider` accept an explicit reference date. The convenience default is suitable for client-only interfaces; tests, snapshots, workers, and server rendering should provide a stable value.
+DOM and Terminal facades may inject the host's current civil date when called without one. Vue picker roots accept an explicit reference date, while `TemporalProvider` shares one with a subtree. The convenience default is suitable for client-only interfaces; tests, snapshots, workers, and server rendering should provide a stable value.
 
 The reference date initializes an otherwise empty view. It does not replace a selected value or silently advance an existing calendar state.

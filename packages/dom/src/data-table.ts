@@ -13,7 +13,6 @@ import type {
   TabularColumnID,
   TabularControlledValues,
   TabularGroupID,
-  TabularHeaderNodeID,
   TabularQuery,
   TabularResult,
   TabularRowID,
@@ -31,12 +30,12 @@ import {
   domFailure,
   findProjectedRow,
   headerElementID,
-  headerMetrics,
   leafHeaderID,
   ok,
   queryWithFilter,
   queryWithSort,
   readEditorValue,
+  resolveHeaderReference,
   rowSelected,
   setEditorAttributes,
   setColumnInlineSize,
@@ -50,6 +49,7 @@ import {
   type TabularDOMEditorElement,
   type TabularDOMEditorOptions,
   type TabularDOMEditorValueParser,
+  type TabularDOMHeaderReference,
   type TabularDOMRegistrationOptions,
 } from './internal/tabular-dom.js';
 
@@ -72,9 +72,7 @@ export interface DataTableConnectionOptions extends TabularDOMColumnSizeOptions 
 
 export interface DataTableOptions extends SemanticDataTableOptions, Omit<DataTableConnectionOptions, 'controller'> {}
 
-export interface DataTableHeaderCellOptions {
-  readonly headerNodeID: TabularHeaderNodeID;
-}
+export type DataTableHeaderCellOptions = TabularDOMHeaderReference;
 
 export interface DataTableRowOptions extends TabularDOMRegistrationOptions {
   readonly rowID: TabularRowID | TabularGroupID;
@@ -225,10 +223,11 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public setHeaderCellAttributes(element: HTMLTableCellElement, options: DataTableHeaderCellOptions): void {
-    const metric = headerMetrics(this.getSnapshot()).find((entry) => entry.headerNodeID === options.headerNodeID);
+    const resolved = resolveHeaderReference(this.getSnapshot(), options);
+    const metric = resolved.metric;
     element.setAttribute('data-part', 'column-header');
-    element.setAttribute('data-header-node-id', options.headerNodeID);
-    element.id = headerElementID(options.headerNodeID);
+    element.setAttribute('data-header-node-id', resolved.headerNodeID);
+    element.id = headerElementID(resolved.headerNodeID);
     if (metric === undefined) {
       element.colSpan = 1;
       element.rowSpan = 1;

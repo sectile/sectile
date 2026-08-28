@@ -3,7 +3,6 @@ import type {
   TabularColumnID,
   TabularControlledValues,
   TabularGroupID,
-  TabularHeaderNodeID,
   TabularResult,
   TabularRow,
   TabularRowID,
@@ -23,11 +22,11 @@ import {
   currentView,
   domFailure,
   headerElementID,
-  headerMetrics,
   ok,
   queryWithFilter,
   queryWithSort,
   readEditorValue,
+  resolveHeaderReference,
   rowSelected,
   setColumnInlineSize,
   setBulkSelectionControlAttributes,
@@ -39,6 +38,7 @@ import {
   type TabularDOMColumnSizeState,
   type TabularDOMEditorElement,
   type TabularDOMEditorOptions,
+  type TabularDOMHeaderReference,
   type TabularDOMRegistrationOptions,
 } from './tabular-dom.js';
 
@@ -104,7 +104,7 @@ export interface GridDOMConnectionOptions<Controller, Command> extends TabularDO
 export interface GridDOMControlledValues extends TabularControlledValues {
   readonly columnSizes?: Readonly<Record<TabularColumnID, number>>;
 }
-export interface GridDOMColumnHeaderOptions { readonly headerNodeID: TabularHeaderNodeID }
+export type GridDOMColumnHeaderOptions = TabularDOMHeaderReference;
 export interface GridDOMRowOptions extends TabularDOMRegistrationOptions { readonly rowID: TabularRowID | TabularGroupID; readonly disabled?: boolean }
 export interface GridDOMCellOptions extends TabularDOMRegistrationOptions { readonly cell: TabularCellAddress; readonly disabled?: boolean }
 export interface GridDOMSortTriggerOptions { readonly columnID: TabularColumnID; readonly comparator: string }
@@ -224,11 +224,12 @@ export class DOMTabularGrid<
 
   public setColumnHeaderAttributes(element: HTMLElement, options: GridDOMColumnHeaderOptions): void {
     const snapshot = this.#semanticSnapshot();
-    const metric = headerMetrics(snapshot).find((entry) => entry.headerNodeID === options.headerNodeID);
+    const resolved = resolveHeaderReference(snapshot, options);
+    const metric = resolved.metric;
     element.setAttribute('role', 'columnheader');
     element.setAttribute('data-part', 'column-header');
-    element.setAttribute('data-header-node-id', options.headerNodeID);
-    element.id = headerElementID(options.headerNodeID);
+    element.setAttribute('data-header-node-id', resolved.headerNodeID);
+    element.id = headerElementID(resolved.headerNodeID);
     if (metric === undefined) {
       clearAttributes(element, ['aria-colindex', 'aria-colspan', 'aria-rowspan', 'aria-sort']);
       return;

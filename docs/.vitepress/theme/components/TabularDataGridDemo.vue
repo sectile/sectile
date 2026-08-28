@@ -10,7 +10,7 @@ import {
   type DataGridEditState,
   type DataGridRootExpose,
   type DataGridViewResponse,
-} from '@sectile/vue/data-grid';
+} from '@sectile/vue/tabular';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';
@@ -124,7 +124,7 @@ const statusIntent = (status: string) => status === 'Ready' ? 'success' : status
         <DataGrid.Root ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
           <DataGrid.Header>
             <DataGrid.HeaderRow>
-              <DataGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
+              <DataGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
                 <DataGrid.SortTrigger :column="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger>
               </DataGrid.ColumnHeader>
             </DataGrid.HeaderRow>

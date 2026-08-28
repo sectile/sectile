@@ -14,6 +14,62 @@ Expand and collapse both groups, move through cells with the keyboard, select le
 <<< ../../.vitepress/theme/components/TabularDataTreeGridDemo.vue
 :::
 
+## Use Tabular core only
+
+The renderer-neutral controller validates hierarchy, advances expansion revisions, and recovers cursor or editor state. The application synchronizes an ordered hierarchy for each request.
+
+```ts
+import { createDataTreeGrid } from '@sectile/tabular/data-tree-grid'
+
+const columns = [
+  { id: 'service', capabilities: ['sort', 'filter', 'edit'] },
+  { id: 'owner', capabilities: ['sort', 'filter'] },
+] as const
+const tree = createDataTreeGrid({ columns })
+
+tree.attachRequestExecutor(({ request }) => {
+  const expanded = request.expansion.includes('commerce')
+  tree.synchronizeView({
+    protocolVersion: 1,
+    requestID: request.requestID,
+    sourceGeneration: request.sourceGeneration,
+    queryRevision: request.queryRevision,
+    expansionRevision: request.expansionRevision,
+    viewRevision: request.requestID,
+    access: request.access,
+    matchingLeafCount: { kind: 'known', value: 1 },
+    visibleRowCount: { kind: 'known', value: expanded ? 2 : 1 },
+    rows: [
+      { kind: 'group', id: 'commerce', parentGroupID: null, depth: 0, expanded, cells: { service: 'Commerce', owner: '' } },
+      ...(expanded ? [{ kind: 'leaf' as const, id: 'checkout', cells: { service: 'Checkout', owner: 'Alex' } }] : []),
+    ],
+    columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
+    removedRowIDs: [],
+  })
+})
+
+tree.dispatch({ type: 'set-expansion', expansion: ['commerce'] })
+renderTreeGrid(tree.getProjection())
+```
+
+## Connect existing DOM
+
+The DOM connection projects the same hierarchy into ARIA treegrid metadata, disclosures, keyboard navigation, and editor elements.
+
+```ts
+import { createDataTreeGrid } from '@sectile/dom/data-tree-grid'
+
+const root = document.querySelector<HTMLElement>('#service-tree-grid')!
+const connection = createDataTreeGrid({ columns, root, onCommand: handleTreeGridCommand })
+const serviceHeader = root.querySelector<HTMLElement>('[data-header="service"]')!
+const groupRow = root.querySelector<HTMLElement>('[data-row="commerce"]')!
+const disclosure = groupRow.querySelector<HTMLButtonElement>('button')!
+
+connection.setColumnHeaderAttributes(serviceHeader, { columnID: 'service' })
+connection.registerRow(groupRow, { rowID: 'commerce' })
+connection.bindRowDisclosure(disclosure, { rowID: 'commerce' })
+```
+
 ## Hierarchical views
 
 The source returns group rows followed by their visible descendants. Group rows carry `parentGroupID`, `depth`, and `expanded`; leaf ancestry is inferred from ordered visible context. Malformed ancestry is rejected without partially changing state.
@@ -112,11 +168,12 @@ The projection exposes parent row, depth, position, size, expansion, and context
 | `ColumnResizeHandle` | Host-owned column size |
 | `Editor` | Leaf-only navigation/edit mode |
 
-## Public Vue API
+## Public API by layer
 
-- Creation: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
-- Context: `DataTreeGrid.Provider`, `DataTreeGrid.Root`
-- Structure: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
+- Tabular core: `createDataTreeGrid`, `tryCreateDataTreeGrid`, controller view/source lifecycle, `dispatch`, and expansion/cursor/edit projection
+- DOM: `createDataTreeGrid`, `connectDataTreeGrid`, header/row/cell registration, interaction bindings, and cell/row reveal
+- Vue creation: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
+- Vue structure: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
+- Vue controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
 
-Every part exports `Props` and `SlotProps`; the subpath also exports expansion, cursor/edit state, projection, row metadata, query, view, source, command, controller, error, resolver, status, controlled-state handlers, and options types.
+Each layer exports expansion, cursor/edit state, projection, row metadata, query, view, source, command, controller, error, and option types. Vue adds every part's `Props` and `SlotProps`.

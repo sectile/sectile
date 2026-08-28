@@ -6,13 +6,14 @@ import {
   type DataTableBodyProps,
   type DataTableBodySlotProps,
   type DataTableCellProps,
+  type DataTableColumnHeaderProps,
   type DataTableColumnState,
   type DataTableController,
   type DataTableHeaderRowProps,
   type DataTableQuery,
   type DataTableRootProps,
   type DataTableSelectionControlProps,
-} from '@sectile/vue/data-table';
+} from '@sectile/vue/tabular';
 import {
   defineDataGridColumns,
   useDataGrid,
@@ -21,7 +22,7 @@ import {
   type DataGridBodySlotProps,
   type DataGridCellProps,
   type DataGridRootExpose,
-} from '@sectile/vue/data-grid';
+} from '@sectile/vue/tabular';
 import {
   defineDataTreeGridColumns,
   useDataTreeGrid,
@@ -30,7 +31,7 @@ import {
   type DataTreeGridCellProps,
   type DataTreeGridRowDisclosureProps,
   type DataTreeGridSourceResolver,
-} from '@sectile/vue/data-tree-grid';
+} from '@sectile/vue/tabular';
 
 interface User { readonly id: string; readonly name: string }
 interface UserCells { readonly name: string; readonly active: boolean }
@@ -59,6 +60,8 @@ const flatHeader: DataTableHeaderRowProps = {};
 const automaticTableBody: DataTableBodyProps = {};
 const manualGridBody: DataGridBodyProps = { manual: true };
 const inheritedTableCell: DataTableCellProps<keyof UserCells> = { column: 'name' };
+const leafColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { column: 'name' };
+const groupedColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { header: 'employment' };
 const explicitGridCell: DataGridCellProps<keyof UserCells> = { rowID: 'r1', column: 'name' };
 const inheritedTreeCell: DataTreeGridCellProps<keyof UserCells> = { column: 'name' };
 const inheritedSelection: DataTableSelectionControlProps = { name: 'users' };
@@ -75,6 +78,10 @@ const bodyName: string = {} as TableBodyRow['cells']['name'];
 const groupedValue = (row: GroupedTableRow): string | number => row.kind === 'leaf' ? row.cells.name : row.cells.memberCount;
 // @ts-expect-error Bound component columns are limited to the view cell schema.
 const invalidCell: DataTableCellProps<keyof UserCells> = { column: 'missing' };
+// @ts-expect-error Leaf headers are limited to the view cell schema.
+const invalidColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { column: 'missing' };
+// @ts-expect-error A header binds either a leaf column or a schema header node, never both.
+const ambiguousColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { column: 'name', header: 'employment' };
 // @ts-expect-error Header depth is derived from the header schema, not a component prop.
 const legacyHeaderDepth: DataTableHeaderRowProps = { depth: 0 };
-void [Table, Grid, TreeGrid, groupedTable, tableProviderHasController, inferredName, rootProps, expose, resolver, flatHeader, automaticTableBody, manualGridBody, inheritedTableCell, explicitGridCell, inheritedTreeCell, inheritedSelection, inheritedDisclosure, tableBodyRowIsTyped, gridBodyRowIsTyped, treeBodyRowIsTyped, bodyName, groupedValue, invalidCell, legacyHeaderDepth];
+void [Table, Grid, TreeGrid, groupedTable, tableProviderHasController, inferredName, rootProps, expose, resolver, flatHeader, automaticTableBody, manualGridBody, inheritedTableCell, leafColumnHeader, groupedColumnHeader, explicitGridCell, inheritedTreeCell, inheritedSelection, inheritedDisclosure, tableBodyRowIsTyped, gridBodyRowIsTyped, treeBodyRowIsTyped, bodyName, groupedValue, invalidCell, invalidColumnHeader, ambiguousColumnHeader, legacyHeaderDepth];

@@ -12,7 +12,7 @@ import {
   CalendarRoot,
   type CalendarPolicies,
   type DateValue,
-} from '@sectile/vue/calendar';
+} from '@sectile/vue/temporal';
 
 const props = defineProps<{ readonly scenario: string }>();
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;

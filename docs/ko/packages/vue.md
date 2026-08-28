@@ -39,6 +39,31 @@ import { HostProvider } from '@sectile/vue/host-provider'
 
 응용 프로그램이 직접 만든 조합형 파트에서는 `useHostDirection`, `useHostPortalTarget`, `useHostId`로 확정된 값을 읽을 수 있습니다. 중첩한 Provider는 생략한 속성만 상위 값을 물려받습니다.
 
+## 날짜와 시간 컴포넌트
+
+날짜 입력란, 시간 입력란, 달력, 선택기를 사용할 때 `@sectile/temporal`을 설치합니다. Vue용 전체 API는 `@sectile/vue/temporal`에서 제공되며 기본 Vue 패키지는 날짜와 시간 계산에 의존하지 않습니다.
+
+```sh
+pnpm add @sectile/core @sectile/temporal @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import {
+  DatePickerRoot,
+  TemporalProvider,
+} from '@sectile/vue/temporal'
+</script>
+
+<template>
+  <TemporalProvider :reference-date="{ year: 2026, month: 8, day: 28 }">
+    <DatePickerRoot />
+  </TemporalProvider>
+</template>
+```
+
+`TemporalProvider`는 하위 영역 전체에 결정적인 기준 날짜 하나를 전달합니다. 특정 선택기에 다른 달력 기준이 필요하면 해당 root의 `referenceDate`가 우선합니다.
+
 ## 기본 사용법
 
 Root가 상호작용 상태를 소유하고 하위 구성 요소에 공유합니다. `v-model`은 Vue의 제어 상태를 사용하고, `default-value`는 컴포넌트가 소유하는 비제어 상태를 만듭니다.
