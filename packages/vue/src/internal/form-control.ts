@@ -149,6 +149,7 @@ export const hiddenValueSubmissionCapabilities = Object.freeze({
 
 export function useNativeInputFormControl(
   element: Readonly<ShallowRef<HTMLInputElement | HTMLTextAreaElement | null | undefined>>,
+  options: { readonly reset?: () => void } = {},
 ): FormControlParticipation {
   return useFormControl({
     element: element as FormElementSource<HTMLInputElement>,
@@ -157,6 +158,7 @@ export function useNativeInputFormControl(
     validationTarget: element as FormElementSource<HTMLInputElement>,
     labelMode: 'for',
     capabilities: nativeInputControlCapabilities,
+    ...(options.reset === undefined ? {} : { reset: options.reset }),
   });
 }
 

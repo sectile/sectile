@@ -93,15 +93,8 @@ export const CheckboxRoot = defineComponent({
   setup(props, { attrs, emit, slots }) {
     const rootElement = ref<HTMLElement | null>(null);
     const inputElement = ref<HTMLInputElement | null>(null);
-    const participation = useCompositeFormControl({
-      root: rootElement,
-      focusTarget: rootElement,
-      submissions: [{
-        element: inputElement,
-        capabilities: hiddenInputSubmissionCapabilities,
-      }],
-    });
     const controlled = useControlledStateInvariant('CheckboxRoot', 'modelValue', () => props.modelValue);
+    const initialValue = controlled ? props.modelValue as CheckboxValue : props.defaultValue;
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as CheckboxValue : props.defaultValue,
@@ -120,6 +113,25 @@ export const CheckboxRoot = defineComponent({
       controller.value = createController(controlled, value, props, emit);
       refresh();
     };
+    const participation = useCompositeFormControl({
+      root: rootElement,
+      focusTarget: rootElement,
+      submissions: [{
+        element: inputElement,
+        capabilities: hiddenInputSubmissionCapabilities,
+      }],
+      reset: () => {
+        queueMicrotask(() => {
+          controller.value = createController(
+            controlled,
+            controlled ? props.modelValue as CheckboxValue : initialValue,
+            props,
+            emit,
+          );
+          refresh();
+        });
+      },
+    });
 
     watch(() => props.modelValue, (value) => {
       if (!controlled || value === undefined) return;

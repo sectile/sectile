@@ -201,6 +201,67 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
   host.remove();
 });
 
+test('Vue Form reset restores native and uncontrolled Sectile defaults without taking controlled ownership', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const controlledUpdates = [];
+  const app = createApp({
+    render: () => h(FormRoot, null, {
+      default: () => [
+        h(FormField, { name: 'native' }, {
+          default: () => h('input', { defaultValue: 'native-default' }),
+        }),
+        h(FormField, { name: 'text' }, {
+          default: () => h(TextField, { defaultValue: 'sectile-default' }),
+        }),
+        h(FormField, { name: 'uncontrolled' }, {
+          default: () => h(CheckboxRoot, { defaultValue: true }),
+        }),
+        h(FormField, { name: 'controlled' }, {
+          default: () => h(CheckboxRoot, {
+            modelValue: true,
+            'onUpdate:modelValue': (value) => controlledUpdates.push(value),
+          }),
+        }),
+        h(FormReset, null, { default: () => 'Reset' }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+
+  const native = host.querySelector('input[name="native"]');
+  const text = host.querySelector('input[name="text"]');
+  const checkboxRoots = [...host.querySelectorAll('[data-scope="checkbox"][data-part="root"]')];
+  assert.ok(native instanceof HTMLInputElement);
+  assert.ok(text instanceof HTMLInputElement);
+  assert.equal(checkboxRoots.length, 2);
+
+  native.value = 'changed-native';
+  text.value = 'changed-sectile';
+  text.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  checkboxRoots[0].click();
+  checkboxRoots[1].click();
+  await nextTick();
+  assert.equal(checkboxRoots[0].getAttribute('data-state'), 'unchecked');
+  assert.equal(checkboxRoots[1].getAttribute('data-state'), 'checked');
+  assert.deepEqual(controlledUpdates, [false]);
+
+  host.querySelector('[data-part="reset"]').click();
+  await Promise.resolve();
+  await nextTick();
+  assert.equal(native.value, 'native-default');
+  assert.equal(text.value, 'sectile-default');
+  assert.equal(checkboxRoots[0].getAttribute('data-state'), 'checked');
+  assert.equal(checkboxRoots[1].getAttribute('data-state'), 'checked');
+  assert.deepEqual(controlledUpdates, [false]);
+
+  app.unmount();
+  host.remove();
+});
+
 test('Vue Form owns async submission success and failure lifecycle', async () => {
   const host = document.createElement('div');
   document.body.append(host);

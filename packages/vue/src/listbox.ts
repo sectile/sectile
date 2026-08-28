@@ -149,6 +149,21 @@ export const ListboxRoot = defineComponent({
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
+      reset: () => {
+        queueMicrotask(() => {
+          const next = controlled
+            ? toIDs(props.modelValue, props.selectionMode)
+            : initialValue;
+          controller.value = createController(
+            controlled,
+            next,
+            next[0] ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
+            { ...props, direction: direction.value },
+            emit,
+          );
+          snapshot.value = controller.value.getSnapshot();
+        });
+      },
     });
     const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
     const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);

@@ -58,12 +58,16 @@ export const CheckboxGroupRoot = defineComponent({
     providePartContract('checkbox-group', { root: 'item' });
     const rootElement = ref<HTMLElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
+    const initialValue = Object.freeze([...props.defaultValue]);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: () => state.value.value.map((_, index) => ({
         element: () => submissionElements[index] ?? null,
         capabilities: hiddenValueSubmissionCapabilities,
       })),
+      reset: () => {
+        if (props.modelValue === undefined) local.value = initialValue;
+      },
     });
     provideFormControlOwner();
     const local = shallowRef<readonly string[]>(props.modelValue ?? props.defaultValue);

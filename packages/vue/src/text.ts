@@ -67,7 +67,6 @@ export const TextField = defineComponent({
   },
   setup(props, { attrs, emit }) {
     const element = ref<HTMLInputElement | HTMLTextAreaElement | null>(null);
-    const participation = useNativeInputFormControl(element);
     const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
     const initialValue = String(controlled ? props.modelValue : props.defaultValue);
     const renderServerValue = typeof window === 'undefined';
@@ -113,6 +112,13 @@ export const TextField = defineComponent({
       });
       connection.render();
     };
+    const participation = useNativeInputFormControl(element, {
+      reset: () => {
+        queueMicrotask(() => mountConnection(createTextState(
+          controlled ? String(props.modelValue) : initialValue,
+        )));
+      },
+    });
 
     onMounted(() => mountConnection(createTextState(initialValue)));
     onBeforeUnmount(() => connection?.disconnect());

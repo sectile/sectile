@@ -63,6 +63,7 @@ interface SpinButtonContext {
   readonly connection: ShallowRef<SpinButtonConnection | undefined>;
   connect(input: HTMLInputElement): void;
   disconnect(): void;
+  reset(): void;
   step(event: 'increment' | 'decrement'): void;
 }
 
@@ -100,8 +101,11 @@ export const SpinButtonRoot = defineComponent({
     const valueControlled = props.modelValue !== undefined;
     const draftControlled = props.draft !== undefined;
     const connection = shallowRef<SpinButtonConnection>();
-    const value = shallowRef(String(props.modelValue ?? props.defaultValue ?? props.min));
-    const draft = shallowRef<string | null>(props.draft !== undefined ? props.draft : props.defaultDraft);
+    const inputElement = shallowRef<HTMLInputElement>();
+    const initialValue = String(props.defaultValue ?? props.min);
+    const initialDraft = props.defaultDraft;
+    const value = shallowRef(String(props.modelValue ?? initialValue));
+    const draft = shallowRef<string | null>(props.draft !== undefined ? props.draft : initialDraft);
     const revision = shallowRef(0);
     const state = computed<SpinButtonSlotProps>(() => ({
       value: value.value,
@@ -125,6 +129,7 @@ export const SpinButtonRoot = defineComponent({
       connection.value = undefined;
     };
     const connect = (input: HTMLInputElement): void => {
+      inputElement.value = input;
       disconnect();
       connection.value = createSpinButton({
         input,
@@ -143,6 +148,13 @@ export const SpinButtonRoot = defineComponent({
       });
       update();
     };
+    const reset = (): void => {
+      queueMicrotask(() => {
+        value.value = valueControlled ? String(props.modelValue) : initialValue;
+        draft.value = draftControlled ? props.draft as string | null : initialDraft;
+        if (inputElement.value !== undefined) connect(inputElement.value);
+      });
+    };
     const sync = (): void => {
       const target = connection.value;
       if (target === undefined) return;
@@ -155,7 +167,7 @@ export const SpinButtonRoot = defineComponent({
     };
     watch([() => props.modelValue, () => props.draft], sync);
     provide<SpinButtonContext>(spinButtonKey, {
-      state, min, max, label, connection, connect, disconnect,
+      state, min, max, label, connection, connect, disconnect, reset,
       step: (event) => {
         if (connection.value?.handleEvent(event)) update();
       },
@@ -189,7 +201,7 @@ export const SpinButtonInput = defineComponent({
   setup(props, { attrs, slots }) {
     const root = useSpinButton('SpinButtonInput');
     const input = shallowRef<HTMLInputElement | null>(null);
-    const participation = useNativeInputFormControl(input);
+    const participation = useNativeInputFormControl(input, { reset: root.reset });
     onMounted(() => {
       if (input.value === null) throw new TypeError('SpinButtonInput must render an input element.');
       root.connect(input.value);

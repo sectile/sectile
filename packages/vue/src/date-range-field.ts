@@ -95,6 +95,12 @@ export const DateRangeFieldRoot = defineComponent({
           capabilities: hiddenInputSubmissionCapabilities,
         },
       ],
+      reset: () => {
+        queueMicrotask(() => {
+          if (!controlled) snapshot.value = initial.value;
+          mount();
+        });
+      },
     });
     let connection: DateRangeFieldConnection | null = null;
 

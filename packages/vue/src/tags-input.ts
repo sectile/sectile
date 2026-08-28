@@ -68,6 +68,8 @@ export const TagsInputRoot = defineComponent({
     const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null); const input = shallowRef<HTMLInputElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
+    const initialTags = Object.freeze([...props.defaultValue]);
+    const initialInput = props.defaultInputValue;
     const participation = useCompositeFormControl({
       root,
       focusTarget: input,
@@ -75,10 +77,17 @@ export const TagsInputRoot = defineComponent({
         element: () => submissionElements[index] ?? null,
         capabilities: hiddenValueSubmissionCapabilities,
       })),
+      reset: () => {
+        queueMicrotask(() => {
+          if (!valueControlled) localTags.value = initialTags;
+          if (!inputControlled) localInput.value = initialInput;
+          connect();
+        });
+      },
     });
     provideFormControlOwner();
     const connection = shallowRef<TagsInputConnection>();
-    const localTags = shallowRef<readonly string[]>(props.modelValue ?? props.defaultValue);
+    const localTags = shallowRef<readonly string[]>(props.modelValue ?? initialTags);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue);
     const valueControlled = props.modelValue !== undefined; const inputControlled = props.inputValue !== undefined;
     const state = computed<TagsInputRootSlotProps>(() => Object.freeze({

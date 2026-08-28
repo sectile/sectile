@@ -61,6 +61,7 @@ interface EditableContext {
   readonly submitTrigger: ReturnType<typeof ref<HTMLElement | null>>;
   readonly cancelTrigger: ReturnType<typeof ref<HTMLElement | null>>;
   readonly multiline: ReturnType<typeof ref<boolean>>;
+  reset(): void;
 }
 
 const editableContextKey = Symbol('SectileEditable');
@@ -127,6 +128,13 @@ export const EditableRoot = defineComponent({
       });
       refresh();
     };
+    const reset = (): void => {
+      queueMicrotask(() => {
+        const value = controlled ? props.modelValue as string : initial;
+        snapshot.value = { value, draft: value, editing: false };
+        mount();
+      });
+    };
 
     onMounted(mount);
     onBeforeUnmount(() => connection?.disconnect());
@@ -148,6 +156,7 @@ export const EditableRoot = defineComponent({
     }));
     provide<EditableContext>(editableContextKey, {
       slotProps, root, preview, input, editTrigger, submitTrigger, cancelTrigger, multiline,
+      reset,
     });
 
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -199,7 +208,7 @@ export const EditableInput = defineComponent({
   },
   setup(props, { attrs }) {
     const context = useEditableContext('EditableInput');
-    const participation = useNativeInputFormControl(context.input);
+    const participation = useNativeInputFormControl(context.input, { reset: context.reset });
     context.multiline.value = props.multiline;
     return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(attrs, {
       ref: (element: unknown) => { context.input.value = element as HTMLInputElement | HTMLTextAreaElement | null; },
