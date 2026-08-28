@@ -3,13 +3,10 @@ import {
   onScopeDispose,
   toValue,
   watch,
-  type AllowedComponentProps,
-  type ComponentCustomProps,
-  type DefineComponent,
+  type Component,
+  type ComputedRef,
   type InjectionKey,
   type Ref,
-  type VNodeChild,
-  type VNodeProps,
 } from 'vue';
 import {
   connectDataTable,
@@ -29,6 +26,7 @@ import {
 import type {
   TabularAcceptedViewState,
   TabularAccessState,
+  TabularCellRecord,
   TabularColumnDefinition,
   TabularColumnState,
   TabularError,
@@ -46,10 +44,16 @@ import type {
   TabularSnapshot,
   TabularView,
   TabularViewResponse,
+  TabularWireCells,
   TabularWireValue,
 } from '@sectile/tabular';
 import type { PrimitiveAs } from './primitive.js';
 import { createTabularParts, type HostConnection } from './internal/tabular-parts.js';
+import {
+  createTabularComponentSuite,
+  type TabularBodyComponent,
+  type TabularComponent,
+} from './internal/tabular-components.js';
 import {
   controlledValues,
   aliasVueProfileController,
@@ -71,19 +75,26 @@ export interface DataTableColumn<RecordValue = unknown, ID extends string = stri
   readonly groupValue?: (record: RecordValue) => TabularWireValue;
   readonly aggregate?: (values: readonly CellValue[]) => TabularWireValue;
 }
+export type DataTableCellsFromColumns<Columns extends readonly DataTableColumn<never>[]> = Readonly<{
+  [Column in Columns[number] as Column['id']]: Column extends { readonly getValue: (record: never) => infer Value }
+    ? Extract<Value, TabularWireValue>
+    : TabularWireValue;
+}>;
+export type DataTableColumnID<LeafCells extends object, GroupCells extends object = LeafCells> = Extract<keyof LeafCells | keyof GroupCells, string>;
+export type DataTableCellValue<Cells extends object, Column extends string> = Column extends keyof Cells ? TabularWireCells<Cells>[Column] : TabularWireValue;
 export type DataTableReactiveInput<T> = T | Ref<T> | (() => T);
 export interface DataTableWritableRef<T> { value: T }
 export type DataTableQuery = TabularQuery;
-export type DataTableView = TabularView;
-export type DataTableViewResponse = TabularViewResponse;
-export type DataTableViewRow = TabularRow;
+export type DataTableViewRow<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularRow<LeafCells, GroupCells>;
+export type DataTableView<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularView<DataTableViewRow<LeafCells, GroupCells>>;
+export type DataTableViewResponse<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularViewResponse<DataTableViewRow<LeafCells, GroupCells>>;
 export type DataTableRowSelection = TabularRowSelection;
 export type DataTableGroupID = TabularGroupID;
 export type DataTableRowID = TabularRowID;
 export type DataTableColumnState = TabularColumnState;
 export type DataTableAccessState = TabularAccessState;
 export type DataTableRequestState = TabularRequestState;
-export type DataTableAcceptedViewState = TabularAcceptedViewState;
+export type DataTableAcceptedViewState<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = TabularAcceptedViewState<DataTableViewRow<LeafCells, GroupCells>>;
 export type DataTableColumnSizeState = DOMDataTableColumnSizeState;
 export type DataTableSourceStatus = SourceStatus;
 export type DataTableSemanticCommand = SemanticDataTableCommand;
@@ -100,12 +111,16 @@ export type DataTableAccessStateChangeHandler = (state: DataTableAccessState) =>
 export type DataTableExpansionChangeHandler = (expansion: readonly DataTableGroupID[]) => void;
 export type DataTableColumnSizeChangeHandler = (state: DataTableColumnSizeState) => void;
 
-export interface UseDataTableOptions<RecordValue = unknown> {
-  readonly columns: DataTableReactiveInput<readonly DataTableColumn<RecordValue>[]>;
+export interface UseDataTableOptions<
+  Columns extends readonly DataTableColumn<never>[] = readonly DataTableColumn<never>[],
+  LeafCells extends object = DataTableCellsFromColumns<Columns>,
+  GroupCells extends object = LeafCells,
+> {
+  readonly columns: DataTableReactiveInput<Columns>;
   readonly headers?: DataTableReactiveInput<readonly TabularHeaderNode[]>;
   readonly sourceKey?: DataTableReactiveInput<string>;
   readonly limits?: Partial<TabularLimits>;
-  readonly initialView?: DataTableViewResponse;
+  readonly initialView?: DataTableViewResponse<LeafCells, GroupCells>;
   readonly query?: DataTableWritableRef<DataTableQuery>;
   readonly defaultQuery?: DataTableQuery;
   readonly onQueryChange?: DataTableQueryChangeHandler;
@@ -126,7 +141,10 @@ export interface UseDataTableOptions<RecordValue = unknown> {
   readonly onColumnSizeStateChange?: DataTableColumnSizeChangeHandler;
 }
 
-export interface DataTableController extends VueProfileController<TabularSnapshot, DataTableEvent, SemanticDataTableCommand> {
+declare const dataTableSchema: unique symbol;
+export interface DataTableController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<TabularSnapshot, DataTableEvent, SemanticDataTableCommand> {
+  readonly [dataTableSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells };
+  readonly acceptedViewState: ComputedRef<DataTableAcceptedViewState<LeafCells, GroupCells>>;
   getProjection(): DataTableProjection;
 }
 
@@ -139,7 +157,13 @@ const hosts = new WeakMap<object, HostOptions>();
 
 export function defineDataTableColumns<const Columns extends readonly DataTableColumn<never>[]>(columns: Columns): Columns { return columns; }
 
-export function useDataTable(options: UseDataTableOptions<never>): DataTableController {
+export function useDataTable<
+  ExplicitLeafCells extends object | undefined = undefined,
+  ExplicitGroupCells extends object | undefined = ExplicitLeafCells,
+  const Columns extends readonly DataTableColumn<never>[] = readonly DataTableColumn<never>[],
+  LeafCells extends object = ExplicitLeafCells extends object ? ExplicitLeafCells : DataTableCellsFromColumns<Columns>,
+  GroupCells extends object = ExplicitGroupCells extends object ? ExplicitGroupCells : LeafCells,
+>(options: UseDataTableOptions<Columns, LeafCells, GroupCells>): DataTableController<LeafCells, GroupCells> {
   assertExclusive(options, 'query');
   assertExclusive(options, 'rowSelection');
   assertExclusive(options, 'columnState');
@@ -173,7 +197,7 @@ export function useDataTable(options: UseDataTableOptions<never>): DataTableCont
   };
   const semantic = createDataTable(semanticOptions);
   const base = createVueProfileController(semantic);
-  const controller: DataTableController = Object.freeze({ ...base, getProjection: () => semantic.getProjection() });
+  const controller = Object.freeze({ ...base, getProjection: () => semantic.getProjection() }) as DataTableController<LeafCells, GroupCells>;
   aliasVueProfileController(controller, base);
   hosts.set(controller, Object.freeze({
     ...(options.columnSizeState === undefined ? {} : { columnSizes: options.columnSizeState.value }),
@@ -187,17 +211,17 @@ export function useDataTable(options: UseDataTableOptions<never>): DataTableCont
   if (options.sourceKey !== undefined) stops.push(watch(() => toValue(options.sourceKey!), () => { unwrapResult(controller.dispatch({ type: 'replace-source' })); }));
   stops.push(watch(() => toValue(options.columns), () => { unwrapResult(controller.dispatch({ type: 'replace-source' })); }, { deep: false }));
   const dispose = controller.dispose;
-  const wrapped = Object.freeze({ ...controller, dispose: () => { for (const stop of stops.splice(0)) stop(); dispose(); } }) as DataTableController;
+  const wrapped = Object.freeze({ ...controller, dispose: () => { for (const stop of stops.splice(0)) stop(); dispose(); } }) as DataTableController<LeafCells, GroupCells>;
   aliasVueProfileController(wrapped, controller);
   hosts.set(wrapped, hosts.get(controller) ?? {});
   if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose);
   return wrapped;
 }
 
-export type DataTableSourceResolver = (request: TabularRequest, context: { readonly signal: AbortSignal }) => DataTableViewResponse | Promise<DataTableViewResponse>;
+export type DataTableSourceResolver<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = (request: TabularRequest, context: { readonly signal: AbortSignal }) => DataTableViewResponse<LeafCells, GroupCells> | Promise<DataTableViewResponse<LeafCells, GroupCells>>;
 export interface UseDataTableSourceOptions { readonly onError?: DataTableSourceErrorHandler; readonly onStatusChange?: DataTableStatusChangeHandler }
 export interface UseDataTableSourceReturn extends SourceReturn {}
-export function useDataTableSource(controller: DataTableController, resolver: DataTableSourceResolver, options?: UseDataTableSourceOptions): UseDataTableSourceReturn {
+export function useDataTableSource<LeafCells extends object, GroupCells extends object>(controller: DataTableController<LeafCells, GroupCells>, resolver: DataTableSourceResolver<LeafCells, GroupCells>, options?: UseDataTableSourceOptions): UseDataTableSourceReturn {
   return useProfileSource(controller, resolver as SourceResolver, options as SourceOptions | undefined);
 }
 
@@ -217,56 +241,69 @@ const parts = createTabularParts({
   }) as HostConnection,
 });
 
-export interface DataTableProviderProps { readonly controller: DataTableController }
+export interface DataTableProviderProps {}
 export interface DataTableRootProps { readonly onCommand?: DataTableCommandHandler; readonly onError?: DataTableErrorHandler; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataTableRootSlotProps { readonly acceptedViewState: DataTableAcceptedViewState; readonly requestState: DataTableRequestState; readonly query: DataTableQuery; readonly rowSelection: DataTableRowSelection; readonly columnState: DataTableColumnState; readonly accessState: DataTableAccessState; readonly expansion: readonly DataTableGroupID[]; readonly rows: readonly DataTableViewRow[] }
-export interface DataTableRootExpose { readonly controller: DataTableController; refresh(): void }
+export interface DataTableRootSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> { readonly acceptedViewState: DataTableAcceptedViewState<LeafCells, GroupCells>; readonly requestState: DataTableRequestState; readonly query: DataTableQuery; readonly rowSelection: DataTableRowSelection; readonly columnState: DataTableColumnState; readonly accessState: DataTableAccessState; readonly expansion: readonly DataTableGroupID[]; readonly rows: readonly DataTableViewRow<LeafCells, GroupCells>[] }
+export interface DataTableRootExpose<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> { readonly controller: DataTableController<LeafCells, GroupCells>; refresh(): void }
 export interface DataTablePartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export type DataTableHeaderRowProps = DataTablePartProps;
 export interface DataTableColumnHeaderProps extends DataTablePartProps { readonly headerNodeID: TabularHeaderNodeID }
-export interface DataTableSortTriggerProps extends DataTablePartProps { readonly column: string; readonly comparator?: string }
-export type DataTableFilterControlProps = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: string; readonly id: string; readonly predicate: string });
-export interface DataTableColumnResizeHandleProps extends DataTablePartProps { readonly column: string; readonly minSize?: number; readonly maxSize?: number }
+export interface DataTableSortTriggerProps<Column extends string = string> extends DataTablePartProps { readonly column: Column; readonly comparator?: string }
+export type DataTableFilterControlProps<Column extends string = string> = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: Column; readonly id: string; readonly predicate: string });
+export interface DataTableColumnResizeHandleProps<Column extends string = string> extends DataTablePartProps { readonly column: Column; readonly minSize?: number; readonly maxSize?: number }
 export interface DataTableRowProps extends DataTablePartProps { readonly rowID: DataTableRowID | DataTableGroupID }
 export interface DataTableSelectionControlProps extends DataTablePartProps { readonly rowID?: DataTableRowID; readonly name: string; readonly value?: string; readonly form?: string; readonly disabled?: boolean }
 export interface DataTableBulkSelectionControlProps extends DataTablePartProps { readonly target: { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: DataTableGroupID }; readonly disabled?: boolean }
 export interface DataTableDisclosureProps extends DataTablePartProps { readonly rowID?: DataTableGroupID; readonly disabled?: boolean }
-export interface DataTableCellProps extends DataTablePartProps { readonly rowID?: DataTableRowID | DataTableGroupID; readonly column: string }
-export interface DataTableEditorProps extends DataTableCellProps { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }
-export interface DataTablePartSlotProps extends DataTableRootSlotProps { readonly row?: DataTableViewRow; readonly isGroup?: boolean }
-export interface DataTableBodySlotProps extends DataTableRootSlotProps { readonly row: DataTableViewRow; readonly rowIndex: number; readonly isGroup: boolean }
-export type DataTableProviderSlotProps = DataTableRootSlotProps;
+export interface DataTableCellProps<Column extends string = string> extends DataTablePartProps { readonly rowID?: DataTableRowID | DataTableGroupID; readonly column: Column }
+export interface DataTableEditorProps<Column extends string = string> extends DataTableCellProps<Column> { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }
+export interface DataTablePartSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends DataTableRootSlotProps<LeafCells, GroupCells> { readonly row?: DataTableViewRow<LeafCells, GroupCells>; readonly isGroup?: boolean }
+export interface DataTableBodySlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends DataTableRootSlotProps<LeafCells, GroupCells> { readonly row: DataTableViewRow<LeafCells, GroupCells>; readonly rowIndex: number; readonly isGroup: boolean }
+export type DataTableProviderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>;
 export type DataTableCaptionProps = DataTablePartProps;
 export type DataTableHeaderProps = DataTablePartProps;
 export interface DataTableBodyProps extends DataTablePartProps { readonly manual?: boolean }
-export type DataTableBodyPublicProps = DataTableBodyProps & VNodeProps & AllowedComponentProps & ComponentCustomProps;
-export interface DataTableBodyComponent {
-  new <Manual extends boolean = false>(props: Omit<DataTableBodyPublicProps, 'manual'> & { readonly manual?: Manual }): {
-    $props: Omit<DataTableBodyPublicProps, 'manual'> & { readonly manual?: Manual };
-    $slots: {
-      default?: (props: Manual extends true ? DataTableRootSlotProps : DataTableBodySlotProps) => VNodeChild;
-      empty?: (props: DataTableRootSlotProps) => VNodeChild;
-    };
-  };
-}
-export type DataTableCaptionSlotProps = DataTableRootSlotProps; export type DataTableHeaderSlotProps = DataTableRootSlotProps; export type DataTableHeaderRowSlotProps = DataTableRootSlotProps; export type DataTableColumnHeaderSlotProps = DataTableRootSlotProps; export type DataTableSortTriggerSlotProps = DataTableRootSlotProps; export type DataTableFilterControlSlotProps = DataTableRootSlotProps; export type DataTableColumnResizeHandleSlotProps = DataTableRootSlotProps; export type DataTableRowSlotProps = DataTableRootSlotProps; export type DataTableSelectionControlSlotProps = DataTablePartSlotProps; export type DataTableBulkSelectionControlSlotProps = DataTableRootSlotProps; export type DataTableDisclosureSlotProps = DataTablePartSlotProps; export type DataTableCellSlotProps = DataTablePartSlotProps; export type DataTableEditorSlotProps = DataTablePartSlotProps;
+export type DataTableCaptionSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableHeaderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableHeaderRowSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableColumnHeaderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableSortTriggerSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableFilterControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableColumnResizeHandleSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableRowSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableSelectionControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableBulkSelectionControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableDisclosureSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableCellSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableEditorSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>;
 
-export const DataTableProvider = parts['Provider'] as DefineComponent<DataTableProviderProps>;
-export const DataTableRoot = parts['Root'] as DefineComponent<DataTableRootProps>;
-export const DataTableCaption = parts['Caption'] as DefineComponent<DataTableCaptionProps>;
-export const DataTableHeader = parts['Header'] as DefineComponent<DataTableHeaderProps>;
-export const DataTableHeaderRow = parts['HeaderRow'] as DefineComponent<DataTableHeaderRowProps>;
-export const DataTableColumnHeader = parts['ColumnHeader'] as DefineComponent<DataTableColumnHeaderProps>;
-export const DataTableSortTrigger = parts['SortTrigger'] as DefineComponent<DataTableSortTriggerProps>;
-export const DataTableFilterControl = parts['FilterControl'] as DefineComponent<DataTableFilterControlProps>;
-export const DataTableColumnResizeHandle = parts['ColumnResizeHandle'] as DefineComponent<DataTableColumnResizeHandleProps>;
-export const DataTableBody = parts['Body'] as unknown as DataTableBodyComponent;
-export const DataTableRow = parts['Row'] as DefineComponent<DataTableRowProps>;
-export const DataTableSelectionControl = parts['SelectionControl'] as DefineComponent<DataTableSelectionControlProps>;
-export const DataTableBulkSelectionControl = parts['BulkSelectionControl'] as DefineComponent<DataTableBulkSelectionControlProps>;
-export const DataTableDisclosure = parts['Disclosure'] as DefineComponent<DataTableDisclosureProps>;
-export const DataTableCell = parts['Cell'] as DefineComponent<DataTableCellProps>;
-export const DataTableEditor = parts['Editor'] as DefineComponent<DataTableEditorProps>;
+export interface DataTableComponents<LeafCells extends object, GroupCells extends object = LeafCells> {
+  readonly Provider: TabularComponent<DataTableProviderProps, DataTableProviderSlotProps<LeafCells, GroupCells>>;
+  readonly Root: TabularComponent<DataTableRootProps, DataTableRootSlotProps<LeafCells, GroupCells>>;
+  readonly Caption: TabularComponent<DataTableCaptionProps, DataTableCaptionSlotProps<LeafCells, GroupCells>>;
+  readonly Header: TabularComponent<DataTableHeaderProps, DataTableHeaderSlotProps<LeafCells, GroupCells>>;
+  readonly HeaderRow: TabularComponent<DataTableHeaderRowProps, DataTableHeaderRowSlotProps<LeafCells, GroupCells>>;
+  readonly ColumnHeader: TabularComponent<DataTableColumnHeaderProps, DataTableColumnHeaderSlotProps<LeafCells, GroupCells>>;
+  readonly SortTrigger: TabularComponent<DataTableSortTriggerProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableSortTriggerSlotProps<LeafCells, GroupCells>>;
+  readonly FilterControl: TabularComponent<DataTableFilterControlProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableFilterControlSlotProps<LeafCells, GroupCells>>;
+  readonly ColumnResizeHandle: TabularComponent<DataTableColumnResizeHandleProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableColumnResizeHandleSlotProps<LeafCells, GroupCells>>;
+  readonly Body: TabularBodyComponent<DataTableBodyProps, DataTableRootSlotProps<LeafCells, GroupCells>, DataTableBodySlotProps<LeafCells, GroupCells>>;
+  readonly Row: TabularComponent<DataTableRowProps, DataTableRowSlotProps<LeafCells, GroupCells>>;
+  readonly SelectionControl: TabularComponent<DataTableSelectionControlProps, DataTableSelectionControlSlotProps<LeafCells, GroupCells>>;
+  readonly BulkSelectionControl: TabularComponent<DataTableBulkSelectionControlProps, DataTableBulkSelectionControlSlotProps<LeafCells, GroupCells>>;
+  readonly Disclosure: TabularComponent<DataTableDisclosureProps, DataTableDisclosureSlotProps<LeafCells, GroupCells>>;
+  readonly Cell: TabularComponent<DataTableCellProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableCellSlotProps<LeafCells, GroupCells>>;
+  readonly Editor: TabularComponent<DataTableEditorProps<DataTableColumnID<LeafCells, GroupCells>>, DataTableEditorSlotProps<LeafCells, GroupCells>>;
+}
+
+const componentSuites = new WeakMap<object, Readonly<Record<string, Component>>>();
+export function useDataTableComponents<LeafCells extends object, GroupCells extends object>(controller: DataTableController<LeafCells, GroupCells>): DataTableComponents<LeafCells, GroupCells> {
+  return createTabularComponentSuite(parts, controller, componentSuites, 'DataTable', {
+    Root: 'Root',
+    Caption: 'Caption',
+    Header: 'Header',
+    HeaderRow: 'HeaderRow',
+    ColumnHeader: 'ColumnHeader',
+    SortTrigger: 'SortTrigger',
+    FilterControl: 'FilterControl',
+    ColumnResizeHandle: 'ColumnResizeHandle',
+    Body: 'Body',
+    Row: 'Row',
+    SelectionControl: 'SelectionControl',
+    BulkSelectionControl: 'BulkSelectionControl',
+    Disclosure: 'Disclosure',
+    Cell: 'Cell',
+    Editor: 'Editor',
+  }) as unknown as DataTableComponents<LeafCells, GroupCells>;
+}
 
 function stripColumns(columns: readonly DataTableColumn<never>[]): readonly TabularColumnDefinition[] {
   return columns.map(({ getValue: _getValue, groupValue: _groupValue, aggregate: _aggregate, ...column }) => Object.freeze(column));

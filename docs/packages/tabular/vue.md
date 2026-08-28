@@ -16,48 +16,52 @@ Each page includes the complete source of its running example plus focused patte
 
 ## Provider and injection
 
-Create the controller in `setup`, pass it to the Provider once, and place Root and every compound part below that Provider. The controller is injected through the subtree; Root does not need another controller prop.
+Create the controller in `setup`, then call `useData*Components` once to obtain the schema-typed component namespace. Its Provider injects the bound controller through the subtree and takes no controller prop.
 
 ```vue
 <script setup lang="ts">
 import {
-  DataGridProvider,
-  DataGridRoot,
   defineDataGridColumns,
   useDataGrid,
+  useDataGridComponents,
   useDataGridSource,
 } from '@sectile/vue/data-grid'
+
+interface UserCells {
+  readonly name: string
+}
 
 const columns = defineDataGridColumns([
   { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
 ])
-const grid = useDataGrid({ columns })
+const grid = useDataGrid<UserCells>({ columns })
+const DataGrid = useDataGridComponents(grid)
 const source = useDataGridSource(grid, (request, { signal }) =>
   resolveUsers(request, signal),
 )
 </script>
 
 <template>
-  <DataGridProvider :controller="grid">
-    <DataGridRoot aria-label="Users">
+  <DataGrid.Provider>
+    <DataGrid.Root aria-label="Users">
       <!-- Header, Body, Row, Cell, and controls inject grid here. -->
-    </DataGridRoot>
-  </DataGridProvider>
+    </DataGrid.Root>
+  </DataGrid.Provider>
 
   <p v-if="source.status.value === 'loading'">Loading…</p>
   <button v-if="source.status.value === 'error'" @click="source.reload">Retry</button>
 </template>
 ```
 
-Nested Providers are rejected, and a part used outside its matching Provider fails immediately. Body renders accepted source rows and exposes each `row` to its slot. Nested cells and controls inherit the current row ID; arbitrary local IDs that are absent from the current projection cannot be registered as interactive rows or cells.
+Nested Providers form nested scopes and each part resolves the nearest matching Provider. A part used outside a matching Provider fails immediately. Body renders accepted source rows and exposes each schema-typed `row` to its slot. Nested cells and controls inherit the current row ID; arbitrary local IDs that are absent from the current projection cannot be registered as interactive rows or cells.
 
 ## Public API by profile
 
 | Profile | Creation and context | Structure | Controls and editing |
 | --- | --- | --- | --- |
-| DataTable | `useDataTable`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`, `DataTableProvider`, `DataTableRoot` | `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
-| DataGrid | `useDataGrid`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`, `DataGridProvider`, `DataGridRoot` | `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
-| DataTreeGrid | `useDataTreeGrid`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`, `DataTreeGridProvider`, `DataTreeGridRoot` | `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
+| DataTable | `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
+| DataGrid | `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
+| DataTreeGrid | `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
 Every part exports its `Props` and `SlotProps` types. Each profile also exports row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, a source resolver, and `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` from the same `@sectile/vue/data-*` subpath and the Vue package root.
 
@@ -73,7 +77,7 @@ SSR does not execute a source resolver. Hydration must begin from the same accep
 - Body repeats accepted rows by default. Its slot exposes `{ row, rowIndex, isGroup }`; `manual` enables explicit low-level Row composition.
 - Cell-oriented parts use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition. Header nodes keep `headerNodeID` because a node may represent a column or a group.
 - `HeaderRow` has no depth prop. Header schema and `headerNodeID` determine nested depth, spans, and ARIA metadata.
-- Body slot rows are typed as the leaf/group `TabularRow` union; cell values are `TabularWireValue`, never `any`.
+- Body slot rows preserve the cell schema carried by the controller. Getter-based columns infer their value types; remote projections can declare the schema with `useData*<Cells>()`. Leaf and group schemas can be distinct.
 - Name a native DataTable with `Caption` or `aria-labelledby`. Grid and TreeGrid use `aria-label` or `aria-labelledby`.
 - Native DataTable markup retains table semantics and form submission.
 - DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.

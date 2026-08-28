@@ -2,20 +2,9 @@
 import { computed } from 'vue';
 import { ArrowDownUp, Search, Table2 } from '@lucide/vue';
 import {
-  DataTableBody,
-  DataTableBulkSelectionControl,
-  DataTableCaption,
-  DataTableCell,
-  DataTableColumnHeader,
-  DataTableFilterControl,
-  DataTableHeader,
-  DataTableHeaderRow,
-  DataTableProvider,
-  DataTableRoot,
-  DataTableSelectionControl,
-  DataTableSortTrigger,
   defineDataTableColumns,
   useDataTable,
+  useDataTableComponents,
   useDataTableSource,
   type DataTableViewResponse,
 } from '@sectile/vue/data-table';
@@ -31,7 +20,16 @@ const copy = computed(() => isKorean.value ? {
   columns: ['Name', 'Team', 'Role', 'Location', 'Status'], status: { active: 'Active', away: 'Away', offline: 'Offline' }, hint: 'Search · sort columns · select rows · select all matching',
 });
 
-const records = [
+interface DirectoryCells {
+  readonly name: string;
+  readonly team: string;
+  readonly role: string;
+  readonly location: string;
+  readonly status: 'active' | 'away' | 'offline';
+}
+interface DirectoryRecord extends DirectoryCells { readonly id: string }
+
+const records: readonly DirectoryRecord[] = [
   { id: 'ada', name: 'Ada Lovelace', team: 'Platform', role: 'Staff engineer', location: 'London', status: 'active' },
   { id: 'grace', name: 'Grace Hopper', team: 'Compiler', role: 'Tech lead', location: 'New York', status: 'active' },
   { id: 'margaret', name: 'Margaret Hamilton', team: 'Reliability', role: 'Principal', location: 'Boston', status: 'away' },
@@ -52,8 +50,9 @@ const columns = defineDataTableColumns([
 ]);
 let viewRevision = 0;
 
-const table = useDataTable({ columns });
-const source = useDataTableSource(table, (request): DataTableViewResponse => {
+const table = useDataTable<DirectoryCells>({ columns });
+const DataTable = useDataTableComponents(table);
+const source = useDataTableSource(table, (request): DataTableViewResponse<DirectoryCells> => {
   const filter = request.query.filters.find((entry) => entry.enabled !== false)?.value;
   const needle = typeof filter === 'string' ? filter.trim().toLocaleLowerCase() : '';
   let result = records.filter((record) => `${record.name} ${record.team} ${record.role} ${record.location} ${record.status}`.toLocaleLowerCase().includes(needle));
@@ -87,40 +86,40 @@ const direction = (columnID: string) => {
 </script>
 
 <template>
-  <DataTableProvider :controller="table">
+  <DataTable.Provider>
     <section class="tabular-demo tabular-demo--table" :aria-label="copy.title">
       <header class="tabular-demo__toolbar">
         <div class="tabular-demo__title"><span><Table2 :size="18" aria-hidden="true" /></span><div><strong>{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '명' : ' people' }}</small></div></div>
-        <label class="tabular-demo__search"><Search :size="16" aria-hidden="true" /><DataTableFilterControl scope="global" id="directory-search" predicate="contains" :placeholder="copy.search" :aria-label="copy.search" /></label>
+        <label class="tabular-demo__search"><Search :size="16" aria-hidden="true" /><DataTable.FilterControl scope="global" id="directory-search" predicate="contains" :placeholder="copy.search" :aria-label="copy.search" /></label>
       </header>
 
       <div class="tabular-demo__viewport">
-        <DataTableRoot class="tabular-table">
-          <DataTableCaption class="sr-only">{{ copy.title }}</DataTableCaption>
-          <DataTableHeader>
-            <DataTableHeaderRow>
-              <th class="tabular-table__select"><DataTableBulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><span aria-hidden="true">✓</span></DataTableBulkSelectionControl></th>
-              <DataTableColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
-                <DataTableSortTrigger :column="column.id">
+        <DataTable.Root class="tabular-table">
+          <DataTable.Caption class="sr-only">{{ copy.title }}</DataTable.Caption>
+          <DataTable.Header>
+            <DataTable.HeaderRow>
+              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><span aria-hidden="true">✓</span></DataTable.BulkSelectionControl></th>
+              <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
+                <DataTable.SortTrigger :column="column.id">
                   {{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /><span class="sr-only">{{ direction(column.id) }}</span>
-                </DataTableSortTrigger>
-              </DataTableColumnHeader>
-            </DataTableHeaderRow>
-          </DataTableHeader>
-          <DataTableBody>
+                </DataTable.SortTrigger>
+              </DataTable.ColumnHeader>
+            </DataTable.HeaderRow>
+          </DataTable.Header>
+          <DataTable.Body>
             <template #default="{ row }">
-              <td class="tabular-table__select"><DataTableSelectionControl name="team-members" :aria-label="`Select ${row.cells['name']}`" /></td>
-              <DataTableCell column="name"><strong>{{ row.cells['name'] }}</strong></DataTableCell>
-              <DataTableCell column="team">{{ row.cells['team'] }}</DataTableCell>
-              <DataTableCell column="role">{{ row.cells['role'] }}</DataTableCell>
-              <DataTableCell column="location">{{ row.cells['location'] }}</DataTableCell>
-              <DataTableCell column="status"><span class="tabular-demo__status" :data-tone="row.cells['status']">{{ copy.status[row.cells['status'] as keyof typeof copy.status] }}</span></DataTableCell>
+              <td class="tabular-table__select"><DataTable.SelectionControl name="team-members" :aria-label="`Select ${row.cells.name}`" /></td>
+              <DataTable.Cell column="name"><strong>{{ row.cells.name }}</strong></DataTable.Cell>
+              <DataTable.Cell column="team">{{ row.cells.team }}</DataTable.Cell>
+              <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
+              <DataTable.Cell column="location">{{ row.cells.location }}</DataTable.Cell>
+              <DataTable.Cell column="status"><span class="tabular-demo__status" :data-tone="row.cells.status">{{ copy.status[row.cells.status] }}</span></DataTable.Cell>
             </template>
             <template #empty><tr><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? 'Loading…' : 'No matching rows' }}</td></tr></template>
-          </DataTableBody>
-        </DataTableRoot>
+          </DataTable.Body>
+        </DataTable.Root>
       </div>
       <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ selectedCount }}{{ isKorean ? '명 선택' : ' selected' }}</strong></footer>
     </section>
-  </DataTableProvider>
+  </DataTable.Provider>
 </template>

@@ -2,18 +2,9 @@
 import { computed, reactive, ref } from 'vue';
 import { ChevronRight, PencilLine, Workflow } from '@lucide/vue';
 import {
-  DataTreeGridBody,
-  DataTreeGridCell,
-  DataTreeGridColumnHeader,
-  DataTreeGridEditor,
-  DataTreeGridHeader,
-  DataTreeGridHeaderRow,
-  DataTreeGridProvider,
-  DataTreeGridRoot,
-  DataTreeGridRowDisclosure,
-  DataTreeGridRowSelectionControl,
   defineDataTreeGridColumns,
   useDataTreeGrid,
+  useDataTreeGridComponents,
   useDataTreeGridSource,
   type DataTreeGridCommand,
   type DataTreeGridEditState,
@@ -50,6 +41,13 @@ const groups = [
   { id: 'experience', name: 'Developer experience', owner: '3 services' },
   { id: 'foundation', name: 'Platform foundation', owner: '3 services' },
 ];
+interface ServiceCells {
+  readonly name: string;
+  readonly owner: string;
+  readonly tier: string;
+  readonly region: string;
+  readonly status: string;
+}
 const columns = defineDataTreeGridColumns([
   { id: 'name', label: 'Service', capabilities: ['edit'] },
   { id: 'owner', label: 'Owner', capabilities: ['edit'] },
@@ -58,9 +56,10 @@ const columns = defineDataTreeGridColumns([
   { id: 'status', label: 'Status', capabilities: ['edit'] },
 ]);
 let viewRevision = 0;
-const tree = useDataTreeGrid({ columns, defaultExpansion: ['commerce', 'experience', 'foundation'] });
-const treeRoot = ref<DataTreeGridRootExpose | null>(null);
-useDataTreeGridSource(tree, (request): DataTreeGridViewResponse => {
+const tree = useDataTreeGrid<ServiceCells>({ columns, defaultExpansion: ['commerce', 'experience', 'foundation'] });
+const DataTreeGrid = useDataTreeGridComponents(tree);
+const treeRoot = ref<DataTreeGridRootExpose<ServiceCells> | null>(null);
+useDataTreeGridSource(tree, (request): DataTreeGridViewResponse<ServiceCells> => {
   const rows = groups.flatMap((group) => {
     const expanded = request.expansion.includes(group.id);
     const parent = { kind: 'group' as const, id: group.id, parentGroupID: null, depth: 0, expanded, cells: { name: group.name, owner: group.owner, tier: '', region: '', status: '' } };
@@ -106,25 +105,25 @@ const handleCommand = (command: DataTreeGridCommand) => {
       <div class="tabular-demo__title"><span><Workflow :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-tree-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 서비스' : ' services' }}</small></div></div>
       <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
     </header>
-    <DataTreeGridProvider :controller="tree">
+    <DataTreeGrid.Provider>
       <div class="tabular-demo__viewport">
-        <DataTreeGridRoot ref="treeRoot" class="tabular-grid tabular-tree-grid" aria-labelledby="tabular-data-tree-grid-demo-title" @command="handleCommand">
-          <DataTreeGridHeader><DataTreeGridHeaderRow><DataTreeGridColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">{{ copy.columns[index] }}</DataTreeGridColumnHeader></DataTreeGridHeaderRow></DataTreeGridHeader>
-          <DataTreeGridBody v-slot="{ row }">
-            <DataTreeGridCell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
+        <DataTreeGrid.Root ref="treeRoot" class="tabular-grid tabular-tree-grid" aria-labelledby="tabular-data-tree-grid-demo-title" @command="handleCommand">
+          <DataTreeGrid.Header><DataTreeGrid.HeaderRow><DataTreeGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">{{ copy.columns[index] }}</DataTreeGrid.ColumnHeader></DataTreeGrid.HeaderRow></DataTreeGrid.Header>
+          <DataTreeGrid.Body v-slot="{ row }">
+            <DataTreeGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
               <template v-if="column.id === 'name'">
-                <DataTreeGridRowDisclosure v-if="row.kind === 'group'" :aria-label="`Toggle ${row.cells['name']}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGridRowDisclosure>
+                <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" :aria-label="`Toggle ${row.cells.name}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGrid.RowDisclosure>
                 <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
-                <DataTreeGridRowSelectionControl v-if="row.kind === 'leaf'" name="services" :aria-label="`Select ${row.cells['name']}`" />
+                <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" name="services" :aria-label="`Select ${row.cells.name}`" />
               </template>
-              <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells['name'] }}</strong>
-              <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
-              <DataTreeGridEditor v-if="row.kind === 'leaf'" :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
-            </DataTreeGridCell>
-          </DataTreeGridBody>
-        </DataTreeGridRoot>
+              <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells.name }}</strong>
+              <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>
+              <DataTreeGrid.Editor v-if="row.kind === 'leaf'" :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+            </DataTreeGrid.Cell>
+          </DataTreeGrid.Body>
+        </DataTreeGrid.Root>
       </div>
-    </DataTreeGridProvider>
+    </DataTreeGrid.Provider>
     <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ rows.length }}{{ isKorean ? '개 행 표시' : ' visible rows' }}</strong></footer>
   </section>
 </template>

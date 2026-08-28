@@ -16,21 +16,29 @@ DataGrid는 평면 application grid 프로필입니다. 셀 사이를 이동하�
 
 ## grid 구성
 
-DataGrid는 native table element가 아니라 ARIA grid 의미를 사용합니다. accepted view의 모든 행은 leaf여야 하며 계층형 response는 상태를 일부 변경하지 않고 원자적으로 거부됩니다.
+DataGrid는 native table element가 아니라 ARIA grid 의미를 사용합니다. accepted view의 모든 행은 leaf여야 하며 계층형 response는 상태를 일부 변경하지 않고 원자적으로 거부됩니다. `useDataGridComponents(grid)`로 controller type이 결합된 namespace를 만듭니다.
 
 ```vue
-<DataGridProvider :controller="grid">
-  <DataGridRoot aria-label="출시 작업" @command="handleCommand">
-    <DataGridHeader><DataGridHeaderRow>
-      <DataGridColumnHeader headerNodeID="task">작업</DataGridColumnHeader>
-      <DataGridColumnHeader headerNodeID="owner">담당자</DataGridColumnHeader>
-    </DataGridHeaderRow></DataGridHeader>
-    <DataGridBody v-slot="{ row }">
-      <DataGridCell column="task">{{ row.cells.task }}</DataGridCell>
-      <DataGridCell column="owner">{{ row.cells.owner }}</DataGridCell>
-    </DataGridBody>
-  </DataGridRoot>
-</DataGridProvider>
+<script setup lang="ts">
+import { useDataGridComponents } from '@sectile/vue/data-grid'
+
+const DataGrid = useDataGridComponents(grid)
+</script>
+
+<template>
+<DataGrid.Provider>
+  <DataGrid.Root aria-label="출시 작업" @command="handleCommand">
+    <DataGrid.Header><DataGrid.HeaderRow>
+      <DataGrid.ColumnHeader headerNodeID="task">작업</DataGrid.ColumnHeader>
+      <DataGrid.ColumnHeader headerNodeID="owner">담당자</DataGrid.ColumnHeader>
+    </DataGrid.HeaderRow></DataGrid.Header>
+    <DataGrid.Body v-slot="{ row }">
+      <DataGrid.Cell column="task">{{ row.cells.task }}</DataGrid.Cell>
+      <DataGrid.Cell column="owner">{{ row.cells.owner }}</DataGrid.Cell>
+    </DataGrid.Body>
+  </DataGrid.Root>
+</DataGrid.Provider>
+</template>
 ```
 
 ## cursor와 keyboard 이동
@@ -44,20 +52,20 @@ grid.dispatch({ type: 'move-cell', direction: 'down' })
 
 ## 편집과 검증
 
-편집할 열에 `edit` capability를 표시하고 각 cell에 `DataGridEditor`를 둡니다. Enter로 시작하고 Enter로 commit하며 Escape로 cancel합니다. `parseValue`는 구조화된 실패를 반환할 수 있습니다. commit command 뒤의 저장과 optimistic update는 응용 프로그램 책임입니다.
+편집할 열에 `edit` capability를 표시하고 각 cell에 `DataGrid.Editor`를 둡니다. Enter로 시작하고 Enter로 commit하며 Escape로 cancel합니다. `parseValue`는 구조화된 실패를 반환할 수 있습니다. commit command 뒤의 저장과 optimistic update는 응용 프로그램 책임입니다.
 
 행이나 열이 source response에서 사라지면 editor를 먼저 취소한 뒤 남은 cell로 cursor를 결정적으로 옮깁니다. source 교체 역시 편집을 취소하고 replacement view를 요청합니다.
 
-Body는 accepted row를 기본으로 반복하며 매 slot 호출에 type이 지정된 `row`를 전달합니다. cell, row selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing 전략이 행 배치를 직접 소유할 때만 `<DataGridBody manual>`과 명시적인 `DataGridRow`를 사용합니다. Header row의 깊이와 span metadata는 component prop이 아니라 header schema에서 계산합니다.
+Body는 accepted row를 기본으로 반복하며 매 slot 호출에 type이 지정된 `row`를 전달합니다. cell, row selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing 전략이 행 배치를 직접 소유할 때만 `<DataGrid.Body manual>`과 명시적인 `DataGrid.Row`를 사용합니다. Header row의 깊이와 span metadata는 component prop이 아니라 header schema에서 계산합니다.
 
 ## 선택, 열 상태, 큰 데이터
 
-`DataGridRowSelectionControl`과 `DataGridBulkSelectionControl`은 cell cursor와 별도로 행을 선택합니다. column state에는 순서, 숨김, start/end pinning이 포함됩니다. `DataGridColumnResizeHandle`은 host가 소유한 크기를 투영합니다. 큰 화면만 `@sectile/vue/virtual`과 선택적 Tabular adapter를 조합합니다.
+`DataGrid.RowSelectionControl`과 `DataGrid.BulkSelectionControl`은 cell cursor와 별도로 행을 선택합니다. column state에는 순서, 숨김, start/end pinning이 포함됩니다. `DataGrid.ColumnResizeHandle`은 host가 소유한 크기를 투영합니다. 큰 화면만 `@sectile/vue/virtual`과 선택적 Tabular adapter를 조합합니다.
 
 ## 공개 Vue API
 
-- 생성: `useDataGrid`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
-- context: `DataGridProvider`, `DataGridRoot`
+- 생성: `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
+- context: `DataGrid.Provider`, `DataGrid.Root`
 - 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
 

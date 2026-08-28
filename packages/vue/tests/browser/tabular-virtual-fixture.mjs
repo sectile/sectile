@@ -1,7 +1,7 @@
 import { createApp, h, nextTick, ref, shallowRef } from 'vue';
 import { createDataGridVirtualAdapter, createDataTableVirtualAdapter, reconcileDataGridVirtualAdapter } from '@sectile/tabular/virtual';
-import { DataGridCell, DataGridEditor, DataGridProvider, DataGridRoot, useDataGrid } from '../../dist/data-grid.js';
-import { DataTableBody, DataTableCell, DataTableProvider, DataTableRoot, DataTableRow, useDataTable } from '../../dist/data-table.js';
+import { useDataGrid, useDataGridComponents } from '../../dist/data-grid.js';
+import { useDataTable, useDataTableComponents } from '../../dist/data-table.js';
 import { VirtualList, VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '../../dist/virtual.js';
 
 const exact = (value) => ({ kind: 'exact', value });
@@ -24,7 +24,7 @@ async function flatScenario() {
   const host = fixtureHost('flat');
   const list = ref();
   let controller;
-  const app = createApp({ setup() { controller = readyGrid(); return () => h(DataGridProvider, { controller }, { default: () => h(DataGridRoot, { 'aria-label': 'Flat virtual grid' }, { default: () => h(VirtualList, { ref: list, items: controller.getProjection().rows, getKey: (entry) => entry.rowID, itemSize: 24, overscan: 0, initialViewport: flatViewport, style: { width: '320px', height: '96px', overflow: 'auto' }, itemAttributes: (entry) => ({ role: 'row', 'data-flat-row': entry.rowID }) }, { default: ({ value }) => h('span', { role: 'gridcell' }, value.row.cells.name) }) }) }); } });
+  const app = createApp({ setup() { controller = readyGrid(); const DataGrid = useDataGridComponents(controller); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, { 'aria-label': 'Flat virtual grid' }, { default: () => h(VirtualList, { ref: list, items: controller.getProjection().rows, getKey: (entry) => entry.rowID, itemSize: 24, overscan: 0, initialViewport: flatViewport, style: { width: '320px', height: '96px', overflow: 'auto' }, itemAttributes: (entry) => ({ role: 'row', 'data-flat-row': entry.rowID }) }, { default: ({ value }) => h('span', { role: 'gridcell' }, value.row.cells.name) }) }) }); } });
   try {
     app.mount(host); await settle(); list.value.flush(); await settle();
     const rendered = host.querySelectorAll('[data-flat-row]').length;
@@ -37,15 +37,16 @@ async function nativeScenario() {
   const app = createApp({
     setup() {
       controller = readyTable();
+      const DataTable = useDataTableComponents(controller);
       adapter = createDataTableVirtualAdapter({ projection: controller.getProjection(), rowExtents: { kind: 'uniform', extent: estimated(26) } });
-      return () => h(DataTableProvider, { controller }, {
+      return () => h(DataTable.Provider, null, {
         default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.state, strategy: adapter.strategy, initialViewport: nativeViewport, overscan: 0, style: { width: '320px', height: '104px', overflow: 'auto' }, onError: (error) => errors.push(`${error.code}:${error.message}`) }, {
           default: ({ placements }) => h(VirtualizerContent, { asChild: true }, {
-            default: () => h(DataTableRoot, { 'aria-label': 'Native virtual table' }, {
-              default: () => h(DataTableBody, { manual: true }, {
+            default: () => h(DataTable.Root, { 'aria-label': 'Native virtual table' }, {
+              default: () => h(DataTable.Body, { manual: true }, {
                 default: () => placements.map((placement) => h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
-                  default: () => h(DataTableRow, { rowID: placement.id }, {
-                    default: () => h(DataTableCell, { rowID: placement.id, column: 'name' }, () => rows[placement.index]?.cells.name),
+                  default: () => h(DataTable.Row, { rowID: placement.id }, {
+                    default: () => h(DataTable.Cell, { rowID: placement.id, column: 'name' }, () => rows[placement.index]?.cells.name),
                   }),
                 })),
               }),
@@ -73,19 +74,20 @@ async function pinnedScenario() {
   const app = createApp({
     setup() {
       controller = readyGrid();
+      const DataGrid = useDataGridComponents(controller);
       adapter.value = createDataGridVirtualAdapter({ projection: controller.getProjection(), rowExtents: { kind: 'uniform', extent: estimated(28) }, columnExtents: { kind: 'uniform', extent: estimated(110) } });
       strategy = adapter.value.strategy;
       rebuildCells();
       const onCommand = (command) => { if (command.type !== 'request-reveal-cell') return; revealCount += 1; const located = adapter.value.locateCell(command.cell); if (located !== null) root.value?.scrollTo(located.id, 'nearest'); };
-      return () => h(DataGridProvider, { controller }, {
-        default: () => h(DataGridRoot, { 'aria-label': 'Pinned virtual grid', onCommand }, {
+      return () => h(DataGrid.Provider, null, {
+        default: () => h(DataGrid.Root, { 'aria-label': 'Pinned virtual grid', onCommand }, {
           default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.value.state, strategy: adapter.value.strategy, initialViewport: pinnedViewport, overscan: 0, style: { width: '220px', height: '84px', overflow: 'auto' } }, {
             default: ({ placements }) => h(VirtualizerContent, null, {
               default: () => placements.map((placement) => {
                 const cell = cells.get(placement.id);
                 return cell === undefined ? null : h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
-                  default: () => h(DataGridCell, { rowID: cell.rowID, column: cell.columnID }, {
-                    default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGridEditor, { rowID: cell.rowID, column: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
+                  default: () => h(DataGrid.Cell, { rowID: cell.rowID, column: cell.columnID }, {
+                    default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGrid.Editor, { rowID: cell.rowID, column: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
                   }),
                 });
               }),

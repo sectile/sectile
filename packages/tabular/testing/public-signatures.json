@@ -35,11 +35,11 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "8d6dd52331e9ce73b7f293f40dc881a7e2170acc150325f572f8ac8de17f88cd",
+  "fingerprint": "5b9b0a4e453d60a89896b7b01c4d62994fdae1aec6d65f90a0c221b186640bd3",
   "files": [
     {
       "path": "dist/contracts.d.ts",
-      "sha256": "20c5161e0d42dcd9abcb58829af2ba2232c5537dd99efa1e698a91a014c736cb"
+      "sha256": "53d0cdb1f5d588bb8739ea61b0ffb930d97f0cba3844f21ae114149d11fa9fcd"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -63,7 +63,7 @@
     },
     {
       "path": "dist/model.d.ts",
-      "sha256": "84b10260b8183b26d634105252ac8109e81a35ec319591a6005c87062ae49a88"
+      "sha256": "1c173e2fed5515118f6aed5b2c4d10e94b947071c891b3f6e2f2a9bffc25b278"
     },
     {
       "path": "dist/query.d.ts",

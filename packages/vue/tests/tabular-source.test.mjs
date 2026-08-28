@@ -5,7 +5,7 @@ import { Window } from 'happy-dom';
 const browserWindow = new Window({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, { window: browserWindow, document: browserWindow.document, Node: browserWindow.Node, Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement, HTMLTableElement: browserWindow.HTMLTableElement, HTMLTableCellElement: browserWindow.HTMLTableCellElement, HTMLInputElement: browserWindow.HTMLInputElement, HTMLSelectElement: browserWindow.HTMLSelectElement, HTMLTextAreaElement: browserWindow.HTMLTextAreaElement, SVGElement: browserWindow.SVGElement, Event: browserWindow.Event, MouseEvent: browserWindow.MouseEvent, KeyboardEvent: browserWindow.KeyboardEvent, AbortController: browserWindow.AbortController, MutationObserver: browserWindow.MutationObserver, ResizeObserver: browserWindow.ResizeObserver });
 const { createApp, h, nextTick } = await import('vue');
-const { DataTableProvider, DataTableRoot, useDataTable, useDataTableSource } = await import('../dist/data-table.js');
+const { useDataTable, useDataTableComponents, useDataTableSource } = await import('../dist/data-table.js');
 
 const columns = [{ id: 'name', capabilities: ['edit'] }];
 const response = (request, name = 'Ada') => ({ protocolVersion: 1, requestID: request.requestID, sourceGeneration: request.sourceGeneration, queryRevision: request.queryRevision, expansionRevision: request.expansionRevision, viewRevision: 1, access: request.access, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'leaf', id: 'r1', cells: { name } }], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
@@ -13,7 +13,7 @@ const waitFor = async (read, expected) => { for (let index = 0; index < 20; inde
 
 test('Vue Tabular source reserves one executor and starts only after mount', async () => {
   let calls = 0; let source;
-  const app = createApp({ setup() { const controller = useDataTable({ columns }); source = useDataTableSource(controller, async (request) => { calls += 1; return response(request); }); assert.throws(() => useDataTableSource(controller, async (request) => response(request)), /executor/i); return () => h(DataTableProvider, { controller }, { default: () => h(DataTableRoot) }); } });
+  const app = createApp({ setup() { const controller = useDataTable({ columns }); const DataTable = useDataTableComponents(controller); source = useDataTableSource(controller, async (request) => { calls += 1; return response(request); }); assert.throws(() => useDataTableSource(controller, async (request) => response(request)), /executor/i); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) }); } });
   const host = document.createElement('div'); document.body.append(host);
   assert.equal(calls, 0);
   app.mount(host); await nextTick(); await waitFor(() => source.status.value, 'success');
@@ -23,7 +23,7 @@ test('Vue Tabular source reserves one executor and starts only after mount', asy
 
 test('Vue Tabular source cancels stale work and exposes resolver errors without rendering policy', async () => {
   let release; let source; let controller;
-  const app = createApp({ setup() { controller = useDataTable({ columns }); source = useDataTableSource(controller, (request, { signal }) => new Promise((resolve) => { release = () => resolve(response(request, signal.aborted ? 'stale' : 'late')); })); return () => h(DataTableProvider, { controller }, { default: () => h(DataTableRoot) }); } });
+  const app = createApp({ setup() { controller = useDataTable({ columns }); const DataTable = useDataTableComponents(controller); source = useDataTableSource(controller, (request, { signal }) => new Promise((resolve) => { release = () => resolve(response(request, signal.aborted ? 'stale' : 'late')); })); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) }); } });
   const host = document.createElement('div'); document.body.append(host); app.mount(host); await nextTick(); await Promise.resolve();
   source.replaceResolver(async () => { throw new Error('offline'); });
   release?.(); await waitFor(() => source.status.value, 'error'); await nextTick();

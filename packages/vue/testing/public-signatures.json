@@ -291,7 +291,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "ddf222c1586169b4221cdb481651a68768418d89f464e68160eb6a34195b517d",
+  "fingerprint": "e45a0e764f972f9850df7cff29b8812f26fdfdb396bb5c178837da165815a622",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -335,15 +335,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "e781a68d9d93c43a64dad2752793e269ce815283d2f65cbdf4846b997a9a41a3"
+      "sha256": "528f9b748bb821a5c7cb90c312e0f2cbe3ed105733f6a5e642f021848745d334"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "58c7c0151350ab1c7155c9f4ad9f78bf62201f9f10137254355c986ec35c4c18"
+      "sha256": "436ae3140c428b512ab14315281eec1ee4c4227d9fce1578ca17484a5c300ff6"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "1da12a0e81250c5fb837c1fdb4e4750668cbc3b73ddf4f34653efe4d28b0c8b3"
+      "sha256": "541e06c050ccf16ef7718bfa91ce467692b0e770c8c6c587d5b9301796e0df7f"
     },
     {
       "path": "dist/date-field.d.ts",
@@ -424,6 +424,10 @@
     {
       "path": "dist/internal/popup.d.ts",
       "sha256": "d3023900e6bfa2a35e255f2eb4685d923ecf9673391ace2d6f047508042659e2"
+    },
+    {
+      "path": "dist/internal/tabular-components.d.ts",
+      "sha256": "341bfba78ac42dc1fa8f9ced66307e8e861f7565448876c901f4c2c6d68ea6a7"
     },
     {
       "path": "dist/internal/tabular-parts.d.ts",

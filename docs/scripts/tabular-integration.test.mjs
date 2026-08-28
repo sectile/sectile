@@ -30,7 +30,8 @@ test('Tabular documentation covers profiles, live examples, Vue injection, sourc
     for (const profile of ['DataTable', 'DataGrid', 'DataTreeGrid']) assert.match(source, new RegExp(profile));
   }
   for (const source of [vue, koVue]) {
-    assert.match(source, /DataTableProvider|DataGridProvider/u);
+    assert.match(source, /useData(?:Table|Grid)Components/u);
+    assert.match(source, /DataGrid\.Provider/u);
     assert.match(source, /useData(?:Table|Grid)Source/u);
     assert.match(source, /loading/iu);
   }
@@ -58,11 +59,12 @@ test('Tabular Vue examples use automatic Body rows and concise public props', as
       read(`ko/packages/tabular/${profile}.md`),
     ]),
   ]);
-  assert.match(sources[0], /DataTableCaption/u);
+  assert.match(sources[0], /DataTable\.Caption/u);
   for (const source of sources) {
     assert.doesNotMatch(source, /acceptedRows/u);
     assert.doesNotMatch(source, /:depth="0"/u);
     assert.doesNotMatch(source, /(?:^|\s):?columnID=/mu);
     assert.doesNotMatch(source, /Data(?:Table|Grid|TreeGrid)Row\s+v-for/u);
+    assert.doesNotMatch(source, /<Data(?:Table|Grid|TreeGrid)\.Provider\s+:controller=/u);
   }
 });

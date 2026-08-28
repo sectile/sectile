@@ -2,12 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { DataGridBody, DataGridCell, DataGridColumnHeader, DataGridHeader, DataGridHeaderRow, DataGridProvider, DataGridRoot, defineDataGridColumns, useDataGrid } from '../dist/data-grid.js';
+import { defineDataGridColumns, useDataGrid, useDataGridComponents } from '../dist/data-grid.js';
 
 const columns = defineDataGridColumns([{ id: 'name', capabilities: ['edit'] }]);
 
+test('Vue DataGrid exposes only the bound grid component namespace', () => {
+  const components = useDataGridComponents(useDataGrid({ columns }));
+  assert.deepEqual(Object.keys(components).sort(), [
+    'Body', 'BulkSelectionControl', 'Cell', 'ColumnHeader', 'ColumnResizeHandle',
+    'Editor', 'FilterControl', 'Header', 'HeaderRow', 'Provider', 'Root', 'Row',
+    'RowSelectionControl', 'SortTrigger',
+  ]);
+});
+
 test('Vue DataGrid owns ARIA grid composition without a repeated controller prop', async () => {
-  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGridProvider, { controller }, { default: () => h(DataGridRoot, null, { default: () => [h(DataGridHeader, null, () => h(DataGridHeaderRow, null, () => h(DataGridColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataGridBody, null, { default: ({ row }) => h(DataGridCell, { column: 'name' }, () => row.cells.name) })] }) }); } });
+  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); const DataGrid = useDataGridComponents(controller); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGrid.Provider, null, { default: () => h(DataGrid.Root, null, { default: () => [h(DataGrid.Header, null, () => h(DataGrid.HeaderRow, null, () => h(DataGrid.ColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataGrid.Body, null, { default: ({ row }) => h(DataGrid.Cell, { column: 'name' }, () => row.cells.name) })] }) }); } });
   const html = await renderToString(app);
   assert.match(html, /role="grid"/);
   assert.match(html, /role="rowgroup"/);

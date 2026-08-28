@@ -8,7 +8,7 @@ DataTable is the read-oriented profile. Start here for directories, reports, sea
 
 <TabularDataTableDemo />
 
-Try sorting more than once to cycle ascending, descending, and off. Filter the rows, select individual results, then select every matching row. The demo uses the real `DataTableSortTrigger`, `DataTableFilterControl`, `DataTableSelectionControl`, and `DataTableBulkSelectionControl` parts.
+Try sorting more than once to cycle ascending, descending, and off. Filter the rows, select individual results, then select every matching row. The demo uses the real `DataTable.SortTrigger`, `DataTable.FilterControl`, `DataTable.SelectionControl`, and `DataTable.BulkSelectionControl` parts returned for its controller.
 
 ::: details Complete source for the live example
 <<< ../../.vitepress/theme/components/TabularDataTableDemo.vue
@@ -16,22 +16,26 @@ Try sorting more than once to cycle ascending, descending, and off. Filter the r
 
 ## Basic composition
 
-The Provider receives the controller once. Root and every nested part read it through injection. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each `row` to its slot; nested cells and controls inherit that row identity.
+`useDataTableComponents` creates the typed compound component namespace for a controller. Its Provider carries that controller through injection without a prop. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each schema-typed `row` to its slot; nested cells and controls inherit that row identity.
 
 ```vue
 <script setup lang="ts">
 import {
-  DataTableProvider, DataTableRoot, DataTableCaption,
-  DataTableHeader, DataTableHeaderRow, DataTableColumnHeader,
-  DataTableBody, DataTableCell,
-  defineDataTableColumns, useDataTable, useDataTableSource,
+  defineDataTableColumns, useDataTable,
+  useDataTableComponents, useDataTableSource,
 } from '@sectile/vue/data-table'
+
+interface UserCells {
+  readonly name: string
+  readonly role: string
+}
 
 const columns = defineDataTableColumns([
   { id: 'name', capabilities: ['sort', 'filter'] },
   { id: 'role', capabilities: ['sort', 'filter'] },
 ])
-const table = useDataTable({ columns })
+const table = useDataTable<UserCells>({ columns })
+const DataTable = useDataTableComponents(table)
 
 useDataTableSource(table, async (request) => {
   const page = await fetchUsers(request)
@@ -40,32 +44,32 @@ useDataTableSource(table, async (request) => {
 </script>
 
 <template>
-  <DataTableProvider :controller="table">
-    <DataTableRoot>
-      <DataTableCaption>Users</DataTableCaption>
-      <DataTableHeader><DataTableHeaderRow>
-        <DataTableColumnHeader headerNodeID="name">Name</DataTableColumnHeader>
-        <DataTableColumnHeader headerNodeID="role">Role</DataTableColumnHeader>
-      </DataTableHeaderRow></DataTableHeader>
-      <DataTableBody v-slot="{ row }">
-        <DataTableCell column="name">{{ row.cells.name }}</DataTableCell>
-        <DataTableCell column="role">{{ row.cells.role }}</DataTableCell>
-      </DataTableBody>
-    </DataTableRoot>
-  </DataTableProvider>
+  <DataTable.Provider>
+    <DataTable.Root>
+      <DataTable.Caption>Users</DataTable.Caption>
+      <DataTable.Header><DataTable.HeaderRow>
+        <DataTable.ColumnHeader headerNodeID="name">Name</DataTable.ColumnHeader>
+        <DataTable.ColumnHeader headerNodeID="role">Role</DataTable.ColumnHeader>
+      </DataTable.HeaderRow></DataTable.Header>
+      <DataTable.Body v-slot="{ row }">
+        <DataTable.Cell column="name">{{ row.cells.name }}</DataTable.Cell>
+        <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
+      </DataTable.Body>
+    </DataTable.Root>
+  </DataTable.Provider>
 </template>
 ```
 
 ## Sort and filter
 
-`DataTableSortTrigger` cycles one column through ascending, descending, and unsorted. `DataTableFilterControl` binds an input or select to a global or column descriptor. Both update the canonical query and request a new view; the source decides what comparator and predicate keys mean.
+`DataTable.SortTrigger` cycles one column through ascending, descending, and unsorted. `DataTable.FilterControl` binds an input or select to a global or column descriptor. Both update the canonical query and request a new view; the source decides what comparator and predicate keys mean.
 
 ```vue
-<DataTableSortTrigger column="name" comparator="locale">
+<DataTable.SortTrigger column="name" comparator="locale">
   Name
-</DataTableSortTrigger>
+</DataTable.SortTrigger>
 
-<DataTableFilterControl
+<DataTable.FilterControl
   scope="global"
   id="directory-search"
   predicate="contains"
@@ -75,23 +79,23 @@ useDataTableSource(table, async (request) => {
 
 ## Selection and native forms
 
-Use `DataTableSelectionControl` for explicit rows and `DataTableBulkSelectionControl` for all matching rows or group leaves. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
+Use `DataTable.SelectionControl` for explicit rows and `DataTable.BulkSelectionControl` for all matching rows or group leaves. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
 
 ```vue
-<DataTableSelectionControl name="selected-users" />
+<DataTable.SelectionControl name="selected-users" />
 
-<DataTableBulkSelectionControl :target="{ kind: 'all-matching' }">
+<DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }">
   Select all results
-</DataTableBulkSelectionControl>
+</DataTable.BulkSelectionControl>
 ```
 
 ## Grouped rows and edit intent
 
-DataTable may render group rows returned by the source. `DataTableDisclosure` changes expansion and requests a new view. `DataTableEditor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
+DataTable may render group rows returned by the source. `DataTable.Disclosure` changes expansion and requests a new view. `DataTable.Editor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
 
-Header rows do not take a depth prop. Multi-level `colspan`, `rowspan`, and ARIA metadata are derived from the header schema and each `headerNodeID`. Give a native DataTable its accessible name with `DataTableCaption`, or use `aria-labelledby` when a visible title outside the table already names it.
+Header rows do not take a depth prop. Multi-level `colspan`, `rowspan`, and ARIA metadata are derived from the header schema and each `headerNodeID`. Give a native DataTable its accessible name with `DataTable.Caption`, or use `aria-labelledby` when a visible title outside the table already names it.
 
-Body owns normal row repetition. Use `<DataTableBody manual>` with explicit `DataTableRow rowID="…"` only for low-level rendering such as a virtualized window.
+Body owns normal row repetition. Use `<DataTable.Body manual>` with explicit `DataTable.Row rowID="…"` only for low-level rendering such as a virtualized window.
 
 ## Source and presentation states
 
@@ -99,8 +103,8 @@ Body owns normal row repetition. Use `<DataTableBody manual>` with explicit `Dat
 
 ## Public Vue API
 
-- Creation: `useDataTable`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
-- Context: `DataTableProvider`, `DataTableRoot`
+- Creation: `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
+- Context: `DataTable.Provider`, `DataTable.Root` from the returned namespace
 - Structure: `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - Controls: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
 

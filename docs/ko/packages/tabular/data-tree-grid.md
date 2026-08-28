@@ -32,23 +32,23 @@ const rows = [
 
 ## disclosure와 source 연결
 
-`DataTreeGridRowDisclosure`는 expansion을 변경하고 revision이 붙은 source request를 만듭니다. resolver는 현재 보이는 branch와 이를 설명하는 데 필요한 context-only ancestor만 반환할 수 있습니다. Body가 현재 group row를 제공하므로 disclosure는 row ID를 자동으로 상속합니다.
+`const DataTreeGrid = useDataTreeGridComponents(tree)`로 type이 결합된 namespace를 한 번 만듭니다. `DataTreeGrid.RowDisclosure`는 expansion을 변경하고 revision이 붙은 source request를 만듭니다. resolver는 현재 보이는 branch와 이를 설명하는 데 필요한 context-only ancestor만 반환할 수 있습니다. Body가 현재 group row를 제공하므로 disclosure는 row ID를 자동으로 상속합니다.
 
 ```vue
-<DataTreeGridRowDisclosure v-if="row.kind === 'group'">
+<DataTreeGrid.RowDisclosure v-if="row.kind === 'group'">
   {{ row.cells.name }} 전환
-</DataTreeGridRowDisclosure>
+</DataTreeGrid.RowDisclosure>
 ```
 
 ## grid 이동과 편집
 
 leaf cell은 DataGrid와 같은 이동·편집 수명 주기를 사용하며 group cell은 read-only입니다. Enter로 editor를 시작하고 Escape로 취소하며 valid commit은 응용 프로그램 command로 전달됩니다. collapse나 removal은 영향을 받은 editor를 먼저 취소하고 cursor를 보이는 cell로 복구합니다.
 
-`DataTreeGridBody`는 accepted hierarchy를 순서대로 렌더링하고 type이 지정된 `{ row, rowIndex, isGroup }`를 노출합니다. cell, disclosure, selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing이 배치를 소유할 때만 manual Body와 명시적인 Row를 사용합니다. Header row 깊이는 header schema에서 계산합니다.
+`DataTreeGrid.Body`는 accepted hierarchy를 순서대로 렌더링하고 type이 지정된 `{ row, rowIndex, isGroup }`를 노출합니다. cell, disclosure, selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing이 배치를 소유할 때만 manual Body와 명시적인 Row를 사용합니다. Header row 깊이는 header schema에서 계산합니다.
 
 ## branch를 가로지르는 선택
 
-보이는 leaf는 `DataTreeGridRowSelectionControl`로 선택합니다. `DataTreeGridBulkSelectionControl`에는 `{ kind: 'all-matching' }` 또는 `{ kind: 'group-leaves', groupID }`를 전달할 수 있습니다. group leaf 선택은 아직 불러오지 않은 descendant도 source나 응용 프로그램이 포함할 수 있도록 intent를 보냅니다.
+보이는 leaf는 `DataTreeGrid.RowSelectionControl`로 선택합니다. `DataTreeGrid.BulkSelectionControl`에는 `{ kind: 'all-matching' }` 또는 `{ kind: 'group-leaves', groupID }`를 전달할 수 있습니다. group leaf 선택은 아직 불러오지 않은 descendant도 source나 응용 프로그램이 포함할 수 있도록 intent를 보냅니다.
 
 ## metadata와 가상화
 
@@ -56,8 +56,8 @@ projection은 ARIA treegrid 속성에 필요한 parent row, depth, position, siz
 
 ## 공개 Vue API
 
-- 생성: `useDataTreeGrid`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
-- context: `DataTreeGridProvider`, `DataTreeGridRoot`
+- 생성: `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
+- context: `DataTreeGrid.Provider`, `DataTreeGrid.Root`
 - 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
 

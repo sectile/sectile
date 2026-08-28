@@ -2,18 +2,9 @@
 import { computed, reactive, ref } from 'vue';
 import { ArrowDownUp, CheckCircle2, PencilLine, TableCellsSplit } from '@lucide/vue';
 import {
-  DataGridBody,
-  DataGridCell,
-  DataGridColumnHeader,
-  DataGridEditor,
-  DataGridHeader,
-  DataGridHeaderRow,
-  DataGridProvider,
-  DataGridRoot,
-  DataGridRowSelectionControl,
-  DataGridSortTrigger,
   defineDataGridColumns,
   useDataGrid,
+  useDataGridComponents,
   useDataGridSource,
   type DataGridCommand,
   type DataGridEditState,
@@ -44,6 +35,14 @@ const records = reactive([
   { id: 'api', task: 'API compatibility', owner: 'Chen', area: 'Core', target: 'Sep 08', risk: 'High', status: 'Review' },
   { id: 'canary', task: 'Canary rollout', owner: 'Iris', area: 'Delivery', target: 'Sep 09', risk: 'Medium', status: 'Progress' },
 ]);
+interface ReleaseCells {
+  readonly task: string;
+  readonly owner: string;
+  readonly area: string;
+  readonly target: string;
+  readonly risk: string;
+  readonly status: string;
+}
 const columns = defineDataGridColumns([
   { id: 'task', label: 'Task', capabilities: ['sort', 'edit'] },
   { id: 'owner', label: 'Owner', capabilities: ['sort', 'edit'] },
@@ -53,9 +52,10 @@ const columns = defineDataGridColumns([
   { id: 'status', label: 'Status', capabilities: ['sort', 'edit'] },
 ]);
 let viewRevision = 0;
-const grid = useDataGrid({ columns });
-const gridRoot = ref<DataGridRootExpose | null>(null);
-useDataGridSource(grid, (request): DataGridViewResponse => {
+const grid = useDataGrid<ReleaseCells>({ columns });
+const DataGrid = useDataGridComponents(grid);
+const gridRoot = ref<DataGridRootExpose<ReleaseCells> | null>(null);
+useDataGridSource(grid, (request): DataGridViewResponse<ReleaseCells> => {
   let result = [...records];
   const sort = request.query.sort[0];
   if (sort !== undefined) result.sort((left, right) => String(left[sort.columnID as keyof typeof left]).localeCompare(String(right[sort.columnID as keyof typeof right])) * (sort.direction === 'ascending' ? 1 : -1));
@@ -106,26 +106,26 @@ const handleCommand = (command: DataGridCommand) => {
       <div class="tabular-demo__title"><span><TableCellsSplit :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 항목' : ' items' }}</small></div></div>
       <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
     </header>
-    <DataGridProvider :controller="grid">
+    <DataGrid.Provider>
       <div class="tabular-demo__viewport">
-        <DataGridRoot ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
-          <DataGridHeader>
-            <DataGridHeaderRow>
-              <DataGridColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
-                <DataGridSortTrigger :column="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGridSortTrigger>
-              </DataGridColumnHeader>
-            </DataGridHeaderRow>
-          </DataGridHeader>
-          <DataGridBody v-slot="{ row }">
-            <DataGridCell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
-              <DataGridRowSelectionControl v-if="column.id === 'task'" name="release-items" :aria-label="`Select ${row.cells['task']}`" />
-              <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
-              <DataGridEditor :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
-            </DataGridCell>
-          </DataGridBody>
-        </DataGridRoot>
+        <DataGrid.Root ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
+          <DataGrid.Header>
+            <DataGrid.HeaderRow>
+              <DataGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
+                <DataGrid.SortTrigger :column="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGrid.SortTrigger>
+              </DataGrid.ColumnHeader>
+            </DataGrid.HeaderRow>
+          </DataGrid.Header>
+          <DataGrid.Body v-slot="{ row }">
+            <DataGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
+              <DataGrid.RowSelectionControl v-if="column.id === 'task'" name="release-items" :aria-label="`Select ${row.cells.task}`" />
+              <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>
+              <DataGrid.Editor :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+            </DataGrid.Cell>
+          </DataGrid.Body>
+        </DataGrid.Root>
       </div>
-    </DataGridProvider>
+    </DataGrid.Provider>
     <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong><CheckCircle2 :size="15" aria-hidden="true" />{{ selectedCount }}{{ isKorean ? '개 행 선택' : ' rows selected' }}</strong></footer>
   </section>
 </template>

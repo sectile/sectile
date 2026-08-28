@@ -21,6 +21,11 @@ export type TabularQueryValue =
 
 export type TabularWireValue = TabularQueryValue;
 
+export type TabularCellRecord = Readonly<Record<TabularColumnID, TabularWireValue>>;
+export type TabularWireCells<Cells extends object> = Readonly<{
+  [Column in keyof Cells]: Extract<Cells[Column], TabularWireValue>;
+}>;
+
 export interface TabularCellAddress {
   readonly rowID: TabularRowID;
   readonly columnID: TabularColumnID;
@@ -59,22 +64,27 @@ export type TabularHeaderNode =
       readonly children: readonly TabularHeaderNode[];
     };
 
-export type TabularRow =
-  | {
-      readonly kind: 'leaf';
-      readonly id: TabularRowID;
-      readonly cells: Readonly<Record<TabularColumnID, TabularWireValue>>;
-      readonly contextOnly?: boolean;
-    }
-  | {
-      readonly kind: 'group';
-      readonly id: TabularGroupID;
-      readonly parentGroupID: TabularGroupID | null;
-      readonly depth: number;
-      readonly expanded: boolean;
-      readonly cells: Readonly<Record<TabularColumnID, TabularWireValue>>;
-      readonly contextOnly?: boolean;
-    };
+export interface TabularLeafRow<Cells extends object = TabularCellRecord> {
+  readonly kind: 'leaf';
+  readonly id: TabularRowID;
+  readonly cells: TabularWireCells<Cells>;
+  readonly contextOnly?: boolean;
+}
+
+export interface TabularGroupRow<Cells extends object = TabularCellRecord> {
+  readonly kind: 'group';
+  readonly id: TabularGroupID;
+  readonly parentGroupID: TabularGroupID | null;
+  readonly depth: number;
+  readonly expanded: boolean;
+  readonly cells: TabularWireCells<Cells>;
+  readonly contextOnly?: boolean;
+}
+
+export type TabularRow<
+  LeafCells extends object = TabularCellRecord,
+  GroupCells extends object = LeafCells,
+> = TabularLeafRow<LeafCells> | TabularGroupRow<GroupCells>;
 
 export interface TabularLimits {
   readonly maxIDCodeUnits: number;
@@ -212,7 +222,7 @@ export interface TabularColumnSchema {
   readonly headers: readonly TabularHeaderNode[];
 }
 
-export interface TabularView {
+export interface TabularView<Row extends TabularRow = TabularRow> {
   readonly requestID: number;
   readonly sourceGeneration: number;
   readonly queryRevision: number;
@@ -221,13 +231,16 @@ export interface TabularView {
   readonly access: TabularAccessRange;
   readonly matchingLeafCount: TabularCount;
   readonly visibleRowCount: TabularCount;
-  readonly rows: readonly TabularRow[];
+  readonly rows: readonly Row[];
   readonly columnSchema: TabularColumnSchema;
 }
 
-export type TabularResolvedRow = TabularRow;
+export type TabularResolvedRow<
+  LeafCells extends object = TabularCellRecord,
+  GroupCells extends object = LeafCells,
+> = TabularRow<LeafCells, GroupCells>;
 
-export interface TabularViewResponse {
+export interface TabularViewResponse<Row extends TabularRow = TabularRow> {
   readonly protocolVersion: 1;
   readonly requestID: number;
   readonly sourceGeneration: number;
@@ -237,7 +250,7 @@ export interface TabularViewResponse {
   readonly access: TabularAccessRange;
   readonly matchingLeafCount: TabularCount;
   readonly visibleRowCount: TabularCount;
-  readonly rows: readonly TabularResolvedRow[];
+  readonly rows: readonly Row[];
   readonly columnSchema: TabularColumnSchema;
   readonly removedRowIDs: readonly TabularRowID[];
 }
@@ -312,10 +325,10 @@ export interface TabularSource {
   resolve(request: TabularRequest): TabularResult<TabularViewResponse>;
 }
 
-export type TabularAcceptedViewState =
+export type TabularAcceptedViewState<Row extends TabularRow = TabularRow> =
   | { readonly kind: 'none' }
-  | { readonly kind: 'stale'; readonly view: TabularView }
-  | { readonly kind: 'current'; readonly view: TabularView };
+  | { readonly kind: 'stale'; readonly view: TabularView<Row> }
+  | { readonly kind: 'current'; readonly view: TabularView<Row> };
 
 export interface TabularState {
   readonly query: TabularQuery;

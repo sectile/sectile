@@ -6,16 +6,8 @@ const browserWindow = new Window({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, { window: browserWindow, document: browserWindow.document, Node: browserWindow.Node, Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement, HTMLTableElement: browserWindow.HTMLTableElement, HTMLTableCellElement: browserWindow.HTMLTableCellElement, HTMLInputElement: browserWindow.HTMLInputElement, HTMLSelectElement: browserWindow.HTMLSelectElement, HTMLTextAreaElement: browserWindow.HTMLTextAreaElement, SVGElement: browserWindow.SVGElement, Event: browserWindow.Event, MouseEvent: browserWindow.MouseEvent, KeyboardEvent: browserWindow.KeyboardEvent, AbortController: browserWindow.AbortController, MutationObserver: browserWindow.MutationObserver, ResizeObserver: browserWindow.ResizeObserver });
 const { createApp, h, nextTick } = await import('vue');
 const {
-  DataTableBody,
-  DataTableCaption,
-  DataTableCell,
-  DataTableColumnHeader,
-  DataTableHeader,
-  DataTableHeaderRow,
-  DataTableProvider,
-  DataTableRoot,
-  DataTableSelectionControl,
   useDataTable,
+  useDataTableComponents,
   useDataTableSource,
 } = await import('../dist/data-table.js');
 
@@ -26,6 +18,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   const app = createApp({
     setup() {
       const controller = useDataTable({ columns });
+      const DataTable = useDataTableComponents(controller);
       source = useDataTableSource(controller, async (request) => ({
         ...request,
         viewRevision: 1,
@@ -38,16 +31,16 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
         columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
         removedRowIDs: [],
       }));
-      return () => h(DataTableProvider, { controller }, {
-        default: () => h(DataTableRoot, null, {
+      return () => h(DataTable.Provider, null, {
+        default: () => h(DataTable.Root, null, {
           default: () => [
-            h(DataTableCaption, null, () => 'People'),
-            h(DataTableHeader, null, () => h(DataTableHeaderRow, null, () => h(DataTableColumnHeader, { headerNodeID: 'name' }, () => 'Name'))),
-            h(DataTableBody, null, {
+            h(DataTable.Caption, null, () => 'People'),
+            h(DataTable.Header, null, () => h(DataTable.HeaderRow, null, () => h(DataTable.ColumnHeader, { headerNodeID: 'name' }, () => 'Name'))),
+            h(DataTable.Body, null, {
               default: ({ row, rowIndex }) => [
-                h(DataTableCell, { column: 'name' }, () => `${rowIndex}:${row.cells.name}`),
-                h(DataTableCell, { column: 'role' }, () => row.cells.role),
-                h('td', null, h(DataTableSelectionControl, { name: 'people', 'aria-label': `Select ${row.cells.name}` })),
+                h(DataTable.Cell, { column: 'name' }, () => `${rowIndex}:${row.cells.name}`),
+                h(DataTable.Cell, { column: 'role' }, () => row.cells.role),
+                h('td', null, h(DataTable.SelectionControl, { name: 'people', 'aria-label': `Select ${row.cells.name}` })),
               ],
             }),
           ],

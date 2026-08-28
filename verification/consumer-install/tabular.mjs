@@ -52,7 +52,7 @@ try {
   const vue = await fixture('vue-base', [tarballs.core, tarballs.tabular, tarballs.temporal, tarballs.dom, tarballs.vue, 'vue@^3.5.0']);
   await runtime(vue, `
     const table = await import('@sectile/vue/data-table');
-    if (typeof table.DataTableProvider !== 'object' || typeof table.useDataTable !== 'function') process.exit(2);
+    if (typeof table.useDataTableComponents !== 'function' || typeof table.useDataTable !== 'function' || 'DataTableProvider' in table) process.exit(2);
   `);
   await missingPeer(vue, '@sectile/vue/virtual');
   await typeConsumer(vue);
@@ -137,16 +137,17 @@ async function missingPeer(directory, specifier) {
 async function typeConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
     import {
-      DataTableProvider,
       defineDataTableColumns,
       useDataTable,
+      useDataTableComponents,
       type DataTableContextValue,
     } from '@sectile/vue/data-table';
     type Row = { id: string; name: string };
     const columns = defineDataTableColumns([{ id: 'name', getValue: (row: Row) => row.name }]);
     const table = useDataTable({ columns });
+    const DataTable = useDataTableComponents(table);
     const context = {} as DataTableContextValue;
-    void [DataTableProvider, table, context];
+    void [DataTable.Provider, table, context];
   `);
   await writeFile(join(directory, 'tsconfig.json'), `${JSON.stringify({
     compilerOptions: {
