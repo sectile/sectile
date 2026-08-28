@@ -5,7 +5,7 @@ import { createSSRApp, defineComponent, h } from 'vue';
 import {
   TemporalProvider,
   useTemporalReferenceDate,
-} from '../dist/temporal.js';
+} from '../.verification-dist/temporal.js';
 
 const ReferenceDateOutput = defineComponent({
   setup() {

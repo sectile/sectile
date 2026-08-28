@@ -7,7 +7,7 @@ import {
   useDataTable,
   createDataTableComponents,
   useDataTableContext,
-} from '../dist/data-table.js';
+} from '../.verification-dist/data-table.js';
 
 const columns = defineDataTableColumns([{ id: 'name', label: 'Name', capabilities: ['sort', 'edit'] }]);
 

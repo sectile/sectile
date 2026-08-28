@@ -8,20 +8,20 @@ import type { DateFieldOptions } from '@sectile/dom/temporal';
 import type { DateTimeFieldOptions } from '@sectile/dom/temporal';
 import type { NumberFieldOptions } from '@sectile/dom/number-field';
 import type { TimeFieldOptions } from '@sectile/dom/temporal';
-import { DateField } from '../dist/temporal.js';
+import { DateField } from '../.verification-dist/temporal.js';
 import {
   defineFormSubmission as defineVueFormSubmission,
-} from '../dist/form.js';
+} from '../.verification-dist/form.js';
 import {
   DatePickerContent,
   DatePickerRoot,
   type DatePickerRootSlotProps,
   type DatePickerValueChangeHandler,
-} from '../dist/temporal.js';
-import type { DateTimeRange } from '../dist/temporal.js';
-import { DateTimeField } from '../dist/temporal.js';
-import type { DateValue } from '../dist/temporal.js';
-import { MenuButtonRoot, MenuRoot } from '../dist/menu.js';
+} from '../.verification-dist/temporal.js';
+import type { DateTimeRange } from '../.verification-dist/temporal.js';
+import { DateTimeField } from '../.verification-dist/temporal.js';
+import type { DateValue } from '../.verification-dist/temporal.js';
+import { MenuButtonRoot, MenuRoot } from '../.verification-dist/menu.js';
 import {
   MeterGroupRoot,
   MeterGroupSegment,
@@ -29,17 +29,17 @@ import {
   type MeterGroupRootProps,
   type MeterGroupRootSlotProps,
   type MeterGroupSegmentSlotProps,
-} from '../dist/meter-group.js';
-import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '../dist/meter.js';
-import { NumberField, type NumberFieldProps } from '../dist/number-field.js';
-import { SelectRoot } from '../dist/select.js';
+} from '../.verification-dist/meter-group.js';
+import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '../.verification-dist/meter.js';
+import { NumberField, type NumberFieldProps } from '../.verification-dist/number-field.js';
+import { SelectRoot } from '../.verification-dist/select.js';
 import {
   SpinButtonInput,
   SpinButtonRoot,
   type SpinButtonInputProps,
-} from '../dist/spin-button.js';
-import { TimeField } from '../dist/temporal.js';
-import { useToast, type UseToastReturn } from '../dist/toast.js';
+} from '../.verification-dist/spin-button.js';
+import { TimeField } from '../.verification-dist/temporal.js';
+import { useToast, type UseToastReturn } from '../.verification-dist/toast.js';
 import {
   VirtualGrid,
   VirtualList,
@@ -53,7 +53,7 @@ import {
   type VirtualMasonrySlotProps,
   type VirtualSpatialProps,
   type VirtualSpatialSlotProps,
-} from '../dist/virtual.js';
+} from '../.verification-dist/virtual.js';
 
 type Assert<T extends true> = T;
 type Equal<Left, Right> =

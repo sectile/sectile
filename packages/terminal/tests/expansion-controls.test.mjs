@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDisclosure } from '../dist/disclosure.js';
-import { createAccordion } from '../dist/accordion.js';
+import { createDisclosure } from '../.verification-dist/disclosure.js';
+import { createAccordion } from '../.verification-dist/accordion.js';
 
 test('terminal disclosure and accordion own key dispatch', () => {
   const disclosure = createDisclosure();

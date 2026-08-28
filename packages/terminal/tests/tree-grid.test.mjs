@@ -10,7 +10,7 @@ import {
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
-} from '../dist/tree-grid.js';
+} from '../.verification-dist/tree-grid.js';
 
 test('terminal keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'down' }), 'down');

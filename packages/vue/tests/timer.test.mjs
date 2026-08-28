@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '../dist/timer.js';
+import { TimerActionTrigger, TimerArea, TimerItem, TimerRoot, TimerSeparator } from '../.verification-dist/timer.js';
 
 test('Vue timer exposes persistent semantic time parts and native controls', async () => {
   const app = createSSRApp({ render: () => h(TimerRoot, { countdown: true, startMs: 90_000 }, { default: () => [h(TimerArea, null, { default: () => [h(TimerItem, { type: 'minutes' }), h(TimerSeparator, null, { default: () => ':' }), h(TimerItem, { type: 'seconds' })] }), h(TimerActionTrigger, { action: 'start' }, { default: () => 'Start' })] }) });

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createReorder } from '../dist/reorder.js';
+import { createReorder } from '../.verification-dist/reorder.js';
 
 test('DOM sequence reorder maps keyboard and pointer placement onto stable identities', () => {
   const root = new FakeElement();

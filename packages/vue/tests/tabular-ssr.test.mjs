@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+import { createTestWindow } from './happy-dom.mjs';
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, { window: browserWindow, document: browserWindow.document, Node: browserWindow.Node, Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement, HTMLTableElement: browserWindow.HTMLTableElement, HTMLTableCellElement: browserWindow.HTMLTableCellElement, HTMLInputElement: browserWindow.HTMLInputElement, HTMLSelectElement: browserWindow.HTMLSelectElement, HTMLTextAreaElement: browserWindow.HTMLTextAreaElement, SVGElement: browserWindow.SVGElement, Event: browserWindow.Event, MutationObserver: browserWindow.MutationObserver, ResizeObserver: browserWindow.ResizeObserver });
 const { createSSRApp, h, nextTick } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { useDataTable, createDataTableComponents, useDataTableSource } = await import('../dist/data-table.js');
+const { useDataTable, createDataTableComponents, useDataTableSource } = await import('../.verification-dist/data-table.js');
 
 test('[HYD-06] Vue Tabular SSR reserves source ownership and hydrates before resolver execution', async () => {
   let calls = 0;

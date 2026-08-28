@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
+const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
 
 test('PIN input element registration settles without recursive updates', async () => {
   const host = document.createElement('div');

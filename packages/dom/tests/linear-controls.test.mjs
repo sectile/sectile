@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTabs, toTabsEvent } from '../dist/tabs.js';
-import { createRadioGroup, toRadioGroupEvent } from '../dist/radio-group.js';
-import { createToolbar, toToolbarEvent } from '../dist/toolbar.js';
+import { createTabs, toTabsEvent } from '../.verification-dist/tabs.js';
+import { createRadioGroup, toRadioGroupEvent } from '../.verification-dist/radio-group.js';
+import { createToolbar, toToolbarEvent } from '../.verification-dist/toolbar.js';
 
 test('DOM tabs keep manual focus separate and activate direct clicks', () => {
   const root = new FakeElement();

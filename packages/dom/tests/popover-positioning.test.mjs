@@ -11,7 +11,7 @@ import {
   offset,
   shift,
   size,
-} from '../dist/popover.js';
+} from '../.verification-dist/popover.js';
 import {
   arrow as tooltipArrow,
   autoPlacement as tooltipAutoPlacement,
@@ -22,8 +22,8 @@ import {
   offset as tooltipOffset,
   shift as tooltipShift,
   size as tooltipSize,
-} from '../dist/tooltip.js';
-import { createPopover } from '../dist/popover.js';
+} from '../.verification-dist/tooltip.js';
+import { createPopover } from '../.verification-dist/popover.js';
 
 test('DOM floating positioning reserves layout synchronously before measuring', () => {
   const window = new Window({ url: 'https://sectile.dev/' });

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createProgress, tryCreateProgress } from '../dist/progress.js';
+import { createProgress, tryCreateProgress } from '../.verification-dist/progress.js';
 
 test('Terminal Progress returns stable indeterminate plans', () => {
   const progress = createProgress();

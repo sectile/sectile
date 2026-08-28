@@ -9,7 +9,7 @@ import {
   CascadeListItemIndicator,
   CascadeListRoot,
   CascadeListValue,
-} from '../dist/cascade-list.js';
+} from '../.verification-dist/cascade-list.js';
 
 const nodes = [
   { id: 'asia', parentID: null },

@@ -6,12 +6,12 @@ import {
   getCascadeListColumns,
   getCascadeListValuePath,
   tryCreateCascadeListState,
-} from '../../dist/cascade-list.js';
+} from '../../.verification-dist/cascade-list.js';
 import {
   applyCascadeSelectEvent,
   createCascadeSelectState,
-} from '../../dist/cascade-select.js';
-import { createTree } from '../../dist/structures/tree.js';
+} from '../../.verification-dist/cascade-select.js';
+import { createTree } from '../../.verification-dist/structures/tree.js';
 
 const tree = createTree([
   { id: 'asia', parentID: null }, { id: 'europe', parentID: null },

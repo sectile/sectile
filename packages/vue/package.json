@@ -304,15 +304,15 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs production",
+    "build:verification": "node scripts/build.mjs verification",
     "benchmark:collections": "pnpm --silent run build && node benchmarks/collection-reconciliation.mjs",
     "check:controlled-reconciliation": "node scripts/check-controlled-reconciliation.mjs",
     "check:hydration-contract": "node scripts/check-hydration-contract.mjs",
     "serve:browser-verification": "pnpm --silent run build && node scripts/serve-browser-verification.mjs",
-    "typecheck": "tsc --project tsconfig.json --pretty false",
-    "typecheck:public": "pnpm --silent run build && tsc --project type-tests/tsconfig.json --pretty false && node scripts/typecheck-public-sfc.mjs --project type-tests/tsconfig.vue.json --noEmit",
-    "test": "pnpm --silent run build && node --test --test-concurrency=1 tests/*.test.mjs",
-    "verify": "pnpm run typecheck && pnpm run typecheck:public && pnpm run test && pnpm run check:controlled-reconciliation && pnpm run check:hydration-contract"
+    "typecheck": "node node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false",
+    "typecheck:public": "pnpm --silent run build:verification && node node_modules/typescript/lib/tsc.js --project type-tests/tsconfig.json --pretty false && node scripts/typecheck-public-sfc.mjs --project type-tests/tsconfig.vue.json --noEmit",
+    "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs"
   },
   "dependencies": {
     "@sectile/core": "workspace:*",
@@ -346,7 +346,7 @@
     "@vue/server-renderer": "^3.5.0",
     "happy-dom": "^20.11.6",
     "typescript": "7.0.2",
-    "typescript-sfc": "npm:typescript@5.9.3",
+    "typescript-sfc": "npm:typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2",
     "vite": "5.4.21",
     "vue": "^3.5.0",
     "vue-tsc": "^3.0.6",

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/text' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/text' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -19,9 +19,9 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { NumberField } = await import('../dist/number-field.js');
-const { QuantityFieldRoot } = await import('../dist/quantity-field.js');
-const { TextField } = await import('../dist/text.js');
+const { NumberField } = await import('../.verification-dist/number-field.js');
+const { QuantityFieldRoot } = await import('../.verification-dist/quantity-field.js');
+const { TextField } = await import('../.verification-dist/text.js');
 
 const replaceInputValue = (input, value) => {
   input.value = value;

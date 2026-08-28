@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from '../dist/slider.js';
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from '../.verification-dist/slider.js';
 
 test('Vue slider projects an exact decimal value and compound parts', async () => {
   const app = createSSRApp({

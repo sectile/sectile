@@ -4,15 +4,15 @@ import { createDateRange, createDateValue, formatDateValue } from '@sectile/temp
 import { createTimeValue, formatTimeValue } from '@sectile/temporal/time-field';
 import { createTimeRange } from '@sectile/temporal/time-range-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
-import { createDateField } from '../dist/date-field.js';
-import { createDateRangeField } from '../dist/date-range-field.js';
-import { createDateTimeField } from '../dist/date-time-field.js';
-import { createDatePicker } from '../dist/date-picker.js';
-import { createDateRangePicker } from '../dist/date-range-picker.js';
-import { createDateTimePicker } from '../dist/date-time-picker.js';
-import { createDateTimeRangePicker } from '../dist/date-time-range-picker.js';
-import { createTimeField } from '../dist/time-field.js';
-import { createTimeRangeField } from '../dist/time-range-field.js';
+import { createDateField } from '../.verification-dist/date-field.js';
+import { createDateRangeField } from '../.verification-dist/date-range-field.js';
+import { createDateTimeField } from '../.verification-dist/date-time-field.js';
+import { createDatePicker } from '../.verification-dist/date-picker.js';
+import { createDateRangePicker } from '../.verification-dist/date-range-picker.js';
+import { createDateTimePicker } from '../.verification-dist/date-time-picker.js';
+import { createDateTimeRangePicker } from '../.verification-dist/date-time-range-picker.js';
+import { createTimeField } from '../.verification-dist/time-field.js';
+import { createTimeRangeField } from '../.verification-dist/time-range-field.js';
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
   const input = new FakeInput();

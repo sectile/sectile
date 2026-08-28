@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const window = new Window({ url: 'http://localhost/' });
+const window = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window,
   document: window.document,
@@ -15,10 +15,10 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h } = await import('vue');
-const rating = await import('../dist/rating.js');
-const stepper = await import('../dist/stepper.js');
-const checkboxGroup = await import('../dist/checkbox-group.js');
-const windowSplitter = await import('../dist/window-splitter.js');
+const rating = await import('../.verification-dist/rating.js');
+const stepper = await import('../.verification-dist/stepper.js');
+const checkboxGroup = await import('../.verification-dist/checkbox-group.js');
+const windowSplitter = await import('../.verification-dist/window-splitter.js');
 
 function renderClient(render) {
   const host = document.createElement('div');

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createDrawer, tryCreateDrawer } from '../dist/drawer.js';
+import { createDrawer, tryCreateDrawer } from '../.verification-dist/drawer.js';
 
 function setup(side = 'right') {
   const window = new Window();

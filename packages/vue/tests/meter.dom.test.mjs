@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -14,7 +14,7 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { MeterIndicator, MeterRoot, MeterValueText } = await import('../dist/meter.js');
+const { MeterIndicator, MeterRoot, MeterValueText } = await import('../.verification-dist/meter.js');
 
 test('Vue Meter reconciles controlled props without owning value changes', async () => {
   const value = ref('10');

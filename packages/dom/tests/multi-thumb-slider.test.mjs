@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMultiThumbSlider } from '../dist/multi-thumb-slider.js';
+import { createMultiThumbSlider } from '../.verification-dist/multi-thumb-slider.js';
 
 test('DOM multi-thumb slider projects constrained thumb values', () => {
   const root = new FakeElement(); const low = new FakeElement(); const high = new FakeElement();

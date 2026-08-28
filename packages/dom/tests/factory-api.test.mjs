@@ -6,7 +6,7 @@ import packageManifest from '../package.json' with { type: 'json' };
 const excludedSubpaths = new Set(['./package.json', './form', './tabular', './temporal', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   for (const subpath of Object.keys(packageManifest.exports)) {
     if (!subpath.startsWith('./') || excludedSubpaths.has(subpath)) continue;
     const component = subpath.slice(2);
@@ -14,7 +14,7 @@ test('every public DOM component exposes direct and fallible factories', async (
       .split('-')
       .map((part) => `${part[0].toUpperCase()}${part.slice(1)}`)
       .join('');
-    const module = await import(`../dist/${component}.js`);
+    const module = await import(`../.verification-dist/${component}.js`);
     assert.equal(typeof module[`create${name}`], 'function', `${subpath} create factory`);
     assert.equal(typeof module[`tryCreate${name}`], 'function', `${subpath} tryCreate factory`);
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);
@@ -27,12 +27,12 @@ test('Form is exposed only through its optional subpath', async () => {
   assert.equal(packageManifest.peerDependencies?.['@sectile/form'], 'workspace:*');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/form']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createForm, undefined);
 
-  const formModule = await import('../dist/form.js');
+  const formModule = await import('../.verification-dist/form.js');
   assert.equal(typeof formModule.createForm, 'function');
-  const formSource = await readFile(new URL('../dist/form.js', import.meta.url), 'utf8');
+  const formSource = await readFile(new URL('../.verification-dist/form.js', import.meta.url), 'utf8');
   assert.match(formSource, /@sectile\/form/);
 });
 
@@ -41,14 +41,14 @@ test('virtualization is exposed only through its optional subpath', async () => 
   assert.equal(packageManifest.peerDependencies?.['@sectile/virtual'], 'workspace:*');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createVirtualizer, undefined);
   assert.equal(rootModule.virtualContentStyle, undefined);
 
-  const virtualModule = await import('../dist/virtual.js');
+  const virtualModule = await import('../.verification-dist/virtual.js');
   assert.equal(typeof virtualModule.createVirtualizer, 'function');
 
-  const virtualSource = await readFile(new URL('../dist/virtual.js', import.meta.url), 'utf8');
+  const virtualSource = await readFile(new URL('../.verification-dist/virtual.js', import.meta.url), 'utf8');
   assert.match(virtualSource, /@sectile\/virtual/);
 });
 
@@ -57,17 +57,17 @@ test('Tabular controls are exposed only through their optional subpath', async (
   assert.equal(packageManifest.peerDependencies?.['@sectile/tabular'], 'workspace:*');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/tabular']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createDataTable, undefined);
   assert.equal(rootModule.createDataGrid, undefined);
   assert.equal(rootModule.createDataTreeGrid, undefined);
 
-  const tabularModule = await import('../dist/tabular.js');
+  const tabularModule = await import('../.verification-dist/tabular.js');
   assert.equal(typeof tabularModule.createDataTable, 'function');
   assert.equal(typeof tabularModule.createDataGrid, 'function');
   assert.equal(typeof tabularModule.createDataTreeGrid, 'function');
 
-  const tabularSource = await readFile(new URL('../dist/tabular.js', import.meta.url), 'utf8');
+  const tabularSource = await readFile(new URL('../.verification-dist/tabular.js', import.meta.url), 'utf8');
   assert.match(tabularSource, /\.\/data-table\.js/);
   assert.match(tabularSource, /\.\/data-grid\.js/);
   assert.match(tabularSource, /\.\/data-tree-grid\.js/);
@@ -78,14 +78,14 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(packageManifest.peerDependencies?.['@sectile/temporal'], 'workspace:*');
   assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/temporal']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createDateField, undefined);
   assert.equal(rootModule.createCalendar, undefined);
 
-  const temporalModule = await import('../dist/temporal.js');
+  const temporalModule = await import('../.verification-dist/temporal.js');
   assert.equal(typeof temporalModule.createDateField, 'function');
   assert.equal(typeof temporalModule.createCalendar, 'function');
 
-  const temporalSource = await readFile(new URL('../dist/temporal.js', import.meta.url), 'utf8');
+  const temporalSource = await readFile(new URL('../.verification-dist/temporal.js', import.meta.url), 'utf8');
   assert.match(temporalSource, /@sectile\/temporal/);
 });

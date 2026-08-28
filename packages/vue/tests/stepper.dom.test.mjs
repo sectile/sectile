@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/stepper' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/stepper' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -24,7 +24,7 @@ const {
   StepperPrevious,
   StepperRoot,
   StepperStep,
-} = await import('../dist/stepper.js');
+} = await import('../.verification-dist/stepper.js');
 
 test('Vue Stepper actions move across enabled steps and focus the activated step', async () => {
   const host = document.createElement('div');

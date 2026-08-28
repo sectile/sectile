@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createCalculatorExpression } from '@sectile/core/number-field';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
-import { createNumberField } from '../dist/number-field.js';
+import { createNumberField } from '../.verification-dist/number-field.js';
 
 test('terminal number field edits at its caret and commits calculator expressions', () => {
   const field = createNumberField({

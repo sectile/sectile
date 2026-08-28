@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, setColorCoordinate, tryCreateColorPickerState } from '../../dist/color-picker.js';
+import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, setColorCoordinate, tryCreateColorPickerState } from '../../.verification-dist/color-picker.js';
 
 test('color picker parses compact and full hexadecimal colors exactly', () => {
   assert.deepEqual(parseColorValue('#0af').value, { red: 0, green: 170, blue: 255, alpha: 255 });

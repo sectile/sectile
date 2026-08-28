@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { ProgressIndicator, ProgressRoot, ProgressTrack, ProgressValueText } from '../dist/progress.js';
+import { ProgressIndicator, ProgressRoot, ProgressTrack, ProgressValueText } from '../.verification-dist/progress.js';
 
 test('Vue Progress renders exact determinate SSR semantics and compound parts', async () => {
   let slot;

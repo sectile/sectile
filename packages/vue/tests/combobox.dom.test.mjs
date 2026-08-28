@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { ComboboxInput, ComboboxRoot } = await import('../dist/combobox.js');
+const { ComboboxInput, ComboboxRoot } = await import('../.verification-dist/combobox.js');
 
 test('Vue combobox synchronizes controlled input values through the DOM connection', async () => {
   const host = document.createElement('div');

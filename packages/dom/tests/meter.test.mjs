@@ -7,7 +7,7 @@ import {
   getMeterNativeAttributes,
   getMeterRootAttributes,
   tryCreateMeter,
-} from '../dist/meter.js';
+} from '../.verification-dist/meter.js';
 
 test('DOM Meter projects custom-role and native attributes without threshold ARIA', () => {
   const state = createMeterState({ value: '25', low: '20', high: '80', optimum: '50' });

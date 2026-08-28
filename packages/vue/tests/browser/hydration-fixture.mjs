@@ -1,17 +1,17 @@
 import { Teleport, defineComponent, h, nextTick, onMounted, ref, shallowRef } from 'vue';
-import { CalendarRoot } from '../../dist/temporal.js';
-import { DialogContent, DialogRoot, DialogTrigger } from '../../dist/dialog.js';
-import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../../dist/disclosure.js';
-import { HostProvider } from '../../dist/host-provider.js';
-import { MeterRoot } from '../../dist/meter.js';
+import { CalendarRoot } from '../../.verification-dist/temporal.js';
+import { DialogContent, DialogRoot, DialogTrigger } from '../../.verification-dist/dialog.js';
+import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../../.verification-dist/disclosure.js';
+import { HostProvider } from '../../.verification-dist/host-provider.js';
+import { MeterRoot } from '../../.verification-dist/meter.js';
 import {
   MeterGroupIndicator,
   MeterGroupRoot,
   MeterGroupSegment,
   MeterGroupTrack,
-} from '../../dist/meter-group.js';
-import { PinInputInput, PinInputRoot } from '../../dist/pin-input.js';
-import { ProgressRoot } from '../../dist/progress.js';
+} from '../../.verification-dist/meter-group.js';
+import { PinInputInput, PinInputRoot } from '../../.verification-dist/pin-input.js';
+import { ProgressRoot } from '../../.verification-dist/progress.js';
 import {
   FormField,
   FormLabel,
@@ -21,8 +21,8 @@ import {
   FormSubmit,
   defineFormSubmission,
   useNativeInputFormControl,
-} from '../../dist/form.js';
-import { TextField } from '../../dist/text.js';
+} from '../../.verification-dist/form.js';
+import { TextField } from '../../.verification-dist/text.js';
 
 export const referenceDate = Object.freeze({ year: 2026, month: 8, day: 26 });
 

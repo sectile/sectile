@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { HostProvider } from '../dist/host-provider.js';
+import { HostProvider } from '../.verification-dist/host-provider.js';
 import {
   DialogContent,
   DialogRoot,
   DialogTitle,
   DialogTrigger,
-} from '../dist/dialog.js';
+} from '../.verification-dist/dialog.js';
 
 test('HostProvider supplies deterministic IDs and reading direction', async () => {
   const html = await renderToString(createSSRApp({

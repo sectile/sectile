@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -21,7 +21,7 @@ const {
   TreeViewGroup,
   TreeViewItem,
   TreeViewRoot,
-} = await import('../dist/tree-view.js');
+} = await import('../.verification-dist/tree-view.js');
 
 test('Vue tree view controls groups through expandedValues v-model', async () => {
   const host = document.createElement('div');

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -26,7 +26,7 @@ const {
   renderSlot,
 } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { Primitive } = await import('../dist/primitive.js');
+const { Primitive } = await import('../.verification-dist/primitive.js');
 
 test('Primitive resolves native, exposed, and simple component element refs', async () => {
   const refs = { native: null, exposed: null, fallback: null };

@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '../dist/carousel.js';
-import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '../dist/feed.js';
-import { GridCell, GridRoot, GridRow } from '../dist/grid.js';
-import { SequenceReorderItem, SequenceReorderRoot, TreeReorderItem, TreeReorderRoot } from '../dist/reorder.js';
-import { TreeGridCell, TreeGridDisclosure, TreeGridEditor, TreeGridRoot, TreeGridRow } from '../dist/tree-grid.js';
-import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '../dist/tree-view.js';
+import { CarouselIndicator, CarouselIndicatorGroup, CarouselNext, CarouselPrevious, CarouselRoot, CarouselSlide, CarouselTrack } from '../.verification-dist/carousel.js';
+import { FeedItem, FeedLoadEarlier, FeedLoadNewer, FeedRoot } from '../.verification-dist/feed.js';
+import { GridCell, GridRoot, GridRow } from '../.verification-dist/grid.js';
+import { SequenceReorderItem, SequenceReorderRoot, TreeReorderItem, TreeReorderRoot } from '../.verification-dist/reorder.js';
+import { TreeGridCell, TreeGridDisclosure, TreeGridEditor, TreeGridRoot, TreeGridRow } from '../.verification-dist/tree-grid.js';
+import { TreeViewDisclosure, TreeViewGroup, TreeViewItem, TreeViewRoot } from '../.verification-dist/tree-view.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 

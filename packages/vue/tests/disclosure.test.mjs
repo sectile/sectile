@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h, nextTick } from 'vue';
-import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../dist/disclosure.js';
+import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../.verification-dist/disclosure.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 test('Vue disclosure renders native trigger linkage and persistent content', async () => {

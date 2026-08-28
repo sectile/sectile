@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { formatDateValue } from '@sectile/temporal/date-field';
-import { createCalendar, toCalendarEvent } from '../dist/calendar.js';
+import { createCalendar, toCalendarEvent } from '../.verification-dist/calendar.js';
 
 test('DOM calendar owns date navigation, selection, and ARIA projection', () => {
   const root = new FakeElement();

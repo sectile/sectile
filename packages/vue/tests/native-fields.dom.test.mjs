@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -18,10 +18,10 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { DateTimeField } = await import('../dist/date-time-field.js');
-const { NumberField } = await import('../dist/number-field.js');
-const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../dist/date-range-field.js');
-const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../dist/time-range-field.js');
+const { DateTimeField } = await import('../.verification-dist/date-time-field.js');
+const { NumberField } = await import('../.verification-dist/number-field.js');
+const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/date-range-field.js');
+const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/time-range-field.js');
 
 test('native date-time field mounts and commits without text selection APIs', async () => {
   const host = document.createElement('div');

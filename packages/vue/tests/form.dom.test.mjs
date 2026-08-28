@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/account' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/account' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -37,39 +37,39 @@ const {
   useCompositeFormControl,
   useFormControl,
   useNativeInputFormControl,
-} = await import('../dist/form.js');
-const { CheckboxRoot } = await import('../dist/checkbox.js');
-const { CheckboxGroupRoot } = await import('../dist/checkbox-group.js');
-const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../dist/calendar.js');
-const { ColorPickerRoot } = await import('../dist/color-picker.js');
-const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../dist/date-range-field.js');
+} = await import('../.verification-dist/form.js');
+const { CheckboxRoot } = await import('../.verification-dist/checkbox.js');
+const { CheckboxGroupRoot } = await import('../.verification-dist/checkbox-group.js');
+const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../.verification-dist/calendar.js');
+const { ColorPickerRoot } = await import('../.verification-dist/color-picker.js');
+const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../.verification-dist/date-range-field.js');
 const {
   DateRangePickerContent,
   DateRangePickerEndInput,
   DateRangePickerRoot,
   DateRangePickerStartInput,
   DateRangePickerTrigger,
-} = await import('../dist/date-range-picker.js');
-const { EditableInput, EditablePreview, EditableRoot } = await import('../dist/editable.js');
-const { ListboxRoot } = await import('../dist/listbox.js');
-const { MultiThumbSliderRoot } = await import('../dist/multi-thumb-slider.js');
-const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
-const { RadioGroupRoot } = await import('../dist/radio-group.js');
+} = await import('../.verification-dist/date-range-picker.js');
+const { EditableInput, EditablePreview, EditableRoot } = await import('../.verification-dist/editable.js');
+const { ListboxRoot } = await import('../.verification-dist/listbox.js');
+const { MultiThumbSliderRoot } = await import('../.verification-dist/multi-thumb-slider.js');
+const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
+const { RadioGroupRoot } = await import('../.verification-dist/radio-group.js');
 const {
   SelectContent,
   SelectItem,
   SelectRoot,
   SelectTrigger,
   SelectValue,
-} = await import('../dist/select.js');
-const { SliderRoot } = await import('../dist/slider.js');
-const { SpinButtonInput, SpinButtonRoot } = await import('../dist/spin-button.js');
-const { SwitchRoot } = await import('../dist/switch.js');
-const { TagsInputInput, TagsInputRoot } = await import('../dist/tags-input.js');
-const { TextField } = await import('../dist/text.js');
-const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../dist/time-range-field.js');
-const { ToggleGroupRoot } = await import('../dist/toggle-group.js');
-const { formValueControlInventory } = await import('../dist/internal/form-control-inventory.js');
+} = await import('../.verification-dist/select.js');
+const { SliderRoot } = await import('../.verification-dist/slider.js');
+const { SpinButtonInput, SpinButtonRoot } = await import('../.verification-dist/spin-button.js');
+const { SwitchRoot } = await import('../.verification-dist/switch.js');
+const { TagsInputInput, TagsInputRoot } = await import('../.verification-dist/tags-input.js');
+const { TextField } = await import('../.verification-dist/text.js');
+const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../.verification-dist/time-range-field.js');
+const { ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
+const { formValueControlInventory } = await import('../.verification-dist/internal/form-control-inventory.js');
 
 test('nested Form controls mount without a reactive render loop', () => {
   const fixture = fileURLToPath(new URL('./fixtures/form-nested-mount.mjs', import.meta.url));

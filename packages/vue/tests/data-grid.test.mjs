@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../dist/data-grid.js';
+import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../.verification-dist/data-grid.js';
 
 const columns = defineDataGridColumns([{ id: 'name', capabilities: ['edit'] }]);
 

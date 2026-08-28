@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow, document: browserWindow.document, Node: browserWindow.Node,
   Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement,
@@ -14,12 +14,12 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../dist/dialog.js');
-const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../dist/alert-dialog.js');
-const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../dist/select.js');
-const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../dist/popover.js');
-const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../dist/tooltip.js');
-const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../dist/toast.js');
+const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
+const { AlertDialogContent, AlertDialogOverlay, AlertDialogRoot } = await import('../.verification-dist/alert-dialog.js');
+const { SelectContent, SelectItem, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectViewport } = await import('../.verification-dist/select.js');
+const { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } = await import('../.verification-dist/popover.js');
+const { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } = await import('../.verification-dist/tooltip.js');
+const { ToastClose, ToastPortal, ToastProvider, ToastRoot, ToastTitle, ToastViewport } = await import('../.verification-dist/toast.js');
 
 const PopupSurface = defineComponent({
   name: 'PopupSurface',

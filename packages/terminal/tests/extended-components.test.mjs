@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCheckboxGroup } from '../dist/checkbox-group.js';
-import { createToggleGroup } from '../dist/toggle-group.js';
-import { createSelect } from '../dist/select.js';
-import { createPagination } from '../dist/pagination.js';
-import { createStepper } from '../dist/stepper.js';
-import { createRating } from '../dist/rating.js';
-import { createPinInput } from '../dist/pin-input.js';
-import { createTagsInput } from '../dist/tags-input.js';
-import { createEditable } from '../dist/editable.js';
+import { createCheckboxGroup } from '../.verification-dist/checkbox-group.js';
+import { createToggleGroup } from '../.verification-dist/toggle-group.js';
+import { createSelect } from '../.verification-dist/select.js';
+import { createPagination } from '../.verification-dist/pagination.js';
+import { createStepper } from '../.verification-dist/stepper.js';
+import { createRating } from '../.verification-dist/rating.js';
+import { createPinInput } from '../.verification-dist/pin-input.js';
+import { createTagsInput } from '../.verification-dist/tags-input.js';
+import { createEditable } from '../.verification-dist/editable.js';
 
 test('terminal extended selection facades own conventional keyboard input', async () => {
   const group = createCheckboxGroup({ items: ['a', 'b'], defaultValue: ['a'], defaultHighlightedValue: 'a' });

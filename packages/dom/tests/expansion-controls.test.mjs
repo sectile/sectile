@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDisclosure, createDisclosureController, getDisclosureContentAttributes, getDisclosureTriggerAttributes } from '../dist/disclosure.js';
+import { createDisclosure, createDisclosureController, getDisclosureContentAttributes, getDisclosureTriggerAttributes } from '../.verification-dist/disclosure.js';
 import { unwrap } from '@sectile/core/result';
-import { createAccordion } from '../dist/accordion.js';
+import { createAccordion } from '../.verification-dist/accordion.js';
 
 test('DOM disclosure owns click projection and panel visibility', () => {
   const trigger = new FakeElement(); const panel = new FakeElement();

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMultiThumbSlider } from '../dist/multi-thumb-slider.js';
+import { createMultiThumbSlider } from '../.verification-dist/multi-thumb-slider.js';
 
 test('terminal multi-thumb slider owns constrained value and thumb keys', () => {
   const slider = createMultiThumbSlider({ thumbs: ['low', 'high'], min: '0', max: '10', step: '1', defaultValues: [2, 8], policies: { minGap: 2 } });

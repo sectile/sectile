@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createDialog } from '../dist/dialog.js';
+import { createDialog } from '../.verification-dist/dialog.js';
 
 test('modal dialog isolates background, locks scroll, handles document Escape, and restores state', () => {
   const window = new Window();

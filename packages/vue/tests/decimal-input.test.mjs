@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeDecimalInput } from '../dist/internal/decimal-input.js';
+import { normalizeDecimalInput } from '../.verification-dist/internal/decimal-input.js';
 
 test('Vue decimal normalization preserves strings and expands number exponents', () => {
   assert.equal(normalizeDecimalInput('1e-7'), '1e-7');

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCascadeSelect, toCascadeSelectEvent } from '../dist/cascade-select.js';
+import { createCascadeSelect, toCascadeSelectEvent } from '../.verification-dist/cascade-select.js';
 
 const nodes = [
   { id: 'asia', parentID: null }, { id: 'europe', parentID: null },

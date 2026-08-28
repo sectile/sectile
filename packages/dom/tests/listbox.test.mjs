@@ -7,7 +7,7 @@ import {
   createListboxController,
   toListboxEffect,
   toListboxEvent,
-} from '../dist/listbox.js';
+} from '../.verification-dist/listbox.js';
 import { createSequence } from '@sectile/core/sequence';
 
 test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activation', async () => {

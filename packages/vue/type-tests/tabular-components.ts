@@ -13,7 +13,7 @@ import {
   type DataTableQuery,
   type DataTableRootProps,
   type DataTableSelectionControlProps,
-} from '@sectile/vue/tabular';
+} from '../.verification-dist/tabular.js';
 import {
   defineDataGridColumns,
   useDataGrid,
@@ -22,7 +22,7 @@ import {
   type DataGridBodySlotProps,
   type DataGridCellProps,
   type DataGridRootExpose,
-} from '@sectile/vue/tabular';
+} from '../.verification-dist/tabular.js';
 import {
   defineDataTreeGridColumns,
   useDataTreeGrid,
@@ -31,7 +31,7 @@ import {
   type DataTreeGridCellProps,
   type DataTreeGridRowDisclosureProps,
   type DataTreeGridSourceResolver,
-} from '@sectile/vue/tabular';
+} from '../.verification-dist/tabular.js';
 
 interface User { readonly id: string; readonly name: string }
 interface UserCells { readonly name: string; readonly active: boolean }

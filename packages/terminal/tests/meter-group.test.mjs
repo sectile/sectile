@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMeterGroup, tryCreateMeterGroup } from '../dist/meter-group.js';
+import { createMeterGroup, tryCreateMeterGroup } from '../.verification-dist/meter-group.js';
 
 test('Terminal MeterGroup allocates every cell across segments and remaining capacity', () => {
   const group = createMeterGroup({

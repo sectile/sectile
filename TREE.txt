@@ -428,7 +428,8 @@ sectile/
 │   ├── scripts/
 │   │   ├── cascade-list-integration.test.mjs
 │   │   ├── generate-component-pages.mjs
-│   │   └── tabular-integration.test.mjs
+│   │   ├── tabular-integration.test.mjs
+│   │   └── typecheck-sfc.mjs
 │   ├── testing/
 │   │   ├── browser-accessibility.md
 │   │   ├── index.md
@@ -1252,6 +1253,7 @@ sectile/
 │       │   ├── extended-controls.test.mjs
 │       │   ├── form.dom.test.mjs
 │       │   ├── form.test.mjs
+│       │   ├── happy-dom.mjs
 │       │   ├── host-provider.dom.test.mjs
 │       │   ├── host-provider.test.mjs
 │       │   ├── hydration.dom.test.mjs

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
-import { createText, createTextController, createTextState, toTextEvent } from '../dist/text.js';
+import { createText, createTextController, createTextState, toTextEvent } from '../.verification-dist/text.js';
 
 test('DOM text creates a caret-preserving state from a plain string', () => {
   const state = createTextState('한글');

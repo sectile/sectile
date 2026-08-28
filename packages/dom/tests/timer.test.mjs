@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTimer } from '../dist/timer.js';
+import { createTimer } from '../.verification-dist/timer.js';
 
 test('DOM timer projects parts and owns native action buttons', () => {
   const root = new FakeElement(); const minutes = new FakeElement(); const start = new FakeElement(); const pause = new FakeElement();

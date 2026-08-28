@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { TextField } from '../dist/text.js';
+import { TextField } from '../.verification-dist/text.js';
 
 test('Vue text field renders a native input with HTML form semantics', async () => {
   const app = createSSRApp({

@@ -13,7 +13,7 @@ import {
   MeterGroupSegment,
   MeterGroupTrack,
   MeterGroupValueText,
-} from '../dist/meter-group.js';
+} from '../.verification-dist/meter-group.js';
 
 test('Vue MeterGroup renders exact SSR semantics, keyed segments, and a presentational legend', async () => {
   let rootSlot;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createLayerStack } from '../dist/layer-stack.js';
+import { createLayerStack } from '../.verification-dist/layer-stack.js';
 
 test('terminal layer scope owns topmost dismissal and descendant close order', () => {
   const closed = [];

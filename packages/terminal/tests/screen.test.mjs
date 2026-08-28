@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createTerminalAppearance,
-} from '../dist/appearance.js';
+} from '../.verification-dist/appearance.js';
 import {
   renderTerminalScreen,
   serializeTerminalFrame,
@@ -11,11 +11,11 @@ import {
   terminalRow,
   terminalSpacer,
   terminalText,
-} from '../dist/screen.js';
+} from '../.verification-dist/screen.js';
 import {
   createTerminalScreenWriter,
   detectTerminalCapabilities,
-} from '../dist/node.js';
+} from '../.verification-dist/node.js';
 
 test('appearance degrades semantic styles to plain text when color is unavailable', () => {
   const appearance = createTerminalAppearance({

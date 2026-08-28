@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createColorPicker } from '../dist/color-picker.js';
+import { createColorPicker } from '../.verification-dist/color-picker.js';
 
 test('DOM color picker composes native color, text, channel, and swatch parts', () => {
   const root = new FakeElement(); const native = new FakeInput(); const text = new FakeInput(); const alpha = new FakeInput(); const swatch = new FakeElement();

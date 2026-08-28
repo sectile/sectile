@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { Fragment, createSSRApp, h, nextTick, ref } from 'vue';
-import { CheckboxIndicator, CheckboxRoot } from '../dist/checkbox.js';
+import { CheckboxIndicator, CheckboxRoot } from '../.verification-dist/checkbox.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 test('Vue checkbox renders semantic state and forwards styling hooks during SSR', async () => {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createColorPicker } from '../dist/color-picker.js';
+import { createColorPicker } from '../.verification-dist/color-picker.js';
 
 test('terminal color picker edits text and commits one exact color', () => {
   const picker = createColorPicker({ defaultValue: '#33669980' });

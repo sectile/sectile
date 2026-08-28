@@ -3,9 +3,9 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { Window } from 'happy-dom';
 import { createClientTabularSource, resolveClientTabularRequest } from '@sectile/tabular/source';
-import { createDataTable } from '../dist/data-table.js';
-import { createDataGrid, tryCreateDataGrid } from '../dist/data-grid.js';
-import { createDataTreeGrid } from '../dist/data-tree-grid.js';
+import { createDataTable } from '../.verification-dist/data-table.js';
+import { createDataGrid, tryCreateDataGrid } from '../.verification-dist/data-grid.js';
+import { createDataTreeGrid } from '../.verification-dist/data-tree-grid.js';
 import manifest from '../package.json' with { type: 'json' };
 
 const columns = [
@@ -465,10 +465,10 @@ test('DOM Tabular profiles remain Virtual-free behind the aggregate subpath', as
   assert.equal(manifest.exports['./data-grid'], undefined);
   assert.equal(manifest.exports['./data-tree-grid'], undefined);
   for (const name of ['data-table', 'data-grid', 'data-tree-grid']) {
-    const source = await readFile(new URL(`../dist/${name}.js`, import.meta.url), 'utf8');
+    const source = await readFile(new URL(`../.verification-dist/${name}.js`, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual/u);
   }
-  const root = await import('../dist/index.js');
+  const root = await import('../.verification-dist/index.js');
   assert.equal(root.createDataTable, undefined);
   assert.equal(root.createDataGrid, undefined);
   assert.equal(root.createDataTreeGrid, undefined);

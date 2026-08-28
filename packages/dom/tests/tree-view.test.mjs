@@ -8,7 +8,7 @@ import {
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
-} from '../dist/tree-view.js';
+} from '../.verification-dist/tree-view.js';
 
 test('DOM tree-view facade constructs the tree and owns ARIA and keyboard focus', () => {
   const root = new FakeElement();

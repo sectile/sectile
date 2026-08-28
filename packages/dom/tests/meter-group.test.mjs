@@ -7,7 +7,7 @@ import {
   getMeterGroupSegmentAttributes,
   getMeterGroupTrackAttributes,
   tryCreateMeterGroup,
-} from '../dist/meter-group.js';
+} from '../.verification-dist/meter-group.js';
 
 test('DOM MeterGroup projects one named group and individually named meter segments', () => {
   const state = createMeterGroupState({

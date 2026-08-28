@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createReorder } from '../dist/reorder.js';
+import { createReorder } from '../.verification-dist/reorder.js';
 
 test('terminal sequence reorder exposes explicit identity movement keys', () => {
   const reorder = createReorder({ ids: ['a', 'b', 'c'], currentID: 'b' });

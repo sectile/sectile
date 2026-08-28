@@ -12,7 +12,7 @@ import {
   FormSubmit,
   FormSummary,
   defineFormSubmission,
-} from '../dist/form.js';
+} from '../.verification-dist/form.js';
 
 test('Vue defineFormSubmission keeps schema and handler atomic for v-bind', () => {
   const schema = { '~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) } };

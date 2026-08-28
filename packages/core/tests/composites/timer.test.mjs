@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTimerEvent, createTimerState, getTimerParts, getTimerProgress, tryCreateTimerState } from '../../dist/timer.js';
+import { applyTimerEvent, createTimerState, getTimerParts, getTimerProgress, tryCreateTimerState } from '../../.verification-dist/timer.js';
 
 test('timer counts up to a target and emits completion once', () => {
   const policies = { startMs: 1_000, targetMs: 3_000 };

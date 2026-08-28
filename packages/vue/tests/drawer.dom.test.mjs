@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -17,7 +17,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { DrawerContent, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTrigger } = await import('../dist/drawer.js');
+const { DrawerContent, DrawerHandle, DrawerOverlay, DrawerRoot, DrawerTrigger } = await import('../.verification-dist/drawer.js');
 
 function pointer(type, x, y = 0) {
   return new browserWindow.PointerEvent(type, {

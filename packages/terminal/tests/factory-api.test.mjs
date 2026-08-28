@@ -12,7 +12,7 @@ const excludedSubpaths = new Set([
 ]);
 
 test('every public terminal component exposes direct and fallible factories', async () => {
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   for (const subpath of Object.keys(packageManifest.exports)) {
     if (!subpath.startsWith('./') || excludedSubpaths.has(subpath)) continue;
     const component = subpath.slice(2);
@@ -20,7 +20,7 @@ test('every public terminal component exposes direct and fallible factories', as
       .split('-')
       .map((part) => `${part[0].toUpperCase()}${part.slice(1)}`)
       .join('');
-    const module = await import(`../dist/${component}.js`);
+    const module = await import(`../.verification-dist/${component}.js`);
     assert.equal(typeof module[`create${name}`], 'function', `${subpath} create factory`);
     assert.equal(typeof module[`tryCreate${name}`], 'function', `${subpath} tryCreate factory`);
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);
@@ -29,7 +29,7 @@ test('every public terminal component exposes direct and fallible factories', as
 });
 
 test('terminal has no Form package surface or dependency edge', async () => {
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(packageManifest.exports['./form'], undefined);
   assert.equal(packageManifest.dependencies?.['@sectile/form'], undefined);
   assert.equal(packageManifest.peerDependencies?.['@sectile/form'], undefined);

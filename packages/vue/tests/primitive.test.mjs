@@ -11,7 +11,7 @@ import {
   nextTick,
   ref,
 } from 'vue';
-import { Primitive, renderPrimitive } from '../dist/primitive.js';
+import { Primitive, renderPrimitive } from '../.verification-dist/primitive.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 test('Primitive adopts an element forwarded through a named slot', async () => {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { CascadeSelectColumn, CascadeSelectContent, CascadeSelectItem, CascadeSelectItemChevron, CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectValue } from '../dist/cascade-select.js';
+import { CascadeSelectColumn, CascadeSelectContent, CascadeSelectItem, CascadeSelectItemChevron, CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectValue } from '../.verification-dist/cascade-select.js';
 
 const nodes = [{ id: 'asia', parentID: null }, { id: 'seoul', parentID: 'asia' }];
 test('Vue cascade select exposes native-like compound parts during SSR', async () => {

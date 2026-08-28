@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createTimer } from '../dist/timer.js';
+import { createTimer } from '../.verification-dist/timer.js';
 
 test('terminal timer exposes deterministic ticking and conventional controls', () => {
   let completed = 0; const timer = createTimer({ countdown: true, startMs: 3_000, autoStart: true, onComplete: () => { completed += 1; } });

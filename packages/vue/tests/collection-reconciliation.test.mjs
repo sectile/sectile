@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { collectionBranchIDs, reconcileCollectionState } from '../dist/internal/collection.js';
+import { collectionBranchIDs, reconcileCollectionState } from '../.verification-dist/internal/collection.js';
 
 test('collection reconciliation follows domain order and removes stale identities', () => {
   const result = reconcileCollectionState(

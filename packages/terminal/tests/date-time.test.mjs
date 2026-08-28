@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { createTimeValue, formatTimeValue } from '@sectile/temporal/time-field';
 import { createDateRange, createDateValue, formatDateValue } from '@sectile/temporal/date-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
-import { createTimeField } from '../dist/time-field.js';
-import { createTimeRangeField } from '../dist/time-range-field.js';
-import { createDateTimeField } from '../dist/date-time-field.js';
-import { createDateRangePicker } from '../dist/date-range-picker.js';
-import { createDateRangeField } from '../dist/date-range-field.js';
-import { createDateTimePicker } from '../dist/date-time-picker.js';
-import { createDateTimeRangePicker } from '../dist/date-time-range-picker.js';
+import { createTimeField } from '../.verification-dist/time-field.js';
+import { createTimeRangeField } from '../.verification-dist/time-range-field.js';
+import { createDateTimeField } from '../.verification-dist/date-time-field.js';
+import { createDateRangePicker } from '../.verification-dist/date-range-picker.js';
+import { createDateRangeField } from '../.verification-dist/date-range-field.js';
+import { createDateTimePicker } from '../.verification-dist/date-time-picker.js';
+import { createDateTimeRangePicker } from '../.verification-dist/date-time-range-picker.js';
 
 test('terminal time field maps vertical keys to the active segment', () => {
   const field = createTimeField({ defaultValue: createTimeValue(10, 30), policies: { step: { minute: 15 } } });

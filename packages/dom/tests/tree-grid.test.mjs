@@ -10,7 +10,7 @@ import {
   createTreeGridController,
   toTreeGridEffect,
   toTreeGridEvent,
-} from '../dist/tree-grid.js';
+} from '../.verification-dist/tree-grid.js';
 
 test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', async () => {
   const root = new FakeElement();

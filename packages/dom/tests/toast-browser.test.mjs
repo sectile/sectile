@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createToast } from '../dist/toast.js';
+import { createToast } from '../.verification-dist/toast.js';
 
 test('toast supports localized controls, viewport hotkey, window pause, and Escape dismissal', () => {
   const window = new Window();

@@ -10,7 +10,7 @@ import {
   toComboboxEffect,
   toComboboxEvent,
   toComboboxTextEvent,
-} from '../dist/combobox.js';
+} from '../.verification-dist/combobox.js';
 
 test('DOM combobox facade owns construction, text input, ARIA, navigation, and acceptance', () => {
   const input = new FakeTextElement();

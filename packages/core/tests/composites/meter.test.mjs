@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMeterState, tryCreateMeterState } from '../../dist/meter.js';
+import { createMeterState, tryCreateMeterState } from '../../.verification-dist/meter.js';
 
 test('Meter defaults to an exact 0 through 100 measurement', () => {
   const state = createMeterState({ value: '25.00' });

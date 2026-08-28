@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../dist/data-tree-grid.js';
+import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../.verification-dist/data-tree-grid.js';
 
 const columns = defineDataTreeGridColumns([{ id: 'name', capabilities: ['edit'] }]);
 

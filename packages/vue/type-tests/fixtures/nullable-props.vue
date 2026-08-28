@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { SelectRoot } from '../../dist/select.js';
-import { SpinButtonRoot } from '../../dist/spin-button.js';
+import { SelectRoot } from '../../.verification-dist/select.js';
+import { SpinButtonRoot } from '../../.verification-dist/spin-button.js';
 </script>
 
 <template>

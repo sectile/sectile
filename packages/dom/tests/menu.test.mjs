@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createMenuButton } from '../dist/menu-button.js';
-import { createMenubar } from '../dist/menubar.js';
-import { createNavigationMenu } from '../dist/navigation-menu.js';
+import { createMenuButton } from '../.verification-dist/menu-button.js';
+import { createMenubar } from '../.verification-dist/menubar.js';
+import { createNavigationMenu } from '../.verification-dist/navigation-menu.js';
 
 test('DOM menu button owns trigger, nested popup path, and invocation', () => {
   const root = new FakeElement();

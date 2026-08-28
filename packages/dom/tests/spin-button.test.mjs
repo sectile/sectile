@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createSpinButton } from '../dist/spin-button.js';
+import { createSpinButton } from '../.verification-dist/spin-button.js';
 
 test('DOM spin button preserves invalid drafts and exposes decimal values instead of ticks', () => {
   const input = new FakeInput();

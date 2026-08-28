@@ -1,2 +1,2 @@
-import test from 'node:test'; import assert from 'node:assert/strict'; import { createToast } from '../dist/toast.js';
+import test from 'node:test'; import assert from 'node:assert/strict'; import { createToast } from '../.verification-dist/toast.js';
 test('terminal toast exposes deterministic ticking and Escape dismissal', () => { const toast = createToast({ defaultDurationMs: 1_000 }); toast.push({ id: 'saved', title: 'Saved' }); toast.tick(500); assert.equal(toast.state.items[0].remainingMs, 500); toast.handleKeyboardInput({ key: 'escape' }); assert.equal(toast.state.items.length, 0); });

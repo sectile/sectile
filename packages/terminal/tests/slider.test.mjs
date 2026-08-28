@@ -8,7 +8,7 @@ import {
   createSliderController,
   toSliderEffect,
   toSliderEvent,
-} from '../dist/slider.js';
+} from '../.verification-dist/slider.js';
 
 test('terminal slider facade constructs a bounded range and owns render updates', () => {
   let updates = 0;

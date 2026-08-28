@@ -8,7 +8,7 @@ import {
   createTreeViewController,
   toTreeViewEffect,
   toTreeViewEvent,
-} from '../dist/tree-view.js';
+} from '../.verification-dist/tree-view.js';
 
 test('terminal tree-view facade constructs the tree and owns keyboard updates', () => {
   let updates = 0;

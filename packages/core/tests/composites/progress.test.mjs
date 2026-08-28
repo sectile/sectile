@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createProgressState, tryCreateProgressState } from '../../dist/progress.js';
+import { createProgressState, tryCreateProgressState } from '../../.verification-dist/progress.js';
 
 test('Progress defaults to an immutable indeterminate state', () => {
   const state = createProgressState();

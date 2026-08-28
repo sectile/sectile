@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -24,18 +24,18 @@ const {
   SliderRoot,
   SliderThumb,
   SliderTrack,
-} = await import('../dist/slider.js');
+} = await import('../.verification-dist/slider.js');
 const {
   MultiThumbSliderRange,
   MultiThumbSliderRoot,
   MultiThumbSliderThumb,
   MultiThumbSliderTrack,
-} = await import('../dist/multi-thumb-slider.js');
+} = await import('../.verification-dist/multi-thumb-slider.js');
 const {
   WindowSplitterHandle,
   WindowSplitterPane,
   WindowSplitterRoot,
-} = await import('../dist/window-splitter.js');
+} = await import('../.verification-dist/window-splitter.js');
 
 async function settle() {
   await nextTick();

@@ -7,7 +7,7 @@ import {
   createStandardUnitRegistry,
   createUnitRegistry,
 } from '@sectile/core/units';
-import { createQuantityField } from '../dist/quantity-field.js';
+import { createQuantityField } from '../.verification-dist/quantity-field.js';
 
 const registry = createUnitRegistry([
   { id: 'meter', symbol: 'm', dimension: { length: 1 }, scale: '1' },

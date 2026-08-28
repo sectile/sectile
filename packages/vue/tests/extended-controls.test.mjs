@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '../dist/checkbox-group.js';
-import { MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '../dist/multi-thumb-slider.js';
-import { PaginationItem, PaginationRoot } from '../dist/pagination.js';
-import { PinInputInput, PinInputRoot } from '../dist/pin-input.js';
-import { TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInputItemText, TagsInputRoot } from '../dist/tags-input.js';
-import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '../dist/window-splitter.js';
+import { CheckboxGroupIndicator, CheckboxGroupItem, CheckboxGroupRoot } from '../.verification-dist/checkbox-group.js';
+import { MultiThumbSliderRoot, MultiThumbSliderThumb, MultiThumbSliderTrack } from '../.verification-dist/multi-thumb-slider.js';
+import { PaginationItem, PaginationRoot } from '../.verification-dist/pagination.js';
+import { PinInputInput, PinInputRoot } from '../.verification-dist/pin-input.js';
+import { TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInputItemText, TagsInputRoot } from '../.verification-dist/tags-input.js';
+import { WindowSplitterHandle, WindowSplitterPane, WindowSplitterRoot } from '../.verification-dist/window-splitter.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 

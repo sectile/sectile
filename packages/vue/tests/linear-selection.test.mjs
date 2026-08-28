@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h, nextTick, ref } from 'vue';
-import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../dist/radio-group.js';
-import { ToggleGroupItem, ToggleGroupRoot } from '../dist/toggle-group.js';
-import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../dist/tabs.js';
+import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../.verification-dist/radio-group.js';
+import { ToggleGroupItem, ToggleGroupRoot } from '../.verification-dist/toggle-group.js';
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../.verification-dist/tabs.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 test('Vue radio group projects persistent indicators and native form radios', async () => {

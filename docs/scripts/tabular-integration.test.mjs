@@ -4,12 +4,17 @@ import test from 'node:test';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('documentation build prepares workspace package outputs', async () => {
-  const packageJSON = JSON.parse(await read('package.json'));
-  assert.equal(packageJSON.scripts.prebuild, 'pnpm run build:packages');
-  assert.equal(packageJSON.scripts.predev, packageJSON.scripts.prebuild);
-  assert.match(packageJSON.scripts['build:packages'], /@sectile\/core/u);
-  assert.match(packageJSON.scripts['build:packages'], /@sectile\/tabular/u);
+test('workspace verification prepares package outputs before local documentation tasks', async () => {
+  const [packageJSON, workspaceVerifier] = await Promise.all([
+    read('package.json').then(JSON.parse),
+    readFile(new URL('../../scripts/verify.mjs', import.meta.url), 'utf8'),
+  ]);
+  assert.equal(packageJSON.scripts.prebuild, undefined);
+  assert.equal(packageJSON.scripts.predev, undefined);
+  assert.equal(packageJSON.scripts.build, 'vitepress build');
+  assert.doesNotMatch(Object.values(packageJSON.scripts).join('\n'), /pnpm --filter @sectile\//u);
+  assert.match(workspaceVerifier, /aliases\.set\('docs', '@sectile\/docs'\)/u);
+  assert.match(workspaceVerifier, /includeDocumentation/u);
 });
 
 test('Tabular documentation covers interactive profiles, hosts, sources, and opt-in Virtual', async () => {

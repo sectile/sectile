@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMeter, tryCreateMeter } from '../dist/meter.js';
+import { createMeter, tryCreateMeter } from '../.verification-dist/meter.js';
 
 test('Terminal Meter returns immutable exact-width plans', () => {
   const meter = createMeter({ value: '25', low: '20', high: '80', optimum: '50' });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'; import test from 'node:test'; import { unwrap } from '@sectile/core/result';
-import { createCheckbox } from '../dist/checkbox.js'; import { createSwitch } from '../dist/switch.js'; import { createToggleButton } from '../dist/toggle-button.js';
+import { createCheckbox } from '../.verification-dist/checkbox.js'; import { createSwitch } from '../.verification-dist/switch.js'; import { createToggleButton } from '../.verification-dist/toggle-button.js';
 test('terminal checked controls own enter and space dispatch', () => {
   const checkbox = createCheckbox({ defaultValue: 'mixed' }); checkbox.handleKeyboardInput({ key: 'space' }); assert.equal(checkbox.getSnapshot().state.checked, true);
   const control = createSwitch(); control.handleKeyboardInput({ key: 'enter' }); assert.equal(control.getSnapshot().state.checked, true);

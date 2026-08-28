@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FormRoot, defineFormSubmission } from '../../dist/form.js';
+import { FormRoot, defineFormSubmission } from '../../.verification-dist/form.js';
 
 const schema = {
   '~standard': {

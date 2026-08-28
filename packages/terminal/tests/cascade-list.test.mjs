@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCascadeList } from '../dist/cascade-list.js';
+import { createCascadeList } from '../.verification-dist/cascade-list.js';
 
 const nodes = [
   { id: 'a', parentID: null }, { id: 'b', parentID: null },

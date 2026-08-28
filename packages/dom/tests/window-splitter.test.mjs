@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createWindowSplitter } from '../dist/window-splitter.js';
+import { createWindowSplitter } from '../.verification-dist/window-splitter.js';
 
 test('DOM window splitter reuses range control with separator projection', () => {
   const root = new FakeElement();

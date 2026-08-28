@@ -7,7 +7,7 @@ import {
   ListboxItemIndicator,
   ListboxItemText,
   ListboxRoot,
-} from '../dist/listbox.js';
+} from '../.verification-dist/listbox.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 const items = ['alpha', 'beta', 'nightly'];

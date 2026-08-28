@@ -3,7 +3,7 @@ import test from 'node:test';
 import {
   createAxisMeasurementResolver,
   createVirtualizer,
-} from '../dist/virtual.js';
+} from '../.verification-dist/virtual.js';
 
 test('DOM virtualizer returns automatic measurement failures from manual flush', () => {
   const fixture = createFixture({

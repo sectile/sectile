@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -26,7 +26,7 @@ const {
   CascadeListColumn,
   CascadeListItem,
   CascadeListRoot,
-} = await import('../dist/cascade-list.js');
+} = await import('../.verification-dist/cascade-list.js');
 
 const initialNodes = [
   { id: 'asia', parentID: null },

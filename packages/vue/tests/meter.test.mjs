@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { MeterIndicator, MeterRoot, MeterTrack, MeterValueText } from '../dist/meter.js';
+import { MeterIndicator, MeterRoot, MeterTrack, MeterValueText } from '../.verification-dist/meter.js';
 
 test('Vue Meter renders exact SSR semantics and compound parts', async () => {
   let slot;

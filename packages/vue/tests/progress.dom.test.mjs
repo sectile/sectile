@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -14,7 +14,7 @@ Object.assign(globalThis, {
 
 const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { ProgressIndicator, ProgressRoot, ProgressValueText } = await import('../dist/progress.js');
+const { ProgressIndicator, ProgressRoot, ProgressValueText } = await import('../.verification-dist/progress.js');
 
 test('Vue Progress reconciles determinate and indeterminate controlled props', async () => {
   const value = ref('10');

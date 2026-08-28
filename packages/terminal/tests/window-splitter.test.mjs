@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createWindowSplitter } from '../dist/window-splitter.js';
+import { createWindowSplitter } from '../.verification-dist/window-splitter.js';
 
 test('terminal window splitter owns normalized range keys', () => {
   const splitter = createWindowSplitter({

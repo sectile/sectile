@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMeterGroupState, tryCreateMeterGroupState } from '../../dist/meter-group.js';
+import { createMeterGroupState, tryCreateMeterGroupState } from '../../.verification-dist/meter-group.js';
 
 test('MeterGroup defaults to an immutable empty 0 through 100 partition', () => {
   const state = createMeterGroupState({ items: [] });

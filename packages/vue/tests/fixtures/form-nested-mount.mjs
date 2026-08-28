@@ -18,8 +18,8 @@ Object.assign(globalThis, {
 });
 
 const { createApp, defineComponent, h, nextTick, ref } = await import('vue');
-const { FormField, FormRoot } = await import('../../dist/form.js');
-const { TextField } = await import('../../dist/text.js');
+const { FormField, FormRoot } = await import('../../.verification-dist/form.js');
+const { TextField } = await import('../../.verification-dist/text.js');
 
 const revision = ref(0);
 const FormCase = defineComponent({

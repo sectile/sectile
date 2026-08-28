@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
-import { createSpinButton } from '../dist/spin-button.js';
+import { createSpinButton } from '../.verification-dist/spin-button.js';
 
 test('terminal spin button separates drafts from committed decimal values', () => {
   const spin = createSpinButton({ min: '0', max: '3', step: '0.5', defaultValue: '0.5' });

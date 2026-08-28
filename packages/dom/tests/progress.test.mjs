@@ -7,7 +7,7 @@ import {
   getProgressNativeAttributes,
   getProgressRootAttributes,
   tryCreateProgress,
-} from '../dist/progress.js';
+} from '../.verification-dist/progress.js';
 
 test('DOM Progress projects determinate custom-role and native attributes', () => {
   const state = createProgressState({ value: '1', max: '3' });

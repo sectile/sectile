@@ -7,7 +7,7 @@ import {
   SpinButtonIncrement,
   SpinButtonInput,
   SpinButtonRoot,
-} from '../dist/spin-button.js';
+} from '../.verification-dist/spin-button.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 class TestHTMLInputElement {

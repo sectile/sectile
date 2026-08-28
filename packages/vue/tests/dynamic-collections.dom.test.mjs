@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -18,15 +18,15 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { CarouselRoot } = await import('../dist/carousel.js');
-const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../dist/cascade-select.js');
-const { FeedRoot } = await import('../dist/feed.js');
-const { GridRoot } = await import('../dist/grid.js');
-const { MenuRoot } = await import('../dist/menu.js');
-const { PaginationRoot } = await import('../dist/pagination.js');
-const { SelectContent, SelectRoot, SelectTrigger } = await import('../dist/select.js');
-const { ToolbarRoot } = await import('../dist/toolbar.js');
-const { TreeGridRoot } = await import('../dist/tree-grid.js');
+const { CarouselRoot } = await import('../.verification-dist/carousel.js');
+const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
+const { FeedRoot } = await import('../.verification-dist/feed.js');
+const { GridRoot } = await import('../.verification-dist/grid.js');
+const { MenuRoot } = await import('../.verification-dist/menu.js');
+const { PaginationRoot } = await import('../.verification-dist/pagination.js');
+const { SelectContent, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
+const { ToolbarRoot } = await import('../.verification-dist/toolbar.js');
+const { TreeGridRoot } = await import('../.verification-dist/tree-grid.js');
 
 async function settle() {
   await nextTick();

@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionRoot,
   AccordionTrigger,
-} from '../dist/accordion.js';
+} from '../.verification-dist/accordion.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 const items = ['general', 'deployment'];

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { RatingClear, RatingIndicator, RatingItem, RatingRoot } from '../dist/rating.js';
+import { RatingClear, RatingIndicator, RatingItem, RatingRoot } from '../.verification-dist/rating.js';
 import {
   StepperContent,
   StepperList,
@@ -10,7 +10,7 @@ import {
   StepperPrevious,
   StepperRoot,
   StepperStep,
-} from '../dist/stepper.js';
+} from '../.verification-dist/stepper.js';
 
 test('Vue rating specializes radio semantics and exposes an optional clear control', async () => {
   const app = createSSRApp({

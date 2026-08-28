@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } from '../dist/combobox.js';
-import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuRoot, MenubarRoot } from '../dist/menu.js';
-import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '../dist/navigation-menu.js';
-import { SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectValue, SelectViewport } from '../dist/select.js';
-import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '../dist/toolbar.js';
+import { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } from '../.verification-dist/combobox.js';
+import { MenuButtonContent, MenuButtonRoot, MenuButtonTrigger, MenuItem, MenuRoot, MenubarRoot } from '../.verification-dist/menu.js';
+import { NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuRoot, NavigationMenuTrigger } from '../.verification-dist/navigation-menu.js';
+import { SelectContent, SelectItem, SelectItemIndicator, SelectItemText, SelectPortal, SelectRoot, SelectTrigger, SelectValue, SelectViewport } from '../.verification-dist/select.js';
+import { ToolbarItem, ToolbarRoot, ToolbarSeparator } from '../.verification-dist/toolbar.js';
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 

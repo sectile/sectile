@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h, nextTick, ref } from 'vue';
-import { SwitchRoot, SwitchThumb } from '../dist/switch.js';
-import { ToggleButton } from '../dist/toggle-button.js';
+import { SwitchRoot, SwitchThumb } from '../.verification-dist/switch.js';
+import { ToggleButton } from '../.verification-dist/toggle-button.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 test('Vue switch renders persistent thumb semantics and native form state', async () => {

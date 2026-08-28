@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createAlertDialog } from '../dist/alert-dialog.js';
-import { createDialog } from '../dist/dialog.js';
-import { createPopover } from '../dist/popover.js';
-import { createSelect } from '../dist/select.js';
-import { createTooltip } from '../dist/tooltip.js';
+import { createAlertDialog } from '../.verification-dist/alert-dialog.js';
+import { createDialog } from '../.verification-dist/dialog.js';
+import { createPopover } from '../.verification-dist/popover.js';
+import { createSelect } from '../.verification-dist/select.js';
+import { createTooltip } from '../.verification-dist/tooltip.js';
 
 test('DOM popup facades preserve focus, announce, and visibility obligations', () => {
   const trigger = new Fake();

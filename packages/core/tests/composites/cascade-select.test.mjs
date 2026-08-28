@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyCascadeSelectEvent, createCascadeSelectState, getCascadeSelectColumns, getCascadeSelectValuePath } from '../../dist/cascade-select.js';
-import { createTree } from '../../dist/structures/tree.js';
+import { applyCascadeSelectEvent, createCascadeSelectState, getCascadeSelectColumns, getCascadeSelectValuePath } from '../../.verification-dist/cascade-select.js';
+import { createTree } from '../../.verification-dist/structures/tree.js';
 
 const tree = createTree([
   { id: 'asia', parentID: null }, { id: 'europe', parentID: null },

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 
 class FakeResizeObserver {
   static observers = new Set();
@@ -45,7 +45,7 @@ const {
   VirtualSpatial,
   VirtualizerContent,
   VirtualizerRoot,
-} = await import('../dist/virtual.js');
+} = await import('../.verification-dist/virtual.js');
 
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');

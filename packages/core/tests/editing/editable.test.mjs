@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { unwrap } from '../../dist/result.js';
-import { applyEditableEvent, createEditableState } from '../../dist/editable.js';
+import { unwrap } from '../../.verification-dist/result.js';
+import { applyEditableEvent, createEditableState } from '../../.verification-dist/editable.js';
 
 test('editable separates draft, commit, and cancel state', () => {
   let state = createEditableState('Alpha');

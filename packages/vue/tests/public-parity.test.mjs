@@ -26,11 +26,11 @@ test('Form is exposed only through its optional subpath', async () => {
   assert.equal(vuePackage.peerDependencies?.['@sectile/form'], 'workspace:*');
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/form']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.FormRoot, undefined);
   assert.equal(rootModule.useFormControl, undefined);
 
-  const formModule = await import('../dist/form.js');
+  const formModule = await import('../.verification-dist/form.js');
   assert.equal(typeof formModule.FormRoot, 'object');
   assert.equal(typeof formModule.useFormControl, 'function');
 });
@@ -41,17 +41,17 @@ test('Tabular is exposed only through its optional subpath', async () => {
   assert.equal(vuePackage.peerDependencies?.['@sectile/tabular'], 'workspace:*');
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/tabular']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.useDataTable, undefined);
   assert.equal(rootModule.useDataGrid, undefined);
   assert.equal(rootModule.useDataTreeGrid, undefined);
 
-  const tabularModule = await import('../dist/tabular.js');
+  const tabularModule = await import('../.verification-dist/tabular.js');
   assert.equal(typeof tabularModule.useDataTable, 'function');
   assert.equal(typeof tabularModule.useDataGrid, 'function');
   assert.equal(typeof tabularModule.useDataTreeGrid, 'function');
 
-  const tabularSource = await readFile(new URL('../dist/tabular.js', import.meta.url), 'utf8');
+  const tabularSource = await readFile(new URL('../.verification-dist/tabular.js', import.meta.url), 'utf8');
   assert.match(tabularSource, /\.\/data-table\.js/);
   assert.match(tabularSource, /\.\/data-grid\.js/);
   assert.match(tabularSource, /\.\/data-tree-grid\.js/);
@@ -63,15 +63,15 @@ test('virtualization is exposed only through its optional subpath', async () => 
   assert.equal(vuePackage.peerDependencies?.['@sectile/virtual'], 'workspace:*');
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.VirtualList, undefined);
   assert.equal(rootModule.useVirtualizer, undefined);
 
-  const virtualModule = await import('../dist/virtual.js');
+  const virtualModule = await import('../.verification-dist/virtual.js');
   assert.equal(typeof virtualModule.VirtualList, 'object');
   assert.equal(typeof virtualModule.useVirtualizer, 'function');
 
-  const virtualSource = await readFile(new URL('../dist/virtual.js', import.meta.url), 'utf8');
+  const virtualSource = await readFile(new URL('../.verification-dist/virtual.js', import.meta.url), 'utf8');
   assert.match(virtualSource, /@sectile\/virtual/);
 });
 
@@ -81,26 +81,26 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(vuePackage.peerDependencies?.['@sectile/temporal'], 'workspace:*');
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/temporal']?.optional, true);
 
-  const rootModule = await import('../dist/index.js');
+  const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.DateField, undefined);
   assert.equal(rootModule.CalendarRoot, undefined);
   assert.equal(rootModule.TemporalProvider, undefined);
 
-  const temporalModule = await import('../dist/temporal.js');
+  const temporalModule = await import('../.verification-dist/temporal.js');
   assert.equal(typeof temporalModule.DateField, 'object');
   assert.equal(typeof temporalModule.CalendarRoot, 'object');
   assert.equal(typeof temporalModule.TemporalProvider, 'object');
 
-  const temporalSource = await readFile(new URL('../dist/temporal.js', import.meta.url), 'utf8');
+  const temporalSource = await readFile(new URL('../.verification-dist/temporal.js', import.meta.url), 'utf8');
   assert.match(temporalSource, /\.\/date-field\.js/);
   assert.match(temporalSource, /\.\/temporal-provider\.js/);
 });
 
 test('base Tabular profiles are complete and remain Virtual-free', async () => {
   for (const profile of ['data-table', 'data-grid', 'data-tree-grid']) {
-    const source = await readFile(new URL(`../dist/${profile}.js`, import.meta.url), 'utf8');
+    const source = await readFile(new URL(`../.verification-dist/${profile}.js`, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual\.js/);
-    const module = await import(`../dist/${profile}.js`);
+    const module = await import(`../.verification-dist/${profile}.js`);
     assert.equal(module[`${profile === 'data-table' ? 'DataTable' : profile === 'data-grid' ? 'DataGrid' : 'DataTreeGrid'}Loading`], undefined);
     assert.equal(typeof module[profile === 'data-table' ? 'useDataTableSource' : profile === 'data-grid' ? 'useDataGridSource' : 'useDataTreeGridSource'], 'function');
   }

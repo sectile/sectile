@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const window = new Window({ url: 'http://localhost/' });
+const window = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window,
   document: window.document,
@@ -15,8 +15,8 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h } = await import('vue');
-const { HostProvider } = await import('../dist/host-provider.js');
-const { DialogContent, DialogPortal, DialogRoot } = await import('../dist/dialog.js');
+const { HostProvider } = await import('../.verification-dist/host-provider.js');
+const { DialogContent, DialogPortal, DialogRoot } = await import('../.verification-dist/dialog.js');
 
 test('HostProvider supplies the default portal target and local targets override it', () => {
   const host = document.createElement('div');

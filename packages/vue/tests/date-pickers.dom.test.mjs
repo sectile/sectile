@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'http://localhost/' });
+const browserWindow = createTestWindow({ url: 'http://localhost/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -18,7 +18,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref } = await import('vue');
-const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../dist/calendar.js');
+const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../.verification-dist/calendar.js');
 const {
   DatePickerCell,
   DatePickerContent,
@@ -26,7 +26,7 @@ const {
   DatePickerInput,
   DatePickerRoot,
   DatePickerTrigger,
-} = await import('../dist/date-picker.js');
+} = await import('../.verification-dist/date-picker.js');
 const {
   DateRangePickerCell,
   DateRangePickerContent,
@@ -35,7 +35,7 @@ const {
   DateRangePickerRoot,
   DateRangePickerStartInput,
   DateRangePickerTrigger,
-} = await import('../dist/date-range-picker.js');
+} = await import('../.verification-dist/date-range-picker.js');
 const {
   DateTimePickerCell,
   DateTimePickerContent,
@@ -45,7 +45,7 @@ const {
   DateTimePickerRoot,
   DateTimePickerTimeInput,
   DateTimePickerTrigger,
-} = await import('../dist/date-time-picker.js');
+} = await import('../.verification-dist/date-time-picker.js');
 const {
   DateTimeRangePickerCell,
   DateTimeRangePickerContent,
@@ -59,7 +59,7 @@ const {
   DateTimeRangePickerStartDateTimeInput,
   DateTimeRangePickerStartTimeInput,
   DateTimeRangePickerTrigger,
-} = await import('../dist/date-time-range-picker.js');
+} = await import('../.verification-dist/date-time-range-picker.js');
 const {
   MonthPickerCell,
   MonthPickerContent,
@@ -67,7 +67,7 @@ const {
   MonthPickerInput,
   MonthPickerRoot,
   MonthPickerTrigger,
-} = await import('../dist/month-picker.js');
+} = await import('../.verification-dist/month-picker.js');
 const {
   YearPickerCell,
   YearPickerContent,
@@ -75,7 +75,7 @@ const {
   YearPickerInput,
   YearPickerRoot,
   YearPickerTrigger,
-} = await import('../dist/year-picker.js');
+} = await import('../.verification-dist/year-picker.js');
 
 const start = Object.freeze({
   date: Object.freeze({ year: 2026, month: 8, day: 18 }),

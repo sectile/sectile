@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCascadeSelect } from '../dist/cascade-select.js';
+import { createCascadeSelect } from '../.verification-dist/cascade-select.js';
 
 const nodes = [{ id: 'a', parentID: null }, { id: 'b', parentID: null }, { id: 'a1', parentID: 'a' }, { id: 'a2', parentID: 'a' }];
 

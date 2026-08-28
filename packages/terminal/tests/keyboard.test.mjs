@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
-import { terminalStringWidth } from '../dist/internal/grapheme.js';
+import { terminalStringWidth } from '../.verification-dist/internal/grapheme.js';
 import {
   applyTerminalTextInput,
   removeLastGrapheme,
-} from '../dist/keyboard.js';
-import { fitTerminalText } from '../dist/layout.js';
-import { createTTYKeyboard, toTerminalKeyboardInput } from '../dist/node.js';
+} from '../.verification-dist/keyboard.js';
+import { fitTerminalText } from '../.verification-dist/layout.js';
+import { createTTYKeyboard, toTerminalKeyboardInput } from '../.verification-dist/node.js';
 
 class FakeTTYInput extends EventEmitter {
   isTTY = true;

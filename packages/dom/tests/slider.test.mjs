@@ -8,7 +8,7 @@ import {
   createSliderController,
   toSliderEffect,
   toSliderEvent,
-} from '../dist/slider.js';
+} from '../.verification-dist/slider.js';
 
 test('DOM slider facade constructs a bounded range and owns keyboard ARIA updates', () => {
   const root = new FakeElement();

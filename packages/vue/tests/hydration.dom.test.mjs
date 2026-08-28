@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 
-const browserWindow = new Window({ url: 'https://sectile.dev/' });
+const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, {
   window: browserWindow,
   document: browserWindow.document,
@@ -21,11 +21,11 @@ Object.assign(globalThis, {
 
 const { createSSRApp, h, nextTick } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { DisclosureContent, DisclosureRoot, DisclosureTrigger } = await import('../dist/disclosure.js');
-const { DialogContent, DialogRoot, DialogTrigger } = await import('../dist/dialog.js');
-const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
-const { FormField, FormRoot } = await import('../dist/form.js');
-const { TextField } = await import('../dist/text.js');
+const { DisclosureContent, DisclosureRoot, DisclosureTrigger } = await import('../.verification-dist/disclosure.js');
+const { DialogContent, DialogRoot, DialogTrigger } = await import('../.verification-dist/dialog.js');
+const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
+const { FormField, FormRoot } = await import('../.verification-dist/form.js');
+const { TextField } = await import('../.verification-dist/text.js');
 
 async function hydrate(component) {
   const html = await renderToString(createSSRApp(component));

@@ -10,7 +10,7 @@ import {
   toComboboxEffect,
   toComboboxEvent,
   toComboboxTextEvent,
-} from '../dist/combobox.js';
+} from '../.verification-dist/combobox.js';
 
 test('terminal combobox facade owns construction, text editing, navigation, and acceptance', () => {
   const accepted = [];

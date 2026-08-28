@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
-import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '../dist/date-range-field.js';
+import { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } from '../.verification-dist/date-range-field.js';
 
 test('Vue date range field renders two native, timezone-free inputs', async () => {
   const html = await renderToString(createSSRApp({

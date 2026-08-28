@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { defineDataTableColumns, useDataTable, createDataTableComponents } from '../../dist/data-table.js';
-import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../../dist/data-grid.js';
-import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../../dist/data-tree-grid.js';
+import { defineDataTableColumns, useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
+import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
+import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../../.verification-dist/data-tree-grid.js';
 
 interface Cells {
   readonly name: string;

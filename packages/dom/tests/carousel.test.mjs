@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
-import { createCarousel } from '../dist/carousel.js';
+import { createCarousel } from '../.verification-dist/carousel.js';
 
 test('DOM carousel projects current slide and pause-independent movement', () => {
   const root = new FakeElement();

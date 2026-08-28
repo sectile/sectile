@@ -10,7 +10,7 @@ import {
   EditablePreview,
   EditableRoot,
   EditableSubmitTrigger,
-} from '../dist/editable.js';
+} from '../.verification-dist/editable.js';
 
 test('Vue editable renders native compound parts and HTML readonly spelling', async () => {
   const app = createSSRApp({

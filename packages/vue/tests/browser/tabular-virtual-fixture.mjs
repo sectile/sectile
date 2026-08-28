@@ -1,8 +1,8 @@
 import { createApp, h, nextTick, ref, shallowRef } from 'vue';
 import { createDataGridVirtualAdapter, createDataTableVirtualAdapter, reconcileDataGridVirtualAdapter } from '@sectile/tabular/virtual';
-import { useDataGrid, createDataGridComponents } from '../../dist/data-grid.js';
-import { useDataTable, createDataTableComponents } from '../../dist/data-table.js';
-import { VirtualList, VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '../../dist/virtual.js';
+import { useDataGrid, createDataGridComponents } from '../../.verification-dist/data-grid.js';
+import { useDataTable, createDataTableComponents } from '../../.verification-dist/data-table.js';
+import { VirtualList, VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '../../.verification-dist/virtual.js';
 
 const exact = (value) => ({ kind: 'exact', value });
 const estimated = (value) => ({ kind: 'estimated', value });

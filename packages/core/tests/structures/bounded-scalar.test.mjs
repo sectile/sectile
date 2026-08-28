@@ -5,7 +5,7 @@ import {
   formatRatioPercentage,
   midpointDecimal,
   tryParseBoundedScalar,
-} from '../../dist/internal/kernel/bounded-scalar.js';
+} from '../../.verification-dist/internal/kernel/bounded-scalar.js';
 
 test('bounded scalar canonicalizes decimals and reduces exact ratios', () => {
   const result = tryParseBoundedScalar({ min: '-10.00', max: '30.0', value: '10.000' });

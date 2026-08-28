@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { ColorPickerAlphaSlider, ColorPickerArea, ColorPickerAreaThumb, ColorPickerChannelInput, ColorPickerControl, ColorPickerCoordinateInput, ColorPickerCoordinateSlider, ColorPickerFormatTrigger, ColorPickerHueSlider, ColorPickerLabel, ColorPickerNativeInput, ColorPickerRoot, ColorPickerSwatch, ColorPickerTextInput, ColorPickerValueText } from '../dist/color-picker.js';
+import { ColorPickerAlphaSlider, ColorPickerArea, ColorPickerAreaThumb, ColorPickerChannelInput, ColorPickerControl, ColorPickerCoordinateInput, ColorPickerCoordinateSlider, ColorPickerFormatTrigger, ColorPickerHueSlider, ColorPickerLabel, ColorPickerNativeInput, ColorPickerRoot, ColorPickerSwatch, ColorPickerTextInput, ColorPickerValueText } from '../.verification-dist/color-picker.js';
 
 test('Vue color picker renders native form, channel inputs, and extended format triggers with headless parts', async () => {
   const html = await renderToString(createSSRApp({ render: () => h(ColorPickerRoot, { defaultValue: '#33669980', name: 'accent', label: 'Accent' }, { default: () => [h(ColorPickerLabel, null, () => 'Accent'), h(ColorPickerControl, null, () => [h(ColorPickerSwatch), h(ColorPickerNativeInput), h(ColorPickerTextInput), h(ColorPickerChannelInput, { channel: 'alpha' }), h(ColorPickerFormatTrigger, { format: 'rgb' }, () => 'RGB'), h(ColorPickerFormatTrigger, { format: 'oklch' }, () => 'OKLCH'), h(ColorPickerValueText)])] }) }));

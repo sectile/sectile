@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createForm, defineFormSubmission } from '../dist/form.js';
+import { createForm, defineFormSubmission } from '../.verification-dist/form.js';
 
 test('DOM defineFormSubmission returns one immutable schema/handler binding', () => {
   const schema = { '~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) } };

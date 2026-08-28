@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { unwrap } from '@sectile/core/result';
-import { createCarousel } from '../dist/carousel.js';
+import { createCarousel } from '../.verification-dist/carousel.js';
 
 test('terminal carousel owns movement, position, and pause keys', () => {
   const carousel = createCarousel({ slides: ['a', 'b'] });
