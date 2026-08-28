@@ -5,6 +5,7 @@ import {
   inject,
   mergeProps,
   onBeforeUnmount,
+  onMounted,
   onUpdated,
   onScopeDispose,
   provide,
@@ -641,7 +642,16 @@ const VirtualListRuntime = defineComponent({
   setup(props, { attrs, emit, expose, slots }) {
     assertVirtualListSizeMode(props.itemSize, props.estimateSize);
     const prepared = shallowRef(prepareVirtualList(props.items, props.getKey));
-    const state = shallowRef(createVirtualListState(prepared.value, props.items, props));
+    const automaticEstimate = shallowRef<number>();
+    const bootstrapCount = shallowRef(
+      requiresDOMBootstrap(props.itemSize, props.estimateSize) && prepared.value.ids.length > 0 ? 1 : 0,
+    );
+    const bootstrapElements = new Map<number, HTMLElement>();
+    const state = shallowRef(
+      requiresDOMBootstrap(props.itemSize, props.estimateSize)
+        ? createEmptyVirtualListState(props)
+        : createVirtualListState(prepared.value, props.items, props),
+    );
     const measure = props.itemSize === undefined
       ? createVirtualListMeasurementResolver(props.axis)
       : undefined;
@@ -688,11 +698,78 @@ const VirtualListRuntime = defineComponent({
       return callback;
     };
 
+    const bootstrapItemRef = (index: number, value: unknown): void => {
+      const element = value instanceof HTMLElement ? value : null;
+      if (element === null) bootstrapElements.delete(index);
+      else bootstrapElements.set(index, element);
+    };
+    const completeBootstrap = (): void => {
+      if (
+        automaticEstimate.value !== undefined
+        || !requiresDOMBootstrap(props.itemSize, props.estimateSize)
+        || prepared.value.ids.length === 0
+      ) return;
+      const count = Math.min(bootstrapCount.value, prepared.value.ids.length);
+      const extents: number[] = [];
+      for (let index = 0; index < count; index += 1) {
+        const element = bootstrapElements.get(index);
+        if (element === undefined) return;
+        const bounds = element.getBoundingClientRect();
+        const extent = props.axis === 'vertical' ? bounds.height : bounds.width;
+        if (!Number.isFinite(extent) || extent <= 0) return;
+        extents.push(extent);
+      }
+      const total = extents.reduce((sum, extent) => sum + extent, 0)
+        + props.gap * Math.max(0, extents.length - 1);
+      const root = virtualizer.root.value;
+      const measuredViewportExtent = props.axis === 'vertical'
+        ? root?.clientHeight ?? 0
+        : root?.clientWidth ?? 0;
+      const viewportExtent = measuredViewportExtent > 0
+        ? measuredViewportExtent
+        : props.axis === 'vertical'
+          ? props.initialViewport?.height ?? 0
+          : props.initialViewport?.width ?? 0;
+      const target = viewportExtent + bootstrapTrailingOverscanExtent(props.overscan, props.axis);
+      const average = extents.reduce((sum, extent) => sum + extent, 0) / extents.length;
+      if (target > total && count < prepared.value.ids.length) {
+        const nextCount = Math.min(
+          prepared.value.ids.length,
+          Math.max(count + 1, Math.ceil((target + props.gap) / (average + props.gap))),
+        );
+        bootstrapCount.value = nextCount;
+        return;
+      }
+      automaticEstimate.value = average;
+      bootstrapCount.value = 0;
+      bootstrapElements.clear();
+      state.value = createVirtualListState(
+        prepared.value,
+        props.items,
+        props,
+        automaticEstimate.value,
+      );
+    };
+    onMounted(completeBootstrap);
+    onUpdated(completeBootstrap);
+
     watch(
       () => props.items,
       (items) => {
         const next = updatePreparedVirtualList(prepared.value, items, props.getKey);
-        const patch = reconcileVirtualList(state.value, next, items, props);
+        if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
+          prepared.value = next;
+          bootstrapElements.clear();
+          bootstrapCount.value = next.ids.length > 0 ? 1 : 0;
+          return;
+        }
+        const patch = reconcileVirtualList(
+          state.value,
+          next,
+          items,
+          props,
+          automaticEstimate.value,
+        );
         if (patch === null) {
           prepared.value = next;
           return;
@@ -744,6 +821,7 @@ const VirtualListRuntime = defineComponent({
       registrations.clear();
       elements.clear();
       itemRefs.clear();
+      bootstrapElements.clear();
     });
 
     onUpdated(() => {
@@ -786,16 +864,19 @@ const VirtualListRuntime = defineComponent({
       const rootStyle = attrs['style'];
       const rootAttributes = { ...attrs };
       delete rootAttributes['style'];
+      const bootstrapping = automaticEstimate.value === undefined && bootstrapCount.value > 0;
       const contentStyle = props.axis === 'vertical'
         ? {
             position: 'relative',
             width: '100%',
-            height: `${plan?.contentSize.height ?? 0}px`,
+            ...(bootstrapping ? {} : { height: `${plan?.contentSize.height ?? 0}px` }),
           }
         : {
             position: 'relative',
-            width: `${plan?.contentSize.width ?? 0}px`,
             height: '100%',
+            ...(bootstrapping
+              ? { display: 'flex' }
+              : { width: `${plan?.contentSize.width ?? 0}px` }),
           };
       const children = (plan?.placements.map((placement) => {
         const index = placement.index;
@@ -839,6 +920,16 @@ const VirtualListRuntime = defineComponent({
           itemChildren as VNodeArrayChildren,
         );
       }) ?? []) as VNodeArrayChildren;
+      if (automaticEstimate.value === undefined && bootstrapCount.value > 0) {
+        children.push(...renderVirtualListBootstrapItems(
+          prepared.value,
+          props.items,
+          bootstrapCount.value,
+          props,
+          slots['default'],
+          bootstrapItemRef,
+        ));
+      }
       if (prepared.value.ids.length === 0) {
         const empty = slots['empty']?.();
         if (empty !== undefined && empty !== null) children.push(empty);
@@ -1029,18 +1120,20 @@ function createVirtualListState(
     gap: number;
     maxItems: number;
   }>,
+  automaticEstimate?: number,
 ): LinearLayoutState<string> {
+  const estimate = props.estimateSize ?? automaticEstimate;
   const sharedExtent = props.itemSize !== undefined
     ? exactExtent(props.itemSize)
-    : typeof props.estimateSize !== 'function'
-      ? estimatedExtent(props.estimateSize ?? 48, undefined, 0)
+    : typeof estimate !== 'function'
+      ? estimatedExtent(requireAutomaticEstimate(estimate), undefined, 0)
       : null;
   return createLinearLayout(
     createPreparedVirtualListSequence(prepared, props.maxItems),
     sharedExtent === null
       ? createExtentIndex(
           prepared.ids.map((_id, index) => estimatedExtent(
-            props.estimateSize!,
+            estimate!,
             items[index],
             index,
           )),
@@ -1049,6 +1142,20 @@ function createVirtualListState(
       : createUniformExtentIndex(prepared.ids.length, sharedExtent, {
           maxItems: props.maxItems,
         }),
+    { axis: props.axis, gap: props.gap, crossExtent: 1 },
+  );
+}
+
+function createEmptyVirtualListState(
+  props: Readonly<{
+    axis: LinearAxis;
+    gap: number;
+    maxItems: number;
+  }>,
+): LinearLayoutState<string> {
+  return createLinearLayout(
+    createSequence([], { maxItems: props.maxItems, maxIDCodeUnits: 1_024 }),
+    createUniformExtentIndex(0, exactExtent(0), { maxItems: props.maxItems }),
     { axis: props.axis, gap: props.gap, crossExtent: 1 },
   );
 }
@@ -1119,6 +1226,7 @@ function reconcileVirtualList(
     itemSize: number | undefined;
     estimateSize: VirtualListEstimate<unknown> | undefined;
   }>,
+  automaticEstimate?: number,
 ): LinearPatch<string> | null {
   const change = next.change;
   if (change === null) return null;
@@ -1134,7 +1242,7 @@ function reconcileVirtualList(
       const nextIndex = change.index + localIndex;
       const previousIndex = state.domain.indexOf(id);
       return (previousIndex === null ? null : state.extents.extentAt(previousIndex))
-        ?? initialExtent(props, items[nextIndex], nextIndex);
+        ?? initialExtent(props, items[nextIndex], nextIndex, automaticEstimate);
     })),
   });
 }
@@ -1155,10 +1263,88 @@ function initialExtent(
   }>,
   value: unknown,
   index: number,
+  automaticEstimate?: number,
 ): Extent {
   return props.itemSize === undefined
-    ? estimatedExtent(props.estimateSize ?? 48, value, index)
+    ? estimatedExtent(requireAutomaticEstimate(props.estimateSize ?? automaticEstimate), value, index)
     : exactExtent(props.itemSize);
+}
+
+function requireAutomaticEstimate(
+  estimate: VirtualListEstimate<unknown> | undefined,
+): VirtualListEstimate<unknown> {
+  if (estimate === undefined) {
+    throw new TypeError('Automatic virtual size must be measured before layout initialization.');
+  }
+  return estimate;
+}
+
+function requiresDOMBootstrap(
+  itemSize: number | undefined,
+  estimateSize: VirtualListEstimate<unknown> | undefined,
+): boolean {
+  return itemSize === undefined && estimateSize === undefined;
+}
+
+function bootstrapTrailingOverscanExtent(
+  overscan: number | Partial<VirtualInsets>,
+  axis: LinearAxis,
+): number {
+  if (typeof overscan === 'number') return overscan;
+  return axis === 'vertical'
+    ? overscan.bottom ?? 0
+    : overscan.right ?? 0;
+}
+
+function renderVirtualListBootstrapItems(
+  prepared: PreparedVirtualList,
+  items: readonly unknown[],
+  count: number,
+  props: Readonly<{
+    axis: LinearAxis;
+    gap: number;
+    itemAs: string;
+    itemAttributes: VirtualListItemAttributes<unknown> | undefined;
+  }>,
+  render: ((props: VirtualListSlotProps<unknown>) => VNodeChild) | undefined,
+  itemRef: (index: number, value: unknown) => void,
+): VNodeArrayChildren {
+  return Array.from({ length: Math.min(count, prepared.ids.length) }, (_unused, index) => {
+    const value = items[index];
+    const id = prepared.ids[index]!;
+    const attributes = props.itemAttributes?.(value, index) ?? {};
+    const placement = Object.freeze({
+      id,
+      index,
+      rect: Object.freeze({ x: 0, y: 0, width: 0, height: 0 }),
+      visible: true,
+    });
+    const rendered = render?.({ value, key: id, index, placement });
+    const children = rendered === undefined || rendered === null
+      ? []
+      : Array.isArray(rendered)
+        ? rendered
+        : [rendered];
+    return h(props.itemAs, {
+      ...attributes,
+      key: id,
+      ref: (element: unknown) => itemRef(index, element),
+      style: [
+        attributes['style'],
+        props.axis === 'vertical' ? { width: '100%' } : { height: '100%' },
+        props.gap > 0 && index > 0
+          ? props.axis === 'vertical'
+            ? { marginTop: `${props.gap}px` }
+            : { marginLeft: `${props.gap}px` }
+          : undefined,
+      ],
+      'data-scope': 'virtual-list',
+      'data-part': 'item',
+      'data-index': index,
+      'data-visible': '',
+      'data-bootstrap': '',
+    }, children as VNodeArrayChildren);
+  });
 }
 
 function exactExtent(value: number): Extent {
@@ -1219,10 +1405,63 @@ const VirtualGridRuntime = defineComponent({
       props.maxLaneCount,
       props.laneGap,
     );
-    const initialState = createVirtualGridState(prepared.value, props.items, props, initialGeometry);
+    const automaticEstimate = shallowRef<number>();
+    const isBootstrapping = (): boolean => requiresDOMBootstrap(props.itemSize, props.estimateSize)
+      && automaticEstimate.value === undefined
+      && prepared.value.ids.length > 0;
+    const initialState = requiresDOMBootstrap(props.itemSize, props.estimateSize)
+      ? createVirtualGridState(
+          prepareVirtualList([], props.getKey),
+          [],
+          props,
+          initialGeometry,
+          0,
+        )
+      : createVirtualGridState(prepared.value, props.items, props, initialGeometry);
+    const activeState = shallowRef(initialState);
     const root = shallowRef<VirtualizerRootExpose>();
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
     const measuredHeights = new Map<string, number>();
+    const bootstrapElements = new Map<number, HTMLElement>();
+    const bootstrapItemRef = (index: number, value: unknown): void => {
+      const element = value instanceof HTMLElement ? value : null;
+      if (element === null) bootstrapElements.delete(index);
+      else bootstrapElements.set(index, element);
+    };
+    const completeBootstrap = (): void => {
+      if (
+        automaticEstimate.value !== undefined
+        || !requiresDOMBootstrap(props.itemSize, props.estimateSize)
+        || prepared.value.ids.length === 0
+      ) return;
+      const geometry = resolveResponsiveLanes(
+        viewportWidth.value,
+        props.laneCount,
+        props.minLaneSize,
+        props.maxLaneCount,
+        props.laneGap,
+      );
+      const count = Math.min(geometry.count, prepared.value.ids.length);
+      let maximum = 0;
+      for (let index = 0; index < count; index += 1) {
+        const element = bootstrapElements.get(index);
+        if (element === undefined) return;
+        const height = element.getBoundingClientRect().height;
+        if (!Number.isFinite(height) || height <= 0) return;
+        maximum = Math.max(maximum, height);
+      }
+      automaticEstimate.value = maximum;
+      bootstrapElements.clear();
+      activeState.value = createVirtualGridState(
+        prepared.value,
+        props.items,
+        props,
+        geometry,
+        maximum,
+      );
+    };
+    onMounted(completeBootstrap);
+    onUpdated(completeBootstrap);
     const measure = props.itemSize === undefined
       ? (({ element, placement, state }) => {
           const bounds = element.getBoundingClientRect();
@@ -1241,12 +1480,18 @@ const VirtualGridRuntime = defineComponent({
               props.items,
               props.estimateSize,
               measuredHeights,
+              automaticEstimate.value,
             )),
           });
         }) satisfies VirtualMeasurementResolver<TrackGridLayoutState<string>, string, GridTrackMeasurement>
       : undefined;
 
     const sync = (): void => {
+      if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
+        prepared.value = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
+        bootstrapElements.clear();
+        return;
+      }
       const exposed = root.value;
       if (exposed === undefined) return;
       const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
@@ -1261,7 +1506,15 @@ const VirtualGridRuntime = defineComponent({
         const active = new Set(next.ids);
         for (const id of measuredHeights.keys()) if (!active.has(id)) measuredHeights.delete(id);
       }
-      if (syncVirtualGrid(exposed, next, props.items, props, geometry, measuredHeights)) {
+      if (syncVirtualGrid(
+        exposed,
+        next,
+        props.items,
+        props,
+        geometry,
+        measuredHeights,
+        automaticEstimate.value,
+      )) {
         prepared.value = next;
       }
     };
@@ -1285,8 +1538,9 @@ const VirtualGridRuntime = defineComponent({
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
+      key: isBootstrapping() ? 'bootstrap' : 'ready',
       ref: root,
-      defaultState: initialState,
+      defaultState: activeState.value,
       strategy: trackGridLayoutStrategy as unknown as VirtualLayoutStrategy<object, string, unknown, unknown>,
       overscan: props.overscan,
       ...(initialViewport === undefined ? {} : { initialViewport }),
@@ -1297,34 +1551,68 @@ const VirtualGridRuntime = defineComponent({
       'data-virtual-layout': 'virtual-grid',
       onStateChange: (state: object) => emit('stateChange', state as TrackGridLayoutState<string>),
       onPlanChange: (plan: VirtualLayoutPlan<string>) => {
-        viewportWidth.value = plan.viewport.width;
+        if (plan.viewport.width > 0) viewportWidth.value = plan.viewport.width;
         emit('planChange', plan);
       },
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
       default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerContent, { as: props.contentAs }, {
-        default: () => renderHighLevelItems(
-          'virtual-grid',
-          placements,
-          prepared.value,
-          props.items,
-          props.itemAs,
-          props.itemAttributes,
-          props.itemSize === undefined ? 'width' : 'both',
-          (value, key, index, placement) => {
-            const grid = (root.value?.state as TrackGridLayoutState<string> | undefined);
-            const region = grid?.regions[placement.index];
-            return slots['default']?.({
-              value,
-              key,
-              index,
-              placement,
-              row: region?.row ?? 0,
-              column: region?.column ?? 0,
-            });
-          },
-          slots['empty'],
-        ),
+        default: () => isBootstrapping()
+          ? renderCollectionBootstrapItems(
+              'virtual-grid',
+              prepared.value,
+              props.items,
+              Math.min(
+                resolveResponsiveLanes(
+                  viewportWidth.value,
+                  props.laneCount,
+                  props.minLaneSize,
+                  props.maxLaneCount,
+                  props.laneGap,
+                ).count,
+                prepared.value.ids.length,
+              ),
+              resolveResponsiveLanes(
+                viewportWidth.value,
+                props.laneCount,
+                props.minLaneSize,
+                props.maxLaneCount,
+                props.laneGap,
+              ).extent,
+              props.itemAs,
+              props.itemAttributes,
+              (value, key, index, placement) => slots['default']?.({
+                value,
+                key,
+                index,
+                placement,
+                row: 0,
+                column: index,
+              }),
+              bootstrapItemRef,
+            )
+          : renderHighLevelItems(
+              'virtual-grid',
+              placements,
+              prepared.value,
+              props.items,
+              props.itemAs,
+              props.itemAttributes,
+              props.itemSize === undefined ? 'width' : 'both',
+              (value, key, index, placement) => {
+                const grid = (root.value?.state as TrackGridLayoutState<string> | undefined);
+                const region = grid?.regions[placement.index];
+                return slots['default']?.({
+                  value,
+                  key,
+                  index,
+                  placement,
+                  row: region?.row ?? 0,
+                  column: region?.column ?? 0,
+                });
+              },
+              slots['empty'],
+            ),
       }),
     });
   },
@@ -1376,9 +1664,59 @@ const VirtualMasonryRuntime = defineComponent({
       props.maxLaneCount,
       props.laneGap,
     );
-    const initialState = createVirtualMasonryState(prepared.value, props.items, props, initialGeometry);
+    const automaticEstimate = shallowRef<number>();
+    const initialState = requiresDOMBootstrap(props.itemSize, props.estimateSize)
+      ? createVirtualMasonryState(
+          prepareVirtualList([], props.getKey),
+          [],
+          props,
+          initialGeometry,
+          0,
+        )
+      : createVirtualMasonryState(prepared.value, props.items, props, initialGeometry);
+    const activeState = shallowRef(initialState);
     const root = shallowRef<VirtualizerRootExpose>();
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
+    const bootstrapElements = new Map<number, HTMLElement>();
+    const isBootstrapping = (): boolean => requiresDOMBootstrap(props.itemSize, props.estimateSize)
+      && automaticEstimate.value === undefined
+      && prepared.value.ids.length > 0;
+    const bootstrapItemRef = (index: number, value: unknown): void => {
+      const element = value instanceof HTMLElement ? value : null;
+      if (element === null) bootstrapElements.delete(index);
+      else bootstrapElements.set(index, element);
+    };
+    const completeBootstrap = (): void => {
+      if (!isBootstrapping()) return;
+      const geometry = resolveResponsiveLanes(
+        viewportWidth.value,
+        props.laneCount,
+        props.minLaneSize,
+        props.maxLaneCount,
+        props.laneGap,
+      );
+      const count = Math.min(geometry.count, prepared.value.ids.length);
+      let total = 0;
+      for (let index = 0; index < count; index += 1) {
+        const element = bootstrapElements.get(index);
+        if (element === undefined) return;
+        const height = element.getBoundingClientRect().height;
+        if (!Number.isFinite(height) || height <= 0) return;
+        total += height;
+      }
+      const estimate = total / count;
+      automaticEstimate.value = estimate;
+      bootstrapElements.clear();
+      activeState.value = createVirtualMasonryState(
+        prepared.value,
+        props.items,
+        props,
+        geometry,
+        estimate,
+      );
+    };
+    onMounted(completeBootstrap);
+    onUpdated(completeBootstrap);
     const measure = props.itemSize === undefined
       ? createAxisMeasurementResolver<MasonryLayoutState<string>, string>('vertical')
       : undefined;
@@ -1386,6 +1724,11 @@ const VirtualMasonryRuntime = defineComponent({
     watch(
       () => [props.items, props.getKey] as const,
       () => {
+        if (requiresDOMBootstrap(props.itemSize, props.estimateSize) && automaticEstimate.value === undefined) {
+          prepared.value = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
+          bootstrapElements.clear();
+          return;
+        }
         const exposed = root.value;
         if (exposed === undefined) return;
         const next = updatePreparedVirtualList(prepared.value, props.items, props.getKey);
@@ -1394,6 +1737,7 @@ const VirtualMasonryRuntime = defineComponent({
           next,
           props.items,
           props,
+          automaticEstimate.value,
         );
         if (patch === null) {
           prepared.value = next;
@@ -1447,8 +1791,9 @@ const VirtualMasonryRuntime = defineComponent({
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
+      key: isBootstrapping() ? 'bootstrap' : 'ready',
       ref: root,
-      defaultState: initialState,
+      defaultState: activeState.value,
       strategy: masonryLayoutStrategy as unknown as VirtualLayoutStrategy<object, string, unknown, unknown>,
       overscan: props.overscan,
       ...(initialViewport === undefined ? {} : { initialViewport }),
@@ -1459,32 +1804,65 @@ const VirtualMasonryRuntime = defineComponent({
       'data-virtual-layout': 'virtual-masonry',
       onStateChange: (state: object) => emit('stateChange', state as MasonryLayoutState<string>),
       onPlanChange: (plan: VirtualLayoutPlan<string>) => {
-        viewportWidth.value = plan.viewport.width;
+        if (plan.viewport.width > 0) viewportWidth.value = plan.viewport.width;
         emit('planChange', plan);
       },
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
       default: ({ placements }: VirtualizerRootSlotProps) => h(VirtualizerContent, { as: props.contentAs }, {
-        default: () => renderHighLevelItems(
-          'virtual-masonry',
-          placements,
-          prepared.value,
-          props.items,
-          props.itemAs,
-          props.itemAttributes,
-          props.itemSize === undefined ? 'width' : 'both',
-          (value, key, index, placement) => {
-            const masonryPlacement = placement as MasonryPlacement<string>;
-            return slots['default']?.({
-              value,
-              key,
-              index,
-              placement: masonryPlacement,
-              lane: masonryPlacement.lane,
-            });
-          },
-          slots['empty'],
-        ),
+        default: () => isBootstrapping()
+          ? renderCollectionBootstrapItems(
+              'virtual-masonry',
+              prepared.value,
+              props.items,
+              Math.min(
+                resolveResponsiveLanes(
+                  viewportWidth.value,
+                  props.laneCount,
+                  props.minLaneSize,
+                  props.maxLaneCount,
+                  props.laneGap,
+                ).count,
+                prepared.value.ids.length,
+              ),
+              resolveResponsiveLanes(
+                viewportWidth.value,
+                props.laneCount,
+                props.minLaneSize,
+                props.maxLaneCount,
+                props.laneGap,
+              ).extent,
+              props.itemAs,
+              props.itemAttributes,
+              (value, key, index, placement) => slots['default']?.({
+                value,
+                key,
+                index,
+                placement: Object.freeze({ ...placement, lane: index }),
+                lane: index,
+              }),
+              bootstrapItemRef,
+            )
+          : renderHighLevelItems(
+              'virtual-masonry',
+              placements,
+              prepared.value,
+              props.items,
+              props.itemAs,
+              props.itemAttributes,
+              props.itemSize === undefined ? 'width' : 'both',
+              (value, key, index, placement) => {
+                const masonryPlacement = placement as MasonryPlacement<string>;
+                return slots['default']?.({
+                  value,
+                  key,
+                  index,
+                  placement: masonryPlacement,
+                  lane: masonryPlacement.lane,
+                });
+              },
+              slots['empty'],
+            ),
       }),
     });
   },
@@ -1678,10 +2056,11 @@ function createVirtualGridState(
     maxItems: number;
   }>,
   geometry: ResponsiveLaneGeometry,
+  automaticEstimate?: number,
 ): TrackGridLayoutState<string> {
   const rowCount = Math.ceil(prepared.ids.length / geometry.count);
   return createDenseTrackGridLayout(
-    createGridRowExtentIndex(rowCount, geometry.count, items, props),
+    createGridRowExtentIndex(rowCount, geometry.count, items, props, automaticEstimate),
     createUniformExtentIndex(geometry.count, exactExtent(geometry.extent), { maxItems: props.maxItems }),
     prepared.ids,
     {
@@ -1701,14 +2080,16 @@ function createGridRowExtentIndex(
     estimateSize: VirtualListEstimate<unknown> | undefined;
     maxItems: number;
   }>,
+  automaticEstimate?: number,
 ): ExtentIndex {
+  const estimate = props.estimateSize ?? automaticEstimate;
   const shared = props.itemSize !== undefined
     ? exactExtent(props.itemSize)
-    : typeof props.estimateSize !== 'function'
-      ? estimatedExtent(props.estimateSize ?? 48, undefined, 0)
+    : typeof estimate !== 'function'
+      ? estimatedExtent(requireAutomaticEstimate(estimate), undefined, 0)
       : null;
   return shared === null
-    ? createExtentIndex(createGridRowExtents(rowCount, columnCount, items, props), { maxItems: props.maxItems })
+    ? createExtentIndex(createGridRowExtents(rowCount, columnCount, items, props, automaticEstimate), { maxItems: props.maxItems })
     : createUniformExtentIndex(rowCount, shared, { maxItems: props.maxItems });
 }
 
@@ -1724,10 +2105,11 @@ function createVirtualMasonryState(
     maxItems: number;
   }>,
   geometry: ResponsiveLaneGeometry,
+  automaticEstimate?: number,
 ): MasonryLayoutState<string> {
   return createMasonryLayout(
     createPreparedVirtualListSequence(prepared, props.maxItems),
-    createCollectionExtents(prepared, items, props),
+    createCollectionExtents(prepared, items, props, automaticEstimate),
     {
       laneCount: geometry.count,
       laneExtent: geometry.extent,
@@ -1759,14 +2141,16 @@ function createCollectionExtents(
     estimateSize: VirtualListEstimate<unknown> | undefined;
     maxItems: number;
   }>,
+  automaticEstimate?: number,
 ) {
+  const estimate = props.estimateSize ?? automaticEstimate;
   const shared = props.itemSize !== undefined
     ? exactExtent(props.itemSize)
-    : typeof props.estimateSize !== 'function'
-      ? estimatedExtent(props.estimateSize ?? 48, undefined, 0)
+    : typeof estimate !== 'function'
+      ? estimatedExtent(requireAutomaticEstimate(estimate), undefined, 0)
       : null;
   return shared === null
-    ? createExtentIndex(prepared.ids.map((_id, index) => estimatedExtent(props.estimateSize!, items[index], index)), { maxItems: props.maxItems })
+    ? createExtentIndex(prepared.ids.map((_id, index) => estimatedExtent(estimate!, items[index], index)), { maxItems: props.maxItems })
     : createUniformExtentIndex(prepared.ids.length, shared, { maxItems: props.maxItems });
 }
 
@@ -1778,10 +2162,11 @@ function createGridRowExtents(
     itemSize: number | undefined;
     estimateSize: VirtualListEstimate<unknown> | undefined;
   }>,
+  automaticEstimate?: number,
 ): readonly Extent[] {
   return Object.freeze(Array.from({ length: rowCount }, (_unused, row) => {
     if (props.itemSize !== undefined) return exactExtent(props.itemSize);
-    const estimate = props.estimateSize ?? 48;
+    const estimate = requireAutomaticEstimate(props.estimateSize ?? automaticEstimate);
     let value = typeof estimate === 'number' ? estimate : 0;
     if (typeof estimate === 'function') {
       const start = row * columnCount;
@@ -1800,15 +2185,17 @@ function gridMeasuredRowHeight(
   items: readonly unknown[],
   estimate: VirtualListEstimate<unknown> | undefined,
   measured: ReadonlyMap<string, number>,
+  automaticEstimate?: number,
 ): number {
   const start = row * columnCount;
   const end = Math.min(prepared.ids.length, start + columnCount);
   let maximum = 0;
   for (let index = start; index < end; index += 1) {
     const id = prepared.ids[index]!;
-    const fallback = typeof estimate === 'function'
-      ? estimate(items[index], index)
-      : estimate ?? 48;
+    const resolvedEstimate = requireAutomaticEstimate(estimate ?? automaticEstimate);
+    const fallback = typeof resolvedEstimate === 'function'
+      ? resolvedEstimate(items[index], index)
+      : resolvedEstimate;
     maximum = Math.max(maximum, measured.get(id) ?? fallback);
   }
   return maximum;
@@ -1882,6 +2269,7 @@ function syncVirtualGrid(
   }>,
   geometry: ResponsiveLaneGeometry,
   measured: ReadonlyMap<string, number>,
+  automaticEstimate?: number,
 ): boolean {
   let state = exposed.state as TrackGridLayoutState<string>;
   const rowCount = Math.ceil(prepared.ids.length / geometry.count);
@@ -1896,9 +2284,17 @@ function syncVirtualGrid(
     && currentColumn?.kind === 'exact'
     && nearlyEqual(currentColumn.value, geometry.extent)
   ) return true;
-  const rowExtents = createGridRowExtents(rowCount, geometry.count, items, props).map((extent, row) => {
+  const rowExtents = createGridRowExtents(rowCount, geometry.count, items, props, automaticEstimate).map((extent, row) => {
     if (props.itemSize !== undefined) return extent;
-    const measuredHeight = gridMeasuredRowHeight(row, geometry.count, prepared, items, props.estimateSize, measured);
+    const measuredHeight = gridMeasuredRowHeight(
+      row,
+      geometry.count,
+      prepared,
+      items,
+      props.estimateSize,
+      measured,
+      automaticEstimate,
+    );
     return measuredHeight > ('fallback' in extent ? extent.fallback : extent.value)
       ? exactExtent(measuredHeight)
       : extent;
@@ -1978,6 +2374,47 @@ function renderHighLevelItems(
       'data-part': 'item',
     }, { default: () => render(value, placement.id, index, placement) })];
   }) as VNodeArrayChildren;
+}
+
+function renderCollectionBootstrapItems(
+  scope: string,
+  prepared: PreparedVirtualList,
+  items: readonly unknown[],
+  count: number,
+  width: number,
+  itemAs: string,
+  itemAttributes: VirtualListItemAttributes<unknown> | undefined,
+  render: (value: unknown, key: string, index: number, placement: VirtualPlacement<string>) => VNodeChild,
+  itemRef: (index: number, value: unknown) => void,
+): VNodeArrayChildren {
+  return Array.from({ length: Math.min(count, prepared.ids.length) }, (_unused, index) => {
+    const id = prepared.ids[index]!;
+    const value = items[index];
+    const attributes = itemAttributes?.(value, index) ?? {};
+    const placement = Object.freeze({
+      id,
+      index,
+      rect: Object.freeze({ x: index * width, y: 0, width, height: 0 }),
+      visible: true,
+    });
+    const rendered = render(value, id, index, placement);
+    const children = rendered === undefined || rendered === null
+      ? []
+      : Array.isArray(rendered)
+        ? rendered
+        : [rendered];
+    return h(itemAs, {
+      ...attributes,
+      key: id,
+      ref: (element: unknown) => itemRef(index, element),
+      style: [attributes['style'], { width: `${width}px` }],
+      'data-scope': scope,
+      'data-virtual-layout': scope,
+      'data-part': 'item',
+      'data-index': index,
+      'data-bootstrap': '',
+    }, children as VNodeArrayChildren);
+  });
 }
 
 function createHighLevelVirtualExpose<State>(

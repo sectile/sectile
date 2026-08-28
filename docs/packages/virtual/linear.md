@@ -17,7 +17,7 @@ These 50,000 rows repeat four different heights. Vue and DOM environments measur
 
 | Available information | Vue prop | Behavior |
 | --- | --- | --- |
-| Actual DOM size only | Omit both | Start from a fallback and measure rendered elements |
+| Actual DOM size only | Omit both | Measure the initial render range, then create the virtual layout from that sample |
 | Approximate starting size | `estimateSize` | Start from the estimate and replace it with real measurements |
 | Exact fixed size for every item | `itemSize` | Skip measurement and calculate from the fixed size |
 

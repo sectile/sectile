@@ -38,7 +38,7 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 </style>
 ```
 
-Omitting size props uses actual DOM size. `estimateSize` supplies a starting estimate, while `itemSize` skips measurement when every item has the same exact size.
+Omitting size props measures an initial DOM sample before creating the virtual layout. The sample covers the initial render range for a list, the first row for a grid, and the first lane set for masonry. More complex item DOM adds to this bootstrap cost. `estimateSize` supplies the starting estimate directly, while `itemSize` skips measurement when every item has the same exact size.
 
 ## Declarative components
 

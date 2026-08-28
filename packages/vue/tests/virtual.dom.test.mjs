@@ -219,6 +219,7 @@ test('VirtualList keeps the layout domain for value-only replacements and measur
 test('VirtualList separates fixed sizes from automatic DOM measurement', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const boundsDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
   Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
     configurable: true,
     get() { return 80; },
@@ -226,6 +227,19 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
     configurable: true,
     get() { return 120; },
+  });
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value() {
+      if (this.dataset.automatic === '') return {
+        x: 0, y: 0, top: 0, right: 120, bottom: 35, left: 0,
+        width: 120, height: 35, toJSON() {},
+      };
+      return boundsDescriptor?.value?.call(this) ?? {
+        x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0,
+        width: 0, height: 0, toJSON() {},
+      };
+    },
   });
   const host = document.createElement('div');
   document.body.append(host);
@@ -246,6 +260,7 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
         items,
         getKey: (value) => value.id,
         overscan: 0,
+        itemAttributes: () => ({ 'data-automatic': '' }),
       }, { default: ({ key }) => key }),
     ]),
   });
@@ -258,20 +273,24 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
     await settle();
     assert.deepEqual(fixed.value.state.extents.extentAt(0), { kind: 'exact', value: 20 });
     assert.equal(fixed.value.plan.contentSize.height, 400);
-    assert.deepEqual(automatic.value.state.extents.extentAt(0), { kind: 'unknown', fallback: 48 });
+    assert.deepEqual(automatic.value.state.extents.extentAt(10), { kind: 'unknown', fallback: 35 });
+    assert.equal(automatic.value.plan.contentSize.height, 700);
 
     const fixedRow = host.querySelectorAll('[data-scope="virtual-list"][data-part="root"]')[0]
       .querySelector('[data-part="item"]');
-    fixedRow.getBoundingClientRect = () => ({
-      x: 0,
-      y: 0,
-      top: 0,
-      right: 120,
-      bottom: 35,
-      left: 0,
-      width: 120,
-      height: 35,
-      toJSON() {},
+    Object.defineProperty(fixedRow, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 120,
+        bottom: 35,
+        left: 0,
+        width: 120,
+        height: 35,
+        toJSON() {},
+      }),
     });
     FakeResizeObserver.notify(fixedRow);
     fixed.value.flush();
@@ -284,6 +303,81 @@ test('VirtualList separates fixed sizes from automatic DOM measurement', async (
     else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
     if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
     else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+    if (boundsDescriptor === undefined) delete HTMLElement.prototype.getBoundingClientRect;
+    else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', boundsDescriptor);
+  }
+});
+
+test('VirtualGrid and VirtualMasonry bootstrap unknown sizes from rendered items', async () => {
+  const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const boundsDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 100; } });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return 120; } });
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true,
+    value() {
+      if (this.dataset.bootstrapHeight !== undefined) {
+        const height = Number(this.dataset.bootstrapHeight);
+        return {
+          x: 0, y: 0, top: 0, right: 55, bottom: height, left: 0,
+          width: 55, height, toJSON() {},
+        };
+      }
+      return boundsDescriptor?.value?.call(this) ?? {
+        x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0,
+        width: 0, height: 0, toJSON() {},
+      };
+    },
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const grid = ref();
+  const masonry = ref();
+  const items = Array.from({ length: 12 }, (_, index) => ({
+    id: `automatic-${index}`,
+    height: index % 2 === 0 ? 30 : 50,
+  }));
+  const app = createApp({
+    render: () => h('div', [
+      h(VirtualGrid, {
+        ref: grid,
+        items,
+        getKey: (value) => value.id,
+        laneCount: 2,
+        minLaneSize: 50,
+        initialViewport: { x: 0, y: 0, width: 120, height: 100 },
+        overscan: 0,
+        itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
+      }, { default: ({ key }) => key }),
+      h(VirtualMasonry, {
+        ref: masonry,
+        items,
+        getKey: (value) => value.id,
+        laneCount: 2,
+        minLaneSize: 50,
+        initialViewport: { x: 0, y: 0, width: 120, height: 100 },
+        overscan: 0,
+        itemAttributes: (value) => ({ 'data-bootstrap-height': String(value.height) }),
+      }, { default: ({ key }) => key }),
+    ]),
+  });
+
+  try {
+    app.mount(host);
+    await settle();
+    await settle();
+    assert.deepEqual(grid.value.state.rows.extentAt(4), { kind: 'unknown', fallback: 50 });
+    assert.deepEqual(masonry.value.state.extents.extentAt(4), { kind: 'unknown', fallback: 40 });
+  } finally {
+    app.unmount();
+    host.remove();
+    if (heightDescriptor === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
+    if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+    if (boundsDescriptor === undefined) delete HTMLElement.prototype.getBoundingClientRect;
+    else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', boundsDescriptor);
   }
 });
 
