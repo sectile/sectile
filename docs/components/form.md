@@ -48,17 +48,21 @@ A string name becomes a top-level key. A string/number path builds nested object
 | `:name="['profile', 'displayName']"` | `values.profile.displayName` |
 | `:name="['members', 0, 'email']"` | `values.members[0].email` |
 
-`onSubmit` is a lifecycle prop that consumes a validated submission, not a Vue emitted submit event. It receives `event`, structured `values`, original `formData`, the `submitter`, and current form `state`, then returns a result or Promise. Bind it as `:on-submit="save"` in templates. Application code can use `values` as its primary submission object and `formData` for file values or native encoding.
+`defineFormSubmission()` keeps a validated submission handler and optional schema in one immutable object. Pass it to `<FormRoot v-bind="submission">` without importing a handler type. Without a schema, each value in `values` is `unknown`; use the original `formData` for files, repeated names, and native encoding. A Standard Schema infers its transformed output in the handler.
 
 Server issues can target a field by `path` instead of an internal field ID, for example `{ message: 'Already registered', path: 'email' }` or `{ message: 'Invalid', path: ['members', 0, 'email'] }`. Sectile generates a form issue ID when `id` is omitted. A thrown or rejected submit callback uses a fixed safe message instead of exposing the original error. Use `mapSubmitError` when an application-facing message should be derived explicitly.
 
-### Typed forms
+### Package and type boundary
 
-`createTypedForm<Values>()` returns `Root` and `Field` components fixed to one value shape. `Field.name` accepts only valid paths, including nested tuples and array indexes. Use `createTypedForm<Input, Output>()` when a schema transforms input values.
+A Vue application using Form installs the optional `@sectile/form` peer explicitly and imports the static `FormRoot` and `FormField` from `@sectile/vue/form`. There is no component factory. Sectile does not pretend that a schema can type every dynamic field path in a Vue template; the schema validates input and infers output at the submission boundary. DOM uses `@sectile/dom/form`, and Terminal has no Form adapter.
 
 ### Custom controls
 
-Use `useNativeInputFormControl` for one native input and `useCompositeFormControl` when several DOM elements represent one value. For lower-level coordination, combine `useFormControl` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field.
+Use `useNativeInputFormControl` for one native input and `useCompositeFormControl` when several DOM elements represent one value. For lower-level coordination, combine `useFormControl` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field. A composite rendering nested participants declares its ownership boundary with `provideFormControlOwner()`. Helpers are inert outside `FormField`.
+
+Prefer Vue 3.5 `useTemplateRef()` for a stable native template ref. Use `shallowRef()` for callback refs, dynamic or custom elements, collections, and externally supplied DOM handles. Do not place DOM nodes in a deep reactive `ref()`.
+
+Native `input`, `textarea`, and `select` elements, Sectile controls, mixed forms, direct named controls outside `FormField`, radio/checkbox/fieldset groups, custom atomic and composite controls, Teleports, and elements associated through native `form` are all supported compositions.
 
 ### State and validation
 
@@ -89,6 +93,11 @@ Vue package: `@sectile/vue/form`
 <div class="component-api-group">
 <strong class="component-api-label">Components</strong>
 <ul class="component-api-list">
+  <li><code class="component-api-token">compositeControlCapabilities</code></li>
+  <li><code class="component-api-token">hiddenInputSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenSelectSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">hiddenValueSubmissionCapabilities</code></li>
+  <li><code class="component-api-token">nativeInputControlCapabilities</code></li>
   <li><code class="component-api-token">FormRoot</code></li>
   <li><code class="component-api-token">FormField</code></li>
   <li><code class="component-api-token">FormLabel</code></li>
@@ -97,15 +106,35 @@ Vue package: `@sectile/vue/form`
   <li><code class="component-api-token">FormSummary</code></li>
   <li><code class="component-api-token">FormReset</code></li>
   <li><code class="component-api-token">FormSubmit</code></li>
-  <li><code class="component-api-token">nativeInputControlCapabilities</code></li>
-  <li><code class="component-api-token">compositeControlCapabilities</code></li>
-  <li><code class="component-api-token">hiddenInputSubmissionCapabilities</code></li>
-  <li><code class="component-api-token">hiddenSelectSubmissionCapabilities</code></li>
-  <li><code class="component-api-token">hiddenValueSubmissionCapabilities</code></li>
 </ul>
 </div>
 
 ### Functions
+
+#### `defineFormSubmission`
+
+```ts
+function defineFormSubmission<const Schema extends FormSchema<object, object>>(definition: FormSchemaSubmissionDefinition<Schema>): FormSchemaSubmissionDefinition<Schema>
+```
+
+#### `provideFormControlOwner`
+
+```ts
+function provideFormControlOwner(): void
+```
+
+#### `useCompositeFormControl`
+
+```ts
+function useCompositeFormControl(options: {
+  readonly root: FormElementSource;
+  readonly focusTarget?: FormElementSource;
+  readonly validationTarget?: FormElementSource;
+  readonly submissions?: FormSubmissionSource;
+  readonly labelMode?: FormLabelMode;
+  readonly reset?: () => void;
+}): FormControlParticipation
+```
 
 #### `useFormControl`
 
@@ -116,30 +145,7 @@ function useFormControl(registration: FormControlRegistration): FormControlParti
 #### `useNativeInputFormControl`
 
 ```ts
-function useNativeInputFormControl(element: Ref<HTMLInputElement | HTMLTextAreaElement | null | undefined>): FormControlParticipation
-```
-
-#### `useCompositeFormControl`
-
-```ts
-function useCompositeFormControl(options: {
-  readonly root: FormElementSource;
-  readonly focusTarget?: FormElementSource;
-  readonly submissions?: FormSubmissionSource;
-  readonly labelMode?: FormLabelMode;
-}): FormControlParticipation
-```
-
-#### `provideFormControlOwner`
-
-```ts
-function provideFormControlOwner(): void
-```
-
-#### `createTypedForm`
-
-```ts
-function createTypedForm<Input extends object, Output extends object = Input>(): TypedFormComponents<Input, Output>
+function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement | HTMLTextAreaElement | null | undefined>>, options: { readonly reset?: () => void } = {}): FormControlParticipation
 ```
 
 ### Props
@@ -239,7 +245,7 @@ function createTypedForm<Input extends object, Output extends object = Input>():
 <div class="component-api-definition">
 <dt><code>name</code></dt>
 <dd>
-<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldPathOf&lt;Values&gt;</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">Type</span><code>FormFieldPath</code></span><span><span class="component-api-definition__label">Default</span><code>undefined</code></span></div>
 <p>Name used for native form submission.</p>
 </dd>
 </div>
@@ -556,6 +562,20 @@ type FormSubmitResult =
 type FormSubmitHandler<Values extends object = Record<string, unknown>> = (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>
 ```
 
+#### `FormSubmissionDefinition`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `schema` | `never` | — |
+| `onSubmit` | `FormSubmitHandler<Record<string, unknown>>` | Yes |
+
+#### `FormSchemaSubmissionDefinition`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `schema` | `Schema` | Yes |
+| `onSubmit` | `FormSubmitHandler<DOMFormSchemaOutput<Schema>>` | Yes |
+
 #### `FormSubmitErrorMapper`
 
 ```ts
@@ -641,18 +661,46 @@ type FormResetAction = () => void
 
 #### `FormRootComponent`
 
-#### `FormFieldPathOf`
+#### `FormControlCapabilities`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `id` | `boolean` | — |
+| `describedBy` | `boolean` | — |
+| `invalid` | `boolean` | — |
+| `labelledBy` | `boolean` | — |
+| `required` | `boolean` | — |
+| `disabled` | `boolean` | — |
+| `readonly` | `boolean` | — |
+
+#### `FormControlParticipation`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `participating` | `boolean` | Yes |
+| `controlProps` | `ComputedRef<Readonly<Record<string, unknown>>>` | Yes |
+
+#### `FormControlRegistration`
+
+| Name | Type | Required |
+| --- | --- | --- |
+| `element` | `FormElementSource` | Yes |
+| `semanticControl` | `FormElementSource` | — |
+| `focusTarget` | `FormElementSource` | — |
+| `validationTarget` | `FormElementSource` | — |
+| `submissions` | `FormSubmissionSource` | — |
+| `labelMode` | `FormLabelMode` | — |
+| `capabilities` | `FormControlCapabilities` | — |
+| `explicit` | `readonly FormMetadataAttribute[]` | — |
+| `reset` | `() => void` | — |
+
+#### `FormElementSource`
 
 ```ts
-type FormFieldPathOf<Values extends object> =
-string extends keyof Values
-  ? FormFieldPath
-  : (keyof Values & string) | FormFieldPathSegments<Values>
+type FormElementSource<ElementType extends HTMLElement = HTMLElement> =
+| Readonly<ShallowRef<ElementType | null | undefined>>
+  | (() => ElementType | null)
 ```
-
-#### `TypedFormRootComponent`
-
-#### `TypedFormFieldComponent`
 
 #### `FormLabelMode`
 
@@ -679,18 +727,6 @@ type FormMetadataAttribute =
   | 'aria-readonly'
 ```
 
-#### `FormControlCapabilities`
-
-| Name | Type | Required |
-| --- | --- | --- |
-| `id` | `boolean` | — |
-| `describedBy` | `boolean` | — |
-| `invalid` | `boolean` | — |
-| `labelledBy` | `boolean` | — |
-| `required` | `boolean` | — |
-| `disabled` | `boolean` | — |
-| `readonly` | `boolean` | — |
-
 #### `FormSubmissionCapabilities`
 
 | Name | Type | Required |
@@ -701,20 +737,12 @@ type FormMetadataAttribute =
 | `disabled` | `boolean` | — |
 | `readonly` | `boolean` | — |
 
-#### `FormElementSource`
-
-```ts
-type FormElementSource<ElementType extends HTMLElement = HTMLElement> =
-| Ref<ElementType | null>
-  | (() => ElementType | null)
-```
-
 #### `FormSubmissionRegistration`
 
 | Name | Type | Required |
 | --- | --- | --- |
-| `element` | `FormElementSource<FormSubmissionElement>` | Yes |
-| `relativeName` | `FormRelativePath` | — |
+| `element` | `FormElementSource<FormControlSubmissionElement>` | Yes |
+| `relativeName` | `FormControlRelativePath` | — |
 | `capabilities` | `FormSubmissionCapabilities` | — |
 | `explicit` | `readonly FormMetadataAttribute[]` | — |
 
@@ -725,38 +753,6 @@ type FormSubmissionSource =
 | readonly FormSubmissionRegistration[]
   | (() => readonly FormSubmissionRegistration[])
 ```
-
-#### `FormControlRegistration`
-
-| Name | Type | Required |
-| --- | --- | --- |
-| `element` | `FormElementSource` | Yes |
-| `semanticControl` | `FormElementSource` | — |
-| `focusTarget` | `FormElementSource` | — |
-| `submissions` | `FormSubmissionSource` | — |
-| `labelMode` | `FormLabelMode` | — |
-| `capabilities` | `FormControlCapabilities` | — |
-| `explicit` | `readonly FormMetadataAttribute[]` | — |
-
-#### `FormControlParticipation`
-
-| Name | Type | Required |
-| --- | --- | --- |
-| `participating` | `boolean` | Yes |
-| `controlProps` | `ComputedRef<Readonly<Record<string, unknown>>>` | Yes |
-
-#### `TypedFormComponents`
-
-| Name | Type | Required |
-| --- | --- | --- |
-| `Root` | `TypedFormRootComponent<Input, Output>` | Yes |
-| `Field` | `TypedFormFieldComponent<Input>` | Yes |
-| `Label` | `typeof FormLabel` | Yes |
-| `Description` | `typeof FormDescription` | Yes |
-| `Message` | `typeof FormMessage` | Yes |
-| `Summary` | `typeof FormSummary` | Yes |
-| `Reset` | `typeof FormReset` | Yes |
-| `Submit` | `typeof FormSubmit` | Yes |
 
 ## Parts
 

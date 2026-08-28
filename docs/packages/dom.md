@@ -142,6 +142,20 @@ import {
 } from '@sectile/dom/temporal'
 ```
 
+## Form coordination
+
+Install the optional `@sectile/form` peer only when an application needs form-wide field registration, structured values, validation, submission, or reset coordination. Ordinary `@sectile/dom` component imports do not require it.
+
+```sh
+pnpm add @sectile/core @sectile/form @sectile/dom
+```
+
+```ts
+import { createForm } from '@sectile/dom/form'
+```
+
+The adapter preserves native `HTMLFormElement`, `FormData`, successful-control ordering and omissions, constraint validation, submitter overrides, reset, focus, and external `form` association. Native, Sectile, mixed, and custom participants share that lifecycle. See the [Form package guide](/packages/form).
+
 ## Virtualization host
 
 `@sectile/dom/virtual` connects any `@sectile/virtual` layout strategy to a scroll element. The connection owns browser scheduling, not the logical collection or application markup.

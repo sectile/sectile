@@ -298,6 +298,31 @@ Form-capable components preserve browser submission semantics. For example, `Che
 
 Text-entry components retain native input, selection, and IME behavior instead of recreating text editing in Vue. Forward ordinary HTML attributes such as `autocomplete`, `inputmode`, and `aria-label` to the public field part.
 
+For form-wide coordination, install the optional `@sectile/form` peer and import the static parts from `@sectile/vue/form`. Ordinary Vue component imports do not require the peer.
+
+```sh
+pnpm add @sectile/core @sectile/form @sectile/dom @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import { FormField, FormRoot, FormSubmit, defineFormSubmission } from '@sectile/vue/form'
+
+const submission = defineFormSubmission({
+  onSubmit: ({ formData }) => console.log(Object.fromEntries(formData)),
+})
+</script>
+
+<template>
+  <FormRoot v-bind="submission">
+    <FormField name="email" required><input type="email" /></FormField>
+    <FormSubmit>Save</FormSubmit>
+  </FormRoot>
+</template>
+```
+
+Native and Sectile controls can be mixed in one form. A Standard Schema passed to `defineFormSubmission()` infers the transformed handler output; without a schema, raw structured values stay `unknown`. There is no typed component factory. See the [complete Form package guide](/packages/form).
+
 ## Styling boundaries
 
 Every public compound part exposes stable attributes:

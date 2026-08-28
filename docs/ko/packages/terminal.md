@@ -18,6 +18,10 @@ import * as checkbox from '@sectile/terminal/checkbox'
 
 큰 응용 프로그램에서는 기존 렌더러가 레이아웃과 입출력을 계속 소유하게 하고, 그 입력을 `TerminalKeyboardInput`으로 바꾼 뒤 컴포넌트 연결 객체를 의미 경계로 사용합니다.
 
+## Form 경계
+
+Terminal에는 의도적으로 Form 어댑터, Form 컴포넌트, root export, `@sectile/form` 의존성이 없습니다. 브라우저의 `HTMLFormElement`, `FormData`, 제약 조건 검사, 제출 탐색을 Terminal에 정직하게 대응시킬 수 없기 때문입니다. TUI 앱에 workflow 상태가 필요하면 `@sectile/form/state`의 렌더러 중립 primitive를 직접 조합할 수 있지만, 이는 앱이 소유하는 조정이며 Terminal Form 대체품이 아닙니다.
+
 ## 화면 전체 구성하기
 
 선택 기능인 화면 계층을 사용하면 레이아웃 트리를 고정 크기의 터미널 화면으로 만들 수 있습니다. 행과 열, 테두리 상자, 안쪽 여백, 간격, 잘라내기, 남은 공간 채우기를 조합해 브라우저 화면처럼 전체 구조를 설계할 수 있습니다. 어떤 구조로 배치할지는 응용 프로그램이 결정합니다.

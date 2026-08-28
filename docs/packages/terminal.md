@@ -18,6 +18,10 @@ The package is primarily a semantic host adapter: it normalizes terminal input a
 
 Integrations for larger applications should keep their renderer in charge of layout and I/O, translate its input into `TerminalKeyboardInput`, and use component connections as the semantic boundary.
 
+## Form boundary
+
+Terminal intentionally provides no Form adapter, Form component, root export, or `@sectile/form` dependency. Browser-native `HTMLFormElement`, `FormData`, constraint validation, and submission navigation have no honest Terminal equivalent. A TUI application that needs workflow state may compose the renderer-neutral primitives from `@sectile/form/state` directly, but that is application-owned coordination rather than a Terminal Form replacement.
+
 ## Build a complete screen
 
 The optional screen layer turns a layout tree into a fixed terminal frame. Rows, columns, boxes, padding, gaps, clipping, and fill sizing are composed the same way across components. Application code still decides the visual structure.

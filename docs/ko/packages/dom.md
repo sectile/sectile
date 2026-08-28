@@ -142,6 +142,20 @@ import {
 } from '@sectile/dom/temporal'
 ```
 
+## Form 조정
+
+폼 전체의 필드 등록, 구조화 값, 검증, 제출, 초기화 조정이 필요할 때만 optional peer인 `@sectile/form`을 설치합니다. 일반 `@sectile/dom` 컴포넌트 import에는 필요하지 않습니다.
+
+```sh
+pnpm add @sectile/core @sectile/form @sectile/dom
+```
+
+```ts
+import { createForm } from '@sectile/dom/form'
+```
+
+이 어댑터는 네이티브 `HTMLFormElement`, `FormData`, successful control의 순서와 생략 규칙, 제약 조건 검사, submitter override, reset, focus, 외부 `form` 연결을 보존합니다. 네이티브·Sectile·혼합·사용자 정의 참여 요소가 같은 수명 주기를 공유합니다. [Form 패키지 안내](/ko/packages/form)를 참고하세요.
+
 ## 가상화 host
 
 `@sectile/dom/virtual`은 모든 `@sectile/virtual` layout strategy를 scroll element에 연결합니다. Connection은 브라우저 scheduling을 맡고, 논리 collection과 markup은 응용 프로그램이 관리합니다.

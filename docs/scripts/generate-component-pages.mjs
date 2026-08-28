@@ -210,17 +210,21 @@ function formDetailsSection(component, korean = false) {
 | \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
 | \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
 
-\`onSubmit\`은 검증된 제출 결과를 소비하는 lifecycle prop입니다. 콜백은 \`event\`, 구조화된 \`values\`, 원본 \`formData\`, \`submitter\`, 현재 폼 \`state\`를 함께 받고 결과나 Promise를 반환합니다. 템플릿에서는 \`:on-submit="save"\`로 전달합니다. 애플리케이션은 \`values\`를 기본 제출 객체로 사용하고, 파일 업로드와 네이티브 인코딩에는 \`formData\`를 활용할 수 있습니다.
+\`defineFormSubmission()\`은 검증된 제출 handler와 선택적 schema를 하나의 불변 객체로 묶습니다. 반환값을 \`<FormRoot v-bind="submission">\`에 전달하면 handler 타입을 별도로 import하지 않아도 됩니다. schema가 없을 때 \`values\`의 값은 \`unknown\`이며, 파일·반복 이름·네이티브 인코딩이 필요하면 원본 \`formData\`를 사용합니다. Standard Schema를 전달하면 변환된 출력 타입이 handler까지 추론됩니다.
 
 서버 이슈는 \`path\`로 필드에 연결할 수 있습니다. 예: \`{ message: 'Already registered', path: 'email' }\` 또는 \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. \`id\`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 \`mapSubmitError\`에서 명시적으로 변환합니다.
 
-### 타입이 지정된 폼
+### 패키지와 타입 경계
 
-\`createTypedForm<Values>()\`는 같은 값 타입으로 고정된 \`Root\`와 \`Field\`를 반환합니다. \`Field.name\`은 중첩 배열과 배열 인덱스를 포함한 실제 값 경로만 허용합니다. 스키마가 입력을 출력으로 변환하면 \`createTypedForm<Input, Output>()\`을 사용합니다.
+Form을 사용하는 Vue 앱은 선택적 peer인 \`@sectile/form\`을 직접 설치하고 \`@sectile/vue/form\`에서 정적 \`FormRoot\`와 \`FormField\`를 가져옵니다. 컴포넌트 factory는 제공하지 않습니다. Vue 템플릿 전체의 동적 필드 경로를 schema 타입으로 제한한다고 가장하지 않고, schema는 제출 경계의 입력 검증과 출력 추론을 담당합니다. DOM은 \`@sectile/dom/form\`을 사용하며 Terminal에는 Form adapter가 없습니다.
 
 ### 사용자 정의 컨트롤
 
-단일 네이티브 입력에는 \`useNativeInputFormControl\`, 여러 DOM 요소가 한 값을 구성하는 컨트롤에는 \`useCompositeFormControl\`을 사용합니다. 저수준 조정이 필요하면 \`useFormControl\`과 공개 capability preset을 조합합니다. 하나의 필드에 독립적인 활성 컨트롤을 여러 개 등록하지 말고 복합 컨트롤 하나로 등록합니다.
+단일 네이티브 입력에는 \`useNativeInputFormControl\`, 여러 DOM 요소가 한 값을 구성하는 컨트롤에는 \`useCompositeFormControl\`을 사용합니다. 저수준 조정이 필요하면 \`useFormControl\`과 공개 capability preset을 조합합니다. 하나의 필드에 독립적인 활성 컨트롤을 여러 개 등록하지 말고 복합 컨트롤 하나로 등록합니다. 중첩 참여 컨트롤을 렌더링하는 복합 컨트롤은 \`provideFormControlOwner()\`로 소유권 경계를 선언합니다. helper는 \`FormField\` 밖에서 아무 효과도 내지 않습니다.
+
+고정된 네이티브 템플릿 ref에는 Vue 3.5의 \`useTemplateRef()\`를 우선 사용합니다. callback ref, 동적·사용자 정의 요소, 컬렉션, 외부에서 받은 DOM handle에는 \`shallowRef()\`를 사용합니다. DOM 노드를 deep reactive \`ref()\`에 넣지 않습니다.
+
+네이티브 \`input\`·\`textarea\`·\`select\`, Sectile 입력, 둘의 혼합, \`FormField\` 밖의 직접 named control, radio/checkbox/fieldset 그룹, 사용자 정의 atomic·composite control, Teleport 및 native \`form\` 연관 요소를 함께 사용할 수 있습니다.
 
 ### 상태와 검증
 
@@ -252,17 +256,21 @@ A string name becomes a top-level key. A string/number path builds nested object
 | \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
 | \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
 
-\`onSubmit\` is a lifecycle prop that consumes a validated submission, not a Vue emitted submit event. It receives \`event\`, structured \`values\`, original \`formData\`, the \`submitter\`, and current form \`state\`, then returns a result or Promise. Bind it as \`:on-submit="save"\` in templates. Application code can use \`values\` as its primary submission object and \`formData\` for file values or native encoding.
+\`defineFormSubmission()\` keeps a validated submission handler and optional schema in one immutable object. Pass it to \`<FormRoot v-bind="submission">\` without importing a handler type. Without a schema, each value in \`values\` is \`unknown\`; use the original \`formData\` for files, repeated names, and native encoding. A Standard Schema infers its transformed output in the handler.
 
 Server issues can target a field by \`path\` instead of an internal field ID, for example \`{ message: 'Already registered', path: 'email' }\` or \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. Sectile generates a form issue ID when \`id\` is omitted. A thrown or rejected submit callback uses a fixed safe message instead of exposing the original error. Use \`mapSubmitError\` when an application-facing message should be derived explicitly.
 
-### Typed forms
+### Package and type boundary
 
-\`createTypedForm<Values>()\` returns \`Root\` and \`Field\` components fixed to one value shape. \`Field.name\` accepts only valid paths, including nested tuples and array indexes. Use \`createTypedForm<Input, Output>()\` when a schema transforms input values.
+A Vue application using Form installs the optional \`@sectile/form\` peer explicitly and imports the static \`FormRoot\` and \`FormField\` from \`@sectile/vue/form\`. There is no component factory. Sectile does not pretend that a schema can type every dynamic field path in a Vue template; the schema validates input and infers output at the submission boundary. DOM uses \`@sectile/dom/form\`, and Terminal has no Form adapter.
 
 ### Custom controls
 
-Use \`useNativeInputFormControl\` for one native input and \`useCompositeFormControl\` when several DOM elements represent one value. For lower-level coordination, combine \`useFormControl\` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field.
+Use \`useNativeInputFormControl\` for one native input and \`useCompositeFormControl\` when several DOM elements represent one value. For lower-level coordination, combine \`useFormControl\` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field. A composite rendering nested participants declares its ownership boundary with \`provideFormControlOwner()\`. Helpers are inert outside \`FormField\`.
+
+Prefer Vue 3.5 \`useTemplateRef()\` for a stable native template ref. Use \`shallowRef()\` for callback refs, dynamic or custom elements, collections, and externally supplied DOM handles. Do not place DOM nodes in a deep reactive \`ref()\`.
+
+Native \`input\`, \`textarea\`, and \`select\` elements, Sectile controls, mixed forms, direct named controls outside \`FormField\`, radio/checkbox/fieldset groups, custom atomic and composite controls, Teleports, and elements associated through native \`form\` are all supported compositions.
 
 ### State and validation
 

@@ -823,8 +823,8 @@ const loadWindow = (direction: 'before' | 'after') => {
 }`,
   ),
   form: sfc(
-    'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormReset, FormSubmit',
-    `  <FormRoot :on-submit="saveAccount">
+    'FormRoot, FormField, FormLabel, FormDescription, FormMessage, FormSummary, FormReset, FormSubmit, defineFormSubmission',
+    `  <FormRoot v-bind="accountSubmission">
     <FormSummary v-slot="{ state }">
       {{ state.issues.map(issue => issue.message).join(' ') }}
     </FormSummary>
@@ -846,19 +846,13 @@ const loadWindow = (direction: 'before' | 'after') => {
     <FormReset>Reset</FormReset>
     <FormSubmit>Save settings</FormSubmit>
   </FormRoot>`,
-    `import type { FormSubmitHandler } from '@sectile/vue/form'
-import { TextField } from '@sectile/vue/text'
+    `import { TextField } from '@sectile/vue/text'
 
-interface AccountFormValues {
-  account: {
-    name: string
-    email: string
-  }
-}
-
-const saveAccount: FormSubmitHandler<AccountFormValues> = ({ values }) => {
-  console.log(values.account)
-}`,
+const accountSubmission = defineFormSubmission({
+  onSubmit: ({ formData }) => {
+    console.log(Object.fromEntries(formData))
+  },
+})`,
   ),
   calendar: sfc(
     'CalendarRoot, CalendarContent, CalendarGrid, CalendarCell',
@@ -1545,24 +1539,20 @@ import {
   FormRoot,
   FormSubmit,
   FormSummary,
-  type FormSubmitHandler,
+  defineFormSubmission,
 } from '@sectile/vue/form'
 import { TextField } from '@sectile/vue/text'
 
-interface ProfileFormValues {
-  profile: {
-    displayName: string
-  }
-}
-const savedProfile = ref<ProfileFormValues['profile']>()
-
-const saveProfile: FormSubmitHandler<ProfileFormValues> = ({ values }) => {
-  savedProfile.value = values.profile
-}
+const savedDisplayName = ref<FormDataEntryValue | null>(null)
+const profileSubmission = defineFormSubmission({
+  onSubmit: ({ formData }) => {
+    savedDisplayName.value = formData.get('profile.displayName')
+  },
+})
 <\/script>
 
 <template>
-  <FormRoot :on-submit="saveProfile">
+  <FormRoot v-bind="profileSubmission">
     <FormSummary />
     <FormField
       id="display-name"
@@ -1586,7 +1576,7 @@ import {
   FormMessage,
   FormRoot,
   FormSubmit,
-  type FormSubmitHandler,
+  defineFormSubmission,
 } from '@sectile/vue/form'
 import {
   SelectContent,
@@ -1600,20 +1590,15 @@ import { ref } from 'vue'
 const channels = ['all', 'mentions', 'none']
 const weeklyDigest = ref(true)
 
-interface NotificationsFormValues {
-  notifications: {
-    channel: string
-    digest?: string
-  }
-}
-
-const saveNotifications: FormSubmitHandler<NotificationsFormValues> = ({ values }) => {
-  console.log(values.notifications)
-}
+const notificationsSubmission = defineFormSubmission({
+  onSubmit: ({ formData }) => {
+    console.log(Object.fromEntries(formData))
+  },
+})
 <\/script>
 
 <template>
-  <FormRoot :on-submit="saveNotifications">
+  <FormRoot v-bind="notificationsSubmission">
     <FormField :name="['notifications', 'channel']" required>
       <FormLabel>Activity emails</FormLabel>
       <SelectRoot :items="channels" default-value="mentions">
@@ -1646,7 +1631,7 @@ import {
   FormMessage,
   FormRoot,
   FormSubmit,
-  type FormSubmitHandler,
+  defineFormSubmission,
 } from '@sectile/vue/form'
 import {
   SelectContent,
@@ -1659,20 +1644,15 @@ import { TextField } from '@sectile/vue/text'
 
 const roles = ['member', 'admin']
 
-interface InvitationFormValues {
-  invitation: {
-    email: string
-    role: string
-  }
-}
-
-const inviteMember: FormSubmitHandler<InvitationFormValues> = ({ values }) => {
-  console.log(values.invitation)
-}
+const invitationSubmission = defineFormSubmission({
+  onSubmit: ({ formData }) => {
+    console.log(Object.fromEntries(formData))
+  },
+})
 <\/script>
 
 <template>
-  <FormRoot :on-submit="inviteMember">
+  <FormRoot v-bind="invitationSubmission">
     <FormField id="invite-email" :name="['invitation', 'email']" required>
       <FormLabel>Email address</FormLabel>
       <TextField type="email" autocomplete="email" />

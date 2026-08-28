@@ -34,7 +34,7 @@ const buildComponentSidebar = (locale: 'en' | 'ko'): DefaultTheme.SidebarItem[] 
 const componentSidebar = buildComponentSidebar('en');
 const koComponentSidebar = buildComponentSidebar('ko');
 
-const packageIds = ['core', 'temporal', 'virtual', 'tabular', 'dom', 'terminal', 'vue'] as const;
+const packageIds = ['core', 'form', 'temporal', 'virtual', 'tabular', 'dom', 'terminal', 'vue'] as const;
 
 const buildPackageNav = (locale: 'en' | 'ko'): DefaultTheme.NavItem => {
   const linkPrefix = locale === 'ko' ? '/ko/packages' : '/packages';
@@ -86,6 +86,11 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Structures and state', link: '/packages/core/structures' },
       { text: 'Transitions and composition', link: '/packages/core/transitions' },
     ],
+  },
+  {
+    text: '@sectile/form',
+    collapsed: false,
+    items: [{ text: 'Overview and integration', link: '/packages/form' }],
   },
   {
     text: '@sectile/temporal',
@@ -147,6 +152,11 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
       { text: '구조와 상태', link: '/ko/packages/core/structures' },
       { text: '상태 전이와 조합', link: '/ko/packages/core/transitions' },
     ],
+  },
+  {
+    text: '@sectile/form',
+    collapsed: false,
+    items: [{ text: '개요와 연결 방법', link: '/ko/packages/form' }],
   },
   {
     text: '@sectile/temporal',

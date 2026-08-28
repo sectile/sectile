@@ -298,6 +298,31 @@ Root와 구성 요소 슬롯은 현재 의미 상태를 노출합니다. 상호�
 
 텍스트 입력 컴포넌트는 브라우저의 입력, 선택 영역, IME 조합 입력을 그대로 사용합니다. `autocomplete`, `inputmode`, `aria-label` 같은 일반 HTML 속성은 공개 Field 구성 요소에 전달합니다.
 
+폼 전체를 조정하려면 optional peer인 `@sectile/form`을 설치하고 `@sectile/vue/form`에서 정적 파트를 가져옵니다. 일반 Vue 컴포넌트 import에는 이 peer가 필요하지 않습니다.
+
+```sh
+pnpm add @sectile/core @sectile/form @sectile/dom @sectile/vue vue
+```
+
+```vue
+<script setup lang="ts">
+import { FormField, FormRoot, FormSubmit, defineFormSubmission } from '@sectile/vue/form'
+
+const submission = defineFormSubmission({
+  onSubmit: ({ formData }) => console.log(Object.fromEntries(formData)),
+})
+</script>
+
+<template>
+  <FormRoot v-bind="submission">
+    <FormField name="email" required><input type="email" /></FormField>
+    <FormSubmit>저장</FormSubmit>
+  </FormRoot>
+</template>
+```
+
+한 폼에서 네이티브와 Sectile 컨트롤을 섞을 수 있습니다. `defineFormSubmission()`에 Standard Schema를 전달하면 변환된 handler 출력이 추론되고, schema가 없는 raw 구조화 값은 `unknown`을 유지합니다. 타입 컴포넌트 factory는 제공하지 않습니다. [전체 Form 패키지 안내](/ko/packages/form)를 참고하세요.
+
 ## 스타일 경계
 
 모든 공개 구성 요소는 안정적인 데이터 속성을 노출합니다.

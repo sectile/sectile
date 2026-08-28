@@ -5,7 +5,7 @@ description: Choose the semantic domain and host adapter that own each part of a
 
 # Packages
 
-Sectile separates **what an interaction means** from **where it runs**. Core, Temporal, Tabular, and Virtual are semantic domains. DOM, Terminal, and Vue are host adapters.
+Sectile separates **what an interaction means** from **where it runs**. Core, Form, Temporal, Tabular, and Virtual are renderer-neutral domains. DOM, Terminal, and Vue are host adapters, although Form intentionally integrates only with DOM and Vue.
 
 <PackageBoundaryMap />
 
@@ -14,6 +14,7 @@ Sectile separates **what an interaction means** from **where it runs**. Core, Te
 | Package | Owns | Does not own |
 | --- | --- | --- |
 | [`@sectile/core`](/packages/core) | interaction state, transitions, identity, commands | dates, layout geometry, rendering |
+| [`@sectile/form`](/packages/form) | field paths, structured native values, issues, validation and submission lifecycle | control values, rendering, Terminal adaptation |
 | [`@sectile/temporal`](/packages/temporal) | civil dates, wall-clock time, calendar and picker rules | time zones, formatting, rendering |
 | [`@sectile/tabular`](/packages/tabular) | tabular identity, data access, columns, selection, grouping, grid interaction | transport, rendering, loading/error UI |
 | [`@sectile/virtual`](/packages/virtual) | extents, viewport queries, placements, anchor correction | collection identity, data loading, DOM measurement |

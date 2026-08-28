@@ -1272,6 +1272,7 @@
 
 .package-boundary {
   --package-core: var(--sectile-action);
+  --package-form: var(--sectile-feedback-warning);
   --package-temporal: var(--sectile-feedback-success);
   --package-tabular: #b45bd1;
   --package-virtual: #8b6de8;
@@ -1328,6 +1329,10 @@
   color: var(--package-temporal);
 }
 
+.package-boundary__domain--form {
+  color: var(--package-form);
+}
+
 .package-boundary__domain--tabular {
   color: var(--package-tabular);
 }
@@ -1349,6 +1354,11 @@
 .vp-doc .package-boundary__domain--temporal,
 .vp-doc .package-boundary__domain--temporal:hover {
   color: var(--package-temporal);
+}
+
+.vp-doc .package-boundary__domain--form,
+.vp-doc .package-boundary__domain--form:hover {
+  color: var(--package-form);
 }
 
 .vp-doc .package-boundary__domain--tabular,

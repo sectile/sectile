@@ -166,6 +166,15 @@ export function componentExampleSources(component: string, scenario: string): Pa
       core: coreExampleCodeFor(component, scenario),
     }).map(([host, source]) => [host, prepareExampleSource(source, host as Host, component, scenario)]));
   }
+  if (component === 'form') {
+    return Object.fromEntries(Object.entries({
+      vue: exactVueSource(component, scenario),
+      dom: domExampleCodeFor(component, scenario),
+    }).map(([host, source]) => [
+      host,
+      prepareExampleSource(source, host as Host, component, scenario),
+    ]));
+  }
   const sources: Record<Host, string> = {
     vue: exactVueSource(component, scenario),
     core: coreExampleCodeFor(component, scenario),
