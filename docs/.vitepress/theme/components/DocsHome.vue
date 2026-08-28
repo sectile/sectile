@@ -10,6 +10,7 @@ import {
   type ListboxValue,
 } from '@sectile/vue/listbox';
 import { useDocsLocale } from '../locale.js';
+import DocsButton from './DocsButton.vue';
 
 const { isKorean } = useDocsLocale();
 
@@ -131,10 +132,17 @@ function highlightEnvironment(next: string | null): void {
         <h1>{{ copy.heroTitle }}</h1>
         <p class="docs-home__hero-body">{{ copy.heroBody }}</p>
         <div class="docs-home__actions">
-          <a class="docs-home__action docs-home__action--primary" :href="localizedPath('/guide/introduction')">
+          <DocsButton
+            appearance="primary"
+            class="docs-home__cta"
+            :href="localizedPath('/guide/introduction')"
+            large
+          >
             {{ copy.learnAction }}<ArrowRight :size="17" aria-hidden="true" />
-          </a>
-          <a class="docs-home__action" :href="localizedPath('/components/')">{{ copy.browseAction }}</a>
+          </DocsButton>
+          <DocsButton class="docs-home__cta" :href="localizedPath('/components/')" large>
+            {{ copy.browseAction }}
+          </DocsButton>
         </div>
         <p class="docs-home__host-note">{{ copy.hostNote }}</p>
       </div>
@@ -279,46 +287,11 @@ function highlightEnvironment(next: string | null): void {
   margin-top: 34px;
 }
 
-.docs-home__action {
-  display: inline-flex;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 11px;
-  padding: 0 17px;
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg-soft);
-  font-size: 0.94rem;
-  font-weight: 680;
-  text-decoration: none;
-  transition: border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
-}
-
-.docs-home__action:hover {
-  border-color: var(--vp-c-border);
-  background: var(--vp-c-bg-elv);
-  transform: translateY(-1px);
-}
-
-.docs-home__action:focus-visible,
 .scope-list a:focus-visible,
 .start-list a:focus-visible,
 .docs-home__advanced a:focus-visible {
   outline: 2px solid var(--sectile-focus-ring);
   outline-offset: 3px;
-}
-
-.docs-home__action--primary {
-  border-color: var(--vp-c-brand-1);
-  color: #fff;
-  background: var(--vp-c-brand-1);
-}
-
-.docs-home__action--primary:hover {
-  border-color: var(--vp-c-brand-3);
-  background: var(--vp-c-brand-3);
 }
 
 .docs-home__host-note {
@@ -715,7 +688,7 @@ function highlightEnvironment(next: string | null): void {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .docs-home__action {
+  .docs-home__cta {
     width: 100%;
   }
 
@@ -776,7 +749,6 @@ function highlightEnvironment(next: string | null): void {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .docs-home__action,
   .scope-list a,
   .start-list a {
     transition: none;

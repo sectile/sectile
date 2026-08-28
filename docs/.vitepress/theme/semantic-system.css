@@ -17,7 +17,7 @@
 
   /* Action and feedback roles are shared by docs, components, and labs. */
   --sectile-action: var(--vp-c-brand-1);
-  --sectile-action-hover: var(--vp-c-brand-2);
+  --sectile-action-hover: var(--vp-c-brand-3);
   --sectile-action-subtle: var(--vp-c-brand-soft);
   --sectile-feedback-info: #5368eb;
   --sectile-feedback-success: #16856f;
