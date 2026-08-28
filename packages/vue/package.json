@@ -319,12 +319,16 @@
     "@sectile/dom": "workspace:*"
   },
   "peerDependencies": {
+    "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/virtual": "workspace:*",
     "vue": "^3.5.0",
     "@sectile/temporal": "workspace:*"
   },
   "peerDependenciesMeta": {
+    "@sectile/form": {
+      "optional": true
+    },
     "@sectile/tabular": {
       "optional": true
     },
@@ -336,6 +340,7 @@
     }
   },
   "devDependencies": {
+    "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/virtual": "workspace:*",
     "@vue/server-renderer": "^3.5.0",

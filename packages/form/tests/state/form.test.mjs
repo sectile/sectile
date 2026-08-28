@@ -2,16 +2,20 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   applyFormEvent,
+  createFormState,
+  tryCreateFormState,
+} from '../../.verification-dist/state.js';
+import {
   appendFormFieldPath,
   createFormFieldPath,
   createFormRelativePath,
-  createFormState,
-  createFormValues,
   encodeFormFieldPath,
-  tryCreateFormState,
   tryCreateFormFieldPath,
+} from '../../.verification-dist/path.js';
+import {
+  createFormValues,
   tryCreateFormValues,
-} from '../../.verification-dist/form.js';
+} from '../../.verification-dist/values.js';
 
 test('form field paths normalize dot, bracket, and explicit segment syntax', () => {
   assert.deepEqual(createFormFieldPath('profile.name'), ['profile', 'name']);

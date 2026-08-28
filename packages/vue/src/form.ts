@@ -1,7 +1,6 @@
 import {
   computed,
   defineComponent,
-  getCurrentInstance,
   h,
   inject,
   mergeProps,
@@ -9,14 +8,12 @@ import {
   onBeforeUnmount,
   onMounted,
   provide,
-  ref,
   shallowRef,
   watch,
   type AllowedComponentProps,
   type ComponentCustomProps,
   type ComputedRef,
   type PropType,
-  type Ref,
   type ShallowRef,
   type SlotsType,
   type VNodeChild,
@@ -42,6 +39,27 @@ import {
   type FormValidationResult as DOMFormValidationResult,
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
+import {
+  compositeControlCapabilities,
+  hiddenInputSubmissionCapabilities,
+  hiddenSelectSubmissionCapabilities,
+  hiddenValueSubmissionCapabilities,
+  nativeInputControlCapabilities,
+  provideFormControlFieldContext,
+  provideFormControlOwner,
+  useCompositeFormControl,
+  useFormControl,
+  useNativeInputFormControl,
+  type FormControlCapabilities,
+  type FormControlParticipation,
+  type FormControlRegistration,
+  type FormElementSource,
+  type FormLabelMode,
+  type FormMetadataAttribute,
+  type FormSubmissionCapabilities,
+  type FormSubmissionRegistration,
+  type FormSubmissionSource,
+} from './internal/form-control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 
@@ -218,69 +236,28 @@ export interface FormFieldSlotProps {
   readonly issues: readonly FormIssue[];
 }
 
-export type FormLabelMode = 'for' | 'labelledby' | 'legend';
-export type FormMetadataAttribute =
-  | 'id'
-  | 'name'
-  | 'form'
-  | 'required'
-  | 'disabled'
-  | 'readonly'
-  | 'aria-describedby'
-  | 'aria-errormessage'
-  | 'aria-invalid'
-  | 'aria-labelledby'
-  | 'aria-disabled'
-  | 'aria-required'
-  | 'aria-readonly';
-
-export interface FormControlCapabilities {
-  readonly id?: boolean;
-  readonly describedBy?: boolean;
-  readonly invalid?: boolean;
-  readonly labelledBy?: boolean;
-  readonly required?: boolean;
-  readonly disabled?: boolean;
-  readonly readonly?: boolean;
-}
-
-export interface FormSubmissionCapabilities {
-  readonly name?: boolean;
-  readonly form?: boolean;
-  readonly required?: boolean;
-  readonly disabled?: boolean;
-  readonly readonly?: boolean;
-}
-
-export type FormElementSource<ElementType extends HTMLElement = HTMLElement> =
-  | Ref<ElementType | null>
-  | (() => ElementType | null);
-
-export interface FormSubmissionRegistration {
-  readonly element: FormElementSource<FormSubmissionElement>;
-  readonly relativeName?: FormRelativePath;
-  readonly capabilities?: FormSubmissionCapabilities;
-  readonly explicit?: readonly FormMetadataAttribute[];
-}
-
-export type FormSubmissionSource =
-  | readonly FormSubmissionRegistration[]
-  | (() => readonly FormSubmissionRegistration[]);
-
-export interface FormControlRegistration {
-  readonly element: FormElementSource;
-  readonly semanticControl?: FormElementSource;
-  readonly focusTarget?: FormElementSource;
-  readonly submissions?: FormSubmissionSource;
-  readonly labelMode?: FormLabelMode;
-  readonly capabilities?: FormControlCapabilities;
-  readonly explicit?: readonly FormMetadataAttribute[];
-}
-
-export interface FormControlParticipation {
-  readonly participating: boolean;
-  readonly controlProps: ComputedRef<Readonly<Record<string, unknown>>>;
-}
+export {
+  compositeControlCapabilities,
+  hiddenInputSubmissionCapabilities,
+  hiddenSelectSubmissionCapabilities,
+  hiddenValueSubmissionCapabilities,
+  nativeInputControlCapabilities,
+  provideFormControlOwner,
+  useCompositeFormControl,
+  useFormControl,
+  useNativeInputFormControl,
+};
+export type {
+  FormControlCapabilities,
+  FormControlParticipation,
+  FormControlRegistration,
+  FormElementSource,
+  FormLabelMode,
+  FormMetadataAttribute,
+  FormSubmissionCapabilities,
+  FormSubmissionRegistration,
+  FormSubmissionSource,
+};
 
 export interface FormPartProps {
   readonly as?: PrimitiveAs;
@@ -294,7 +271,7 @@ interface RegisteredParticipant {
 
 interface FormContext {
   readonly state: ShallowRef<FormState>;
-  readonly summary: Ref<HTMLElement | null>;
+  readonly summary: ShallowRef<HTMLElement | null>;
   readonly register: (participant: FormParticipant<string>) => () => void;
   readonly connection: ShallowRef<FormConnection<string> | null>;
 }
@@ -310,7 +287,6 @@ interface FormFieldContext {
 
 const formContextKey = Symbol('SectileForm');
 const formFieldContextKey = Symbol('SectileFormField');
-const formControlOwnerKey = Symbol('SectileFormControlOwner');
 const emptyState: FormState = Object.freeze({
   validationGeneration: 0,
   validationStatus: 'idle',
@@ -355,8 +331,8 @@ const FormRootImpl = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, expose, slots }) {
-    const root = ref<HTMLFormElement | null>(null);
-    const summary = ref<HTMLElement | null>(null);
+    const root = shallowRef<HTMLFormElement | null>(null);
+    const summary = shallowRef<HTMLElement | null>(null);
     const state = shallowRef<FormState>(emptyState);
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
@@ -595,7 +571,7 @@ export const FormField = defineComponent({
     const nameKey = computed(() => (
       props.name === undefined ? undefined : encodeFormFieldPath(props.name)
     ));
-    const root = ref<HTMLElement | null>(null);
+    const root = shallowRef<HTMLElement | null>(null);
     const controls = shallowRef<readonly FormControlRegistration[]>([]);
     const fallback = shallowRef<FormControlRegistration | null>(null);
     const appliedAttributes = new Map<HTMLElement, Map<string, string | null>>();
@@ -818,6 +794,7 @@ export const FormField = defineComponent({
       registerControl,
       attributesFor,
     });
+    provideFormControlFieldContext({ registerControl, attributesFor });
 
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
@@ -979,93 +956,6 @@ function renderFieldPart(
   }), { default: () => slots.default?.() });
 }
 
-export function useFormControl(
-  registration: FormControlRegistration,
-): FormControlParticipation {
-  const field = inject<FormFieldContext | null>(formFieldContextKey, null);
-  const owned = inject(formControlOwnerKey, false);
-  const instance = getCurrentInstance();
-  const explicit = Object.freeze([
-    ...new Set([
-      ...(registration.explicit ?? []),
-      ...explicitMetadataAttributes(instance?.vnode.props ?? null),
-    ]),
-  ]);
-  const normalized = Object.freeze({ ...registration, explicit });
-  const controlProps = computed<Readonly<Record<string, unknown>>>(() => (
-    field !== null && !owned ? field.attributesFor(normalized) : Object.freeze({})
-  ));
-  let unregister: (() => void) | undefined;
-  if (field !== null && !owned) {
-    onMounted(() => { unregister = field.registerControl(normalized); });
-    onBeforeUnmount(() => unregister?.());
-  }
-  return Object.freeze({ participating: field !== null && !owned, controlProps });
-}
-
-export const nativeInputControlCapabilities = Object.freeze({
-  id: true,
-  describedBy: true,
-  invalid: true,
-  required: true,
-  disabled: true,
-  readonly: true,
-}) satisfies FormControlCapabilities;
-
-export const compositeControlCapabilities = Object.freeze({
-  id: true,
-  describedBy: true,
-  invalid: true,
-  labelledBy: true,
-}) satisfies FormControlCapabilities;
-
-export const hiddenInputSubmissionCapabilities = Object.freeze({
-  name: true,
-  form: true,
-  required: true,
-  disabled: true,
-}) satisfies FormSubmissionCapabilities;
-
-export const hiddenSelectSubmissionCapabilities = hiddenInputSubmissionCapabilities;
-
-export const hiddenValueSubmissionCapabilities = Object.freeze({
-  name: true,
-  form: true,
-  disabled: true,
-}) satisfies FormSubmissionCapabilities;
-
-export function useNativeInputFormControl(
-  element: Ref<HTMLInputElement | HTMLTextAreaElement | null | undefined>,
-): FormControlParticipation {
-  return useFormControl({
-    element: element as FormElementSource<HTMLInputElement>,
-    semanticControl: element as FormElementSource<HTMLInputElement>,
-    focusTarget: element as FormElementSource<HTMLInputElement>,
-    labelMode: 'for',
-    capabilities: nativeInputControlCapabilities,
-  });
-}
-
-export function useCompositeFormControl(options: {
-  readonly root: FormElementSource;
-  readonly focusTarget?: FormElementSource;
-  readonly submissions?: FormSubmissionSource;
-  readonly labelMode?: FormLabelMode;
-}): FormControlParticipation {
-  return useFormControl({
-    element: options.root,
-    semanticControl: options.root,
-    focusTarget: options.focusTarget ?? options.root,
-    labelMode: options.labelMode ?? 'labelledby',
-    capabilities: compositeControlCapabilities,
-    ...(options.submissions === undefined ? {} : { submissions: options.submissions }),
-  });
-}
-
-export function provideFormControlOwner(): void {
-  provide(formControlOwnerKey, true);
-}
-
 export interface TypedFormComponents<Input extends object, Output extends object = Input> {
   readonly Root: TypedFormRootComponent<Input, Output>;
   readonly Field: TypedFormFieldComponent<Input>;
@@ -1108,7 +998,7 @@ function useFormFieldContext(part: string): FormFieldContext {
 function resolveElement<ElementType extends HTMLElement>(
   source: FormElementSource<ElementType>,
 ): ElementType | null {
-  return typeof source === 'function' ? source() : source.value;
+  return typeof source === 'function' ? source() : source.value ?? null;
 }
 
 function resolveSubmissionRegistrations(
@@ -1224,30 +1114,6 @@ function applyMetadata(
       : value === true ? '' : String(value);
     element.setAttribute(name, next);
   }
-}
-
-function explicitMetadataAttributes(
-  vnodeProps: Readonly<Record<string, unknown>> | null,
-): readonly FormMetadataAttribute[] {
-  if (vnodeProps === null) return [];
-  const aliases: Readonly<Record<FormMetadataAttribute, readonly string[]>> = {
-    id: ['id'],
-    name: ['name'],
-    form: ['form'],
-    required: ['required'],
-    disabled: ['disabled'],
-    readonly: ['readonly', 'readOnly'],
-    'aria-describedby': ['aria-describedby', 'ariaDescribedby'],
-    'aria-errormessage': ['aria-errormessage', 'ariaErrormessage'],
-    'aria-invalid': ['aria-invalid', 'ariaInvalid'],
-    'aria-labelledby': ['aria-labelledby', 'ariaLabelledby'],
-    'aria-disabled': ['aria-disabled', 'ariaDisabled'],
-    'aria-required': ['aria-required', 'ariaRequired'],
-    'aria-readonly': ['aria-readonly', 'ariaReadonly'],
-  };
-  return (Object.entries(aliases) as [FormMetadataAttribute, readonly string[]][])
-    .filter(([, names]) => names.some((name) => Object.hasOwn(vnodeProps, name)))
-    .map(([attribute]) => attribute);
 }
 
 function supportsReadonly(element: HTMLInputElement): boolean {

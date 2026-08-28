@@ -5,7 +5,7 @@ import {
 import { createPinInput, type PinInputConnection, type PinInputPolicies } from '@sectile/dom/pin-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './internal/native-input.js';
-import { provideFormControlOwner } from './form.js';
+import { provideFormControlOwner } from './internal/form-control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,

@@ -71,10 +71,6 @@
       "types": "dist/feed.d.ts"
     },
     {
-      "subpath": "./form",
-      "types": "dist/form.d.ts"
-    },
-    {
       "subpath": "./grid",
       "types": "dist/structures/grid.d.ts"
     },
@@ -251,7 +247,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "754b683d339b86619f4053e1f1e596cb7eb8a9bcefc3239e8357a6494efeb9a4",
+  "fingerprint": "f852c3d1759f1edf64a8a3d81a0d0a79edc552136e03a657479fd4f52eef42ed",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -315,19 +311,15 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "248072aeb7a3fec541bc15ec6b6d2a97c095b5023a65759c1551bb25343890e8"
+      "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
     },
     {
       "path": "dist/feed.d.ts",
       "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
     },
     {
-      "path": "dist/form.d.ts",
-      "sha256": "07cecfb5e5c28f4c0dd774fd5e711e0a10d63fc94c2ef551149b177b4aea6a6a"
-    },
-    {
       "path": "dist/index.d.ts",
-      "sha256": "3edf3e28ef5101a09298f7202688ed3789fa98f753795e178f8eb79acc7641d6"
+      "sha256": "6345254858c1d5cb0eae75aaa34eddffe6c56e1924b366f84c53b8f2ab027ed2"
     },
     {
       "path": "dist/interaction.d.ts",

@@ -237,16 +237,6 @@
       "statement": "selection state owns no cursor authority"
     },
     {
-      "id": "FRM-01",
-      "theory": "form",
-      "statement": "validation generations increase and reject stale completion"
-    },
-    {
-      "id": "FRM-02",
-      "theory": "form",
-      "statement": "submission results identify the active submission generation"
-    },
-    {
       "id": "LAY-01",
       "theory": "layer-stack",
       "statement": "open layer identities are unique"

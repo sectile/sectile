@@ -48,8 +48,6 @@
     "SEL-07": "tests/state/selection.reference-law.test.mjs",
     "SEL-08": "tests/state/selection.reference-law.test.mjs",
     "SEL-09": "tests/state/selection.reference-law.test.mjs",
-    "FRM-01": "tests/composites/form.test.mjs",
-    "FRM-02": "tests/composites/form.test.mjs",
     "LAY-01": "tests/runtime/layer-stack.test.mjs",
     "LAY-02": "tests/runtime/layer-stack.test.mjs",
     "LAY-03": "tests/runtime/layer-stack.test.mjs",

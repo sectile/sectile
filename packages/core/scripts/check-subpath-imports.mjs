@@ -24,9 +24,8 @@ try {
     import { createTreeGridModel, createTreeGridModelFromRows } from '@sectile/core/tree-grid';
     import { createRevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState } from '@sectile/core/text';
-    import { createFormState } from '@sectile/core/form';
     if (Object.keys(root).length !== 0) throw new Error('root runtime is not empty');
-    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState, createFormState]) {
+    for (const value of [createSequence, createRange, createGrid, createTree, unwrap, createSelectionState, createListboxState, createComboboxState, createSliderState, createTreeViewState, createTreeGridModel, createTreeGridModelFromRows, createRevisionSnapshot, createTextEditingState]) {
       if (typeof value !== 'function') throw new Error('missing runtime export');
     }
   `);
@@ -47,7 +46,6 @@ try {
     import { createTreeGridModel, createTreeGridModelFromRows, type TreeGridModel, type TreeGridRowInput } from '@sectile/core/tree-grid';
     import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
     import { createTextEditingState, type TextEditingState } from '@sectile/core/text';
-    import { createFormState, type FormState } from '@sectile/core/form';
     const a: Sequence<string> = createSequence(['a']);
     const b: QuantizedRange = createRange({ origin: '0', step: '1', count: 1 });
     const c: Grid<string> = createGrid([['a']]);
@@ -64,7 +62,6 @@ try {
     const k: TreeGridModel<string, string> = createTreeGridModel(d, c, ['a']);
     const rows: readonly TreeGridRowInput<string, string>[] = [{ id: 'a', parentID: null, cells: ['a'] }];
     const l: TreeGridModel<string, string> = createTreeGridModelFromRows(rows);
-    const m: FormState = createFormState({ fields: [] });
     declare const failure: Result<number, 'no-cursor'>;
     if (!failure.ok) {
       const code: 'no-cursor' = failure.error.code;
@@ -78,7 +75,7 @@ try {
     }
     // @ts-expect-error Core codes remain a closed package-local contract
     const unknownCoreCode: CoreErrorCode = 'consumer-invented-error';
-    void [a, b, c, d, selection, e, f, g, h, i, j, k, l, m, unknownCoreCode];
+    void [a, b, c, d, selection, e, f, g, h, i, j, k, l, unknownCoreCode];
   `);
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: {
@@ -92,7 +89,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(typecheck.status, 0, `${typecheck.stdout}\n${typecheck.stderr}`);
-  console.log(JSON.stringify({ status: 'passed', subpaths: 15, typeConsumer: 'passed' }, null, 2));
+  console.log(JSON.stringify({ status: 'passed', subpaths: 14, typeConsumer: 'passed' }, null, 2));
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

@@ -1,22 +1,23 @@
 import {
   applyFormEvent,
-  createFormValues,
-  encodeFormFieldPath,
   tryCreateFormState,
   type FormCommand,
   type FormEvent,
-  type FormFieldPath,
   type FormFieldState,
   type FormIssue,
   type FormIssueSource,
   type FormState,
   type FormValidationIntent,
   type FormValidationTrigger,
-  type FormValues,
-} from '@sectile/core/form';
-import { unwrap } from '@sectile/core/result';
-import type { Result, StableID } from '@sectile/core';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+} from '@sectile/form/state';
+import {
+  encodeFormFieldPath,
+  type FormFieldPath,
+} from '@sectile/form/path';
+import { createFormValues, type FormValues } from '@sectile/form/values';
+import type { FormSchema, StandardSchemaV1 } from '@sectile/form/schema';
+import { FormResultError, type FormResult } from '@sectile/form/error';
+import type { StableID } from '@sectile/core';
 
 export {
   appendFormFieldPath,
@@ -26,8 +27,9 @@ export {
   type FormFieldPath,
   type FormPathSegment,
   type FormRelativePath,
-} from '@sectile/core/form';
-export type { FormValues } from '@sectile/core/form';
+} from '@sectile/form/path';
+export type { FormValues } from '@sectile/form/values';
+export type { FormSchema } from '@sectile/form/schema';
 
 export interface FormValidationIssue {
   readonly message: string;
@@ -37,8 +39,6 @@ export interface FormValidationIssue {
 export interface FormValidationResult {
   readonly issues?: readonly FormValidationIssue[];
 }
-
-export type FormSchema<Input = unknown, Output = Input> = StandardSchemaV1<Input, Output>;
 
 export type FormInteractionValidationTrigger = Exclude<FormValidationTrigger, 'submit'>;
 
@@ -158,7 +158,9 @@ export function createForm<
 >(
   options: FormOptions<ID, Input, Output>,
 ): FormConnection<ID, Input, Output> {
-  return unwrap(tryCreateForm(options));
+  const result = tryCreateForm(options);
+  if (!result.ok) throw new FormResultError(result.error);
+  return result.value;
 }
 
 export function tryCreateForm<
@@ -167,7 +169,7 @@ export function tryCreateForm<
   Output extends object = Input,
 >(
   options: FormOptions<ID, Input, Output>,
-): Result<FormConnection<ID, Input, Output>> {
+): FormResult<FormConnection<ID, Input, Output>> {
   const initial = tryCreateFormState<ID>({ issues: options.issues ?? [] });
   if (!initial.ok) return initial;
 

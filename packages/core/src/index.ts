@@ -61,22 +61,6 @@ export type {
   TreeReorderUpdate,
 } from './reorder.js';
 export type {
-  FormCommand,
-  FormEvent,
-  FormFieldInput,
-  FormFieldState,
-  FormIssue,
-  FormIssueSource,
-  FormState,
-  FormStateInput,
-  FormSubmissionStatus,
-  FormUpdate,
-  FormValidationIntent,
-  FormValidationStatus,
-  FormValidationTrigger,
-  FormValues,
-} from './form.js';
-export type {
   CalculatorExpressionOptions,
   NumberFieldCommand,
   NumberFieldEvent,

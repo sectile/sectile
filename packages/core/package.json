@@ -81,11 +81,6 @@
       "import": "./dist/reorder.js",
       "default": "./dist/reorder.js"
     },
-    "./form": {
-      "types": "./dist/form.d.ts",
-      "import": "./dist/form.js",
-      "default": "./dist/form.js"
-    },
     "./listbox": {
       "types": "./dist/listbox.d.ts",
       "import": "./dist/listbox.js",

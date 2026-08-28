@@ -6,7 +6,7 @@ import {
   createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderPolicies,
 } from '@sectile/dom/multi-thumb-slider';
 import { createSliderControllerFromRange } from '@sectile/dom/slider';
-import type { FormSubmissionRegistration } from './form.js';
+import type { FormSubmissionRegistration } from './internal/form-control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,

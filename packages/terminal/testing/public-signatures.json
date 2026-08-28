@@ -99,10 +99,6 @@
       "types": "dist/feed.d.ts"
     },
     {
-      "subpath": "./form",
-      "types": "dist/form.d.ts"
-    },
-    {
       "subpath": "./grid",
       "types": "dist/grid.d.ts"
     },
@@ -291,7 +287,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "b35d852d619e7a46204b54b20122d3651b150711c278942f97c2d8124047622f",
+  "fingerprint": "8f7cbd91cb5474a14f1e903e7250c978661ce8c2292e50976fd853a1e72d3b01",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -386,16 +382,12 @@
       "sha256": "d473c9f9cc3ba96788613a20d8eb87b153633e3954e8a8bc657abc94dfeaa8ff"
     },
     {
-      "path": "dist/form.d.ts",
-      "sha256": "83272b374420afce3a1b411e0733d90755ed6a1b7bd621010635ccd915e471ce"
-    },
-    {
       "path": "dist/grid.d.ts",
       "sha256": "64827d68e1da438b754bc15770cf9882d070a0e81c8a5aba0f5b59d49ba11edb"
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "59e1bdb6ab11a2f2cc5d1540e61d23d327471cdb9900923b405d4243d2703627"
+      "sha256": "7c8ffff8f9d5e25c9ec56370030dce70b67af31e64006f2f4d0d0b937927e014"
     },
     {
       "path": "dist/internal/checked-control.d.ts",

@@ -1,6 +1,6 @@
-import { fail, ok } from './internal/kernel/foundation.js';
-import { unwrap } from './result.js';
-import type { Result, StableID } from './shared.js';
+import type { StableID } from '@sectile/core';
+import type { FormResult as Result } from '../error.js';
+import { fail, ok, unwrap } from './result.js';
 
 export type FormIssueSource = 'native' | 'field' | 'form' | 'validate' | 'schema' | 'server';
 export type FormPathSegment = string | number;

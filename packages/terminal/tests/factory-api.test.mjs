@@ -27,3 +27,12 @@ test('every public terminal component exposes direct and fallible factories', as
     assert.equal(typeof rootModule[`tryCreate${name}`], 'function', `root tryCreate${name} export`);
   }
 });
+
+test('terminal has no Form package surface or dependency edge', async () => {
+  const rootModule = await import('../dist/index.js');
+  assert.equal(packageManifest.exports['./form'], undefined);
+  assert.equal(packageManifest.dependencies?.['@sectile/form'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/form'], undefined);
+  assert.equal(packageManifest.devDependencies?.['@sectile/form'], undefined);
+  assert.equal(rootModule.createForm, undefined);
+});

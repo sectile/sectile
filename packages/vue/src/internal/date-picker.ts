@@ -12,7 +12,7 @@ import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sec
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal';
 import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/temporal';
 import { formatTimeValue, type TimeValue } from '@sectile/dom/temporal';
-import type { FormSubmissionRegistration } from '../form.js';
+import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,

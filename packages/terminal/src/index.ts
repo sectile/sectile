@@ -14,24 +14,6 @@ export {
   type TerminalTreeReorderOptions,
 } from './reorder.js';
 export {
-  createForm,
-  tryCreateForm,
-  type TerminalFormConnection,
-  type TerminalFormAnnounceSummaryHandler,
-  type TerminalFormCurrentFieldChangeHandler,
-  type TerminalFormField,
-  type TerminalFormFieldResetHandler,
-  type TerminalFormFieldValidation,
-  type TerminalFormFieldValidator,
-  type TerminalFormOptions,
-  type TerminalFormSnapshot,
-  type TerminalFormSnapshotListener,
-  type TerminalFormStateChangeHandler,
-  type TerminalFormSubmitHandler,
-  type TerminalFormSubmitPayload,
-  type TerminalFormUpdateHandler,
-} from './form.js';
-export {
   connectListbox,
   createListbox, tryCreateListbox,
   createListboxController,

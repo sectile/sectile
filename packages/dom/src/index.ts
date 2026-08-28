@@ -186,28 +186,6 @@ export {
   type CarouselScheduler,
 } from './carousel.js';
 export { createFeed, tryCreateFeed, type FeedConnection, type FeedOptions, type FeedWindow } from './feed.js';
-export {
-  createForm, tryCreateForm,
-  type FormConnection,
-  type FormAnnounceSummaryHandler,
-  type FormFocusHandler,
-  type FormInteractionValidationTrigger,
-  type FormOptions,
-  type FormParticipant,
-  type FormResetHandler,
-  type FormSchema,
-  type FormSnapshot,
-  type FormSnapshotListener,
-  type FormStateChangeHandler,
-  type FormSubmitHandler,
-  type FormSubmitPayload,
-  type FormUpdateHandler,
-  type FormValidateContext,
-  type FormValidateHandler,
-  type FormValidationIssue,
-  type FormValidationResult,
-  type FormValues,
-} from './form.js';
 export { createGridControl, tryCreateGridControl, type GridConnection, type GridControlledValues, type GridOptions } from './grid.js';
 export {
   connectCombobox,

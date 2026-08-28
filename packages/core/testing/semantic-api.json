@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "eacac4a058b1e7ff5a6194f46440a9a754993a4086a412f4157e11e5a61f750b",
+    "publicSignatureFingerprint": "c4038fdafe4db2c5a7166fc32c975554892f3585129d498151c2be870dc1183c",
     "subpaths": [
       ".",
       "./accordion",
@@ -29,7 +29,6 @@
       "./drawer",
       "./editable",
       "./feed",
-      "./form",
       "./grid",
       "./interaction",
       "./layer-stack",
@@ -180,39 +179,6 @@
       "feed-cursor-outside-window",
       "feed-target-unavailable",
       "feed-window-size-mismatch",
-      "form-field-id-duplicate",
-      "form-field-id-empty",
-      "form-field-id-missing",
-      "form-field-order-invalid",
-      "form-field-path-empty",
-      "form-field-path-index-invalid",
-      "form-field-path-root-invalid",
-      "form-field-path-segment-invalid",
-      "form-field-path-syntax-invalid",
-      "form-issue-field-mismatch",
-      "form-issue-id-duplicate",
-      "form-issue-invalid",
-      "form-issue-source-mismatch",
-      "form-relative-path-empty",
-      "form-result-unexpected",
-      "form-submission-generation-exhausted",
-      "form-submission-generation-invalid",
-      "form-submission-generation-stale",
-      "form-submission-status-invalid",
-      "form-submit-count-invalid",
-      "form-submit-issue-source-invalid",
-      "form-submit-not-pending",
-      "form-submit-not-requested",
-      "form-validation-context-invalid",
-      "form-validation-during-submit",
-      "form-validation-generation-exhausted",
-      "form-validation-generation-invalid",
-      "form-validation-generation-stale",
-      "form-validation-intent-invalid",
-      "form-validation-not-pending",
-      "form-validation-status-invalid",
-      "form-validation-trigger-invalid",
-      "form-value-path-collision",
       "grid-cursor-outside-grid",
       "grid-edit-active",
       "grid-edit-without-cursor",
@@ -544,7 +510,7 @@
     }
   ],
   "acceptance": {
-    "classification": "contract-impact-reviewed",
-    "reason": "Adapter connections now reject every post-destroy operation with the typed connection-destroyed failure; this is an additive lifecycle contract."
+    "classification": "breaking",
+    "reason": "Form runtime, declarations, and error codes moved to @sectile/form; @sectile/core/form is removed in the coordinated 0.8.0 release."
   }
 }

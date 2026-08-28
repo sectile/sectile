@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './tabular', './temporal', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './form', './tabular', './temporal', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../dist/index.js');
@@ -20,6 +20,20 @@ test('every public DOM component exposes direct and fallible factories', async (
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);
     assert.equal(typeof rootModule[`tryCreate${name}`], 'function', `root tryCreate${name} export`);
   }
+});
+
+test('Form is exposed only through its optional subpath', async () => {
+  assert.equal(packageManifest.dependencies?.['@sectile/form'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/form'], 'workspace:*');
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/form']?.optional, true);
+
+  const rootModule = await import('../dist/index.js');
+  assert.equal(rootModule.createForm, undefined);
+
+  const formModule = await import('../dist/form.js');
+  assert.equal(typeof formModule.createForm, 'function');
+  const formSource = await readFile(new URL('../dist/form.js', import.meta.url), 'utf8');
+  assert.match(formSource, /@sectile\/form/);
 });
 
 test('virtualization is exposed only through its optional subpath', async () => {

@@ -227,7 +227,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "073333f9315f3c445e7561fa5c7eba69d2ffc722a4dec388f0ce919b70aedbe7",
+  "fingerprint": "6549111e085f69ace9105d60ff0e25f04f1d1663a7a93b9637705eeea99a0050",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -331,7 +331,7 @@
     },
     {
       "path": "dist/form.d.ts",
-      "sha256": "f5399a5bde19b5144cd41d368447a736e184f5aeeae2a3127d219abecccee3ca"
+      "sha256": "652642c2884305dbe0f520ceb4fc9d8a1c1eda9646a08ff9a05f78d44d4bc138"
     },
     {
       "path": "dist/grid.d.ts",
@@ -343,7 +343,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "9c84934290fa48580817b27eefc921b44f66d07b922f130131afe05800c74e1d"
+      "sha256": "901e412a83916baad1c63f3547410f1a4b43f14e2bb25d77f74431a6dfefd944"
     },
     {
       "path": "dist/internal/cascade-choice.d.ts",
@@ -352,6 +352,10 @@
     {
       "path": "dist/internal/date-picker.d.ts",
       "sha256": "047967f0aaaeb3830a883b213b0aa7b8b277d1bff212b4baa0b991f9c6fdc861"
+    },
+    {
+      "path": "dist/internal/form-control.d.ts",
+      "sha256": "71c9253e459c08d7732faa878af5c93c98ccaf92bbba10cb3a119866e2cde6d2"
     },
     {
       "path": "dist/internal/native-field.d.ts",

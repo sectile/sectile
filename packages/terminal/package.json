@@ -31,11 +31,6 @@
       "import": "./dist/listbox.js",
       "default": "./dist/listbox.js"
     },
-    "./form": {
-      "types": "./dist/form.d.ts",
-      "import": "./dist/form.js",
-      "default": "./dist/form.js"
-    },
     "./reorder": {
       "types": "./dist/reorder.d.ts",
       "import": "./dist/reorder.js",

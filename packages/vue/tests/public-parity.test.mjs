@@ -20,6 +20,21 @@ test('Vue exposes every public DOM component family', async () => {
   assert.equal(vuePackage.exports['./data-tree-grid'], undefined);
 });
 
+test('Form is exposed only through its optional subpath', async () => {
+  const vuePackage = await readPackage('../package.json');
+  assert.equal(vuePackage.dependencies?.['@sectile/form'], undefined);
+  assert.equal(vuePackage.peerDependencies?.['@sectile/form'], 'workspace:*');
+  assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/form']?.optional, true);
+
+  const rootModule = await import('../dist/index.js');
+  assert.equal(rootModule.FormRoot, undefined);
+  assert.equal(rootModule.useFormControl, undefined);
+
+  const formModule = await import('../dist/form.js');
+  assert.equal(typeof formModule.FormRoot, 'object');
+  assert.equal(typeof formModule.useFormControl, 'function');
+});
+
 test('Tabular is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/tabular'], undefined);

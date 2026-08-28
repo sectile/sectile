@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "laws": [
+    {
+      "id": "FRM-01",
+      "theory": "form",
+      "statement": "validation generations increase and reject stale completion"
+    },
+    {
+      "id": "FRM-02",
+      "theory": "form",
+      "statement": "submission results identify the active submission generation"
+    }
+  ]
+}
