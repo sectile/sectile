@@ -185,4 +185,19 @@ const values = computed(() => props.options.map((option) => option.value));
   background: transparent;
   box-shadow: none;
 }
+
+@media (min-width: 768px) and (max-width: 900px) {
+  .nav-preference-menu__trigger {
+    padding-inline: 4px;
+  }
+
+  .nav-preference-menu__label,
+  .nav-preference-menu__trigger :slotted(svg) {
+    display: none;
+  }
+
+  .nav-preference-menu strong {
+    margin-left: 0;
+  }
+}
 </style>

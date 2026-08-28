@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress';
 import BashTerminal from './components/BashTerminal.vue';
 import ComponentCatalog from './components/ComponentCatalog.vue';
 import ComponentExample from './components/ComponentExample.vue';
+import DocsHome from './components/DocsHome.vue';
 import FormPackageExample from './components/FormPackageExample.vue';
 import HostCode from './components/HostCode.vue';
 import HostInstall from './components/HostInstall.vue';
@@ -28,6 +29,7 @@ export default {
     app.component('BashTerminal', BashTerminal);
     app.component('ComponentCatalog', ComponentCatalog);
     app.component('ComponentExample', ComponentExample);
+    app.component('DocsHome', DocsHome);
     app.component('FormPackageExample', FormPackageExample);
     app.component('HostCode', HostCode);
     app.component('HostInstall', HostInstall);

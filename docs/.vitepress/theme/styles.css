@@ -3,6 +3,7 @@
   --vp-c-brand-2: #6f82ff;
   --vp-c-brand-3: #4659d4;
   --vp-c-brand-soft: rgba(83, 104, 235, 0.16);
+  --vp-c-text-3: #606875;
   --vp-c-tip-1: #2bc9b4;
   --vp-c-tip-soft: rgba(43, 201, 180, 0.12);
   --vp-font-family-base: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -18,8 +19,42 @@
   --vp-c-border: #293852;
   --vp-c-text-1: #edf2ff;
   --vp-c-text-2: #a9b5cc;
-  --vp-c-text-3: #74839e;
+  --vp-c-text-3: #8e9bb2;
   --vp-code-block-bg: #080d16;
+}
+
+html {
+  scrollbar-color: color-mix(in srgb, var(--vp-c-brand-1) 55%, var(--vp-c-divider)) var(--vp-c-bg);
+  scrollbar-width: thin;
+}
+
+::selection {
+  color: var(--vp-c-text-1);
+  background: color-mix(in srgb, var(--vp-c-brand-1) 28%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vp-c-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--vp-c-bg);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--vp-c-brand-1) 55%, var(--vp-c-divider));
+}
+
+html[lang='ko-KR'] .vp-doc {
+  line-break: strict;
+}
+
+html[lang='ko-KR'] .vp-doc :where(h1, h2, h3, h4, p, li, dt, dd, strong, small, a, button) {
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .VPNavBarTitle .title {
@@ -30,45 +65,6 @@
   display: flex;
   align-items: center;
   margin-left: 2px;
-}
-
-.VPHomeHero .name {
-  color: var(--vp-c-brand-1);
-}
-
-.VPHomeHero .container,
-.VPFeatures .container {
-  max-width: 1120px;
-}
-
-.VPHomeHero .main {
-  align-items: center;
-  max-width: 960px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.VPHomeHero h1 {
-  align-items: center;
-  flex-direction: column;
-}
-
-.VPHomeHero .text {
-  max-width: 960px;
-  letter-spacing: -0.035em;
-  line-height: 1;
-  text-wrap: balance;
-}
-
-.VPHomeHero .tagline {
-  max-width: 680px;
-  margin-right: auto;
-  margin-left: auto;
-  text-wrap: balance;
-}
-
-.VPHomeHero .actions {
-  justify-content: center;
 }
 
 .VPDoc h1,

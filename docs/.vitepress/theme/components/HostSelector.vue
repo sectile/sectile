@@ -9,7 +9,7 @@ const props = defineProps<{ mobile?: boolean }>();
 
 const { host, setHost } = useHostPreference();
 const { isKorean } = useDocsLocale();
-const label = computed(() => isKorean.value ? '사용 환경' : 'Usage');
+const label = computed(() => isKorean.value ? '예제 환경' : 'Examples');
 const ariaLabel = computed(() => isKorean.value ? '코드 예시 실행 환경' : 'Code example environment');
 const options = hosts.map((value) => ({ label: hostLabels[value], value }));
 

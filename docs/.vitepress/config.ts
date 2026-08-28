@@ -232,7 +232,7 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
 
 const rootLocaleTheme: DefaultTheme.Config = {
   nav: [
-    { text: 'Guide', link: '/guide/getting-started' },
+    { text: 'How it works', link: '/guide/introduction', activeMatch: '^/guide/' },
     { text: 'Core theory', link: '/theory/' },
     { text: 'Components', link: '/components/', activeMatch: '^/components/' },
     packageNav,
@@ -257,7 +257,7 @@ const rootLocaleTheme: DefaultTheme.Config = {
 
 const koLocaleTheme: DefaultTheme.Config = {
   nav: [
-    { text: '사용 안내', link: '/ko/guide/getting-started' },
+    { text: '동작 방식', link: '/ko/guide/introduction', activeMatch: '^/ko/guide/' },
     { text: '코어 이론', link: '/ko/theory/' },
     { text: '컴포넌트', link: '/ko/components/', activeMatch: '^/ko/components/' },
     koPackageNav,
@@ -293,6 +293,11 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   appearance: false,
+  vue: {
+    template: {
+      compilerOptions: { comments: true },
+    },
+  },
   locales: {
     root: { label: 'English', lang: 'en-US' },
     ko: {
@@ -337,7 +342,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
-    logo: { src: '/logo.png', alt: 'Sectile' },
+    logo: { src: '/logo.png', alt: '' },
     search: {
       provider: 'local',
       options: {
