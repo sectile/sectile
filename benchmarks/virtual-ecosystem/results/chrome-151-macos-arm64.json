@@ -29,7 +29,22 @@
       "frameTimeoutMs": 2000,
       "geometryTolerancePx": 2,
       "completion": "first animation frame with correct DOM order, row geometry, total height, viewport coverage, and anchor position",
-      "recovery": "every frame after the mutation becomes observable is checked; the first occurrence of each failure code is retained while recovery is observed until the frame timeout"
+      "recovery": "every frame after the mutation becomes observable is checked; an unchanged incorrect layout is a hard failure after the stable-failure threshold, while changing layouts remain under observation until the frame timeout"
+    },
+    "rowProfile": "uniform",
+    "rowProfiles": {
+      "uniform": {
+        "commonEstimateHeight": 48,
+        "contentCorpusVersion": 0,
+        "contentVariants": 1,
+        "heightDistribution": {
+          "minimum": 48,
+          "median": 48,
+          "p95": 48,
+          "maximum": 48,
+          "distinct": 1
+        }
+      }
     }
   },
   "heightModeSupport": [
@@ -85,6 +100,7 @@
   ],
   "baselineResults": [
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "Sectile Virtual",
       "version": "0.7.0",
@@ -111,6 +127,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "TanStack Virtual",
       "version": "3.14.10",
@@ -137,6 +154,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "react-window",
       "version": "2.3.0",
@@ -163,6 +181,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "React Virtuoso",
       "version": "4.18.12",
@@ -189,6 +208,7 @@
       "domElements": 84
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "react-virtualized",
       "version": "9.22.6",
@@ -215,6 +235,7 @@
       "domElements": 42
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "Virtua",
       "version": "0.50.5",
@@ -241,6 +262,7 @@
       "domElements": 59
     },
     {
+      "rowProfile": "uniform",
       "mode": "fixed",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
@@ -267,6 +289,7 @@
       "domElements": 84
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "Sectile Virtual",
       "version": "0.7.0",
@@ -293,6 +316,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "TanStack Virtual",
       "version": "3.14.10",
@@ -319,6 +343,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "react-window",
       "version": "2.3.0",
@@ -345,6 +370,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "React Virtuoso",
       "version": "4.18.12",
@@ -371,6 +397,7 @@
       "domElements": 84
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "react-virtualized",
       "version": "9.22.6",
@@ -397,6 +424,7 @@
       "domElements": 62
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "Virtua",
       "version": "0.50.5",
@@ -423,6 +451,7 @@
       "domElements": 59
     },
     {
+      "rowProfile": "uniform",
       "mode": "estimated",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
@@ -449,6 +478,7 @@
       "domElements": 87
     },
     {
+      "rowProfile": "uniform",
       "mode": "automatic",
       "library": "Sectile Virtual",
       "version": "0.7.0",
@@ -475,6 +505,7 @@
       "domElements": 56
     },
     {
+      "rowProfile": "uniform",
       "mode": "automatic",
       "library": "React Virtuoso",
       "version": "4.18.12",
@@ -501,6 +532,7 @@
       "domElements": 84
     },
     {
+      "rowProfile": "uniform",
       "mode": "automatic",
       "library": "Virtua",
       "version": "0.50.5",
@@ -529,6 +561,7 @@
   ],
   "mutationResults": [
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -855,6 +888,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -1181,6 +1215,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -1507,6 +1542,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -1833,6 +1869,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -2159,6 +2196,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -2485,6 +2523,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -2811,6 +2850,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -3137,6 +3177,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -3463,6 +3504,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -3789,6 +3831,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -4115,6 +4158,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -4441,6 +4485,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -6118,6 +6163,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -7795,6 +7841,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -8121,6 +8168,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -9798,6 +9846,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -11475,6 +11524,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -11801,6 +11851,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -12127,6 +12178,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -13804,6 +13856,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -14130,6 +14183,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -14456,6 +14510,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -14782,6 +14837,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "TanStack Virtual",
       "version": "3.14.10",
       "stack": "React 19.2.8",
@@ -15108,6 +15164,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -16785,6 +16842,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -18462,6 +18520,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -18788,6 +18847,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -20465,6 +20525,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -22142,6 +22203,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -22468,6 +22530,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -22794,6 +22857,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -24471,6 +24535,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -24797,6 +24862,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -26374,6 +26440,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -27951,6 +28018,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-window",
       "version": "2.3.0",
       "stack": "React 19.2.8",
@@ -28277,6 +28345,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -29954,6 +30023,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -31631,6 +31701,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -31957,6 +32028,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -33634,6 +33706,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -35311,6 +35384,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -35637,6 +35711,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -35963,6 +36038,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -37640,6 +37716,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -37966,6 +38043,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -38292,6 +38370,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -38618,6 +38697,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -38944,6 +39024,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -40621,6 +40702,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -42298,6 +42380,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -42624,6 +42707,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -44301,6 +44385,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -45978,6 +46063,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -46304,6 +46390,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -46630,6 +46717,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -48307,6 +48395,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -48633,6 +48722,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -48959,6 +49049,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -49285,6 +49376,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "react-virtualized",
       "version": "9.22.6",
       "stack": "React 19.2.8",
@@ -49611,6 +49703,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -49937,6 +50030,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -51614,6 +51708,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -51940,6 +52035,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -53617,6 +53713,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -55294,6 +55391,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -55620,6 +55718,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -55946,6 +56045,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -57623,6 +57723,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -58900,6 +59001,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -59226,6 +59328,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -59552,6 +59655,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -59878,6 +59982,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -60204,6 +60309,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -60530,6 +60636,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -60856,6 +60963,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -61182,6 +61290,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -61508,6 +61617,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -61834,6 +61944,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -62160,6 +62271,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -63837,6 +63949,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -64163,6 +64276,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -66390,6 +66504,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -68617,6 +68732,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Vue Virtual Scroller",
       "version": "3.0.5",
       "stack": "Vue 3.5.22",
@@ -69594,6 +69710,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -69920,6 +70037,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -70246,6 +70364,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -70572,6 +70691,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -70898,6 +71018,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -71224,6 +71345,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -71550,6 +71672,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -71876,6 +71999,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -72202,6 +72326,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -72528,6 +72653,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -72854,6 +72980,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -73180,6 +73307,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Sectile Virtual",
       "version": "0.7.0",
       "stack": "Vue 3.5.22",
@@ -73506,6 +73634,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -75183,6 +75312,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -76860,6 +76990,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -77186,6 +77317,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -78863,6 +78995,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -80540,6 +80673,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -80866,6 +81000,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -81192,6 +81327,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -82869,6 +83005,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -83195,6 +83332,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -83521,6 +83659,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -83847,6 +83986,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "React Virtuoso",
       "version": "4.18.12",
       "stack": "React 19.2.8",
@@ -84173,6 +84313,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -84499,6 +84640,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -86176,6 +86318,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -86502,6 +86645,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -88179,6 +88323,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -89856,6 +90001,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -90182,6 +90328,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -90508,6 +90655,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -92185,6 +92333,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -93462,6 +93611,7 @@
       ]
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -93788,6 +93938,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -94114,6 +94265,7 @@
       "failures": []
     },
     {
+      "rowProfile": "uniform",
       "library": "Virtua",
       "version": "0.50.5",
       "stack": "React 19.2.8",
@@ -121676,5 +121828,6 @@
         "checks": 2
       }
     ]
-  }
+  },
+  "baselineFailures": []
 }

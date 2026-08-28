@@ -1,5 +1,6 @@
 import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './adapters.js';
-import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT } from './constants.js';
+import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from './constants.js';
+import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
 import {
   automaticMutableAdapters,
   mutableAdapters,
@@ -16,6 +17,7 @@ import './style.css';
 type HeightMode = 'fixed' | 'estimated' | 'automatic';
 
 interface BenchmarkCase {
+  readonly rowProfile: RowProfile;
   readonly mode: HeightMode;
   readonly name: string;
   readonly version: string;
@@ -24,6 +26,7 @@ interface BenchmarkCase {
 }
 
 interface BenchmarkResult {
+  readonly rowProfile: RowProfile;
   readonly mode: HeightMode;
   readonly library: string;
   readonly version: string;
@@ -31,6 +34,9 @@ interface BenchmarkResult {
   readonly setupMs: number;
   readonly firstRowsMs: number;
   readonly mountMs: number;
+  readonly initialTotalHeightErrorPercent: number;
+  readonly scrollTotalHeightErrorMedianPercent: number;
+  readonly scrollTotalHeightErrorP95Percent: number;
   readonly scrollMedianMs: number;
   readonly scrollMedianLowerBoundMs: number;
   readonly scrollP95Ms: number;
@@ -45,6 +51,7 @@ interface BenchmarkResult {
 }
 
 interface BaselineBenchmarkFailure {
+  readonly rowProfile: RowProfile;
   readonly mode: HeightMode;
   readonly library: string;
   readonly version: string;
@@ -59,6 +66,7 @@ interface ScrollMeasurement {
   readonly lowerBoundMs: number;
   readonly probeMs: number;
   readonly checks: number;
+  readonly totalHeightErrorPercent: number;
 }
 
 interface BaselineSample extends ScrollMeasurement {
@@ -79,6 +87,8 @@ interface RawBenchmarkResult extends Omit<BenchmarkResult,
   | 'scrollSampleCount'
   | 'scrollRoundMedianRangeMs'
   | 'scrollRoundP95RangeMs'
+  | 'scrollTotalHeightErrorMedianPercent'
+  | 'scrollTotalHeightErrorP95Percent'
 > {
   readonly setupMs: number;
   readonly firstRowsMs: number;
@@ -132,11 +142,12 @@ const FRAME_TIMEOUT_MS = 4_000;
 const STABLE_FAILURE_MIN_MS = 300;
 const STABLE_FAILURE_FRAMES = 8;
 const HEIGHT_TOLERANCE_PX = 2;
+const rowProfile = parseRowProfile(search.get('row-profile'));
 
 const benchmarkCases = Object.freeze([
-  ...fixedAdapters.map((adapter) => fixedCase(adapter)),
-  ...mutableAdapters.map((adapter) => dynamicCase(adapter)),
-  ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter)),
+  ...(rowProfile === 'uniform' ? fixedAdapters.map((adapter) => fixedCase(adapter)) : []),
+  ...mutableAdapters.map((adapter) => dynamicCase(adapter, rowProfile)),
+  ...automaticMutableAdapters.map((adapter) => dynamicCase(adapter, rowProfile)),
 ]);
 const libraryFilter = search.get('library');
 const activeCases = benchmarkCases.filter((entry) => (
@@ -175,7 +186,7 @@ if (root === null) throw new Error('Missing benchmark root.');
 root.innerHTML = `
   <header>
     <h1>Virtualization ecosystem benchmark</h1>
-    <p>100,000 identical 72px rows · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
+    <p>100,000 rows · ${rowProfile} DOM-height profile · fixed, estimated, and no-height-input conditions · 720 × 480 viewport</p>
     <button type="button" id="run">Run benchmark</button>
   </header>
   <section aria-live="polite">
@@ -183,7 +194,7 @@ root.innerHTML = `
     <div id="mount"></div>
     <h2>Initial render and scrolling</h2>
     <table>
-      <thead><tr><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th></tr></thead>
+      <thead><tr><th>Row profile</th><th>Height input</th><th>Library</th><th>Stack</th><th>Setup</th><th>First rows</th><th>Stable layout</th><th>Scroll median</th><th>Scroll p95</th></tr></thead>
       <tbody id="results"></tbody>
     </table>
     <h2>Height input support</h2>
@@ -193,7 +204,7 @@ root.innerHTML = `
     </table>
     <h2>Mutation results</h2>
     <table>
-      <thead><tr><th>Height input</th><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Clean</th><th>Recovered</th><th>Failed</th><th>Failures</th></tr></thead>
+      <thead><tr><th>Row profile</th><th>Height input</th><th>Library</th><th>Operation</th><th>Location</th><th>Median</th><th>p95</th><th>Clean</th><th>Recovered</th><th>Failed</th><th>Failures</th></tr></thead>
       <tbody id="mutation-results"></tbody>
     </table>
     <pre id="json"></pre>
@@ -228,6 +239,8 @@ async function runAll(): Promise<void> {
   const raw = new Map<string, RawBenchmarkResult[]>();
   const baselineFailures: BaselineBenchmarkFailure[] = [];
   try {
+    status!.textContent = `Calibrating ${rowProfile} row heights…`;
+    const oracle = await createHeightOracle(rowProfile);
     for (let roundIndex = 0; roundIndex < (MUTATIONS_ONLY ? 0 : ROUNDS); roundIndex += 1) {
       const order = rotate(activeCases, roundIndex * 3);
       for (const benchmarkCase of order) {
@@ -235,10 +248,11 @@ async function runAll(): Promise<void> {
         const caseStartedAt = performance.now();
         let result: RawBenchmarkResult;
         try {
-          result = await runCase(benchmarkCase, mountHost!);
+          result = await runCase(benchmarkCase, mountHost!, oracle);
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error);
           baselineFailures.push(Object.freeze({
+            rowProfile,
             mode: benchmarkCase.mode,
             library: benchmarkCase.name,
             version: benchmarkCase.version,
@@ -279,6 +293,8 @@ async function runAll(): Promise<void> {
       : await runMutationBenchmarks(
           mountHost!,
           (message) => { status!.textContent = message; },
+          rowProfile,
+          oracle,
           [...new Set(activeCases.map((entry) => entry.name))],
           mutationFilter,
         );
@@ -287,17 +303,23 @@ async function runAll(): Promise<void> {
     window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, baselineFailures, baselineSamples, mutationResults, heightModeSupport });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 2,
+      protocolVersion: 3,
       environment: navigator.userAgent,
       conditions: {
         itemCount: ITEM_COUNT,
-        actualRowHeight: ROW_HEIGHT,
+        rowProfile,
+        commonEstimateHeight: ROW_HEIGHT,
+        heightDistribution: oracle.distribution,
+        contentCorpusVersion: oracle.corpusVersion,
+        contentVariants: oracle.contentVariants,
         viewport: [720, VIEWPORT_HEIGHT],
         overscanRows: 8,
         baseline: {
           rounds: ROUNDS,
           scrollSamplesPerRound: RECORDED_SCROLLS,
-          completion: 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage',
+          completion: rowProfile === 'uniform'
+            ? 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage'
+            : 'correct visible row content and geometry, contiguous viewport coverage, and a separately recorded total-height estimate error',
           trigger: 'programmatic scrollTop change; the browser-generated scroll event is observed at document capture before target listeners',
           observation: 'timing starts when the browser begins native scroll-event delivery and ends after DOM geometry has been read; correctness validation runs outside the timed interval',
           diagnostics: 'raw samples retain round, sample, lower and upper timing bounds, geometry-probe cost, and correctness-check count; summaries retain per-round ranges',
@@ -306,7 +328,9 @@ async function runAll(): Promise<void> {
           timing: {
             setupMs: 'synchronous adapter and framework setup',
             firstRowsMs: 'time until the first benchmark rows exist',
-            mountMs: 'time until total scroll height and viewport geometry are correct',
+            mountMs: rowProfile === 'uniform'
+              ? 'time until total scroll height and viewport geometry are correct'
+              : 'time until the initial viewport geometry is correct; total-height estimate error is recorded separately',
           },
         },
         mutations: mutationConditions,
@@ -331,6 +355,10 @@ function parseHeightMode(value: string | null): MutationBenchmarkFilter['sizeMod
   return value === 'estimated' || value === 'automatic' ? value : undefined;
 }
 
+function parseRowProfile(value: string | null): RowProfile {
+  return value === 'heterogeneous' ? 'heterogeneous' : 'uniform';
+}
+
 function parseMutationOperation(value: string | null): MutationBenchmarkFilter['operation'] {
   return value === 'insert' || value === 'move' || value === 'remove' || value === 'resize' ? value : undefined;
 }
@@ -340,20 +368,21 @@ function parseMutationLocation(value: string | null): MutationBenchmarkFilter['l
 }
 
 function fixedCase(adapter: BenchmarkAdapter): BenchmarkCase {
-  return Object.freeze({ mode: 'fixed', ...adapter });
+  return Object.freeze({ rowProfile: 'uniform', mode: 'fixed', ...adapter });
 }
 
-function dynamicCase(adapter: MutableBenchmarkAdapter): BenchmarkCase {
+function dynamicCase(adapter: MutableBenchmarkAdapter, profile: RowProfile): BenchmarkCase {
   return Object.freeze({
+    rowProfile: profile,
     mode: adapter.sizeMode,
     name: adapter.name,
     version: adapter.version,
     stack: adapter.stack,
-    mount: (host: HTMLElement) => adapter.mount(host, items),
+    mount: (host: HTMLElement) => adapter.mount(host, items, profile),
   });
 }
 
-async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise<RawBenchmarkResult> {
+async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: HeightOracle): Promise<RawBenchmarkResult> {
   host.replaceChildren();
   const startedAt = performance.now();
   const mounted = benchmarkCase.mount(host);
@@ -361,21 +390,27 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
     const setupMs = performance.now() - startedAt;
     await waitForAnyRows(host);
     const firstRowsMs = performance.now() - startedAt;
-    await waitForBaselineLayout(mounted.scroller, 0);
+    const expectedLayout = oracle.layout(items);
+    const strictTotalHeight = benchmarkCase.rowProfile === 'uniform' && benchmarkCase.mode !== 'automatic';
+    await waitForBaselineLayout(mounted.scroller, strictTotalHeight ? 0 : undefined, expectedLayout, strictTotalHeight);
     const mountMs = performance.now() - startedAt;
-    const maximum = mounted.scroller.scrollHeight - VIEWPORT_HEIGHT;
+    const initialTotalHeightErrorPercent = totalHeightErrorPercent(mounted.scroller.scrollHeight, expectedLayout.totalHeight);
     const sampleCount = WARMUP_SCROLLS + RECORDED_SCROLLS;
-    const offsets = Array.from({ length: sampleCount }, (_, index) => Math.floor(maximum * ((((index + 1) * 19) % 47) / 46)));
+    const fractions = Array.from({ length: sampleCount }, (_, index) => (((index + 1) * 19) % 47) / 46);
     const measurements: ScrollMeasurement[] = [];
-    for (let index = 0; index < offsets.length; index += 1) {
-      const offset = offsets[index]!;
-      const expected = Math.floor(offset / ROW_HEIGHT);
-      const measurement = await measureScrollLayout(mounted.scroller, expected, offset);
+    for (let index = 0; index < fractions.length; index += 1) {
+      const fraction = fractions[index]!;
+      const offset = Math.floor(Math.max(0, mounted.scroller.scrollHeight - VIEWPORT_HEIGHT) * fraction);
+      const expected = strictTotalHeight
+        ? expectedLayout.indexAt(offset + HEIGHT_TOLERANCE_PX)
+        : undefined;
+      const measurement = await measureScrollLayout(mounted.scroller, expected, offset, expectedLayout, strictTotalHeight);
       if (index >= WARMUP_SCROLLS) measurements.push(measurement);
     }
     const renderedRows = host.querySelectorAll('.bench-row').length;
     const domElements = host.querySelectorAll('*').length;
     return Object.freeze({
+      rowProfile: benchmarkCase.rowProfile,
       mode: benchmarkCase.mode,
       library: benchmarkCase.name,
       version: benchmarkCase.version,
@@ -383,6 +418,7 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement): Promise
       setupMs,
       firstRowsMs,
       mountMs,
+      initialTotalHeightErrorPercent,
       scrollMeasurements: Object.freeze(measurements),
       renderedRows,
       domElements,
@@ -398,17 +434,20 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
   const setups = rounds.map((round) => round.setupMs).sort(ascending);
   const firstRows = rounds.map((round) => round.firstRowsMs).sort(ascending);
   const mounts = rounds.map((round) => round.mountMs).sort(ascending);
+  const initialTotalHeightErrors = rounds.map((round) => round.initialTotalHeightErrorPercent).sort(ascending);
   const measurements = rounds.flatMap((round) => round.scrollMeasurements);
   const scrolls = measurements.map((measurement) => measurement.elapsedMs).sort(ascending);
   const lowerBounds = measurements.map((measurement) => measurement.lowerBoundMs).sort(ascending);
   const probes = measurements.map((measurement) => measurement.probeMs).sort(ascending);
   const checks = measurements.map((measurement) => measurement.checks).sort(ascending);
+  const totalHeightErrors = measurements.map((measurement) => measurement.totalHeightErrorPercent).sort(ascending);
   const roundMedians = rounds.map((result) => percentile(result.scrollMeasurements.map((measurement) => measurement.elapsedMs).sort(ascending), 0.5));
   const roundP95s = rounds.map((result) => percentile(result.scrollMeasurements.map((measurement) => measurement.elapsedMs).sort(ascending), 0.95));
   const scrollMedianMs = percentile(scrolls, 0.5);
   const deviations = scrolls.map((value) => Math.abs(value - scrollMedianMs)).sort(ascending);
   const last = rounds.at(-1)!;
   return Object.freeze({
+    rowProfile: benchmarkCase.rowProfile,
     mode: benchmarkCase.mode,
     library: benchmarkCase.name,
     version: benchmarkCase.version,
@@ -416,6 +455,9 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
     setupMs: round(percentile(setups, 0.5)),
     firstRowsMs: round(percentile(firstRows, 0.5)),
     mountMs: round(percentile(mounts, 0.5)),
+    initialTotalHeightErrorPercent: round(percentile(initialTotalHeightErrors, 0.5)),
+    scrollTotalHeightErrorMedianPercent: round(percentile(totalHeightErrors, 0.5)),
+    scrollTotalHeightErrorP95Percent: round(percentile(totalHeightErrors, 0.95)),
     scrollMedianMs: round(scrollMedianMs),
     scrollMedianLowerBoundMs: round(percentile(lowerBounds, 0.5)),
     scrollP95Ms: round(percentile(scrolls, 0.95)),
@@ -430,7 +472,12 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
   });
 }
 
-function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Promise<void> {
+function waitForBaselineLayout(
+  scroller: HTMLElement,
+  expectedIndex: number | undefined,
+  expectedLayout: ExpectedLayout,
+  strictTotalHeight: boolean,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const startedAt = performance.now();
     let lastFingerprint: string | undefined;
@@ -438,7 +485,7 @@ function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Pr
     const frame = (): void => {
       const snapshot = captureBaselineLayout(scroller);
       try {
-        assertBaselineSnapshot(snapshot, expectedIndex);
+        assertBaselineSnapshot(snapshot, expectedIndex, expectedLayout, strictTotalHeight);
         resolve();
         return;
       } catch (error) {
@@ -465,7 +512,13 @@ function waitForBaselineLayout(scroller: HTMLElement, expectedIndex: number): Pr
   });
 }
 
-async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number, offset: number): Promise<ScrollMeasurement> {
+async function measureScrollLayout(
+  scroller: HTMLElement,
+  expectedIndex: number | undefined,
+  offset: number,
+  expectedLayout: ExpectedLayout,
+  strictTotalHeight: boolean,
+): Promise<ScrollMeasurement> {
   await nextAnimationFrame();
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -494,7 +547,7 @@ async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number,
       const snapshot = captureBaselineLayout(scroller);
       const probeMs = snapshot.observedAt - probeStartedAt;
       try {
-        assertBaselineSnapshot(snapshot, expectedIndex);
+        assertBaselineSnapshot(snapshot, expectedIndex, expectedLayout, strictTotalHeight);
         settled = true;
         cleanup();
         resolve(Object.freeze({
@@ -502,6 +555,7 @@ async function measureScrollLayout(scroller: HTMLElement, expectedIndex: number,
           lowerBoundMs: probeStartedAt - startedAt,
           probeMs,
           checks,
+          totalHeightErrorPercent: totalHeightErrorPercent(snapshot.scrollHeight, expectedLayout.totalHeight),
         }));
       } catch (error) {
         lastFailureMessage = error instanceof Error ? error.message : String(error);
@@ -590,9 +644,14 @@ function baselineFailureFingerprint(snapshot: BaselineLayoutSnapshot): string {
   });
 }
 
-function assertBaselineSnapshot(snapshot: BaselineLayoutSnapshot, expectedIndex: number): void {
-  const expectedHeight = ITEM_COUNT * ROW_HEIGHT;
-  if (Math.abs(snapshot.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
+function assertBaselineSnapshot(
+  snapshot: BaselineLayoutSnapshot,
+  expectedIndex: number | undefined,
+  expectedLayout: ExpectedLayout,
+  strictTotalHeight: boolean,
+): void {
+  const expectedHeight = expectedLayout.totalHeight;
+  if (strictTotalHeight && Math.abs(snapshot.scrollHeight - expectedHeight) > HEIGHT_TOLERANCE_PX) {
     throw new Error(`Scroll height ${snapshot.scrollHeight}px did not match ${expectedHeight}px.`);
   }
   const seen = new Set<number>();
@@ -601,7 +660,8 @@ function assertBaselineSnapshot(snapshot: BaselineLayoutSnapshot, expectedIndex:
     if (!Number.isInteger(row.index) || row.index < 0 || row.index >= ITEM_COUNT) throw new Error(`Invalid benchmark row index ${row.rawIndex ?? 'missing'}.`);
     if (seen.has(row.index)) throw new Error(`Benchmark row ${row.index} appeared more than once.`);
     seen.add(row.index);
-    if (Math.abs(row.height - ROW_HEIGHT) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark row ${row.index} measured ${round(row.height)}px instead of ${ROW_HEIGHT}px.`);
+    const rowHeight = expectedLayout.heightAt(row.index);
+    if (Math.abs(row.height - rowHeight) > HEIGHT_TOLERANCE_PX) throw new Error(`Benchmark row ${row.index} measured ${round(row.height)}px instead of ${rowHeight}px.`);
     return [{ index: row.index, top: row.top, bottom: row.bottom }];
   });
   rows.sort((left, right) => left.top - right.top || left.index - right.index);
@@ -614,7 +674,9 @@ function assertBaselineSnapshot(snapshot: BaselineLayoutSnapshot, expectedIndex:
   }
   const visible = rows.filter((row) => row.bottom > snapshot.viewportTop + HEIGHT_TOLERANCE_PX && row.top < snapshot.viewportBottom - HEIGHT_TOLERANCE_PX);
   if (visible.length === 0) throw new Error('No benchmark row covers the viewport.');
-  if (!visible.some((row) => row.index === expectedIndex)) throw new Error(`Expected benchmark row ${expectedIndex} is absent from the viewport.`);
+  if (expectedIndex !== undefined && !visible.some((row) => row.index === expectedIndex)) {
+    throw new Error(`Expected benchmark row ${expectedIndex} is absent from the viewport; visible rows are ${visible[0]?.index ?? 'none'}-${visible.at(-1)?.index ?? 'none'}.`);
+  }
   const first = visible[0]!;
   const last = visible.at(-1)!;
   if (first.top > snapshot.viewportTop + HEIGHT_TOLERANCE_PX) throw new Error(`Blank space precedes benchmark row ${first.index}.`);
@@ -646,6 +708,7 @@ function waitUntilFrame(predicate: () => boolean, label: string): Promise<void> 
 
 function renderResult(result: BenchmarkResult): HTMLTableRowElement {
   return renderCells([
+    result.rowProfile,
     result.mode,
     `${result.library} ${result.version}`,
     result.stack,
@@ -657,8 +720,14 @@ function renderResult(result: BenchmarkResult): HTMLTableRowElement {
   ]);
 }
 
+function totalHeightErrorPercent(actual: number, expected: number): number {
+  if (expected === 0) return actual === 0 ? 0 : 100;
+  return Math.abs(actual - expected) / expected * 100;
+}
+
 function renderBaselineFailure(benchmarkCase: BenchmarkCase, reason: string): HTMLTableRowElement {
   return renderCells([
+    benchmarkCase.rowProfile,
     benchmarkCase.mode,
     `${benchmarkCase.name} ${benchmarkCase.version}`,
     benchmarkCase.stack,
@@ -682,6 +751,7 @@ function renderSupport(result: HeightModeSupport): HTMLTableRowElement {
 
 function renderMutationResult(result: MutationBenchmarkResult): HTMLTableRowElement {
   const row = renderCells([
+    result.rowProfile,
     result.sizeMode,
     `${result.library} ${result.version}`,
     result.operation,
@@ -707,7 +777,7 @@ function renderCells(values: readonly string[]): HTMLTableRowElement {
   return row;
 }
 
-function caseKey(entry: BenchmarkCase): string { return `${entry.mode}:${entry.name}`; }
+function caseKey(entry: BenchmarkCase): string { return `${entry.rowProfile}:${entry.mode}:${entry.name}`; }
 function rotate<T>(values: readonly T[], offset: number): readonly T[] {
   if (values.length === 0) return values;
   const start = offset % values.length;

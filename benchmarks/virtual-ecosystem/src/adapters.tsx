@@ -10,7 +10,7 @@ import { createApp, defineComponent, h, type App } from 'vue';
 import { RecycleScroller } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import {
-  ITEM_COUNT, items, OVERSCAN_PX, OVERSCAN_ROWS, ROW_HEIGHT, VIEWPORT_HEIGHT, VIEWPORT_WIDTH,
+  ITEM_COUNT, items, OVERSCAN_PX, OVERSCAN_ROWS, ROW_HEIGHT, VIEWPORT_HEIGHT, VIEWPORT_WIDTH, contentFor,
   type BenchmarkItem,
 } from './constants.js';
 
@@ -34,7 +34,8 @@ export interface BenchmarkAdapter {
 }
 
 function rowText(index: number): string {
-  return items[index]?.label ?? `Customer request ${index}`;
+  const item = items[index];
+  return item === undefined ? `Customer request ${index}` : contentFor(item).title;
 }
 
 function reactRow(index: number, style?: React.CSSProperties) {
@@ -139,7 +140,7 @@ function VirtuaApp() {
       className: 'bench-row',
       'data-index': item.index,
       style: { height: ROW_HEIGHT },
-    }, createElement('span', null, item.label)),
+  }, createElement('span', null, contentFor(item).title)),
   });
 }
 
@@ -179,7 +180,7 @@ const sectileAdapter: BenchmarkAdapter = Object.freeze({
             style: { height: `${ROW_HEIGHT}px` },
           }),
         }, {
-          default: ({ value }: { value: BenchmarkItem }) => h('span', value.label),
+          default: ({ value }: { value: BenchmarkItem }) => h('span', contentFor(value).title),
         });
       },
     });
@@ -210,7 +211,7 @@ const vueVirtualScrollerAdapter: BenchmarkAdapter = Object.freeze({
             class: 'bench-row',
             'data-index': item.index,
             style: { height: `${ROW_HEIGHT}px` },
-          }, [h('span', item.label)]),
+          }, [h('span', contentFor(item).title)]),
         });
       },
     });

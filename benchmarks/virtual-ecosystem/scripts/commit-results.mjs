@@ -5,15 +5,16 @@ const packageRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(packageRoot, '../..');
 const args = process.argv.slice(2);
 const baselineOnly = args.includes('--baseline-only');
+const mergeBaseline = args.includes('--merge-baseline');
 const mergeMutations = args.includes('--merge-mutations');
 const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
 const rawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
 const docsOutputPath = resolve(repoRoot, 'docs/.vitepress/theme/virtual-benchmark-data.ts');
 const incomingReport = JSON.parse(await readFile(inputPath, 'utf8'));
-if (baselineOnly && mergeMutations) {
-  throw new Error('--baseline-only and --merge-mutations cannot be combined.');
+if ([baselineOnly, mergeBaseline, mergeMutations].filter(Boolean).length > 1) {
+  throw new Error('--baseline-only, --merge-baseline, and --merge-mutations are mutually exclusive.');
 }
-const previousReport = baselineOnly || mergeMutations
+const previousReport = baselineOnly || mergeBaseline || mergeMutations
   ? JSON.parse(await readFile(rawOutputPath, 'utf8'))
   : undefined;
 if (previousReport !== undefined) assertCompatibleConditions(previousReport, incomingReport);
@@ -23,34 +24,55 @@ if (baselineOnly && incomingReport.mutationResults.length !== 0) {
 if (mergeMutations && incomingReport.mutationResults.length === 0) {
   throw new Error('A mutation merge report must contain at least one mutation result.');
 }
+const normalizedIncoming = normalizeReport(incomingReport);
+const normalizedPrevious = previousReport === undefined ? undefined : normalizeReport(previousReport);
 const report = baselineOnly
   ? {
-      ...previousReport,
-      ...incomingReport,
+      ...normalizedPrevious,
+      ...normalizedIncoming,
       conditions: {
-        ...previousReport.conditions,
-        ...incomingReport.conditions,
-        mutations: previousReport.conditions.mutations,
+        ...normalizedPrevious.conditions,
+        ...normalizedIncoming.conditions,
+        rowProfiles: mergeProfileConditions(normalizedPrevious, normalizedIncoming),
+        mutations: normalizedPrevious.conditions.mutations,
       },
-      mutationResults: previousReport.mutationResults,
+      mutationResults: normalizedPrevious.mutationResults,
     }
+  : mergeBaseline
+    ? {
+        ...normalizedPrevious,
+        environment: normalizedIncoming.environment,
+        protocolVersion: normalizedIncoming.protocolVersion,
+        conditions: {
+          ...normalizedPrevious.conditions,
+          ...normalizedIncoming.conditions,
+          rowProfiles: mergeProfileConditions(normalizedPrevious, normalizedIncoming),
+          mutations: normalizedPrevious.conditions.mutations,
+        },
+        baselineResults: mergeBaselineResults(normalizedPrevious.baselineResults, normalizedIncoming.baselineResults),
+        baselineFailures: mergeBaselineResults(normalizedPrevious.baselineFailures ?? [], normalizedIncoming.baselineFailures ?? []),
+        baselineSamples: { ...(normalizedPrevious.baselineSamples ?? {}), ...(normalizedIncoming.baselineSamples ?? {}) },
+      }
   : mergeMutations
     ? {
-        ...previousReport,
-        environment: incomingReport.environment,
+        ...normalizedPrevious,
+        environment: normalizedIncoming.environment,
+        protocolVersion: normalizedIncoming.protocolVersion,
         conditions: {
-          ...previousReport.conditions,
-          mutations: incomingReport.conditions.mutations,
+          ...normalizedPrevious.conditions,
+          ...normalizedIncoming.conditions,
+          rowProfiles: mergeProfileConditions(normalizedPrevious, normalizedIncoming),
+          baseline: normalizedPrevious.conditions.baseline,
         },
-        mutationResults: mergeMutationResults(previousReport.mutationResults, incomingReport.mutationResults),
+        mutationResults: mergeMutationResults(normalizedPrevious.mutationResults, normalizedIncoming.mutationResults),
       }
-  : incomingReport;
+  : normalizedIncoming;
 const observedAt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
 const conditions = {
   ...report.conditions,
   mutations: {
     ...report.conditions.mutations,
-    recovery: 'every frame after the mutation becomes observable is checked; an unchanged incorrect layout is a hard failure after the stable-failure threshold, while changing layouts remain under observation until the frame timeout',
+    recovery: 'every frame after the mutation becomes observable is checked; recovery within 200ms is responsive, recovery from 200ms through 500ms is slow, and no correct frame within 500ms is a hard failure; an unchanged incorrect layout can fail earlier at the stable-failure threshold',
   },
 };
 
@@ -61,6 +83,7 @@ const rawReport = {
 };
 
 const baselineResults = report.baselineResults.map((result) => ({
+  rowProfile: result.rowProfile,
   mode: result.mode,
   library: result.library,
   version: result.version,
@@ -68,6 +91,9 @@ const baselineResults = report.baselineResults.map((result) => ({
   setupMs: result.setupMs,
   firstRowsMs: result.firstRowsMs,
   mountMs: result.mountMs,
+  initialTotalHeightErrorPercent: result.initialTotalHeightErrorPercent ?? 0,
+  scrollTotalHeightErrorMedianPercent: result.scrollTotalHeightErrorMedianPercent ?? 0,
+  scrollTotalHeightErrorP95Percent: result.scrollTotalHeightErrorP95Percent ?? 0,
   scrollMedianMs: result.scrollMedianMs,
   scrollMedianLowerBoundMs: result.scrollMedianLowerBoundMs,
   scrollP95Ms: result.scrollP95Ms,
@@ -80,18 +106,20 @@ const baselineResults = report.baselineResults.map((result) => ({
 }));
 
 const baselineFailures = (report.baselineFailures ?? []).map((failure) => ({
+  rowProfile: failure.rowProfile,
   mode: failure.mode,
   library: failure.library,
   version: failure.version,
   stack: failure.stack,
-  failedRounds: (report.baselineFailures ?? []).filter((entry) => entry.mode === failure.mode && entry.library === failure.library).length,
+  failedRounds: (report.baselineFailures ?? []).filter((entry) => entry.rowProfile === failure.rowProfile && entry.mode === failure.mode && entry.library === failure.library).length,
   totalRounds: report.conditions.baseline.rounds,
   message: failure.message,
 })).filter((failure, index, failures) => failures.findIndex((candidate) => (
-  candidate.mode === failure.mode && candidate.library === failure.library
+  candidate.rowProfile === failure.rowProfile && candidate.mode === failure.mode && candidate.library === failure.library
 )) === index);
 
 const mutationResults = report.mutationResults.map((result) => ({
+  rowProfile: result.rowProfile,
   library: result.library,
   version: result.version,
   stack: result.stack,
@@ -120,8 +148,10 @@ const mutationResults = report.mutationResults.map((result) => ({
 const docsModule = `export type BenchmarkOperation = 'insert' | 'move' | 'remove' | 'resize';
 export type BenchmarkLocation = 'start' | 'middle' | 'end';
 export type BenchmarkHeightMode = 'fixed' | 'estimated' | 'automatic';
+export type BenchmarkRowProfile = 'uniform' | 'heterogeneous';
 
 export interface BaselineBenchmarkResult {
+  readonly rowProfile: BenchmarkRowProfile;
   readonly mode: BenchmarkHeightMode;
   readonly library: string;
   readonly version: string;
@@ -129,6 +159,9 @@ export interface BaselineBenchmarkResult {
   readonly setupMs: number;
   readonly firstRowsMs: number;
   readonly mountMs: number;
+  readonly initialTotalHeightErrorPercent: number;
+  readonly scrollTotalHeightErrorMedianPercent: number;
+  readonly scrollTotalHeightErrorP95Percent: number;
   readonly scrollMedianMs: number;
   readonly scrollMedianLowerBoundMs: number;
   readonly scrollP95Ms: number;
@@ -141,6 +174,7 @@ export interface BaselineBenchmarkResult {
 }
 
 export interface BaselineBenchmarkFailure {
+  readonly rowProfile: BenchmarkRowProfile;
   readonly mode: BenchmarkHeightMode;
   readonly library: string;
   readonly version: string;
@@ -151,6 +185,7 @@ export interface BaselineBenchmarkFailure {
 }
 
 export interface MutationBenchmarkResult {
+  readonly rowProfile: BenchmarkRowProfile;
   readonly library: string;
   readonly version: string;
   readonly stack: string;
@@ -184,6 +219,19 @@ export interface HeightModeSupport {
   readonly automaticNote: string;
 }
 
+export interface BenchmarkRowProfileConditions {
+  readonly commonEstimateHeight: number;
+  readonly contentCorpusVersion: number;
+  readonly contentVariants: number;
+  readonly heightDistribution: {
+    readonly minimum: number;
+    readonly median: number;
+    readonly p95: number;
+    readonly maximum: number;
+    readonly distinct: number;
+  };
+}
+
 // Generated by benchmarks/virtual-ecosystem/scripts/commit-results.mjs.
 export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Object.freeze(${JSON.stringify(baselineResults, null, 2)});
 
@@ -192,6 +240,8 @@ export const baselineBenchmarkFailures: readonly BaselineBenchmarkFailure[] = Ob
 export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Object.freeze(${JSON.stringify(mutationResults, null, 2)});
 
 export const heightModeSupport: readonly HeightModeSupport[] = Object.freeze(${JSON.stringify(report.heightModeSupport, null, 2)});
+
+export const benchmarkRowProfiles: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>> = Object.freeze(${JSON.stringify(report.conditions.rowProfiles, null, 2)});
 `;
 
 await Promise.all([
@@ -212,24 +262,72 @@ function mergeMutationResults(previousResults, incomingResults) {
   return merged;
 }
 
+function mergeBaselineResults(previousResults, incomingResults) {
+  const incomingByKey = new Map(incomingResults.map((result) => [baselineKey(result), result]));
+  const merged = previousResults.map((result) => incomingByKey.get(baselineKey(result)) ?? result);
+  const previousKeys = new Set(previousResults.map(baselineKey));
+  for (const result of incomingResults) {
+    if (!previousKeys.has(baselineKey(result))) merged.push(result);
+  }
+  return merged;
+}
+
+function baselineKey(result) {
+  return `${result.rowProfile}\u0000${result.mode}\u0000${result.library}`;
+}
+
 function mutationKey(result) {
-  return `${result.library}\u0000${result.sizeMode}\u0000${result.operation}\u0000${result.location}`;
+  return `${result.rowProfile}\u0000${result.library}\u0000${result.sizeMode}\u0000${result.operation}\u0000${result.location}`;
 }
 
 function assertCompatibleConditions(previous, incoming) {
   const previousKey = JSON.stringify({
     protocolVersion: previous.protocolVersion,
     itemCount: previous.conditions?.itemCount,
-    actualRowHeight: previous.conditions?.actualRowHeight,
+    contentCorpusVersion: previous.conditions?.contentCorpusVersion,
     viewport: previous.conditions?.viewport,
   });
   const incomingKey = JSON.stringify({
     protocolVersion: incoming.protocolVersion,
     itemCount: incoming.conditions?.itemCount,
-    actualRowHeight: incoming.conditions?.actualRowHeight,
+    contentCorpusVersion: incoming.conditions?.contentCorpusVersion,
     viewport: incoming.conditions?.viewport,
   });
   if (previousKey !== incomingKey) {
     throw new Error('Cannot merge benchmark reports from different protocols or geometry conditions. Run and commit the complete suite.');
   }
+}
+
+function normalizeReport(report) {
+  const profile = report.conditions?.rowProfile ?? 'uniform';
+  const rowProfiles = {
+    ...(report.conditions?.rowProfiles ?? {}),
+    [profile]: profileConditions(report.conditions),
+  };
+  return {
+    ...report,
+    baselineResults: (report.baselineResults ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
+    baselineFailures: (report.baselineFailures ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
+    mutationResults: (report.mutationResults ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
+    conditions: { ...report.conditions, rowProfile: profile, rowProfiles },
+  };
+}
+
+function profileConditions(conditions = {}) {
+  return {
+    commonEstimateHeight: conditions.commonEstimateHeight ?? conditions.actualRowHeight ?? 72,
+    contentCorpusVersion: conditions.contentCorpusVersion ?? 0,
+    contentVariants: conditions.contentVariants ?? 1,
+    heightDistribution: conditions.heightDistribution ?? {
+      minimum: conditions.actualRowHeight ?? 72,
+      median: conditions.actualRowHeight ?? 72,
+      p95: conditions.actualRowHeight ?? 72,
+      maximum: conditions.actualRowHeight ?? 72,
+      distinct: 1,
+    },
+  };
+}
+
+function mergeProfileConditions(previous, incoming) {
+  return { ...(previous.conditions.rowProfiles ?? {}), ...(incoming.conditions.rowProfiles ?? {}) };
 }

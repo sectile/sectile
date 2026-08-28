@@ -6,10 +6,12 @@ import DemoCascadeList from './DemoCascadeList.vue';
 import {
   baselineBenchmarkFailures,
   baselineBenchmarkResults,
+  benchmarkRowProfiles,
   mutationBenchmarkResults,
   type BenchmarkHeightMode,
   type BenchmarkLocation,
   type BenchmarkOperation,
+  type BenchmarkRowProfile,
   type MutationBenchmarkResult,
 } from '../virtual-benchmark-data.js';
 
@@ -30,25 +32,30 @@ type ChartResult = {
 const { isKorean } = useDocsLocale();
 const baselineScenarios: readonly BaselineScenario[] = Object.freeze(['mount', 'scroll']);
 const scenarios: readonly Scenario[] = Object.freeze([...baselineScenarios, 'insert', 'move', 'remove', 'resize']);
+const rowProfiles: readonly BenchmarkRowProfile[] = Object.freeze(['uniform', 'heterogeneous']);
 const cascadeNodes = Object.freeze([
-  ...scenarios.map((item) => ({ id: `scenario:${item}`, parentID: null })),
-  ...baselineScenarios.flatMap((baselineScenario) => (['fixed', 'estimated', 'automatic'] as const).map((mode) => ({ id: `${baselineScenario}:${mode}`, parentID: `scenario:${baselineScenario}` }))),
-  ...(['insert', 'move', 'remove', 'resize'] as const).flatMap((operation) => [
-    { id: `${operation}:estimated`, parentID: `scenario:${operation}` },
-    { id: `${operation}:automatic`, parentID: `scenario:${operation}` },
+  ...rowProfiles.map((profile) => ({ id: `profile:${profile}`, parentID: null })),
+  ...rowProfiles.flatMap((profile) => scenarios.map((item) => ({ id: `${profile}:${item}`, parentID: `profile:${profile}` }))),
+  ...rowProfiles.flatMap((profile) => baselineScenarios.flatMap((baselineScenario) => (
+    (profile === 'uniform' ? ['fixed', 'estimated', 'automatic'] as const : ['estimated', 'automatic'] as const)
+      .map((mode) => ({ id: `${profile}:${baselineScenario}:${mode}`, parentID: `${profile}:${baselineScenario}` }))
+  ))),
+  ...rowProfiles.flatMap((profile) => (['insert', 'move', 'remove', 'resize'] as const).flatMap((operation) => [
+    ...(['estimated', 'automatic'] as const).map((mode) => ({ id: `${profile}:${operation}:${mode}`, parentID: `${profile}:${operation}` })),
     ...(['estimated', 'automatic'] as const).flatMap((mode) => (['start', 'middle', 'end'] as const).map((itemLocation) => ({
-      id: `${operation}:${mode}:${itemLocation}`,
-      parentID: `${operation}:${mode}`,
+      id: `${profile}:${operation}:${mode}:${itemLocation}`,
+      parentID: `${profile}:${operation}:${mode}`,
     }))),
-  ]),
+  ])),
 ]);
-const cascadeValue = ref<string | null>('mount:fixed');
+const cascadeValue = ref<string | null>('uniform:mount:fixed');
 
 const copy = computed(() => isKorean.value ? {
   title: '같은 조건에서 결과 비교',
   description: '조건을 바꾸면 같은 그래프에서 일곱 라이브러리의 결과를 바로 비교할 수 있습니다.',
   conditionLabel: '비교 조건',
-  columnLabel: ['측정 항목', '높이 입력', '변경 위치'],
+  columnLabel: ['행 구성', '측정 항목', '높이 입력', '변경 위치'],
+  profile: { uniform: '같은 높이', heterogeneous: '서로 다른 높이' } as Record<BenchmarkRowProfile, string>,
   scenario: { mount: '초기 렌더', scroll: '스크롤', insert: '삽입', move: '이동', remove: '삭제', resize: '높이 변경' } as Record<Scenario, string>,
   mode: { fixed: '고정 높이', estimated: '예상값 제공', automatic: '높이 생략' } as Record<BenchmarkHeightMode, string>,
   location: { start: '시작', middle: '중간', end: '끝' } as Record<BenchmarkLocation, string>,
@@ -76,10 +83,14 @@ const copy = computed(() => isKorean.value ? {
     height: '높이 입력',
     repeat: '반복',
     completion: '완료 판정',
+    estimation: '전체 높이',
     environment: '환경',
   },
   criteriaValue: {
-    data: '같은 행 100,000개',
+    data: {
+      uniform: '같은 높이의 행 100,000개',
+      heterogeneous: '내용이 다른 행 100,000개 · 256가지 구성',
+    } as Record<BenchmarkRowProfile, string>,
     viewport: '720 × 480px · 여유 8행',
     height: {
       fixed: '정확한 72px 전달',
@@ -96,13 +107,25 @@ const copy = computed(() => isKorean.value ? {
       scroll: '목표 행·전체 높이·화면 배치 좌표를 모두 읽은 시점',
       mutation: '순서·높이·전체 높이·기준 위치가 모두 맞은 첫 프레임',
     },
+    completionHeterogeneous: {
+      mount: '처음 보이는 행의 높이·순서·화면 채움이 맞은 시점',
+      scroll: '보이는 행의 높이·순서·화면 채움을 모두 읽은 시점',
+      mutation: '순서·높이·화면 채움·기준 위치가 모두 맞은 첫 프레임',
+    },
     environment: 'Chrome 151 · Apple Silicon · macOS',
+    totalHeight: {
+      uniform: '실측값과 일치',
+      mutation: '보이는 행은 DOM에서 실측하고, 아직 보지 않은 구간은 라이브러리가 추정',
+      measured: (minimum: number, maximum: number, initial: number, scrolled: number) => `행 ${minimum}–${maximum}px · 초기 오차 ${initial.toFixed(1)}% · 스크롤 후 ${scrolled.toFixed(1)}%`,
+      unavailable: '이 조건의 측정값 없음',
+    },
   },
 } : {
   title: 'Compare results under the same conditions',
   description: 'Change the scenario to compare all seven libraries in the same chart.',
   conditionLabel: 'Comparison conditions',
-  columnLabel: ['Scenario', 'Height input', 'Mutation position'],
+  columnLabel: ['Row profile', 'Scenario', 'Height input', 'Mutation position'],
+  profile: { uniform: 'Uniform heights', heterogeneous: 'Mixed natural heights' } as Record<BenchmarkRowProfile, string>,
   scenario: { mount: 'Initial render', scroll: 'Scroll', insert: 'Insert', move: 'Move', remove: 'Remove', resize: 'Height change' } as Record<Scenario, string>,
   mode: { fixed: 'Fixed height', estimated: 'Estimate provided', automatic: 'Height omitted' } as Record<BenchmarkHeightMode, string>,
   location: { start: 'Start', middle: 'Middle', end: 'End' } as Record<BenchmarkLocation, string>,
@@ -130,10 +153,14 @@ const copy = computed(() => isKorean.value ? {
     height: 'Height input',
     repeat: 'Repetition',
     completion: 'Completion',
+    estimation: 'Total height',
     environment: 'Environment',
   },
   criteriaValue: {
-    data: '100,000 identical rows',
+    data: {
+      uniform: '100,000 equal-height rows',
+      heterogeneous: '100,000 content-driven rows · 256 variants',
+    } as Record<BenchmarkRowProfile, string>,
     viewport: '720 × 480px · 8-row overscan',
     height: {
       fixed: 'Exact 72px supplied',
@@ -150,15 +177,27 @@ const copy = computed(() => isKorean.value ? {
       scroll: 'Target row, total height, and viewport geometry have been read',
       mutation: 'Correct order, geometry, total height, and anchor',
     },
+    completionHeterogeneous: {
+      mount: 'Correct height, order, and coverage for the initial viewport',
+      scroll: 'Visible row height, order, and viewport coverage have been read',
+      mutation: 'Correct order, geometry, viewport coverage, and anchor',
+    },
     environment: 'Chrome 151 · Apple Silicon · macOS',
+    totalHeight: {
+      uniform: 'Matches the measured total',
+      mutation: 'Visible rows are measured from the DOM; unseen ranges remain estimated by the library',
+      measured: (minimum: number, maximum: number, initial: number, scrolled: number) => `Rows ${minimum}–${maximum}px · initial error ${initial.toFixed(1)}% · after scrolling ${scrolled.toFixed(1)}%`,
+      unavailable: 'No measurement for this condition',
+    },
   },
 });
 
-const selectionParts = computed(() => (cascadeValue.value ?? 'mount:fixed').split(':'));
-const scenario = computed<Scenario>(() => (selectionParts.value[0] ?? 'mount') as Scenario);
-const baselineMode = computed<BenchmarkHeightMode>(() => (selectionParts.value[1] ?? 'fixed') as BenchmarkHeightMode);
-const mutationMode = computed<Exclude<BenchmarkHeightMode, 'fixed'>>(() => (selectionParts.value[1] ?? 'estimated') as Exclude<BenchmarkHeightMode, 'fixed'>);
-const location = computed<BenchmarkLocation>(() => (selectionParts.value[2] ?? 'start') as BenchmarkLocation);
+const selectionParts = computed(() => (cascadeValue.value ?? 'uniform:mount:fixed').split(':'));
+const rowProfile = computed<BenchmarkRowProfile>(() => (selectionParts.value[0] ?? 'uniform') as BenchmarkRowProfile);
+const scenario = computed<Scenario>(() => (selectionParts.value[1] ?? 'mount') as Scenario);
+const baselineMode = computed<BenchmarkHeightMode>(() => (selectionParts.value[2] ?? 'fixed') as BenchmarkHeightMode);
+const mutationMode = computed<Exclude<BenchmarkHeightMode, 'fixed'>>(() => (selectionParts.value[2] ?? 'estimated') as Exclude<BenchmarkHeightMode, 'fixed'>);
+const location = computed<BenchmarkLocation>(() => (selectionParts.value[3] ?? 'start') as BenchmarkLocation);
 const logarithmic = computed(() => !isBaselineScenario(scenario.value));
 const legendSlots = computed<readonly (string | null)[]>(() => {
   if (scenario.value === 'mount') return copy.value.mountLegend;
@@ -214,28 +253,51 @@ const initialRenderMaximum = computed(() => Math.max(
 
 const selectedDescription = computed(() => {
   const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
-  const parts = [copy.value.scenario[scenario.value], copy.value.mode[mode]];
+  const parts = [copy.value.profile[rowProfile.value], copy.value.scenario[scenario.value], copy.value.mode[mode]];
   if (!isBaselineScenario(scenario.value)) parts.push(copy.value.location[location.value]);
   return parts.join(' · ');
+});
+
+const totalHeightCriterion = computed(() => {
+  if (rowProfile.value === 'uniform') return copy.value.criteriaValue.totalHeight.uniform;
+  if (!isBaselineScenario(scenario.value)) return copy.value.criteriaValue.totalHeight.mutation;
+  const result = baselineBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value
+    && entry.mode === baselineMode.value
+    && entry.library === 'Sectile Virtual');
+  if (result === undefined) return copy.value.criteriaValue.totalHeight.unavailable;
+  const distribution = benchmarkRowProfiles.heterogeneous?.heightDistribution;
+  if (distribution === undefined) return copy.value.criteriaValue.totalHeight.unavailable;
+  return copy.value.criteriaValue.totalHeight.measured(
+    distribution.minimum,
+    distribution.maximum,
+    result.initialTotalHeightErrorPercent,
+    result.scrollTotalHeightErrorMedianPercent,
+  );
 });
 
 const benchmarkCriteria = computed(() => {
   const mode = isBaselineScenario(scenario.value) ? baselineMode.value : mutationMode.value;
   const phase = scenario.value === 'mount' ? 'mount' : scenario.value === 'scroll' ? 'scroll' : 'mutation';
   return [
-    { label: copy.value.criteriaLabel.data, value: copy.value.criteriaValue.data },
+    { label: copy.value.criteriaLabel.data, value: copy.value.criteriaValue.data[rowProfile.value] },
     { label: copy.value.criteriaLabel.viewport, value: copy.value.criteriaValue.viewport },
     { label: copy.value.criteriaLabel.height, value: copy.value.criteriaValue.height[mode] },
     { label: copy.value.criteriaLabel.repeat, value: copy.value.criteriaValue.repeat[phase] },
-    { label: copy.value.criteriaLabel.completion, value: copy.value.criteriaValue.completion[phase] },
+    {
+      label: copy.value.criteriaLabel.completion,
+      value: rowProfile.value === 'uniform'
+        ? copy.value.criteriaValue.completion[phase]
+        : copy.value.criteriaValue.completionHeterogeneous[phase],
+    },
+    { label: copy.value.criteriaLabel.estimation, value: totalHeightCriterion.value },
     { label: copy.value.criteriaLabel.environment, value: copy.value.criteriaValue.environment },
   ];
 });
 
 function baselineResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
-  const result = baselineBenchmarkResults.find((entry) => entry.library === metadata.library && entry.mode === baselineMode.value);
+  const result = baselineBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
   if (result === undefined) {
-    const failure = baselineBenchmarkFailures.find((entry) => entry.library === metadata.library && entry.mode === baselineMode.value);
+    const failure = baselineBenchmarkFailures.find((entry) => entry.rowProfile === rowProfile.value && entry.library === metadata.library && entry.mode === baselineMode.value);
     if (failure === undefined) return unsupportedResult(metadata);
     return {
       ...metadata,
@@ -254,7 +316,8 @@ function baselineResult(metadata: { readonly library: string; readonly version: 
 }
 
 function mutationResult(metadata: { readonly library: string; readonly version: string; readonly stack: string }): ChartResult {
-  const result = mutationBenchmarkResults.find((entry) => entry.library === metadata.library
+  const result = mutationBenchmarkResults.find((entry) => entry.rowProfile === rowProfile.value
+    && entry.library === metadata.library
     && entry.sizeMode === mutationMode.value
     && entry.operation === scenario.value
     && entry.location === location.value);
@@ -352,9 +415,10 @@ function formatInitialRenderTime(value: number): string {
 
 function nodeLabel(id: string): string {
   const parts = id.split(':');
-  if (parts[0] === 'scenario') return copy.value.scenario[(parts[1] ?? 'mount') as Scenario];
-  if (parts.length === 2) return copy.value.mode[(parts[1] ?? 'estimated') as BenchmarkHeightMode];
-  return copy.value.location[(parts[2] ?? 'start') as BenchmarkLocation];
+  if (parts[0] === 'profile') return copy.value.profile[(parts[1] ?? 'uniform') as BenchmarkRowProfile];
+  if (parts.length === 2) return copy.value.scenario[(parts[1] ?? 'mount') as Scenario];
+  if (parts.length === 3) return copy.value.mode[(parts[2] ?? 'estimated') as BenchmarkHeightMode];
+  return copy.value.location[(parts[3] ?? 'start') as BenchmarkLocation];
 }
 
 function isBaselineScenario(value: Scenario): value is BaselineScenario {
@@ -387,7 +451,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
         :text-value="nodeLabel"
         :label="copy.conditionLabel"
         :column-labels="copy.columnLabel"
-        :column-count="3"
+        :column-count="4"
         :show-value="false"
       />
     </div>

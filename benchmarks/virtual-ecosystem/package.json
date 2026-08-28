@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "merge-shards": "node scripts/merge-shards.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

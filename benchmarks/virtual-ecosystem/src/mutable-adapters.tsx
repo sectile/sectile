@@ -14,8 +14,8 @@ import { VList } from 'virtua';
 import { createApp, defineComponent, h, shallowRef, type App } from 'vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import {
-  ITEM_COUNT, OVERSCAN_PX, OVERSCAN_ROWS, ROW_HEIGHT, VIEWPORT_HEIGHT, VIEWPORT_WIDTH,
-  type BenchmarkItem,
+  ITEM_COUNT, OVERSCAN_PX, OVERSCAN_ROWS, ROW_HEIGHT, VIEWPORT_HEIGHT, VIEWPORT_WIDTH, contentFor,
+  type BenchmarkItem, type RowProfile,
 } from './constants.js';
 import type { MutationLocation, MutationOperation, MutationScenario } from './mutations.js';
 
@@ -31,7 +31,7 @@ export interface MutableBenchmarkAdapter {
   readonly stack: string;
   readonly sizeMode: DynamicSizeMode;
   readonly heightHandling: HeightHandling;
-  mount(host: HTMLElement, items: readonly BenchmarkItem[]): MutableMountedAdapter;
+  mount(host: HTMLElement, items: readonly BenchmarkItem[], rowProfile: RowProfile): MutableMountedAdapter;
 }
 
 export type DynamicSizeMode = 'estimated' | 'automatic';
@@ -68,6 +68,7 @@ const VueDynamicScrollerItem = DynamicScrollerItem as unknown as Parameters<type
 
 interface MutableSnapshot {
   readonly items: readonly BenchmarkItem[];
+  readonly rowProfile: RowProfile;
   readonly revision: number;
   readonly operation: MutationOperation | null;
   readonly location: MutationLocation | null;
@@ -80,8 +81,8 @@ interface MutableStore {
   update(items: readonly BenchmarkItem[], scenario: MutationScenario): void;
 }
 
-function createMutableStore(initialItems: readonly BenchmarkItem[]): MutableStore {
-  let snapshot: MutableSnapshot = Object.freeze({ items: initialItems, revision: 0, operation: null, location: null, changeIndex: 0 });
+function createMutableStore(initialItems: readonly BenchmarkItem[], rowProfile: RowProfile): MutableStore {
+  let snapshot: MutableSnapshot = Object.freeze({ items: initialItems, rowProfile, revision: 0, operation: null, location: null, changeIndex: 0 });
   const listeners = new Set<() => void>();
   return Object.freeze({
     getSnapshot: () => snapshot,
@@ -89,6 +90,7 @@ function createMutableStore(initialItems: readonly BenchmarkItem[]): MutableStor
     update(nextItems: readonly BenchmarkItem[], scenario: MutationScenario) {
       snapshot = Object.freeze({
         items: nextItems,
+        rowProfile: snapshot.rowProfile,
         revision: snapshot.revision + 1,
         operation: scenario.operation,
         location: scenario.location,
@@ -103,17 +105,46 @@ function useMutableSnapshot(store: MutableStore): MutableSnapshot {
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 }
 
-function rowAttributes(item: BenchmarkItem, index: number, style: React.CSSProperties = {}): Record<string, unknown> {
+function rowAttributes(item: BenchmarkItem, index: number, rowProfile: RowProfile, style: React.CSSProperties = {}): Record<string, unknown> {
   return {
-    className: 'bench-row',
+    className: `bench-row bench-row--${rowProfile}`,
     'data-id': item.id,
     'data-index': index,
-    style: { ...style, height: item.height },
+    style: rowProfile === 'uniform' ? { ...style, height: ROW_HEIGHT } : style,
   };
 }
 
-function reactRow(item: BenchmarkItem, index: number, style?: React.CSSProperties) {
-  return createElement('div', rowAttributes(item, index, style), createElement('span', null, item.label));
+function reactRow(item: BenchmarkItem, index: number, rowProfile: RowProfile, style?: React.CSSProperties) {
+  return createElement('div', rowAttributes(item, index, rowProfile, style), ...reactRowContent(item, rowProfile));
+}
+
+function reactRowContent(item: BenchmarkItem, rowProfile: RowProfile): readonly ReactElement[] {
+  const content = contentFor(item);
+  if (rowProfile === 'uniform') return [createElement('span', { key: 'title' }, content.title)];
+  const children: ReactElement[] = [
+    createElement('div', { className: 'bench-row__header', key: 'header' },
+      createElement('strong', { className: 'bench-row__title' }, content.title),
+      createElement('span', { className: 'bench-row__metadata' }, content.metadata)),
+    createElement('p', { className: 'bench-row__summary', key: 'summary' }, content.summary),
+  ];
+  if (content.tags.length > 0) children.push(createElement('div', { className: 'bench-row__tags', key: 'tags' }, ...content.tags.map((tag, index) => createElement('span', { className: 'bench-row__tag', key: `${tag}-${index}` }, tag))));
+  if (item.expanded) children.push(createElement('p', { className: 'bench-row__detail', key: 'detail' }, content.detail));
+  return children;
+}
+
+function vueRowContent(item: BenchmarkItem, rowProfile: RowProfile) {
+  const content = contentFor(item);
+  if (rowProfile === 'uniform') return [h('span', content.title)];
+  const children = [
+    h('div', { class: 'bench-row__header' }, [
+      h('strong', { class: 'bench-row__title' }, content.title),
+      h('span', { class: 'bench-row__metadata' }, content.metadata),
+    ]),
+    h('p', { class: 'bench-row__summary' }, content.summary),
+  ];
+  if (content.tags.length > 0) children.push(h('div', { class: 'bench-row__tags' }, content.tags.map((tag) => h('span', { class: 'bench-row__tag' }, tag))));
+  if (item.expanded) children.push(h('p', { class: 'bench-row__detail' }, content.detail));
+  return children;
 }
 
 function TanStackMutable({ store }: { readonly store: MutableStore }) {
@@ -135,19 +166,19 @@ function TanStackMutable({ store }: { readonly store: MutableStore }) {
   }, virtualizer.getVirtualItems().map((virtualItem) => {
     const item = snapshot.items[virtualItem.index]!;
     return createElement('div', {
-      ...rowAttributes(item, virtualItem.index, {
+      ...rowAttributes(item, virtualItem.index, snapshot.rowProfile, {
         position: 'absolute', inset: '0 0 auto 0', transform: `translateY(${virtualItem.start}px)`, width: '100%',
       }),
       key: item.id,
       ref: virtualizer.measureElement,
-    }, createElement('span', null, item.label));
+    }, ...reactRowContent(item, snapshot.rowProfile));
   })));
 }
 
-interface ReactWindowRowData { readonly items: readonly BenchmarkItem[]; }
+interface ReactWindowRowData { readonly items: readonly BenchmarkItem[]; readonly rowProfile: RowProfile; }
 
-function ReactWindowMutableRow({ index, style, items }: RowComponentProps<ReactWindowRowData>) {
-  return reactRow(items[index]!, index, style);
+function ReactWindowMutableRow({ index, style, items, rowProfile }: RowComponentProps<ReactWindowRowData>) {
+  return reactRow(items[index]!, index, rowProfile, style);
 }
 
 function ReactWindowMutable({ store }: { readonly store: MutableStore }) {
@@ -159,7 +190,7 @@ function ReactWindowMutable({ store }: { readonly store: MutableStore }) {
     rowCount: snapshot.items.length,
     rowHeight,
     rowKey: (index, data) => data.items[index]!.id,
-    rowProps: { items: snapshot.items },
+    rowProps: { items: snapshot.items, rowProfile: snapshot.rowProfile },
     overscanCount: OVERSCAN_ROWS,
     style: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
   });
@@ -174,7 +205,7 @@ function ReactVirtuosoMutable({ store }: { readonly store: MutableStore }) {
     defaultItemHeight: ROW_HEIGHT,
     increaseViewportBy: OVERSCAN_PX,
     computeItemKey: (_index, item) => item.id,
-    itemContent: (index, item) => reactRow(item, index),
+    itemContent: (index, item) => reactRow(item, index, snapshot.rowProfile),
   });
 }
 
@@ -186,7 +217,7 @@ function ReactVirtuosoAutomatic({ store }: { readonly store: MutableStore }) {
     data: snapshot.items,
     increaseViewportBy: OVERSCAN_PX,
     computeItemKey: (_index, item) => item.id,
-    itemContent: (index, item) => reactRow(item, index),
+    itemContent: (index, item) => reactRow(item, index, snapshot.rowProfile),
   });
 }
 
@@ -214,7 +245,7 @@ function ReactVirtualizedMutable({ store }: { readonly store: MutableStore }) {
       children: ({ registerChild }: { readonly registerChild: (element?: Element | null) => void }) => createElement('div', {
         ref: registerChild,
         style,
-      }, reactRow(item, index)),
+      }, reactRow(item, index, snapshot.rowProfile)),
     });
   };
   return createElement(ReactVirtualizedListComponent, {
@@ -242,7 +273,7 @@ function VirtuaMutable({ store }: { readonly store: MutableStore }) {
     itemSize: ROW_HEIGHT,
     bufferSize: OVERSCAN_PX,
     shift,
-    children: (item: BenchmarkItem, index: number) => reactRow(item, index),
+    children: (item: BenchmarkItem, index: number) => reactRow(item, index, snapshot.rowProfile),
   });
 }
 
@@ -255,16 +286,17 @@ function VirtuaAutomatic({ store }: { readonly store: MutableStore }) {
     data: snapshot.items,
     bufferSize: OVERSCAN_PX,
     shift,
-    children: (item: BenchmarkItem, index: number) => reactRow(item, index),
+    children: (item: BenchmarkItem, index: number) => reactRow(item, index, snapshot.rowProfile),
   });
 }
 
 function mountMutableReact(
   host: HTMLElement,
   initialItems: readonly BenchmarkItem[],
+  rowProfile: RowProfile,
   component: (props: { readonly store: MutableStore }) => ReactElement,
 ): MutableMountedAdapter {
-  const store = createMutableStore(initialItems);
+  const store = createMutableStore(initialItems, rowProfile);
   const root: Root = createRoot(host);
   root.render(createElement(component, { store }));
   return Object.freeze({
@@ -291,7 +323,7 @@ function reactMutableAdapter(
     stack: 'React 19.2.8',
     sizeMode,
     heightHandling,
-    mount: (host: HTMLElement, initialItems: readonly BenchmarkItem[]) => mountMutableReact(host, initialItems, component),
+    mount: (host: HTMLElement, initialItems: readonly BenchmarkItem[], rowProfile: RowProfile) => mountMutableReact(host, initialItems, rowProfile, component),
   });
 }
 
@@ -299,7 +331,7 @@ function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmar
   return Object.freeze({
   name: 'Sectile Virtual', version: '0.7.0', stack: 'Vue 3.5.22', sizeMode,
   heightHandling: sizeMode === 'estimated' ? estimatedHeightHandling : automaticHeightHandling,
-  mount(host: HTMLElement, initialItems: readonly BenchmarkItem[]) {
+  mount(host: HTMLElement, initialItems: readonly BenchmarkItem[], rowProfile: RowProfile) {
     const data = shallowRef(initialItems);
     const component = defineComponent({
       setup() {
@@ -313,13 +345,13 @@ function createSectileMutableAdapter(sizeMode: DynamicSizeMode): MutableBenchmar
           class: 'bench-scroller',
           style: { width: `${VIEWPORT_WIDTH}px`, height: `${VIEWPORT_HEIGHT}px`, overflow: 'auto' },
           itemAttributes: (item: BenchmarkItem, index: number) => ({
-            class: 'bench-row',
+            class: `bench-row bench-row--${rowProfile}`,
             'data-id': item.id,
             'data-index': index,
-            style: { height: `${item.height}px` },
+            ...(rowProfile === 'uniform' ? { style: { height: `${ROW_HEIGHT}px` } } : {}),
           }),
         }, {
-          default: ({ value }: { value: BenchmarkItem }) => h('span', value.label),
+          default: ({ value }: { value: BenchmarkItem }) => vueRowContent(value, rowProfile),
         });
       },
     });
@@ -346,7 +378,7 @@ const sectileAutomaticAdapter = createSectileMutableAdapter('automatic');
 const vueVirtualScrollerMutableAdapter: MutableBenchmarkAdapter = Object.freeze({
   name: 'Vue Virtual Scroller', version: '3.0.5', stack: 'Vue 3.5.22',
   sizeMode: 'estimated', heightHandling: estimatedHeightHandling,
-  mount(host: HTMLElement, initialItems: readonly BenchmarkItem[]) {
+  mount(host: HTMLElement, initialItems: readonly BenchmarkItem[], rowProfile: RowProfile) {
     const data = shallowRef(initialItems);
     const shift = shallowRef(false);
     const component = defineComponent({
@@ -365,8 +397,11 @@ const vueVirtualScrollerMutableAdapter: MutableBenchmarkAdapter = Object.freeze(
             active,
           }, {
             default: () => h('div', {
-              class: 'bench-row', 'data-id': item.id, 'data-index': index, style: { height: `${item.height}px` },
-            }, [h('span', item.label)]),
+              class: `bench-row bench-row--${rowProfile}`,
+              'data-id': item.id,
+              'data-index': index,
+              ...(rowProfile === 'uniform' ? { style: { height: `${ROW_HEIGHT}px` } } : {}),
+            }, vueRowContent(item, rowProfile)),
           }),
         });
       },

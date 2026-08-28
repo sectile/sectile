@@ -1,4 +1,5 @@
-import { ITEM_COUNT, ROW_HEIGHT, VIEWPORT_HEIGHT, type BenchmarkItem } from './constants.js';
+import { VIEWPORT_HEIGHT, type BenchmarkItem, type RowProfile } from './constants.js';
+import type { ExpectedLayout, HeightOracle } from './fixture.js';
 import {
   automaticMutableAdapters,
   mutableAdapters,
@@ -27,6 +28,7 @@ export interface MutationFailure {
 }
 
 export interface MutationBenchmarkResult {
+  readonly rowProfile: RowProfile;
   readonly library: string;
   readonly version: string;
   readonly stack: string;
@@ -104,9 +106,11 @@ interface SampleOutcome {
 }
 
 const QUICK_RUN = new URLSearchParams(window.location.search).has('quick');
-const MUTATION_ROUNDS = QUICK_RUN ? 1 : 5;
-const SAMPLES_PER_ROUND = QUICK_RUN ? 1 : 10;
-const FRAME_TIMEOUT_MS = 2_000;
+const mutationSearch = new URLSearchParams(window.location.search);
+const MUTATION_ROUNDS = positiveInteger(mutationSearch.get('mutation-rounds')) ?? (QUICK_RUN ? 1 : 5);
+const SAMPLES_PER_ROUND = positiveInteger(mutationSearch.get('mutation-samples')) ?? (QUICK_RUN ? 1 : 10);
+const GOOD_RECOVERY_MS = 200;
+const FRAME_TIMEOUT_MS = 500;
 const STABLE_FAILURE_MIN_MS = 300;
 const STABLE_FAILURE_FRAMES = 8;
 const GEOMETRY_TOLERANCE_PX = 2;
@@ -115,18 +119,21 @@ export const mutationConditions = Object.freeze({
   rounds: MUTATION_ROUNDS,
   samplesPerRound: SAMPLES_PER_ROUND,
   samplesPerScenario: MUTATION_ROUNDS * SAMPLES_PER_ROUND,
+  goodRecoveryMs: GOOD_RECOVERY_MS,
   frameTimeoutMs: FRAME_TIMEOUT_MS,
   stableFailureMinMs: STABLE_FAILURE_MIN_MS,
   stableFailureFrames: STABLE_FAILURE_FRAMES,
   geometryTolerancePx: GEOMETRY_TOLERANCE_PX,
   lifecycle: 'five independent mounts; each mount runs ten measured mutations and restores a correct initial collection between samples',
-  completion: 'first animation frame with correct DOM order, row geometry, total height, viewport coverage, and anchor position',
-  recovery: 'every frame after the mutation becomes observable is checked; an unchanged incorrect layout is a hard failure after the stable-failure threshold, while changing layouts remain under observation until the frame timeout',
+  completion: 'first animation frame with correct DOM order, row geometry, viewport coverage, and anchor position; exact total height is required for uniform rows and recorded as estimation quality for heterogeneous rows',
+  recovery: 'every frame after the mutation becomes observable is checked; recovery within 200ms is responsive, recovery from 200ms through 500ms is slow, and no correct frame within 500ms is a hard failure; an unchanged incorrect layout can fail earlier at the stable-failure threshold',
 });
 
 export async function runMutationBenchmarks(
   host: HTMLElement,
   onProgress: (message: string) => void,
+  rowProfile: RowProfile,
+  oracle: HeightOracle,
   libraries?: readonly string[],
   filter: MutationBenchmarkFilter = {},
 ): Promise<readonly MutationBenchmarkResult[]> {
@@ -140,7 +147,7 @@ export async function runMutationBenchmarks(
     .filter((operation) => filter.operation === undefined || operation === filter.operation)
     .flatMap((operation) => mutationLocations
       .filter((location) => filter.location === undefined || location === filter.location)
-      .map((location) => createMutationScenario(operation, location)));
+      .map((location) => createMutationScenario(operation, location, rowProfile, oracle)));
   const raw = new Map<string, RawScenarioResult>();
   const total = selectedAdapters.length * scenarios.length * MUTATION_ROUNDS * SAMPLES_PER_ROUND;
   let completed = 0;
@@ -159,6 +166,8 @@ export async function runMutationBenchmarks(
           onProgress(`Mutation ${completed}/${total} · ${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location}`);
           return sample;
         });
+        await nextFrame();
+        await new Promise((resolve) => setTimeout(resolve, 50));
         for (const { sample, outcome } of roundOutcomes) {
           if (outcome.elapsedMs !== null) result.samples.push(outcome.elapsedMs);
           if (outcome.elapsedMs !== null && outcome.failures.length > 0) result.recoverySamples.push(outcome.elapsedMs);
@@ -182,6 +191,7 @@ export async function runMutationBenchmarks(
     const recoveredSamples = collected.outcomes.filter((sample) => sample.outcome === 'recovered').length;
     const failedSamples = collected.outcomes.filter((sample) => sample.outcome === 'failed').length;
     return Object.freeze({
+      rowProfile,
       library: adapter.name,
       version: adapter.version,
       stack: adapter.stack,
@@ -214,7 +224,7 @@ async function runMutationRound(
   let mounted: MutableMountedAdapter | undefined;
   const outcomes: { sample: number; outcome: SampleOutcome }[] = [];
   try {
-    mounted = adapter.mount(host, scenario.initialItems);
+    mounted = adapter.mount(host, scenario.initialItems, scenario.rowProfile);
     await waitForElement(host, '.bench-scroller');
     await waitForRows(host);
     for (let localSample = 0; localSample < SAMPLES_PER_ROUND; localSample += 1) {
@@ -222,15 +232,50 @@ async function runMutationRound(
       const execution = await runMountedMutationSample(adapter, mounted, scenario, host, sample);
       outcomes.push(Object.freeze({ sample, outcome: execution.outcome }));
       if (localSample === SAMPLES_PER_ROUND - 1 || !execution.didMutate) continue;
+      if (execution.outcome.elapsedMs === null) {
+        mounted.unmount();
+        host.replaceChildren();
+        await nextFrame();
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        mounted = adapter.mount(host, scenario.initialItems, scenario.rowProfile);
+        await waitForElement(host, '.bench-scroller');
+        await waitForRows(host);
+        continue;
+      }
       const reset = reverseMutationScenario(scenario);
       mounted.update(scenario.initialItems, reset);
-      const resetSucceeded = await waitForInitialLayout(mounted.scroller, scenario);
+      const resetSucceeded = await waitForInitialLayout(
+        mounted.scroller,
+        scenario,
+        scenario.rowProfile === 'uniform' && adapter.sizeMode !== 'automatic',
+      );
       if (resetSucceeded) continue;
       mounted.unmount();
       host.replaceChildren();
-      mounted = adapter.mount(host, scenario.initialItems);
+      await nextFrame();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      mounted = adapter.mount(host, scenario.initialItems, scenario.rowProfile);
       await waitForElement(host, '.bench-scroller');
       await waitForRows(host);
+    }
+    return Object.freeze(outcomes);
+  } catch (error) {
+    for (let localSample = outcomes.length; localSample < SAMPLES_PER_ROUND; localSample += 1) {
+      const sample = beginSample(localSample);
+      outcomes.push(Object.freeze({
+        sample,
+        outcome: Object.freeze({
+          elapsedMs: null,
+          failures: Object.freeze([Object.freeze({
+            severity: adapter.name === 'Sectile Virtual' ? 'fatal' : 'failure',
+            code: 'exception' as const,
+            message: error instanceof Error ? error.message : String(error),
+            sample,
+            scrollTop: 0,
+            details: Object.freeze({ stack: error instanceof Error ? error.stack : undefined }),
+          })]),
+        }),
+      }));
     }
     return Object.freeze(outcomes);
   } finally {
@@ -251,7 +296,14 @@ async function runMountedMutationSample(
   try {
     await positionScenario(scroller, scenario, host);
     const initialIndex = indexByID(scenario.initialItems);
-    const initialInspection = inspectLayout(scroller, initialIndex, scenario.initialItems, scenario.initialTotalHeight, undefined);
+    const initialInspection = inspectLayout(
+      scroller,
+      initialIndex,
+      scenario.initialLayout,
+      scenario.initialTotalHeight,
+      undefined,
+      scenario.rowProfile === 'uniform' && adapter.sizeMode !== 'automatic',
+    );
     if (initialInspection.failures.length > 0) {
       return Object.freeze({
         didMutate: false,
@@ -260,7 +312,7 @@ async function runMountedMutationSample(
     }
     const nextIndex = indexByID(scenario.nextItems);
     const expectedScrollHeight = scenario.nextTotalHeight;
-    const anchor = captureAnchor(scroller, initialInspection.rows, initialIndex, nextIndex, scenario, expectedScrollHeight);
+    const anchor = captureAnchor(scroller, initialInspection.rows, initialIndex, nextIndex, scenario);
     if (anchor === undefined) {
       return Object.freeze({
         didMutate: false,
@@ -327,9 +379,10 @@ function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
         const inspection = inspectLayout(
           options.scroller,
           options.nextIndex,
-          options.scenario.nextItems,
+          options.scenario.nextLayout,
           options.expectedScrollHeight,
           options.anchor,
+          options.scenario.rowProfile === 'uniform' && options.adapter.sizeMode !== 'automatic',
         );
         lastInspection = inspection;
         if (inspection.failures.length === 0) {
@@ -371,6 +424,7 @@ function waitForCorrectMutation(options: WaitOptions): Promise<SampleOutcome> {
 function waitForInitialLayout(
   scroller: HTMLElement,
   scenario: MutationScenario,
+  strictTotalHeight: boolean,
 ): Promise<boolean> {
   const expectedIndex = indexByID(scenario.initialItems);
   return new Promise((resolve) => {
@@ -381,9 +435,10 @@ function waitForInitialLayout(
       const inspection = inspectLayout(
         scroller,
         expectedIndex,
-        scenario.initialItems,
+        scenario.initialLayout,
         scenario.initialTotalHeight,
         undefined,
+        strictTotalHeight,
       );
       if (inspection.failures.length === 0) {
         resolve(true);
@@ -427,9 +482,10 @@ function failureFingerprint(inspection: LayoutInspection, scroller: HTMLElement)
 function inspectLayout(
   scroller: HTMLElement,
   expectedIndex: ReadonlyMap<string, number>,
-  expectedItems: readonly BenchmarkItem[],
+  expectedLayout: ExpectedLayout,
   expectedScrollHeight: number,
   anchor: Anchor | undefined,
+  strictTotalHeight: boolean,
 ): LayoutInspection {
   const viewport = scroller.getBoundingClientRect();
   const elements = Array.from(scroller.querySelectorAll<HTMLElement>('.bench-row'));
@@ -451,7 +507,7 @@ function inspectLayout(
       failures.push({ code: 'unexpected-id', message: `Rendered row ID ${id} is absent from the expected data.`, details: { id } });
       continue;
     }
-    const expectedHeight = expectedItems[index]!.height;
+    const expectedHeight = expectedLayout.heightAt(index);
     if (Math.abs(rect.height - expectedHeight) > GEOMETRY_TOLERANCE_PX) {
       failures.push({
         code: 'row-height',
@@ -498,7 +554,7 @@ function inspectLayout(
     }
   }
 
-  if (Math.abs(scroller.scrollHeight - expectedScrollHeight) > GEOMETRY_TOLERANCE_PX) {
+  if (strictTotalHeight && Math.abs(scroller.scrollHeight - expectedScrollHeight) > GEOMETRY_TOLERANCE_PX) {
     failures.push({
       code: 'scroll-height',
       message: `Scroll height was ${scroller.scrollHeight}px instead of ${expectedScrollHeight}px.`,
@@ -527,7 +583,10 @@ function mutationObserved(host: HTMLElement, scenario: MutationScenario, nextInd
   if (scenario.operation === 'remove') return !byID.has(scenario.affectedIDs[0]);
   if (scenario.operation === 'resize') {
     const target = byID.get(scenario.affectedIDs[0]);
-    return target !== undefined && Math.abs(target.getBoundingClientRect().height - ROW_HEIGHT * 2) <= GEOMETRY_TOLERANCE_PX;
+    const index = nextIndex.get(scenario.affectedIDs[0]);
+    return target !== undefined
+      && index !== undefined
+      && Math.abs(target.getBoundingClientRect().height - scenario.nextLayout.heightAt(index)) <= GEOMETRY_TOLERANCE_PX;
   }
   const affected = scenario.affectedIDs
     .map((id) => ({ id, row: byID.get(id), index: nextIndex.get(id) }))
@@ -542,7 +601,6 @@ function captureAnchor(
   initialIndex: ReadonlyMap<string, number>,
   nextIndex: ReadonlyMap<string, number>,
   scenario: MutationScenario,
-  expectedScrollHeight: number,
 ): Anchor | undefined {
   const viewport = scroller.getBoundingClientRect();
   const candidates = rows.filter((row) => nextIndex.has(row.id) && row.bottom > viewport.top && row.top < viewport.bottom);
@@ -552,12 +610,11 @@ function captureAnchor(
   const beforeIndex = initialIndex.get(selected.id);
   const afterIndex = nextIndex.get(selected.id);
   if (beforeIndex === undefined || afterIndex === undefined) return undefined;
-  const beforeAbsolute = beforeIndex * ROW_HEIGHT;
-  const resizeDelta = scenario.operation === 'resize' && scenario.index < afterIndex ? ROW_HEIGHT : 0;
-  const afterAbsolute = afterIndex * ROW_HEIGHT + resizeDelta;
+  const beforeAbsolute = scenario.initialLayout.offsetAt(beforeIndex);
+  const afterAbsolute = scenario.nextLayout.offsetAt(afterIndex);
   const absoluteDelta = afterAbsolute - beforeAbsolute;
   const desiredScrollTop = Math.min(
-    Math.max(0, expectedScrollHeight - scroller.clientHeight),
+    Math.max(0, scroller.scrollHeight + scenario.expectedScrollHeightDelta - scroller.clientHeight),
     Math.max(0, scroller.scrollTop + absoluteDelta),
   );
   const viewportOffset = (selected.top - viewport.top) + absoluteDelta - (desiredScrollTop - scroller.scrollTop);
@@ -565,30 +622,65 @@ function captureAnchor(
 }
 
 async function positionScenario(scroller: HTMLElement, scenario: MutationScenario, host: HTMLElement): Promise<void> {
-  const maximum = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+  const targetID = scenario.initialItems[scenario.index]!.id;
+  if (scenario.location === 'end') {
+    for (let attempt = 0; attempt < 32; attempt += 1) {
+      scroller.scrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await nextFrame();
+      const target = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
+      if (target !== null && intersectsViewport(target, scroller)) return;
+    }
+    throw new Error(`Could not position row ${scenario.index} in the viewport.`);
+  }
+  let low = 0;
+  let high = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
   let offset = scenario.location === 'start'
     ? 0
     : scenario.location === 'middle'
-      ? Math.round(maximum * (scenario.index / Math.max(1, scenario.initialItems.length - 1)))
-      : maximum;
-  const targetID = scenario.initialItems[scenario.index]!.id;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+      ? high / 2
+      : high;
+  for (let attempt = 0; attempt < 16; attempt += 1) {
     scroller.scrollTop = offset;
     scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
     await nextFrame();
-    if (host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`) !== null) return;
-    const viewport = scroller.getBoundingClientRect();
-    const rendered = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'), (row) => {
-      const index = Number(row.dataset['index']);
-      const rect = row.getBoundingClientRect();
-      return { index, absoluteTop: scroller.scrollTop + rect.top - viewport.top };
-    }).filter((row) => Number.isInteger(row.index));
-    const nearest = rendered.sort((left, right) => Math.abs(left.index - scenario.index) - Math.abs(right.index - scenario.index))[0];
-    if (nearest === undefined) continue;
-    const extent = nearest.index === 0 ? ROW_HEIGHT : nearest.absoluteTop / nearest.index;
-    if (!Number.isFinite(extent) || extent <= 0) continue;
-    offset = Math.min(maximum, Math.max(0, scroller.scrollTop + ((scenario.index - nearest.index) * extent)));
+    const target = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
+    if (target !== null) {
+      const targetRect = target.getBoundingClientRect();
+      const viewport = scroller.getBoundingClientRect();
+      const centerDelta = targetRect.top - viewport.top - Math.max(0, (scroller.clientHeight - targetRect.height) / 2);
+      if (Math.abs(centerDelta) <= GEOMETRY_TOLERANCE_PX) return;
+      scroller.scrollTop += centerDelta;
+      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await nextFrame();
+      const centered = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
+      if (centered !== null && intersectsViewport(centered, scroller)) return;
+    }
+    const visibleIndices = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'))
+      .map((row) => Number(row.dataset['index']))
+      .filter(Number.isInteger);
+    if (visibleIndices.length === 0) {
+      high = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      offset = Math.min(high, Math.max(0, offset));
+      continue;
+    }
+    const minimum = Math.min(...visibleIndices);
+    const maximum = Math.max(...visibleIndices);
+    if (scenario.index < minimum) high = Math.min(high, offset);
+    else if (scenario.index > maximum) low = Math.max(low, offset);
+    else return;
+    const currentMaximum = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    high = Math.min(currentMaximum, Math.max(low, high));
+    offset = (low + high) / 2;
   }
+  throw new Error(`Could not position row ${scenario.index} in the viewport.`);
+}
+
+function intersectsViewport(row: HTMLElement, scroller: HTMLElement): boolean {
+  const rect = row.getBoundingClientRect();
+  const viewport = scroller.getBoundingClientRect();
+  return rect.bottom > viewport.top + GEOMETRY_TOLERANCE_PX
+    && rect.top < viewport.bottom - GEOMETRY_TOLERANCE_PX;
 }
 
 function waitForRows(host: HTMLElement): Promise<void> {
@@ -641,7 +733,7 @@ function indexByID(items: readonly BenchmarkItem[]): ReadonlyMap<string, number>
 }
 
 function resultKey(adapter: MutableBenchmarkAdapter, scenario: MutationScenario): string {
-  return `${adapter.name}:${adapter.sizeMode}:${scenario.operation}:${scenario.location}`;
+  return `${scenario.rowProfile}:${adapter.name}:${adapter.sizeMode}:${scenario.operation}:${scenario.location}`;
 }
 
 function rotate<T>(values: readonly T[], offset: number): readonly T[] {
@@ -655,3 +747,8 @@ function percentile(sorted: readonly number[], ratio: number): number {
 
 function round(value: number): number { return Number(value.toFixed(3)); }
 function nextFrame(): Promise<void> { return new Promise((resolve) => requestAnimationFrame(() => resolve())); }
+function positiveInteger(value: string | null): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 && parsed <= 50 ? parsed : undefined;
+}
