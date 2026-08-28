@@ -23,7 +23,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { Teleport, createApp, defineComponent, h, mergeProps, nextTick, ref } = await import('vue');
+const { Teleport, createApp, defineComponent, h, mergeProps, nextTick, ref, shallowRef } = await import('vue');
 const {
   FormDescription,
   FormField,
@@ -33,7 +33,10 @@ const {
   FormRoot,
   FormSubmit,
   FormSummary,
+  provideFormControlOwner,
+  useCompositeFormControl,
   useFormControl,
+  useNativeInputFormControl,
 } = await import('../dist/form.js');
 const { CheckboxRoot } = await import('../dist/checkbox.js');
 const { CheckboxGroupRoot } = await import('../dist/checkbox-group.js');
@@ -199,6 +202,120 @@ test('Vue Form coordinates native validation, focus, FormData, and reset without
 
   app.unmount();
   host.remove();
+});
+
+test('native-only Form fields preserve textarea and select successful controls', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let submitted;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: (event) => { submitted = event; },
+    }, {
+      default: () => [
+        h(FormField, { id: 'bio', name: ['profile', 'bio'] }, {
+          default: () => h('textarea', { defaultValue: 'Maintainer' }),
+        }),
+        h(FormField, { id: 'plan', name: ['billing', 'plan'] }, {
+          default: () => h('select', { value: 'team' }, [
+            h('option', { value: 'starter' }, 'Starter'),
+            h('option', { value: 'team' }, 'Team'),
+          ]),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    host.querySelector('form').requestSubmit();
+
+    assert.equal(submitted.values.profile.bio, 'Maintainer');
+    assert.equal(submitted.values.billing.plan, 'team');
+    assert.deepEqual([...submitted.formData.entries()], [
+      ['profile.bio', 'Maintainer'],
+      ['billing.plan', 'team'],
+    ]);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('mixed native and Sectile controls serialize in one document-ordered FormData', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let entries;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: (event) => { entries = [...event.formData.entries()]; },
+    }, {
+      default: () => [
+        h(FormField, { name: 'native' }, {
+          default: () => h('input', { defaultValue: 'first' }),
+        }),
+        h(FormField, { name: 'sectile' }, {
+          default: () => h(TextField, { defaultValue: 'second' }),
+        }),
+        h(FormField, { name: 'enabled' }, {
+          default: () => h(CheckboxRoot, { defaultValue: true, value: 'yes' }),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    host.querySelector('form').requestSubmit();
+
+    assert.deepEqual(entries, [
+      ['native', 'first'],
+      ['sectile', 'second'],
+      ['enabled', 'yes'],
+    ]);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('named controls outside FormField submit without enhanced field registration', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let state;
+  let submitted;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+      onSubmit: (event) => { submitted = event.values; },
+    }, {
+      default: () => [
+        h('input', { name: 'direct', value: 'outside' }),
+        h(FormField, { id: 'enhanced', name: 'enhanced' }, {
+          default: () => h('input', { value: 'inside' }),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    await nextTick();
+
+    assert.deepEqual(state.fields.map((field) => field.id), ['enhanced']);
+    host.querySelector('form').requestSubmit();
+    assert.equal(submitted.direct, 'outside');
+    assert.equal(submitted.enhanced, 'inside');
+  } finally {
+    app.unmount();
+    host.remove();
+  }
 });
 
 test('Vue Form reset restores native and uncontrolled Sectile defaults without taking controlled ownership', async () => {
@@ -421,6 +538,39 @@ test('native checkbox groups share one FormField path without requiring every ch
   host.remove();
 });
 
+test('native radio groups share one FormField path and serialize the checked choice', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let submitted;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: (event) => { submitted = event.values; },
+    }, {
+      default: () => h(FormField, { id: 'contact', name: 'contact', required: true }, {
+        default: () => h('fieldset', null, [
+          h(FormLabel, null, { default: () => 'Contact method' }),
+          h('input', { type: 'radio', value: 'email' }),
+          h('input', { type: 'radio', value: 'phone', checked: true }),
+        ]),
+      }),
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+
+    const radios = [...host.querySelectorAll('input[type="radio"]')];
+    assert.deepEqual(radios.map((input) => input.name), ['contact', 'contact']);
+    host.querySelector('form').requestSubmit();
+    assert.equal(submitted.contact, 'phone');
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('unrelated native controls produce a field diagnostic instead of choosing one target', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -471,7 +621,7 @@ test('multiple custom registrations and invalid paths become recoverable field d
   const AtomicInput = defineComponent({
     name: 'DiagnosticAtomicInput',
     setup() {
-      const input = ref(null);
+      const input = shallowRef(null);
       const participation = useFormControl({
         element: input,
         semanticControl: input,
@@ -603,7 +753,7 @@ test('teleported custom controls keep FormField context, form association, and i
     name: 'AtomicInput',
     inheritAttrs: false,
     setup(_, { attrs }) {
-      const input = ref(null);
+      const input = shallowRef(null);
       const participation = useFormControl({
         element: input,
         semanticControl: input,
@@ -680,7 +830,7 @@ test('dynamic custom-control replacement preserves field metadata and refreshes 
     inheritAttrs: false,
     props: { value: { type: String, required: true } },
     setup(props, { attrs }) {
-      const input = ref(null);
+      const input = shallowRef(null);
       const participation = useFormControl({
         element: input,
         semanticControl: input,
@@ -739,8 +889,8 @@ test('useFormControl maps compound semantics and nested submission names to sepa
     name: 'CompoundControl',
     inheritAttrs: false,
     setup(_, { attrs }) {
-      const semantic = ref(null);
-      const hidden = ref(null);
+      const semantic = shallowRef(null);
+      const hidden = shallowRef(null);
       const participation = useFormControl({
         element: semantic,
         semanticControl: semantic,
@@ -807,6 +957,131 @@ test('useFormControl maps compound semantics and nested submission names to sepa
 
   app.unmount();
   host.remove();
+});
+
+test('useFormControl is inert outside FormField while the native control still submits', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let participation;
+  let state;
+  let submitted;
+  const AtomicControl = defineComponent({
+    name: 'UnwrappedAtomicControl',
+    setup() {
+      const input = shallowRef(null);
+      participation = useFormControl({
+        element: input,
+        semanticControl: input,
+        focusTarget: input,
+        validationTarget: input,
+        labelMode: 'for',
+        capabilities: { id: true, describedBy: true, invalid: true },
+      });
+      return () => h('input', {
+        ...participation.controlProps.value,
+        ref: input,
+        name: 'direct-custom',
+        value: 'available',
+      });
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+      onSubmit: (event) => { submitted = event.values; },
+    }, { default: () => h(AtomicControl) }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+
+    assert.equal(participation.participating, false);
+    assert.deepEqual(participation.controlProps.value, {});
+    assert.deepEqual(state.fields, []);
+    host.querySelector('form').requestSubmit();
+    assert.equal(submitted['direct-custom'], 'available');
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('custom composite ownership prevents nested duplicate registration and resets once', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let childParticipation;
+  let resetCount = 0;
+  let state;
+  const NestedInput = defineComponent({
+    name: 'OwnedNestedInput',
+    setup() {
+      const input = shallowRef(null);
+      childParticipation = useNativeInputFormControl(input);
+      return () => h('input', {
+        ...childParticipation.controlProps.value,
+        ref: input,
+        value: 'focus-only',
+      });
+    },
+  });
+  const CompositeControl = defineComponent({
+    name: 'OwnedCompositeControl',
+    setup() {
+      const root = shallowRef(null);
+      const hidden = shallowRef(null);
+      const participation = useCompositeFormControl({
+        root,
+        submissions: [{
+          element: hidden,
+          relativeName: 'choice',
+          capabilities: { name: true, form: true, disabled: true },
+        }],
+        reset: () => { resetCount += 1; },
+      });
+      provideFormControlOwner();
+      return () => h('div', {
+        ...participation.controlProps.value,
+        ref: root,
+        tabindex: 0,
+      }, [
+        h(NestedInput),
+        h('input', { ref: hidden, type: 'hidden', value: 'nested' }),
+      ]);
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+    }, {
+      default: () => [
+        h(FormField, { id: 'custom-composite', name: 'profile' }, {
+          default: () => h(CompositeControl),
+        }),
+        h(FormReset, null, { default: () => 'Reset' }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    await nextTick();
+
+    assert.equal(childParticipation.participating, false);
+    assert.deepEqual(state.fields.map((field) => field.id), ['custom-composite']);
+    assert.deepEqual([...new FormData(host.querySelector('form')).entries()], [
+      ['profile.choice', 'nested'],
+    ]);
+    host.querySelector('[data-part="reset"]').click();
+    await nextTick();
+    assert.equal(resetCount, 1);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
 });
 
 test('Sectile scalar and boolean controls inherit FormField metadata through their actual targets', async () => {

@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": 1,
+      "description": "Standalone Sectile controls and host roots remain usable without the optional Form peer.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue Form value-control inventory is an explicit integration ratchet" },
+        { "file": "verification/consumer-install/form.mjs", "contains": "const domBase = await fixture('dom-base'" },
+        { "file": "verification/consumer-install/form.mjs", "contains": "const vueBase = await fixture('vue-base'" }
+      ]
+    },
+    {
+      "id": 2,
+      "description": "Native input, textarea, select, checkbox, radio, and fieldset compositions participate through FormField.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "native-only Form fields preserve textarea and select successful controls" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue Form coordinates native validation, focus, FormData, and reset without owning values" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "native checkbox groups share one FormField path without requiring every choice" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "native radio groups share one FormField path and serialize the checked choice" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue FormField uses native fieldset semantics and preserves explicit child metadata" }
+      ]
+    },
+    {
+      "id": 3,
+      "description": "Sectile-only fields use their actual semantic, focus, validation, and successful controls.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Sectile scalar and boolean controls inherit FormField metadata through their actual targets" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Sectile group and selection controls keep semantics separate from successful controls" }
+      ]
+    },
+    {
+      "id": 4,
+      "description": "Native and Sectile controls share one document-ordered native FormData.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "mixed native and Sectile controls serialize in one document-ordered FormData" }
+      ]
+    },
+    {
+      "id": 5,
+      "description": "Named controls outside FormField submit without enhanced registration.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "named controls outside FormField submit without enhanced field registration" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form preserves files and native omissions without registering unwrapped controls" }
+      ]
+    },
+    {
+      "id": 6,
+      "description": "Grouped native controls share a field while unrelated multiple targets are diagnosed.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "native checkbox groups share one FormField path without requiring every choice" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "unrelated native controls produce a field diagnostic instead of choosing one target" }
+      ]
+    },
+    {
+      "id": 7,
+      "description": "Composite controls separate semantic, focus, validation, and successful targets for scalar, repeated, indexed, and range shapes.",
+      "evidence": [
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form keeps field, semantic, focus, validation, and submission targets distinct" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "compound range fields inherit one FormField path and submit named endpoints" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "multi-thumb slider submits indexed values through a FormField path" }
+      ]
+    },
+    {
+      "id": 8,
+      "description": "A custom atomic control participates inside FormField and remains inert outside it.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "useFormControl is inert outside FormField while the native control still submits" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "teleported custom controls keep FormField context, form association, and interaction state" }
+      ]
+    },
+    {
+      "id": 9,
+      "description": "Custom composites register compound targets and suppress nested duplicate ownership.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "useFormControl maps compound semantics and nested submission names to separate elements" },
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "custom composite ownership prevents nested duplicate registration and resets once" }
+      ]
+    },
+    {
+      "id": 10,
+      "description": "Explicit control metadata wins and effective paths own serialization and issues.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "explicit control metadata wins over inherited FormField defaults" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form routes descendant issues to the longest registered field path" }
+      ]
+    },
+    {
+      "id": 11,
+      "description": "Teleported and external form-associated controls preserve behavior and clean up directly observed targets.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "teleported custom controls keep FormField context, form association, and interaction state" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form observes and refreshes registered out-of-tree controls exactly once" }
+      ]
+    },
+    {
+      "id": 12,
+      "description": "Raw values preserve native nested, indexed, repeated, submitter, file, and omission behavior while malformed shapes retain FormData.",
+      "evidence": [
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form derives nested values from the exact submitter-aware successful controls" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form preserves files and native omissions without registering unwrapped controls" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form turns malformed value shapes into safe form issues without losing FormData" }
+      ]
+    },
+    {
+      "id": 13,
+      "description": "Raw defineFormSubmission values remain honestly unknown without an arbitrary output generic.",
+      "evidence": [
+        { "file": "packages/vue/type-tests/component-contracts.ts", "contains": "Raw FormData-derived values remain unknown without a schema." }
+      ]
+    },
+    {
+      "id": 14,
+      "description": "Standard Schema output is inferred through one atomic DOM/Vue definition and Vue v-bind.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.test.mjs", "test": "Vue defineFormSubmission keeps schema and handler atomic for v-bind" },
+        { "file": "packages/vue/type-tests/fixtures/form-submission.vue", "contains": "const submission = defineFormSubmission({" }
+      ]
+    },
+    {
+      "id": 15,
+      "description": "Issue sources coexist and asynchronous validation is cancellable with deterministic focus and summary behavior.",
+      "evidence": [
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "issue replacement preserves other sources and unregistered server issues" },
+        { "file": "packages/form/tests/state/form.test.mjs", "test": "FRM-01, FRM-02: form generations reject stale validation and submission results atomically" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form focuses the summary when invalid issues have no focusable field owner" }
+      ]
+    },
+    {
+      "id": 16,
+      "description": "Native submission attributes and submitter survive async gating; novalidate only skips native constraints.",
+      "evidence": [
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form resumes one async-gated native submission with the original submitter" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form skips native constraints for novalidate submitters but keeps custom validation" }
+      ]
+    },
+    {
+      "id": 17,
+      "description": "Managed sync and async submissions support success, mapped failure, server issues, duplicate suppression, and stale invalidation.",
+      "evidence": [
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form owns async managed submission, duplicate suppression, and server failure" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form maps thrown managed submission errors without exposing the reason" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form ignores managed submission completion after reset or destroy" }
+      ]
+    },
+    {
+      "id": 18,
+      "description": "Reset restores native and uncontrolled defaults, preserves controlled ownership, orders hooks, and cancels async work.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "Vue Form reset restores native and uncontrolled Sectile defaults without taking controlled ownership" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form preserves document order and delegates reset to participants and native controls" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form reset invalidates async validation and prevents native resumption" }
+      ]
+    },
+    {
+      "id": 19,
+      "description": "Dynamic registration, replacement, ordering, names, ownership, and teardown do not leave stale participants.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.dom.test.mjs", "test": "dynamic custom-control replacement preserves field metadata and refreshes targets" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form updates duplicate participant ids in place and unregisters explicitly" },
+        { "file": "packages/dom/tests/form.test.mjs", "test": "DOM Form observes and refreshes registered out-of-tree controls exactly once" }
+      ]
+    },
+    {
+      "id": 20,
+      "description": "SSR and hydration preserve native semantics, participant cardinality, controlled ownership, and peer-free ordinary imports.",
+      "evidence": [
+        { "file": "packages/vue/tests/form.test.mjs", "test": "Vue Form renders native semantics and stable compound part boundaries during SSR" },
+        { "file": "packages/vue/tests/hydration.dom.test.mjs", "test": "[HYD-07] Form hydration registers one participant and preserves controlled ownership" },
+        { "file": "verification/consumer-install/form.mjs", "contains": "await missingPeer(vueBase, '@sectile/vue/form', '@sectile/form')" }
+      ]
+    },
+    {
+      "id": 21,
+      "description": "Renderer-neutral, DOM, and Vue package paths work while Terminal has no Form surface or dependency.",
+      "evidence": [
+        { "file": "verification/consumer-install/form.mjs", "contains": "Form packed consumers passed: direct, optional-peer, DOM, Vue, typing, and Terminal absence" },
+        { "file": "packages/terminal/tests/factory-api.test.mjs", "test": "terminal has no Form package surface or dependency edge" }
+      ]
+    }
+  ]
+}

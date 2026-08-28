@@ -71,6 +71,7 @@ const fullSteps = [
   Object.freeze({ label: 'workspace boundaries', ...pnpm('check:boundaries') }),
   Object.freeze({ label: 'public signatures', ...pnpm('check:signatures') }),
   Object.freeze({ label: 'component completeness', ...pnpm('check:components') }),
+  Object.freeze({ label: 'Form scenario completeness', ...pnpm('check:form-scenarios') }),
   Object.freeze({ label: 'component public API', ...pnpm('check:component-api') }),
 ];
 

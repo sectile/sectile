@@ -10,6 +10,7 @@ Object.assign(globalThis, {
   Element: browserWindow.Element,
   HTMLElement: browserWindow.HTMLElement,
   HTMLButtonElement: browserWindow.HTMLButtonElement,
+  HTMLFormElement: browserWindow.HTMLFormElement,
   HTMLInputElement: browserWindow.HTMLInputElement,
   SVGElement: browserWindow.SVGElement,
   Event: browserWindow.Event,
@@ -23,6 +24,8 @@ const { renderToString } = await import('@vue/server-renderer');
 const { DisclosureContent, DisclosureRoot, DisclosureTrigger } = await import('../dist/disclosure.js');
 const { DialogContent, DialogRoot, DialogTrigger } = await import('../dist/dialog.js');
 const { PinInputInput, PinInputRoot } = await import('../dist/pin-input.js');
+const { FormField, FormRoot } = await import('../dist/form.js');
+const { TextField } = await import('../dist/text.js');
 
 async function hydrate(component) {
   const html = await renderToString(createSSRApp(component));
@@ -106,6 +109,43 @@ test('[HYD-05] hidden form controls preserve SSR hydration and submission state'
     assert.equal(hidden.value, '1234');
     assert.equal(rendered.host.querySelectorAll('[data-part="input"]').length, 4);
     assert.equal(new FormData(rendered.host.querySelector('form')).get('pin'), '1234');
+    assert.deepEqual(rendered.warnings, []);
+  } finally {
+    rendered.app.unmount();
+    rendered.host.remove();
+  }
+});
+
+test('[HYD-07] Form hydration registers one participant and preserves controlled ownership', async () => {
+  const states = [];
+  const component = {
+    render: () => h(FormRoot, {
+      id: 'account-form',
+      onStateChange: (state) => states.push(state),
+    }, {
+      default: () => h(FormField, {
+        id: 'email',
+        name: ['profile', 'email'],
+      }, {
+        default: () => h(TextField, {
+          modelValue: 'owner@sectile.dev',
+          'onUpdate:modelValue': () => {},
+        }),
+      }),
+    }),
+  };
+  const rendered = await hydrate(component);
+  try {
+    await nextTick();
+    const form = rendered.host.querySelector('form');
+    const input = rendered.host.querySelector('input');
+    assert.ok(form instanceof HTMLFormElement);
+    assert.ok(input instanceof HTMLInputElement);
+    assert.equal(input.name, 'profile.email');
+    assert.equal(input.value, 'owner@sectile.dev');
+    assert.equal(new FormData(form).get('profile.email'), 'owner@sectile.dev');
+    assert.equal(states.at(-1).fields.length, 1);
+    assert.equal(states.at(-1).fields[0].id, 'email');
     assert.deepEqual(rendered.warnings, []);
   } finally {
     rendered.app.unmount();

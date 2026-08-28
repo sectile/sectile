@@ -299,6 +299,49 @@ test('DOM Form derives nested values from the exact submitter-aware successful c
   }
 });
 
+test('DOM Form preserves files and native omissions without registering unwrapped controls', () => {
+  const dom = installDOM();
+  try {
+    const { DataTransfer, File, document } = dom.window;
+    const formElement = document.createElement('form');
+    const avatar = document.createElement('input');
+    const unchecked = document.createElement('input');
+    const unnamed = document.createElement('textarea');
+    avatar.type = 'file';
+    avatar.name = 'profile.avatar';
+    unchecked.type = 'checkbox';
+    unchecked.name = 'notifications';
+    unchecked.value = 'email';
+    unnamed.value = 'browser omits unnamed controls';
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['avatar'], 'avatar.txt', { type: 'text/plain' }));
+    avatar.files = transfer.files;
+    formElement.append(avatar, unchecked, unnamed);
+    document.body.append(formElement);
+    let details;
+
+    const form = createForm({
+      form: formElement,
+      onSubmit(next) {
+        next.event.preventDefault();
+        details = next;
+      },
+    });
+
+    formElement.requestSubmit();
+
+    const file = details.values.profile.avatar;
+    assert.ok(file instanceof File);
+    assert.equal(file.name, 'avatar.txt');
+    assert.equal(file.size, 6);
+    assert.deepEqual([...details.formData.keys()], ['profile.avatar']);
+    assert.equal('notifications' in details.values, false);
+    assert.equal(form.state.fields.length, 0);
+  } finally {
+    dom.restore();
+  }
+});
+
 test('DOM Form defers Standard Schema until submit and revalidates failed submission on input', () => {
   const dom = installDOM();
   try {
@@ -640,6 +683,10 @@ test('DOM Form resumes one async-gated native submission with the original submi
     submitter.type = 'submit';
     submitter.name = 'intent';
     submitter.value = 'publish';
+    formElement.action = '/releases';
+    formElement.method = 'post';
+    formElement.enctype = 'multipart/form-data';
+    formElement.target = 'release-frame';
     formElement.append(submitter);
     document.body.append(formElement);
     let resolveValidation;
@@ -672,6 +719,47 @@ test('DOM Form resumes one async-gated native submission with the original submi
     assert.equal(events.length, 3);
     assert.equal(events[2].prevented, false);
     assert.equal(events[2].submitter, submitter);
+    assert.equal(formElement.getAttribute('action'), '/releases');
+    assert.equal(formElement.method, 'post');
+    assert.equal(formElement.enctype, 'multipart/form-data');
+    assert.equal(formElement.target, 'release-frame');
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form skips native constraints for novalidate submitters but keeps custom validation', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const required = document.createElement('input');
+    const submitter = document.createElement('button');
+    required.name = 'email';
+    required.required = true;
+    submitter.type = 'submit';
+    submitter.formNoValidate = true;
+    formElement.append(required, submitter);
+    document.body.append(formElement);
+    let customValidations = 0;
+    let submissions = 0;
+
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'email', element: required }],
+      validate: () => {
+        customValidations += 1;
+        return { issues: [{ path: 'email', message: 'Application validation still runs.' }] };
+      },
+      onSubmit: () => { submissions += 1; },
+    });
+
+    formElement.requestSubmit(submitter);
+
+    assert.equal(customValidations, 1);
+    assert.equal(submissions, 0);
+    assert.equal(form.state.validationStatus, 'invalid');
+    assert.deepEqual(form.state.fields[0].issues.map((issue) => issue.source), ['validate']);
   } finally {
     dom.restore();
   }
