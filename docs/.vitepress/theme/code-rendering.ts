@@ -1,7 +1,20 @@
-import { codeToHtml } from 'shiki';
+import { createHighlighterCore } from 'shiki/core';
+import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
+import shellscript from 'shiki/langs/shellscript.mjs';
+import typescript from 'shiki/langs/typescript.mjs';
+import vue from 'shiki/langs/vue.mjs';
+import vueHtml from 'shiki/langs/vue-html.mjs';
+import githubDarkDefault from 'shiki/themes/github-dark-default.mjs';
+import githubLightDefault from 'shiki/themes/github-light-default.mjs';
 import { resolveVueCodeLanguage } from '../code-language.mjs';
 
 type CodeTheme = 'github-dark-default' | 'github-light-default';
+
+const highlighter = createHighlighterCore({
+  engine: createOnigurumaEngine(import('shiki/wasm')),
+  langs: [shellscript, typescript, vue, vueHtml],
+  themes: [githubDarkDefault, githubLightDefault],
+});
 
 const prettierOptions = Object.freeze({
   htmlWhitespaceSensitivity: 'ignore' as const,
@@ -71,6 +84,9 @@ export async function renderCodeSource(
 ): Promise<{ formatted: string; html: string }> {
   const resolvedLanguage = resolveVueCodeLanguage(language, source);
   const formatted = await formatCodeSource(source, resolvedLanguage);
-  const html = await codeToHtml(formatted, { lang: resolvedLanguage, theme });
+  const html = (await highlighter).codeToHtml(formatted, {
+    lang: resolvedLanguage,
+    theme,
+  });
   return { formatted, html };
 }

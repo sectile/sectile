@@ -4,6 +4,7 @@ import { componentSections } from '../data/component-sections.js';
 import { vueTemplateFencePlugin } from './markdown/vue-template-fences.mjs';
 
 const base = '/sectile/';
+const markdownHighlightCache = new Map<string, string>();
 
 const title = (value: string): string => value
   .split('-')
@@ -335,6 +336,20 @@ export default defineConfig({
     theme: { dark: 'github-dark-default', light: 'github-light-default' },
     lineNumbers: true,
     config: vueTemplateFencePlugin,
+    shikiSetup(highlighter) {
+      const codeToHtml = highlighter.codeToHtml.bind(highlighter);
+      highlighter.codeToHtml = (code, options) => {
+        // VitePress fixes the transformer set; fence attributes remain part of meta.
+        const { transformers: _transformers, ...stableOptions } = options;
+        const key = `${code}\0${JSON.stringify(stableOptions)}`;
+        const cached = markdownHighlightCache.get(key);
+        if (cached !== undefined) return cached;
+
+        const highlighted = codeToHtml(code, options);
+        markdownHighlightCache.set(key, highlighted);
+        return highlighted;
+      };
+    },
   },
   vite: {
     ssr: {
