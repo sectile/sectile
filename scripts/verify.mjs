@@ -131,6 +131,7 @@ function workspaceContractSteps() {
   return [
     commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling verification', 'pnpm', ['test:tooling']),
+    commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
     commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
     commandStep('public signatures', 'pnpm', ['check:signatures']),
     commandStep('component completeness', 'pnpm', ['check:components']),

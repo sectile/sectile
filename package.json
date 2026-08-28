@@ -20,6 +20,8 @@
     "verify:performance": "pnpm check:performance-gates && pnpm performance:check",
     "update:complexity": "pnpm run build:workspace && node scripts/check-complexity-contracts.mjs --write",
     "check:complexity": "pnpm run build:workspace && node scripts/check-complexity-contracts.mjs",
+    "check:algorithm-reuse": "node scripts/check-algorithm-reuse.mjs",
+    "update:algorithm-reuse": "node scripts/update-algorithm-reuse.mjs",
     "test:complexity": "node --test --test-concurrency=1 scripts/complexity-contracts.test.mjs scripts/complexity-witnesses.test.mjs",
     "update:consumer-surfaces": "pnpm run build:workspace && node scripts/update-consumer-surfaces.mjs",
     "record:consumer-bundles": "pnpm run build:workspace && node scripts/consumer-bundles/run.mjs record",

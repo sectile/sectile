@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "allowedMigrationOwners": ["WI-006", "WI-013", "WI-014", "WI-020", "WI-021", "WI-027", "WI-038", "WI-039", "WI-040"],
+  "detectors": [
+    { "id": "raw-identity-lookup", "category": "raw-full-domain-scan", "pattern": "\\.(?:find|findIndex|some)\\s*\\(" },
+    { "id": "immutable-view-construction", "category": "repeated-immutable-view", "pattern": "new\\s+IndexedSequence\\s*\\(" },
+    { "id": "whole-state-validation", "category": "whole-domain-validation", "pattern": "const\\s+(?:valid|validated)\\s*=\\s*tryCreate[A-Za-z]+State\\s*\\(" },
+    { "id": "derived-index-construction", "category": "discarded-canonical-index", "pattern": "new\\s+(?:Map|Set)[^;\\n]{0,240}(?:\\.map|\\.slice)\\s*\\(" },
+    { "id": "geometry-measurement", "category": "measurement-authority", "pattern": "getBoundingClientRect\\s*\\(" },
+    { "id": "full-materialization", "category": "private-algorithm-bypass", "pattern": "\\bflatCells\\s*\\(" },
+    { "id": "serialization-signature", "category": "private-algorithm-bypass", "pattern": "JSON\\.stringify\\s*\\(" },
+    { "id": "linear-membership", "category": "raw-full-domain-scan", "pattern": "\\.includes\\s*\\(" },
+    { "id": "controller-rebuild", "category": "controller-connection-rebuild", "pattern": "watch\\s*\\([^;]{0,1200}?\\b(?:connect|rebuild)\\b" },
+    { "id": "full-index-rebuild", "category": "discarded-canonical-index", "pattern": "\\b(?:buildPackedTree|buildRegionTree)\\s*\\(" }
+  ],
+  "rules": [
+    {
+      "id": "core-trusted-transition-validation",
+      "detectors": ["whole-state-validation"],
+      "prefixes": ["packages/core/src/internal/composites/"],
+      "classification": "migration-required",
+      "owner": "WI-013",
+      "rationale": "Canonical provenance fast paths must avoid repeated whole-state validation while preserving forged-state validation."
+    },
+    {
+      "id": "core-composite-derived-views",
+      "detectors": ["raw-identity-lookup", "immutable-view-construction", "derived-index-construction", "linear-membership"],
+      "prefixes": ["packages/core/src/internal/composites/"],
+      "classification": "migration-required",
+      "owner": "WI-020",
+      "rationale": "Composite transitions must retain and reuse canonical structure indexes and immutable views."
+    },
+    {
+      "id": "core-structure-index-reuse",
+      "detectors": ["raw-identity-lookup", "immutable-view-construction", "derived-index-construction", "linear-membership"],
+      "prefixes": ["packages/core/src/structures/", "packages/core/src/internal/state/"],
+      "classification": "migration-required",
+      "owner": "WI-014",
+      "rationale": "Sequence, Selection, Tree, and Grid own the canonical indexes and cached views."
+    },
+    {
+      "id": "core-text-reorder-local-proof",
+      "detectors": ["raw-identity-lookup", "derived-index-construction", "linear-membership"],
+      "paths": ["packages/core/src/reorder.ts", "packages/core/src/text.ts", "packages/core/src/internal/editing/text.ts"],
+      "classification": "migration-required",
+      "owner": "WI-021",
+      "rationale": "Text and reorder must reuse local proof and existing Sequence/Tree index vocabulary."
+    },
+    {
+      "id": "form-indexed-field-state",
+      "detectors": ["*"],
+      "prefixes": ["packages/form/src/"],
+      "classification": "migration-required",
+      "owner": "WI-027",
+      "rationale": "Form field lookup, issues, validation, and structural sharing require one retained field/source index."
+    },
+    {
+      "id": "tabular-retained-resolution",
+      "detectors": ["*"],
+      "paths": ["packages/tabular/src/source.ts", "packages/tabular/src/data-table.ts", "packages/tabular/src/internal/grid-profile.ts", "packages/tabular/src/virtual.ts"],
+      "classification": "migration-required",
+      "owner": "WI-038",
+      "rationale": "Tabular must retain the current normalized/projection generation and grid cell index."
+    },
+    {
+      "id": "virtual-incremental-index",
+      "detectors": ["*"],
+      "paths": ["packages/virtual/src/spatial-layout.ts", "packages/virtual/src/track-grid-layout.ts", "packages/virtual/src/partitioned-track-grid-layout.ts", "packages/virtual/src/extent-index.ts"],
+      "classification": "migration-required",
+      "owner": "WI-039",
+      "rationale": "Virtual measurement batches require the crossover-selected retained repair/rebuild policy."
+    },
+    {
+      "id": "vue-virtual-measurement-and-batching",
+      "detectors": ["*"],
+      "paths": ["packages/vue/src/virtual.ts"],
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "DOM observer measurement, one logical domain batch, indexed membership, and stable connections must be authoritative."
+    },
+    {
+      "id": "vue-controller-reconfiguration",
+      "detectors": ["controller-rebuild"],
+      "prefixes": ["packages/vue/src/"],
+      "classification": "migration-required",
+      "owner": "WI-040",
+      "rationale": "Equal canonical owners and normalized options must retain controllers and connections."
+    },
+    {
+      "id": "core-residual-reviewed",
+      "detectors": ["*"],
+      "prefixes": ["packages/core/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Core scans construct, validate, or return the explicit immutable result and are covered by complexity contracts."
+    },
+    {
+      "id": "temporal-bounded-domain",
+      "detectors": ["*"],
+      "prefixes": ["packages/temporal/src/"],
+      "classification": "bounded-small",
+      "owner": null,
+      "rationale": "Calendar and civil-time scans are bounded by explicit finite domain/resource ceilings."
+    },
+    {
+      "id": "tabular-residual-reviewed",
+      "detectors": ["*"],
+      "prefixes": ["packages/tabular/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Tabular work validates explicit external input or materializes requested result rows."
+    },
+    {
+      "id": "virtual-residual-reviewed",
+      "detectors": ["*"],
+      "prefixes": ["packages/virtual/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Remaining Virtual work constructs or emits explicit placement/query results."
+    },
+    {
+      "id": "dom-host-authority",
+      "detectors": ["*"],
+      "prefixes": ["packages/dom/src/"],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "DOM registries and geometry reads are host-owned projection, lifecycle, or changed-entry measurement work."
+    },
+    {
+      "id": "terminal-platform-policy",
+      "detectors": ["*"],
+      "prefixes": ["packages/terminal/src/"],
+      "classification": "result-proportional",
+      "owner": null,
+      "rationale": "Terminal screen, grapheme, appearance, and registry work is platform projection proportional to requested output."
+    },
+    {
+      "id": "vue-host-residual-reviewed",
+      "detectors": ["*"],
+      "prefixes": ["packages/vue/src/"],
+      "classification": "reuse",
+      "owner": null,
+      "rationale": "Remaining Vue occurrences project canonical snapshots or manage framework lifecycle rather than own domain algorithms."
+    }
+  ]
+}
