@@ -66,6 +66,7 @@ export type FormEvent<ID extends StableID = StableID> =
   | {
       readonly type: 'update-field';
       readonly id: ID;
+      readonly name?: string | null;
       readonly touched?: boolean;
       readonly dirty?: boolean;
       readonly valid?: boolean;
@@ -498,7 +499,7 @@ function updateField<ID extends StableID>(
   const current = state.fields[index]!;
   const normalized = normalizeField({
     id: current.id,
-    ...(current.name === null ? {} : { name: current.name }),
+    name: event.name === undefined ? current.name : event.name,
     touched: event.touched ?? current.touched,
     dirty: event.dirty ?? current.dirty,
     valid: event.valid ?? current.valid,

@@ -251,7 +251,7 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'submitting');
   resolveSubmission();
-  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'succeeded');
 
@@ -265,7 +265,7 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
 
   mode = 'reject';
   form.requestSubmit();
-  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'failed');
   assert.match(summary.textContent ?? '', /Form submission failed/);

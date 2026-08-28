@@ -109,6 +109,16 @@ test('form registry preserves order and derives aggregate field state', () => {
   assert.equal(state.fields[0].name, 'account-email');
 
   state = applyFormEvent(state, {
+    type: 'update-field',
+    id: 'email',
+    name: 'profile.email',
+    touched: true,
+  }).value.state;
+  assert.equal(state.fields[0].name, 'profile.email');
+  assert.equal(state.fields[0].touched, true);
+  assert.equal(state.fields[0].dirty, true);
+
+  state = applyFormEvent(state, {
     type: 'reorder-fields',
     ids: ['team', 'email'],
   }).value.state;

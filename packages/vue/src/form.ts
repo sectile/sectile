@@ -33,6 +33,7 @@ import {
   type FormSchema as DOMFormSchema,
   type FormSubmissionElement,
   type FormSubmitPayload as DOMFormSubmitPayload,
+  type FormSubmitResult as DOMFormSubmitResult,
   type FormValidateContext as DOMFormValidateContext,
   type FormValidateHandler as DOMFormValidateHandler,
   type FormValidationIssue as DOMFormValidationIssue,
@@ -356,52 +357,48 @@ const FormRootImpl = defineComponent({
         void nextTick(syncConfiguredIssues);
       };
     };
-    const settleSubmission = (
-      target: FormConnection<string>,
-      generation: number,
-      result: FormSubmitResult,
-    ): void => {
-      if (connection.value !== target) return;
-      if (typeof result === 'object' && result !== null && result.ok === false) {
-        target.submitFailed(generation, resolveIssueInputs(target, 'server', result.issues ?? [submissionErrorIssue()]));
-        return;
-      }
-      target.submitSucceeded(generation);
-    };
-    const rejectSubmission = (
-      target: FormConnection<string>,
-      generation: number,
-      reason: unknown,
-    ): void => {
-      if (connection.value !== target) return;
-      target.submitFailed(generation, resolveIssueInputs(target, 'server', mapSubmissionError(props.mapSubmitError, reason)));
-    };
-    const submit = (payload: DOMFormSubmitPayload<string>): void => {
+    const submit = (
+      payload: DOMFormSubmitPayload<string>,
+    ): DOMFormSubmitResult<string> | PromiseLike<DOMFormSubmitResult<string>> => {
       const handler = props.onSubmit;
       if (handler === undefined) return;
       const target = connection.value;
       if (target === null) return;
-      payload.event.preventDefault();
-      if (target.getSnapshot().state.submissionStatus === 'submitting') {
-        return;
-      }
-      const generation = target.submitStarted();
-      if (generation === null) return;
       let result: FormSubmitResult | PromiseLike<FormSubmitResult>;
       try {
         result = handler(toFormSubmitEvent(payload));
       } catch (error) {
-        rejectSubmission(target, generation, error);
-        return;
+        return {
+          ok: false,
+          issues: resolveIssueInputs(target, 'server', mapSubmissionError(props.mapSubmitError, error)),
+        };
       }
+      const settle = (resolved: FormSubmitResult): DOMFormSubmitResult<string> => (
+        typeof resolved === 'object' && resolved !== null && resolved.ok === false
+          ? {
+              ok: false,
+              issues: resolveIssueInputs(
+                target,
+                'server',
+                resolved.issues ?? [submissionErrorIssue()],
+              ),
+            }
+          : { ok: true }
+      );
       if (isPromiseLike(result)) {
-        void Promise.resolve(result).then(
-          (resolved) => settleSubmission(target, generation, resolved),
-          (error: unknown) => rejectSubmission(target, generation, error),
+        return Promise.resolve(result).then(
+          settle,
+          (error: unknown) => ({
+            ok: false as const,
+            issues: resolveIssueInputs(
+              target,
+              'server',
+              mapSubmissionError(props.mapSubmitError, error),
+            ),
+          }),
         );
-        return;
       }
-      settleSubmission(target, generation, result);
+      return settle(result);
     };
     const configuration = () => ({
       ...(summary.value === null ? {} : { summary: summary.value }),
@@ -409,7 +406,7 @@ const FormRootImpl = defineComponent({
       ...(props.validate === undefined ? {} : { validate: props.validate }),
       validateOn: props.validateOn,
       revalidateOn: props.revalidateOn,
-      onSubmit: submit,
+      ...(props.onSubmit === undefined ? {} : { onSubmit: submit }),
       onReset: () => emit('reset'),
       onStateChange: (next: FormState) => {
         state.value = next;
@@ -443,6 +440,8 @@ const FormRootImpl = defineComponent({
       () => props.validate,
       () => [...props.validateOn],
       () => [...props.revalidateOn],
+      () => props.onSubmit,
+      () => props.mapSubmitError,
     ], () => {
       void nextTick(() => connection.value?.reconfigure(configuration()));
     });

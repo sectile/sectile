@@ -9,11 +9,11 @@
     { "subpath": "./state", "types": "dist/state.d.ts" },
     { "subpath": "./values", "types": "dist/values.d.ts" }
   ],
-  "fingerprint": "30224db9f4ae94cc9c4efe3bb35e8a5ea2a0a12a120b8008ca829452ac012a5c",
+  "fingerprint": "d0e70c452571657fa67a705ed64da417c01da58964bbf1f85e0e4deebc0f8d58",
   "files": [
     { "path": "dist/error.d.ts", "sha256": "f18cbac47093430de87b71d6c5bd1bef2d5197d4291f32945ff3341ca9f6d06a" },
     { "path": "dist/index.d.ts", "sha256": "0bd7568cb76aa1805ed415e92ca861db40d6431c11fd6415809ddf163a8bb137" },
-    { "path": "dist/internal/form.d.ts", "sha256": "ddc4129beb194fd7fed6b819a4204340353f961c5405aefea40345841a3ce78c" },
+    { "path": "dist/internal/form.d.ts", "sha256": "54c0fd9085a6f9d7db9a4d2c1cb7f4f744151b14c18aa68e191480e6563bf584" },
     { "path": "dist/path.d.ts", "sha256": "ef03109b27eb8e68d7876903f11a85d58da7f78eec3c20cc5c3d8dc94af6e4df" },
     { "path": "dist/schema.d.ts", "sha256": "d2693b16965fedd836e665b582cca3c34e5162613dc3caa039a32de1769b1054" },
     { "path": "dist/state.d.ts", "sha256": "d401937cda03076c1d711e9322b986b23ba04efd4a74dc49c9ce8886da30da87" },

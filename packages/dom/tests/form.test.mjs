@@ -93,17 +93,117 @@ test('DOM Form reads successful native controls through FormData and observes su
     assert.equal(values.email, 'release@sectile.dev');
     assert.equal(form.state.fields[0].dirty, true);
     assert.equal(form.state.validationStatus, 'valid');
-    const generation = form.submitStarted();
-    assert.equal(generation, form.state.submissionGeneration);
+    assert.equal(form.state.submissionStatus, 'succeeded');
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form owns async managed submission, duplicate suppression, and server failure', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const email = document.createElement('input');
+    email.name = 'email';
+    email.value = 'taken@sectile.dev';
+    formElement.append(email);
+    document.body.append(formElement);
+    let resolveSubmission;
+    let submissions = 0;
+
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'email', element: email }],
+      onSubmit() {
+        submissions += 1;
+        return new Promise((resolve) => { resolveSubmission = resolve; });
+      },
+    });
+
+    formElement.requestSubmit();
+    formElement.requestSubmit();
+    assert.equal(submissions, 1);
     assert.equal(form.state.submissionStatus, 'submitting');
-    assert.equal(form.submitFailed(generation, [{
-      id: 'email:taken',
-      fieldId: 'email',
-      source: 'server',
-      message: 'This email is already registered.',
-    }]), true);
+
+    resolveSubmission({
+      ok: false,
+      issues: [{
+        id: 'email:taken',
+        fieldId: 'email',
+        source: 'form',
+        message: 'This email is already registered.',
+      }],
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     assert.equal(form.state.submissionStatus, 'failed');
     assert.equal(form.state.fields[0].issues[0].source, 'server');
+    assert.equal(document.activeElement, email);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form maps thrown managed submission errors without exposing the reason', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+
+    const form = createForm({
+      form: formElement,
+      onSubmit() { throw new Error('secret service detail'); },
+      mapSubmitError: () => [{
+        id: 'server:unavailable',
+        message: 'Please try again.',
+        source: 'server',
+      }],
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(form.state.submissionStatus, 'failed');
+    assert.deepEqual(form.state.issues.map((issue) => issue.message), ['Please try again.']);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form ignores managed submission completion after reset or destroy', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const firstElement = document.createElement('form');
+    const secondElement = document.createElement('form');
+    document.body.append(firstElement, secondElement);
+    let resolveResetSubmission;
+    let resolveDestroyedSubmission;
+    const resetForm = createForm({
+      form: firstElement,
+      onSubmit: () => new Promise((resolve) => { resolveResetSubmission = resolve; }),
+    });
+    const destroyedForm = createForm({
+      form: secondElement,
+      onSubmit: () => new Promise((resolve) => { resolveDestroyedSubmission = resolve; }),
+    });
+
+    firstElement.requestSubmit();
+    secondElement.requestSubmit();
+    assert.equal(resetForm.state.submissionStatus, 'submitting');
+    assert.equal(destroyedForm.state.submissionStatus, 'submitting');
+
+    resetForm.reset();
+    const destroyedRevision = destroyedForm.getSnapshot().revision;
+    destroyedForm.destroy();
+    resolveResetSubmission({ ok: true });
+    resolveDestroyedSubmission({ ok: false });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(resetForm.state.submissionStatus, 'idle');
+    assert.equal(resetForm.state.submitCount, 0);
+    assert.equal(destroyedForm.getSnapshot().revision, destroyedRevision);
   } finally {
     dom.restore();
   }
@@ -345,6 +445,222 @@ test('DOM Form updates duplicate participant ids in place and unregisters explic
     assert.equal(form.state.fields[0].name, 'after');
     unregister();
     assert.equal(form.state.fields.length, 0);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form turns malformed value shapes into safe form issues without losing FormData', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const profile = document.createElement('input');
+    const email = document.createElement('input');
+    profile.name = 'profile';
+    profile.value = 'leaf';
+    email.name = 'profile.email';
+    email.value = 'nested@sectile.dev';
+    formElement.append(profile, email);
+    document.body.append(formElement);
+    let submitted = false;
+
+    const form = createForm({
+      form: formElement,
+      onSubmit() { submitted = true; },
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(submitted, false);
+    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(form.state.issues.length, 1);
+    assert.equal(form.state.issues[0].source, 'validate');
+    assert.deepEqual([...form.getFormData().entries()], [
+      ['profile', 'leaf'],
+      ['profile.email', 'nested@sectile.dev'],
+    ]);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form constructs prototype-sensitive native names without mutating prototypes', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const proto = document.createElement('input');
+    const constructor = document.createElement('input');
+    proto.name = '__proto__.polluted';
+    proto.value = 'no';
+    constructor.name = 'constructor.prototype.changed';
+    constructor.value = 'still no';
+    formElement.append(proto, constructor);
+    document.body.append(formElement);
+    let values;
+
+    createForm({
+      form: formElement,
+      onSubmit(payload) { values = payload.values; },
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(Object.getPrototypeOf(values), null);
+    assert.equal(values.__proto__.polluted, 'no');
+    assert.equal(values.constructor.prototype.changed, 'still no');
+    assert.equal(Object.prototype.polluted, undefined);
+    assert.equal(Object.prototype.changed, undefined);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form routes descendant issues to the longest registered field path', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const profile = document.createElement('div');
+    const email = document.createElement('input');
+    email.name = 'profile.email';
+    email.value = 'team@sectile.dev';
+    profile.append(email);
+    formElement.append(profile);
+    document.body.append(formElement);
+
+    const form = createForm({
+      form: formElement,
+      participants: [
+        { id: 'profile', element: profile, name: 'profile' },
+        { id: 'email', element: email, name: 'profile.email' },
+      ],
+      validate: () => ({
+        issues: [
+          { path: ['profile', 'email', 'domain'], message: 'Use an approved domain.' },
+          { path: ['unowned'], message: 'Review the form.' },
+        ],
+      }),
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(form.state.fields.find((field) => field.id === 'profile').issues.length, 0);
+    assert.equal(form.state.fields.find((field) => field.id === 'email').issues.length, 1);
+    assert.equal(form.state.issues.length, 1);
+    assert.equal(document.activeElement, email);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form observes and refreshes registered out-of-tree controls exactly once', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const external = document.createElement('input');
+    formElement.id = 'settings';
+    external.setAttribute('form', 'settings');
+    external.name = 'email';
+    external.value = 'outside@sectile.dev';
+    document.body.append(formElement, external);
+    const form = createForm({ form: formElement });
+    form.registerParticipant({ id: 'external', element: external });
+
+    external.dispatchEvent(new Event('input', { bubbles: true }));
+    external.dispatchEvent(new Event('blur'));
+    assert.equal(form.state.fields[0].dirty, true);
+    assert.equal(form.state.fields[0].touched, true);
+    assert.deepEqual([...form.getFormData().entries()], [['email', 'outside@sectile.dev']]);
+
+    external.name = 'account.email';
+    assert.equal(form.refreshParticipant('external'), true);
+    assert.equal(form.state.fields[0].name, 'account.email');
+    assert.equal(form.state.fields[0].dirty, true);
+    assert.equal(form.state.fields[0].touched, true);
+
+    const revision = form.getSnapshot().revision;
+    form.destroy();
+    external.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.getSnapshot().revision, revision);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form resumes one async-gated native submission with the original submitter', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const submitter = document.createElement('button');
+    submitter.type = 'submit';
+    submitter.name = 'intent';
+    submitter.value = 'publish';
+    formElement.append(submitter);
+    document.body.append(formElement);
+    let resolveValidation;
+    let validationCalls = 0;
+    const events = [];
+
+    const form = createForm({
+      form: formElement,
+      validate: () => {
+        validationCalls += 1;
+        return new Promise((resolve) => { resolveValidation = resolve; });
+      },
+    });
+    formElement.addEventListener('submit', (event) => {
+      events.push({ prevented: event.defaultPrevented, submitter: event.submitter });
+    });
+
+    formElement.requestSubmit(submitter);
+    formElement.requestSubmit(submitter);
+    assert.equal(validationCalls, 1);
+    assert.equal(form.state.validationStatus, 'validating');
+    assert.deepEqual(events.map((event) => event.prevented), [true, true]);
+
+    resolveValidation({});
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(validationCalls, 1);
+    assert.equal(form.state.validationStatus, 'valid');
+    assert.equal(form.state.submitCount, 1);
+    assert.equal(events.length, 3);
+    assert.equal(events[2].prevented, false);
+    assert.equal(events[2].submitter, submitter);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form reset invalidates async validation and prevents native resumption', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    document.body.append(formElement);
+    let resolveValidation;
+    let submits = 0;
+    const form = createForm({
+      form: formElement,
+      validate: () => new Promise((resolve) => { resolveValidation = resolve; }),
+    });
+    formElement.addEventListener('submit', () => { submits += 1; });
+
+    formElement.requestSubmit();
+    assert.equal(form.state.validationStatus, 'validating');
+    form.reset();
+    resolveValidation({});
+    await Promise.resolve();
+    await Promise.resolve();
+
+    assert.equal(submits, 1);
+    assert.equal(form.state.validationStatus, 'idle');
+    assert.equal(form.state.submissionStatus, 'idle');
+    assert.equal(form.state.submitCount, 0);
   } finally {
     dom.restore();
   }
