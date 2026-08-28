@@ -27,6 +27,7 @@
   "devDependencies": {
     "@sectile/core": "workspace:*",
     "@sectile/dom": "workspace:*",
+    "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/terminal": "workspace:*",
     "@sectile/vue": "workspace:*",

@@ -17,6 +17,8 @@ if (quietRequested && verbose) throw new Error('verification cannot be both quie
 const generatedOutputs = [
   join(root, 'packages', 'core', 'dist'),
   join(root, 'packages', 'core', '.verification-dist'),
+  join(root, 'packages', 'form', 'dist'),
+  join(root, 'packages', 'form', '.verification-dist'),
   join(root, 'packages', 'tabular', 'dist'),
   join(root, 'packages', 'tabular', '.verification-dist'),
   join(root, 'packages', 'temporal', 'dist'),
@@ -38,6 +40,7 @@ const packageStep = (label, packageName, script) => Object.freeze({
 const fullSteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core verification', '@sectile/core', 'verify'),
+  packageStep('Form verification', '@sectile/form', 'verify'),
   packageStep('temporal verification', '@sectile/temporal', 'verify'),
   packageStep('virtual verification', '@sectile/virtual', 'verify'),
   packageStep('Tabular verification', '@sectile/tabular', 'verify'),
@@ -46,6 +49,11 @@ const fullSteps = [
   packageStep('Tabular convergence evidence', '@sectile/tabular', 'check:implementation'),
   packageStep('terminal verification', '@sectile/terminal', 'verify'),
   packageStep('Vue verification', '@sectile/vue', 'verify'),
+  Object.freeze({
+    label: 'Form packed consumer verification',
+    command: process.execPath,
+    args: [join(root, 'verification', 'consumer-install', 'form.mjs')],
+  }),
   packageStep('documentation verification', '@sectile/docs', 'verify'),
   Object.freeze({
     label: 'cross-host verification',
@@ -69,6 +77,8 @@ const fullSteps = [
 const compatibilitySteps = [
   packageStep('core clean build', '@sectile/core', 'build'),
   packageStep('core runtime tests', '@sectile/core', 'test'),
+  packageStep('Form runtime tests', '@sectile/form', 'test'),
+  packageStep('Form compatibility build', '@sectile/form', 'build'),
   packageStep('temporal runtime tests', '@sectile/temporal', 'test'),
   packageStep('temporal compatibility build', '@sectile/temporal', 'build'),
   packageStep('virtual runtime tests', '@sectile/virtual', 'test'),

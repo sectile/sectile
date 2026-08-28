@@ -9,16 +9,18 @@ const semanticPackagePaths = [
   'packages/core/package.json',
   'packages/temporal/package.json',
 ];
-const hostPackagePaths = [
-  'packages/dom/package.json',
-  'packages/terminal/package.json',
-];
+const hostPackagePaths = {
+  'packages/dom/package.json': ['packages/core/package.json'],
+  'packages/terminal/package.json': semanticPackagePaths,
+};
 const vuePackagePath = 'packages/vue/package.json';
 const supportSubpaths = new Set([
   'package.json', 'adapter-runtime', 'sequence', 'selection', 'extent-index', 'range', 'tree', 'result', 'revision', 'interaction',
   'collection-window', 'virtual-layout', 'virtual', 'layer-stack', 'reorder',
+  'form',
   'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
   'model', 'query', 'source', 'data-table', 'data-grid', 'data-tree-grid',
+  'tabular', 'temporal',
 ]);
 const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
 const migrationBaselineIDs = new Set([
@@ -55,9 +57,12 @@ const componentsFor = async (path) => {
 const canonical = [...new Set((await Promise.all(
   semanticPackagePaths.map((path) => componentsFor(path)),
 )).flat())].sort();
-for (const path of hostPackagePaths) {
+for (const [path, semanticPaths] of Object.entries(hostPackagePaths)) {
   const components = await componentsFor(path);
-  assert.deepEqual(components, canonical,
+  const expected = [...new Set((await Promise.all(
+    semanticPaths.map((semanticPath) => componentsFor(semanticPath)),
+  )).flat())].sort();
+  assert.deepEqual(components, expected,
     `${path} must expose every renderer-neutral semantic component subpath.`);
 }
 
@@ -67,8 +72,8 @@ const vueComponents = Object.keys(vuePackage.exports)
   .map((subpath) => subpath.slice(2))
   .filter((subpath) => !supportSubpaths.has(subpath) && !vueOnlySubpaths.has(subpath))
   .sort();
-assert.deepEqual(vueComponents, canonical,
-  `${vuePackagePath} must project every public component subpath from @sectile/core.`);
+assert.deepEqual(vueComponents, await componentsFor('packages/core/package.json'),
+  `${vuePackagePath} must project every direct @sectile/core component subpath.`);
 
 const entries = manifest.components;
 assert.ok(Array.isArray(entries), 'Component completeness entries must be an array.');
@@ -108,6 +113,7 @@ for (const family of declaredFamilies) {
 }
 
 const supportHosts = {
+  form: ['form', 'dom', 'vue'],
   'layer-stack': ['core', 'dom', 'terminal', 'vue'],
   reorder: ['core', 'dom', 'terminal', 'vue'],
   virtual: ['virtual', 'dom', 'vue'],
@@ -125,7 +131,7 @@ for (const [support, hosts] of Object.entries(supportHosts)) {
     }
   }
   if (support === 'virtual') continue;
-  for (const host of ['dom', 'terminal']) {
+  for (const host of hosts.filter((candidate) => candidate === 'dom' || candidate === 'terminal')) {
     const inputs = supportEvidence.hostInputs?.[host];
     assert.ok(Array.isArray(inputs) && inputs.length > 0,
       `${support}: ${host} host inputs must be declared.`);
@@ -212,7 +218,8 @@ for (const entry of tabularProfiles) {
   assert.ok(entry.standard.startsWith('docs/'), `${entry.id}: Tabular standard must be a repository document.`);
   for (const packageName of tabularPackages) {
     const pkg = JSON.parse(await readFile(`packages/${packageName}/package.json`, 'utf8'));
-    assert.ok(pkg.exports?.[`./${entry.id}`] !== undefined,
+    const subpath = packageName === 'tabular' ? `./${entry.id}` : './tabular';
+    assert.ok(pkg.exports?.[subpath] !== undefined,
       `${entry.id}: @sectile/${packageName} subpath missing.`);
   }
   const terminal = JSON.parse(await readFile('packages/terminal/package.json', 'utf8'));

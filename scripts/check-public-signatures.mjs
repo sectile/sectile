@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { collectPublicSignatures } from './lib/public-signatures.mjs';
 
-const packageDirectories = ['core', 'tabular', 'temporal', 'virtual', 'dom', 'terminal', 'vue']
+const packageDirectories = ['core', 'form', 'tabular', 'temporal', 'virtual', 'dom', 'terminal', 'vue']
   .map((name) => resolve('packages', name));
 
 for (const packageDirectory of packageDirectories) {

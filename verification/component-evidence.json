@@ -21,6 +21,12 @@
     }
   },
   "support": {
+    "form": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "native-form"] },
+      "form": ["packages/form/tests/state/form.test.mjs"],
+      "dom": ["packages/dom/tests/form.test.mjs"],
+      "vue": ["packages/vue/tests/form.test.mjs", "packages/vue/tests/form.dom.test.mjs"]
+    },
     "layer-stack": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },
       "core": ["packages/core/tests/runtime/layer-stack.test.mjs"],
@@ -95,13 +101,6 @@
       "dom": ["packages/dom/tests/toast.test.mjs"],
       "terminal": ["packages/terminal/tests/toast.test.mjs"],
       "vue": ["packages/vue/tests/toast.test.mjs"]
-    },
-    "form": {
-      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "ime", "native-form"], "terminal": ["keyboard", "text"] },
-      "core": ["packages/core/tests/composites/form.test.mjs"],
-      "dom": ["packages/dom/tests/form.test.mjs"],
-      "terminal": ["packages/terminal/tests/form.test.mjs"],
-      "vue": ["packages/vue/tests/form.test.mjs", "packages/vue/tests/form.dom.test.mjs"]
     },
     "linear-action": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },

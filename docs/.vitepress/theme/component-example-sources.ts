@@ -71,54 +71,6 @@ const terminalIntegrationNames: Readonly<Record<string, string>> = Object.freeze
 });
 
 function terminalSource(component: string, scenario: string): string {
-  if (component === 'form') {
-    const formExamples: Readonly<Record<string, string>> = {
-      profile: `import { createForm } from '@sectile/terminal/form'
-
-const fields = [
-  { id: 'display-name', name: ['profile', 'displayName'], label: 'Display name', required: true },
-  { id: 'email', name: ['profile', 'email'], label: 'Email address', required: true },
-] as const
-
-const form = createForm({
-  fields,
-  onSubmit: ({ state }) => console.log('profile saved', state.valid),
-  onAnnounceSummary: (issues) => console.log(issues.map(issue => issue.message)),
-})
-
-form.handleKeyboardInput({ key: 'tab' })
-form.handleKeyboardInput({ key: 'enter' })`,
-      notifications: `import { createForm } from '@sectile/terminal/form'
-
-const fields = [
-  { id: 'channel', name: ['notifications', 'channel'], label: 'Activity emails', required: true },
-  { id: 'digest', name: ['notifications', 'digest'], label: 'Weekly digest' },
-] as const
-
-const form = createForm({
-  fields,
-  onSubmit: ({ state }) => console.log('preferences saved', state.valid),
-})
-
-form.handleKeyboardInput({ key: 'tab' })
-form.handleKeyboardInput({ key: 'enter' })`,
-      'team-invite': `import { createForm } from '@sectile/terminal/form'
-
-const fields = [
-  { id: 'invite-email', name: ['invitation', 'email'], label: 'Email address', required: true },
-  { id: 'invite-role', name: ['invitation', 'role'], label: 'Role', required: true },
-] as const
-
-const form = createForm({
-  fields,
-  onSubmit: ({ state }) => console.log('invitation sent', state.valid),
-})
-
-form.handleKeyboardInput({ key: 'tab' })
-form.handleKeyboardInput({ key: 'enter' })`,
-    };
-    return formExamples[scenario] ?? formExamples['profile'] ?? '';
-  }
   if (component === 'pin-input') return pinInputTerminalSource(scenario);
   if (component === 'meter-group') return meterGroupTerminalSource(scenario);
   const name = terminalIntegrationNames[component];

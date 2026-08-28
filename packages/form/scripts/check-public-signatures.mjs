@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { collectPublicSignatures } from '../../../scripts/lib/public-signatures.mjs';
+import { collectPublicSignatures } from './lib/public-signatures.mjs';
 
 const current = await collectPublicSignatures();
 const stored = JSON.parse(await readFile('testing/public-signatures.json', 'utf8'));
