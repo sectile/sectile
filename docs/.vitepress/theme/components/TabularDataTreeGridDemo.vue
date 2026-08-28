@@ -12,6 +12,8 @@ import {
   type DataTreeGridViewResponse,
 } from '@sectile/vue/data-tree-grid';
 import { useDocsLocale } from '../locale.js';
+import { rowSelectionValue } from '../tabular-selection.js';
+import DocsCheckbox from './DocsCheckbox.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -114,7 +116,9 @@ const handleCommand = (command: DataTreeGridCommand) => {
               <template v-if="column.id === 'name'">
                 <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" :aria-label="`Toggle ${row.cells.name}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGrid.RowDisclosure>
                 <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
-                <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" name="services" :aria-label="`Select ${row.cells.name}`" />
+                <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" v-slot="{ rowSelection }" as-child name="services" :aria-label="`Select ${row.cells.name}`">
+                  <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
+                </DataTreeGrid.RowSelectionControl>
               </template>
               <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells.name }}</strong>
               <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>

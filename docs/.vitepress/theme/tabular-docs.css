@@ -251,7 +251,7 @@
 .tabular-table td { color: var(--vp-c-text-2); }
 .tabular-table td:not(.tabular-table__select) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tabular-table td strong { color: var(--vp-c-text-1); font-weight: 600; }
-.tabular-table th button { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 0; color: inherit; background: transparent; cursor: pointer; }
+.tabular-table th button:not(.ds-check) { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 0; color: inherit; background: transparent; cursor: pointer; }
 .tabular-table th button[aria-pressed='true'] { color: var(--vp-c-brand-1); }
 .tabular-table th:nth-child(2) { width: 24%; }
 .tabular-table th:nth-child(3) { width: 17%; }
@@ -259,14 +259,6 @@
 .tabular-table th:nth-child(5) { width: 18%; }
 .tabular-table th:nth-child(6) { width: 17%; }
 .tabular-table__select { width: 42px; padding-right: 6px !important; padding-left: 12px !important; }
-.tabular-table__select > button { display: grid; width: 18px; height: 18px; place-items: center; border: 1px solid var(--vp-c-border); border-radius: 5px; padding: 0; color: #fff; background: var(--vp-c-bg); cursor: pointer; }
-.tabular-table__select > button[aria-checked='true'],
-.tabular-table__select > button[aria-checked='mixed'] { border-color: var(--vp-c-brand-1); background: var(--vp-c-brand-1); }
-.tabular-table__select > button[aria-checked='true']::after { width: 8px; height: 4px; border-bottom: 1.5px solid currentColor; border-left: 1.5px solid currentColor; content: ''; transform: translateY(-1px) rotate(-45deg); }
-.tabular-table__select > button[aria-checked='mixed']::after { width: 8px; height: 1.5px; border-radius: 1px; background: currentColor; content: ''; }
-.tabular-table__select > button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
-.tabular-table input[type='checkbox'],
-.tabular-grid input[type='checkbox'] { width: 15px; height: 15px; flex: none; margin: 0; accent-color: var(--vp-c-brand-1); }
 
 .tabular-demo__status { display: inline-flex; min-height: 23px; align-items: center; padding: 2px 8px; border-radius: 999px; color: var(--vp-c-text-2); background: var(--vp-c-bg-alt); font-size: 11px; font-weight: 650; white-space: nowrap; }
 .tabular-demo__status[data-tone='active'],

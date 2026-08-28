@@ -75,7 +75,7 @@ export interface DataTreeGridConnection {
   registerCell(element: HTMLElement, options: DataTreeGridCellOptions): TabularResult<() => void>;
   bindSortTrigger(element: HTMLElement, options: DataTreeGridSortTriggerOptions): () => void;
   bindFilterControl(element: HTMLInputElement | HTMLSelectElement, options: DataTreeGridFilterControlOptions): () => void;
-  bindRowSelectionControl(element: HTMLInputElement, options: DataTreeGridRowSelectionControlOptions): () => void;
+  bindRowSelectionControl(element: HTMLElement, options: DataTreeGridRowSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataTreeGridBulkSelectionControlOptions): () => void;
   bindRowDisclosure(element: HTMLElement, options: DataTreeGridRowDisclosureOptions): () => void;
   bindEditor(element: DataTreeGridEditorElement, options: DataTreeGridEditorOptions): () => void;
@@ -128,7 +128,7 @@ function createDataTreeGridConnection(options: DataTreeGridConnectionOptions, ow
     registerCell: (element: HTMLElement, value: DataTreeGridCellOptions) => base.registerCell(element, value),
     bindSortTrigger: (element: HTMLElement, value: DataTreeGridSortTriggerOptions) => base.bindSortTrigger(element, value),
     bindFilterControl: (element: HTMLInputElement | HTMLSelectElement, value: DataTreeGridFilterControlOptions) => base.bindFilterControl(element, value),
-    bindRowSelectionControl: (element: HTMLInputElement, value: DataTreeGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
+    bindRowSelectionControl: (element: HTMLElement, value: DataTreeGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
     bindBulkSelectionControl: (element: HTMLElement, value: DataTreeGridBulkSelectionControlOptions) => base.bindBulkSelectionControl(element, value),
     bindRowDisclosure: (element: HTMLElement, value: DataTreeGridRowDisclosureOptions) => base.bindRowDisclosure(element, value),
     bindEditor: (element: DataTreeGridEditorElement, value: DataTreeGridEditorOptions) => base.bindEditor(element, value),

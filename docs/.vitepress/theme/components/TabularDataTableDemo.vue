@@ -9,6 +9,8 @@ import {
   type DataTableViewResponse,
 } from '@sectile/vue/data-table';
 import { useDocsLocale } from '../locale.js';
+import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
+import DocsCheckbox from './DocsCheckbox.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -108,7 +110,11 @@ const direction = (columnID: string) => {
         <DataTable.Root class="tabular-table" aria-labelledby="tabular-data-table-demo-title">
           <DataTable.Header>
             <DataTable.HeaderRow>
-              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll" /></th>
+              <th class="tabular-table__select">
+                <DataTable.BulkSelectionControl v-slot="{ rowSelection, rows }" as-child :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll">
+                  <DocsCheckbox :model-value="bulkSelectionValue(rowSelection, rows)" />
+                </DataTable.BulkSelectionControl>
+              </th>
               <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
                 <DataTable.SortTrigger :column="column.id">
                   {{ copy.columns[index] }}
@@ -121,7 +127,11 @@ const direction = (columnID: string) => {
           </DataTable.Header>
           <DataTable.Body>
             <template #default="{ row }">
-              <td class="tabular-table__select"><DataTable.SelectionControl name="selected-users" :aria-label="copy.selectRow(row.cells.name)" /></td>
+              <td class="tabular-table__select">
+                <DataTable.SelectionControl v-slot="{ rowSelection }" as-child name="selected-users" :aria-label="copy.selectRow(row.cells.name)">
+                  <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
+                </DataTable.SelectionControl>
+              </td>
               <DataTable.Cell column="name"><strong>{{ row.cells.name }}</strong></DataTable.Cell>
               <DataTable.Cell column="team">{{ row.cells.team }}</DataTable.Cell>
               <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>

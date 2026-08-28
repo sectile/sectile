@@ -12,6 +12,8 @@ import {
   type DataGridViewResponse,
 } from '@sectile/vue/data-grid';
 import { useDocsLocale } from '../locale.js';
+import { rowSelectionValue } from '../tabular-selection.js';
+import DocsCheckbox from './DocsCheckbox.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -118,7 +120,9 @@ const handleCommand = (command: DataGridCommand) => {
           </DataGrid.Header>
           <DataGrid.Body v-slot="{ row }">
             <DataGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
-              <DataGrid.RowSelectionControl v-if="column.id === 'task'" name="release-items" :aria-label="`Select ${row.cells.task}`" />
+              <DataGrid.RowSelectionControl v-if="column.id === 'task'" v-slot="{ rowSelection }" as-child name="release-items" :aria-label="`Select ${row.cells.task}`">
+                <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
+              </DataGrid.RowSelectionControl>
               <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>
               <DataGrid.Editor :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
             </DataGrid.Cell>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Check, ChevronDown, Clock3, MapPin, Users } from '@lucide/vue';
-import { CheckboxIndicator, CheckboxRoot } from '@sectile/vue/checkbox';
+import { ChevronDown, Clock3, MapPin, Users } from '@lucide/vue';
 import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '@sectile/vue/disclosure';
 import { useDocsLocale } from '../locale.js';
 import { workItemRecord } from '../../../examples/virtual/work-item-data.js';
+import DocsCheckbox from './DocsCheckbox.vue';
 
 const props = defineProps<{
   readonly id: string;
@@ -44,9 +44,7 @@ const copy = computed(() => isKorean.value ? {
   >
     <DisclosureRoot class="work-item-row__disclosure" :model-value="expanded" @update:model-value="emit('expand', $event)">
       <div class="work-item-row__primary">
-        <CheckboxRoot class="ds-check" :model-value="selected" :aria-label="copy.select" @update:model-value="emit('select', $event === true)">
-          <CheckboxIndicator><Check :size="13" :stroke-width="3" aria-hidden="true" /></CheckboxIndicator>
-        </CheckboxRoot>
+        <DocsCheckbox :model-value="selected" :aria-label="copy.select" @update:model-value="emit('select', $event === true)" />
 
         <div class="work-item-row__identity">
           <div class="work-item-row__eyebrow">

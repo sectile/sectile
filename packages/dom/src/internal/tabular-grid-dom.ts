@@ -31,6 +31,7 @@ import {
   rowSelected,
   setColumnInlineSize,
   setBulkSelectionControlAttributes,
+  setRowSelectionControlAttributes,
   setEditorAttributes,
   validateRegistrationGeneration,
   type TabularDOMColumnResizeHandleOptions,
@@ -351,21 +352,27 @@ export class DOMTabularGrid<
     });
   }
 
-  public bindRowSelectionControl(element: HTMLInputElement, options: GridDOMSelectionControlOptions): () => void {
-    element.type = 'checkbox';
-    element.value = options.value;
-    element.disabled = options.disabled === true;
-    if (options.form === undefined) element.removeAttribute('form');
-    else element.setAttribute('form', options.form);
+  public bindRowSelectionControl(element: HTMLElement, options: GridDOMSelectionControlOptions): () => void {
+    const input = element.tagName === 'INPUT' ? element as HTMLInputElement : null;
+    if (input !== null) {
+      input.type = 'checkbox';
+      input.value = options.value;
+      if (options.form === undefined) input.removeAttribute('form');
+      else input.setAttribute('form', options.form);
+    }
     element.setAttribute('data-part', 'row-selection-control');
     element.setAttribute('data-row-id', options.rowID);
     const update = (): void => {
       const selection = this.getProjection().rowSelection;
-      element.checked = rowSelected(selection, options.rowID);
-      if (selection.kind === 'explicit-rows') element.name = options.name;
-      else element.removeAttribute('name');
+      setRowSelectionControlAttributes(element, rowSelected(selection, options.rowID), options.disabled === true);
+      if (input !== null) {
+        if (selection.kind === 'explicit-rows') input.name = options.name;
+        else input.removeAttribute('name');
+      }
     };
-    const dispose = bindEvent(this.#scope, element, 'change', () => this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID } as Event));
+    const dispose = bindEvent(this.#scope, element, input === null ? 'click' : 'change', () => {
+      if (options.disabled !== true) this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID } as Event);
+    });
     this.#refreshers.add(update);
     update();
     return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });

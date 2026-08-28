@@ -305,7 +305,8 @@
   cursor: pointer;
 }
 
-.ds-check[data-state='checked'] {
+.ds-check[data-state='checked'],
+.ds-check[data-state='indeterminate'] {
   border-color: var(--sectile-action);
   background: var(--sectile-action);
 }

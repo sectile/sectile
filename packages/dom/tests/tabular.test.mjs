@@ -76,11 +76,20 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   assert.equal(cell.getAttribute('headers'), 'sectile-tabular-header-header%3Aname');
 
   const selection = document.createElement('input');
+  const styledSelection = document.createElement('button');
   const bulkSelection = document.createElement('button');
   row.append(selection);
+  row.append(styledSelection);
   row.append(bulkSelection);
   const unbind = connection.bindSelectionControl(selection, { rowID: 'r1', name: 'users', value: 'r1' });
+  const unbindStyled = connection.bindSelectionControl(styledSelection, { rowID: 'r2', name: 'users', value: 'r2' });
   const unbindBulk = connection.bindBulkSelectionControl(bulkSelection, { target: { kind: 'all-matching' } });
+  assert.equal(styledSelection.getAttribute('role'), 'checkbox');
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'false');
+  styledSelection.click();
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'true');
+  styledSelection.click();
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'false');
   assert.equal(bulkSelection.getAttribute('role'), 'checkbox');
   assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
   assert.equal(bulkSelection.getAttribute('data-state'), 'unchecked');
@@ -109,6 +118,8 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   registered.value();
   unbind();
   unbind();
+  unbindStyled();
+  unbindStyled();
   unbindBulk();
   unbindBulk();
   connection.disconnect();
@@ -153,7 +164,16 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
   assert.equal(connection.requestRevealCell({ rowID: 'r1', columnID: 'name' }, connection.getProjection().generation - 1), false);
 
   const bulkSelection = document.createElement('button');
+  const styledSelection = document.createElement('button');
+  root.append(styledSelection);
   root.append(bulkSelection);
+  connection.bindRowSelectionControl(styledSelection, { rowID: 'r1', name: 'rows', value: 'r1' });
+  assert.equal(styledSelection.getAttribute('role'), 'checkbox');
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'false');
+  styledSelection.click();
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'true');
+  styledSelection.click();
+  assert.equal(styledSelection.getAttribute('aria-checked'), 'false');
   connection.bindBulkSelectionControl(bulkSelection, { target: { kind: 'all-matching' } });
   assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
   connection.handleEvent({ type: 'toggle-row-selection', rowID: 'r1' });

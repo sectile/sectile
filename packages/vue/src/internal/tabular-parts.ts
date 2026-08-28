@@ -35,8 +35,8 @@ export interface HostConnection {
   registerCell(element: HTMLElement, options: { readonly cell: TabularCellAddress; readonly expectedProjectionGeneration?: number }): { readonly ok: boolean; readonly value?: () => void };
   bindSortTrigger(element: HTMLElement, options: { readonly columnID: string; readonly comparator: string }): () => void;
   bindFilterControl(element: HTMLInputElement | HTMLSelectElement, options: unknown): () => void;
-  bindSelectionControl?(element: HTMLInputElement, options: unknown): () => void;
-  bindRowSelectionControl?(element: HTMLInputElement, options: unknown): () => void;
+  bindSelectionControl?(element: HTMLElement, options: unknown): () => void;
+  bindRowSelectionControl?(element: HTMLElement, options: unknown): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: unknown): () => void;
   bindDisclosure?(element: HTMLElement, options: unknown): () => void;
   bindRowDisclosure?(element: HTMLElement, options: unknown): () => void;
@@ -248,7 +248,6 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   const SelectionControl = boundPart(table ? 'SelectionControl' : 'RowSelectionControl', 'selection-control', 'input', {
     rowID: { type: String, default: undefined }, name: { type: String, required: true }, value: { type: String, default: undefined }, form: { type: String, default: undefined }, disabled: { type: Boolean, default: false },
   }, (connection, element, props) => {
-    if (!(element instanceof HTMLInputElement)) return undefined;
     const rowID = String(props['rowID']);
     const options = { rowID, name: String(props['name']), value: props['value'] === undefined ? rowID : String(props['value']), ...(typeof props['form'] === 'string' ? { form: props['form'] } : {}), disabled: props['disabled'] === true };
     return table ? connection.bindSelectionControl?.(element, options) : connection.bindRowSelectionControl?.(element, options);

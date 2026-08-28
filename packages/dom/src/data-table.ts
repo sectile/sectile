@@ -41,6 +41,7 @@ import {
   setEditorAttributes,
   setColumnInlineSize,
   setBulkSelectionControlAttributes,
+  setRowSelectionControlAttributes,
   validateColumnSizeOptions,
   validateRegistrationGeneration,
   type TabularDOMColumnResizeHandleOptions,
@@ -134,7 +135,7 @@ export interface DataTableConnection {
   registerCell(element: HTMLTableCellElement, options: DataTableCellOptions): TabularResult<() => void>;
   bindSortTrigger(element: HTMLElement, options: DataTableSortTriggerOptions): () => void;
   bindFilterControl(element: HTMLInputElement | HTMLSelectElement, options: DataTableFilterControlOptions): () => void;
-  bindSelectionControl(element: HTMLInputElement, options: DataTableSelectionControlOptions): () => void;
+  bindSelectionControl(element: HTMLElement, options: DataTableSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataTableBulkSelectionControlOptions): () => void;
   bindDisclosure(element: HTMLElement, options: DataTableDisclosureOptions): () => void;
   bindEditor(element: DataTableEditorElement, options: DataTableEditorOptions): () => void;
@@ -322,21 +323,27 @@ class DOMDataTable implements DataTableConnection {
     return bindEvent(this.#scope, element, 'input', listener);
   }
 
-  public bindSelectionControl(element: HTMLInputElement, options: DataTableSelectionControlOptions): () => void {
-    element.type = 'checkbox';
-    element.value = options.value;
-    element.disabled = options.disabled === true;
-    if (options.form === undefined) element.removeAttribute('form');
-    else element.setAttribute('form', options.form);
+  public bindSelectionControl(element: HTMLElement, options: DataTableSelectionControlOptions): () => void {
+    const input = element.tagName === 'INPUT' ? element as HTMLInputElement : null;
+    if (input !== null) {
+      input.type = 'checkbox';
+      input.value = options.value;
+      if (options.form === undefined) input.removeAttribute('form');
+      else input.setAttribute('form', options.form);
+    }
     element.setAttribute('data-part', 'selection-control');
     element.setAttribute('data-row-id', options.rowID);
     const update = (): void => {
       const selection = this.getSnapshot().state.rowSelection;
-      element.checked = rowSelected(selection, options.rowID);
-      if (selection.kind === 'explicit-rows') element.name = options.name;
-      else element.removeAttribute('name');
+      setRowSelectionControlAttributes(element, rowSelected(selection, options.rowID), options.disabled === true);
+      if (input !== null) {
+        if (selection.kind === 'explicit-rows') input.name = options.name;
+        else input.removeAttribute('name');
+      }
     };
-    const dispose = bindEvent(this.#scope, element, 'change', () => this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID }));
+    const dispose = bindEvent(this.#scope, element, input === null ? 'click' : 'change', () => {
+      if (options.disabled !== true) this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID });
+    });
     this.#refreshers.add(update);
     update();
     return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });

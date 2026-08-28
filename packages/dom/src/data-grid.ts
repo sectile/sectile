@@ -70,7 +70,7 @@ export interface DataGridConnection {
   registerCell(element: HTMLElement, options: DataGridCellOptions): TabularResult<() => void>;
   bindSortTrigger(element: HTMLElement, options: DataGridSortTriggerOptions): () => void;
   bindFilterControl(element: HTMLInputElement | HTMLSelectElement, options: DataGridFilterControlOptions): () => void;
-  bindRowSelectionControl(element: HTMLInputElement, options: DataGridRowSelectionControlOptions): () => void;
+  bindRowSelectionControl(element: HTMLElement, options: DataGridRowSelectionControlOptions): () => void;
   bindBulkSelectionControl(element: HTMLElement, options: DataGridBulkSelectionControlOptions): () => void;
   bindEditor(element: DataGridEditorElement, options: DataGridEditorOptions): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: DataGridColumnResizeHandleOptions): () => void;
@@ -120,7 +120,7 @@ function createDataGridConnection(options: DataGridConnectionOptions, ownsContro
     registerCell: (element: HTMLElement, value: DataGridCellOptions) => base.registerCell(element, value),
     bindSortTrigger: (element: HTMLElement, value: DataGridSortTriggerOptions) => base.bindSortTrigger(element, value),
     bindFilterControl: (element: HTMLInputElement | HTMLSelectElement, value: DataGridFilterControlOptions) => base.bindFilterControl(element, value),
-    bindRowSelectionControl: (element: HTMLInputElement, value: DataGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
+    bindRowSelectionControl: (element: HTMLElement, value: DataGridRowSelectionControlOptions) => base.bindRowSelectionControl(element, value),
     bindBulkSelectionControl: (element: HTMLElement, value: DataGridBulkSelectionControlOptions) => base.bindBulkSelectionControl(element, value),
     bindEditor: (element: DataGridEditorElement, value: DataGridEditorOptions) => base.bindEditor(element, value),
     bindColumnResizeHandle: (element: HTMLElement, value: DataGridColumnResizeHandleOptions) => base.bindColumnResizeHandle(element, value),

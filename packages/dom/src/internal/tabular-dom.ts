@@ -253,6 +253,24 @@ export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID)
     : !selection.excludedRowIDs.includes(rowID);
 }
 
+export function setRowSelectionControlAttributes(
+  element: HTMLElement,
+  checked: boolean,
+  disabled: boolean,
+): void {
+  if (element.tagName === 'INPUT') {
+    const input = element as HTMLInputElement;
+    input.checked = checked;
+    input.indeterminate = false;
+    input.disabled = disabled;
+    return;
+  }
+  element.setAttribute('role', 'checkbox');
+  element.setAttribute('aria-checked', String(checked));
+  element.setAttribute('aria-disabled', String(disabled));
+  element.setAttribute('data-state', checked ? 'checked' : 'unchecked');
+}
+
 export function allMatchingSelectionState(snapshot: TabularSnapshot): TabularDOMBulkSelectionState {
   const selection = snapshot.state.rowSelection;
   const view = currentView(snapshot);
