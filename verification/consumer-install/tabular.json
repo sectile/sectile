@@ -23,16 +23,16 @@
       "bytes": 54278
     },
     "@sectile/dom": {
-      "bytes": 284146
+      "bytes": 286466
     },
     "@sectile/vue": {
-      "bytes": 301860
+      "bytes": 302528
     }
   },
   "declarationClosure": {
     "status": "passed",
-    "files": 311,
-    "imports": 477
+    "files": 315,
+    "imports": 493
   },
   "scenarios": [
     {
@@ -40,11 +40,11 @@
       "status": "passed"
     },
     {
-      "id": "dom-base-without-virtual",
+      "id": "dom-base-without-optional-peers",
       "status": "passed"
     },
     {
-      "id": "vue-base-types-without-direct-tabular",
+      "id": "vue-base-without-optional-peers",
       "status": "passed"
     },
     {
@@ -57,6 +57,14 @@
     },
     {
       "id": "vue-virtual-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "dom-temporal-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "vue-temporal-explicit-opt-in",
       "status": "passed"
     }
   ]

@@ -8,6 +8,7 @@ const root = resolve(import.meta.dirname, '..', '..');
 const evidencePath = resolve(import.meta.dirname, 'tabular.json');
 const store = resolve(root, '.pnpm-store');
 const packageNames = ['core', 'tabular', 'temporal', 'virtual', 'dom', 'vue'];
+const vueVersion = JSON.parse(await readFile(resolve(root, 'packages/vue/node_modules/vue/package.json'), 'utf8')).version;
 const temporary = await mkdtemp(join(tmpdir(), 'sectile-tabular-consumer-'));
 const tarballs = {};
 
@@ -50,7 +51,7 @@ try {
   await missingPeer(dom, '@sectile/dom/temporal', '@sectile/temporal');
   scenarios.push({ id: 'dom-base-without-optional-peers', status: 'passed' });
 
-  const vue = await fixture('vue-base', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, 'vue@^3.5.0']);
+  const vue = await fixture('vue-base', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vue, `
     const root = await import('@sectile/vue');
     if (typeof root.CheckboxRoot !== 'object') process.exit(2);
@@ -74,7 +75,7 @@ try {
   `);
   scenarios.push({ id: 'dom-virtual-explicit-opt-in', status: 'passed' });
 
-  const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, tarballs.virtual, 'vue@^3.5.0']);
+  const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, tarballs.virtual, `vue@${vueVersion}`]);
   await runtime(vueVirtual, `
     const virtual = await import('@sectile/vue/virtual');
     if (typeof virtual.useVirtualizer !== 'function') process.exit(2);
@@ -88,7 +89,7 @@ try {
   `);
   scenarios.push({ id: 'dom-temporal-explicit-opt-in', status: 'passed' });
 
-  const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.tabular, tarballs.temporal, tarballs.dom, tarballs.vue, 'vue@^3.5.0']);
+  const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.tabular, tarballs.temporal, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vueTemporal, `
     const temporal = await import('@sectile/vue/temporal');
     if (typeof temporal.DateField !== 'object' || typeof temporal.TemporalProvider !== 'object') process.exit(2);
