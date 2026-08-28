@@ -13,7 +13,12 @@ import {
 } from '@sectile/vue/data-tree-grid';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
+import DocsButton from './DocsButton.vue';
 import DocsCheckbox from './DocsCheckbox.vue';
+import DocsDemoFooter from './DocsDemoFooter.vue';
+import DocsDemoHeader from './DocsDemoHeader.vue';
+import DocsInlineEditor from './DocsInlineEditor.vue';
+import DocsStatusBadge from './DocsStatusBadge.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -99,14 +104,20 @@ const handleCommand = (command: DataTreeGridCommand) => {
   if (command.cell.columnID === 'status') record.status = command.value;
   tree.requestView();
 };
+const statusIntent = (status: string) => status === 'Healthy' ? 'success' : status === 'Incident' ? 'critical' : 'warning';
 </script>
 
 <template>
   <section class="tabular-demo tabular-demo--tree" :aria-label="copy.title">
-    <header class="tabular-demo__toolbar">
-      <div class="tabular-demo__title"><span><Workflow :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-tree-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 서비스' : ' services' }}</small></div></div>
-      <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
-    </header>
+    <DocsDemoHeader
+      title-id="tabular-data-tree-grid-demo-title"
+      :title="copy.title"
+      :subtitle="copy.subtitle"
+      :meta="`${records.length}${isKorean ? '개 서비스' : ' services'}`"
+    >
+      <template #icon><Workflow :size="18" aria-hidden="true" /></template>
+      <template #action><DocsButton class="tabular-demo__action" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</DocsButton></template>
+    </DocsDemoHeader>
     <DataTreeGrid.Provider>
       <div class="tabular-demo__viewport">
         <DataTreeGrid.Root ref="treeRoot" class="tabular-grid tabular-tree-grid" aria-labelledby="tabular-data-tree-grid-demo-title" @command="handleCommand">
@@ -114,20 +125,28 @@ const handleCommand = (command: DataTreeGridCommand) => {
           <DataTreeGrid.Body v-slot="{ row }">
             <DataTreeGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
               <template v-if="column.id === 'name'">
-                <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" :aria-label="`Toggle ${row.cells.name}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGrid.RowDisclosure>
+                <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'" as-child :aria-label="`Toggle ${row.cells.name}`">
+                  <DocsButton appearance="ghost" icon-only><ChevronRight :size="16" aria-hidden="true" /></DocsButton>
+                </DataTreeGrid.RowDisclosure>
                 <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
                 <DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" v-slot="{ rowSelection }" as-child name="services" :aria-label="`Select ${row.cells.name}`">
                   <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
                 </DataTreeGrid.RowSelectionControl>
               </template>
               <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells.name }}</strong>
-              <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>
-              <DataTreeGrid.Editor v-if="row.kind === 'leaf'" :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+              <DocsStatusBadge v-else-if="column.id === 'status' && row.kind === 'leaf' && !isEditing(editState, row.id, column.id)" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge>
+              <span v-else-if="!isEditing(editState, row.id, column.id)">{{ row.cells[column.id] }}</span>
+              <DataTreeGrid.Editor v-if="row.kind === 'leaf'" as-child :column="column.id">
+                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+              </DataTreeGrid.Editor>
             </DataTreeGrid.Cell>
           </DataTreeGrid.Body>
         </DataTreeGrid.Root>
       </div>
     </DataTreeGrid.Provider>
-    <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ rows.length }}{{ isKorean ? '개 행 표시' : ' visible rows' }}</strong></footer>
+    <DocsDemoFooter>
+      {{ copy.hint }}
+      <template #summary>{{ rows.length }}{{ isKorean ? '개 행 표시' : ' visible rows' }}</template>
+    </DocsDemoFooter>
   </section>
 </template>

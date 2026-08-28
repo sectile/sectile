@@ -4,7 +4,9 @@ import { ChevronDown, Clock3, MapPin, Users } from '@lucide/vue';
 import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '@sectile/vue/disclosure';
 import { useDocsLocale } from '../locale.js';
 import { workItemRecord } from '../../../examples/virtual/work-item-data.js';
+import DocsButton from './DocsButton.vue';
 import DocsCheckbox from './DocsCheckbox.vue';
+import DocsStatusBadge from './DocsStatusBadge.vue';
 
 const props = defineProps<{
   readonly id: string;
@@ -27,6 +29,8 @@ const priorityLabel = computed(() => isKorean.value
 const stateLabel = computed(() => isKorean.value
   ? ({ investigating: '확인 중', monitoring: '답변 대기', resolved: '완료' })[workItem.value.state]
   : ({ investigating: 'Reviewing', monitoring: 'Waiting', resolved: 'Done' })[workItem.value.state]);
+const priorityIntent = computed(() => ({ critical: 'critical', high: 'warning', medium: 'info', low: 'success' } as const)[workItem.value.priority]);
+const stateIntent = computed(() => ({ investigating: 'warning', monitoring: 'info', resolved: 'success' } as const)[workItem.value.state]);
 const copy = computed(() => isKorean.value ? {
   select: `${workItem.value.number} 선택`, openDetails: '처리 내역', closeDetails: '접기', affected: '관련 고객', age: '대기 시간', minutes: '분',
   timeline: '처리 내역', owner: '담당 팀', region: '접수 경로',
@@ -48,7 +52,7 @@ const copy = computed(() => isKorean.value ? {
 
         <div class="work-item-row__identity">
           <div class="work-item-row__eyebrow">
-            <span class="ds-status" :data-intent="workItem.priority">{{ priorityLabel }}</span>
+            <DocsStatusBadge :intent="priorityIntent">{{ priorityLabel }}</DocsStatusBadge>
             <code>{{ workItem.number }}</code>
             <span>{{ workItem.service }}</span>
           </div>
@@ -66,9 +70,11 @@ const copy = computed(() => isKorean.value ? {
         </dl>
 
         <div class="work-item-row__state">
-          <span class="ds-status" :data-intent="workItem.state">{{ stateLabel }}</span>
-          <DisclosureTrigger class="ds-icon-action work-item-row__details-button">
-            {{ expanded ? copy.closeDetails : copy.openDetails }}<ChevronDown :size="16" aria-hidden="true" />
+          <DocsStatusBadge :intent="stateIntent">{{ stateLabel }}</DocsStatusBadge>
+          <DisclosureTrigger as-child>
+            <DocsButton class="work-item-row__details-button" compact>
+              {{ expanded ? copy.closeDetails : copy.openDetails }}<ChevronDown :size="16" aria-hidden="true" />
+            </DocsButton>
           </DisclosureTrigger>
         </div>
       </div>

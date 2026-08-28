@@ -13,7 +13,12 @@ import {
 } from '@sectile/vue/data-grid';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
+import DocsButton from './DocsButton.vue';
 import DocsCheckbox from './DocsCheckbox.vue';
+import DocsDemoFooter from './DocsDemoFooter.vue';
+import DocsDemoHeader from './DocsDemoHeader.vue';
+import DocsInlineEditor from './DocsInlineEditor.vue';
+import DocsStatusBadge from './DocsStatusBadge.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -100,14 +105,20 @@ const handleCommand = (command: DataGridCommand) => {
   if (command.cell.columnID === 'status') record.status = command.value;
   grid.requestView();
 };
+const statusIntent = (status: string) => status === 'Ready' ? 'success' : status === 'Blocked' ? 'critical' : 'warning';
 </script>
 
 <template>
   <section class="tabular-demo tabular-demo--grid" :aria-label="copy.title">
-    <header class="tabular-demo__toolbar">
-      <div class="tabular-demo__title"><span><TableCellsSplit :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 항목' : ' items' }}</small></div></div>
-      <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
-    </header>
+    <DocsDemoHeader
+      title-id="tabular-data-grid-demo-title"
+      :title="copy.title"
+      :subtitle="copy.subtitle"
+      :meta="`${records.length}${isKorean ? '개 항목' : ' items'}`"
+    >
+      <template #icon><TableCellsSplit :size="18" aria-hidden="true" /></template>
+      <template #action><DocsButton class="tabular-demo__action" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</DocsButton></template>
+    </DocsDemoHeader>
     <DataGrid.Provider>
       <div class="tabular-demo__viewport">
         <DataGrid.Root ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
@@ -123,13 +134,19 @@ const handleCommand = (command: DataGridCommand) => {
               <DataGrid.RowSelectionControl v-if="column.id === 'task'" v-slot="{ rowSelection }" as-child name="release-items" :aria-label="`Select ${row.cells.task}`">
                 <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
               </DataGrid.RowSelectionControl>
-              <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells.status : undefined">{{ column.id === 'status' ? copy.status[row.cells.status as keyof typeof copy.status] : row.cells[column.id] }}</span>
-              <DataGrid.Editor :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+              <DocsStatusBadge v-if="column.id === 'status' && !isEditing(editState, row.id, column.id)" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge>
+              <span v-else-if="!isEditing(editState, row.id, column.id)">{{ row.cells[column.id] }}</span>
+              <DataGrid.Editor as-child :column="column.id">
+                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+              </DataGrid.Editor>
             </DataGrid.Cell>
           </DataGrid.Body>
         </DataGrid.Root>
       </div>
     </DataGrid.Provider>
-    <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong><CheckCircle2 :size="15" aria-hidden="true" />{{ selectedCount }}{{ isKorean ? '개 행 선택' : ' rows selected' }}</strong></footer>
+    <DocsDemoFooter>
+      {{ copy.hint }}
+      <template #summary><CheckCircle2 :size="15" aria-hidden="true" />{{ selectedCount }}{{ isKorean ? '개 행 선택' : ' rows selected' }}</template>
+    </DocsDemoFooter>
   </section>
 </template>

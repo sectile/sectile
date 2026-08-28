@@ -12,7 +12,10 @@ import {
 import { useDocsLocale } from '../locale.js';
 import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
 import DocsCheckbox from './DocsCheckbox.vue';
+import DocsDemoFooter from './DocsDemoFooter.vue';
+import DocsDemoHeader from './DocsDemoHeader.vue';
 import DocsSearchField from './DocsSearchField.vue';
+import DocsStatusBadge from './DocsStatusBadge.vue';
 import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
@@ -98,22 +101,27 @@ const direction = (columnID: string) => {
   const snapshot = table.getSnapshot();
   return snapshot.state.query.sort.find((item) => item.columnID === columnID)?.direction;
 };
+const statusIntent = (status: UserCells['status']) => status === 'active' ? 'success' : status === 'suspended' ? 'critical' : 'warning';
 </script>
 
 <template>
   <DataTable.Provider>
     <section class="tabular-demo tabular-demo--table" :aria-label="copy.title">
-      <header class="tabular-demo__toolbar">
-        <div class="tabular-demo__title"><span><Table2 :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-table-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ copy.count(records.length) }}</small></div></div>
-        <DocsSearchField class="tabular-demo__search" :label="copy.search" compact>
-          <DataTable.FilterControl as-child scope="global" id="user-search" predicate="contains">
-            <TextField
-              type="search"
-              :placeholder="copy.search"
-            />
-          </DataTable.FilterControl>
-        </DocsSearchField>
-      </header>
+      <DocsDemoHeader
+        title-id="tabular-data-table-demo-title"
+        :title="copy.title"
+        :subtitle="copy.subtitle"
+        :meta="copy.count(records.length)"
+      >
+        <template #icon><Table2 :size="18" aria-hidden="true" /></template>
+        <template #action>
+          <DocsSearchField class="tabular-demo__search" :label="copy.search" compact>
+            <DataTable.FilterControl as-child scope="global" id="user-search" predicate="contains">
+              <TextField type="search" :placeholder="copy.search" />
+            </DataTable.FilterControl>
+          </DocsSearchField>
+        </template>
+      </DocsDemoHeader>
 
       <div class="tabular-demo__viewport">
         <DataTable.Root class="tabular-table" aria-labelledby="tabular-data-table-demo-title">
@@ -145,13 +153,16 @@ const direction = (columnID: string) => {
               <DataTable.Cell column="team">{{ row.cells.team }}</DataTable.Cell>
               <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
               <DataTable.Cell column="lastActive">{{ row.cells.lastActive }}</DataTable.Cell>
-              <DataTable.Cell column="status"><span class="tabular-demo__status" :data-tone="row.cells.status">{{ copy.status[row.cells.status] }}</span></DataTable.Cell>
+              <DataTable.Cell column="status"><DocsStatusBadge :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status] }}</DocsStatusBadge></DataTable.Cell>
             </template>
             <template #empty><tr><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? copy.loading : copy.empty }}</td></tr></template>
           </DataTable.Body>
         </DataTable.Root>
       </div>
-      <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ copy.count(rows.length) }} · {{ copy.selected(selectedCount) }}</strong></footer>
+      <DocsDemoFooter>
+        {{ copy.hint }}
+        <template #summary>{{ copy.count(rows.length) }} · {{ copy.selected(selectedCount) }}</template>
+      </DocsDemoFooter>
     </section>
   </DataTable.Provider>
 </template>
