@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, hydrateOnVisible } from 'vue';
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import { pinInputExampleOptions } from '../pin-input-example-options.js';
 
-const ComponentExamplePreview = defineAsyncComponent({
-  loader: () => import('./ComponentExamplePreview.vue'),
-  hydrate: hydrateOnVisible({ rootMargin: '720px 0px' }),
-});
+const ComponentExamplePreview = defineAsyncComponent(() => import('./ComponentExamplePreview.vue'));
 
 const props = defineProps<{
   readonly component: string;
@@ -15,10 +12,28 @@ const props = defineProps<{
 const pinOptions = computed(() => props.component === 'pin-input'
   ? pinInputExampleOptions(props.scenario)
   : undefined);
+const previewRoot = ref<HTMLElement | null>(null);
+const shouldRender = ref(false);
+let observer: IntersectionObserver | undefined;
+
+onMounted(() => {
+  if (previewRoot.value === null) return;
+  if (typeof IntersectionObserver === 'undefined') {
+    shouldRender.value = true;
+    return;
+  }
+  observer = new IntersectionObserver(([entry]) => {
+    shouldRender.value = entry?.isIntersecting === true;
+  }, { rootMargin: '720px 0px' });
+  observer.observe(previewRoot.value);
+});
+
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
   <div
+    ref="previewRoot"
     class="component-gallery-preview"
     :data-component="component"
     aria-hidden="true"
@@ -26,6 +41,7 @@ const pinOptions = computed(() => props.component === 'pin-input'
   >
     <div class="component-gallery-preview__render">
       <ComponentExamplePreview
+        v-if="shouldRender"
         :component="component"
         :scenario="scenario"
         title=""
