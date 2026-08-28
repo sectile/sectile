@@ -1,3 +1,7 @@
+<script setup>
+import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
+</script>
+
 # Vue에서 Tabular 사용하기
 
 Tabular용 Vue API는 `@sectile/vue/tabular`에 모여 있습니다. 이 subpath를 사용할 때는 optional peer dependency인 `@sectile/tabular`를 함께 설치합니다. Tabular를 사용하지 않는 `@sectile/vue` 응용 프로그램에는 필요하지 않습니다.
@@ -5,6 +9,10 @@ Tabular용 Vue API는 `@sectile/vue/tabular`에 모여 있습니다. 이 subpath
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
 ```
+
+<TabularExample kind="table-overview" />
+
+**코드 → Vue**에서 controller 생성, typed compound component, Provider와 source 연결이 한 파일 안에서 어떻게 이어지는지 확인할 수 있습니다.
 
 ## 프로필 선택
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, useId } from 'vue';
 import { ArrowDownUp, CheckCircle2, PencilLine, TableCellsSplit } from '@lucide/vue';
 import {
   createDataGridComponents,
@@ -21,14 +21,17 @@ import DocsInlineEditor from './DocsInlineEditor.vue';
 import DocsStatusBadge from './DocsStatusBadge.vue';
 import '../tabular-docs.css';
 
+const props = withDefaults(defineProps<{ focus?: 'overview' | 'navigation' | 'editing' | 'selection' }>(), { focus: 'overview' });
+const titleID = `tabular-data-grid-demo-${useId()}`;
+
 const { isKorean } = useDocsLocale();
 const copy = computed(() => isKorean.value ? {
   title: '출시 준비 보드', subtitle: '셀을 이동하며 릴리스 항목을 바로 편집', columns: ['작업', '담당자', '영역', '목표일', '위험도', '상태'],
-  hint: 'Shift로 행 범위 선택 · 방향키 이동 · Enter 편집 · Escape 취소', edit: '첫 셀 편집',
+  hint: 'Shift로 행 범위 선택 · 방향키 이동 · Enter 편집 · Escape 취소', edit: '첫 셀 편집', selectRow: (value: string) => `${value} 행 선택`, editCell: (column: string, row: string) => `${row}의 ${column} 편집`,
   status: { Ready: '준비', Review: '검토', Blocked: '차단', Progress: '진행 중' },
 } : {
   title: 'Release readiness', subtitle: 'Move through cells and edit release work in place', columns: ['Work item', 'Owner', 'Area', 'Target', 'Risk', 'Status'],
-  hint: 'Shift-select a row range · Arrow keys move · Enter edits · Escape cancels', edit: 'Edit first cell',
+  hint: 'Shift-select a row range · Arrow keys move · Enter edits · Escape cancels', edit: 'Edit first cell', selectRow: (value: string) => `Select ${value} row`, editCell: (column: string, row: string) => `Edit ${column} for ${row}`,
   status: { Ready: 'Ready', Review: 'Review', Blocked: 'Blocked', Progress: 'In progress' },
 });
 
@@ -106,12 +109,26 @@ const handleCommand = (command: DataGridCommand) => {
   grid.requestView();
 };
 const statusIntent = (status: string) => status === 'Ready' ? 'success' : status === 'Blocked' ? 'critical' : 'warning';
+const focusState = computed(() => {
+  void grid.snapshot.value;
+  const snapshot = grid.getSnapshot();
+  if (props.focus === 'navigation') return JSON.stringify(snapshot.cursor);
+  if (props.focus === 'editing') return JSON.stringify(snapshot.edit);
+  if (props.focus === 'selection') return JSON.stringify(snapshot.tabular.state.rowSelection);
+  return JSON.stringify({ cursor: snapshot.cursor.current, selected: snapshot.tabular.state.rowSelection });
+});
+const focusLabel = computed(() => ({
+  overview: isKorean.value ? '요약' : 'Overview',
+  navigation: isKorean.value ? '현재 셀' : 'Active cell',
+  editing: isKorean.value ? '편집 상태' : 'Edit state',
+  selection: isKorean.value ? '선택 상태' : 'Selection state',
+})[props.focus]);
 </script>
 
 <template>
   <section class="tabular-demo tabular-demo--grid" :aria-label="copy.title">
     <DocsDemoHeader
-      title-id="tabular-data-grid-demo-title"
+      :title-id="titleID"
       :title="copy.title"
       :subtitle="copy.subtitle"
       :meta="`${records.length}${isKorean ? '개 항목' : ' items'}`"
@@ -119,9 +136,10 @@ const statusIntent = (status: string) => status === 'Ready' ? 'success' : status
       <template #icon><TableCellsSplit :size="18" aria-hidden="true" /></template>
       <template #action><DocsButton class="tabular-demo__action" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</DocsButton></template>
     </DocsDemoHeader>
+    <div class="tabular-demo__witness" aria-live="polite"><span>{{ focusLabel }}</span><code>{{ focusState }}</code></div>
     <DataGrid.Provider>
       <div class="tabular-demo__viewport">
-        <DataGrid.Root ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
+        <DataGrid.Root ref="gridRoot" class="tabular-grid" :aria-labelledby="titleID" @command="handleCommand">
           <DataGrid.Header>
             <DataGrid.HeaderRow>
               <DataGrid.ColumnHeader v-for="(column, index) in columns" :key="column.id" :column="column.id">
@@ -131,13 +149,13 @@ const statusIntent = (status: string) => status === 'Ready' ? 'success' : status
           </DataGrid.Header>
           <DataGrid.Body v-slot="{ row }">
             <DataGrid.Cell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
-              <DataGrid.RowSelectionControl v-if="column.id === 'task'" v-slot="{ rowSelection }" as-child name="release-items" :aria-label="`Select ${row.cells.task}`">
+              <DataGrid.RowSelectionControl v-if="column.id === 'task'" v-slot="{ rowSelection }" as-child name="release-items" :aria-label="copy.selectRow(row.cells.task)">
                 <DocsCheckbox :model-value="rowSelectionValue(rowSelection, row.id)" />
               </DataGrid.RowSelectionControl>
               <DocsStatusBadge v-if="column.id === 'status' && !isEditing(editState, row.id, column.id)" :intent="statusIntent(row.cells.status)">{{ copy.status[row.cells.status as keyof typeof copy.status] }}</DocsStatusBadge>
               <span v-else-if="!isEditing(editState, row.id, column.id)">{{ row.cells[column.id] }}</span>
               <DataGrid.Editor as-child :column="column.id">
-                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+                <DocsInlineEditor :value="row.cells[column.id]" :aria-label="copy.editCell(column.id, row.cells.task)" />
               </DataGrid.Editor>
             </DataGrid.Cell>
           </DataGrid.Body>

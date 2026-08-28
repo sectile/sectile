@@ -1,214 +1,90 @@
 <script setup>
-import TabularRemoteDataDemo from '../../../.vitepress/theme/components/TabularRemoteDataDemo.vue'
+import TabularExample from '../../../.vitepress/theme/components/TabularExample.vue'
 </script>
 
 # 비동기 source
 
-원격 정렬, 필터, 페이지네이션은 별도 모드가 아닙니다. UI가 query나 access를 바꾸면 `useData*Source`가 최신 `TabularRequest`를 resolver에 전달하고, 응용 프로그램은 이를 서버 규격으로 직렬화한 뒤 response envelope로 되돌립니다.
+Tabular의 정렬·필터·페이지 변경은 현재 DOM 행을 재배열하는 명령이 아니라 **새 view를 요청하는 query 변경**입니다. source는 그 request를 메모리에서 계산할 수도 있고 서버로 보낼 수도 있습니다.
 
-<TabularRemoteDataDemo />
+<TabularExample kind="remote-source" />
 
-열 제목을 연속으로 눌러 정렬 방향을 바꾸고, 검색 중 바로 다음 문자열을 입력해 보세요. 이전 작업은 `AbortSignal`로 취소되고 최신 request와 일치하는 response만 반영됩니다. 페이지 이동, all-matching 선택, 실패와 retry도 같은 source 수명 주기를 사용합니다.
+검색하거나 정렬하고, 다음 페이지로 이동한 뒤 실패도 발생시켜 보세요. 화면은 마지막으로 승인된 결과를 유지하면서 별도의 loading/error 상태를 보여주고, 오래 도착한 응답은 거부합니다. 코드 탭에서는 같은 흐름을 Vue·DOM·Core로 전환할 수 있습니다.
 
-::: details 동작하는 전체 예제 source
-<<< ../../../.vitepress/theme/components/TabularRemoteDataDemo.vue
-:::
+## 한 요청이 처리되는 순서
 
-## Tabular core에서 비동기 source 실행
+1. 사용자가 정렬, 필터, expansion 또는 page/window를 바꿉니다.
+2. controller가 고유한 request ID와 현재 query·access·revision을 담은 request를 만듭니다.
+3. source가 로컬 배열을 계산하거나 HTTP/RPC를 실행합니다.
+4. 응답이 현재 pending request와 같은 계약인지 검사합니다.
+5. 일치하면 view 전체를 승인하고, 오래됐거나 잘못된 응답이면 기존 view를 그대로 둡니다.
 
-`useData*Source`는 Vue용 수명 주기 helper입니다. core만 사용할 때는 controller의 유일한 request executor에 transport를 직접 연결합니다.
+선택·cursor·column 상태는 이 과정과 독립적으로 유지되며, 새 view에서 사라진 대상만 각 프로필의 복구 규칙으로 정리됩니다.
 
-```ts
-import { createDataTable } from '@sectile/tabular/data-table'
+## request를 서버 규격으로 옮기기
 
-const table = createDataTable({ columns })
-let active: AbortController | undefined
+서버 API 이름은 자유롭게 정할 수 있습니다. 다만 의미를 잃지 않도록 query와 access를 명시적으로 변환하세요.
 
-const attached = table.attachRequestExecutor(async ({ request }) => {
-  active?.abort()
-  const transport = new AbortController()
-  active = transport
+| Tabular request | HTTP 예시 |
+| --- | --- |
+| `query.sort` | `sort=name:asc,team:desc` |
+| `query.filters` | `filter[status]=active&q=mina` |
+| page access | `page=3&pageSize=25` |
+| window access | `offset=200&limit=80` |
+| `expansion.expandedGroupIDs` | `expanded=commerce,platform` |
+| source/query revision | cache key 또는 If-Match 계열 header |
 
-  try {
-    const response = await fetch(`/api/users?${toSearchParams(request)}`, {
-      signal: transport.signal,
-    })
-    if (!response.ok) throw new Error(`사용자 요청 실패: ${response.status}`)
-    const page: UsersPage = await response.json()
-    if (!transport.signal.aborted) table.synchronizeView(toViewResponse(request, page))
-  } catch (error) {
-    if (transport.signal.aborted) return
-    const pending = table.getSnapshot().state.requestState.pendingRequest
-    if (pending?.requestID === request.requestID) table.abandonRequest(request.requestID)
-    reportError(error)
-  }
-})
-
-if (!attached.ok) throw new Error(attached.error.message)
-```
-
-core는 request envelope와 stale 응답 거부를 소유하고, abort controller·cache·retry timing은 application이 소유합니다. DataGrid와 DataTreeGrid의 `attachRequestExecutor`도 같은 계약입니다.
-
-## DOM과 결합
-
-DOM connection은 별도 source 종류가 아닙니다. connection이 노출하는 semantic controller에 executor를 붙이고, snapshot 변경 시 등록된 element를 갱신합니다.
-
-```ts
-import { createDataTable } from '@sectile/dom/tabular'
-
-const connection = createDataTable({
-  columns,
-  table: document.querySelector<HTMLTableElement>('#users')!,
-})
-
-connection.controller.attachRequestExecutor(({ request }) => {
-  void resolveRemoteUsers(request).then((response) => {
-    connection.synchronizeView(response)
-  })
-})
-```
-
-## request를 서버 query로 변환
-
-`request.query.sort`는 배열이므로 서버가 허용하면 다중 정렬을 그대로 보낼 수 있습니다. filter, group, aggregate, pivot도 descriptor ID와 policy key를 유지한 채 서버 계약으로 변환합니다.
-
-```ts
-function toSearchParams(request: Parameters<DataTableSourceResolver<UserCells>>[0]) {
-  const params = new URLSearchParams()
-
-  if (request.access.kind === 'page') {
-    params.set('page', String(request.access.page))
-    params.set('pageSize', String(request.access.itemsPerPage))
-  } else {
-    params.set('offset', String(request.access.start))
-    params.set('limit', String(request.access.count))
-  }
-
-  for (const sort of request.query.sort) {
-    const direction = sort.direction === 'ascending' ? 'asc' : 'desc'
-    params.append('sort', `${sort.columnID}:${direction}`)
-  }
-
-  for (const filter of request.query.filters) {
-    if (filter.enabled !== false) {
-      params.append('filter', JSON.stringify(filter))
-    }
-  }
-
-  return params
-}
-```
-
-policy key는 함수를 네트워크로 보내는 값이 아닙니다. 예를 들어 `comparator: 'locale'`이나 `predicate: 'contains'`를 서버가 아는 정렬·검색 규칙 이름으로 사용합니다.
-
-## resolver와 취소
-
-```ts
-import {
-  useDataTableSource,
-  type DataTableSourceResolver,
-  type DataTableViewResponse,
-} from '@sectile/vue/tabular'
-
-const resolveUsers: DataTableSourceResolver<UserCells> = async (request, { signal }) => {
-  const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal })
-  if (!response.ok) throw new Error(`사용자 요청 실패: ${response.status}`)
-
-  const page: UsersPage = await response.json()
-  return toViewResponse(request, page)
-}
-
-const source = useDataTableSource(table, resolveUsers, {
-  onError(error) {
-    reportError(error)
-  },
-  onStatusChange(status) {
-    analytics.track('users-source', { status })
-  },
-})
-```
-
-새 request가 시작되면 실행 중인 resolver의 signal이 abort됩니다. transport가 실제 취소를 지원하지 않아 이전 Promise가 완료되더라도 request ID가 현재 작업과 다르면 결과를 무시합니다.
+comparator와 predicate 문자열의 실제 의미는 source와 서버가 공유하는 응용 프로그램 계약입니다. Tabular가 임의의 locale 비교나 검색 문법을 강제하지 않습니다.
 
 ## response envelope 만들기
 
+서버 결과를 바로 controller에 넣지 말고 요청 정보를 다시 포함한 view response로 만듭니다.
+
 ```ts
-function toViewResponse(
-  request: Parameters<DataTableSourceResolver<UserCells>>[0],
-  page: UsersPage,
-): DataTableViewResponse<UserCells> {
-  return {
-    protocolVersion: 1,
-    requestID: request.requestID,
-    sourceGeneration: request.sourceGeneration,
-    queryRevision: request.queryRevision,
-    expansionRevision: request.expansionRevision,
-    viewRevision: page.revision,
-    access: request.access,
-    matchingLeafCount: { kind: 'known', value: page.total },
-    visibleRowCount: { kind: 'known', value: page.total },
-    rows: page.items.map((user) => ({
-      kind: 'leaf',
-      id: user.id,
-      cells: {
-        name: user.name,
-        team: user.team,
-        role: user.role,
-      },
-    })),
-    columnSchema: {
-      revision: request.columnSchemaRevision,
-      columns,
-      headers: [],
-    },
-    removedRowIDs: page.removedUserIDs,
-  }
+return {
+  protocolVersion: request.protocolVersion,
+  requestID: request.requestID,
+  profile: request.profile,
+  sourceRevision: payload.sourceRevision,
+  queryRevision: request.queryRevision,
+  accessRevision: request.accessRevision,
+  expansionRevision: request.expansionRevision,
+  view: {
+    revision: payload.viewRevision,
+    columnSchema: columns,
+    rows: payload.rows,
+    access: { kind: 'page', pageIndex: payload.page, pageSize: 25, totalRowCount: payload.total },
+  },
 }
 ```
 
-`viewRevision`은 같은 source generation 안에서 이전에 수락한 view보다 커야 합니다. page response의 `visibleRowCount`는 현재 page 길이가 아니라 query에 맞는 전체 row 수입니다. `matchingLeafCount`는 계층이나 projection을 적용하기 전 matching leaf 수를 표현할 수 있습니다.
+이 envelope 덕분에 응답 순서가 뒤바뀌거나 다른 profile/schema의 데이터가 와도 부분적으로 섞이지 않고 원자적으로 거부됩니다.
 
-## loading, stale, empty, error
+## loading, empty, error, retry
 
-source는 표현을 강제하지 않고 필요한 신호만 제공합니다.
+Tabular는 상태를 제공하지만 그 화면을 그리지 않습니다.
 
-```vue
-<template>
-  <p v-if="source.status.value === 'loading'" aria-live="polite">
-    사용자 목록을 갱신하는 중…
-  </p>
-
-  <DataTable.Body>
-    <template #default="{ row }"><!-- cells --></template>
-    <template #empty>
-      <tr><td :colspan="columns.length">검색 결과가 없습니다.</td></tr>
-    </template>
-  </DataTable.Body>
-
-  <div v-if="source.status.value === 'error'" role="alert">
-    사용자 목록을 불러오지 못했습니다.
-    <button type="button" @click="source.reload">다시 시도</button>
-  </div>
-</template>
-```
-
-새 request 중 기존 current view는 `acceptedViewState.kind === 'stale'`로 남습니다. 화면을 비울지, 이전 데이터를 흐리게 유지할지, skeleton을 보여줄지는 응용 프로그램이 선택합니다. 첫 response 전에는 `none`, 최신 response를 수락하면 `current`입니다.
-
-## source 제어 API
-
-| API | 용도 |
+| 상태 | 권장 표현 |
 | --- | --- |
-| `status` | `idle`, `loading`, `success`, `error` 상태 |
-| `error` | 가장 최근 resolver 또는 response 검증 실패 |
-| `reload()` | 현재 query·access·expansion으로 새 request |
-| `cancel()` | 실행 중인 작업 abort, pending request abandon |
-| `replaceResolver(next)` | controller는 유지하고 transport를 교체한 뒤 source generation 갱신 |
-| `dispose()` | executor와 진행 중인 작업 해제. Vue scope에서는 자동 호출 |
+| 첫 loading | table 영역의 skeleton 또는 progress |
+| 기존 결과가 있는 loading | 결과를 유지하고 toolbar에 작은 progress |
+| empty | 현재 query를 설명하고 filter 초기화 동작 제공 |
+| error | 마지막 결과를 유지하고 오류 설명과 retry 제공 |
+| 취소 | 오류로 표시하지 않고 다음 request를 기다림 |
 
-controller 하나에는 request executor 하나만 붙을 수 있습니다. query cache를 사용한다면 resolver 안에서 cache를 호출하고 `signal`과 request descriptor를 cache key에 연결하세요.
+Vue의 `useDataTableSource`, `useDataGridSource`, `useDataTreeGridSource`는 `status`, `error`, `reload`, `cancel`, `replaceResolver`, `dispose`를 제공합니다. Core와 DOM에서는 응용 프로그램의 `AbortController`와 controller request state로 같은 정책을 구성합니다.
 
-## source 교체와 SSR
+## page와 window
 
-`sourceKey`가 바뀌면 source generation이 증가하고 기존 view, expansion, generation에 묶인 all-matching 선택을 재조정합니다. 같은 source에서 fetch 함수만 교체하려면 `replaceResolver`를 사용합니다.
+Page는 번호가 있는 화면과 전체 개수가 필요한 목록에 적합합니다. Window는 무한 scroll이나 가상화처럼 offset 주변 범위만 필요할 때 사용합니다. 두 방식 모두 query가 바뀌면 안전한 시작 위치로 reset하고 새 access revision을 발급해야 합니다.
 
-SSR에서는 resolver를 실행하지 않습니다. `initialView`를 전달한다면 server와 client가 같은 response envelope와 schema에서 hydration을 시작해야 하며, mount 뒤 첫 resolver가 최신 데이터를 갱신합니다.
+가상화는 source가 아닙니다. 필요한 경우 소비자가 설치한 `@sectile/virtual`이 승인된 visible row의 배치만 맡습니다. 자세한 경계는 [선택적 가상화](./virtual)를 참고하세요.
+
+## 응용 프로그램이 소유하는 것
+
+- fetch/RPC client, 인증, cache와 retry 정책
+- loading·empty·error의 문구와 시각 디자인
+- optimistic update와 저장 충돌 해결
+- comparator·predicate의 서버 의미
+- SSR에서 사용할 initial accepted view
+
+Tabular가 소유하는 것은 request 생성, revision 비교, stale 응답 거부, 승인된 view와 typed command입니다. 전체 상태의 의미는 [공통 계약](./contracts)에서 확인할 수 있습니다.

@@ -1,3 +1,7 @@
+<script setup>
+import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
+</script>
+
 # Tabular with Vue
 
 The Vue Tabular API is collected under `@sectile/vue/tabular`. Install its optional peer dependency, `@sectile/tabular`, when using this subpath. Applications that do not use Tabular do not need it.
@@ -5,6 +9,10 @@ The Vue Tabular API is collected under `@sectile/vue/tabular`. Install its optio
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
 ```
+
+<TabularExample kind="table-overview" />
+
+Open **Code → Vue** to see controller creation, typed compound components, Provider, and source composition in one file.
 
 ## Choose a profile
 

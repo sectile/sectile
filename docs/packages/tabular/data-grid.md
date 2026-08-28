@@ -1,191 +1,59 @@
 <script setup>
-import TabularDataGridDemo from '../../.vitepress/theme/components/TabularDataGridDemo.vue'
+import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
 </script>
 
 # DataGrid
 
-DataGrid is the flat application-grid profile. Use it for task boards, permission matrices, inventories, and editors where a person moves between cells and edits values without leaving the grid.
+DataGrid is a two-dimensional workspace where cells are the task. Use it for arrow-key navigation, roving focus, cell editing, and deterministic recovery. Choose [DataTable](./data-table) when reading and selecting rows is the primary interaction.
 
-<TabularDataGridDemo />
+<TabularExample kind="grid-overview" />
 
-Click a cell, move with the arrow keys, press Enter to edit, and press Escape to cancel. Row checkboxes remain independent from the current cell. Sorting changes the accepted view without losing the profile contract.
+## Navigate cells with the keyboard
 
-::: details Complete source for the live example
-<<< ../../.vitepress/theme/components/TabularDataGridDemo.vue
-:::
+Only one cell participates in the tab order. Arrow keys move the cursor, Home and End move to row boundaries, and PageUp/PageDown move relative to the access window. Core emits reveal and focus commands for off-screen targets instead of touching the platform.
 
-## Use Tabular core only
+<TabularExample kind="grid-navigation" />
 
-The core controller computes cursor, edit mode, selection, and commands without owning DOM focus or elements.
+When a new view removes the active row or column, the cursor recovers to a nearby row in the same column, a nearby column in the same row, or the first focusable cell. Core, DOM, and Vue share this rule.
 
-```ts
-import { createDataGrid } from '@sectile/tabular/data-grid'
+## Edit, commit, or cancel
 
-const columns = [
-  { id: 'task', capabilities: ['sort', 'edit'] },
-  { id: 'owner', capabilities: ['sort'] },
-] as const
-const grid = createDataGrid({ columns })
+Enter or an input action switches from navigation mode to edit mode. Commit produces a typed command; Escape restores the original value and cursor. The application owns persistence and validation copy.
 
-grid.subscribeCommands((command) => {
-  if (command.type === 'request-view') loadGridView(command.request)
-  if (command.type === 'commit-edit') saveCell(command.cell, command.value)
-})
-grid.synchronizeView(initialGridResponse)
-grid.dispatch({ type: 'focus-cell', cell: { rowID: 'release', columnID: 'task' } })
-grid.dispatch({ type: 'move-cell', direction: 'right' })
-renderGrid(grid.getProjection(), grid.getSnapshot())
-```
+<TabularExample kind="grid-editing" />
 
-## Connect existing DOM
+- `Editor` can wrap a native input, select, or textarea.
+- A parser returns a wire value or a structured error.
+- Editor recovery remains deterministic when a new view arrives during editing.
+- Reload the source after persistence or synchronize an optimistic view.
 
-The DOM connection projects ARIA grid semantics, roving focus, keyboard navigation, and editor lifetime onto existing elements.
+## Select rows independently from the cursor
 
-`RowSelectionControl` also supports Shift-click and Shift-Space range selection across the currently visible leaf rows; cell selection and cursor movement remain unchanged.
+The cell cursor answers “where am I working?” while row selection answers “which records receive a bulk action?”. They are independent, and row checkboxes support anchored Shift ranges.
 
-```ts
-import { createDataGrid } from '@sectile/dom/tabular'
+<TabularExample kind="grid-selection" />
 
-const root = document.querySelector<HTMLElement>('#release-grid')!
-const connection = createDataGrid({ columns, root, onCommand: handleGridCommand })
-const taskHeader = root.querySelector<HTMLElement>('[data-header="task"]')!
-const taskCell = root.querySelector<HTMLElement>('[data-cell="release:task"]')!
+The range follows visible leaf-row order. A new sort or filter establishes a new order, while group and context rows are excluded.
 
-connection.setColumnHeaderAttributes(taskHeader, { columnID: 'task' })
-connection.registerCell(taskCell, { cell: { rowID: 'release', columnID: 'task' } })
-connection.focusCurrent()
-```
+## Query server data
 
-## Vue grid composition
+DataGrid shares DataTable's query and source contract. Sort and filter controls request a view rather than rearranging mounted cells. A server resolves the query and page/window access into a response envelope.
 
-DataGrid uses ARIA grid semantics rather than native table elements. Rows in an accepted view must all be leaves; a hierarchical response is rejected atomically. Create its typed namespace with `createDataGridComponents(grid)`.
+Use the [async source example](./data-source) to inspect retained results while loading, cancellation, stale-response rejection, and retry.
 
-```vue
-<script setup lang="ts">
-import { createDataGridComponents } from '@sectile/vue/tabular'
+## Columns and large data
 
-const DataGrid = createDataGridComponents(grid)
-</script>
+Column order, visibility, and pinning are controller state. Pixel size and scrolling are host state. Ordinary grids do not need virtualization; compose the consumer-installed `@sectile/virtual` only for genuinely large surfaces. See [optional virtualization](./virtual).
 
-<template>
-<DataGrid.Provider>
-  <DataGrid.Root aria-label="Release tasks" @command="handleCommand">
-    <DataGrid.Header>
-      <DataGrid.HeaderRow>
-        <DataGrid.ColumnHeader column="task">Task</DataGrid.ColumnHeader>
-        <DataGrid.ColumnHeader column="owner">Owner</DataGrid.ColumnHeader>
-      </DataGrid.HeaderRow>
-    </DataGrid.Header>
-    <DataGrid.Body v-slot="{ row }">
-      <DataGrid.Cell column="task">{{ row.cells.task }}</DataGrid.Cell>
-      <DataGrid.Cell column="owner">{{ row.cells.owner }}</DataGrid.Cell>
-    </DataGrid.Body>
-  </DataGrid.Root>
-</DataGrid.Provider>
-</template>
-```
+## Find a public part
 
-## Cursor and keyboard navigation
+| Goal | Vue part | Primary state or behavior |
+| --- | --- | --- |
+| Grid boundary | `Root` | cursor, edit mode, command boundary |
+| Headers | `Header`, `HeaderRow`, `ColumnHeader` | query and column metadata |
+| Cells | `Body`, `Row`, `Cell` | roving tabindex, active cell |
+| Editing | `Editor` | begin, commit, cancel, restore |
+| Row selection | `RowSelectionControl`, `BulkSelectionControl` | explicit/range/all-matching |
+| Column size | `ColumnResizeHandle` | host size state |
 
-The controller owns a cell address, not DOM focus itself. The DOM connection projects one tab stop, moves across visible editable cells, and emits reveal requests when the current cell is not mounted. Applications can also dispatch `focus-cell` and `move-cell` directly.
-
-```ts
-grid.dispatch({ type: 'focus-cell', cell: { rowID: 'task-1', columnID: 'owner' } })
-grid.dispatch({ type: 'move-cell', direction: 'down' })
-```
-
-`boundary: 'stop'` stops at the edge; `boundary: 'wrap-axis'` continues on the next row or axis. `isCellDisabled` defines cells that navigation and editing skip.
-
-```ts
-const grid = useDataGrid({
-  columns,
-  isCellDisabled: (cell) => cell.columnID === 'approval' && !canApprove(cell.rowID),
-})
-
-grid.dispatch({ type: 'move-cell', direction: 'right', boundary: 'wrap-axis' })
-```
-
-Cursor and edit mode can each be controlled or uncontrolled.
-
-```ts
-const cursor = ref<DataGridCursorState>({ current: null })
-const editState = ref<DataGridEditState>({ kind: 'navigation' })
-
-const grid = useDataGrid({
-  columns,
-  cursor,
-  onCursorChange: (next) => { cursor.value = next },
-  editState,
-  onEditStateChange: (next) => { editState.value = next },
-})
-```
-
-## Editing and validation
-
-Mark editable columns with the `edit` capability and place a `DataGrid.Editor` in each editable cell. Enter begins editing, Enter commits, and Escape cancels. `parseValue` can return a structured failure; commit commands remain application-owned so persistence and optimistic updates stay outside the reducer.
-
-```vue
-<DataGrid.Cell column="owner" v-slot="{ editState }">
-  <span v-if="editState.kind !== 'editing'">{{ row.cells.owner }}</span>
-  <DataGrid.Editor
-    column="owner"
-    :value="row.cells.owner"
-  />
-</DataGrid.Cell>
-```
-
-When a source response removes the edited row or column, DataGrid cancels the editor before moving the cursor to a deterministic surviving cell. Replacing the source also cancels editing before requesting the replacement view.
-
-Body renders accepted rows by default and gives each slot invocation its typed `row`. Cells, row-selection controls, and editors inherit the row ID. Use `<DataGrid.Body manual>` and explicit `DataGrid.Row` only when a custom windowing strategy must own row placement. Header row depth and span metadata come from the header schema rather than a component prop.
-
-```ts
-function handleCommand(command: DataGridCommand) {
-  if (command.type === 'commit-edit') {
-    saveCell(command.cell, command.value)
-    grid.requestView()
-  }
-  if (command.type === 'cancel-edit') releaseDraft(command.cell, command.reason)
-  if (command.type === 'request-reveal-cell') {
-    const target = adapter.locateCell(command.cell)
-    if (target !== null) virtualizer.scrollTo(target.id)
-  }
-}
-```
-
-Begin, commit, and cancel commands keep editor DOM behavior separate from persistence. Composition never commits prematurely; a focus transfer cancels the previous edit first.
-
-## Selection, columns, and large data
-
-`DataGrid.RowSelectionControl` and `DataGrid.BulkSelectionControl` manage row selection independently of the cell cursor. Column state covers order, hidden columns, and start/end pinning. `DataGrid.ColumnResizeHandle` projects host-owned sizes. For large surfaces, compose `@sectile/vue/virtual` and the optional Tabular adapter only where needed.
-
-```vue
-<DataGrid.RowSelectionControl name="selected-work-items" />
-<DataGrid.BulkSelectionControl :target="{ kind: 'all-matching' }">Select every result</DataGrid.BulkSelectionControl>
-<DataGrid.ColumnResizeHandle column="task" :min-size="220" />
-```
-
-## Query and source
-
-DataGrid shares the same query and source envelope as DataTable. Sort and filter controls request a new flat view rather than rewriting mounted cells. Server pagination, abort, and stale-response behavior are covered in [async data sources](./data-source). A response containing group rows is rejected atomically by the flat profile.
-
-## Parts by responsibility
-
-| Part | Responsibility |
-| --- | --- |
-| `Provider` · `Root` | Controller scope, ARIA grid, and command/error boundary |
-| `Header` · `HeaderRow` · `ColumnHeader` | Header rowgroup and schema metadata |
-| `SortTrigger` · `FilterControl` | Query update and fresh source request |
-| `Body` · `Row` · `Cell` | Flat accepted view and 2D cell registration |
-| `RowSelectionControl` · `BulkSelectionControl` | Row selection independent from the cursor |
-| `ColumnResizeHandle` | Host-owned column size |
-| `Editor` | Navigation/edit mode and commit/cancel wiring |
-
-## Public API by layer
-
-- Tabular core: `createDataGrid`, `tryCreateDataGrid`, controller view/source lifecycle, `dispatch`, and cursor/edit projection
-- DOM: `createDataGrid`, `connectDataGrid`, header/row/cell registration, interaction bindings, `focusCurrent`, and `requestRevealCell`
-- Vue creation: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
-- Vue structure: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Vue controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`
-
-Each layer exports cursor/edit state, projection, query, view, source, command, controller, error, and option types from the same subpath. Vue adds every part's `Props` and `SlotProps`.
+Import Core from `@sectile/tabular/data-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/tabular`. See [DOM](./dom) and [Vue](./vue) for composition details.

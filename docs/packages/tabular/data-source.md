@@ -1,187 +1,90 @@
 <script setup>
-import TabularRemoteDataDemo from '../../.vitepress/theme/components/TabularRemoteDataDemo.vue'
+import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
 </script>
 
 # Async data sources
 
-Remote sorting, filtering, and pagination do not require a separate mode. A query or access change sends the latest `TabularRequest` to `useData*Source`; the application serializes it for HTTP, RPC, or a query client and maps the result back into a response envelope.
+A Tabular sort, filter, or page change is not an instruction to rearrange mounted rows. It is a **query change that requests a new view**. A source can evaluate that request in memory or send it to a server.
 
-<TabularRemoteDataDemo />
+<TabularExample kind="remote-source" />
 
-Change the sort direction, type several search values quickly, move between pages, select all matches, and preview a failure. Superseded work is aborted and only a response that matches the active request can be accepted.
+Search, sort, move to another page, and trigger a failure. The surface retains its last accepted rows while exposing loading or error state, and rejects a response that arrives too late. The Code tab shows the same lifecycle in Vue, DOM, and Core.
 
-::: details Complete interactive source
-<<< ../../.vitepress/theme/components/TabularRemoteDataDemo.vue
-:::
+## One request lifecycle
 
-## Run an async source with Tabular core
+1. The user changes sorting, filtering, expansion, or page/window access.
+2. The controller creates a request with a unique ID plus current query, access, and revisions.
+3. The source evaluates local data or performs HTTP/RPC.
+4. The response is checked against the current pending request.
+5. A matching view is accepted atomically; a stale or malformed response leaves the current view untouched.
 
-`useData*Source` is a Vue lifecycle helper. A core-only application attaches transport directly to the controller's sole request executor.
-
-```ts
-import { createDataTable } from '@sectile/tabular/data-table'
-
-const table = createDataTable({ columns })
-let active: AbortController | undefined
-
-const attached = table.attachRequestExecutor(async ({ request }) => {
-  active?.abort()
-  const transport = new AbortController()
-  active = transport
-
-  try {
-    const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal: transport.signal })
-    if (!response.ok) throw new Error(`User request failed: ${response.status}`)
-    const page: UsersPage = await response.json()
-    if (!transport.signal.aborted) table.synchronizeView(toViewResponse(request, page))
-  } catch (error) {
-    if (transport.signal.aborted) return
-    const pending = table.getSnapshot().state.requestState.pendingRequest
-    if (pending?.requestID === request.requestID) table.abandonRequest(request.requestID)
-    reportError(error)
-  }
-})
-
-if (!attached.ok) throw new Error(attached.error.message)
-```
-
-Core owns request envelopes and stale-response rejection. The application owns abort controllers, caches, and retry timing. DataGrid and DataTreeGrid expose the same executor contract.
-
-## Compose with DOM
-
-A DOM connection is not another source mode. Attach the executor to its semantic controller and refresh registered elements when snapshots change.
-
-```ts
-import { createDataTable } from '@sectile/dom/tabular'
-
-const connection = createDataTable({
-  columns,
-  table: document.querySelector<HTMLTableElement>('#users')!,
-})
-
-connection.controller.attachRequestExecutor(({ request }) => {
-  void resolveRemoteUsers(request).then((response) => {
-    connection.synchronizeView(response)
-  })
-})
-```
+Selection, cursor, and column state remain independent. Only targets missing from the accepted view are adjusted by profile-specific recovery rules.
 
 ## Serialize a request
 
-`request.query.sort` is an array, so a server that supports multi-sort can preserve the descriptors in order. Filter, group, aggregate, and pivot descriptors keep their IDs and policy keys as they cross the transport boundary.
+Your server API can use any names, but transform query and access explicitly so their meaning is preserved.
 
-```ts
-function toSearchParams(request: Parameters<DataTableSourceResolver<UserCells>>[0]) {
-  const params = new URLSearchParams()
-
-  if (request.access.kind === 'page') {
-    params.set('page', String(request.access.page))
-    params.set('pageSize', String(request.access.itemsPerPage))
-  } else {
-    params.set('offset', String(request.access.start))
-    params.set('limit', String(request.access.count))
-  }
-
-  for (const sort of request.query.sort) {
-    const direction = sort.direction === 'ascending' ? 'asc' : 'desc'
-    params.append('sort', `${sort.columnID}:${direction}`)
-  }
-  for (const filter of request.query.filters) {
-    if (filter.enabled !== false) params.append('filter', JSON.stringify(filter))
-  }
-  return params
-}
-```
-
-Policy keys are names, not functions sent over the network. A server can interpret `comparator: 'locale'` or `predicate: 'contains'` according to its own registered policies.
-
-## Resolver and cancellation
-
-```ts
-import {
-  useDataTableSource,
-  type DataTableSourceResolver,
-  type DataTableViewResponse,
-} from '@sectile/vue/tabular'
-
-const resolveUsers: DataTableSourceResolver<UserCells> = async (request, { signal }) => {
-  const response = await fetch(`/api/users?${toSearchParams(request)}`, { signal })
-  if (!response.ok) throw new Error(`User request failed: ${response.status}`)
-  return toViewResponse(request, await response.json() as UsersPage)
-}
-
-const source = useDataTableSource(table, resolveUsers, {
-  onError: reportError,
-  onStatusChange: (status) => analytics.track('users-source', { status }),
-})
-```
-
-A new request aborts the active resolver signal. If the transport cannot cancel and an older Promise still completes, its request ID no longer matches and the result is ignored.
-
-## Build the response envelope
-
-```ts
-function toViewResponse(
-  request: Parameters<DataTableSourceResolver<UserCells>>[0],
-  page: UsersPage,
-): DataTableViewResponse<UserCells> {
-  return {
-    protocolVersion: 1,
-    requestID: request.requestID,
-    sourceGeneration: request.sourceGeneration,
-    queryRevision: request.queryRevision,
-    expansionRevision: request.expansionRevision,
-    viewRevision: page.revision,
-    access: request.access,
-    matchingLeafCount: { kind: 'known', value: page.total },
-    visibleRowCount: { kind: 'known', value: page.total },
-    rows: page.items.map((user) => ({
-      kind: 'leaf', id: user.id,
-      cells: { name: user.name, team: user.team, role: user.role },
-    })),
-    columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
-    removedRowIDs: page.removedUserIDs,
-  }
-}
-```
-
-Within one source generation, `viewRevision` must be newer than the last accepted view. For a page response, `visibleRowCount` is the complete query result count rather than the current page length.
-
-## Loading, stale, empty, and error
-
-The source exposes state but does not impose rendering policy.
-
-```vue
-<p v-if="source.status.value === 'loading'" aria-live="polite">Refreshing users…</p>
-
-<DataTable.Body>
-  <template #default="{ row }"><!-- cells --></template>
-  <template #empty><tr><td :colspan="columns.length">No users match.</td></tr></template>
-</DataTable.Body>
-
-<div v-if="source.status.value === 'error'" role="alert">
-  Users could not be loaded.
-  <button type="button" @click="source.reload">Retry</button>
-</div>
-```
-
-While a new request is pending, the previous current view becomes `stale`. The application can preserve it, dim it, or replace it. Before the first response the accepted state is `none`; the latest accepted response is `current`.
-
-## Source control API
-
-| API | Purpose |
+| Tabular request | Example HTTP encoding |
 | --- | --- |
-| `status` | `idle`, `loading`, `success`, or `error` |
-| `error` | Latest resolver or response-validation failure |
-| `reload()` | Request the current query, access, and expansion again |
-| `cancel()` | Abort active work and abandon its pending request |
-| `replaceResolver(next)` | Keep the controller, replace transport logic, and advance source generation |
-| `dispose()` | Release the executor and active work; Vue scopes call it automatically |
+| `query.sort` | `sort=name:asc,team:desc` |
+| `query.filters` | `filter[status]=active&q=mina` |
+| page access | `page=3&pageSize=25` |
+| window access | `offset=200&limit=80` |
+| `expansion.expandedGroupIDs` | `expanded=commerce,platform` |
+| source/query revision | cache key or If-Match-style header |
 
-One controller accepts one request executor. A query cache belongs inside the resolver; include descriptors in the cache key and pass the abort signal through.
+The source and server define comparator and predicate semantics. Tabular does not impose a locale comparator or search language.
 
-## Source replacement and SSR
+## Build a response envelope
 
-Changing `sourceKey` advances source generation and resets state bound to the previous source. Use `replaceResolver` when only the transport function changes.
+Wrap server data with the request identity before synchronizing it.
 
-Resolvers do not run during SSR. If you provide `initialView`, server and client must hydrate from the same envelope and schema; the mounted resolver can then refresh it.
+```ts
+return {
+  protocolVersion: request.protocolVersion,
+  requestID: request.requestID,
+  profile: request.profile,
+  sourceRevision: payload.sourceRevision,
+  queryRevision: request.queryRevision,
+  accessRevision: request.accessRevision,
+  expansionRevision: request.expansionRevision,
+  view: {
+    revision: payload.viewRevision,
+    columnSchema: columns,
+    rows: payload.rows,
+    access: { kind: 'page', pageIndex: payload.page, pageSize: 25, totalRowCount: payload.total },
+  },
+}
+```
+
+This envelope prevents out-of-order responses or mismatched profile/schema data from being partially merged.
+
+## Loading, empty, error, and retry
+
+Tabular exposes state without prescribing its presentation.
+
+| State | Recommended presentation |
+| --- | --- |
+| Initial loading | Skeleton or progress inside the table region |
+| Loading with rows | Retain rows and show subtle toolbar progress |
+| Empty | Explain the active query and offer filter reset |
+| Error | Retain the last view and offer a described retry |
+| Cancellation | Do not present it as an error; await the next request |
+
+Vue's `useDataTableSource`, `useDataGridSource`, and `useDataTreeGridSource` expose `status`, `error`, `reload`, `cancel`, `replaceResolver`, and `dispose`. Core and DOM compose the same policy from an application-owned `AbortController` and controller request state.
+
+## Page and window access
+
+Page access suits numbered navigation and total counts. Window access suits infinite scrolling or virtualization around an offset. A query change should reset either mode to a safe starting position and issue a new access revision.
+
+Virtualization is not a source. When needed, consumer-installed `@sectile/virtual` only lays out the accepted visible rows. See [optional virtualization](./virtual).
+
+## Application-owned responsibilities
+
+- HTTP/RPC client, authentication, cache, and retry policy
+- Loading, empty, and error presentation
+- Optimistic updates and write-conflict resolution
+- Server meaning of comparators and predicates
+- Initial accepted view for SSR
+
+Tabular owns request creation, revision comparison, stale-response rejection, accepted views, and typed commands. See [shared contracts](./contracts) for the complete state model.

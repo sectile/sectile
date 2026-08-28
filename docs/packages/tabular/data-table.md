@@ -1,236 +1,88 @@
 <script setup>
-import TabularDataTableDemo from '../../.vitepress/theme/components/TabularDataTableDemo.vue'
+import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
 </script>
 
 # DataTable
 
-DataTable is the read-oriented profile. Start here for directories, reports, search results, audit logs, and admin lists where native table semantics and row actions matter more than spreadsheet navigation.
+DataTable is a table for reading and comparing rows. Use it for directories, search results, and audit logs where **native table semantics and row selection** matter. Choose [DataGrid](./data-grid) when every cell must support keyboard navigation and editing.
 
-<TabularDataTableDemo />
+<TabularExample kind="table-overview" />
 
-Try sorting more than once to cycle ascending, descending, and off. Filter the rows, select individual results, then select every matching row. The demo uses the real `DataTable.SortTrigger`, `DataTable.FilterControl`, `DataTable.SelectionControl`, and `DataTable.BulkSelectionControl` parts returned for its controller.
+The **Code** tab switches the same UI between Vue compound components, DOM bindings for existing HTML, and renderer-free Core APIs.
 
-::: details Complete source for the live example
-<<< ../../.vitepress/theme/components/TabularDataTableDemo.vue
-:::
+## Search and sort
 
-## Use Tabular core only
+Repeatedly activate a heading to cycle ascending, descending, and off. Search and sort update one query and request a new view instead of mutating mounted DOM rows. The same UI therefore works with both in-memory and server-backed data.
 
-`@sectile/tabular/data-table` knows nothing about elements or frameworks. Attach a source executor, dispatch events, and send its projection to any renderer.
+<TabularExample kind="table-query" />
 
-```ts
-import { createDataTable } from '@sectile/tabular/data-table'
-import { createClientTabularSource, resolveClientTabularRequest } from '@sectile/tabular/source'
+- `SortTrigger` records a column and comparator in the query.
+- `FilterControl` records a global or column filter.
+- A client source evaluates that query locally; a remote source serializes it for HTTP or RPC.
 
-const columns = [
-  { id: 'name', capabilities: ['sort', 'filter'] },
-  { id: 'role', capabilities: ['sort', 'filter'] },
-] as const
-const source = createClientTabularSource({
-  records: [
-    { id: 'ada', name: 'Ada Lovelace', role: 'Platform' },
-    { id: 'grace', name: 'Grace Hopper', role: 'Compiler' },
-  ],
-  columnSchema: { revision: 0, columns, headers: [] },
-  getRowID: (record) => record.id,
-  getValue: (record, columnID) => columnID === 'name' ? record.name : record.role,
-})
-const table = createDataTable({ columns })
-const attached = table.attachRequestExecutor(({ request }) => {
-  const response = resolveClientTabularRequest(source, request)
-  if (response.ok) table.synchronizeView(response.value)
-})
-if (!attached.ok) throw new Error(attached.error.message)
+See [async data sources](./data-source) for a complete request, cancellation, failure, and retry flow.
 
-table.dispatch({ type: 'toggle-row-selection', rowID: 'ada' })
-renderRows(table.getProjection().rows)
-```
+## Select rows and all matching results
 
-## Connect existing DOM
+Individual checkboxes, Shift ranges, and selecting every row matched by the current query share one selection contract. The header checkbox exposes false, mixed, and true for none, some, and all matching rows.
 
-`@sectile/dom/tabular` binds the same controller contract to native table elements, form controls, and events while preserving application styling.
+<TabularExample kind="table-selection" />
 
-Bound row checkboxes support anchored range selection without extra options. Activate one checkbox, then Shift-click or press Shift-Space on another to apply that checkbox's next state to the inclusive visible leaf range.
+`SelectionControl` inherits the current Body row. `BulkSelectionControl` with `all-matching` stores the query revision and exclusions rather than every unloaded ID. Set `name` for native form submission and override `value` only when it differs from the row ID.
 
-```ts
-import { createDataTable } from '@sectile/dom/tabular'
+## Multi-level headers and edit intent
 
-const connection = createDataTable({
-  columns,
-  table: document.querySelector<HTMLTableElement>('#users')!,
-  onCommand: handleTableCommand,
-  onSnapshotChange: renderTable,
-})
-const nameHeader = document.querySelector<HTMLTableCellElement>('#name-header')!
-const nameSort = nameHeader.querySelector<HTMLButtonElement>('button')!
-connection.setHeaderCellAttributes(nameHeader, { columnID: 'name' })
-const releaseSort = connection.bindSortTrigger(nameSort, { columnID: 'name', comparator: 'locale' })
-```
+Do not specify a header-row depth. Bind leaf headers with `column`, and only bind a spanning group with `header`. Tabular derives depth, colspan, rowspan, and accessibility metadata from the schema.
 
-## Vue composition
+<TabularExample kind="table-structure" />
 
-`createDataTableComponents` creates the typed compound component namespace for a controller. Its Provider carries that controller through injection without a prop. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each schema-typed `row` to its slot; nested cells and controls inherit that row identity.
+`Editor` does not persist data. It converts a native input commit into a typed command; the application owns validation, storage, and optimistic updates. Use DataGrid when a cell cursor and edit mode are central.
+
+## Column visibility, pinning, and size
+
+Order, visibility, and start/end pinning are portable semantic state. Pixel width belongs to the DOM or Vue host. This keeps Core platform-independent while each rendered surface can use real measurements.
+
+<TabularExample kind="table-columns" />
+
+`ColumnResizeHandle` supports pointer and keyboard input and respects min/max limits. Column visibility and pinning update controller `columnState`, so they can be persisted or controlled by the application.
+
+## Connect data and render request states
+
+`useDataTableSource` executes requests and exposes `status`, `error`, `reload`, and `cancel`. Tabular does not prescribe the spinner, empty state, error copy, or retry control. It keeps the last accepted view while exposing the new request separately.
+
+| Situation | Read this state |
+| --- | --- |
+| Initial request | `status === 'loading'` with no accepted view |
+| Sorting request | Existing `rows` remain while a request is pending |
+| Empty result | Accepted view has `rows.length === 0` |
+| Failure and retry | `error`, `reload()` |
+
+See [async data sources](./data-source) for the complete flow.
+
+## Preserve row types in Vue
+
+`createDataTableComponents(table)` creates a component namespace bound to the controller schema. A Body slot therefore preserves the `useDataTable<UserCells>` type for `row.cells`, and Cell inherits the row ID from Body.
 
 ```vue
-<script setup lang="ts">
-import {
-  defineDataTableColumns, useDataTable,
-  createDataTableComponents, useDataTableSource,
-} from '@sectile/vue/tabular'
-
-interface UserCells {
-  readonly name: string
-  readonly role: string
-}
-
-const columns = defineDataTableColumns([
-  { id: 'name', capabilities: ['sort', 'filter'] },
-  { id: 'role', capabilities: ['sort', 'filter'] },
-])
-const table = useDataTable<UserCells>({ columns })
-const DataTable = createDataTableComponents(table)
-
-useDataTableSource(table, async (request) => {
-  const page = await fetchUsers(request)
-  return toViewResponse(request, columns, page)
-})
-</script>
-
-<template>
-  <DataTable.Provider>
-    <DataTable.Root>
-      <DataTable.Caption>Users</DataTable.Caption>
-      <DataTable.Header><DataTable.HeaderRow>
-        <DataTable.ColumnHeader column="name">Name</DataTable.ColumnHeader>
-        <DataTable.ColumnHeader column="role">Role</DataTable.ColumnHeader>
-      </DataTable.HeaderRow></DataTable.Header>
-      <DataTable.Body v-slot="{ row }">
-        <DataTable.Cell column="name">{{ row.cells.name }}</DataTable.Cell>
-        <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
-      </DataTable.Body>
-    </DataTable.Root>
-  </DataTable.Provider>
-</template>
-```
-
-## Sort and filter
-
-`DataTable.SortTrigger` cycles one column through ascending, descending, and unsorted. `DataTable.FilterControl` binds an input or select to a global or column descriptor. Both update the canonical query and request a new view; the source decides what comparator and predicate keys mean.
-
-```vue
-<DataTable.SortTrigger column="name" comparator="locale">
-  Name
-</DataTable.SortTrigger>
-
-<DataTable.FilterControl
-  scope="global"
-  id="user-search"
-  predicate="contains"
-  placeholder="Search people"
-/>
-```
-
-These controls do not reorder mounted DOM rows. They update the query and request a fresh view. A client source computes an in-memory result; a remote source serializes `request.query.sort` and `request.query.filters`. See [async data sources](./data-source) for cancellation, page reset, and stale-response handling.
-
-Bind a filter to one column by including its ID.
-
-```vue
-<DataTable.FilterControl as-child scope="column" column="status" id="status-filter" predicate="equals">
-  <select aria-label="Account status">
-    <option value="">Every status</option>
-    <option value="active">Active</option>
-    <option value="suspended">Suspended</option>
-  </select>
-</DataTable.FilterControl>
-```
-
-## Selection and native forms
-
-Use `DataTable.SelectionControl` for explicit rows and `DataTable.BulkSelectionControl` for all matching rows or group leaves. The bulk control projects `aria-checked="false"`, `"mixed"`, and `"true"` for no selection, partial selection, and all matching rows. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
-
-```vue
-<DataTable.SelectionControl name="selected-users" />
-
-<DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }">
-  Select all results
-</DataTable.BulkSelectionControl>
-```
-
-## Grouped rows and edit intent
-
-DataTable may render group rows returned by the source. `DataTable.Disclosure` changes expansion and requests a new view. `DataTable.Editor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
-
-Header rows do not take a depth prop. Bind leaf headers with `column`; only nested group headers use `header` to identify a schema node. The schema derives multi-level spans and ARIA metadata. Give a native DataTable its accessible name with `DataTable.Caption`, or use `aria-labelledby` when a visible title outside the table already names it.
-
-```vue
-<DataTable.HeaderRow>
-  <DataTable.ColumnHeader column="name">Name</DataTable.ColumnHeader>
-  <DataTable.ColumnHeader header="employment">Employment</DataTable.ColumnHeader>
-</DataTable.HeaderRow>
-<DataTable.HeaderRow>
-  <DataTable.ColumnHeader column="team">Team</DataTable.ColumnHeader>
-  <DataTable.ColumnHeader column="role">Role</DataTable.ColumnHeader>
-</DataTable.HeaderRow>
-```
-
-Body owns normal row repetition. Use `<DataTable.Body manual>` with explicit `DataTable.Row rowID="…"` only for low-level rendering such as a virtualized window.
-
-```vue
-<DataTable.Body v-slot="{ row, isGroup }">
-  <DataTable.Cell column="name">
-    <DataTable.Disclosure v-if="isGroup" :aria-label="`Toggle ${row.cells.name}`" />
-    {{ row.cells.name }}
-  </DataTable.Cell>
-  <DataTable.Cell column="quota">
-    <DataTable.Editor v-if="row.kind === 'leaf'" as-child column="quota" :parse-value="parseQuota">
-      <input :value="row.cells.quota">
-    </DataTable.Editor>
-  </DataTable.Cell>
+<DataTable.Body v-slot="{ row }">
+  <DataTable.Cell column="name">{{ row.cells.name }}</DataTable.Cell>
+  <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
 </DataTable.Body>
 ```
 
-A `request-value-commit` command carries the cell address and parsed wire value. Persist it, then reload the source or synchronize an optimistic view.
+Body owns normal row iteration. Use `<DataTable.Body manual>` and explicit `DataTable.Row` only for low-level rendering such as a virtual window.
 
-## Column state and access
+## Find a public part
 
-Semantic column state owns order, visibility, and start/end pinning. Pixel size is host state.
+| Goal | Vue part | DOM/Core equivalent |
+| --- | --- | --- |
+| Table and name | `Root`, `Caption` | native table / controller projection |
+| Headers | `Header`, `HeaderRow`, `ColumnHeader` | header attributes / schema |
+| Query | `SortTrigger`, `FilterControl` | bind functions / `set-query` event |
+| Rows | `Body`, `Row`, `Cell` | element registration / projection rows |
+| Selection | `SelectionControl`, `BulkSelectionControl` | checkbox binding / selection event |
+| Groups | `Disclosure` | disclosure binding / expansion event |
+| Editing | `Editor` | editor binding / commit command |
+| Column size | `ColumnResizeHandle` | resize binding / host size state |
 
-```vue
-<DataTable.ColumnHeader column="name">
-  Name
-  <DataTable.ColumnResizeHandle column="name" :min-size="160" :max-size="480" aria-label="Resize name column" />
-</DataTable.ColumnHeader>
-```
-
-The default access mode is a 25-row page. `set-access` selects another page or window and issues a new source request. A page response returns the full visible count; window access is suited to infinite scrolling or virtualization. See [shared contracts](./contracts#page-and-window-access).
-
-## Source and presentation states
-
-`useDataTableSource` exposes `status`, `error`, `reload`, `cancel`, `replaceResolver`, and `dispose`. Render loading, empty, stale, error, and retry UI according to application policy. SSR does not execute a resolver, so server and client must share the same initial accepted view when hydrating.
-
-Root and part slots expose `acceptedViewState`, `requestState`, `query`, `rowSelection`, `columnState`, `accessState`, `expansion`, and `rows`. Body adds the typed `row`, `rowIndex`, and `isGroup` values.
-
-## Parts by responsibility
-
-| Part | Responsibility |
-| --- | --- |
-| `Provider` | Inject the controller bound to this namespace |
-| `Root` | Native table plus command/error boundary |
-| `Caption` | Accessible name for the native table |
-| `Header` · `HeaderRow` · `ColumnHeader` | Header schema and native header elements |
-| `SortTrigger` · `FilterControl` | Canonical query updates and source requests |
-| `Body` · `Row` · `Cell` | Automatic accepted-view iteration or manual registration |
-| `SelectionControl` · `BulkSelectionControl` | Explicit, all-matching, and group-leaf selection |
-| `Disclosure` | Group expansion and a new view request |
-| `ColumnResizeHandle` | Host-owned column size |
-| `Editor` | Parsed native input commit intent |
-
-## Public API by layer
-
-- Tabular core: `createDataTable`, `tryCreateDataTable`, and controller `dispatch`, view/source lifecycle, snapshots, and projections
-- DOM: `createDataTable`, `connectDataTable`, header/row/cell attributes and registration, plus sort/filter/selection/disclosure/resize/editor bindings
-- Vue creation: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
-- Vue structure: `Provider`, `Root`, `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Vue controls: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`
-
-Each layer exports its query, view, source, error, command, controller, state, and option types from the same subpath. Vue adds `Props` and `SlotProps` for every part.
+See [Vue composition](./vue), [DOM composition](./dom), and [shared contracts](./contracts) for installation paths and full state shapes.

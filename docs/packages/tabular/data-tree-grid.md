@@ -1,181 +1,54 @@
 <script setup>
-import TabularDataTreeGridDemo from '../../.vitepress/theme/components/TabularDataTreeGridDemo.vue'
+import TabularExample from '../../.vitepress/theme/components/TabularExample.vue'
 </script>
 
 # DataTreeGrid
 
-DataTreeGrid combines a grid cursor and editor with an ordered hierarchy. Use it for service ownership, file-like inventories, grouped permissions, and planning structures where parent context must remain part of the interactive surface.
+DataTreeGrid adds parent and child rows to DataGrid's cell cursor and editing model. Use it for service ownership, file-like inventory, and grouped permissions where users work on leaf cells while retaining **parent context**.
 
-<TabularDataTreeGridDemo />
+<TabularExample kind="tree-overview" />
 
-Expand and collapse both groups, move through cells with the keyboard, select leaf rows, and edit a service. Collapsing a group requests a new view and safely recovers interaction state that was inside the removed branch.
+## Expand and collapse branches
 
-::: details Complete source for the live example
-<<< ../../.vitepress/theme/components/TabularDataTreeGridDemo.vue
-:::
+A group disclosure changes expansion state and requests a new view. Tabular does not hide an arbitrary nested DOM subtree. The source returns a flat list of currently visible rows plus hierarchy metadata for the active expansion.
 
-## Use Tabular core only
+<TabularExample kind="tree-hierarchy" />
 
-The renderer-neutral controller validates hierarchy, advances expansion revisions, and recovers cursor or editor state. The application synchronizes an ordered hierarchy for each request.
+Rows can carry `level`, `positionInSet`, `setSize`, and parent/group IDs. A parent that does not match a filter may remain as `contextOnly` so its matching descendants keep meaningful location. It is navigation context, not a selectable or editable record.
 
-```ts
-import { createDataTreeGrid } from '@sectile/tabular/data-tree-grid'
+## Select leaf rows
 
-const columns = [
-  { id: 'service', capabilities: ['sort', 'filter', 'edit'] },
-  { id: 'owner', capabilities: ['sort', 'filter'] },
-] as const
-const tree = createDataTreeGrid({ columns })
+Checkbox selection applies to leaves. A Shift range follows visible leaf order, skipping group rows and collapsed descendants. The header control represents every leaf matched by the current query revision.
 
-tree.attachRequestExecutor(({ request }) => {
-  const expanded = request.expansion.includes('commerce')
-  tree.synchronizeView({
-    protocolVersion: 1,
-    requestID: request.requestID,
-    sourceGeneration: request.sourceGeneration,
-    queryRevision: request.queryRevision,
-    expansionRevision: request.expansionRevision,
-    viewRevision: request.requestID,
-    access: request.access,
-    matchingLeafCount: { kind: 'known', value: 1 },
-    visibleRowCount: { kind: 'known', value: expanded ? 2 : 1 },
-    rows: [
-      { kind: 'group', id: 'commerce', parentGroupID: null, depth: 0, expanded, cells: { service: 'Commerce', owner: '' } },
-      ...(expanded ? [{ kind: 'leaf' as const, id: 'checkout', cells: { service: 'Checkout', owner: 'Alex' } }] : []),
-    ],
-    columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
-    removedRowIDs: [],
-  })
-})
+<TabularExample kind="tree-selection" />
 
-tree.dispatch({ type: 'set-expansion', expansion: ['commerce'] })
-renderTreeGrid(tree.getProjection())
-```
+For group-level selection, pass a group-leaves target to `BulkSelectionControl`. It stores source-resolvable intent instead of enumerating every descendant ID.
 
-## Connect existing DOM
+## Navigate, edit, and recover
 
-The DOM connection projects the same hierarchy into ARIA treegrid metadata, disclosures, keyboard navigation, and editor elements.
+Arrow-key navigation and edit mode follow DataGrid. Left and Right may move columns or collapse and expand a branch according to product policy. If collapse hides the cursor or editor, recovery targets a nearby visible cell or the owning group row.
 
-`RowSelectionControl` applies Shift ranges only to visible leaf rows, so group rows and collapsed descendants do not enter the checkbox range.
+An edit commit is a command; the application persists it. A view arriving after persistence or expansion is accepted atomically only after its request, source, and view revisions match.
 
-```ts
-import { createDataTreeGrid } from '@sectile/dom/tabular'
+## Preserve parent context during query
 
-const root = document.querySelector<HTMLElement>('#service-tree-grid')!
-const connection = createDataTreeGrid({ columns, root, onCommand: handleTreeGridCommand })
-const serviceHeader = root.querySelector<HTMLElement>('[data-header="service"]')!
-const groupRow = root.querySelector<HTMLElement>('[data-row="commerce"]')!
-const disclosure = groupRow.querySelector<HTMLButtonElement>('button')!
+Sort and filter descriptors can be sent directly to a server. The server returns matching leaves and any ancestors required for navigation as `contextOnly`, so users can still understand which branch contains a result.
 
-connection.setColumnHeaderAttributes(serviceHeader, { columnID: 'service' })
-connection.registerRow(groupRow, { rowID: 'commerce' })
-connection.bindRowDisclosure(disclosure, { rowID: 'commerce' })
-```
+The [async source](./data-source) shows request serialization, loading, errors, and stale-response rejection in a live UI.
 
-## Hierarchical views
+## Large treegrids
 
-The source returns group rows followed by their visible descendants. Group rows carry `parentGroupID`, `depth`, and `expanded`; leaf ancestry is inferred from ordered visible context. Malformed ancestry is rejected without partially changing state.
+Tabular computes hierarchy semantics for visible rows but does not measure DOM or scroll. Install and compose `@sectile/virtual` only when a large treegrid is a measured bottleneck. See [optional virtualization](./virtual).
 
-```ts
-const rows = [
-  {
-    kind: 'group', id: 'platform', parentGroupID: null,
-    depth: 0, expanded: true,
-    cells: { name: 'Platform', owner: '2 services' },
-  },
-  { kind: 'leaf', id: 'checkout', cells: { name: 'Checkout', owner: 'Alex' } },
-  { kind: 'leaf', id: 'storefront', cells: { name: 'Storefront', owner: 'Mina' } },
-]
-```
+## Find a public part
 
-## Disclosure and source coordination
+| Goal | Vue part | Primary state or behavior |
+| --- | --- | --- |
+| Treegrid boundary | `Root` | cursor, edit mode, tree metadata |
+| Hierarchical rows | `Body`, `Row`, `Cell` | level, position, contextOnly |
+| Expansion | `RowDisclosure` | expansion query and new request |
+| Selection | `RowSelectionControl`, `BulkSelectionControl` | visible leaf range, group leaves |
+| Editing | `Editor` | leaf-cell commit/cancel/restore |
+| Columns | `ColumnHeader`, `ColumnResizeHandle` | query and host size |
 
-Create the typed namespace once with `const DataTreeGrid = createDataTreeGridComponents(tree)`. `DataTreeGrid.RowDisclosure` updates expansion and produces a revisioned source request. The resolver returns only the currently visible branch plus any context-only ancestors needed to explain it. Body supplies the current group row, so the disclosure inherits its row ID.
-
-```vue
-<DataTreeGrid.RowDisclosure
-  v-if="row.kind === 'group'"
->
-  Toggle {{ row.cells.name }}
-</DataTreeGrid.RowDisclosure>
-```
-
-Changing disclosure advances the expansion revision and places the current group IDs in `request.expansion`. The server returns visible descendants for the requested branches.
-
-An external store can control expansion, cursor, and edit state independently.
-
-```ts
-const expansion = ref<readonly string[]>(['platform'])
-
-const tree = useDataTreeGrid({
-  columns,
-  expansion,
-  onExpansionChange: (next) => { expansion.value = next },
-  defaultCursor: { current: null },
-  defaultEditState: { kind: 'navigation' },
-})
-```
-
-## Grid navigation and editing
-
-Leaf cells use the same navigation and edit lifecycle as DataGrid. Group cells are read-only. Enter begins an editor, Escape cancels, and a valid commit emits an application command. Collapse or removal cancels an affected editor before recovering the cursor to a visible cell.
-
-`DataTreeGrid.Body` renders the accepted ordered hierarchy and exposes typed `{ row, rowIndex, isGroup }`. Cells, disclosure controls, selection controls, and editors inherit the row ID. Use manual Body plus explicit Row only when custom windowing owns placement. Header row depth is derived from the header schema.
-
-## Selection across branches
-
-Use `DataTreeGrid.RowSelectionControl` for visible leaves. `DataTreeGrid.BulkSelectionControl` accepts either `{ kind: 'all-matching' }` or `{ kind: 'group-leaves', groupID }`. The latter emits group-leaf selection intent so the application or source can include descendants that are not loaded.
-
-```vue
-<DataTreeGrid.RowSelectionControl v-if="row.kind === 'leaf'" name="selected-services" />
-<DataTreeGrid.BulkSelectionControl
-  v-if="row.kind === 'group'"
-  :target="{ kind: 'group-leaves', groupID: row.id }"
->
-  Select every {{ row.cells.name }} service
-</DataTreeGrid.BulkSelectionControl>
-```
-
-## Query and context-only ancestors
-
-Sorting and filtering apply to leaves without discarding the parent context required by a treegrid. A source can return an ancestor with `contextOnly: true`; it preserves structure and ARIA metadata but is not a selection or editing target.
-
-```ts
-const rows = [
-  {
-    kind: 'group', id: 'platform', parentGroupID: null,
-    depth: 0, expanded: true, contextOnly: true,
-    cells: { name: 'Platform', owner: '' },
-  },
-  { kind: 'leaf', id: 'checkout', cells: { name: 'Checkout', owner: 'Alex' } },
-]
-```
-
-Multi-sort, global and column filters, page/window access, cancellation, and stale-response handling match the other profiles. Parent-before-child order, depth, expansion, and ancestry must all validate before a hierarchy is accepted.
-
-## Metadata and virtualization
-
-The projection exposes parent row, depth, position, size, expansion, and context-only metadata for ARIA treegrid attributes. Column order, pinning, sizing, filtering, and sorting share the flat grid contracts. Virtualization remains a separate raw composition and can reveal a row or cell without making Tabular own measurement.
-
-## Parts by responsibility
-
-| Part | Responsibility |
-| --- | --- |
-| `Provider` · `Root` | Controller scope, ARIA treegrid, and command/error boundary |
-| `Header` · `HeaderRow` · `ColumnHeader` | Header schema and column metadata |
-| `SortTrigger` · `FilterControl` | Query update and fresh hierarchical view request |
-| `Body` · `Row` · `Cell` | Ordered groups/leaves, row levels, and cell cursor registration |
-| `RowDisclosure` | Expansion and branch requests |
-| `RowSelectionControl` · `BulkSelectionControl` | Leaf, all-matching, and group-leaf selection |
-| `ColumnResizeHandle` | Host-owned column size |
-| `Editor` | Leaf-only navigation/edit mode |
-
-## Public API by layer
-
-- Tabular core: `createDataTreeGrid`, `tryCreateDataTreeGrid`, controller view/source lifecycle, `dispatch`, and expansion/cursor/edit projection
-- DOM: `createDataTreeGrid`, `connectDataTreeGrid`, header/row/cell registration, interaction bindings, and cell/row reveal
-- Vue creation: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
-- Vue structure: `Provider`, `Root`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
-- Vue controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`
-
-Each layer exports expansion, cursor/edit state, projection, row metadata, query, view, source, command, controller, error, and option types. Vue adds every part's `Props` and `SlotProps`.
+Import Core from `@sectile/tabular/data-tree-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/tabular`.
