@@ -4,13 +4,15 @@
     "allowImportingTsExtensions": false,
     "composite": false,
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "emitDeclarationOnly": false,
     "isolatedDeclarations": false,
     "noEmit": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "sourceMap": true
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "inlineSources": false
   },
   "include": ["src/**/*.ts"]
 }

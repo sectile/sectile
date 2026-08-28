@@ -32,6 +32,8 @@
     "check:workstream-ownership": "node scripts/check-workstream-ownership.mjs",
     "record:consumer-install": "pnpm run build:workspace && node scripts/consumer-install/run.mjs record",
     "check:consumer-install": "pnpm run build:workspace && node scripts/consumer-install/run.mjs check",
+    "record:source-maps": "pnpm run build:workspace && node scripts/source-map-policy.mjs record",
+    "check:source-maps": "pnpm run build:workspace && node scripts/source-map-policy.mjs check",
     "check:public-change-gates": "node scripts/check-public-change-gates.mjs",
     "verify:public-change-gates": "pnpm run build:workspace && node scripts/check-public-change-gates.mjs --full",
     "verify:theory": "pnpm -r --workspace-concurrency=1 --if-present verify:theory",

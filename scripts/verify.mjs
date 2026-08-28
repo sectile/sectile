@@ -58,21 +58,23 @@ const packagePipelines = Object.freeze({
     'check:api-stability', 'check:semantic-api', 'check:laws', 'check:naming',
     'check:layout', 'check:import-boundaries', 'check:dist-boundary',
     'check:subpaths', 'check:package', 'check:verification',
+    'verify:reproducible-build',
   ],
   '@sectile/form': [
     'typecheck', 'test', 'build', 'check:laws', 'check:package',
     'check:public-api', 'verify:reproducible-build',
   ],
-  '@sectile/temporal': ['typecheck', 'test', 'build', 'check:laws', 'check:package'],
-  '@sectile/virtual': ['typecheck', 'test', 'build', 'check:laws', 'check:package'],
+  '@sectile/temporal': ['typecheck', 'test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
+  '@sectile/virtual': ['typecheck', 'test', 'build', 'check:laws', 'check:package', 'verify:reproducible-build'],
   '@sectile/tabular': [
     'typecheck', 'test', 'build', 'check:laws', 'check:package', 'check:implementation',
+    'verify:reproducible-build',
   ],
-  '@sectile/dom': ['typecheck', 'test', 'build'],
-  '@sectile/terminal': ['typecheck', 'test', 'build'],
+  '@sectile/dom': ['typecheck', 'test', 'build', 'verify:reproducible-build'],
+  '@sectile/terminal': ['typecheck', 'test', 'build', 'verify:reproducible-build'],
   '@sectile/vue': [
     'typecheck', 'typecheck:public', 'test', 'check:controlled-reconciliation',
-    'check:hydration-contract', 'build',
+    'check:hydration-contract', 'build', 'verify:reproducible-build',
   ],
 });
 
@@ -132,6 +134,7 @@ function workspaceContractSteps() {
     commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling verification', 'pnpm', ['test:tooling']),
     commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
+    commandStep('published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
     commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
     commandStep('public signatures', 'pnpm', ['check:signatures']),
     commandStep('component completeness', 'pnpm', ['check:components']),

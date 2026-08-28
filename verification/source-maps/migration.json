@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "before": {
+    "declarationMapFiles": 404,
+    "declarationMapBytes": 913211,
+    "packages": {
+      "core": { "files": 87, "bytes": 142502 },
+      "dom": { "files": 94, "bytes": 235155 },
+      "form": { "files": 8, "bytes": 9904 },
+      "tabular": { "files": 13, "bytes": 33880 },
+      "temporal": { "files": 19, "bytes": 30126 },
+      "terminal": { "files": 80, "bytes": 153853 },
+      "virtual": { "files": 12, "bytes": 35542 },
+      "vue": { "files": 91, "bytes": 272249 }
+    }
+  },
+  "after": {
+    "declarationMapFiles": 0,
+    "declarationMapBytes": 0,
+    "externalJavaScriptMapFiles": 404
+  }
+}

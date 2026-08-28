@@ -67,8 +67,8 @@
   },
   "footprint": {
     "javascriptBytes": 131430,
-    "declarationBytes": 39500,
-    "sourceMapBytes": 172871,
+    "declarationBytes": 39002,
+    "sourceMapBytes": 138991,
     "packedBytes": 61118,
     "declarationFiles": 13,
     "publicSubpaths": 9

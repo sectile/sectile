@@ -2,44 +2,44 @@
   "schemaVersion": 1,
   "packages": {
     "core": {
-      "tarballBytes": 186788,
-      "unpackedBytes": 1054235,
-      "unpackedFiles": 347,
+      "tarballBytes": 162397,
+      "unpackedBytes": 908972,
+      "unpackedFiles": 264,
       "categories": {
         "runtimeJS": {
-          "files": 86,
-          "bytes": 367037
+          "files": 87,
+          "bytes": 367019
         },
         "declarations": {
-          "files": 86,
-          "bytes": 144969
+          "files": 87,
+          "bytes": 141674
         },
         "sourceMaps": {
-          "files": 172,
-          "bytes": 529036
+          "files": 87,
+          "bytes": 386794
         },
         "other": {
           "files": 3,
-          "bytes": 13193
+          "bytes": 13485
         }
       }
     },
     "dom": {
-      "tarballBytes": 292849,
-      "unpackedBytes": 1829494,
-      "unpackedFiles": 379,
+      "tarballBytes": 254568,
+      "unpackedBytes": 1590663,
+      "unpackedFiles": 285,
       "categories": {
         "runtimeJS": {
           "files": 94,
-          "bytes": 648601
+          "bytes": 648646
         },
         "declarations": {
           "files": 94,
-          "bytes": 258901
+          "bytes": 255113
         },
         "sourceMaps": {
-          "files": 188,
-          "bytes": 909573
+          "files": 94,
+          "bytes": 674485
         },
         "other": {
           "files": 3,
@@ -48,9 +48,9 @@
       }
     },
     "form": {
-      "tarballBytes": 17262,
-      "unpackedBytes": 83852,
-      "unpackedFiles": 35,
+      "tarballBytes": 15461,
+      "unpackedBytes": 73667,
+      "unpackedFiles": 27,
       "categories": {
         "runtimeJS": {
           "files": 8,
@@ -58,11 +58,11 @@
         },
         "declarations": {
           "files": 8,
-          "bytes": 10053
+          "bytes": 9772
         },
         "sourceMaps": {
-          "files": 16,
-          "bytes": 40211
+          "files": 8,
+          "bytes": 30307
         },
         "other": {
           "files": 3,
@@ -71,9 +71,9 @@
       }
     },
     "tabular": {
-      "tarballBytes": 61082,
-      "unpackedBytes": 348545,
-      "unpackedFiles": 55,
+      "tarballBytes": 55011,
+      "unpackedBytes": 314167,
+      "unpackedFiles": 42,
       "categories": {
         "runtimeJS": {
           "files": 13,
@@ -81,11 +81,11 @@
         },
         "declarations": {
           "files": 13,
-          "bytes": 39500
+          "bytes": 39002
         },
         "sourceMaps": {
-          "files": 26,
-          "bytes": 172871
+          "files": 13,
+          "bytes": 138991
         },
         "other": {
           "files": 3,
@@ -94,9 +94,9 @@
       }
     },
     "temporal": {
-      "tarballBytes": 41089,
-      "unpackedBytes": 259599,
-      "unpackedFiles": 79,
+      "tarballBytes": 35331,
+      "unpackedBytes": 228741,
+      "unpackedFiles": 60,
       "categories": {
         "runtimeJS": {
           "files": 19,
@@ -104,34 +104,34 @@
         },
         "declarations": {
           "files": 19,
-          "bytes": 34847
+          "bytes": 34037
         },
         "sourceMaps": {
-          "files": 38,
-          "bytes": 128450
+          "files": 19,
+          "bytes": 98324
         },
         "other": {
           "files": 3,
-          "bytes": 5435
+          "bytes": 5513
         }
       }
     },
     "terminal": {
-      "tarballBytes": 153178,
-      "unpackedBytes": 978686,
-      "unpackedFiles": 323,
+      "tarballBytes": 128493,
+      "unpackedBytes": 821788,
+      "unpackedFiles": 243,
       "categories": {
         "runtimeJS": {
           "files": 80,
-          "bytes": 313797
+          "bytes": 313842
         },
         "declarations": {
           "files": 80,
-          "bytes": 167680
+          "bytes": 164523
         },
         "sourceMaps": {
-          "files": 160,
-          "bytes": 482939
+          "files": 80,
+          "bytes": 329153
         },
         "other": {
           "files": 3,
@@ -140,9 +140,9 @@
       }
     },
     "virtual": {
-      "tarballBytes": 54249,
-      "unpackedBytes": 332213,
-      "unpackedFiles": 51,
+      "tarballBytes": 48774,
+      "unpackedBytes": 296252,
+      "unpackedFiles": 39,
       "categories": {
         "runtimeJS": {
           "files": 12,
@@ -150,22 +150,22 @@
         },
         "declarations": {
           "files": 12,
-          "bytes": 37680
+          "bytes": 37183
         },
         "sourceMaps": {
-          "files": 24,
-          "bytes": 169973
+          "files": 12,
+          "bytes": 134431
         },
         "other": {
           "files": 3,
-          "bytes": 4647
+          "bytes": 4725
         }
       }
     },
     "vue": {
-      "tarballBytes": 309625,
-      "unpackedBytes": 2327057,
-      "unpackedFiles": 367,
+      "tarballBytes": 264693,
+      "unpackedBytes": 2051201,
+      "unpackedFiles": 276,
       "categories": {
         "runtimeJS": {
           "files": 91,
@@ -173,15 +173,15 @@
         },
         "declarations": {
           "files": 91,
-          "bytes": 625668
+          "bytes": 621983
         },
         "sourceMaps": {
-          "files": 182,
-          "bytes": 999369
+          "files": 91,
+          "bytes": 727120
         },
         "other": {
           "files": 3,
-          "bytes": 12597
+          "bytes": 12675
         }
       }
     }
@@ -189,8 +189,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22745737,
-      "installedFiles": 1799,
+      "installedBytes": 22085787,
+      "installedFiles": 1531,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -572,8 +572,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22765198,
-      "installedFiles": 1804,
+      "installedBytes": 22105248,
+      "installedFiles": 1536,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -907,13 +907,13 @@
   "incumbentPerformanceEvidence": {
     "colord": {
       "iterations": 20000,
-      "medianNanoseconds": 2151.820849999999,
-      "medianAllocationBytes": 887152,
-      "medianRetainedBytes": 56792
+      "medianNanoseconds": 2217.797900000001,
+      "medianAllocationBytes": 887104,
+      "medianRetainedBytes": 56856
     },
     "@floating-ui/dom": {
       "iterations": 50000,
-      "medianNanoseconds": 30.49415999999951,
+      "medianNanoseconds": 29.2841599999997,
       "medianAllocationBytes": 1993776,
       "medianRetainedBytes": 64
     }
