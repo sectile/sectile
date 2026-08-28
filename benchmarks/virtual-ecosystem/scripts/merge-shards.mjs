@@ -11,21 +11,26 @@ const reports = await Promise.all(inputArguments.map(async (input) => (
   JSON.parse(await readFile(resolve(input), 'utf8'))
 )));
 for (const report of reports.slice(1)) assertCompatible(reports[0], report);
+const mergedBaseline = mergeBaselineReports(reports);
 
 const merged = {
   ...reports[0],
   environment: reports.at(-1).environment,
   conditions: {
     ...reports[0].conditions,
-    rowProfiles: Object.assign({}, ...reports.map((report) => report.conditions.rowProfiles ?? {})),
+    baseline: {
+      ...reports.find((report) => (report.baselineResults?.length ?? 0) > 0)?.conditions.baseline,
+      rounds: mergedBaseline.rounds,
+    },
+    rowProfiles: mergeRowProfiles(reports),
     mutations: {
       ...reports[0].conditions.mutations,
       rounds: mergedMutationRounds(reports),
     },
   },
-  baselineResults: mergeByKey(reports.flatMap((report) => report.baselineResults ?? []), baselineKey),
-  baselineFailures: reports.flatMap((report) => report.baselineFailures ?? []),
-  baselineSamples: Object.assign({}, ...reports.map((report) => report.baselineSamples ?? {})),
+  baselineResults: mergedBaseline.results,
+  baselineFailures: mergedBaseline.failures,
+  baselineSamples: mergedBaseline.samples,
   mutationResults: mergeMutationResults(reports.flatMap((report) => report.mutationResults ?? [])),
 };
 
@@ -41,6 +46,103 @@ function mergeMutationResults(results) {
     groups.set(key, group);
   }
   return [...groups.values()].map(mergeMutationGroup);
+}
+
+function mergeBaselineReports(reports) {
+  const groups = new Map();
+  for (const report of reports) {
+    const resultByKey = new Map((report.baselineResults ?? []).map((result) => [baselineKey(result), result]));
+    const failuresByKey = new Map();
+    for (const failure of report.baselineFailures ?? []) {
+      const key = baselineKey(failure);
+      const failures = failuresByKey.get(key) ?? [];
+      failures.push(failure);
+      failuresByKey.set(key, failures);
+    }
+    for (const key of new Set([...resultByKey.keys(), ...failuresByKey.keys()])) {
+      const entries = groups.get(key) ?? [];
+      entries.push({
+        result: resultByKey.get(key),
+        failures: failuresByKey.get(key) ?? [],
+        samples: report.baselineSamples?.[key.replaceAll('\u0000', ':')] ?? [],
+        rounds: report.conditions.baseline?.rounds ?? 0,
+      });
+      groups.set(key, entries);
+    }
+  }
+
+  const results = [];
+  const failures = [];
+  const samples = {};
+  let rounds = 0;
+  for (const [key, entries] of groups) {
+    const mergedSamples = [];
+    let roundOffset = 0;
+    for (const entry of entries) {
+      for (const sample of entry.samples) mergedSamples.push({ ...sample, round: Number(sample.round) + roundOffset });
+      for (const failure of entry.failures) failures.push({ ...failure, round: Number(failure.round) + roundOffset });
+      roundOffset += entry.rounds;
+    }
+    rounds = Math.max(rounds, roundOffset);
+    samples[key.replaceAll('\u0000', ':')] = mergedSamples;
+    if (entries.every((entry) => entry.result !== undefined)) {
+      results.push(entries.length === 1
+        ? entries[0].result
+        : aggregateBaselineResults(entries.map((entry) => entry.result), mergedSamples));
+    }
+  }
+  return { results, failures, samples, rounds };
+}
+
+function mergeRowProfiles(reports) {
+  const profiles = {};
+  for (const report of reports) {
+    Object.assign(profiles, report.conditions.rowProfiles ?? {});
+    const profile = report.conditions.rowProfile;
+    if (profile === undefined) continue;
+    profiles[profile] = {
+      commonEstimateHeight: report.conditions.commonEstimateHeight,
+      contentCorpusVersion: report.conditions.contentCorpusVersion,
+      contentVariants: report.conditions.contentVariants,
+      heightDistribution: report.conditions.heightDistribution,
+    };
+  }
+  return profiles;
+}
+
+function aggregateBaselineResults(results, samples) {
+  const template = results[0];
+  const elapsed = samples.map((sample) => sample.elapsedMs).sort((left, right) => left - right);
+  const lowerBounds = samples.map((sample) => sample.lowerBoundMs).sort((left, right) => left - right);
+  const probes = samples.map((sample) => sample.probeMs).sort((left, right) => left - right);
+  const checks = samples.map((sample) => sample.checks).sort((left, right) => left - right);
+  const heightErrors = samples.map((sample) => sample.totalHeightErrorPercent).sort((left, right) => left - right);
+  const scrollMedian = percentile(elapsed, 0.5);
+  const deviations = elapsed.map((value) => Math.abs(value - scrollMedian)).sort((left, right) => left - right);
+  return {
+    ...template,
+    setupMs: round(percentile(results.map((result) => result.setupMs).sort((left, right) => left - right), 0.5)),
+    firstRowsMs: round(percentile(results.map((result) => result.firstRowsMs).sort((left, right) => left - right), 0.5)),
+    mountMs: round(percentile(results.map((result) => result.mountMs).sort((left, right) => left - right), 0.5)),
+    initialTotalHeightErrorPercent: round(percentile(results.map((result) => result.initialTotalHeightErrorPercent).sort((left, right) => left - right), 0.5)),
+    scrollTotalHeightErrorMedianPercent: round(percentile(heightErrors, 0.5)),
+    scrollTotalHeightErrorP95Percent: round(percentile(heightErrors, 0.95)),
+    scrollMedianMs: round(scrollMedian),
+    scrollMedianLowerBoundMs: round(percentile(lowerBounds, 0.5)),
+    scrollP95Ms: round(percentile(elapsed, 0.95)),
+    scrollMadMs: round(percentile(deviations, 0.5)),
+    scrollProbeMedianMs: round(percentile(probes, 0.5)),
+    scrollChecksMedian: round(percentile(checks, 0.5)),
+    scrollSampleCount: samples.length,
+    scrollRoundMedianRangeMs: [
+      Math.min(...results.map((result) => result.scrollRoundMedianRangeMs[0])),
+      Math.max(...results.map((result) => result.scrollRoundMedianRangeMs[1])),
+    ],
+    scrollRoundP95RangeMs: [
+      Math.min(...results.map((result) => result.scrollRoundP95RangeMs[0])),
+      Math.max(...results.map((result) => result.scrollRoundP95RangeMs[1])),
+    ],
+  };
 }
 
 function mergedMutationRounds(reports) {
@@ -93,12 +195,6 @@ function mergeMutationGroup(results) {
     samples,
     failures,
   };
-}
-
-function mergeByKey(values, keyOf) {
-  const merged = new Map();
-  for (const value of values) merged.set(keyOf(value), value);
-  return [...merged.values()];
 }
 
 function assertCompatible(left, right) {

@@ -70,6 +70,12 @@ For a long observation, run and save the baseline first, then run mutations one 
 
 Keep the browser otherwise idle and run these shards sequentially. Parallel browser runs compete for the same CPU and change the timing distribution.
 
+If one baseline library exceeds the browser session limit, keep all 40 recorded scrolls and split only its independent rounds. Merge the five one-round reports afterward:
+
+```text
+?row-profile=heterogeneous&library=Vue%20Virtual%20Scroller&baseline-only&baseline-rounds=1
+```
+
 Merge that focused report into the matching mutation entry while preserving every other committed result:
 
 ```sh

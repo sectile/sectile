@@ -135,7 +135,7 @@ declare global {
 
 const search = new URLSearchParams(window.location.search);
 const QUICK_RUN = search.has('quick');
-const ROUNDS = QUICK_RUN ? 1 : 5;
+const ROUNDS = positiveInteger(search.get('baseline-rounds')) ?? (QUICK_RUN ? 1 : 5);
 const WARMUP_SCROLLS = QUICK_RUN ? 1 : 5;
 const RECORDED_SCROLLS = QUICK_RUN ? 2 : 40;
 const FRAME_TIMEOUT_MS = 4_000;
@@ -353,6 +353,12 @@ async function runAll(): Promise<void> {
 
 function parseHeightMode(value: string | null): MutationBenchmarkFilter['sizeMode'] {
   return value === 'estimated' || value === 'automatic' ? value : undefined;
+}
+
+function positiveInteger(value: string | null): number | undefined {
+  if (value === null) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 function parseRowProfile(value: string | null): RowProfile {

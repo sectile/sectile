@@ -96,15 +96,15 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "Sectile Virtual",
     "version": "0.7.0",
     "stack": "Vue 3.5.22",
-    "setupMs": 8.4,
-    "firstRowsMs": 8.5,
-    "mountMs": 8.6,
+    "setupMs": 8.3,
+    "firstRowsMs": 8.4,
+    "mountMs": 13.1,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 0.9,
-    "scrollMedianLowerBoundMs": 0.5,
-    "scrollP95Ms": 1.2,
+    "scrollMedianMs": 1,
+    "scrollMedianLowerBoundMs": 0.6,
+    "scrollP95Ms": 1.5,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.4,
     "scrollChecksMedian": 2,
@@ -114,8 +114,8 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
       1.1
     ],
     "scrollRoundP95RangeMs": [
-      1,
-      1.3
+      1.1,
+      2.7
     ]
   },
   {
@@ -124,22 +124,22 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "TanStack Virtual",
     "version": "3.14.10",
     "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 6.5,
-    "mountMs": 6.5,
+    "setupMs": 0,
+    "firstRowsMs": 13.6,
+    "mountMs": 30.9,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.2,
+    "scrollMedianMs": 1.3,
     "scrollMedianLowerBoundMs": 0.9,
-    "scrollP95Ms": 1.5,
+    "scrollP95Ms": 1.6,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.3,
     "scrollChecksMedian": 2,
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
-      1.1,
-      1.4
+      1.2,
+      1.5
     ],
     "scrollRoundP95RangeMs": [
       1.3,
@@ -152,16 +152,16 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "react-window",
     "version": "2.3.0",
     "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 5.8,
-    "mountMs": 5.8,
+    "setupMs": 0,
+    "firstRowsMs": 14.3,
+    "mountMs": 30.9,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 4.2,
-    "scrollMedianLowerBoundMs": 3.8,
+    "scrollMedianMs": 4.1,
+    "scrollMedianLowerBoundMs": 3.7,
     "scrollP95Ms": 5.5,
-    "scrollMadMs": 0.8,
+    "scrollMadMs": 0.7,
     "scrollProbeMedianMs": 0.4,
     "scrollChecksMedian": 3,
     "scrollSampleCount": 200,
@@ -170,8 +170,8 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
       4.3
     ],
     "scrollRoundP95RangeMs": [
-      5.1,
-      6
+      5,
+      5.6
     ]
   },
   {
@@ -180,15 +180,15 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "React Virtuoso",
     "version": "4.18.12",
     "stack": "React 19.2.8",
-    "setupMs": 0,
-    "firstRowsMs": 20,
-    "mountMs": 20,
+    "setupMs": 0.1,
+    "firstRowsMs": 46.2,
+    "mountMs": 62.8,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
     "scrollMedianMs": 1.9,
     "scrollMedianLowerBoundMs": 1.6,
-    "scrollP95Ms": 2.3,
+    "scrollP95Ms": 2.4,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.3,
     "scrollChecksMedian": 2,
@@ -199,7 +199,7 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     ],
     "scrollRoundP95RangeMs": [
       2,
-      2.4
+      2.5
     ]
   },
   {
@@ -209,25 +209,25 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "version": "9.22.6",
     "stack": "React 19.2.8",
     "setupMs": 0.1,
-    "firstRowsMs": 4.9,
-    "mountMs": 5,
+    "firstRowsMs": 12.5,
+    "mountMs": 29.6,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.7,
-    "scrollMedianLowerBoundMs": 1.4,
-    "scrollP95Ms": 2.1,
+    "scrollMedianMs": 1.6,
+    "scrollMedianLowerBoundMs": 1.3,
+    "scrollP95Ms": 4.2,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.3,
     "scrollChecksMedian": 3,
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
       1.5,
-      1.8
+      1.9
     ],
     "scrollRoundP95RangeMs": [
       1.7,
-      2.6
+      4.7
     ]
   },
   {
@@ -236,205 +236,9 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "Virtua",
     "version": "0.50.5",
     "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 13.5,
-    "mountMs": 13.6,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.9,
-    "scrollMedianLowerBoundMs": 1.6,
-    "scrollP95Ms": 2.2,
-    "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.3,
-    "scrollChecksMedian": 2,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      1.8,
-      1.9
-    ],
-    "scrollRoundP95RangeMs": [
-      2.1,
-      2.2
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "fixed",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "setupMs": 7.7,
-    "firstRowsMs": 12.7,
-    "mountMs": 12.8,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 0.1,
-    "scrollMedianLowerBoundMs": 0,
-    "scrollP95Ms": 1.6,
-    "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.1,
-    "scrollChecksMedian": 1,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      0.1,
-      1.4
-    ],
-    "scrollRoundP95RangeMs": [
-      0.1,
-      1.9
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "setupMs": 7.1,
-    "firstRowsMs": 7.5,
-    "mountMs": 7.6,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.2,
-    "scrollMedianLowerBoundMs": 1.1,
-    "scrollP95Ms": 1.4,
-    "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.1,
-    "scrollChecksMedian": 2,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      1.2,
-      1.3
-    ],
-    "scrollRoundP95RangeMs": [
-      1.3,
-      1.4
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 10.3,
-    "mountMs": 10.5,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 3.1,
-    "scrollMedianLowerBoundMs": 2.7,
-    "scrollP95Ms": 3.5,
-    "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.4,
-    "scrollChecksMedian": 2,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      3,
-      3.3
-    ],
-    "scrollRoundP95RangeMs": [
-      3.3,
-      3.5
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 4.6,
-    "mountMs": 4.7,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 4.2,
-    "scrollMedianLowerBoundMs": 3.7,
-    "scrollP95Ms": 5.8,
-    "scrollMadMs": 0.8,
-    "scrollProbeMedianMs": 0.5,
-    "scrollChecksMedian": 3,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      3.9,
-      4.3
-    ],
-    "scrollRoundP95RangeMs": [
-      5.7,
-      6
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 20.4,
-    "mountMs": 20.4,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.9,
-    "scrollMedianLowerBoundMs": 1.6,
-    "scrollP95Ms": 2.1,
-    "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.3,
-    "scrollChecksMedian": 2,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      1.8,
-      2
-    ],
-    "scrollRoundP95RangeMs": [
-      2.1,
-      2.2
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 5.8,
-    "mountMs": 5.9,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 5.3,
-    "scrollMedianLowerBoundMs": 5.3,
-    "scrollP95Ms": 6.8,
-    "scrollMadMs": 1.1,
-    "scrollProbeMedianMs": 0.1,
-    "scrollChecksMedian": 3,
-    "scrollSampleCount": 200,
-    "scrollRoundMedianRangeMs": [
-      4.9,
-      5.7
-    ],
-    "scrollRoundP95RangeMs": [
-      5.9,
-      7
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "mode": "estimated",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "setupMs": 0.1,
-    "firstRowsMs": 11.1,
-    "mountMs": 11.2,
+    "setupMs": 0,
+    "firstRowsMs": 29.2,
+    "mountMs": 45.9,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
@@ -447,7 +251,7 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
       1.7,
-      1.8
+      1.9
     ],
     "scrollRoundP95RangeMs": [
       1.9,
@@ -456,21 +260,217 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
+    "mode": "fixed",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "setupMs": 5.3,
+    "firstRowsMs": 11.1,
+    "mountMs": 28.3,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 1.4,
+    "scrollMedianLowerBoundMs": 1.1,
+    "scrollP95Ms": 1.8,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.4,
+      1.5
+    ],
+    "scrollRoundP95RangeMs": [
+      1.5,
+      3.4
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "setupMs": 7.4,
+    "firstRowsMs": 7.7,
+    "mountMs": 14.4,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 1.3,
+    "scrollMedianLowerBoundMs": 1.3,
+    "scrollP95Ms": 1.6,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.3,
+      1.4
+    ],
+    "scrollRoundP95RangeMs": [
+      1.4,
+      1.6
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 14.7,
+    "mountMs": 30.8,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 3.2,
+    "scrollMedianLowerBoundMs": 2.8,
+    "scrollP95Ms": 3.5,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3,
+      3.4
+    ],
+    "scrollRoundP95RangeMs": [
+      3.2,
+      3.6
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 11.8,
+    "mountMs": 28.3,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 4.1,
+    "scrollMedianLowerBoundMs": 3.7,
+    "scrollP95Ms": 5.6,
+    "scrollMadMs": 0.8,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3.9,
+      4.3
+    ],
+    "scrollRoundP95RangeMs": [
+      5.3,
+      5.8
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 45,
+    "mountMs": 62.8,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 2,
+    "scrollMedianLowerBoundMs": 1.7,
+    "scrollP95Ms": 2.3,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.4,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      2,
+      2.1
+    ],
+    "scrollRoundP95RangeMs": [
+      2.1,
+      2.3
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 13.2,
+    "mountMs": 30.5,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 4.5,
+    "scrollMedianLowerBoundMs": 4.4,
+    "scrollP95Ms": 6.1,
+    "scrollMadMs": 1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      4.3,
+      5
+    ],
+    "scrollRoundP95RangeMs": [
+      5.6,
+      6.5
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "mode": "estimated",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 28.7,
+    "mountMs": 45.9,
+    "initialTotalHeightErrorPercent": 0,
+    "scrollTotalHeightErrorMedianPercent": 0,
+    "scrollTotalHeightErrorP95Percent": 0,
+    "scrollMedianMs": 1.9,
+    "scrollMedianLowerBoundMs": 1.5,
+    "scrollP95Ms": 2.1,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.3,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1.8,
+      2
+    ],
+    "scrollRoundP95RangeMs": [
+      1.9,
+      2.2
+    ]
+  },
+  {
+    "rowProfile": "uniform",
     "mode": "estimated",
     "library": "Vue Virtual Scroller",
     "version": "3.0.5",
     "stack": "Vue 3.5.22",
-    "setupMs": 583.6,
-    "firstRowsMs": 1437.9,
-    "mountMs": 1437.9,
+    "setupMs": 565.4,
+    "firstRowsMs": 1367,
+    "mountMs": 1886.9,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
     "scrollMedianMs": 0.1,
     "scrollMedianLowerBoundMs": 0,
     "scrollP95Ms": 0.1,
-    "scrollMadMs": 0,
-    "scrollProbeMedianMs": 0.1,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0,
     "scrollChecksMedian": 1,
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
@@ -488,26 +488,26 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "library": "Sectile Virtual",
     "version": "0.7.0",
     "stack": "Vue 3.5.22",
-    "setupMs": 8.4,
-    "firstRowsMs": 8.8,
-    "mountMs": 8.8,
-    "initialTotalHeightErrorPercent": 0,
-    "scrollTotalHeightErrorMedianPercent": 0,
-    "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.3,
-    "scrollMedianLowerBoundMs": 1.2,
-    "scrollP95Ms": 1.5,
+    "setupMs": 7,
+    "firstRowsMs": 7.5,
+    "mountMs": 8.5,
+    "initialTotalHeightErrorPercent": 33.326,
+    "scrollTotalHeightErrorMedianPercent": 33.023,
+    "scrollTotalHeightErrorP95Percent": 33.233,
+    "scrollMedianMs": 1.6,
+    "scrollMedianLowerBoundMs": 1.5,
+    "scrollP95Ms": 1.9,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.1,
     "scrollChecksMedian": 2,
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
-      1.2,
-      1.4
+      1.5,
+      1.7
     ],
     "scrollRoundP95RangeMs": [
-      1.4,
-      1.6
+      1.7,
+      1.9
     ]
   },
   {
@@ -517,25 +517,25 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "version": "4.18.12",
     "stack": "React 19.2.8",
     "setupMs": 0.1,
-    "firstRowsMs": 22.6,
-    "mountMs": 22.7,
+    "firstRowsMs": 47.6,
+    "mountMs": 64.3,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
-    "scrollMedianMs": 1.9,
+    "scrollMedianMs": 2,
     "scrollMedianLowerBoundMs": 1.6,
     "scrollP95Ms": 2.2,
     "scrollMadMs": 0.1,
-    "scrollProbeMedianMs": 0.3,
+    "scrollProbeMedianMs": 0.4,
     "scrollChecksMedian": 2,
     "scrollSampleCount": 200,
     "scrollRoundMedianRangeMs": [
-      1.8,
+      1.9,
       2.1
     ],
     "scrollRoundP95RangeMs": [
-      2,
-      2.3
+      2.2,
+      3.7
     ]
   },
   {
@@ -545,14 +545,14 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "version": "0.50.5",
     "stack": "React 19.2.8",
     "setupMs": 0.1,
-    "firstRowsMs": 12.8,
-    "mountMs": 12.8,
+    "firstRowsMs": 30.2,
+    "mountMs": 48.2,
     "initialTotalHeightErrorPercent": 0,
     "scrollTotalHeightErrorMedianPercent": 0,
     "scrollTotalHeightErrorP95Percent": 0,
     "scrollMedianMs": 1.8,
-    "scrollMedianLowerBoundMs": 1.6,
-    "scrollP95Ms": 2.1,
+    "scrollMedianLowerBoundMs": 1.5,
+    "scrollP95Ms": 2,
     "scrollMadMs": 0.1,
     "scrollProbeMedianMs": 0.3,
     "scrollChecksMedian": 2,
@@ -564,6 +564,286 @@ export const baselineBenchmarkResults: readonly BaselineBenchmarkResult[] = Obje
     "scrollRoundP95RangeMs": [
       2,
       2.1
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "setupMs": 7.2,
+    "firstRowsMs": 7.5,
+    "mountMs": 14.3,
+    "initialTotalHeightErrorPercent": 40.002,
+    "scrollTotalHeightErrorMedianPercent": 39.758,
+    "scrollTotalHeightErrorP95Percent": 39.925,
+    "scrollMedianMs": 2.3,
+    "scrollMedianLowerBoundMs": 2.2,
+    "scrollP95Ms": 2.7,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      2.2,
+      2.4
+    ],
+    "scrollRoundP95RangeMs": [
+      2.5,
+      2.7
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "automatic",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "setupMs": 7.9,
+    "firstRowsMs": 8.3,
+    "mountMs": 15.2,
+    "initialTotalHeightErrorPercent": 59.992,
+    "scrollTotalHeightErrorMedianPercent": 59.432,
+    "scrollTotalHeightErrorP95Percent": 59.818,
+    "scrollMedianMs": 3,
+    "scrollMedianLowerBoundMs": 3,
+    "scrollP95Ms": 3.3,
+    "scrollMadMs": 0.1,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      3,
+      3.1
+    ],
+    "scrollRoundP95RangeMs": [
+      3.3,
+      3.4
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 16.1,
+    "mountMs": 32.1,
+    "initialTotalHeightErrorPercent": 40.002,
+    "scrollTotalHeightErrorMedianPercent": 39.758,
+    "scrollTotalHeightErrorP95Percent": 39.925,
+    "scrollMedianMs": 35.5,
+    "scrollMedianLowerBoundMs": 35.3,
+    "scrollP95Ms": 53,
+    "scrollMadMs": 2.7,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 5,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      34.7,
+      36.2
+    ],
+    "scrollRoundP95RangeMs": [
+      51.3,
+      55.1
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "setupMs": 0.2,
+    "firstRowsMs": 6.5,
+    "mountMs": 23.5,
+    "initialTotalHeightErrorPercent": 1.153,
+    "scrollTotalHeightErrorMedianPercent": 39.611,
+    "scrollTotalHeightErrorP95Percent": 39.895,
+    "scrollMedianMs": 163.9,
+    "scrollMedianLowerBoundMs": 163.9,
+    "scrollP95Ms": 186.9,
+    "scrollMadMs": 10.3,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 9,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      159.8,
+      165.9
+    ],
+    "scrollRoundP95RangeMs": [
+      182.9,
+      187.6
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 45.1,
+    "mountMs": 61.7,
+    "initialTotalHeightErrorPercent": 40.002,
+    "scrollTotalHeightErrorMedianPercent": 39.771,
+    "scrollTotalHeightErrorP95Percent": 39.937,
+    "scrollMedianMs": 4.2,
+    "scrollMedianLowerBoundMs": 3.1,
+    "scrollP95Ms": 5.1,
+    "scrollMadMs": 0.5,
+    "scrollProbeMedianMs": 1.1,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      2.9,
+      4.5
+    ],
+    "scrollRoundP95RangeMs": [
+      4.8,
+      5.2
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "automatic",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 45,
+    "mountMs": 61.7,
+    "initialTotalHeightErrorPercent": 0.847,
+    "scrollTotalHeightErrorMedianPercent": 0.847,
+    "scrollTotalHeightErrorP95Percent": 0.848,
+    "scrollMedianMs": 2.8,
+    "scrollMedianLowerBoundMs": 2.1,
+    "scrollP95Ms": 4,
+    "scrollMadMs": 0.3,
+    "scrollProbeMedianMs": 0.8,
+    "scrollChecksMedian": 2,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      2.6,
+      3
+    ],
+    "scrollRoundP95RangeMs": [
+      3.6,
+      4.4
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "setupMs": 0.1,
+    "firstRowsMs": 9.9,
+    "mountMs": 26.2,
+    "initialTotalHeightErrorPercent": 40.003,
+    "scrollTotalHeightErrorMedianPercent": 39.894,
+    "scrollTotalHeightErrorP95Percent": 39.976,
+    "scrollMedianMs": 10.9,
+    "scrollMedianLowerBoundMs": 10.9,
+    "scrollP95Ms": 16.1,
+    "scrollMadMs": 2.8,
+    "scrollProbeMedianMs": 0.1,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      9.7,
+      12.2
+    ],
+    "scrollRoundP95RangeMs": [
+      13.9,
+      16.1
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "setupMs": 0.2,
+    "firstRowsMs": 26,
+    "mountMs": 42.1,
+    "initialTotalHeightErrorPercent": 40.002,
+    "scrollTotalHeightErrorMedianPercent": 39.842,
+    "scrollTotalHeightErrorP95Percent": 39.95,
+    "scrollMedianMs": 5.3,
+    "scrollMedianLowerBoundMs": 5.3,
+    "scrollP95Ms": 8.7,
+    "scrollMadMs": 0.5,
+    "scrollProbeMedianMs": 0,
+    "scrollChecksMedian": 4,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      4.8,
+      5.9
+    ],
+    "scrollRoundP95RangeMs": [
+      5.9,
+      10.2
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "automatic",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "setupMs": 0.2,
+    "firstRowsMs": 27.1,
+    "mountMs": 43.6,
+    "initialTotalHeightErrorPercent": 0.847,
+    "scrollTotalHeightErrorMedianPercent": 0.847,
+    "scrollTotalHeightErrorP95Percent": 0.848,
+    "scrollMedianMs": 4.5,
+    "scrollMedianLowerBoundMs": 4.4,
+    "scrollP95Ms": 18.6,
+    "scrollMadMs": 0.6,
+    "scrollProbeMedianMs": 0,
+    "scrollChecksMedian": 4,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      4.1,
+      4.8
+    ],
+    "scrollRoundP95RangeMs": [
+      18.2,
+      18.8
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "mode": "estimated",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "setupMs": 592.5,
+    "firstRowsMs": 1413.3,
+    "mountMs": 1424.4,
+    "initialTotalHeightErrorPercent": 40.005,
+    "scrollTotalHeightErrorMedianPercent": 39.864,
+    "scrollTotalHeightErrorP95Percent": 39.961,
+    "scrollMedianMs": 1090.3,
+    "scrollMedianLowerBoundMs": 1090.2,
+    "scrollP95Ms": 1639.1,
+    "scrollMadMs": 72.3,
+    "scrollProbeMedianMs": 0,
+    "scrollChecksMedian": 3,
+    "scrollSampleCount": 200,
+    "scrollRoundMedianRangeMs": [
+      1022.5,
+      1159.5
+    ],
+    "scrollRoundP95RangeMs": [
+      1588,
+      1703.1
     ]
   }
 ]);
@@ -579,19 +859,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "start",
-    "medianMs": 5.1,
-    "p95Ms": 7.6,
+    "medianMs": 6.9,
+    "p95Ms": 8.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      8.7,
-      9.7
+      10.4,
+      11.2
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -608,19 +891,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "middle",
-    "medianMs": 5,
-    "p95Ms": 8.4,
+    "medianMs": 6.9,
+    "p95Ms": 7.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      8.5,
-      8.9
+      8.2,
+      9.3
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -637,8 +923,614 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "end",
-    "medianMs": 4.6,
-    "p95Ms": 5.8,
+    "medianMs": 7,
+    "p95Ms": 8.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      8.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 7.2,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.8,
+      11.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 7,
+    "p95Ms": 8.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.5,
+      8.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.1,
+    "p95Ms": 7.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.1,
+      8.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7,
+    "p95Ms": 9.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10,
+      10.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 6.8,
+    "p95Ms": 7.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      9.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 7.3,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.7,
+      9.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7.1,
+    "p95Ms": 8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      8.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 6.9,
+    "p95Ms": 8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.6,
+      8.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 7.2,
+    "p95Ms": 9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.3,
+      9.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 3.4,
+    "p95Ms": 7.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      7.7,
+      7.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 8.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9,
+      9.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 3.4,
+    "p95Ms": 4.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      6,
+      6.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.3,
+    "p95Ms": 10.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.3,
+      10.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.8,
+    "p95Ms": 8.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.1,
+      9.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 3.7,
+    "p95Ms": 6.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      7,
+      7.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 9.1,
+    "p95Ms": 10.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.2,
+      11.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7.5,
+    "p95Ms": 8.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
@@ -650,6 +1542,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -660,453 +1555,17 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": 5.1,
-    "p95Ms": 8.7,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      9.6,
-      10
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": 5,
-    "p95Ms": 5.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      6.1,
-      10.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 4.5,
-    "p95Ms": 7.4,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8.4,
-      9.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 4.9,
-    "p95Ms": 7.9,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8.6,
-      10.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": 5.1,
-    "p95Ms": 6,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      6.1,
-      6.2
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 4.9,
-    "p95Ms": 6.6,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      7.7,
-      14.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 4.8,
-    "p95Ms": 5.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      6.2,
-      9.2
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 4.8,
-    "p95Ms": 7.1,
+    "medianMs": 7.3,
+    "p95Ms": 8.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      8.2,
-      8.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 4.4,
-    "p95Ms": 7.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8.2,
-      9.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 2.9,
-    "p95Ms": 3.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.6,
-      7.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 2.6,
-    "p95Ms": 3,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      3.1,
-      3.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 2.6,
-    "p95Ms": 3.3,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      3.9,
       9.3
     ],
     "settledSamples": 50,
@@ -1114,121 +1573,9 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 4.5,
-    "p95Ms": 5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.4,
-      7.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 5.1,
-    "p95Ms": 5.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "TanStack Virtual",
-    "version": "3.14.10",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": 5.1,
-    "p95Ms": 6.9,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      7.3,
-      8.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -1245,1091 +1592,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "resize",
     "location": "end",
-    "medianMs": 5,
-    "p95Ms": 7.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8,
-      8.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 12.1,
-    "p95Ms": 16.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      16.5,
-      17.8
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 11.7,
-    "p95Ms": 15.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      16,
-      16.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 0.9,
-    "p95Ms": 1.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      4,
-      4.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 12,
-    "p95Ms": 15.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      16.4,
-      25.9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-height",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-height",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-window",
-    "version": "2.3.0",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 29.6,
-    "p95Ms": 43,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      43.6,
-      50.8
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 1.1,
-    "p95Ms": 4.7,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.5,
-      6.5
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 0.9,
-    "p95Ms": 4.2,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      4.6,
-      8.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 1,
-    "p95Ms": 2.9,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      3.3,
-      3.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 1.2,
-    "p95Ms": 4.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.3,
-      6.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 0.8,
-    "p95Ms": 4.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.8,
-      7.8
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": 1,
-    "p95Ms": 5.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      5.5,
-      11
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "React Virtuoso",
-    "version": "4.18.12",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 0.8,
-    "p95Ms": 4.7,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      4.9,
-      4.9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 5.1,
-    "p95Ms": 8.9,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      9.9,
-      11.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 0.8,
-    "p95Ms": 1.2,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1.3,
-      1.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 1.1,
-    "p95Ms": 3.2,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      4.2,
-      5.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 5.2,
-    "p95Ms": 8.2,
+    "medianMs": 7.7,
+    "p95Ms": 8.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
       8.4,
-      8.8
+      8.9
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 1.1,
-    "p95Ms": 1.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1.9,
-      2.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": 1.1,
-    "p95Ms": 1.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      3.8,
-      4.5
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "react-virtualized",
-    "version": "9.22.6",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 1,
-    "p95Ms": 1.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      2.3,
-      3.8
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "cache-invalidation",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": 1.2,
-    "p95Ms": 1.8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      2.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2340,12 +1618,12 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "react-window",
+    "version": "2.3.0",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "insert",
-    "location": "middle",
+    "location": "start",
     "medianMs": null,
     "p95Ms": null,
     "recoveryMedianMs": null,
@@ -2354,8 +1632,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2369,25 +1650,28 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "react-window",
+    "version": "2.3.0",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "insert",
-    "location": "end",
-    "medianMs": 0.9,
-    "p95Ms": 2.1,
+    "location": "middle",
+    "medianMs": 498.1,
+    "p95Ms": 1021.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      2.2,
-      2.2
+      1198.8,
+      1500.3
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2398,8 +1682,40 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 36.8,
+    "p95Ms": 51.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      53.6,
+      56.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "move",
@@ -2412,8 +1728,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2421,17 +1740,304 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "scroll-anchor"
     ]
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "react-window",
+    "version": "2.3.0",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "move",
+    "location": "middle",
+    "medianMs": 65.1,
+    "p95Ms": 106.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      136.4,
+      169.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 38.2,
+    "p95Ms": 53.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      58.3,
+      59.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 828.7,
+    "p95Ms": 1050.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1085,
+      1101.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 557.2,
+    "p95Ms": 1003.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 16,
+    "correctSamples": 16,
+    "recoveredSamples": 0,
+    "failedSamples": 24,
+    "totalSamples": 40,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "timeout",
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 39.9,
+    "p95Ms": 56.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      57.1,
+      58
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 32.5,
+    "p95Ms": 99,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      173,
+      227.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 44.7,
+    "p95Ms": 77.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      78.4,
+      127.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 39.5,
+    "p95Ms": 49.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      51.2,
+      51.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 30,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "timeout",
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
     "location": "middle",
     "medianMs": null,
     "p95Ms": null,
@@ -2441,8 +2047,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 30,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2450,30 +2059,129 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "timeout",
+      "exception"
     ]
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 8.3,
+    "p95Ms": 9.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.2,
+      11.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 8.9,
+    "p95Ms": 12.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      14.5,
+      15.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "move",
     "location": "end",
-    "medianMs": 0.6,
-    "p95Ms": 1.2,
+    "medianMs": 8.1,
+    "p95Ms": 10.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.5
+      11.3,
+      11.4
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2484,25 +2192,27 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "remove",
     "location": "start",
-    "medianMs": 3.6,
-    "p95Ms": 4,
+    "medianMs": 159.7,
+    "p95Ms": 183.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      4.2,
-      4.8
+      188.5
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2513,8 +2223,8 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "remove",
@@ -2527,8 +2237,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 30,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": true,
@@ -2536,583 +2249,24 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "timeout",
+      "exception"
     ]
   },
   {
     "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
     "stack": "React 19.2.8",
     "sizeMode": "estimated",
     "operation": "remove",
     "location": "end",
-    "medianMs": 3,
-    "p95Ms": 8.7,
-    "recoveryMedianMs": 3,
-    "recoveryP95Ms": 8.7,
-    "slowTailMs": [
-      9,
-      9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 0,
-    "recoveredSamples": 50,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "blank-viewport"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 1.1,
-    "p95Ms": 1.5,
+    "medianMs": 8.9,
+    "p95Ms": 10.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.6,
-      1.6
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": 1,
-    "p95Ms": 1.4,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1.5,
-      1.7
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Virtua",
-    "version": "0.50.5",
-    "stack": "React 19.2.8",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 0.8,
-    "p95Ms": 1.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1.2
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": 1253.1,
-    "p95Ms": 1387.2,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1750,
-      1828.9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": 661.4,
-    "p95Ms": 1112.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      2539.5,
-      2580.7
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 666.7,
-    "p95Ms": 863.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      905.1,
-      2690.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "start",
-    "medianMs": 1171.7,
-    "p95Ms": 1350,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1359.2,
-      1698.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": 630.9,
-    "p95Ms": 714.6,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      1009.8,
-      1165.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 636,
-    "p95Ms": 685.6,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      695.7,
-      707.1
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "start",
-    "medianMs": 1277.4,
-    "p95Ms": 3419.1,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      4255.6,
-      4704.5
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
-    "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 653.3,
-    "p95Ms": 731.4,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      736.5,
-      798.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 1196.8,
-    "p95Ms": 1499.4,
-    "recoveryMedianMs": 1196.8,
-    "recoveryP95Ms": 1499.4,
-    "slowTailMs": [
-      1534.9,
-      1675.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 0,
-    "recoveredSamples": 50,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "row-overlap",
-      "scroll-height"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "middle",
-    "medianMs": 1215.2,
-    "p95Ms": 1825.2,
-    "recoveryMedianMs": 1215.2,
-    "recoveryP95Ms": 1825.2,
-    "slowTailMs": [
-      2710.6,
-      2876.3
-    ],
-    "settledSamples": 50,
-    "correctSamples": 0,
-    "recoveredSamples": 50,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "row-overlap",
-      "scroll-height"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Vue Virtual Scroller",
-    "version": "3.0.5",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "estimated",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 1266.7,
-    "p95Ms": 1453.1,
-    "recoveryMedianMs": 1266.7,
-    "recoveryP95Ms": 1453.1,
-    "slowTailMs": [
-      1549.6,
-      1765
-    ],
-    "settledSamples": 50,
-    "correctSamples": 0,
-    "recoveredSamples": 50,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": true,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": [
-      "scroll-height"
-    ]
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "insert",
-    "location": "start",
-    "medianMs": 5.2,
-    "p95Ms": 9.3,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      10.1,
-      10.5
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "insert",
-    "location": "middle",
-    "medianMs": 5.2,
-    "p95Ms": 8,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      9.4
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "insert",
-    "location": "end",
-    "medianMs": 5,
-    "p95Ms": 9.9,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      11.9,
-      18.9
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "move",
-    "location": "start",
-    "medianMs": 5.2,
-    "p95Ms": 8.6,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      11.2,
+      11.1,
       12.1
     ],
     "settledSamples": 50,
@@ -3120,9 +2274,12 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
-      "initialEstimate": false,
+      "initialEstimate": true,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
@@ -3130,105 +2287,177 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
   },
   {
     "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "move",
-    "location": "middle",
-    "medianMs": 5.3,
-    "p95Ms": 7.5,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8.9,
-      9.7
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "move",
-    "location": "end",
-    "medianMs": 4.6,
-    "p95Ms": 9.3,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      12.1,
-      12.2
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "remove",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
     "location": "start",
-    "medianMs": 5.1,
-    "p95Ms": 9.4,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      10.3,
-      18.8
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "remove",
-    "location": "middle",
-    "medianMs": 5.4,
-    "p95Ms": 8.3,
+    "medianMs": 7.8,
+    "p95Ms": 8.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
       9.5,
+      13.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 7.9,
+    "p95Ms": 9.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.8,
+      12.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 7.8,
+    "p95Ms": 9.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.1,
+      11
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 5.3,
+    "p95Ms": 10.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.1,
+      33.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.9,
+    "p95Ms": 9.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.7,
       10
     ],
     "settledSamples": 50,
@@ -3236,52 +2465,90 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
       "applicationCalculatesHeight": false
     },
     "failureCodes": []
   },
   {
     "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "remove",
-    "location": "end",
-    "medianMs": 5,
-    "p95Ms": 7.6,
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 3.2,
+    "p95Ms": 6.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      8.3
+      6.3,
+      6.5
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
       "applicationCalculatesHeight": false
     },
     "failureCodes": []
   },
   {
     "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "resize",
-    "location": "start",
-    "medianMs": 5,
-    "p95Ms": 7.5,
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 8.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
@@ -3293,6 +2560,1278 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.5,
+    "p95Ms": 8.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.1,
+      12
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 4.7,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 10.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.9,
+      11.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7,
+    "p95Ms": 9.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10,
+      10.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 6.9,
+    "p95Ms": 7.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8,
+      10
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9,
+      12.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 322.8,
+    "p95Ms": 366.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      367.7,
+      374.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 58.2,
+    "p95Ms": 58.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 1,
+    "correctSamples": 1,
+    "recoveredSamples": 0,
+    "failedSamples": 29,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 15,
+    "p95Ms": 17.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      17.7,
+      19.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 15.5,
+    "p95Ms": 22.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      23.3,
+      24
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 13.5,
+    "p95Ms": 14.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      14.9,
+      18.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 328.4,
+    "p95Ms": 379.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      384.6,
+      441
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 72.6,
+    "p95Ms": 72.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 1,
+    "correctSamples": 1,
+    "recoveredSamples": 0,
+    "failedSamples": 29,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 23.6,
+    "p95Ms": 24.6,
+    "recoveryMedianMs": 23.6,
+    "recoveryP95Ms": 24.6,
+    "slowTailMs": [
+      24.8,
+      30
+    ],
+    "settledSamples": 50,
+    "correctSamples": 0,
+    "recoveredSamples": 50,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "blank-viewport"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 13.7,
+    "p95Ms": 15.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18.1,
+      18.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 13.8,
+    "p95Ms": 15,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18.2,
+      19
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 13.2,
+    "p95Ms": 14.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      14.8,
+      17.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 648.8,
+    "p95Ms": 1161.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1178.2,
+      1180.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 649.1,
+    "p95Ms": 1270.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1289.8,
+      1351.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 1240.6,
+    "p95Ms": 1244,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 5,
+    "correctSamples": 5,
+    "recoveredSamples": 0,
+    "failedSamples": 45,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 597.5,
+    "p95Ms": 668.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      677.3,
+      697
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 1139,
+    "p95Ms": 1269,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1344.1
+    ],
+    "settledSamples": 25,
+    "correctSamples": 25,
+    "recoveredSamples": 0,
+    "failedSamples": 25,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 684,
+    "p95Ms": 1318,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1363.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 723.7,
+    "p95Ms": 1397.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1422.1,
+      1574.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 633.9,
+    "p95Ms": 1229.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1247.7,
+      1362.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 1145.6,
+    "p95Ms": 1398.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1542.8
+    ],
+    "settledSamples": 35,
+    "correctSamples": 35,
+    "recoveredSamples": 0,
+    "failedSamples": 15,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 604.5,
+    "p95Ms": 700.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      710.8,
+      711.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 635,
+    "p95Ms": 1834.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1878,
+      1910.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 634.1,
+    "p95Ms": 1243.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1262.7,
+      1281.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 6.9,
+    "p95Ms": 9.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10,
+      10.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 6.9,
+    "p95Ms": 8.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.1,
+    "p95Ms": 8.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 7.1,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.2,
+      12.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 6.8,
+    "p95Ms": 7.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      7.9,
+      7.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.3,
+    "p95Ms": 8.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.2,
+    "p95Ms": 9.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.8,
+      10.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 7,
+    "p95Ms": 8.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.2,
+      10
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 7.2,
+    "p95Ms": 8.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.8,
+      11.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 6.9,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.7,
+      9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3309,41 +3848,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 2.1,
-    "p95Ms": 3.1,
+    "medianMs": 6.9,
+    "p95Ms": 8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      4.2,
-      5
-    ],
-    "settledSamples": 50,
-    "correctSamples": 50,
-    "recoveredSamples": 0,
-    "failedSamples": 0,
-    "totalSamples": 50,
-    "heightHandling": {
-      "sizeInput": "dom-measurement",
-      "initialEstimate": false,
-      "resizeNotification": "automatic",
-      "applicationCalculatesHeight": false
-    },
-    "failureCodes": []
-  },
-  {
-    "rowProfile": "uniform",
-    "library": "Sectile Virtual",
-    "version": "0.7.0",
-    "stack": "Vue 3.5.22",
-    "sizeMode": "automatic",
-    "operation": "resize",
-    "location": "end",
-    "medianMs": 4.6,
-    "p95Ms": 7.7,
-    "recoveryMedianMs": null,
-    "recoveryP95Ms": null,
-    "slowTailMs": [
-      8.8,
       10.2
     ],
     "settledSamples": 50,
@@ -3351,6 +3860,41 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "uniform",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 7.2,
+    "p95Ms": 8.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.5,
+      9.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3375,8 +3919,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3384,8 +3931,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "scroll-anchor"
     ]
   },
   {
@@ -3396,26 +3942,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 79.6,
+    "p95Ms": 93.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      93.9,
+      101.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3425,18 +3974,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "end",
-    "medianMs": 1,
-    "p95Ms": 1.5,
+    "medianMs": 8.3,
+    "p95Ms": 9.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      3.6
+      10.1,
+      10.6
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3461,8 +4014,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3470,8 +4026,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "scroll-anchor"
     ]
   },
   {
@@ -3482,26 +4037,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 8.4,
+    "p95Ms": 10.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      10.6,
+      13.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3511,19 +4069,21 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "end",
-    "medianMs": 0.9,
-    "p95Ms": 1.5,
+    "medianMs": 8.2,
+    "p95Ms": 9.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.6,
-      1.9
+      10.5
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3540,19 +4100,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "start",
-    "medianMs": 1,
-    "p95Ms": 1.5,
+    "medianMs": 167.4,
+    "p95Ms": 193.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      4.2,
-      4.9
+      193.9,
+      201.4
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3569,26 +4132,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 79.5,
+    "p95Ms": 89.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      90.2,
+      92.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3598,16 +4164,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "end",
-    "medianMs": 1.1,
-    "p95Ms": 1.6,
+    "medianMs": 8.8,
+    "p95Ms": 10.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
+    "slowTailMs": [
+      11.2,
+      14
+    ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3624,19 +4196,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "start",
-    "medianMs": 0.8,
-    "p95Ms": 1,
+    "medianMs": 7.7,
+    "p95Ms": 11.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.1,
-      1.2
+      11.5,
+      11.5
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3653,19 +4228,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 0.8,
-    "p95Ms": 1.6,
+    "medianMs": 8.2,
+    "p95Ms": 11.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.9,
-      2.7
+      12.5,
+      13.7
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3682,19 +4260,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "end",
-    "medianMs": 0.8,
-    "p95Ms": 1.3,
+    "medianMs": 7.8,
+    "p95Ms": 8.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.5,
-      1.6
+      9.1,
+      9.8
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3711,19 +4292,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "start",
-    "medianMs": 1.3,
-    "p95Ms": 1.8,
+    "medianMs": 340.1,
+    "p95Ms": 417,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.9,
-      2.5
+      424.2,
+      506.3
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3740,26 +4324,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 153.8,
+    "p95Ms": 171.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      183.2,
+      186.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3769,18 +4356,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "end",
-    "medianMs": 0.9,
-    "p95Ms": 1.3,
+    "medianMs": 15.2,
+    "p95Ms": 17.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.4
+      18.8,
+      19.4
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3805,8 +4396,11 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "settledSamples": 0,
     "correctSamples": 0,
     "recoveredSamples": 0,
-    "failedSamples": 50,
-    "totalSamples": 50,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3814,8 +4408,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "scroll-anchor",
-      "timeout"
+      "scroll-anchor"
     ]
   },
   {
@@ -3826,26 +4419,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 14,
+    "p95Ms": 15.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      16.8,
+      18.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3855,19 +4451,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "end",
-    "medianMs": 0.7,
-    "p95Ms": 1.1,
+    "medianMs": 13.4,
+    "p95Ms": 14.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.5,
-      1.8
+      15,
+      18.7
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3884,19 +4483,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "start",
-    "medianMs": 3.5,
-    "p95Ms": 4,
+    "medianMs": 330.7,
+    "p95Ms": 384.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      4.3,
-      4.7
+      392.1,
+      483
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3913,26 +4515,29 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "middle",
-    "medianMs": null,
-    "p95Ms": null,
+    "medianMs": 157.7,
+    "p95Ms": 176.1,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 0,
-    "correctSamples": 0,
+    "slowTailMs": [
+      180.2,
+      181
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 50,
+    "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "timeout"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -3942,19 +4547,21 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "end",
-    "medianMs": 2.7,
-    "p95Ms": 8.3,
-    "recoveryMedianMs": 2.7,
-    "recoveryP95Ms": 8.3,
+    "medianMs": 23.7,
+    "p95Ms": 24.8,
+    "recoveryMedianMs": 23.7,
+    "recoveryP95Ms": 24.8,
     "slowTailMs": [
-      8.4,
-      20.7
+      30.8
     ],
     "settledSamples": 50,
     "correctSamples": 0,
     "recoveredSamples": 50,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -3973,18 +4580,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "start",
-    "medianMs": 1.1,
-    "p95Ms": 1.5,
+    "medianMs": 13.8,
+    "p95Ms": 16.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.7
+      17.9,
+      18.8
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -4001,19 +4612,22 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 1,
-    "p95Ms": 1.6,
+    "medianMs": 13.5,
+    "p95Ms": 15.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.7,
-      1.7
+      18.8,
+      19
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -4030,18 +4644,3887 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "end",
-    "medianMs": 0.8,
-    "p95Ms": 1.2,
+    "medianMs": 13,
+    "p95Ms": 14.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      1.3
+      14.7,
+      17
     ],
     "settledSamples": 50,
     "correctSamples": 50,
     "recoveredSamples": 0,
     "failedSamples": 0,
     "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 7,
+    "p95Ms": 9.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.3,
+      11.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 7,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.2,
+      9.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.1,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.5,
+      8.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 7.2,
+    "p95Ms": 9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.4,
+      10.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 7.2,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.7,
+      8.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7,
+    "p95Ms": 8.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.3,
+    "p95Ms": 8.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9,
+      10.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 7.4,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9,
+      8.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7.4,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 7.4,
+    "p95Ms": 9.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.9,
+      19.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 6.4,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.6,
+      8.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 7.3,
+    "p95Ms": 10,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.3,
+      12.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 8.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9,
+      9.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 7.7,
+    "p95Ms": 9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.1,
+      13
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.4,
+    "p95Ms": 10,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.2,
+      10.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.9,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 7.3,
+    "p95Ms": 8.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9,
+      10.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 10.7,
+    "p95Ms": 11.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      13.3,
+      13.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 8,
+    "p95Ms": 10.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.9,
+      10.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 8.3,
+    "p95Ms": 10.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.9,
+      11.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "TanStack Virtual",
+    "version": "3.14.10",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 8,
+    "p95Ms": 10.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.6,
+      10.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "row-gap",
+      "blank-viewport",
+      "scroll-anchor",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-gap",
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 77.1,
+    "p95Ms": 102,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      102.8,
+      107.3
+    ],
+    "settledSamples": 45,
+    "correctSamples": 45,
+    "recoveredSamples": 0,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 84.7,
+    "p95Ms": 94,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      97,
+      103.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 50,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "blank-viewport"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-gap",
+      "row-overlap",
+      "blank-viewport",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "row-gap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 68.8,
+    "p95Ms": 76.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      84.8,
+      85
+    ],
+    "settledSamples": 45,
+    "correctSamples": 45,
+    "recoveredSamples": 0,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 59,
+    "p95Ms": 72.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      76.9,
+      78.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 93.2,
+    "p95Ms": 111.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      116.3,
+      134.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-window",
+    "version": "2.3.0",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 85.3,
+    "p95Ms": 104.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      106.1
+    ],
+    "settledSamples": 45,
+    "correctSamples": 45,
+    "recoveredSamples": 0,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 76.7,
+    "p95Ms": 91.7,
+    "recoveryMedianMs": 91.7,
+    "recoveryP95Ms": 100.2,
+    "slowTailMs": [
+      91.8,
+      100.2
+    ],
+    "settledSamples": 45,
+    "correctSamples": 40,
+    "recoveredSamples": 5,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor",
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 8.7,
+    "p95Ms": 11.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      12.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 8.8,
+    "p95Ms": 10,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.1,
+      11.1
+    ],
+    "settledSamples": 45,
+    "correctSamples": 45,
+    "recoveredSamples": 0,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 8.4,
+    "p95Ms": 11.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      12.1,
+      14.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 158.7,
+    "p95Ms": 190.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      192,
+      201.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 76,
+    "p95Ms": 85.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      86.2,
+      90.1
+    ],
+    "settledSamples": 45,
+    "correctSamples": 45,
+    "recoveredSamples": 0,
+    "failedSamples": 5,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 9.8,
+    "p95Ms": 12.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      12.7,
+      13
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 8.7,
+    "p95Ms": 10.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.5,
+      11.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 8.8,
+    "p95Ms": 10.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.7,
+      11.1
+    ],
+    "settledSamples": 43,
+    "correctSamples": 43,
+    "recoveredSamples": 0,
+    "failedSamples": 7,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor",
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 8.6,
+    "p95Ms": 11.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.8,
+      12.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 7.1,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.2,
+      11.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.3,
+    "p95Ms": 8.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.3,
+      9.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 6.6,
+    "p95Ms": 8.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.3,
+      9.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.3,
+    "p95Ms": 9.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.4,
+      9.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.9,
+    "p95Ms": 9.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.8,
+      10.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 6.8,
+    "p95Ms": 7.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.7,
+      10.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7.8,
+    "p95Ms": 11.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.7,
+      12.3
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 6.3,
+    "p95Ms": 7.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      7.5,
+      7.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "react-virtualized",
+    "version": "9.22.6",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "cache-invalidation",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 158.7,
+    "p95Ms": 181,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      186.4
+    ],
+    "settledSamples": 30,
+    "correctSamples": 30,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 16.1,
+    "p95Ms": 17.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18.9,
+      20.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 14.5,
+    "p95Ms": 16.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      17.6
+    ],
+    "settledSamples": 30,
+    "correctSamples": 30,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 15.3,
+    "p95Ms": 17.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18,
+      21
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 334.6,
+    "p95Ms": 400.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      420.4,
+      421
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 157.2,
+    "p95Ms": 180.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      184.6
+    ],
+    "settledSamples": 30,
+    "correctSamples": 30,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 23.3,
+    "p95Ms": 40.5,
+    "recoveryMedianMs": 23.3,
+    "recoveryP95Ms": 40.5,
+    "slowTailMs": [
+      41.5,
+      48.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 0,
+    "recoveredSamples": 50,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "blank-viewport",
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 16.2,
+    "p95Ms": 17.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      20.5,
+      20.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 15.8,
+    "p95Ms": 17.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      19.8
+    ],
+    "settledSamples": 30,
+    "correctSamples": 30,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 15,
+    "p95Ms": 16.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      17.6,
+      20.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 1156.7,
+    "p95Ms": 1156.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 1,
+    "correctSamples": 1,
+    "recoveredSamples": 0,
+    "failedSamples": 29,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "row-gap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 1702.3,
+    "p95Ms": 1926.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      2076.7
+    ],
+    "settledSamples": 24,
+    "correctSamples": 24,
+    "recoveredSamples": 0,
+    "failedSamples": 26,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 1352.8,
+    "p95Ms": 1494.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 5,
+    "correctSamples": 5,
+    "recoveredSamples": 0,
+    "failedSamples": 45,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-gap",
+      "timeout",
+      "row-overlap",
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 579.8,
+    "p95Ms": 702.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      708.1,
+      764.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 50,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 782,
+    "p95Ms": 1433.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      1749.8
+    ],
+    "settledSamples": 20,
+    "correctSamples": 20,
+    "recoveredSamples": 0,
+    "failedSamples": 30,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "row-gap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 1178.5,
+    "p95Ms": 1178.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 1,
+    "correctSamples": 1,
+    "recoveredSamples": 0,
+    "failedSamples": 29,
+    "totalSamples": 30,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-gap",
+      "row-overlap",
+      "blank-viewport",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 50,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 625.6,
+    "p95Ms": 696.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      704.6
+    ],
+    "settledSamples": 24,
+    "correctSamples": 24,
+    "recoveredSamples": 0,
+    "failedSamples": 26,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "timeout",
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 50,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap",
+      "timeout"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Vue Virtual Scroller",
+    "version": "3.0.5",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "estimated",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 621.6,
+    "p95Ms": 680.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      682.4,
+      1891.2
+    ],
+    "settledSamples": 46,
+    "correctSamples": 46,
+    "recoveredSamples": 0,
+    "failedSamples": 4,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": true,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-overlap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": 7.4,
+    "p95Ms": 9.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.4,
+      11.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 7.1,
+    "p95Ms": 8.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.5
+    ],
+    "settledSamples": 25,
+    "correctSamples": 25,
+    "recoveredSamples": 0,
+    "failedSamples": 25,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 7.6,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9,
+      9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "start",
+    "medianMs": 7,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 7.4,
+    "p95Ms": 8.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9
+    ],
+    "settledSamples": 25,
+    "correctSamples": 25,
+    "recoveredSamples": 0,
+    "failedSamples": 25,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 7.5,
+    "p95Ms": 8.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 7.4,
+    "p95Ms": 9.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.2,
+      11.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 7.4,
+    "p95Ms": 9.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.6
+    ],
+    "settledSamples": 25,
+    "correctSamples": 25,
+    "recoveredSamples": 0,
+    "failedSamples": 25,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 7.5,
+    "p95Ms": 8.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 7.2,
+    "p95Ms": 9.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      9.7,
+      11
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 6.8,
+    "p95Ms": 8.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      12.4
+    ],
+    "settledSamples": 25,
+    "correctSamples": 25,
+    "recoveredSamples": 0,
+    "failedSamples": 25,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "exception"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Sectile Virtual",
+    "version": "0.7.0",
+    "stack": "Vue 3.5.22",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 7.8,
+    "p95Ms": 8.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      8.8,
+      8.8
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 76.5,
+    "p95Ms": 86,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      88.5,
+      114
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 8.9,
+    "p95Ms": 11.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.6,
+      12.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 166.6,
+    "p95Ms": 188.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      192,
+      205.7
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 76.7,
+    "p95Ms": 90.2,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      96.5,
+      108.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 9.2,
+    "p95Ms": 10.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      13.6,
+      15
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 8.7,
+    "p95Ms": 9.7,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      10.6,
+      11.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 9,
+    "p95Ms": 10.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      11.9,
+      14.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "React Virtuoso",
+    "version": "4.18.12",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "middle",
+    "medianMs": 161.6,
+    "p95Ms": 196,
+    "recoveryMedianMs": 193.3,
+    "recoveryP95Ms": 193.3,
+    "slowTailMs": [
+      200.6,
+      211.5
+    ],
+    "settledSamples": 50,
+    "correctSamples": 49,
+    "recoveredSamples": 1,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "row-gap"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "insert",
+    "location": "end",
+    "medianMs": 17.9,
+    "p95Ms": 20.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      20.6,
+      23.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "start",
+    "medianMs": null,
+    "p95Ms": null,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [],
+    "settledSamples": 0,
+    "correctSamples": 0,
+    "recoveredSamples": 0,
+    "failedSamples": 20,
+    "totalSamples": 20,
+    "plannedSamples": 50,
+    "earlyStopped": true,
+    "earlyStopReason": "reproducible-failure",
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "scroll-anchor"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "middle",
+    "medianMs": 14.4,
+    "p95Ms": 15.3,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      16.5,
+      18.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "move",
+    "location": "end",
+    "medianMs": 16.9,
+    "p95Ms": 20.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      20.9,
+      22.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "start",
+    "medianMs": 347.9,
+    "p95Ms": 456.6,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      459.2,
+      517.9
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "middle",
+    "medianMs": 155.6,
+    "p95Ms": 180.8,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      183,
+      224.4
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "remove",
+    "location": "end",
+    "medianMs": 23.6,
+    "p95Ms": 24.8,
+    "recoveryMedianMs": 23.7,
+    "recoveryP95Ms": 24.8,
+    "slowTailMs": [
+      24.9,
+      30.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 5,
+    "recoveredSamples": 45,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": [
+      "blank-viewport"
+    ]
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "start",
+    "medianMs": 15.7,
+    "p95Ms": 17.1,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      19.9,
+      20.2
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "middle",
+    "medianMs": 15.7,
+    "p95Ms": 16.9,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18.8,
+      20.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
+    "heightHandling": {
+      "sizeInput": "dom-measurement",
+      "initialEstimate": false,
+      "resizeNotification": "automatic",
+      "applicationCalculatesHeight": false
+    },
+    "failureCodes": []
+  },
+  {
+    "rowProfile": "heterogeneous",
+    "library": "Virtua",
+    "version": "0.50.5",
+    "stack": "React 19.2.8",
+    "sizeMode": "automatic",
+    "operation": "resize",
+    "location": "end",
+    "medianMs": 15.9,
+    "p95Ms": 17.4,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
+    "slowTailMs": [
+      18.1,
+      21.6
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
+    "totalSamples": 50,
+    "plannedSamples": 50,
+    "earlyStopped": false,
+    "earlyStopReason": null,
     "heightHandling": {
       "sizeInput": "dom-measurement",
       "initialEstimate": false,
@@ -4106,15 +8589,27 @@ export const heightModeSupport: readonly HeightModeSupport[] = Object.freeze([
 
 export const benchmarkRowProfiles: Readonly<Partial<Record<BenchmarkRowProfile, BenchmarkRowProfileConditions>>> = Object.freeze({
   "uniform": {
-    "commonEstimateHeight": 48,
-    "contentCorpusVersion": 0,
+    "commonEstimateHeight": 72,
+    "contentCorpusVersion": 1,
     "contentVariants": 1,
     "heightDistribution": {
-      "minimum": 48,
-      "median": 48,
-      "p95": 48,
-      "maximum": 48,
+      "minimum": 72,
+      "median": 72,
+      "p95": 72,
+      "maximum": 72,
       "distinct": 1
+    }
+  },
+  "heterogeneous": {
+    "commonEstimateHeight": 72,
+    "contentCorpusVersion": 1,
+    "contentVariants": 256,
+    "heightDistribution": {
+      "minimum": 71,
+      "median": 119,
+      "p95": 159,
+      "maximum": 159,
+      "distinct": 8
     }
   }
 });
