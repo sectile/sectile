@@ -40,6 +40,22 @@ const rows = [
 </DataTreeGrid.RowDisclosure>
 ```
 
+group을 펼치거나 접으면 `expansionRevision`이 증가하고 `request.expansion`에 현재 펼쳐진 group ID가 들어갑니다. server는 요청된 branch의 visible descendants를 반환합니다.
+
+expansion, cursor, edit state를 외부 store가 소유해야 하면 각각 controlled ref와 change callback을 전달합니다.
+
+```ts
+const expansion = ref<readonly string[]>(['platform'])
+
+const tree = useDataTreeGrid({
+  columns,
+  expansion,
+  onExpansionChange: (next) => { expansion.value = next },
+  defaultCursor: { current: null },
+  defaultEditState: { kind: 'navigation' },
+})
+```
+
 ## grid 이동과 편집
 
 leaf cell은 DataGrid와 같은 이동·편집 수명 주기를 사용하며 group cell은 read-only입니다. Enter로 editor를 시작하고 Escape로 취소하며 valid commit은 응용 프로그램 command로 전달됩니다. collapse나 removal은 영향을 받은 editor를 먼저 취소하고 cursor를 보이는 cell로 복구합니다.
@@ -50,9 +66,57 @@ leaf cell은 DataGrid와 같은 이동·편집 수명 주기를 사용하며 gro
 
 보이는 leaf는 `DataTreeGrid.RowSelectionControl`로 선택합니다. `DataTreeGrid.BulkSelectionControl`에는 `{ kind: 'all-matching' }` 또는 `{ kind: 'group-leaves', groupID }`를 전달할 수 있습니다. group leaf 선택은 아직 불러오지 않은 descendant도 source나 응용 프로그램이 포함할 수 있도록 intent를 보냅니다.
 
+```vue
+<DataTreeGrid.RowSelectionControl
+  v-if="row.kind === 'leaf'"
+  name="selected-services"
+/>
+<DataTreeGrid.BulkSelectionControl
+  v-if="row.kind === 'group'"
+  :target="{ kind: 'group-leaves', groupID: row.id }"
+>
+  {{ row.cells.name }} 전체 선택
+</DataTreeGrid.BulkSelectionControl>
+```
+
+`group-leaves`는 controller가 임의로 descendant ID를 추측하지 않고 `request-bulk-selection` command로 application/source에 정확한 intent를 전달합니다.
+
+## 정렬, 필터와 context-only ancestor
+
+sort와 filter는 leaf 결과에 적용되지만 treegrid가 parent context를 잃어서는 안 됩니다. source는 matching leaf로 이어지는 ancestor를 `contextOnly: true`로 포함할 수 있습니다. context-only row는 구조와 ARIA metadata를 유지하기 위한 행이며 선택·편집 대상이 아닙니다.
+
+```ts
+const rows = [
+  {
+    kind: 'group', id: 'platform', parentGroupID: null,
+    depth: 0, expanded: true, contextOnly: true,
+    cells: { name: 'Platform', owner: '' },
+  },
+  {
+    kind: 'leaf', id: 'checkout',
+    cells: { name: 'Checkout', owner: 'Alex' },
+  },
+]
+```
+
+다중 정렬, column/global filter, page/window access, source 취소와 stale response 처리는 다른 profile과 같습니다. 계층 응답은 parent-before-child 순서, depth, expansion, ancestry가 모두 유효할 때만 수락됩니다.
+
 ## metadata와 가상화
 
 projection은 ARIA treegrid 속성에 필요한 parent row, depth, position, size, expansion, context-only metadata를 제공합니다. 열 순서·pinning·크기·filter·sort는 평면 grid 계약을 공유합니다. 가상화는 별도 raw composition이며 Tabular가 측정을 소유하지 않은 채 row나 cell reveal만 연결합니다.
+
+## part별 용도
+
+| Part | 용도 |
+| --- | --- |
+| `Provider` · `Root` | controller inject, ARIA treegrid와 command/error boundary |
+| `Header` · `HeaderRow` · `ColumnHeader` | header schema와 column metadata |
+| `SortTrigger` · `FilterControl` | canonical query 변경과 새 계층 view request |
+| `Body` · `Row` · `Cell` | group/leaf 순서, row level과 cell cursor 등록 |
+| `RowDisclosure` | expansion 변경과 branch request |
+| `RowSelectionControl` · `BulkSelectionControl` | leaf, all-matching, group-leaves 선택 |
+| `ColumnResizeHandle` | host column size 변경 |
+| `Editor` | leaf cell만 navigation/edit mode에 연결 |
 
 ## 공개 Vue API
 

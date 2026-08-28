@@ -15,27 +15,52 @@ Virtual inputs.
 
 ```ts
 import { createDataGridVirtualAdapter } from '@sectile/tabular/virtual'
-import {
-  VirtualizerContent,
-  VirtualizerItem,
-  VirtualizerRoot,
-  useVirtualizer,
-} from '@sectile/vue/virtual'
+import { useVirtualizer } from '@sectile/vue/virtual'
+import { shallowRef } from 'vue'
 
-const adapter = createDataGridVirtualAdapter({ controller: grid.controller })
-const virtualizer = useVirtualizer({ strategy: adapter.strategy })
+let adapter = createDataGridVirtualAdapter({
+  projection: grid.getProjection(),
+  rowExtents: { kind: 'uniform', extent: 44 },
+  columnExtents: {
+    kind: 'by-id',
+    getExtent: (columnID) => columnWidths[columnID] ?? 160,
+  },
+})
+
+const virtualState = shallowRef(adapter.state)
+const virtualizer = useVirtualizer({
+  state: virtualState,
+  strategy: adapter.strategy,
+})
 ```
 
-The application composes the rendered window. The adapter preserves Tabular
-row, column and cell identity, measured extents, pinned partitions, projection
-generations, locators, and reveal targets. Virtual continues to measure mounted
-elements internally; applications do not pass a `measure` policy or hard-code
-item heights unless they intentionally configure an estimated layout.
+The adapter preserves row, column and cell identity, the initial extent domain,
+pinned partitions, projection generations, locators, and projection mutations.
+Use `uniform` for a known fixed estimate and `by-id` for column sizes or row
+estimates the application already owns. Virtual measures and corrects mounted
+elements through its own lifecycle.
 
-Native DataTable keeps native table width semantics and normally virtualizes the
-row axis only. DataGrid and DataTreeGrid may use linear rows or a two-axis
-partitioned track grid. Pinned start/end columns form overlap layers without
-replacing the strategy when partitions change.
+```ts
+const next = reconcileDataGridVirtualAdapter(
+  adapter,
+  virtualState.value,
+  grid.getProjection(),
+)
+
+if (next.ok) {
+  for (const mutation of next.value.mutations) virtualizer.mutate(mutation)
+  adapter = next.value.adapter
+}
+
+adapter.locateRow('user-42')
+adapter.locateColumn('name')
+adapter.locateCell({ rowID: 'user-42', columnID: 'name' })
+```
+
+DataTable uses a vertical linear-row adapter and keeps native table width
+semantics. DataGrid and DataTreeGrid use a partitioned-track grid that preserves
+start, center, and end pinning. Reconcile projection changes with the matching
+`reconcileData*VirtualAdapter` function.
 
 Importing base `@sectile/tabular`, `@sectile/dom/data-*`, or
 `@sectile/vue/data-*` never loads Virtual. Importing `@sectile/tabular/virtual`,

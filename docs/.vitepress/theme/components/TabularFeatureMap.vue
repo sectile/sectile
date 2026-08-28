@@ -14,9 +14,13 @@ const copy = computed(() => isKorean.value ? {
   sharedLabel: '모든 프로필의 공통 기반',
   shared: [
     { label: '정체성', detail: 'row · column · cell · group ID' },
+    { label: 'Schema', detail: 'columns · nested headers · capabilities' },
     { label: '질의', detail: 'sort · filter · group · aggregate · pivot' },
     { label: '소스', detail: 'request · source · view revision' },
+    { label: '접근 범위', detail: 'page · window · visible counts' },
     { label: '선택', detail: 'explicit row · all-matching' },
+    { label: '열 상태', detail: 'order · hidden · pinned start/end' },
+    { label: '소유권과 안전', detail: 'controlled slices · limits · atomic errors' },
   ],
   chooseLabel: '탐색 단위 선택', selectedLabel: '선택한 프로필', ownsLabel: '이 프로필이 책임지는 기능', fitLabel: '잘 맞는 화면', boundaryLabel: '경계',
   profiles: [
@@ -32,9 +36,13 @@ const copy = computed(() => isKorean.value ? {
   sharedLabel: 'Shared by every profile',
   shared: [
     { label: 'Identity', detail: 'row · column · cell · group ID' },
+    { label: 'Schema', detail: 'columns · nested headers · capabilities' },
     { label: 'Query', detail: 'sort · filter · group · aggregate · pivot' },
     { label: 'Source', detail: 'request · source · view revision' },
+    { label: 'Access', detail: 'page · window · visible counts' },
     { label: 'Selection', detail: 'explicit row · all-matching' },
+    { label: 'Columns', detail: 'order · hidden · pinned start/end' },
+    { label: 'Ownership and safety', detail: 'controlled slices · limits · atomic errors' },
   ],
   chooseLabel: 'Choose a navigation unit', selectedLabel: 'Selected profile', ownsLabel: 'Owned by this profile', fitLabel: 'Best suited to', boundaryLabel: 'Boundary',
   profiles: [

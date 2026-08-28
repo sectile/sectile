@@ -8,13 +8,13 @@ defineProps<{
 </script>
 
 <template>
-  <search class="docs-search-field" :data-size="compact ? 'compact' : 'default'">
+  <div class="docs-search-field" role="search" :data-size="compact ? 'compact' : 'default'">
     <label class="docs-search-field__control">
       <span class="docs-search-field__label">{{ label }}</span>
       <SearchIcon :size="16" aria-hidden="true" />
       <slot />
     </label>
-  </search>
+  </div>
 </template>
 
 <style scoped>

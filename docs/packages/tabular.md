@@ -15,6 +15,16 @@ pnpm add @sectile/tabular
 
 <TabularFeatureMap />
 
+## Find the capability
+
+| Task | Guide |
+| --- | --- |
+| Column schema, query, page/window access, selection, column state, controlled state | [Shared contracts](./tabular/contracts) |
+| Server sorting, filtering, pagination, cancellation, stale data, errors, and retry | [Async data sources](./tabular/data-source) |
+| Typed compound components, Providers, slots, and SSR | [Vue composition](./tabular/vue) |
+| Element registration and event/focus/form bindings without a framework | [DOM composition](./tabular/dom) |
+| Compose a large view with raw Virtual | [Optional virtualization](./tabular/virtual) |
+
 ## DataTable
 
 Choose DataTable when people primarily scan, compare, sort, filter, and select rows. It preserves native table and form semantics and can express grouped disclosure or edit commit intent without turning the surface into a spreadsheet.
@@ -51,6 +61,8 @@ The three profiles share the same bounded contracts:
 - atomic rejection for stale responses, collisions, profile mismatches, and limit violations.
 
 Every change enters as a typed event and returns a deterministic state, projection, command list, or structured failure. Policy functions and transport stay outside reducers.
+
+The same query descriptors can operate on an in-memory array or cross the network to request a new server page or window. Moving from a client source to a remote source does not change component structure, selection, or cursor contracts.
 
 ## What the application owns
 

@@ -69,6 +69,26 @@ useDataTableSource(table, async (request) => {
 <DataTable.FilterControl scope="global" id="user-search" predicate="contains" placeholder="사용자 검색" />
 ```
 
+정렬과 필터는 현재 DOM 행을 직접 재배열하지 않습니다. query를 바꾸고 source에 새 view를 요청합니다. 메모리 배열은 client source가 계산하고, 서버 데이터는 `request.query.sort`와 `request.query.filters`를 HTTP/RPC 규격으로 옮깁니다. 취소, page reset, stale 응답 거부를 포함한 전체 예제는 [비동기 source](./data-source)에 있습니다.
+
+column filter는 열 ID를 함께 전달합니다.
+
+```vue
+<DataTable.FilterControl
+  as-child
+  scope="column"
+  column="status"
+  id="status-filter"
+  predicate="equals"
+>
+  <select aria-label="계정 상태">
+    <option value="">전체 상태</option>
+    <option value="active">사용 중</option>
+    <option value="suspended">중지됨</option>
+  </select>
+</DataTable.FilterControl>
+```
+
 ## 선택과 native form
 
 개별 행은 `DataTable.SelectionControl`, 전체 검색 결과나 group leaf는 `DataTable.BulkSelectionControl`로 선택합니다. 전체 선택 컨트롤은 선택 없음, 일부 선택, 검색 결과 전체 선택을 각각 `aria-checked="false"`, `"mixed"`, `"true"`로 투영합니다. Body 안에서는 현재 행 ID가 native value의 기본값이므로 `name`만 필요합니다. form에 다른 값을 제출할 때만 `value`를 지정합니다. all-matching selection은 revision에 묶이며 아직 불러오지 않은 모든 ID 대신 제외 목록만 저장합니다.
@@ -86,9 +106,78 @@ Header row에는 depth prop이 없습니다. 여러 단계의 `colspan`, `rowspa
 
 일반적인 행 반복은 Body가 맡습니다. virtual window처럼 저수준 렌더링이 필요할 때만 `<DataTable.Body manual>`과 `DataTable.Row rowID="…"`를 직접 사용합니다.
 
+```vue
+<DataTable.Body v-slot="{ row, isGroup }">
+  <DataTable.Cell column="name">
+    <DataTable.Disclosure v-if="isGroup" :aria-label="`${row.cells.name} 펼치기`" />
+    {{ row.cells.name }}
+  </DataTable.Cell>
+  <DataTable.Cell column="quota">
+    <DataTable.Editor
+      v-if="row.kind === 'leaf'"
+      as-child
+      column="quota"
+      :parse-value="parseQuota"
+    >
+      <input :value="row.cells.quota">
+    </DataTable.Editor>
+  </DataTable.Cell>
+</DataTable.Body>
+```
+
+`request-value-commit` command는 cell address와 parsed wire value를 전달합니다. 응용 프로그램은 저장 성공 뒤 source를 reload하거나 optimistic view를 동기화합니다.
+
+## 열 표시, pinning과 크기
+
+열 순서·숨김·start/end pinning은 semantic `columnState`입니다. 픽셀 크기는 DOM host state이고 `ColumnResizeHandle`이 변경합니다.
+
+```vue
+<DataTable.ColumnHeader headerNodeID="name">
+  이름
+  <DataTable.ColumnResizeHandle
+    column="name"
+    :min-size="160"
+    :max-size="480"
+    aria-label="이름 열 너비 조절"
+  />
+</DataTable.ColumnHeader>
+```
+
+```ts
+const table = useDataTable({
+  columns,
+  defaultColumnSizeState: { name: 240, role: 180 },
+  onColumnSizeStateChange(next) {
+    localStorage.setItem('users:column-sizes', JSON.stringify(next))
+  },
+})
+```
+
+## page와 window
+
+기본 access는 25개씩 page입니다. `set-access`로 page나 window를 바꾸면 source request의 `access`가 바뀝니다. page response는 query 전체의 visible row 수를 반환하고 controller가 pagination state를 계산합니다. 무한 scroll이나 virtual window에서는 `{ kind: 'window', window }`를 사용합니다. 자세한 state 형태는 [공통 계약](./contracts#page와-window-access)을 참고하세요.
+
 ## source와 표현 상태
 
 `useDataTableSource`는 `status`, `error`, `reload`, `cancel`, `replaceResolver`, `dispose`를 제공합니다. loading, empty, stale, error, retry 화면은 응용 프로그램 정책에 맞춰 구성합니다. SSR에서는 resolver가 실행되지 않으므로 hydration 시 server와 client가 같은 initial accepted view를 가져야 합니다.
+
+Root와 각 part slot은 `acceptedViewState`, `requestState`, `query`, `rowSelection`, `columnState`, `accessState`, `expansion`, `rows`를 제공합니다. Body slot은 여기에 typed `row`, `rowIndex`, `isGroup`을 더합니다.
+
+## part별 용도
+
+| Part | 용도 |
+| --- | --- |
+| `Provider` | 결합된 controller를 하위 part에 inject |
+| `Root` | native `<table>`, command/error boundary |
+| `Caption` | native table의 접근 가능한 이름 |
+| `Header` · `HeaderRow` · `ColumnHeader` | header schema와 native `<thead>/<tr>/<th>` 투영 |
+| `SortTrigger` · `FilterControl` | canonical query 변경과 새 source request |
+| `Body` · `Row` · `Cell` | accepted view 자동 반복 또는 manual 등록 |
+| `SelectionControl` | native checkbox/form 행 선택 |
+| `BulkSelectionControl` | all-matching 또는 group-leaves 선택 intent |
+| `Disclosure` | group expansion 변경과 새 view request |
+| `ColumnResizeHandle` | host column size 변경 |
+| `Editor` | native input의 parsed commit intent |
 
 ## 공개 Vue API
 

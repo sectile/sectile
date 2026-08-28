@@ -71,6 +71,75 @@ Provider를 중첩하면 각 part가 가장 가까운 matching Provider를 사�
 
 SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted view에서 시작해야 합니다. `sourceKey`는 semantic source generation을 교체하고 `replaceResolver`는 controller를 바꾸지 않은 채 transport logic만 바꿉니다.
 
+[비동기 source](./data-source) 페이지에는 정렬·검색·페이지 이동이 실제 resolver request로 전달되는 예제와 loading, stale, error, retry 구성이 있습니다.
+
+## type 추론
+
+`defineData*Columns`의 `getValue`가 있으면 column ID와 cell value type을 추론합니다. 원격 response처럼 record accessor가 없는 경우 `useData*<Cells>()`에 schema를 한 번 선언합니다. `createData*Components(controller)`가 이 schema를 모든 compound part와 Body slot에 결합합니다.
+
+```ts
+interface UserRecord {
+  readonly id: string
+  readonly profile: { readonly name: string }
+  readonly quota: number
+}
+
+const columns = defineDataTableColumns([
+  { id: 'name', getValue: (user: UserRecord) => user.profile.name },
+  { id: 'quota', getValue: (user: UserRecord) => user.quota },
+])
+
+const inferred = useDataTable({ columns })
+const InferredTable = createDataTableComponents(inferred)
+// Body의 row.cells.name은 string, row.cells.quota는 number
+
+interface RemoteCells {
+  readonly name: string
+  readonly quota: number
+}
+
+const remote = useDataTable<RemoteCells>({ columns })
+const RemoteTable = createDataTableComponents(remote)
+```
+
+bound namespace 밖의 broad component를 별도로 유지하지 않습니다. controller마다 만든 namespace가 schema type과 Provider scope의 단일 공개 component API입니다.
+
+## controlled state
+
+각 slice는 `ref`를 전달하면 controlled, `default*`를 전달하면 uncontrolled입니다. controlled callback은 변경 제안이며 ref를 실제로 갱신해야 새 request가 시작됩니다.
+
+```ts
+const query = ref(createTabularQuery())
+const selection = ref<DataTableRowSelection>({ kind: 'explicit-rows', rowIDs: [] })
+
+const table = useDataTable({
+  columns,
+  query,
+  onQueryChange: (next) => { query.value = next },
+  rowSelection: selection,
+  onRowSelectionChange: (next) => { selection.value = next },
+  defaultColumnState: {
+    order: columns.map((column) => column.id),
+    hidden: [], pinnedStart: ['name'], pinnedEnd: [],
+  },
+})
+```
+
+## slot으로 상태 표현
+
+Root/Provider/part slot은 source와 interaction state를 함께 제공합니다. 별도 composable을 호출하지 않고 loading, stale, selection, cursor, edit mode를 가까운 template에서 표현할 수 있습니다.
+
+```vue
+<DataGrid.Root v-slot="{ acceptedViewState, requestState, cursor, editState }">
+  <p v-if="requestState.kind === 'pending'" aria-live="polite">업데이트 중…</p>
+  <p v-if="acceptedViewState.kind === 'stale'">이전 결과를 표시하고 있습니다.</p>
+  <span>현재 셀: {{ cursor.current?.rowID }} / {{ cursor.current?.columnID }}</span>
+  <span>모드: {{ editState.kind }}</span>
+</DataGrid.Root>
+```
+
+`useData*Context()`는 같은 값을 script에서 읽어야 하는 하위 component에 사용합니다. matching Provider 밖에서 호출하면 즉시 실패합니다.
+
 ## 렌더링 계약
 
 - `as`는 element를 고르고 `asChild`는 유효한 child 하나를 채택합니다.
@@ -83,3 +152,19 @@ SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted
 - DataGrid와 DataTreeGrid는 grid/treegrid ARIA, roving tab stop, cursor, edit state를 투영합니다.
 - controlled ownership은 mount된 Provider 수명 동안 고정됩니다.
 - 열 크기, 측정, scroll, resize는 semantic state가 아니라 host state입니다.
+
+## `as`와 `asChild`
+
+`as`는 기본 element를 바꾸고, `asChild`는 유효한 단일 child에 part의 속성·event·ref를 합칩니다. 기존 input, button, design-system component를 다시 만들지 않고 Tabular binding만 채택할 때 사용합니다.
+
+```vue
+<DataTable.FilterControl as-child scope="global" id="search" predicate="contains">
+  <TextField type="search" aria-label="사용자 검색" />
+</DataTable.FilterControl>
+
+<DataGrid.Editor as-child column="quota">
+  <NumberField aria-label="할당량" />
+</DataGrid.Editor>
+```
+
+`asChild`에는 element로 귀결되는 child 하나만 둘 수 있습니다. 구조 part의 native/ARIA 의미를 바꾸는 경우 결과 element가 해당 host 계약을 충족하는지 응용 프로그램이 책임집니다.

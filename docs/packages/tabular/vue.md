@@ -71,6 +71,64 @@ Every part exports its `Props` and `SlotProps` types. Each profile also exports 
 
 SSR does not execute a source resolver. Hydration must begin from the same accepted view. `sourceKey` replaces a semantic source generation; `replaceResolver` changes transport logic without changing the controller.
 
+The [async data source](./data-source) guide includes a working sort, search, and pagination request plus loading, stale, error, and retry presentation.
+
+## Type inference
+
+`defineData*Columns` infers IDs and value types from `getValue`. Remote projections without record accessors declare their cell schema once through `useData*<Cells>()`. `createData*Components(controller)` carries that schema into every part and Body slot.
+
+```ts
+interface UserRecord {
+  readonly id: string
+  readonly profile: { readonly name: string }
+  readonly quota: number
+}
+
+const columns = defineDataTableColumns([
+  { id: 'name', getValue: (user: UserRecord) => user.profile.name },
+  { id: 'quota', getValue: (user: UserRecord) => user.quota },
+])
+
+const inferred = useDataTable({ columns })
+const InferredTable = createDataTableComponents(inferred)
+
+interface RemoteCells { readonly name: string; readonly quota: number }
+const remote = useDataTable<RemoteCells>({ columns })
+const RemoteTable = createDataTableComponents(remote)
+```
+
+There is no separate broad component API. The namespace created for a controller is the single public component API for its schema and Provider scope.
+
+## Controlled state and slots
+
+Pass a ref for controlled ownership or a `default*` value for uncontrolled ownership. A controlled callback proposes a value; synchronize the ref before its source request starts.
+
+```ts
+const query = ref(createTabularQuery())
+const selection = ref<DataTableRowSelection>({ kind: 'explicit-rows', rowIDs: [] })
+
+const table = useDataTable({
+  columns,
+  query,
+  onQueryChange: (next) => { query.value = next },
+  rowSelection: selection,
+  onRowSelectionChange: (next) => { selection.value = next },
+})
+```
+
+Root and part slots expose the source and interaction state near the template that renders it.
+
+```vue
+<DataGrid.Root v-slot="{ acceptedViewState, requestState, cursor, editState }">
+  <p v-if="requestState.kind === 'pending'" aria-live="polite">Updating…</p>
+  <p v-if="acceptedViewState.kind === 'stale'">Showing the previous result.</p>
+  <span>Cell: {{ cursor.current?.rowID }} / {{ cursor.current?.columnID }}</span>
+  <span>Mode: {{ editState.kind }}</span>
+</DataGrid.Root>
+```
+
+Use `useData*Context()` when a descendant component needs the same values in script. Calling it outside a matching Provider fails immediately.
+
 ## Rendering contracts
 
 - `as` selects the rendered element; `asChild` adopts exactly one valid child.
@@ -83,3 +141,19 @@ SSR does not execute a source resolver. Hydration must begin from the same accep
 - DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.
 - Controlled ownership is fixed for the mounted Provider.
 - Column sizes, measurement, scroll, and resize remain host state, not semantic state.
+
+## `as` and `asChild`
+
+`as` changes the default element. `asChild` merges a part's attributes, events, and ref into one valid child, so an existing design-system input or button can adopt Tabular behavior without recreating its styling.
+
+```vue
+<DataTable.FilterControl as-child scope="global" id="search" predicate="contains">
+  <TextField type="search" aria-label="Search users" />
+</DataTable.FilterControl>
+
+<DataGrid.Editor as-child column="quota">
+  <NumberField aria-label="Quota" />
+</DataGrid.Editor>
+```
+
+The adopted child must resolve to one element. When replacing a structural part, the application remains responsible for satisfying the native or ARIA host contract.

@@ -52,6 +52,32 @@ grid.dispatch({ type: 'focus-cell', cell: { rowID: 'task-1', columnID: 'owner' }
 grid.dispatch({ type: 'move-cell', direction: 'down' })
 ```
 
+`boundary: 'stop'` stops at the edge; `boundary: 'wrap-axis'` continues on the next row or axis. `isCellDisabled` defines cells that navigation and editing skip.
+
+```ts
+const grid = useDataGrid({
+  columns,
+  isCellDisabled: (cell) => cell.columnID === 'approval' && !canApprove(cell.rowID),
+})
+
+grid.dispatch({ type: 'move-cell', direction: 'right', boundary: 'wrap-axis' })
+```
+
+Cursor and edit mode can each be controlled or uncontrolled.
+
+```ts
+const cursor = ref<DataGridCursorState>({ current: null })
+const editState = ref<DataGridEditState>({ kind: 'navigation' })
+
+const grid = useDataGrid({
+  columns,
+  cursor,
+  onCursorChange: (next) => { cursor.value = next },
+  editState,
+  onEditStateChange: (next) => { editState.value = next },
+})
+```
+
 ## Editing and validation
 
 Mark editable columns with the `edit` capability and place a `DataGrid.Editor` in each editable cell. Enter begins editing, Enter commits, and Escape cancels. `parseValue` can return a structured failure; commit commands remain application-owned so persistence and optimistic updates stay outside the reducer.
@@ -70,9 +96,47 @@ When a source response removes the edited row or column, DataGrid cancels the ed
 
 Body renders accepted rows by default and gives each slot invocation its typed `row`. Cells, row-selection controls, and editors inherit the row ID. Use `<DataGrid.Body manual>` and explicit `DataGrid.Row` only when a custom windowing strategy must own row placement. Header row depth and span metadata come from the header schema rather than a component prop.
 
+```ts
+function handleCommand(command: DataGridCommand) {
+  if (command.type === 'commit-edit') {
+    saveCell(command.cell, command.value)
+    grid.requestView()
+  }
+  if (command.type === 'cancel-edit') releaseDraft(command.cell, command.reason)
+  if (command.type === 'request-reveal-cell') {
+    const target = adapter.locateCell(command.cell)
+    if (target !== null) virtualizer.scrollTo(target.id)
+  }
+}
+```
+
+Begin, commit, and cancel commands keep editor DOM behavior separate from persistence. Composition never commits prematurely; a focus transfer cancels the previous edit first.
+
 ## Selection, columns, and large data
 
 `DataGrid.RowSelectionControl` and `DataGrid.BulkSelectionControl` manage row selection independently of the cell cursor. Column state covers order, hidden columns, and start/end pinning. `DataGrid.ColumnResizeHandle` projects host-owned sizes. For large surfaces, compose `@sectile/vue/virtual` and the optional Tabular adapter only where needed.
+
+```vue
+<DataGrid.RowSelectionControl name="selected-work-items" />
+<DataGrid.BulkSelectionControl :target="{ kind: 'all-matching' }">Select every result</DataGrid.BulkSelectionControl>
+<DataGrid.ColumnResizeHandle column="task" :min-size="220" />
+```
+
+## Query and source
+
+DataGrid shares the same query and source envelope as DataTable. Sort and filter controls request a new flat view rather than rewriting mounted cells. Server pagination, abort, and stale-response behavior are covered in [async data sources](./data-source). A response containing group rows is rejected atomically by the flat profile.
+
+## Parts by responsibility
+
+| Part | Responsibility |
+| --- | --- |
+| `Provider` · `Root` | Controller scope, ARIA grid, and command/error boundary |
+| `Header` · `HeaderRow` · `ColumnHeader` | Header rowgroup and schema metadata |
+| `SortTrigger` · `FilterControl` | Query update and fresh source request |
+| `Body` · `Row` · `Cell` | Flat accepted view and 2D cell registration |
+| `RowSelectionControl` · `BulkSelectionControl` | Row selection independent from the cursor |
+| `ColumnResizeHandle` | Host-owned column size |
+| `Editor` | Navigation/edit mode and commit/cancel wiring |
 
 ## Public Vue API
 

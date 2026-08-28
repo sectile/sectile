@@ -15,6 +15,16 @@ pnpm add @sectile/tabular
 
 <TabularFeatureMap />
 
+## 기능을 찾는 순서
+
+| 필요한 작업 | 문서 |
+| --- | --- |
+| column schema, query, page/window, 선택, 열 상태, controlled state | [공통 계약과 기능](./tabular/contracts) |
+| 서버 정렬·필터·페이지네이션, 취소, stale, error, retry | [비동기 source](./tabular/data-source) |
+| typed compound component, Provider, slot, SSR | [Vue 구성](./tabular/vue) |
+| framework 없이 element 등록과 event/focus/form 연결 | [DOM 연결](./tabular/dom) |
+| 큰 view를 raw Virtual과 조합 | [선택적 가상화](./tabular/virtual) |
+
 ## DataTable
 
 행을 읽고 비교하고 정렬·필터·선택하는 일이 중심이면 DataTable을 사용합니다. native table과 form 의미를 유지하며, grouped disclosure와 편집 commit 의도도 표현할 수 있지만 화면을 spreadsheet로 만들지는 않습니다.
@@ -51,6 +61,8 @@ grid 탐색과 부모·자식 행이 함께 필요하면 DataTreeGrid를 사용�
 - stale response, ID 충돌, profile 불일치, limit 위반의 원자적 거부
 
 모든 변경은 typed event로 들어가며 결정적인 state, projection, command 목록 또는 구조화된 실패를 반환합니다. 정책 함수와 transport는 reducer 밖에서 실행됩니다.
+
+정렬이나 필터를 현재 화면의 배열에 적용할 수도 있고, 같은 query descriptor를 서버로 보내 새 page/window를 받아올 수도 있습니다. Tabular가 두 방식을 구분하지 않기 때문에 client source에서 원격 source로 옮겨도 component 구조와 선택·cursor 계약은 유지됩니다.
 
 ## 응용 프로그램이 책임지는 것
 
