@@ -69,8 +69,4 @@ const submission = defineFormSubmission({
 | 앱 컴포넌트를 `FormField`와 연결하기 | [사용자 정의 컨트롤](./form/custom-controls) |
 | hydration 문제 없이 서버 렌더링하기 | [SSR과 hydration](./form/ssr) |
 
-## HTML이 기반입니다
-
-Form은 네이티브 `name`, `form`, `required`, `disabled`, `readonly`, 파일, checkbox, radio, submitter, action, method, encoding, reset 동작을 유지합니다. HTML이 이미 알맞은 상호작용을 제공하면 네이티브 컨트롤을 우선 사용하고, 더 풍부한 접근 가능한 상호작용이 필요하면 Sectile 컴포넌트를 사용하세요. 한 화면에서 두 종류를 함께 써도 됩니다.
-
 모든 Vue 파트, prop, slot, 공개 타입은 [Form 컴포넌트 레퍼런스](/ko/components/form)에서 확인할 수 있습니다.

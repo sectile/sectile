@@ -69,8 +69,4 @@ const submission = defineFormSubmission({
 | Make an application component work inside `FormField` | [Custom controls](./form/custom-controls) |
 | Render forms on the server without hydration surprises | [SSR and hydration](./form/ssr) |
 
-## HTML remains the foundation
-
-Form preserves native `name`, `form`, `required`, `disabled`, `readonly`, file, checkbox, radio, submitter, action, method, encoding, and reset behavior. Prefer a native control when HTML already provides the interaction. Use a Sectile component when you need a richer accessible interaction, and compose both when that best fits the screen.
-
 The [Form component reference](/components/form) lists every Vue part, prop, slot, and exported type.
