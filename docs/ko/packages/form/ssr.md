@@ -66,4 +66,4 @@ description: 서버 렌더링 폼을 제어 값과 Teleport를 포함해 안정�
 - Teleport target이 초기 문서에 존재합니다.
 - 클라이언트 전용 검증이나 서버 요청은 hydration 뒤 시작합니다.
 
-기본 구성은 [Vue 폼](./vue), 제어 값 소유권은 [제출과 초기화](./submission)를 참고하세요.
+기본 구성은 [Vue 폼](./vue), 제어 값 소유권은 [제출과 값 기준 관리](./submission)를 참고하세요.

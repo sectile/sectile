@@ -1,54 +1,13 @@
+---
+title: Form API
+description: Form의 Vue 컴포넌트, prop, slot, 이벤트, 함수와 공개 타입을 확인합니다.
+---
 <!-- scripts/generate-component-pages.mjs에서 생성함. -->
-# Form
+# Form API
 
-네이티브 컨트롤과 Sectile 컴포넌트로 접근 가능한 폼을 만들고 검증, 제출, 초기화를 함께 처리합니다.
+Form의 Vue 컴포넌트, prop, slot, 이벤트, 함수와 공개 타입을 확인합니다.
 
-## 용법
-
-### 기본 구성
-
-Form은 네이티브 `<form>`을 기반으로 입력의 레이블, 설명, 오류, 제출, 초기화를 연결합니다.
-
-| 파트 | 용도 |
-| --- | --- |
-| `FormRoot` | 네이티브 form 속성, 검증 설정, 제출, 폼 상태 |
-| `FormField` | 레이블이 있는 값 하나, 그룹 또는 복합 컨트롤 |
-| `FormLabel` | 화면에 표시하는 레이블 또는 그룹 범례 |
-| `FormDescription` | 필드와 연결된 도움말 |
-| `FormMessage` | 현재 필드 오류 |
-| `FormSummary` | 폼 전체 오류 요약 |
-| `FormReset` / `FormSubmit` | 네이티브 초기화·제출 버튼 |
-
-네이티브 `input`, `select`, `textarea`와 Sectile 입력 컴포넌트를 같은 폼에서 자유롭게 섞을 수 있습니다.
-
-### 기본 폼
-
-Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다.
-
-<ComponentExample component="form" scenario="profile" title="기본 폼" description="Sectile 필드와 입력으로 폼을 구성하고 중첩 값을 제출합니다." :index="0" />
-
-### 다음 단계
-
-- 네이티브 입력, Sectile 컴포넌트, 그룹, 중첩 이름은 [필드와 컨트롤](/ko/packages/form/fields)에서 설명합니다.
-- 브라우저 제약 조건, schema, 서버 오류는 [검증과 오류](/ko/packages/form/validation)에서 설명합니다.
-- `defineFormSubmission()`, 파일, 비동기 상태, reset은 [제출과 초기화](/ko/packages/form/submission)에서 설명합니다.
-- 앱에서 만든 입력을 연결하는 방법과 `useTemplateRef()`/`shallowRef()` 선택은 [사용자 정의 컨트롤](/ko/packages/form/custom-controls)에서 설명합니다.
-
-`FormField`에 쓴 `name`, `required`, `disabled`, `readonly`는 하위 컨트롤의 기본값입니다. 같은 속성을 입력에 직접 지정하면 입력의 값이 우선합니다.
-
-## 예시
-
-### 입력 컴포넌트 조합
-
-FormField가 공통 메타데이터를 제공하는 Select와 Switch를 함께 사용합니다.
-
-<ComponentExample component="form" scenario="notifications" title="입력 컴포넌트 조합" description="FormField가 공통 메타데이터를 제공하는 Select와 Switch를 함께 사용합니다." :index="1" />
-
-### 중첩 필드 경로
-
-Sectile 입력을 중첩 필드 경로에 연결해 하나의 구조화된 제출로 구성합니다.
-
-<ComponentExample component="form" scenario="team-invite" title="중첩 필드 경로" description="Sectile 입력을 중첩 필드 경로에 연결해 하나의 구조화된 제출로 구성합니다." :index="2" />
+[Form 개요로 돌아가기](/ko/packages/form)
 
 ## API
 
@@ -103,6 +62,8 @@ function useCompositeFormControl(options: {
   readonly submissions?: FormSubmissionSource;
   readonly labelMode?: FormLabelMode;
   readonly reset?: () => void;
+  readonly getValue?: () => unknown;
+  readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
 }): FormControlParticipation
 ```
 
@@ -115,7 +76,11 @@ function useFormControl(registration: FormControlRegistration): FormControlParti
 #### `useNativeInputFormControl`
 
 ```ts
-function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement | HTMLTextAreaElement | null | undefined>>, options: { readonly reset?: () => void } = {}): FormControlParticipation
+function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement | HTMLTextAreaElement | null | undefined>>, options: {
+    readonly reset?: () => void;
+    readonly getValue?: () => unknown;
+    readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
+  } = {}): FormControlParticipation
 ```
 
 ### Props
@@ -263,7 +228,14 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>dirty</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>현재 값이 초깃값과 다른지 여부입니다.</p>
+<p>현재 값이 기준값과 다른지 여부입니다.</p>
+</dd>
+</div>
+<div class="component-api-definition">
+<dt><code>reinitialize</code></dt>
+<dd>
+<div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormReinitializeAction</code></span></div>
+<p>현재 값을 새 변경 기준으로 삼고, 유지하도록 지정하지 않은 폼 상태를 초기화하는 함수입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -277,7 +249,7 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>reset</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>FormResetAction</code></span></div>
-<p>초깃값과 조작 상태로 되돌리는 함수입니다.</p>
+<p>네이티브 form reset을 실행하고 Form 상태를 비웁니다. 제어 값은 계속 애플리케이션이 관리합니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -394,7 +366,7 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 <dt><code>dirty</code></dt>
 <dd>
 <div class="component-api-definition__metadata"><span><span class="component-api-definition__label">타입</span><code>boolean</code></span></div>
-<p>현재 값이 초깃값과 다른지 여부입니다.</p>
+<p>현재 값이 기준값과 다른지 여부입니다.</p>
 </dd>
 </div>
 <div class="component-api-definition">
@@ -445,19 +417,18 @@ function useNativeInputFormControl(element: Readonly<ShallowRef<HTMLInputElement
 
 #### `FormSubmitEvent`
 
-```ts
-type FormSubmitEvent<Values extends object = Record<string, unknown>> =
-Omit<
-  DOMFormSubmitPayload<string, FormValues<Values>>,
-  'event'
-> & {
-  readonly nativeEvent: SubmitEvent;
-  readonly defaultPrevented: boolean;
-  preventDefault(): void;
-  stopPropagation(): void;
-  stopImmediatePropagation(): void;
-}
-```
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `values` | `Readonly<Values>` | 필수 |
+| `state` | `FormState<string>` | 필수 |
+| `formData` | `FormData` | 필수 |
+| `submitter` | `HTMLElement \| null` | 필수 |
+| `reinitialize` | `FormReinitializeHandler` | 필수 |
+| `nativeEvent` | `SubmitEvent` | 필수 |
+| `defaultPrevented` | `boolean` | 필수 |
+| `preventDefault` | `() => void` | 필수 |
+| `stopPropagation` | `() => void` | 필수 |
+| `stopImmediatePropagation` | `() => void` | 필수 |
 
 ### 기타 타입
 
@@ -484,6 +455,12 @@ type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0]
 ```ts
 type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>
 ```
+
+#### `FormReinitializeOptions`
+
+| 이름 | 타입 | 필수 |
+| --- | --- | --- |
+| `preserve` | `{ readonly touched?: boolean; readonly validation?: boolean; readonly submission?: boolean; } \| undefined` | — |
 
 #### `FormSchema`
 
@@ -629,7 +606,30 @@ type FormReplaceIssuesAction =
 type FormResetAction = () => void
 ```
 
+#### `FormReinitializeAction`
+
+```ts
+type FormReinitializeAction = (options?: FormReinitializeOptions) => void
+```
+
 #### `FormRootComponent`
+
+```ts
+interface FormRootComponent {
+  new <Input extends object = Record<string, unknown>, Output extends object = Input>(props: FormRootPublicProps<Input, Output>): {
+    $props: FormRootPublicProps<Input, Output>;
+    $slots: {
+      default?: (props: FormRootSlotProps) => VNodeChild;
+    };
+    submitStarted: FormSubmitStartedAction;
+    submitSucceeded: FormSubmitSucceededAction;
+    submitFailed: FormSubmitFailedAction;
+    replaceIssues: FormReplaceIssuesAction;
+    reinitialize: FormReinitializeAction;
+    reset: FormResetAction;
+  };
+}
+```
 
 #### `FormControlCapabilities`
 
@@ -663,6 +663,8 @@ type FormResetAction = () => void
 | `capabilities` | `FormControlCapabilities` | — |
 | `explicit` | `readonly FormMetadataAttribute[]` | — |
 | `reset` | `() => void` | — |
+| `getValue` | `(() => unknown) \| undefined` | — |
+| `isValueEqual` | `((current: unknown, baseline: unknown) => boolean) \| undefined` | — |
 
 #### `FormElementSource`
 
@@ -723,78 +725,3 @@ type FormSubmissionSource =
 | readonly FormSubmissionRegistration[]
   | (() => readonly FormSubmissionRegistration[])
 ```
-
-## 파트
-
-공통 범위: <code class="component-scope-token">[data-scope="form"]</code>. 컴포넌트 내부로 스타일을 제한할 때 파트 선택자와 함께 사용합니다.
-
-<div class="component-parts-table">
-<table>
-<thead>
-<tr><th scope="col">파트</th><th scope="col">선택자</th><th scope="col">역할</th><th scope="col">추가 속성</th></tr>
-</thead>
-<tbody>
-<tr>
-  <td><code class="component-part-token">root</code></td>
-  <td><code>[data-part="root"]</code></td>
-  <td>컴포넌트 경계와 내부 파트를 묶습니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">field</code></td>
-  <td><code>[data-part="field"]</code></td>
-  <td>Field 스타일 영역을 노출합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">label</code></td>
-  <td><code>[data-part="label"]</code></td>
-  <td>컴포넌트 조작부의 레이블입니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">description</code></td>
-  <td><code>[data-part="description"]</code></td>
-  <td>연결된 콘텐츠나 결정 내용을 설명합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">message</code></td>
-  <td><code>[data-part="message"]</code></td>
-  <td>Message 스타일 영역을 노출합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">summary</code></td>
-  <td><code>[data-part="summary"]</code></td>
-  <td>Summary 스타일 영역을 노출합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">reset</code></td>
-  <td><code>[data-part="reset"]</code></td>
-  <td>네이티브 폼 값과 연결된 폼 상태를 초기화합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-<tr>
-  <td><code class="component-part-token">submit</code></td>
-  <td><code>[data-part="submit"]</code></td>
-  <td>연결된 검증을 거쳐 네이티브 폼을 제출합니다.</td>
-  <td><span aria-label="None">—</span></td>
-</tr>
-</tbody>
-</table>
-</div>
-
-## 키보드 동작
-
-| 키 | 동작 |
-| --- | --- |
-| <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> | 네이티브 폼 컨트롤을 문서 순서대로 이동합니다. |
-| <kbd>Enter</kbd> | 제출 가능한 네이티브 컨트롤에서 폼을 제출하고 검증합니다. |
-
-## 접근성
-
-네이티브 폼과 컨트롤의 의미를 유지하면서 레이블·설명·오류 메시지·오류 요약이 검증 상태를 전달하고 첫 번째 잘못된 컨트롤로 포커스를 옮깁니다.
-
-[관련 WAI-ARIA 패턴](https://html.spec.whatwg.org/multipage/forms.html#forms)에서 호스트 접근성 규칙을 확인할 수 있습니다.

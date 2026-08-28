@@ -7,7 +7,6 @@ const exampleScenarios = Object.freeze({
   combobox: ['ime'],
   'date-time-field': ['cross-midnight'],
   feed: ['load-after', 'load-before'],
-  form: ['notifications', 'team-invite'],
   pagination: ['long-range'],
   popover: ['collision'],
   'quantity-field': ['calculator', 'compound'],

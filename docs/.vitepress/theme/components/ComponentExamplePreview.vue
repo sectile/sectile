@@ -14,7 +14,6 @@ const DateRangeFieldCase = defineAsyncComponent(() => import('./DateRangeFieldCa
 const DisclosureCase = defineAsyncComponent(() => import('./DisclosureCase.vue'));
 const EditableCase = defineAsyncComponent(() => import('./EditableCase.vue'));
 const FeedCase = defineAsyncComponent(() => import('./FeedCase.vue'));
-const FormCase = defineAsyncComponent(() => import('./FormCase.vue'));
 const ListboxCase = defineAsyncComponent(() => import('./ListboxCase.vue'));
 const MeterCase = defineAsyncComponent(() => import('./MeterCase.vue'));
 const MeterGroupCase = defineAsyncComponent(() => import('./MeterGroupCase.vue'));
@@ -79,7 +78,6 @@ function resolveExample(): ResolvedExample {
     case 'disclosure': return specialized(DisclosureCase, { label: 'Advanced deployment options', initialValue: initialOn, controlled, preview: props.preview });
     case 'text': return specialized(TextCase, { initialValue: props.scenario === 'unicode-selection' ? '한글과 emoji 👋' : 'Sectile', multiline: props.scenario === 'multiline', controlled, preview: props.preview });
     case 'editable': return specialized(EditableCase, { initialValue: 'release-candidate', validated: props.scenario === 'validated', controlled });
-    case 'form': return specialized(FormCase, { scenario: props.scenario });
     case 'feed': return specialized(FeedCase, { scenario: props.scenario });
     case 'tree-grid': return specialized(TreeGridCase, { scenario: props.scenario });
     case 'tree-view': return specialized(TreeViewCase, { scenario: props.scenario });

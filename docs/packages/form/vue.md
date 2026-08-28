@@ -95,14 +95,71 @@ The example deliberately mixes a Sectile text field with a native `<select>`. Bo
 Use the root slot for UI that depends on the whole form. Inputs continue to own their values.
 
 ```vue
-<FormRoot v-bind="submission" v-slot="{ dirty, valid, submissionStatus }">
+<FormRoot v-bind="submission" v-slot="{ dirty, touched, valid, submissionStatus }">
   <!-- fields -->
   <p v-if="dirty">You have unsaved changes.</p>
+  <p v-if="touched && !dirty">The form was reviewed without changing its values.</p>
   <FormSubmit :disabled="submissionStatus === 'submitting'">
     {{ submissionStatus === 'submitting' ? 'Saving…' : 'Save' }}
   </FormSubmit>
 </FormRoot>
 ```
+
+`dirty` compares the current participant values with the form's baseline. It becomes `true` after a real value change and returns to `false` when the value returns to that baseline. `touched` records interaction independently, so it can remain `true` after `dirty` becomes `false`.
+
+## Establish a new baseline
+
+Call `reinitialize()` when the values currently on screen should count as the new starting values. It does not mutate inputs.
+
+```vue
+<FormRoot v-bind="submission" v-slot="{ dirty, reinitialize }">
+  <!-- fields -->
+  <p v-if="dirty">You have unsaved changes.</p>
+  <button type="button" @click="reinitialize()">Accept current values</button>
+</FormRoot>
+```
+
+`FormRoot` also exposes `reinitialize()` through its component ref:
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue'
+
+const form = useTemplateRef('form')
+const acceptCurrentValues = () => form.value?.reinitialize()
+</script>
+
+<template>
+  <FormRoot ref="form" v-bind="submission">
+    <!-- fields -->
+  </FormRoot>
+  <button type="button" @click="acceptCurrentValues">Accept current values</button>
+</template>
+```
+
+For the usual save flow, call the submission event's `reinitialize()` instead. It is committed only after the managed submission succeeds:
+
+```ts
+const submission = defineFormSubmission({
+  onSubmit: async ({ formData, reinitialize }) => {
+    await saveProfile(formData)
+    reinitialize()
+  },
+})
+```
+
+See [submission, reset, and reinitialization](./submission) for preservation options and the distinction from native reset.
+
+## Unsaved-change warnings and drafts
+
+Form reports whether values differ through `dirty`; the application decides what to do with that information.
+
+- Use it in a router leave guard for client-side navigation.
+- Use it in a `beforeunload` listener for refresh, tab close, or browser exit. Browsers control the prompt text.
+- Persist drafts in the application's chosen storage, then restore those values through the controls that own them.
+- After a save or restored draft is accepted, call `reinitialize()` to make those current values the new baseline.
+
+Form does not install global navigation listeners or choose a storage policy, because both depend on the application's router, data sensitivity, expiry rules, and multi-tab behavior.
 
 ## Attribute precedence
 

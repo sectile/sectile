@@ -1,0 +1,15 @@
+{
+  "id": "form",
+  "family": "editing",
+  "standard": "https://html.spec.whatwg.org/multipage/forms.html#forms",
+  "capabilities": [
+    "field-registration",
+    "metadata-coordination",
+    "issue-coordination",
+    "submit-lifecycle",
+    "reset-coordination",
+    "first-invalid-focus",
+    "issue-summary",
+    "native-form-semantics"
+  ]
+}

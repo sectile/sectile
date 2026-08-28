@@ -40,6 +40,21 @@ description: 네이티브 입력, Sectile 컴포넌트, 그룹, 중첩 이름, �
 
 Sectile 컨트롤은 기존의 제어·비제어 API를 그대로 유지합니다. `FormField`로 감싸면 폼 메타데이터와 오류 표시가 추가되지만 `v-model`이나 `defaultValue`를 대체하지 않습니다.
 
+## 필드별 변경 상태
+
+값 하나의 상태에 따라 UI를 바꾸려면 `FormField` 슬롯에서 `dirty`와 `touched`를 읽습니다.
+
+```vue
+<FormField name="email" v-slot="{ dirty, touched }">
+  <FormLabel>이메일 주소</FormLabel>
+  <TextField type="email" />
+  <span v-if="dirty">변경됨</span>
+  <span v-else-if="touched">확인함</span>
+</FormField>
+```
+
+`dirty`는 컨트롤의 현재 값과 기준값을 비교하며, 값을 기준으로 되돌리면 다시 해제됩니다. `touched`는 조작 여부를 별도로 기록합니다. `FormField`에 참여하는 네이티브 컨트롤과 Sectile 컨트롤에는 같은 규칙이 적용됩니다.
+
 ## 중첩 필드 이름
 
 제출 결과에 객체나 배열 구조가 필요하면 segment 배열을 사용합니다.
@@ -84,7 +99,7 @@ Checkbox 그룹도 같은 구조를 사용합니다. 특정 선택지 자체가 
 </FormRoot>
 ```
 
-연결된 레이블·설명·오류, 필드 상태, 첫 오류 포커스가 필요하면 `FormField`를 사용하세요.
+연결된 레이블·설명·오류, 필드 상태, 첫 오류 포커스가 필요하면 `FormField`를 사용하세요. `FormField` 없이 이름만 지정한 컨트롤도 `FormData`에는 들어가지만 participant는 아니므로 `dirty`와 `touched` 계산에는 포함되지 않습니다.
 
 ## Form 요소 밖의 컨트롤
 

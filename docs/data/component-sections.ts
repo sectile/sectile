@@ -11,7 +11,6 @@ export const componentSections = [
     componentIds: [
       'color-picker',
       'editable',
-      'form',
       'number-field',
       'pin-input',
       'quantity-field',

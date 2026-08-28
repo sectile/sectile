@@ -54,18 +54,18 @@ participant로 지정하지 않은 이름 있는 컨트롤도 네이티브 `Form
 
 ## 네이티브 제출과 관리형 제출
 
-브라우저가 form의 `action`, `method`, `enctype`, `target`, 제출 버튼 override를 그대로 처리해야 하면 `onSubmit`을 생략합니다.
+브라우저가 form의 `action`, `method`, `enctype`, `target`과 제출 버튼에서 덮어쓴 속성을 그대로 처리해야 하면 `onSubmit`을 생략합니다.
 
 ```ts
 const form = createForm({ form: formElement })
 ```
 
-JavaScript에서 저장하려면 `onSubmit`을 전달합니다. callback은 원본 `SubmitEvent`, 네이티브 `FormData`, 구조화된 `values`, submitter를 받습니다.
+JavaScript에서 저장하려면 `onSubmit`을 전달합니다. 제출 함수는 원본 `SubmitEvent`, 네이티브 `FormData`, 구조화된 `values`, submitter를 받습니다.
 
 ```ts
 const form = createForm({
   form: formElement,
-  onSubmit: async ({ formData, submitter }) => {
+  onSubmit: async ({ formData, submitter, reinitialize }) => {
     await fetch('/account', {
       method: 'POST',
       body: formData,
@@ -73,9 +73,76 @@ const form = createForm({
         ? { 'X-Save-Mode': 'draft' }
         : undefined,
     })
+    reinitialize()
   },
 })
 ```
+
+제출 함수에서 호출한 `reinitialize()`는 관리형 제출이 성공한 뒤에만 반영됩니다. 함수가 예외를 던지거나 Promise가 거부되거나 `{ ok: false }`를 반환하면 기존 변경 기준이 유지됩니다.
+
+## dirty와 touched
+
+폼 상태에 따라 앱 UI를 바꿔야 한다면 상태 변경을 구독합니다.
+
+```ts
+const unsubscribe = form.subscribe(({ state }) => {
+  unsavedBadge.hidden = !state.dirty
+})
+```
+
+`dirty`는 하나 이상의 participant 값이 기준값과 다르다는 뜻입니다. 모든 값을 원래대로 돌리면 다시 `false`가 됩니다. `touched`는 조작 여부를 따로 기록하므로 `dirty`가 `false`여도 `true`로 남을 수 있습니다.
+
+네이티브 input, textarea, select, checkbox, radio, file input은 값을 자동으로 기록합니다. 사용자 정의 participant는 값과 비교 규칙을 직접 제공할 수 있습니다.
+
+```ts
+interface RangeSnapshot {
+  readonly start: number
+  readonly end: number
+}
+
+const isRangeSnapshot = (value: unknown): value is RangeSnapshot => (
+  typeof value === 'object'
+  && value !== null
+  && 'start' in value
+  && 'end' in value
+)
+
+const unregister = form.registerParticipant({
+  id: 'range',
+  element: rangeRoot,
+  getValue: () => ({ start: range.start, end: range.end }),
+  isValueEqual: (current, baseline) => (
+    isRangeSnapshot(current)
+    && isRangeSnapshot(baseline)
+    && current.start === baseline.start
+    && current.end === baseline.end
+  ),
+})
+```
+
+사용자 정의 컨트롤이 네이티브 `input`이나 `change` 이벤트 없이 바뀌었다면 `refreshParticipant('range')`를 호출하세요.
+
+## 현재 값을 새 기준으로 삼기
+
+`reinitialize()`는 컨트롤 값을 바꾸지 않고 모든 participant의 현재 값을 새 기준으로 삼습니다.
+
+```ts
+form.reinitialize()
+```
+
+기본값으로 조작 기록, 검증 상태, 제출 상태도 함께 초기화됩니다. 필요한 상태만 유지할 수 있습니다.
+
+```ts
+form.reinitialize({
+  preserve: {
+    touched: true,
+    validation: true,
+    submission: true,
+  },
+})
+```
+
+컨트롤을 기본값으로 되돌리려면 `reset()`, 화면의 현재 값을 유지한 채 저장된 상태로 확정하려면 `reinitialize()`를 사용하세요. 전체 상태 계약은 [제출과 값 기준 관리](./submission)에서 설명합니다.
 
 ## 동적 컨트롤
 
@@ -91,4 +158,4 @@ const unregister = form.registerParticipant({
 unregister()
 ```
 
-검증 callback은 [검증과 오류](./validation), 비동기 결과와 서버 오류는 [제출과 초기화](./submission)에서 이어서 설명합니다.
+검증 함수는 [검증과 오류](./validation), 비동기 결과와 서버 오류는 [제출과 값 기준 관리](./submission)에서 이어서 설명합니다.

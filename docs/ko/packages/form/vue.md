@@ -92,17 +92,74 @@ const submission = defineFormSubmission({
 
 ## 슬롯에서 폼 상태 읽기
 
-폼 전체 상태에 따라 달라지는 UI에는 root 슬롯을 사용합니다. 입력값은 계속 각 입력이 소유합니다.
+폼 전체 상태에 따라 달라지는 UI에는 `FormRoot` 슬롯을 사용합니다. 입력값은 계속 각 입력이 소유합니다.
 
 ```vue
-<FormRoot v-bind="submission" v-slot="{ dirty, valid, submissionStatus }">
+<FormRoot v-bind="submission" v-slot="{ dirty, touched, valid, submissionStatus }">
   <!-- fields -->
   <p v-if="dirty">저장하지 않은 변경 사항이 있습니다.</p>
+  <p v-if="touched && !dirty">값을 바꾸지 않고 폼을 확인했습니다.</p>
   <FormSubmit :disabled="submissionStatus === 'submitting'">
     {{ submissionStatus === 'submitting' ? '저장 중…' : '저장' }}
   </FormSubmit>
 </FormRoot>
 ```
+
+`dirty`는 한 번이라도 수정했는지를 기록하지 않습니다. 현재 값이 폼의 기준값과 다른지만 비교하므로, 값을 바꿨다가 원래대로 돌리면 다시 `false`가 됩니다. `touched`는 조작 여부를 따로 기록하므로 이때도 `true`로 남을 수 있습니다.
+
+## 현재 값을 새 기준으로 삼기
+
+화면의 현재 값을 새 출발점으로 확정하려면 `reinitialize()`를 호출합니다. 입력값 자체는 바꾸지 않습니다.
+
+```vue
+<FormRoot v-bind="submission" v-slot="{ dirty, reinitialize }">
+  <!-- fields -->
+  <p v-if="dirty">저장하지 않은 변경 사항이 있습니다.</p>
+  <button type="button" @click="reinitialize()">현재 값을 기준으로 지정</button>
+</FormRoot>
+```
+
+`FormRoot`의 컴포넌트 ref에서도 `reinitialize()`를 호출할 수 있습니다.
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue'
+
+const form = useTemplateRef('form')
+const acceptCurrentValues = () => form.value?.reinitialize()
+</script>
+
+<template>
+  <FormRoot ref="form" v-bind="submission">
+    <!-- fields -->
+  </FormRoot>
+  <button type="button" @click="acceptCurrentValues">현재 값을 기준으로 지정</button>
+</template>
+```
+
+일반적인 저장 흐름에서는 제출 이벤트가 제공하는 `reinitialize()`를 호출하는 편이 간단합니다. 관리형 제출이 성공했을 때만 새 기준이 반영됩니다.
+
+```ts
+const submission = defineFormSubmission({
+  onSubmit: async ({ formData, reinitialize }) => {
+    await saveProfile(formData)
+    reinitialize()
+  },
+})
+```
+
+상태 유지 옵션과 네이티브 reset과의 차이는 [제출과 값 기준 관리](./submission)에서 확인하세요.
+
+## 이탈 경고와 작성 중 데이터 보관
+
+Form은 값이 기준과 다른지를 `dirty`로 알려주고, 그다음 행동은 애플리케이션에 맡깁니다.
+
+- CSR 이동은 사용하는 라우터의 이동 차단 기능에서 `dirty`를 확인합니다.
+- 새로고침, 탭 닫기, 브라우저 종료는 `beforeunload` 이벤트 처리 함수에서 다룹니다. 경고 문구는 브라우저가 결정합니다.
+- 작성 중 데이터는 앱에서 선택한 저장소에 보관한 뒤, 값을 소유한 각 컨트롤을 통해 복원합니다.
+- 저장하거나 복원한 값을 확정하면 `reinitialize()`로 현재 값을 새 기준으로 삼습니다.
+
+Form은 전역 이동 감시나 저장소 정책을 직접 설치하지 않습니다. 라우터 종류뿐 아니라 데이터 민감도, 보관 기간, 여러 탭 사이의 충돌 처리까지 앱마다 다르기 때문입니다.
 
 ## 속성 우선순위
 

@@ -316,7 +316,7 @@ const enSlots = Object.freeze({
   controlId: 'ID assigned to the semantic control.', coordinates: 'Current coordinates in the active color model.', count: 'Number of values in the collection.',
   cssColor: 'Current color serialized for CSS.', current: 'Whether this item represents the current position.', dates: 'Dates projected by the active view.',
   depth: 'Depth of the current hierarchical item.', describedBy: 'Space-separated IDs that describe the control.', descriptionId: 'ID assigned to field help text.',
-  dirty: 'Whether the current value differs from its initial value.', dismiss: 'Dismisses one notification.', dismissAll: 'Dismisses every notification.',
+  dirty: 'Whether the current value differs from its baseline.', dismiss: 'Dismisses one notification.', dismissAll: 'Dismisses every notification.',
   displayUnit: 'Unit currently used for presentation.', draft: 'Current uncommitted input text.', editMode: 'Current editing mode.', editing: 'Whether editing is active.',
   endText: 'Formatted text for the range end value.', expanded: 'Whether descendants are visible.', expandedValue: 'Values whose descendants are visible.', expandedValues: 'Values whose descendants are visible.',
   format: 'Current color format.', highlighted: 'Whether this item is highlighted for interaction.', highlightedValue: 'Value currently highlighted for interaction.',
@@ -331,7 +331,7 @@ const enSlots = Object.freeze({
   path: 'Current selected path.', pause: 'Pauses timer updates.', paused: 'Whether automatic updates are paused.', pending: 'Whether a request is currently pending.',
   percentage: 'Current value expressed as a percentage of its range.', percentages: 'Percentage position for each thumb.', pressed: 'Whether the toggle is pressed.',
   remaining: 'Unallocated value remaining before the shared maximum.', segments: 'Ordered segments projected from the shared range.', startPercentage: 'Segment start expressed as a percentage of the shared range.', endPercentage: 'Segment end expressed as a percentage of the shared range.', total: 'Sum of all segment values.',
-  progress: 'Completion progress from 0 to 1.', range: 'Current start and end values.', replaceIssues: 'Replaces validation issues for one source.',
+  progress: 'Completion progress from 0 to 1.', range: 'Current start and end values.', reinitialize: 'Adopts the current values as the new dirty baseline and resets form metadata unless preserved.', replaceIssues: 'Replaces validation issues for one source.',
   reset: 'Restores the initial value and interaction state.', restart: 'Restarts timing from the configured initial value.', resume: 'Resumes a paused timer.',
   requestGeneration: 'Generation of the current or most recently issued window request.', revision: 'Revision of the current state snapshot.', rowIndex: 'Zero-based row position.', rows: 'Rows projected by the active view.', running: 'Whether the timer is currently running.',
   selected: 'Whether this item is selected.', selectedValues: 'Current selected values.', start: 'Starts timer updates.', startText: 'Formatted text for the range start value.',
@@ -354,7 +354,7 @@ const koSlots = Object.freeze({
   columns: '현재 표시 중인 단계별 선택 열입니다.', complete: '필요한 모든 문자 또는 단계가 완료됐는지 여부입니다.', completed: '타이머가 목표에 도달했는지 여부입니다.',
   controlId: '시맨틱 컨트롤에 지정한 ID입니다.', coordinates: '현재 색상 모델의 좌표입니다.', count: '컬렉션의 값 개수입니다.', cssColor: 'CSS 문자열로 직렬화한 현재 색상입니다.',
   current: '현재 위치를 나타내는 항목인지 여부입니다.', dates: '현재 보기에 표시할 날짜입니다.', depth: '현재 계층 항목의 깊이입니다.',
-  describedBy: '컨트롤을 설명하는 공백 구분 ID입니다.', descriptionId: '필드 도움말에 지정한 ID입니다.', dirty: '현재 값이 초깃값과 다른지 여부입니다.',
+  describedBy: '컨트롤을 설명하는 공백 구분 ID입니다.', descriptionId: '필드 도움말에 지정한 ID입니다.', dirty: '현재 값이 기준값과 다른지 여부입니다.',
   dismiss: '알림 하나를 닫는 함수입니다.', dismissAll: '모든 알림을 닫는 함수입니다.', displayUnit: '현재 표시 단위입니다.', draft: '현재 편집 중인 입력 문자열입니다.',
   editMode: '현재 편집 상태입니다.', editing: '현재 편집 중인지 여부입니다.', endText: '범위 종료 값을 표시한 문자열입니다.', expanded: '하위 항목이 보이는지 여부입니다.',
   expandedValue: '하위 항목을 표시 중인 값입니다.', expandedValues: '하위 항목을 표시 중인 값 목록입니다.', format: '현재 색상 형식입니다.', highlighted: '조작 대상으로 강조된 항목인지 여부입니다.', highlightedValue: '조작 대상으로 강조된 현재 값입니다.',
@@ -368,7 +368,7 @@ const koSlots = Object.freeze({
   parts: '현재 값을 나눈 표시 단위입니다.', path: '현재 선택 경로입니다.', pause: '타이머 갱신을 멈추는 함수입니다.', paused: '자동 갱신이 멈춘 상태인지 여부입니다.',
   pending: '요청 처리 중인지 여부입니다.', percentage: '현재 값을 범위의 백분율로 나타낸 값입니다.', percentages: '각 핸들의 백분율 위치입니다.', pressed: '토글이 눌린 상태인지 여부입니다.',
   remaining: '공유 최댓값에서 할당량을 뺀 잔여 값입니다.', segments: '공유 범위에서 계산한 순서 있는 구간 목록입니다.', startPercentage: '공유 범위 대비 구간 시작점의 백분율입니다.', endPercentage: '공유 범위 대비 구간 끝점의 백분율입니다.', total: '모든 구간 값의 합계입니다.',
-  progress: '0부터 1까지의 완료 진행률입니다.', range: '현재 시작값과 종료값입니다.', replaceIssues: '한 출처의 검증 이슈를 바꾸는 함수입니다.',
+  progress: '0부터 1까지의 완료 진행률입니다.', range: '현재 시작값과 종료값입니다.', reinitialize: '현재 값을 새 변경 기준으로 삼고, 유지하도록 지정하지 않은 폼 상태를 초기화하는 함수입니다.', replaceIssues: '한 출처의 검증 이슈를 바꾸는 함수입니다.',
   reset: '초깃값과 조작 상태로 되돌리는 함수입니다.', restart: '설정한 초깃값에서 타이머를 다시 시작하는 함수입니다.', resume: '멈춘 타이머를 다시 시작하는 함수입니다.',
   requestGeneration: '현재 또는 가장 최근에 발급한 구간 요청의 generation입니다.', revision: '현재 상태 스냅샷의 변경 차수입니다.', rowIndex: '0부터 시작하는 행 위치입니다.', rows: '현재 보기에 표시할 행입니다.', running: '타이머가 작동 중인지 여부입니다.',
   selected: '현재 선택된 항목인지 여부입니다.', selectedValues: '현재 선택된 값입니다.', start: '타이머 갱신을 시작하는 함수입니다.', startText: '범위 시작값을 표시한 문자열입니다.',
@@ -427,6 +427,9 @@ const descriptions = Object.freeze({
 const componentDescriptions = Object.freeze({
   en: Object.freeze({
     drawer: Object.freeze({ props: Object.freeze({ side: 'Viewport edge from which the drawer opens.' }) }),
+    form: Object.freeze({ slots: Object.freeze({
+      reset: 'Runs the native form reset and clears Form state; controlled values remain application-owned.',
+    }) }),
     'meter-group': Object.freeze({ slots: Object.freeze({
       end: 'Segment end value within the shared range.',
       start: 'Segment start value within the shared range.',
@@ -434,6 +437,9 @@ const componentDescriptions = Object.freeze({
   }),
   ko: Object.freeze({
     drawer: Object.freeze({ props: Object.freeze({ side: '드로어가 열릴 화면 가장자리입니다.' }) }),
+    form: Object.freeze({ slots: Object.freeze({
+      reset: '네이티브 form reset을 실행하고 Form 상태를 비웁니다. 제어 값은 계속 애플리케이션이 관리합니다.',
+    }) }),
     'meter-group': Object.freeze({ slots: Object.freeze({
       end: '공유 범위 안에서 이 구간이 끝나는 값입니다.',
       start: '공유 범위 안에서 이 구간이 시작하는 값입니다.',

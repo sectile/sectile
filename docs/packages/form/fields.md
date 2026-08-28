@@ -40,6 +40,21 @@ A `FormField` represents one user-facing answer. Its child may be a native input
 
 Sectile controls retain their normal controlled and uncontrolled APIs. Wrapping one in `FormField` adds form metadata and error presentation; it does not replace `v-model` or `defaultValue`.
 
+## Per-field change state
+
+Read `dirty` and `touched` from a `FormField` slot when UI depends on one answer:
+
+```vue
+<FormField name="email" v-slot="{ dirty, touched }">
+  <FormLabel>Email address</FormLabel>
+  <TextField type="email" />
+  <span v-if="dirty">Changed</span>
+  <span v-else-if="touched">Reviewed</span>
+</FormField>
+```
+
+`dirty` compares the control's current value with its baseline and clears when the value returns to that baseline. `touched` records interaction separately. Native and Sectile controls follow the same rule when they participate through `FormField`.
+
 ## Nested field names
 
 Use a segment array when the submitted value should have an object or array shape.
@@ -84,7 +99,7 @@ A normal named input directly inside `FormRoot` still submits:
 </FormRoot>
 ```
 
-Use `FormField` when you also need connected labels, descriptions, errors, form state, or first-invalid focus.
+Use `FormField` when you also need connected labels, descriptions, errors, form state, or first-invalid focus. A named control without `FormField` is included in `FormData`, but it is not a participant and therefore does not contribute to `dirty` or `touched`.
 
 ## Controls outside the form element
 

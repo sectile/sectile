@@ -10,20 +10,22 @@ const props = defineProps<{
   sources: Partial<Record<Host, string>>;
   koSources?: Partial<Record<Host, string>>;
   languages?: Partial<Record<Host, string>>;
+  fixedHost?: Host;
 }>();
 
 const modes = ['view', 'code'] as const;
 const mode = ref('view');
 const { host } = useHostPreference();
 const { isKorean } = useDocsLocale();
+const activeHost = computed(() => props.fixedHost ?? host.value);
 const source = computed(() => {
-  const value = (isKorean.value ? props.koSources?.[host.value] : undefined) ?? props.sources[host.value];
+  const value = (isKorean.value ? props.koSources?.[activeHost.value] : undefined) ?? props.sources[activeHost.value];
   if (value === undefined || value.trim() === '') {
-    throw new Error(`Missing ${host.value} example source`);
+    throw new Error(`Missing ${activeHost.value} example source`);
   }
   return value;
 });
-const language = computed(() => props.languages?.[host.value] ?? (host.value === 'vue' ? 'vue' : 'ts'));
+const language = computed(() => props.languages?.[activeHost.value] ?? (activeHost.value === 'vue' ? 'vue' : 'ts'));
 </script>
 
 <template>
@@ -53,7 +55,7 @@ const language = computed(() => props.languages?.[host.value] ?? (host.value ===
       class="sectile-example__preview"
       value="view"
     >
-      <slot v-if="host !== 'terminal' || !$slots['terminal']" />
+      <slot v-if="activeHost !== 'terminal' || !$slots['terminal']" />
       <slot v-else name="terminal" />
     </TabsContent>
     <TabsContent

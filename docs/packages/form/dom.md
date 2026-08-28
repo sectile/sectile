@@ -65,7 +65,7 @@ Provide `onSubmit` when JavaScript should save the result. The callback receives
 ```ts
 const form = createForm({
   form: formElement,
-  onSubmit: async ({ formData, submitter }) => {
+  onSubmit: async ({ formData, submitter, reinitialize }) => {
     await fetch('/account', {
       method: 'POST',
       body: formData,
@@ -73,9 +73,76 @@ const form = createForm({
         ? { 'X-Save-Mode': 'draft' }
         : undefined,
     })
+    reinitialize()
   },
 })
 ```
+
+The submit payload's `reinitialize()` request is applied only after a successful managed submission. If the handler throws, rejects, or returns `{ ok: false }`, the existing dirty baseline remains.
+
+## Dirty and touched state
+
+Subscribe when application UI depends on form state:
+
+```ts
+const unsubscribe = form.subscribe(({ state }) => {
+  unsavedBadge.hidden = !state.dirty
+})
+```
+
+`dirty` means that at least one participant's current value differs from its baseline. It returns to `false` when every value returns to that baseline. `touched` records interaction separately and may stay `true` even when `dirty` is `false`.
+
+Native inputs, textareas, selects, checkboxes, radios, and file inputs are snapshotted automatically. A custom participant can describe its value and equality rules:
+
+```ts
+interface RangeSnapshot {
+  readonly start: number
+  readonly end: number
+}
+
+const isRangeSnapshot = (value: unknown): value is RangeSnapshot => (
+  typeof value === 'object'
+  && value !== null
+  && 'start' in value
+  && 'end' in value
+)
+
+const unregister = form.registerParticipant({
+  id: 'range',
+  element: rangeRoot,
+  getValue: () => ({ start: range.start, end: range.end }),
+  isValueEqual: (current, baseline) => (
+    isRangeSnapshot(current)
+    && isRangeSnapshot(baseline)
+    && current.start === baseline.start
+    && current.end === baseline.end
+  ),
+})
+```
+
+Call `refreshParticipant('range')` after a custom control changes outside a native `input` or `change` event.
+
+## Establish a new baseline
+
+`reinitialize()` adopts every participant's current value as its new baseline without changing the controls:
+
+```ts
+form.reinitialize()
+```
+
+By default it also clears touched, validation, and submission metadata. Preserve selected groups when needed:
+
+```ts
+form.reinitialize({
+  preserve: {
+    touched: true,
+    validation: true,
+    submission: true,
+  },
+})
+```
+
+Use `reset()` when controls should return to their defaults. Use `reinitialize()` when the current values should stay on screen and count as saved. See [submission, reset, and reinitialization](./submission) for the full state contract.
 
 ## Dynamic controls
 
@@ -91,4 +158,4 @@ const unregister = form.registerParticipant({
 unregister()
 ```
 
-See [validation and errors](./validation) for validation callbacks and [submission and reset](./submission) for async outcomes and server errors.
+See [validation and errors](./validation) for validation callbacks and [submission, reset, and reinitialization](./submission) for async outcomes and server errors.

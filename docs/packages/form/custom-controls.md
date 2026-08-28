@@ -67,6 +67,7 @@ const participation = useCompositeFormControl({
   focusTarget: firstButton,
   submissions: () => [{ element: submission }],
   reset: () => { value.value = 3 },
+  getValue: () => value.value,
 })
 
 provideFormControlOwner()
@@ -84,8 +85,26 @@ provideFormControlOwner()
 
 `provideFormControlOwner()` prevents nested buttons or Sectile controls from registering as separate answers for the same `FormField`.
 
+`getValue()` supplies the snapshot used for `dirty`. Return a stable primitive or an immutable value that represents the whole answer. If the control needs domain-specific equality, provide `isValueEqual()` as well:
+
+```ts
+const participation = useCompositeFormControl({
+  root,
+  getValue: () => query.value,
+  isValueEqual: (current, baseline) => (
+    typeof current === 'string'
+    && typeof baseline === 'string'
+    && current.trim() === baseline.trim()
+  ),
+})
+```
+
+Callers do not need these options for an ordinary native input. Form snapshots its value, checked state, selected options, or selected files automatically. Sectile input components also provide their value snapshot through their existing Form integration.
+
+When `reinitialize()` is called, the latest `getValue()` result becomes the new baseline. A custom `reset()` callback changes the control's value; after all reset callbacks finish, Form captures the resulting baseline.
+
 ## Usage boundary
 
 These composables do nothing when the component is used outside `FormField`; the component should continue to work normally. This makes a custom control reusable in both form and non-form contexts.
 
-For a low-level control with separate semantic, focus, validation, or multiple named submission elements, use `useFormControl()` and refer to the [Form component API](/components/form) for the complete registration options.
+For a low-level control with separate semantic, focus, validation, or multiple named submission elements, use `useFormControl()` and refer to the [Form API](./api) for the complete registration options, including `getValue` and `isValueEqual`.

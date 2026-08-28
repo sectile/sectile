@@ -5,57 +5,43 @@ description: Build accessible forms with native HTML controls, Sectile component
 
 # Form
 
-Sectile Form connects labels, descriptions, errors, validation, submission, and reset behavior across native HTML controls and Sectile components. Use it when a screen needs more than a standalone input and the fields should behave as one accessible form.
+Sectile Form coordinates the behavior that turns separate inputs into one accessible form: field metadata, validation, errors, submission, reset, and the baseline behind `dirty`. Inputs still own their values and markup.
 
-## Choose your integration
+## Try a complete form
 
-| Application | Install | Start here |
-| --- | --- | --- |
-| Vue | `pnpm add @sectile/core @sectile/form @sectile/dom @sectile/vue vue` | [Vue forms](./form/vue) |
-| Browser without Vue | `pnpm add @sectile/core @sectile/form @sectile/dom` | [DOM forms](./form/dom) |
+Edit a field and watch the form-level state change. A successful save calls `reinitialize()`, so the values on screen become the new baseline and `dirty` returns to `false`.
 
-`@sectile/form` is an optional peer of the DOM and Vue packages. Applications that do not import a Form entry point do not need to install it.
+<FormPackageExample />
 
-## A complete Vue form
+This is a real `FormRoot` using Sectile `TextField` and `Select` components. Open the Code tab for a complete Vue example you can copy.
 
-```vue
-<script setup lang="ts">
-import {
-  FormDescription,
-  FormField,
-  FormLabel,
-  FormMessage,
-  FormRoot,
-  FormSubmit,
-  FormSummary,
-  defineFormSubmission,
-} from '@sectile/vue/form'
-import { TextField } from '@sectile/vue/text'
+## Choose an integration
 
-const submission = defineFormSubmission({
-  onSubmit: async ({ formData }) => {
-    await saveProfile(formData)
-  },
-})
-</script>
+- [Vue](./form/vue)
 
-<template>
-  <FormRoot v-bind="submission">
-    <FormSummary />
+  ```sh
+  pnpm add @sectile/core @sectile/form @sectile/dom @sectile/vue vue
+  ```
 
-    <FormField name="displayName" required>
-      <FormLabel>Display name</FormLabel>
-      <TextField autocomplete="name" />
-      <FormDescription>Shown to other workspace members.</FormDescription>
-      <FormMessage />
-    </FormField>
+- [Direct DOM](./form/dom)
 
-    <FormSubmit>Save profile</FormSubmit>
-  </FormRoot>
-</template>
-```
+  ```sh
+  pnpm add @sectile/core @sectile/form @sectile/dom
+  ```
 
-`FormField` supplies shared field attributes, but the input keeps ownership of its value. Native inputs, Sectile inputs, and both together use the same form.
+Install `@sectile/form` only when using a Form entry point. Applications without Form do not need it.
+
+## What Form coordinates
+
+| Part | Responsibility |
+| --- | --- |
+| `FormRoot` | Native form behavior, validation, submission, and form-level state |
+| `FormField` | One labelled value, group, or compound control |
+| `FormLabel` / `FormDescription` | Accessible field metadata |
+| `FormMessage` / `FormSummary` | Field and form-level validation feedback |
+| `FormReset` / `FormSubmit` | Native reset and submit actions |
+
+`FormField` supplies shared attributes such as `name`, `required`, `disabled`, and `readonly`. The participating input keeps ownership of its value and can override those defaults when needed.
 
 ## Learn by task
 
@@ -65,8 +51,8 @@ const submission = defineFormSubmission({
 | Connect an existing HTML form | [DOM forms](./form/dom) |
 | Mix native inputs, Sectile components, groups, and nested names | [Fields and controls](./form/fields) |
 | Show browser, schema, application, and server errors | [Validation and errors](./form/validation) |
-| Handle files, async saves, native navigation, and reset | [Submission and reset](./form/submission) |
+| Handle files, async saves, native navigation, reset, and a new dirty baseline | [Submission, reset, and reinitialization](./form/submission) |
 | Make an application component work inside `FormField` | [Custom controls](./form/custom-controls) |
 | Render forms on the server without hydration surprises | [SSR and hydration](./form/ssr) |
 
-The [Form component reference](/components/form) lists every Vue part, prop, slot, and exported type.
+The [Form API reference](./form/api) lists every Vue component, prop, slot, event, function, and exported type.

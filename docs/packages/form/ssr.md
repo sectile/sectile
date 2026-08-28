@@ -66,4 +66,4 @@ For a custom teleported input, follow [custom controls](./custom-controls) and u
 - Teleport targets exist in the initial document.
 - Client-only validation or server requests begin after hydration.
 
-See [Vue forms](./vue) for the basic composition and [submission and reset](./submission) for controlled-value ownership.
+See [Vue forms](./vue) for the basic composition and [submission, reset, and reinitialization](./submission) for controlled-value ownership.
