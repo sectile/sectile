@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { normalizeMutationResult } from './result-normalization.mjs';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(packageRoot, '../..');
@@ -314,7 +315,7 @@ function normalizeReport(report) {
     ...report,
     baselineResults: (report.baselineResults ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
     baselineFailures: (report.baselineFailures ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
-    mutationResults: (report.mutationResults ?? []).map((result) => ({ rowProfile: result.rowProfile ?? profile, ...result })),
+    mutationResults: (report.mutationResults ?? []).map((result) => normalizeMutationResult({ rowProfile: result.rowProfile ?? profile, ...result })),
     conditions: { ...report.conditions, rowProfile: profile, rowProfiles },
   };
 }

@@ -3235,7 +3235,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -5888,7 +5888,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     },
     "failureCodes": [
       "scroll-anchor",
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -5984,7 +5984,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6082,7 +6082,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6181,7 +6181,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     },
     "failureCodes": [
       "scroll-anchor",
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6657,7 +6657,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6753,7 +6753,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6850,7 +6850,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -6950,7 +6950,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "applicationCalculatesHeight": false
     },
     "failureCodes": [
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -7083,7 +7083,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "row-gap",
       "timeout",
       "row-overlap",
-      "exception"
+      "target-position"
     ]
   },
   {
@@ -7423,17 +7423,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "middle",
-    "medianMs": 7.1,
-    "p95Ms": 8.4,
+    "medianMs": 5,
+    "p95Ms": 6.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      9.5
+      9.2,
+      96.7
     ],
-    "settledSamples": 25,
-    "correctSamples": 25,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 25,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -7444,9 +7445,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "exception"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -7519,17 +7518,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "middle",
-    "medianMs": 7.4,
-    "p95Ms": 8.5,
+    "medianMs": 4.5,
+    "p95Ms": 6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      9
+      8,
+      19.4
     ],
-    "settledSamples": 25,
-    "correctSamples": 25,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 25,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -7540,9 +7540,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "exception"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -7615,17 +7613,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "remove",
     "location": "middle",
-    "medianMs": 7.4,
-    "p95Ms": 9.1,
+    "medianMs": 4.9,
+    "p95Ms": 8.7,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      11.6
+      9.4,
+      97.5
     ],
-    "settledSamples": 25,
-    "correctSamples": 25,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 25,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -7636,9 +7635,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "exception"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -7711,17 +7708,17 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 6.8,
-    "p95Ms": 8.7,
+    "medianMs": 2.2,
+    "p95Ms": 5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      12.4
+      5.1
     ],
-    "settledSamples": 25,
-    "correctSamples": 25,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 25,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -7732,9 +7729,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "exception"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",

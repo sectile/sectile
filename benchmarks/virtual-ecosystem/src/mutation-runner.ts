@@ -22,6 +22,7 @@ import {
   type MutationOperation,
   type MutationScenario,
 } from './mutations.js';
+import { correctedTargetScroll, initialTargetScroll, targetViewportOffset } from './target-position.js';
 
 export interface MutationFailure {
   readonly severity: 'failure' | 'fatal';
@@ -72,6 +73,7 @@ export interface MutationBenchmarkFilter {
 
 type FailureCode =
   | 'exception'
+  | 'target-position'
   | 'timeout'
   | 'duplicate-id'
   | 'unexpected-id'
@@ -113,6 +115,14 @@ interface SampleOutcome {
   readonly failures: readonly MutationFailure[];
 }
 
+class MutationPreparationError extends Error {
+  readonly code = 'target-position' as const;
+
+  constructor(message: string, readonly details: Readonly<Record<string, unknown>>) {
+    super(message);
+  }
+}
+
 const QUICK_RUN = new URLSearchParams(window.location.search).has('quick');
 const mutationSearch = new URLSearchParams(window.location.search);
 const MUTATION_ROUNDS = positiveInteger(mutationSearch.get('mutation-rounds')) ?? (QUICK_RUN ? 1 : 5);
@@ -124,6 +134,7 @@ const STABLE_FAILURE_FRAMES = 8;
 const REPRODUCIBLE_FAILURE_ROUNDS = 2;
 const REPRODUCIBLE_FAILURE_SAMPLES_PER_ROUND = 10;
 const GEOMETRY_TOLERANCE_PX = 2;
+const POSITION_MAX_FRAMES = 32;
 
 export const mutationConditions = Object.freeze({
   rounds: MUTATION_ROUNDS,
@@ -379,11 +390,14 @@ async function runMountedMutationSample(
       didMutate,
       outcome: Object.freeze({ elapsedMs: null, failures: [Object.freeze({
         severity: adapter.name === 'Sectile Virtual' ? 'fatal' : 'failure',
-        code: 'exception',
+        code: error instanceof MutationPreparationError ? error.code : 'exception',
         message: error instanceof Error ? error.message : String(error),
         sample,
         scrollTop: scroller.scrollTop,
-        details: Object.freeze({ stack: error instanceof Error ? error.stack : undefined }),
+        details: Object.freeze({
+          stack: error instanceof Error ? error.stack : undefined,
+          ...(error instanceof MutationPreparationError ? error.details : {}),
+        }),
       })] }),
     });
   }
@@ -658,24 +672,23 @@ function captureAnchor(
 
 async function positionScenario(scroller: HTMLElement, scenario: MutationScenario, host: HTMLElement): Promise<void> {
   const targetID = scenario.initialItems[scenario.index]!.id;
-  if (scenario.location === 'end') {
-    for (let attempt = 0; attempt < 32; attempt += 1) {
-      scroller.scrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
-      await nextFrame();
-      const target = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
-      if (target !== null && intersectsViewport(target, scroller)) return;
-    }
-    throw new Error(`Could not position row ${scenario.index} in the viewport.`);
-  }
-  let low = 0;
-  let high = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-  let offset = scenario.location === 'start'
-    ? 0
-    : scenario.location === 'middle'
-      ? high / 2
-      : high;
-  for (let attempt = 0; attempt < 16; attempt += 1) {
+  const layout = scenario.initialLayout;
+  const desiredViewportTop = targetViewportOffset(
+    layout.heightAt(scenario.index),
+    scenario.location,
+    scroller.clientHeight,
+  );
+  const scrollGeometry = () => ({
+    targetIndex: scenario.index,
+    itemCount: scenario.initialItems.length,
+    scrollHeight: scroller.scrollHeight,
+    targetHeight: layout.heightAt(scenario.index),
+    location: scenario.location,
+    viewportHeight: scroller.clientHeight,
+  });
+  let offset = initialTargetScroll(scrollGeometry());
+  const trace: Array<Readonly<Record<string, unknown>>> = [];
+  for (let attempt = 0; attempt < POSITION_MAX_FRAMES; attempt += 1) {
     scroller.scrollTop = offset;
     scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
     await nextFrame();
@@ -683,32 +696,50 @@ async function positionScenario(scroller: HTMLElement, scenario: MutationScenari
     if (target !== null) {
       const targetRect = target.getBoundingClientRect();
       const viewport = scroller.getBoundingClientRect();
-      const centerDelta = targetRect.top - viewport.top - Math.max(0, (scroller.clientHeight - targetRect.height) / 2);
-      if (Math.abs(centerDelta) <= GEOMETRY_TOLERANCE_PX) return;
-      scroller.scrollTop += centerDelta;
-      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
-      await nextFrame();
-      const centered = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
-      if (centered !== null && intersectsViewport(centered, scroller)) return;
-    }
-    const visibleIndices = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'))
-      .map((row) => Number(row.dataset['index']))
-      .filter(Number.isInteger);
-    if (visibleIndices.length === 0) {
-      high = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      offset = Math.min(high, Math.max(0, offset));
+      const targetViewportTop = targetRect.top - viewport.top;
+      if (intersectsViewport(target, scroller) && Math.abs(targetViewportTop - desiredViewportTop) <= GEOMETRY_TOLERANCE_PX) return;
+      offset = correctedTargetScroll({
+        ...scrollGeometry(),
+        referenceIndex: scenario.index,
+        referenceViewportTop: targetViewportTop,
+        currentScrollTop: scroller.scrollTop,
+        location: scenario.location,
+        viewportHeight: scroller.clientHeight,
+      });
       continue;
     }
-    const minimum = Math.min(...visibleIndices);
-    const maximum = Math.max(...visibleIndices);
-    if (scenario.index < minimum) high = Math.min(high, offset);
-    else if (scenario.index > maximum) low = Math.max(low, offset);
-    else return;
-    const currentMaximum = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-    high = Math.min(currentMaximum, Math.max(low, high));
-    offset = (low + high) / 2;
+    const viewport = scroller.getBoundingClientRect();
+    const visibleRows = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'))
+      .map((row) => ({ row, index: Number(row.dataset['index']) }))
+      .filter((entry) => Number.isInteger(entry.index));
+    trace.push(Object.freeze({
+      attempt,
+      requestedScrollTop: Math.round(offset),
+      actualScrollTop: Math.round(scroller.scrollTop),
+      scrollHeight: scroller.scrollHeight,
+      minimumIndex: visibleRows.length === 0 ? null : Math.min(...visibleRows.map((entry) => entry.index)),
+      maximumIndex: visibleRows.length === 0 ? null : Math.max(...visibleRows.map((entry) => entry.index)),
+    }));
+    if (trace.length > 8) trace.shift();
+    const reference = visibleRows
+      .sort((left, right) => Math.abs(left.index - scenario.index) - Math.abs(right.index - scenario.index))[0];
+    if (reference === undefined) {
+      offset = initialTargetScroll(scrollGeometry());
+      continue;
+    }
+    offset = correctedTargetScroll({
+      ...scrollGeometry(),
+      referenceIndex: reference.index,
+      referenceViewportTop: reference.row.getBoundingClientRect().top - viewport.top,
+      currentScrollTop: scroller.scrollTop,
+      location: scenario.location,
+      viewportHeight: scroller.clientHeight,
+    });
   }
-  throw new Error(`Could not position row ${scenario.index} in the viewport.`);
+  throw new MutationPreparationError(
+    `Could not position row ${scenario.index} in the viewport.`,
+    Object.freeze({ trace: Object.freeze(trace) }),
+  );
 }
 
 function intersectsViewport(row: HTMLElement, scroller: HTMLElement): boolean {

@@ -64,18 +64,15 @@ const copy = computed(() => isKorean.value ? {
   mutationLegend: ['안정화 중앙값', '느린 5% 경계', '복구 중앙값', '복구 느린 5% 경계'],
   tailLegend: 'p95 초과 표본',
   initialRenderLabel: '초기 렌더',
-  unsupported: '이 조건은 높이 예상값 없이 시작할 수 없음',
+  unsupported: '초기 높이값이 필요한 API입니다.',
   stableFailure: '정상 화면에 도달하지 못했습니다.',
   baselineFailure: (failed: number, total: number) => `${total}회 중 ${failed}회에서 올바른 초기 화면을 만들지 못했습니다.`,
-  recoveredFailure: (recovered: number, total: number) => recovered === total
-    ? `${total}번 모두 처리 중 화면 오류가 발생했지만 최종 화면은 정상으로 돌아왔습니다.`
-    : `${total}번 중 ${recovered}번에서 화면 오류가 발생했지만 최종 화면은 정상으로 돌아왔습니다.`,
-  permanentFailure: (failed: number, total: number) => failed === total
-    ? `${total}번 모두 정상 화면에 도달하지 못했습니다.`
-    : `${total}번 중 ${failed}번은 정상 화면에 도달하지 못했습니다.`,
-  earlyStop: (actual: number, planned: number) => `같은 오류가 두 번의 독립 실행에서 각각 10회 연속 재현되어, 예정된 ${planned}회 중 ${actual}회에서 측정을 마쳤습니다.`,
-  failureSummary: (failures: string) => `오류 유형은 ${failures}입니다.`,
-  failureCode: { 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
+  recoveredFailure: (recovered: number, total: number) => `${total}회 중 ${recovered}회는 화면 오류 후 복구됐습니다.`,
+  permanentFailure: (failed: number, total: number, failures: string) => failed === total
+    ? `${total}회 모두 ${failures} 오류로 정상 화면에 도달하지 못했습니다.`
+    : `${total}회 중 ${failed}회는 ${failures} 오류로 정상 화면에 도달하지 못했습니다.`,
+  earlyStop: (actual: number, planned: number) => `동일 오류가 재현되어 ${planned}회 중 ${actual}회에서 종료했습니다.`,
+  failureCode: { exception: '실행', 'target-position': '대상 행 배치', 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
   criteriaTitle: '이 그래프의 측정 기준',
   criteriaLabel: {
@@ -135,18 +132,15 @@ const copy = computed(() => isKorean.value ? {
   mutationLegend: ['Settle median', 'Slower 5% boundary', 'Recovery median', 'Recovery slower 5% boundary'],
   tailLegend: 'Samples above p95',
   initialRenderLabel: 'Initial render',
-  unsupported: 'This condition cannot start without a height estimate',
+  unsupported: 'This API requires an initial height value.',
   stableFailure: 'The screen did not reach a correct stable state.',
   baselineFailure: (failed: number, total: number) => `${failed} of ${total} rounds failed to produce a correct initial screen.`,
-  recoveredFailure: (recovered: number, total: number) => recovered === total
-    ? `All ${total} runs showed a visual error, but the final screen recovered.`
-    : `${recovered} of ${total} runs showed a visual error, but the final screen recovered.`,
-  permanentFailure: (failed: number, total: number) => failed === total
-    ? `All ${total} runs failed to reach a correct screen.`
-    : `${failed} of ${total} runs failed to reach a correct screen.`,
-  earlyStop: (actual: number, planned: number) => `The same error repeated ten times in each of two independent runs, so measurement stopped after ${actual} of ${planned} planned samples.`,
-  failureSummary: (failures: string) => `The observed errors were ${failures}.`,
-  failureCode: { 'scroll-anchor': 'anchor moved', 'row-overlap': 'row overlap', 'scroll-height': 'scroll-height error', 'blank-viewport': 'blank viewport', timeout: 'failed to settle', 'row-gap': 'row gap', 'row-height': 'row-height error', 'row-order': 'row-order error', 'duplicate-id': 'duplicate ID', 'unexpected-id': 'unexpected ID' } as Record<string, string>,
+  recoveredFailure: (recovered: number, total: number) => `${recovered} of ${total} runs recovered from a visual error.`,
+  permanentFailure: (failed: number, total: number, failures: string) => failed === total
+    ? `All ${total} runs failed to reach a correct screen due to ${failures}.`
+    : `${failed} of ${total} runs failed to reach a correct screen due to ${failures}.`,
+  earlyStop: (actual: number, planned: number) => `The repeated error stopped the run after ${actual} of ${planned} samples.`,
+  failureCode: { exception: 'an execution error', 'target-position': 'target-row positioning', 'scroll-anchor': 'anchor movement', 'row-overlap': 'row overlap', 'scroll-height': 'a scroll-height error', 'blank-viewport': 'a blank viewport', timeout: 'a settle timeout', 'row-gap': 'a row gap', 'row-height': 'a row-height error', 'row-order': 'a row-order error', 'duplicate-id': 'a duplicate ID', 'unexpected-id': 'an unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
   criteriaTitle: 'Measurement criteria for this chart',
   criteriaLabel: {
@@ -324,10 +318,9 @@ function mutationResult(metadata: { readonly library: string; readonly version: 
     && entry.operation === scenario.value
     && entry.location === location.value);
   if (result === undefined) return unsupportedResult(metadata);
-  const state = result.settledSamples === 0 ? failureLabel(result) : null;
-  const notice = state === null && (result.recoveredSamples > 0 || result.failedSamples > 0)
-    ? failureLabel(result)
-    : null;
+  const status = failureLabel(result);
+  const state = result.settledSamples === 0 ? status || copy.value.stableFailure : null;
+  const notice = state === null && status !== '' ? status : null;
   return {
     ...metadata,
     values: [result.medianMs, result.p95Ms, result.recoveryMedianMs, result.recoveryP95Ms],
@@ -428,15 +421,15 @@ function isBaselineScenario(value: Scenario): value is BaselineScenario {
 }
 
 function failureLabel(result: MutationBenchmarkResult): string {
-  const states = [];
-  const failures = result.failureCodes.map((code) => copy.value.failureCode[code] ?? code).join(', ');
+  const states: string[] = [];
+  const defaultFailure = copy.value.failureCode['exception'] ?? 'execution';
+  const failures = result.failureCodes.map((code) => copy.value.failureCode[code] ?? code).join(', ') || defaultFailure;
   if (result.recoveredSamples > 0) states.push(copy.value.recoveredFailure(result.recoveredSamples, result.totalSamples));
-  if (result.failedSamples > 0) states.push(copy.value.permanentFailure(result.failedSamples, result.totalSamples));
-  else if (result.settledSamples === 0) states.push(copy.value.stableFailure);
-  if (result.earlyStopped === true) states.push(copy.value.earlyStop(result.totalSamples, result.plannedSamples ?? result.totalSamples));
-  if (failures.length > 0) states.push(copy.value.failureSummary(failures));
-  return states.join('\n');
+  if (result.failedSamples > 0) states.push(copy.value.permanentFailure(result.failedSamples, result.totalSamples, failures));
+  if (states.length > 0 && result.earlyStopped === true) states.push(copy.value.earlyStop(result.totalSamples, result.plannedSamples ?? result.totalSamples));
+  return [states.slice(0, -1).join(' '), states.at(-1)].filter(Boolean).join('\n');
 }
+
 </script>
 
 <template>
@@ -616,7 +609,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
 .benchmark-meter.is-outlier .benchmark-meter-value { color: var(--sectile-feedback-critical); font-weight: 700; }
 .benchmark-meter-value { color: var(--sectile-content-secondary); font-size: 0.65rem; font-variant-numeric: tabular-nums; line-height: 9px; text-align: right; white-space: nowrap; }
 .benchmark-meter-empty { visibility: hidden; }
-.result-message { display: grid; grid-row: 1 / -1; place-items: center; overflow: hidden; padding-inline: 10px; color: var(--sectile-content-primary); font-size: 0.8rem; font-weight: 720; line-height: 1.45; text-align: center; white-space: pre-line; }
+.result-message { display: grid; grid-row: 1 / -1; place-items: center; overflow: hidden; padding-inline: 6px; color: var(--sectile-content-primary); font-size: 0.74rem; font-weight: 720; line-height: 1.4; text-align: center; text-wrap: pretty; white-space: pre-line; }
 .result-message.is-failure { color: var(--sectile-feedback-critical); }
 .result-notice { display: -webkit-box; align-self: center; overflow: hidden; padding-top: 5px; color: var(--sectile-feedback-warning); font-size: 0.66rem; font-weight: 680; line-height: 1.4; text-align: left; white-space: pre-line; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .result-notice.is-failure { color: var(--sectile-feedback-critical); }

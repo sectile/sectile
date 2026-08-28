@@ -6,7 +6,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "merge-shards": "node scripts/merge-shards.mjs",
-    "test": "node --test src/failure-reproduction.test.ts",
+    "test": "node --test src/failure-reproduction.test.ts src/target-position.test.ts scripts/result-normalization.test.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
