@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { componentExampleSources } from '../component-example-sources.js';
 import { pinInputExampleOptions, type PinInputExampleOptions } from '../pin-input-example-options.js';
-import ComponentExamplePreview from './ComponentExamplePreview.vue';
 import ExampleFrame from './ExampleFrame.vue';
 import PinInputExampleControls from './PinInputExampleControls.vue';
 import TerminalComponentExample from './TerminalComponentExample.vue';
+
+const ComponentExamplePreview = defineAsyncComponent(() => import('./ComponentExamplePreview.vue'));
 
 const props = withDefaults(defineProps<{
   readonly component: string;

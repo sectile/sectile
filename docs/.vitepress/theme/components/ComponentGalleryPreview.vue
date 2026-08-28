@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, defineAsyncComponent, hydrateOnVisible } from 'vue';
 import { pinInputExampleOptions } from '../pin-input-example-options.js';
-import ComponentExamplePreview from './ComponentExamplePreview.vue';
+
+const ComponentExamplePreview = defineAsyncComponent({
+  loader: () => import('./ComponentExamplePreview.vue'),
+  hydrate: hydrateOnVisible({ rootMargin: '720px 0px' }),
+});
 
 const props = defineProps<{
   readonly component: string;
