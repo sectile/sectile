@@ -3,6 +3,8 @@ import catalog from '../data/components.json' with { type: 'json' };
 import { componentSections } from '../data/component-sections.js';
 import { vueTemplateFencePlugin } from './markdown/vue-template-fences.mjs';
 
+const base = '/sectile/';
+
 const title = (value: string): string => value
   .split('-')
   .map((part) => part.length === 0 ? part : `${part[0]?.toUpperCase()}${part.slice(1)}`)
@@ -285,7 +287,7 @@ const koLocaleTheme: DefaultTheme.Config = {
 export default defineConfig({
   title: 'Sectile',
   description: 'Renderer-neutral interaction semantics for the interfaces you need to own.',
-  base: '/sectile/',
+  base,
   cleanUrls: true,
   lastUpdated: true,
   appearance: false,
@@ -314,6 +316,11 @@ export default defineConfig({
     'roadmap.md',
   ],
   head: [
+    ['link', { rel: 'icon', href: `${base}favicon.ico`, sizes: 'any' }],
+    ['link', { rel: 'icon', type: 'image/png', href: `${base}favicon-32x32.png`, sizes: '32x32' }],
+    ['link', { rel: 'icon', type: 'image/png', href: `${base}favicon-16x16.png`, sizes: '16x16' }],
+    ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon.png`, sizes: '180x180' }],
+    ['link', { rel: 'manifest', href: `${base}site.webmanifest` }],
     ['meta', { name: 'theme-color', content: '#0a0f1c' }],
     ['meta', { name: 'color-scheme', content: 'dark light' }],
   ],
@@ -328,7 +335,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
-    logo: '/mark.svg',
+    logo: { src: '/logo.png', alt: 'Sectile' },
     search: {
       provider: 'local',
       options: {
