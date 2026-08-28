@@ -1,6 +1,7 @@
 import { defineConfig, type DefaultTheme } from 'vitepress';
 import catalog from '../data/components.json' with { type: 'json' };
 import { componentSections } from '../data/component-sections.js';
+import { vueTemplateFencePlugin } from './markdown/vue-template-fences.mjs';
 
 const title = (value: string): string => value
   .split('-')
@@ -319,6 +320,7 @@ export default defineConfig({
   markdown: {
     theme: { dark: 'github-dark-default', light: 'github-light-default' },
     lineNumbers: true,
+    config: vueTemplateFencePlugin,
   },
   vite: {
     ssr: {
