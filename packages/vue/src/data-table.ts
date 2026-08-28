@@ -3,9 +3,13 @@ import {
   onScopeDispose,
   toValue,
   watch,
+  type AllowedComponentProps,
+  type ComponentCustomProps,
   type DefineComponent,
   type InjectionKey,
   type Ref,
+  type VNodeChild,
+  type VNodeProps,
 } from 'vue';
 import {
   connectDataTable,
@@ -218,7 +222,7 @@ export interface DataTableRootProps { readonly onCommand?: DataTableCommandHandl
 export interface DataTableRootSlotProps { readonly acceptedViewState: DataTableAcceptedViewState; readonly requestState: DataTableRequestState; readonly query: DataTableQuery; readonly rowSelection: DataTableRowSelection; readonly columnState: DataTableColumnState; readonly accessState: DataTableAccessState; readonly expansion: readonly DataTableGroupID[]; readonly rows: readonly DataTableViewRow[] }
 export interface DataTableRootExpose { readonly controller: DataTableController; refresh(): void }
 export interface DataTablePartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataTableHeaderRowProps extends DataTablePartProps { readonly depth?: number }
+export type DataTableHeaderRowProps = DataTablePartProps;
 export interface DataTableColumnHeaderProps extends DataTablePartProps { readonly headerNodeID: TabularHeaderNodeID }
 export interface DataTableSortTriggerProps extends DataTablePartProps { readonly column: string; readonly comparator?: string }
 export type DataTableFilterControlProps = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: string; readonly id: string; readonly predicate: string });
@@ -235,6 +239,16 @@ export type DataTableProviderSlotProps = DataTableRootSlotProps;
 export type DataTableCaptionProps = DataTablePartProps;
 export type DataTableHeaderProps = DataTablePartProps;
 export interface DataTableBodyProps extends DataTablePartProps { readonly manual?: boolean }
+export type DataTableBodyPublicProps = DataTableBodyProps & VNodeProps & AllowedComponentProps & ComponentCustomProps;
+export interface DataTableBodyComponent {
+  new <Manual extends boolean = false>(props: Omit<DataTableBodyPublicProps, 'manual'> & { readonly manual?: Manual }): {
+    $props: Omit<DataTableBodyPublicProps, 'manual'> & { readonly manual?: Manual };
+    $slots: {
+      default?: (props: Manual extends true ? DataTableRootSlotProps : DataTableBodySlotProps) => VNodeChild;
+      empty?: (props: DataTableRootSlotProps) => VNodeChild;
+    };
+  };
+}
 export type DataTableCaptionSlotProps = DataTableRootSlotProps; export type DataTableHeaderSlotProps = DataTableRootSlotProps; export type DataTableHeaderRowSlotProps = DataTableRootSlotProps; export type DataTableColumnHeaderSlotProps = DataTableRootSlotProps; export type DataTableSortTriggerSlotProps = DataTableRootSlotProps; export type DataTableFilterControlSlotProps = DataTableRootSlotProps; export type DataTableColumnResizeHandleSlotProps = DataTableRootSlotProps; export type DataTableRowSlotProps = DataTableRootSlotProps; export type DataTableSelectionControlSlotProps = DataTablePartSlotProps; export type DataTableBulkSelectionControlSlotProps = DataTableRootSlotProps; export type DataTableDisclosureSlotProps = DataTablePartSlotProps; export type DataTableCellSlotProps = DataTablePartSlotProps; export type DataTableEditorSlotProps = DataTablePartSlotProps;
 
 export const DataTableProvider = parts['Provider'] as DefineComponent<DataTableProviderProps>;
@@ -246,7 +260,7 @@ export const DataTableColumnHeader = parts['ColumnHeader'] as DefineComponent<Da
 export const DataTableSortTrigger = parts['SortTrigger'] as DefineComponent<DataTableSortTriggerProps>;
 export const DataTableFilterControl = parts['FilterControl'] as DefineComponent<DataTableFilterControlProps>;
 export const DataTableColumnResizeHandle = parts['ColumnResizeHandle'] as DefineComponent<DataTableColumnResizeHandleProps>;
-export const DataTableBody = parts['Body'] as DefineComponent<DataTableBodyProps>;
+export const DataTableBody = parts['Body'] as unknown as DataTableBodyComponent;
 export const DataTableRow = parts['Row'] as DefineComponent<DataTableRowProps>;
 export const DataTableSelectionControl = parts['SelectionControl'] as DefineComponent<DataTableSelectionControlProps>;
 export const DataTableBulkSelectionControl = parts['BulkSelectionControl'] as DefineComponent<DataTableBulkSelectionControlProps>;

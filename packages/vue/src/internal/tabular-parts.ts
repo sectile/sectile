@@ -11,6 +11,7 @@ import {
   type ComputedRef,
   type InjectionKey,
   type PropType,
+  type SlotsType,
   type VNodeChild,
 } from 'vue';
 import type { TabularCellAddress, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID } from '@sectile/tabular';
@@ -50,6 +51,12 @@ interface PartConfig<State, Event, Command> {
   readonly privateKey: InjectionKey<ProfileContext<State, Event, Command, HostConnection>>;
   connect(element: HTMLElement, controller: VueProfileController<State, Event, Command>, callbacks: { readonly onCommand?: (command: unknown) => void; readonly onSnapshotChange: () => void }): HostConnection;
 }
+
+type TabularAutomaticBodySlotProps = Readonly<Record<string, unknown>> & {
+  readonly row: TabularRow;
+  readonly rowIndex: number;
+  readonly isGroup: boolean;
+};
 
 const asProp = { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' };
 const asChildProp = { type: Boolean, default: false };
@@ -171,8 +178,8 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   const Header = structural('Header', 'header', table ? 'thead' : 'div');
   const HeaderRow = defineComponent({
     name: `Sectile${config.prefix}HeaderRow`, inheritAttrs: false,
-    props: { depth: { type: Number, default: 0 }, as: { ...asProp, default: table ? 'tr' : 'div' }, asChild: asChildProp },
-    setup(props, { attrs, slots }) { const context = usePublic('HeaderRow'); return () => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: table ? undefined : 'row', 'data-depth': props.depth, 'data-scope': config.profile, 'data-part': 'header-row' }), { default: () => slots['default']?.(rootSlot(context)) }); },
+    props: { as: { ...asProp, default: table ? 'tr' : 'div' }, asChild: asChildProp },
+    setup(props, { attrs, slots }) { const context = usePublic('HeaderRow'); return () => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: table ? undefined : 'row', 'data-scope': config.profile, 'data-part': 'header-row' }), { default: () => slots['default']?.(rootSlot(context)) }); },
   });
   const ColumnHeader = boundPart('ColumnHeader', 'column-header', table ? 'th' : 'div', {
     headerNodeID: { type: String, required: true },
@@ -202,6 +209,10 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     name: `Sectile${config.prefix}Body`,
     inheritAttrs: false,
     props: { manual: { type: Boolean, default: false }, as: { ...asProp, default: table ? 'tbody' : 'div' }, asChild: asChildProp },
+    slots: Object as SlotsType<{
+      default: (props: TabularAutomaticBodySlotProps) => VNodeChild;
+      empty: (props: Readonly<Record<string, unknown>>) => VNodeChild;
+    }>,
     setup(props, { attrs, slots }) {
       const context = usePublic('Body');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -212,7 +223,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         role: table ? undefined : 'rowgroup',
       }), { default: () => {
         const root = rootSlot(context);
-        if (props.manual) return slots['default']?.(root);
+        if (props.manual) return (slots['default'] as ((props: Readonly<Record<string, unknown>>) => VNodeChild) | undefined)?.(root);
         const rows = root['rows'] as readonly TabularRow[];
         if (rows.length === 0) return slots['empty']?.(root);
         return rows.map((row, rowIndex) => h(AutomaticRow, { key: row.id, row }, {

@@ -46,7 +46,7 @@ const rows = [
 
 Leaf cells use the same navigation and edit lifecycle as DataGrid. Group cells are read-only. Enter begins an editor, Escape cancels, and a valid commit emits an application command. Collapse or removal cancels an affected editor before recovering the cursor to a visible cell.
 
-`DataTreeGridBody` renders the accepted ordered hierarchy and exposes `{ row, rowIndex, isGroup }`. Cells, disclosure controls, selection controls, and editors inherit the row ID. Use manual Body plus explicit Row only when custom windowing owns placement. Flat headers omit `depth`.
+`DataTreeGridBody` renders the accepted ordered hierarchy and exposes typed `{ row, rowIndex, isGroup }`. Cells, disclosure controls, selection controls, and editors inherit the row ID. Use manual Body plus explicit Row only when custom windowing owns placement. Header row depth is derived from the header schema.
 
 ## Selection across branches
 

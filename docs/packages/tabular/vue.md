@@ -72,7 +72,8 @@ SSR does not execute a source resolver. Hydration must begin from the same accep
 - `as` selects the rendered element; `asChild` adopts exactly one valid child.
 - Body repeats accepted rows by default. Its slot exposes `{ row, rowIndex, isGroup }`; `manual` enables explicit low-level Row composition.
 - Cell-oriented parts use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition. Header nodes keep `headerNodeID` because a node may represent a column or a group.
-- Flat `HeaderRow` uses the default `depth=0`; pass `depth` only for nested header rows.
+- `HeaderRow` has no depth prop. Header schema and `headerNodeID` determine nested depth, spans, and ARIA metadata.
+- Body slot rows are typed as the leaf/group `TabularRow` union; cell values are `TabularWireValue`, never `any`.
 - Name a native DataTable with `Caption` or `aria-labelledby`. Grid and TreeGrid use `aria-label` or `aria-labelledby`.
 - Native DataTable markup retains table semantics and form submission.
 - DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.

@@ -89,7 +89,7 @@ Use `DataTableSelectionControl` for explicit rows and `DataTableBulkSelectionCon
 
 DataTable may render group rows returned by the source. `DataTableDisclosure` changes expansion and requests a new view. `DataTableEditor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
 
-Flat headers omit `depth`; it defaults to `0`. Pass an explicit depth only for multi-level header rows. Give a native DataTable its accessible name with `DataTableCaption`, or use `aria-labelledby` when a visible title outside the table already names it.
+Header rows do not take a depth prop. Multi-level `colspan`, `rowspan`, and ARIA metadata are derived from the header schema and each `headerNodeID`. Give a native DataTable its accessible name with `DataTableCaption`, or use `aria-labelledby` when a visible title outside the table already names it.
 
 Body owns normal row repetition. Use `<DataTableBody manual>` with explicit `DataTableRow rowID="…"` only for low-level rendering such as a virtualized window.
 

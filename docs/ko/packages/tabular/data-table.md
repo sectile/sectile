@@ -78,7 +78,7 @@ useDataTableSource(table, async (request) => {
 
 source가 반환한 group row는 `DataTableDisclosure`로 펼치고 새 view를 요청할 수 있습니다. `DataTableEditor`는 input, textarea, select에서 value commit 의도를 보내지만 검증과 저장은 응용 프로그램이 맡습니다. 2차원 cursor와 edit mode는 제공하지 않으므로 셀 편집이 중심이면 DataGrid를 사용하세요.
 
-평면 header에서는 `depth`를 생략합니다. 기본값은 `0`이며 여러 단계의 header row를 구성할 때만 명시합니다. native DataTable의 접근 가능한 이름은 `DataTableCaption`으로 제공하고, table 밖의 보이는 제목이 이미 있다면 `aria-labelledby`로 연결합니다.
+Header row에는 depth prop이 없습니다. 여러 단계의 `colspan`, `rowspan`, ARIA metadata는 header schema와 각 `headerNodeID`에서 계산합니다. native DataTable의 접근 가능한 이름은 `DataTableCaption`으로 제공하고, table 밖의 보이는 제목이 이미 있다면 `aria-labelledby`로 연결합니다.
 
 일반적인 행 반복은 Body가 맡습니다. virtual window처럼 저수준 렌더링이 필요할 때만 `<DataTableBody manual>`과 `DataTableRow rowID="…"`를 직접 사용합니다.
 

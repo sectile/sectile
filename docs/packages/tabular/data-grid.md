@@ -60,7 +60,7 @@ Mark editable columns with the `edit` capability and place a `DataGridEditor` in
 
 When a source response removes the edited row or column, DataGrid cancels the editor before moving the cursor to a deterministic surviving cell. Replacing the source also cancels editing before requesting the replacement view.
 
-Body renders accepted rows by default and gives each slot invocation its `row`. Cells, row-selection controls, and editors inherit the row ID. Use `<DataGridBody manual>` and explicit `DataGridRow` only when a custom windowing strategy must own row placement. Flat headers omit `depth`; nested headers pass it explicitly.
+Body renders accepted rows by default and gives each slot invocation its typed `row`. Cells, row-selection controls, and editors inherit the row ID. Use `<DataGridBody manual>` and explicit `DataGridRow` only when a custom windowing strategy must own row placement. Header row depth and span metadata come from the header schema rather than a component prop.
 
 ## Selection, columns, and large data
 

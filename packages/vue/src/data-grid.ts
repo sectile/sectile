@@ -1,4 +1,4 @@
-import { getCurrentScope, onScopeDispose, toValue, watch, type DefineComponent, type InjectionKey } from 'vue';
+import { getCurrentScope, onScopeDispose, toValue, watch, type AllowedComponentProps, type ComponentCustomProps, type DefineComponent, type InjectionKey, type VNodeChild, type VNodeProps } from 'vue';
 import { connectDataGrid, type DataGridColumnSizeState as DOMDataGridColumnSizeState, type DataGridConnection, type DataGridDOMCommand } from '@sectile/dom/data-grid';
 import {
   createDataGrid,
@@ -135,7 +135,7 @@ export interface DataGridRootProps { readonly onCommand?: DataGridCommandHandler
 export interface DataGridRootSlotProps { readonly acceptedViewState: DataGridAcceptedViewState; readonly requestState: DataGridRequestState; readonly query: DataGridQuery; readonly rowSelection: DataGridRowSelection; readonly columnState: DataGridColumnState; readonly accessState: DataGridAccessState; readonly cursor: DataGridCursorState; readonly editState: DataGridEditState; readonly rows: readonly DataGridViewRow[] }
 export interface DataGridRootExpose { readonly controller: DataGridController; refresh(): void }
 export interface DataGridPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataGridHeaderRowProps extends DataGridPartProps { readonly depth?: number }
+export type DataGridHeaderRowProps = DataGridPartProps;
 export interface DataGridColumnHeaderProps extends DataGridPartProps { readonly headerNodeID: TabularHeaderNodeID }
 export interface DataGridSortTriggerProps extends DataGridPartProps { readonly column: string; readonly comparator?: string }
 export type DataGridFilterControlProps = DataGridPartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: string; readonly id: string; readonly predicate: string });
@@ -147,6 +147,8 @@ export interface DataGridCellProps extends DataGridPartProps { readonly rowID?: 
 export interface DataGridEditorProps extends DataGridCellProps { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }
 export type DataGridHeaderProps = DataGridPartProps; export interface DataGridBodyProps extends DataGridPartProps { readonly manual?: boolean } export interface DataGridPartSlotProps extends DataGridRootSlotProps { readonly row?: DataGridViewRow; readonly isGroup?: boolean } export type DataGridProviderSlotProps = DataGridRootSlotProps;
 export interface DataGridBodySlotProps extends DataGridRootSlotProps { readonly row: DataGridViewRow; readonly rowIndex: number; readonly isGroup: boolean }
+export type DataGridBodyPublicProps = DataGridBodyProps & VNodeProps & AllowedComponentProps & ComponentCustomProps;
+export interface DataGridBodyComponent { new <Manual extends boolean = false>(props: Omit<DataGridBodyPublicProps, 'manual'> & { readonly manual?: Manual }): { $props: Omit<DataGridBodyPublicProps, 'manual'> & { readonly manual?: Manual }; $slots: { default?: (props: Manual extends true ? DataGridRootSlotProps : DataGridBodySlotProps) => VNodeChild; empty?: (props: DataGridRootSlotProps) => VNodeChild } } }
 export type DataGridHeaderSlotProps = DataGridRootSlotProps; export type DataGridHeaderRowSlotProps = DataGridRootSlotProps; export type DataGridColumnHeaderSlotProps = DataGridRootSlotProps; export type DataGridSortTriggerSlotProps = DataGridRootSlotProps; export type DataGridFilterControlSlotProps = DataGridRootSlotProps; export type DataGridColumnResizeHandleSlotProps = DataGridRootSlotProps; export type DataGridRowSlotProps = DataGridRootSlotProps; export type DataGridRowSelectionControlSlotProps = DataGridPartSlotProps; export type DataGridBulkSelectionControlSlotProps = DataGridRootSlotProps; export type DataGridCellSlotProps = DataGridPartSlotProps; export type DataGridEditorSlotProps = DataGridPartSlotProps;
 export const DataGridProvider = parts['Provider'] as DefineComponent<DataGridProviderProps>;
 export const DataGridRoot = parts['Root'] as DefineComponent<DataGridRootProps>;
@@ -156,7 +158,7 @@ export const DataGridColumnHeader = parts['ColumnHeader'] as DefineComponent<Dat
 export const DataGridSortTrigger = parts['SortTrigger'] as DefineComponent<DataGridSortTriggerProps>;
 export const DataGridFilterControl = parts['FilterControl'] as DefineComponent<DataGridFilterControlProps>;
 export const DataGridColumnResizeHandle = parts['ColumnResizeHandle'] as DefineComponent<DataGridColumnResizeHandleProps>;
-export const DataGridBody = parts['Body'] as DefineComponent<DataGridBodyProps>;
+export const DataGridBody = parts['Body'] as unknown as DataGridBodyComponent;
 export const DataGridRow = parts['Row'] as DefineComponent<DataGridRowProps>;
 export const DataGridRowSelectionControl = parts['SelectionControl'] as DefineComponent<DataGridRowSelectionControlProps>;
 export const DataGridBulkSelectionControl = parts['BulkSelectionControl'] as DefineComponent<DataGridBulkSelectionControlProps>;

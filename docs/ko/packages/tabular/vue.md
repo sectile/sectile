@@ -72,7 +72,8 @@ SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted
 - `as`는 element를 고르고 `asChild`는 유효한 child 하나를 채택합니다.
 - Body는 accepted row를 기본으로 반복합니다. slot은 `{ row, rowIndex, isGroup }`를 제공하고 `manual`은 명시적인 저수준 Row 구성을 켭니다.
 - cell 계열 part에는 `column="name"`을 사용합니다. 자동 Body 밖에서만 명시적인 `rowID`가 필요합니다. header node는 column 또는 group을 뜻할 수 있으므로 `headerNodeID`를 유지합니다.
-- 평면 `HeaderRow`는 기본 `depth=0`을 사용하며 중첩 header row에서만 `depth`를 전달합니다.
+- `HeaderRow`에는 depth prop이 없습니다. Header schema와 `headerNodeID`가 중첩 깊이, span, ARIA metadata를 결정합니다.
+- Body slot의 row는 leaf/group `TabularRow` union이며 cell 값은 `TabularWireValue`입니다. `any`로 노출되지 않습니다.
 - native DataTable은 `Caption`이나 `aria-labelledby`로 이름을 붙입니다. Grid와 TreeGrid는 `aria-label` 또는 `aria-labelledby`를 사용합니다.
 - DataTable은 native table 의미와 form submission을 유지합니다.
 - DataGrid와 DataTreeGrid는 grid/treegrid ARIA, roving tab stop, cursor, edit state를 투영합니다.

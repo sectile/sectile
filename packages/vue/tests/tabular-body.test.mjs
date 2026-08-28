@@ -62,7 +62,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   await nextTick();
 
   assert.equal(host.querySelector('caption')?.textContent, 'People');
-  assert.equal(host.querySelector('[data-part="header-row"]')?.getAttribute('data-depth'), '0');
+  assert.equal(host.querySelector('[data-part="header-row"]')?.hasAttribute('data-depth'), false);
   assert.deepEqual([...host.querySelectorAll('[data-part="row"]')].map((row) => row.getAttribute('data-row-id')), ['ada', 'grace']);
   assert.deepEqual([...host.querySelectorAll('[data-part="cell"]')].map((cell) => cell.textContent), ['0:Ada', 'Engineer', '1:Grace', 'Admiral']);
   assert.deepEqual([...host.querySelectorAll('input[name="people"]')].map((input) => input.value), ['ada', 'grace']);

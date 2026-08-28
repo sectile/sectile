@@ -44,7 +44,7 @@ const rows = [
 
 leaf cell은 DataGrid와 같은 이동·편집 수명 주기를 사용하며 group cell은 read-only입니다. Enter로 editor를 시작하고 Escape로 취소하며 valid commit은 응용 프로그램 command로 전달됩니다. collapse나 removal은 영향을 받은 editor를 먼저 취소하고 cursor를 보이는 cell로 복구합니다.
 
-`DataTreeGridBody`는 accepted hierarchy를 순서대로 렌더링하고 `{ row, rowIndex, isGroup }`를 노출합니다. cell, disclosure, selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing이 배치를 소유할 때만 manual Body와 명시적인 Row를 사용합니다. 평면 header에서는 `depth`를 생략합니다.
+`DataTreeGridBody`는 accepted hierarchy를 순서대로 렌더링하고 type이 지정된 `{ row, rowIndex, isGroup }`를 노출합니다. cell, disclosure, selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing이 배치를 소유할 때만 manual Body와 명시적인 Row를 사용합니다. Header row 깊이는 header schema에서 계산합니다.
 
 ## branch를 가로지르는 선택
 

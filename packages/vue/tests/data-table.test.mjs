@@ -34,7 +34,7 @@ test('Vue DataTable renders one native table tree and propagates controller cont
   assert.match(html, /<caption[^>]*>Users/);
   assert.match(html, /<thead/);
   assert.match(html, /<tbody/);
-  assert.match(html, /data-depth="0"/);
+  assert.doesNotMatch(html, /data-depth=/);
   assert.match(html, /data-row-id="r1"/);
   assert.match(html, />Ada</);
   assert.equal(injected.controller, controller);

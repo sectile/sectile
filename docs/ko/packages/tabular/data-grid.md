@@ -48,7 +48,7 @@ grid.dispatch({ type: 'move-cell', direction: 'down' })
 
 행이나 열이 source response에서 사라지면 editor를 먼저 취소한 뒤 남은 cell로 cursor를 결정적으로 옮깁니다. source 교체 역시 편집을 취소하고 replacement view를 요청합니다.
 
-Body는 accepted row를 기본으로 반복하며 매 slot 호출에 `row`를 전달합니다. cell, row selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing 전략이 행 배치를 직접 소유할 때만 `<DataGridBody manual>`과 명시적인 `DataGridRow`를 사용합니다. 평면 header에서는 `depth`를 생략하고 중첩 header에서만 지정합니다.
+Body는 accepted row를 기본으로 반복하며 매 slot 호출에 type이 지정된 `row`를 전달합니다. cell, row selection control, editor는 현재 행 ID를 자동으로 상속합니다. 별도 windowing 전략이 행 배치를 직접 소유할 때만 `<DataGridBody manual>`과 명시적인 `DataGridRow`를 사용합니다. Header row의 깊이와 span metadata는 component prop이 아니라 header schema에서 계산합니다.
 
 ## 선택, 열 상태, 큰 데이터
 
