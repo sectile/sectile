@@ -22,7 +22,12 @@ import {
   type MutationOperation,
   type MutationScenario,
 } from './mutations.js';
-import { correctedTargetScroll, initialTargetScroll, targetViewportOffset } from './target-position.js';
+import {
+  correctedTargetScroll,
+  initialTargetScroll,
+  intersectsViewportGeometry,
+  targetViewportOffset,
+} from './target-position.js';
 
 export interface MutationFailure {
   readonly severity: 'failure' | 'fatal';
@@ -692,12 +697,22 @@ async function positionScenario(scroller: HTMLElement, scenario: MutationScenari
     scroller.scrollTop = offset;
     scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
     await nextFrame();
-    const target = host.querySelector<HTMLElement>(`.bench-row[data-id="${targetID}"]`);
-    if (target !== null) {
+    const target = Array.from(host.querySelectorAll<HTMLElement>(`.bench-row[data-id="${targetID}"]`))
+      .find((candidate) => intersectsViewport(candidate, scroller));
+    if (target !== undefined) {
       const targetRect = target.getBoundingClientRect();
       const viewport = scroller.getBoundingClientRect();
       const targetViewportTop = targetRect.top - viewport.top;
-      if (intersectsViewport(target, scroller) && Math.abs(targetViewportTop - desiredViewportTop) <= GEOMETRY_TOLERANCE_PX) return;
+      if (Math.abs(targetViewportTop - desiredViewportTop) <= GEOMETRY_TOLERANCE_PX) return;
+      trace.push(Object.freeze({
+        attempt,
+        requestedScrollTop: Math.round(offset),
+        actualScrollTop: Math.round(scroller.scrollTop),
+        scrollHeight: scroller.scrollHeight,
+        targetViewportTop: Math.round(targetViewportTop),
+        desiredViewportTop: Math.round(desiredViewportTop),
+      }));
+      if (trace.length > 8) trace.shift();
       offset = correctedTargetScroll({
         ...scrollGeometry(),
         referenceIndex: scenario.index,
@@ -711,7 +726,7 @@ async function positionScenario(scroller: HTMLElement, scenario: MutationScenari
     const viewport = scroller.getBoundingClientRect();
     const visibleRows = Array.from(host.querySelectorAll<HTMLElement>('.bench-row[data-index]'))
       .map((row) => ({ row, index: Number(row.dataset['index']) }))
-      .filter((entry) => Number.isInteger(entry.index));
+      .filter((entry) => Number.isInteger(entry.index) && intersectsViewport(entry.row, scroller));
     trace.push(Object.freeze({
       attempt,
       requestedScrollTop: Math.round(offset),
@@ -719,6 +734,11 @@ async function positionScenario(scroller: HTMLElement, scenario: MutationScenari
       scrollHeight: scroller.scrollHeight,
       minimumIndex: visibleRows.length === 0 ? null : Math.min(...visibleRows.map((entry) => entry.index)),
       maximumIndex: visibleRows.length === 0 ? null : Math.max(...visibleRows.map((entry) => entry.index)),
+      targetID,
+      visibleRows: visibleRows.map((entry) => Object.freeze({
+        id: entry.row.dataset['id'] ?? null,
+        index: entry.index,
+      })),
     }));
     if (trace.length > 8) trace.shift();
     const reference = visibleRows
@@ -745,8 +765,13 @@ async function positionScenario(scroller: HTMLElement, scenario: MutationScenari
 function intersectsViewport(row: HTMLElement, scroller: HTMLElement): boolean {
   const rect = row.getBoundingClientRect();
   const viewport = scroller.getBoundingClientRect();
-  return rect.bottom > viewport.top + GEOMETRY_TOLERANCE_PX
-    && rect.top < viewport.bottom - GEOMETRY_TOLERANCE_PX;
+  return intersectsViewportGeometry(
+    rect.top,
+    rect.bottom,
+    viewport.top,
+    viewport.bottom,
+    GEOMETRY_TOLERANCE_PX,
+  );
 }
 
 function waitForRows(host: HTMLElement): Promise<void> {

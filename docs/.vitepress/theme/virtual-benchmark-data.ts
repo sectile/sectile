@@ -3215,15 +3215,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "end",
-    "medianMs": 1240.6,
-    "p95Ms": 1244,
+    "medianMs": 674.1,
+    "p95Ms": 1374.8,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 5,
-    "correctSamples": 5,
+    "slowTailMs": [
+      1377,
+      1392.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 45,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -3234,9 +3237,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "uniform",
@@ -5864,18 +5865,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "middle",
-    "medianMs": 76.7,
-    "p95Ms": 91.7,
-    "recoveryMedianMs": 91.7,
-    "recoveryP95Ms": 100.2,
+    "medianMs": 82.4,
+    "p95Ms": 99.5,
+    "recoveryMedianMs": null,
+    "recoveryP95Ms": null,
     "slowTailMs": [
-      91.8,
-      100.2
+      101.1,
+      101.4
     ],
-    "settledSamples": 45,
-    "correctSamples": 40,
-    "recoveredSamples": 5,
-    "failedSamples": 5,
+    "settledSamples": 50,
+    "correctSamples": 50,
+    "recoveredSamples": 0,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -5886,10 +5887,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -5961,18 +5959,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "move",
     "location": "middle",
-    "medianMs": 8.8,
-    "p95Ms": 10,
+    "medianMs": 9.2,
+    "p95Ms": 11.2,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      10.1,
-      11.1
+      11.4,
+      12.9
     ],
-    "settledSamples": 45,
-    "correctSamples": 45,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 5,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -5983,9 +5981,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6059,18 +6055,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "remove",
     "location": "middle",
-    "medianMs": 76,
-    "p95Ms": 85.5,
+    "medianMs": 80.8,
+    "p95Ms": 99.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      86.2,
-      90.1
+      102.2,
+      160.8
     ],
-    "settledSamples": 45,
-    "correctSamples": 45,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 5,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6081,9 +6077,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6157,18 +6151,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 8.8,
-    "p95Ms": 10.3,
+    "medianMs": 11,
+    "p95Ms": 14.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      10.7,
-      11.1
+      15.2,
+      17.9
     ],
-    "settledSamples": 43,
-    "correctSamples": 43,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 7,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6179,10 +6173,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "scroll-anchor",
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6635,17 +6626,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "middle",
-    "medianMs": 158.7,
-    "p95Ms": 181,
+    "medianMs": 159.7,
+    "p95Ms": 176.3,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      186.4
+      198.3,
+      253.2
     ],
-    "settledSamples": 30,
-    "correctSamples": 30,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 20,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6656,9 +6648,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6731,17 +6721,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "move",
     "location": "middle",
-    "medianMs": 14.5,
-    "p95Ms": 16.5,
+    "medianMs": 15,
+    "p95Ms": 18,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      17.6
+      18.1,
+      18.3
     ],
-    "settledSamples": 30,
-    "correctSamples": 30,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 20,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6752,9 +6743,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6828,17 +6817,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "remove",
     "location": "middle",
-    "medianMs": 157.2,
-    "p95Ms": 180.6,
+    "medianMs": 161.8,
+    "p95Ms": 186.4,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      184.6
+      189.4,
+      190.1
     ],
-    "settledSamples": 30,
-    "correctSamples": 30,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 20,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6849,9 +6839,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -6928,17 +6916,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 15.8,
-    "p95Ms": 17.3,
+    "medianMs": 17.3,
+    "p95Ms": 22.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      19.8
+      22.7,
+      24.9
     ],
-    "settledSamples": 30,
-    "correctSamples": 30,
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 20,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -6949,9 +6938,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -7060,15 +7047,18 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "estimated",
     "operation": "insert",
     "location": "end",
-    "medianMs": 1352.8,
-    "p95Ms": 1494.7,
+    "medianMs": 649.6,
+    "p95Ms": 1236.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
-    "slowTailMs": [],
-    "settledSamples": 5,
-    "correctSamples": 5,
+    "slowTailMs": [
+      1281.4,
+      1354.1
+    ],
+    "settledSamples": 50,
+    "correctSamples": 50,
     "recoveredSamples": 0,
-    "failedSamples": 45,
+    "failedSamples": 0,
     "totalSamples": 50,
     "plannedSamples": 50,
     "earlyStopped": false,
@@ -7079,12 +7069,7 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
       "resizeNotification": "automatic",
       "applicationCalculatesHeight": false
     },
-    "failureCodes": [
-      "row-gap",
-      "timeout",
-      "row-overlap",
-      "target-position"
-    ]
+    "failureCodes": []
   },
   {
     "rowProfile": "heterogeneous",
@@ -7423,13 +7408,13 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "insert",
     "location": "middle",
-    "medianMs": 5,
-    "p95Ms": 6.8,
+    "medianMs": 5.3,
+    "p95Ms": 7.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      9.2,
-      96.7
+      8,
+      9.9
     ],
     "settledSamples": 50,
     "correctSamples": 50,
@@ -7518,13 +7503,13 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "move",
     "location": "middle",
-    "medianMs": 4.5,
-    "p95Ms": 6,
+    "medianMs": 4.8,
+    "p95Ms": 5.9,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      8,
-      19.4
+      6.2,
+      8.9
     ],
     "settledSamples": 50,
     "correctSamples": 50,
@@ -7614,12 +7599,12 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "operation": "remove",
     "location": "middle",
     "medianMs": 4.9,
-    "p95Ms": 8.7,
+    "p95Ms": 7.6,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      9.4,
-      97.5
+      9.2,
+      10.7
     ],
     "settledSamples": 50,
     "correctSamples": 50,
@@ -7708,12 +7693,13 @@ export const mutationBenchmarkResults: readonly MutationBenchmarkResult[] = Obje
     "sizeMode": "automatic",
     "operation": "resize",
     "location": "middle",
-    "medianMs": 2.2,
-    "p95Ms": 5,
+    "medianMs": 2.1,
+    "p95Ms": 5.5,
     "recoveryMedianMs": null,
     "recoveryP95Ms": null,
     "slowTailMs": [
-      5.1
+      5.8,
+      6.1
     ],
     "settledSamples": 50,
     "correctSamples": 50,

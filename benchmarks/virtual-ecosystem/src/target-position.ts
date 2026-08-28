@@ -43,6 +43,17 @@ export function targetViewportOffset(
   return Math.max(0, (viewportHeight - targetHeight) / 2);
 }
 
+export function intersectsViewportGeometry(
+  rowTop: number,
+  rowBottom: number,
+  viewportTop: number,
+  viewportBottom: number,
+  tolerance: number,
+): boolean {
+  return rowBottom > viewportTop + tolerance
+    && rowTop < viewportBottom - tolerance;
+}
+
 function estimatedAbsoluteTop(geometry: TargetScrollGeometry, index: number): number {
   return index * geometry.scrollHeight / Math.max(1, geometry.itemCount);
 }
