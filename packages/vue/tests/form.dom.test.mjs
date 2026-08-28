@@ -23,7 +23,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, defineComponent, h, mergeProps, nextTick, ref } = await import('vue');
+const { Teleport, createApp, defineComponent, h, mergeProps, nextTick, ref } = await import('vue');
 const {
   FormDescription,
   FormField,
@@ -316,6 +316,187 @@ test('Vue FormField uses native fieldset semantics and preserves explicit child 
   host.remove();
 });
 
+test('native checkbox groups share one FormField path without requiring every choice', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let submitted;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onSubmit: (event) => { submitted = event.values; },
+    }, {
+      default: () => h(FormField, {
+        id: 'channels',
+        name: 'channels',
+        required: true,
+      }, {
+        default: () => [
+          h(FormLabel, null, { default: () => 'Channels' }),
+          h('input', { type: 'checkbox', value: 'email', checked: true }),
+          h('input', { type: 'checkbox', value: 'sms', checked: true }),
+        ],
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+
+  const field = host.querySelector('[data-part="field"]');
+  const label = host.querySelector('[data-part="label"]');
+  const inputs = [...host.querySelectorAll('input')];
+  assert.ok(field instanceof HTMLElement);
+  assert.ok(label instanceof HTMLElement);
+  assert.equal(label.tagName, 'SPAN');
+  assert.equal(field.getAttribute('aria-labelledby'), 'channels-label');
+  assert.equal(field.getAttribute('aria-required'), 'true');
+  assert.deepEqual(inputs.map((input) => input.name), ['channels', 'channels']);
+  assert.deepEqual(inputs.map((input) => input.required), [false, false]);
+
+  host.querySelector('form').requestSubmit();
+  assert.deepEqual(submitted.channels, ['email', 'sms']);
+
+  app.unmount();
+  host.remove();
+});
+
+test('unrelated native controls produce a field diagnostic instead of choosing one target', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let state;
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+    }, {
+      default: () => [
+        h(FormSummary),
+        h(FormField, { id: 'ambiguous', name: 'ambiguous' }, {
+          default: () => [
+            h(FormLabel, null, { default: () => 'Ambiguous' }),
+            h('input', { type: 'text' }),
+            h('select', null, [h('option', { value: 'one' }, 'One')]),
+          ],
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  await nextTick();
+
+  const inputs = [...host.querySelectorAll('input, select')];
+  assert.equal(state.fields[0].valid, false);
+  assert.equal(state.fields[0].issues[0].source, 'field');
+  assert.match(state.fields[0].issues[0].message, /multiple unrelated native controls/);
+  assert.deepEqual(inputs.map((input) => input.id), ['', '']);
+
+  host.querySelector('form').requestSubmit();
+  await nextTick();
+  assert.equal(document.activeElement, host.querySelector('[data-part="summary"]'));
+
+  app.unmount();
+  host.remove();
+});
+
+test('multiple custom registrations and invalid paths become recoverable field diagnostics', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  let state;
+  const warnings = [];
+  const previousWarn = console.warn;
+  console.warn = (message) => { warnings.push(message); };
+  const AtomicInput = defineComponent({
+    name: 'DiagnosticAtomicInput',
+    setup() {
+      const input = ref(null);
+      const participation = useFormControl({
+        element: input,
+        semanticControl: input,
+        focusTarget: input,
+        validationTarget: input,
+        labelMode: 'for',
+        capabilities: { id: true },
+      });
+      return () => h('input', mergeProps(participation.controlProps.value, { ref: input }));
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+    }, {
+      default: () => [
+        h(FormField, { id: 'custom-ambiguous', name: 'custom' }, {
+          default: () => [h(AtomicInput), h(AtomicInput)],
+        }),
+        h(FormField, { id: 'invalid-path', name: 'profile..email' }, {
+          default: () => h('input'),
+        }),
+      ],
+    }),
+  });
+
+  try {
+    app.mount(host);
+    await nextTick();
+    await nextTick();
+    await nextTick();
+
+    const custom = state.fields.find((field) => field.id === 'custom-ambiguous');
+    const invalidPath = state.fields.find((field) => field.id === 'invalid-path');
+    assert.match(custom.issues[0].message, /multiple active controls/);
+    assert.match(invalidPath.issues[0].message, /invalid field path/);
+    assert.equal(host.querySelectorAll('[data-part="field"]')[1].querySelector('input').name, '');
+    assert.equal(warnings.length, 1);
+  } finally {
+    console.warn = previousWarn;
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('configured descendant issues use the longest FormField path and summary fallback', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({
+    render: () => h(FormRoot, {
+      issues: [
+        { path: ['profile', 'email', 'domain'], message: 'Use an approved domain.' },
+        { path: ['unowned'], message: 'Review the complete form.' },
+      ],
+    }, {
+      default: () => [
+        h(FormSummary),
+        h(FormField, { id: 'profile', name: 'profile' }, {
+          default: () => [h('input')],
+        }),
+        h(FormField, { id: 'email', name: 'profile.email' }, {
+          default: () => [h('input'), h(FormMessage)],
+        }),
+      ],
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  await nextTick();
+
+  const fields = [...host.querySelectorAll('[data-part="field"]')];
+  assert.equal(fields[0].hasAttribute('data-invalid'), false);
+  assert.equal(fields[1].hasAttribute('data-invalid'), true);
+  assert.equal(fields[1].querySelector('[data-part="message"]').textContent, 'Use an approved domain.');
+
+  host.querySelector('form').requestSubmit();
+  await nextTick();
+  assert.equal(document.activeElement, fields[1].querySelector('input'));
+  assert.match(host.querySelector('[data-part="summary"]').textContent, /Review the complete form/);
+
+  app.unmount();
+  host.remove();
+});
+
 test('native fallback prefers a visible control over hidden submission elements', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -346,6 +527,147 @@ test('native fallback prefers a visible control over hidden submission elements'
   assert.equal(hidden.id, '');
   assert.equal(hidden.name, 'source');
   assert.equal(search.name, 'query');
+
+  app.unmount();
+  host.remove();
+});
+
+test('teleported custom controls keep FormField context, form association, and interaction state', async () => {
+  const host = document.createElement('div');
+  const portal = document.createElement('div');
+  document.body.append(host, portal);
+  let state;
+  let submitted;
+  const AtomicInput = defineComponent({
+    name: 'AtomicInput',
+    inheritAttrs: false,
+    setup(_, { attrs }) {
+      const input = ref(null);
+      const participation = useFormControl({
+        element: input,
+        semanticControl: input,
+        focusTarget: input,
+        validationTarget: input,
+        labelMode: 'for',
+        capabilities: {
+          id: true,
+          describedBy: true,
+          invalid: true,
+          required: true,
+          disabled: true,
+          readonly: true,
+        },
+      });
+      return () => h('input', mergeProps(attrs, participation.controlProps.value, {
+        ref: input,
+        value: 'portal@sectile.dev',
+      }));
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      id: 'teleport-form',
+      onStateChange: (next) => { state = next; },
+      onSubmit: (event) => { submitted = event.values; },
+    }, {
+      default: () => h(FormField, {
+        id: 'teleported-email',
+        name: ['profile', 'email'],
+        form: 'teleport-form',
+        required: true,
+      }, {
+        default: () => [
+          h(FormLabel, null, { default: () => 'Email' }),
+          h(Teleport, { to: portal }, h(AtomicInput)),
+        ],
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  await nextTick();
+
+  const input = portal.querySelector('input');
+  assert.ok(input instanceof HTMLInputElement);
+  assert.equal(input.name, 'profile.email');
+  assert.equal(input.getAttribute('form'), 'teleport-form');
+  assert.equal(input.required, true);
+
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('blur'));
+  assert.equal(state.fields[0].dirty, true);
+  assert.equal(state.fields[0].touched, true);
+
+  host.querySelector('form').requestSubmit();
+  assert.equal(submitted.profile.email, 'portal@sectile.dev');
+
+  app.unmount();
+  host.remove();
+  portal.remove();
+});
+
+test('dynamic custom-control replacement preserves field metadata and refreshes targets', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const variant = ref('first');
+  let state;
+  let submitted;
+  const AtomicInput = defineComponent({
+    name: 'ReplaceableAtomicInput',
+    inheritAttrs: false,
+    props: { value: { type: String, required: true } },
+    setup(props, { attrs }) {
+      const input = ref(null);
+      const participation = useFormControl({
+        element: input,
+        semanticControl: input,
+        focusTarget: input,
+        validationTarget: input,
+        labelMode: 'for',
+        capabilities: { id: true, describedBy: true, invalid: true },
+      });
+      return () => h('input', mergeProps(attrs, participation.controlProps.value, {
+        ref: input,
+        value: props.value,
+      }));
+    },
+  });
+  const app = createApp({
+    render: () => h(FormRoot, {
+      onStateChange: (next) => { state = next; },
+      onSubmit: (event) => { submitted = event.values; },
+    }, {
+      default: () => h(FormField, { id: 'dynamic', name: 'dynamic' }, {
+        default: () => h(AtomicInput, {
+          key: variant.value,
+          value: variant.value,
+        }),
+      }),
+    }),
+  });
+
+  app.mount(host);
+  await nextTick();
+  await nextTick();
+  let input = host.querySelector('input');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('blur'));
+  assert.equal(state.fields[0].dirty, true);
+  assert.equal(state.fields[0].touched, true);
+
+  variant.value = 'second';
+  await nextTick();
+  await nextTick();
+  input = host.querySelector('input');
+  assert.equal(input.value, 'second');
+  assert.equal(input.name, 'dynamic');
+  assert.equal(state.fields[0].dirty, true);
+  assert.equal(state.fields[0].touched, true);
+
+  host.querySelector('form').requestSubmit();
+  assert.equal(submitted.dynamic, 'second');
 
   app.unmount();
   host.remove();

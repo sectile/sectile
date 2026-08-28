@@ -40,6 +40,7 @@ import {
   type FormValidationResult as DOMFormValidationResult,
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
+import { tryCreateFormFieldPath } from '@sectile/form/path';
 import {
   compositeControlCapabilities,
   hiddenInputSubmissionCapabilities,
@@ -274,6 +275,7 @@ interface FormContext {
   readonly state: ShallowRef<FormState>;
   readonly summary: ShallowRef<HTMLElement | null>;
   readonly register: (participant: FormParticipant<string>) => () => void;
+  readonly setFieldDiagnostic: (id: string, issue: FormIssue | null) => void;
   readonly connection: ShallowRef<FormConnection<string> | null>;
 }
 
@@ -337,7 +339,9 @@ const FormRootImpl = defineComponent({
     const state = shallowRef<FormState>(emptyState);
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
+    const fieldDiagnostics = new Map<string, FormIssue>();
     let syncConfiguredIssues = (): void => {};
+    let syncFieldDiagnostics = (): void => {};
 
     const sync = (): void => {
       if (connection.value !== null) state.value = connection.value.getSnapshot().state;
@@ -348,14 +352,25 @@ const FormRootImpl = defineComponent({
       const registered: RegisteredParticipant = { participant };
       participants.set(participant.id, registered);
       if (connection.value !== null) registered.unregister = connection.value.registerParticipant(participant);
-      void nextTick(() => syncConfiguredIssues());
+      void nextTick(() => {
+        syncConfiguredIssues();
+        syncFieldDiagnostics();
+      });
       return (): void => {
         if (participants.get(participant.id) !== registered) return;
         registered.unregister?.();
         participants.delete(participant.id);
         sync();
-        void nextTick(syncConfiguredIssues);
+        void nextTick(() => {
+          syncConfiguredIssues();
+          syncFieldDiagnostics();
+        });
       };
+    };
+    const setFieldDiagnostic = (id: string, issue: FormIssue | null): void => {
+      if (issue === null) fieldDiagnostics.delete(id);
+      else fieldDiagnostics.set(id, issue);
+      void nextTick(syncFieldDiagnostics);
     };
     const submit = (
       payload: DOMFormSubmitPayload<string>,
@@ -407,7 +422,10 @@ const FormRootImpl = defineComponent({
       validateOn: props.validateOn,
       revalidateOn: props.revalidateOn,
       ...(props.onSubmit === undefined ? {} : { onSubmit: submit }),
-      onReset: () => emit('reset'),
+      onReset: () => {
+        emit('reset');
+        void nextTick(syncFieldDiagnostics);
+      },
       onStateChange: (next: FormState) => {
         state.value = next;
         emit('stateChange', next);
@@ -417,6 +435,9 @@ const FormRootImpl = defineComponent({
       const target = connection.value;
       if (target === null) return;
       target.replaceIssues('form', resolveIssueInputs(target, 'form', props.issues));
+    };
+    syncFieldDiagnostics = (): void => {
+      connection.value?.replaceIssues('field', [...fieldDiagnostics.values()]);
     };
     const mount = (): void => {
       if (root.value === null) return;
@@ -429,6 +450,7 @@ const FormRootImpl = defineComponent({
         registered.unregister = connection.value.registerParticipant(registered.participant);
       }
       syncConfiguredIssues();
+      syncFieldDiagnostics();
       sync();
     };
 
@@ -467,7 +489,13 @@ const FormRootImpl = defineComponent({
       submitCount: state.value.submitCount,
       ...actions,
     }));
-    provide<FormContext>(formContextKey, { state, summary, register, connection });
+    provide<FormContext>(formContextKey, {
+      state,
+      summary,
+      register,
+      setFieldDiagnostic,
+      connection,
+    });
     expose(actions);
 
     return (): VNodeChild => h('form', mergeProps(attrs, {
@@ -512,10 +540,8 @@ function resolveIssueInputs(
 ): readonly FormIssue[] {
   const fields = target.getSnapshot().state.fields;
   return Object.freeze(input.map((issue, index) => {
-    const name = issue.path === undefined ? undefined : encodeFormFieldPath(issue.path);
-    const owner = name === undefined
-      ? undefined
-      : fields.find((field) => field.name === name);
+    const name = issue.path === undefined ? null : safeEncodeFormFieldPath(issue.path);
+    const owner = name === null ? undefined : findNamedFieldOwner(fields, name);
     return Object.freeze({
       id: issue.id ?? `form-${source}-issue-${index + 1}`,
       message: issue.message,
@@ -523,6 +549,30 @@ function resolveIssueInputs(
       ...(owner === undefined ? {} : { fieldId: owner.id }),
     });
   }));
+}
+
+function safeEncodeFormFieldPath(path: FormFieldPath): string | null {
+  const result = tryCreateFormFieldPath(path);
+  return result.ok ? encodeFormFieldPath(result.value) : null;
+}
+
+function findNamedFieldOwner(
+  fields: FormState['fields'],
+  issueName: string,
+): FormState['fields'][number] | undefined {
+  let owner: FormState['fields'][number] | undefined;
+  for (const candidate of fields) {
+    if (
+      candidate.name === null
+      || (
+        issueName !== candidate.name
+        && !issueName.startsWith(`${candidate.name}.`)
+        && !issueName.startsWith(`${candidate.name}[`)
+      )
+    ) continue;
+    if (owner === undefined || candidate.name.length > (owner.name?.length ?? 0)) owner = candidate;
+  }
+  return owner;
 }
 
 function mapSubmissionError(
@@ -568,19 +618,26 @@ export const FormField = defineComponent({
     const generatedId = useHostId();
     const id = computed(() => props.id ?? `form-field-${generatedId}`);
     const nameKey = computed(() => (
-      props.name === undefined ? undefined : encodeFormFieldPath(props.name)
+      props.name === undefined ? undefined : safeEncodeFormFieldPath(props.name) ?? undefined
     ));
     const root = shallowRef<HTMLElement | null>(null);
     const controls = shallowRef<readonly FormControlRegistration[]>([]);
     const fallback = shallowRef<FormControlRegistration | null>(null);
+    const nativeFallbackProblem = shallowRef<string | null>(null);
     const appliedAttributes = new Map<HTMLElement, Map<string, string | null>>();
     let observer: MutationObserver | undefined;
     let unregister: (() => void) | undefined;
+    let diagnosticId: string | undefined;
+    let observedTargets: readonly HTMLElement[] = [];
     let warnedMultipleControls = false;
 
+    const activeRegistrations = computed(() => controls.value.filter(
+      (registration) => resolveElement(registration.element) !== null,
+    ));
     const activeControl = computed(() => (
-      controls.value.find((registration) => resolveElement(registration.element) !== null)
-      ?? fallback.value
+      activeRegistrations.value.length === 1
+        ? activeRegistrations.value[0]
+        : controls.value.length === 0 ? fallback.value : null
     ));
     const labelMode = computed<FormLabelMode>(() => activeControl.value?.labelMode ?? 'for');
     const semanticControl = (): HTMLElement | null => {
@@ -662,8 +719,9 @@ export const FormField = defineComponent({
         const capabilities = submission.capabilities ?? nativeSubmissionCapabilities(element);
         const explicit = submission.explicit ?? registration.explicit;
         const attributes: Record<string, unknown> = {};
-        if (capabilities.name === true && props.name !== undefined) {
-          attributes['name'] = encodeSubmissionName(props.name, submission.relativeName);
+        if (capabilities.name === true && nameKey.value !== undefined) {
+          const submissionName = safeEncodeSubmissionName(nameKey.value, submission.relativeName);
+          if (submissionName !== null) attributes['name'] = submissionName;
         }
         if (capabilities.form === true && props.form !== undefined) attributes['form'] = props.form;
         if (capabilities.required === true && props.required === true) attributes['required'] = true;
@@ -676,53 +734,107 @@ export const FormField = defineComponent({
     const discoverNativeFallback = (): void => {
       if (controls.value.length > 0 || root.value === null) {
         fallback.value = null;
+        nativeFallbackProblem.value = null;
         return;
       }
       const candidates = nativeCandidates(root.value);
-      const semantic = nativeSemanticControl(candidates);
-      if (semantic === undefined) {
+      const discovered = createNativeFallbackRegistration(root.value, candidates);
+      nativeFallbackProblem.value = discovered.problem;
+      if (discovered.registration === null) {
         fallback.value = null;
         return;
       }
-      const submissions = candidates.filter(isFormSubmissionElement).map((element) => ({
-        element: () => element,
-        capabilities: nativeSubmissionCapabilities(element),
-      }));
+      const next = discovered.registration;
       const current = fallback.value;
       if (
         current !== null
-        && resolveElement(current.semanticControl ?? current.element) === semantic
-        && sameSubmissionElements(resolveSubmissionRegistrations(current), submissions)
+        && resolveElement(current.semanticControl ?? current.element)
+          === resolveElement(next.semanticControl ?? next.element)
+        && sameSubmissionElements(
+          resolveSubmissionRegistrations(current),
+          resolveSubmissionRegistrations(next),
+        )
       ) return;
-      fallback.value = {
-        element: () => semantic,
-        semanticControl: () => semantic,
-        focusTarget: () => semantic,
-        submissions,
-        labelMode: nativeLabelMode(semantic),
-        capabilities: nativeControlCapabilities(semantic),
-      };
+      fallback.value = next;
+    };
+
+    const syncDiagnostic = (): void => {
+      const currentId = id.value;
+      if (diagnosticId !== undefined && diagnosticId !== currentId) {
+        formContext.setFieldDiagnostic(diagnosticId, null);
+      }
+      diagnosticId = currentId;
+      let message: string | null = null;
+      if (props.name !== undefined && nameKey.value === undefined) {
+        message = 'FormField received an invalid field path.';
+      } else if (activeRegistrations.value.length > 1) {
+        message = 'FormField received multiple active controls. Register one composite control with explicit targets.';
+      } else if (controls.value.length > 0 && activeRegistrations.value.length === 0) {
+        message = 'FormField has no mounted control target.';
+      } else if (nativeFallbackProblem.value !== null) {
+        message = nativeFallbackProblem.value;
+      } else {
+        const registration = activeControl.value;
+        if (registration !== null && registration !== undefined) {
+          const invalidRelativeName = resolveSubmissionRegistrations(registration).some(
+            (submission) => submission.relativeName !== undefined
+              && nameKey.value !== undefined
+              && safeEncodeSubmissionName(nameKey.value, submission.relativeName) === null,
+          );
+          if (invalidRelativeName) message = 'FormField received an invalid relative submission path.';
+        }
+      }
+      formContext.setFieldDiagnostic(currentId, message === null ? null : Object.freeze({
+        id: `${currentId}:composition`,
+        fieldId: currentId,
+        message,
+        source: 'field',
+      }));
+    };
+
+    const refreshParticipantTargets = (): void => {
+      const registration = activeControl.value;
+      const next = registration === null || registration === undefined
+        ? root.value === null ? [] : [root.value]
+        : [
+            root.value,
+            resolveElement(registration.semanticControl ?? registration.element),
+            resolveElement(registration.focusTarget ?? registration.element),
+            resolveElement(registration.validationTarget ?? registration.element),
+            ...resolveSubmissionRegistrations(registration).map(
+              (submission) => resolveElement(submission.element),
+            ),
+          ].filter((element): element is HTMLElement => element !== null);
+      if (
+        next.length === observedTargets.length
+        && next.every((element, index) => element === observedTargets[index])
+      ) return;
+      observedTargets = Object.freeze([...next]);
+      formContext.connection.value?.refreshParticipant(id.value);
     };
 
     const registerControl = (registration: FormControlRegistration): (() => void) => {
       controls.value = [...controls.value, registration];
       fallback.value = null;
       void nextTick(() => {
-        const activeRegistrations = controls.value.filter(
-          (candidate) => resolveElement(candidate.element) !== null,
-        );
-        if (!warnedMultipleControls && activeRegistrations.length > 1) {
+        if (!warnedMultipleControls && activeRegistrations.value.length > 1) {
           warnedMultipleControls = true;
           console.warn(
             '[Sectile] FormField received multiple active control registrations. Register one composite control with explicit semantic, focus, and submission targets.',
           );
         }
         applyControlAttributes();
+        syncDiagnostic();
+        refreshParticipantTargets();
       });
       return (): void => {
         controls.value = controls.value.filter((candidate) => candidate !== registration);
         discoverNativeFallback();
-        void nextTick(applyControlAttributes);
+        void nextTick(() => {
+          applyControlAttributes();
+          syncDiagnostic();
+          refreshParticipantTargets();
+        });
       };
     };
 
@@ -735,6 +847,8 @@ export const FormField = defineComponent({
       observer = new MutationObserver(() => {
         discoverNativeFallback();
         applyControlAttributes();
+        syncDiagnostic();
+        refreshParticipantTargets();
       });
       observer.observe(root.value, { childList: true, subtree: true });
       applyControlAttributes();
@@ -748,6 +862,16 @@ export const FormField = defineComponent({
             ? root.value as HTMLElement
             : resolveElement(registration.focusTarget ?? registration.semanticControl ?? registration.element)
               ?? root.value as HTMLElement;
+        },
+        get validationTarget() {
+          const registration = activeControl.value;
+          return registration === undefined || registration === null
+            ? root.value as HTMLElement
+            : resolveElement(
+                registration.validationTarget
+                  ?? registration.semanticControl
+                  ?? registration.element,
+              ) ?? root.value as HTMLElement;
         },
         get submissionElements() {
           const registration = activeControl.value;
@@ -764,15 +888,25 @@ export const FormField = defineComponent({
           control?.focus();
           return control !== null && document.activeElement === control;
         },
-        ...(props.name === undefined ? {} : { name: props.name }),
+        reset: () => activeControl.value?.reset?.(),
+        ...(nameKey.value === undefined ? {} : { name: nameKey.value }),
       };
       unregister = formContext.register(participant);
+      observedTargets = Object.freeze([
+        participant.element,
+        participant.semanticControl ?? participant.element,
+        participant.focusTarget ?? participant.element,
+        participant.validationTarget ?? participant.element,
+        ...(participant.submissionElements ?? []),
+      ]);
+      syncDiagnostic();
     };
 
     onMounted(() => { void nextTick(mount); });
     onBeforeUnmount(() => {
       observer?.disconnect();
       restoreControlAttributes();
+      if (diagnosticId !== undefined) formContext.setFieldDiagnostic(diagnosticId, null);
       unregister?.();
     });
     watch([id, nameKey], () => { void nextTick(mount); });
@@ -786,7 +920,10 @@ export const FormField = defineComponent({
       () => props.disabled,
       () => props.readonly,
       () => slotProps.value.valid,
-    ], applyControlAttributes, { flush: 'post' });
+    ], () => {
+      applyControlAttributes();
+      syncDiagnostic();
+    }, { flush: 'post' });
     provide<FormFieldContext>(formFieldContextKey, {
       slotProps,
       labelMode,
@@ -1027,7 +1164,7 @@ function sameSubmissionElements(
 }
 
 function nativeCandidates(root: HTMLElement): readonly HTMLElement[] {
-  const selector = 'button, fieldset, input, select, textarea';
+  const selector = 'fieldset, input, select, textarea';
   const candidates = [
     ...(root.matches(selector) ? [root] : []),
     ...root.querySelectorAll<HTMLElement>(selector),
@@ -1037,11 +1174,97 @@ function nativeCandidates(root: HTMLElement): readonly HTMLElement[] {
   ));
 }
 
+function createNativeFallbackRegistration(
+  root: HTMLElement,
+  candidates: readonly HTMLElement[],
+): { readonly registration: FormControlRegistration | null; readonly problem: string | null } {
+  const semantic = nativeSemanticControl(candidates);
+  if (semantic === undefined || isHiddenInput(semantic)) {
+    return {
+      registration: null,
+      problem: 'FormField has no visible native semantic or focus target.',
+    };
+  }
+  const submissions = candidates.filter(isFormSubmissionElement);
+  const visible = candidates.filter((candidate) => !isHiddenInput(candidate));
+  const fieldset = visible.find((candidate) => candidate.tagName === 'FIELDSET');
+  if (fieldset !== undefined) {
+    return {
+      registration: nativeFallbackForElement(fieldset, submissions),
+      problem: null,
+    };
+  }
+  if (visible.length === 1) {
+    return {
+      registration: nativeFallbackForElement(semantic, submissions),
+      problem: null,
+    };
+  }
+  if (isNativeCheckedGroup(visible)) {
+    const focusTarget = visible.find((candidate) => !(
+      candidate as HTMLInputElement
+    ).disabled) ?? visible[0]!;
+    return {
+      registration: {
+        element: () => root,
+        semanticControl: () => root,
+        focusTarget: () => focusTarget,
+        validationTarget: () => root,
+        submissions: submissions.map((element) => ({
+          element: () => element,
+          capabilities: Object.freeze({
+            ...nativeSubmissionCapabilities(element),
+            required: false,
+          }),
+        })),
+        labelMode: 'labelledby',
+        capabilities: compositeControlCapabilities,
+      },
+      problem: null,
+    };
+  }
+  return {
+    registration: null,
+    problem: 'FormField contains multiple unrelated native controls. Use a fieldset or one composite registration.',
+  };
+}
+
+function nativeFallbackForElement(
+  semantic: HTMLElement,
+  submissions: readonly FormSubmissionElement[],
+): FormControlRegistration {
+  return {
+    element: () => semantic,
+    semanticControl: () => semantic,
+    focusTarget: () => semantic,
+    validationTarget: () => semantic,
+    submissions: submissions.map((element) => ({
+      element: () => element,
+      capabilities: nativeSubmissionCapabilities(element),
+    })),
+    labelMode: nativeLabelMode(semantic),
+    capabilities: nativeControlCapabilities(semantic),
+  };
+}
+
+function isHiddenInput(element: HTMLElement): boolean {
+  return element.tagName === 'INPUT'
+    && element.getAttribute('type')?.toLowerCase() === 'hidden';
+}
+
+function isNativeCheckedGroup(candidates: readonly HTMLElement[]): boolean {
+  if (candidates.length < 2) return false;
+  const types = candidates.map((candidate) => (
+    candidate.tagName === 'INPUT'
+      ? (candidate as HTMLInputElement).type.toLowerCase()
+      : null
+  ));
+  return types.every((type) => type === types[0])
+    && (types[0] === 'checkbox' || types[0] === 'radio');
+}
+
 function nativeSemanticControl(candidates: readonly HTMLElement[]): HTMLElement | undefined {
-  return candidates.find((candidate) => (
-    candidate.tagName !== 'INPUT'
-    || candidate.getAttribute('type')?.toLowerCase() !== 'hidden'
-  )) ?? candidates[0];
+  return candidates.find((candidate) => !isHiddenInput(candidate)) ?? candidates[0];
 }
 
 function isFormSubmissionElement(element: HTMLElement): element is FormSubmissionElement {
@@ -1085,9 +1308,16 @@ function nativeSubmissionCapabilities(
   });
 }
 
-function encodeSubmissionName(base: FormFieldPath, relative?: FormRelativePath): string {
-  if (relative === undefined) return encodeFormFieldPath(base);
-  return encodeFormFieldPath(appendFormFieldPath(base, relative));
+function safeEncodeSubmissionName(
+  base: FormFieldPath,
+  relative?: FormRelativePath,
+): string | null {
+  try {
+    if (relative === undefined) return safeEncodeFormFieldPath(base);
+    return safeEncodeFormFieldPath(appendFormFieldPath(base, relative));
+  } catch {
+    return null;
+  }
 }
 
 function applyMetadata(

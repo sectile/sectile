@@ -76,6 +76,7 @@ export interface FormParticipant<ID extends StableID = StableID> {
   readonly element: HTMLElement;
   readonly semanticControl?: HTMLElement;
   readonly focusTarget?: HTMLElement;
+  readonly validationTarget?: HTMLElement;
   readonly submissionElements?: readonly FormSubmissionElement[];
   readonly name?: FormFieldPath | null;
   readonly focus?: FormFocusHandler;
@@ -193,6 +194,7 @@ export function tryCreateForm<
   let state = initial.value;
   let revision = 0;
   let active = true;
+  let recoveringFocus = false;
   let invalidBatchPending = false;
   let validationSequence = 0;
   let validationController: AbortController | null = null;
@@ -287,7 +289,7 @@ export function tryCreateForm<
       dirty: flags.dirty ?? current.dirty,
     }) !== null;
   };
-  const focusInvalid = (startId: ID): void => {
+  const focusInvalid = (startId: ID): boolean => {
     const invalid = state.fields.filter(
       (candidate) => !candidate.valid || candidate.issues.length > 0,
     );
@@ -297,7 +299,7 @@ export function tryCreateForm<
       const participant = participants.get(candidate.id);
       if (participant === undefined) continue;
       if (participant.focus !== undefined) {
-        if (participant.focus() !== false) return;
+        if (participant.focus() !== false) return true;
         continue;
       }
       const control = participant.focusTarget
@@ -306,8 +308,9 @@ export function tryCreateForm<
       const focusable = control as HTMLElement & { readonly disabled?: boolean };
       if (focusable.hidden || focusable.disabled === true) continue;
       focusable.focus();
-      return;
+      if (focusable.ownerDocument.activeElement === focusable) return true;
     }
+    return false;
   };
   const announce = (issueIds: readonly StableID[]): void => {
     const issues = orderedIssues(state).filter((issue) => issueIds.includes(issue.id));
@@ -318,9 +321,28 @@ export function tryCreateForm<
     announceSummaryHandler?.(issues);
   };
   const execute = (commands: readonly FormCommand<ID>[]): void => {
+    let focused = false;
     for (const command of commands) {
-      if (command.type === 'focus-field') focusInvalid(command.id);
-      if (command.type === 'announce-summary') announce(command.issueIds);
+      if (command.type === 'focus-field') {
+        recoveringFocus = true;
+        try {
+          focused = focusInvalid(command.id) || focused;
+        } finally {
+          recoveringFocus = false;
+        }
+      }
+      if (command.type === 'announce-summary') {
+        announce(command.issueIds);
+        if (!focused && command.issueIds.length > 0 && summary !== undefined) {
+          recoveringFocus = true;
+          try {
+            summary.focus();
+            focused = summary.ownerDocument.activeElement === summary;
+          } finally {
+            recoveringFocus = false;
+          }
+        }
+      }
       if (command.type === 'reset-field') participants.get(command.id)?.reset?.();
     }
   };
@@ -652,6 +674,7 @@ export function tryCreateForm<
     });
   };
   const interact = (event: Event, trigger: FormInteractionValidationTrigger): void => {
+    if (recoveringFocus && trigger === 'blur') return;
     if (handledParticipantEvents.has(event)) return;
     handledParticipantEvents.add(event);
     const participant = participantFor(event.target);
@@ -839,6 +862,7 @@ function participantTargets<ID extends StableID>(
     participant.element,
     participant.semanticControl,
     participant.focusTarget,
+    participant.validationTarget,
     ...(participant.submissionElements ?? []),
   ].filter((element): element is HTMLElement => element !== undefined))];
 }
@@ -847,8 +871,9 @@ function validationTargets<ID extends StableID>(
   participant: FormParticipant<ID>,
 ): readonly HTMLElement[] {
   const semantic = participant.semanticControl;
+  const validation = participant.validationTarget;
   const submissions = participant.submissionElements ?? [];
-  const targets = [...new Set([semantic, ...submissions].filter(
+  const targets = [...new Set([validation, semantic, ...submissions].filter(
     (element): element is HTMLElement => element !== undefined,
   ))];
   return targets.length > 0 ? targets : [participant.element];

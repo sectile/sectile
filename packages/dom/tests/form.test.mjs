@@ -346,7 +346,7 @@ test('DOM Form defers Standard Schema until submit and revalidates failed submis
   }
 });
 
-test('DOM Form keeps field, semantic, focus, and submission targets distinct', () => {
+test('DOM Form keeps field, semantic, focus, validation, and submission targets distinct', async () => {
   const dom = installDOM();
   try {
     const { document } = dom.window;
@@ -354,11 +354,13 @@ test('DOM Form keeps field, semantic, focus, and submission targets distinct', (
     const field = document.createElement('div');
     const semanticControl = document.createElement('div');
     const focusTarget = document.createElement('button');
+    const validationTarget = document.createElement('input');
     const submission = document.createElement('input');
+    validationTarget.required = true;
     submission.type = 'hidden';
     submission.name = 'profile.preference';
     submission.value = 'compact';
-    field.append(semanticControl, focusTarget, submission);
+    field.append(semanticControl, focusTarget, validationTarget, submission);
     formElement.append(field);
     document.body.append(formElement);
 
@@ -375,14 +377,44 @@ test('DOM Form keeps field, semantic, focus, and submission targets distinct', (
       element: field,
       semanticControl,
       focusTarget,
+      validationTarget,
       submissionElements: [submission],
       name: ['profile', 'preference'],
     });
 
     formElement.requestSubmit();
+    await Promise.resolve();
 
     assert.equal(form.state.fields[0].name, 'profile.preference');
+    assert.deepEqual(
+      form.state.fields[0].issues.map((issue) => issue.source),
+      ['native', 'validate'],
+    );
     assert.equal(document.activeElement, focusTarget);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form focuses the summary when invalid issues have no focusable field owner', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const formElement = document.createElement('form');
+    const summary = document.createElement('div');
+    formElement.append(summary);
+    document.body.append(formElement);
+    const form = createForm({
+      form: formElement,
+      summary,
+      validate: () => ({ issues: [{ message: 'Review the entire form.' }] }),
+    });
+
+    formElement.requestSubmit();
+
+    assert.equal(form.state.validationStatus, 'invalid');
+    assert.equal(document.activeElement, summary);
+    assert.equal(summary.textContent, 'Review the entire form.');
   } finally {
     dom.restore();
   }

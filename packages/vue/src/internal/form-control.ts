@@ -69,10 +69,12 @@ export interface FormControlRegistration {
   readonly element: FormElementSource;
   readonly semanticControl?: FormElementSource;
   readonly focusTarget?: FormElementSource;
+  readonly validationTarget?: FormElementSource;
   readonly submissions?: FormSubmissionSource;
   readonly labelMode?: FormLabelMode;
   readonly capabilities?: FormControlCapabilities;
   readonly explicit?: readonly FormMetadataAttribute[];
+  readonly reset?: () => void;
 }
 
 export interface FormControlParticipation {
@@ -152,6 +154,7 @@ export function useNativeInputFormControl(
     element: element as FormElementSource<HTMLInputElement>,
     semanticControl: element as FormElementSource<HTMLInputElement>,
     focusTarget: element as FormElementSource<HTMLInputElement>,
+    validationTarget: element as FormElementSource<HTMLInputElement>,
     labelMode: 'for',
     capabilities: nativeInputControlCapabilities,
   });
@@ -160,16 +163,20 @@ export function useNativeInputFormControl(
 export function useCompositeFormControl(options: {
   readonly root: FormElementSource;
   readonly focusTarget?: FormElementSource;
+  readonly validationTarget?: FormElementSource;
   readonly submissions?: FormSubmissionSource;
   readonly labelMode?: FormLabelMode;
+  readonly reset?: () => void;
 }): FormControlParticipation {
   return useFormControl({
     element: options.root,
     semanticControl: options.root,
     focusTarget: options.focusTarget ?? options.root,
+    validationTarget: options.validationTarget ?? options.root,
     labelMode: options.labelMode ?? 'labelledby',
     capabilities: compositeControlCapabilities,
     ...(options.submissions === undefined ? {} : { submissions: options.submissions }),
+    ...(options.reset === undefined ? {} : { reset: options.reset }),
   });
 }
 

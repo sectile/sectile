@@ -227,7 +227,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "6549111e085f69ace9105d60ff0e25f04f1d1663a7a93b9637705eeea99a0050",
+  "fingerprint": "e4e0a5344b9210009ede56da80e52bf6513045821f1c9250d2a15448d901fe2e",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -355,7 +355,7 @@
     },
     {
       "path": "dist/internal/form-control.d.ts",
-      "sha256": "71c9253e459c08d7732faa878af5c93c98ccaf92bbba10cb3a119866e2cde6d2"
+      "sha256": "ea1e34cf4cdd9412cbdb9fb316ddec7fc55f219c28aae3cda511cafa04be799e"
     },
     {
       "path": "dist/internal/native-field.d.ts",
