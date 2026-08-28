@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createForm } from '../dist/form.js';
+import { createForm, defineFormSubmission } from '../dist/form.js';
+
+test('DOM defineFormSubmission returns one immutable schema/handler binding', () => {
+  const schema = { '~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) } };
+  const onSubmit = () => ({ ok: true });
+  const submission = defineFormSubmission({ schema, onSubmit });
+  assert.equal(submission.schema, schema);
+  assert.equal(submission.onSubmit, onSubmit);
+  assert.equal(Object.isFrozen(submission), true);
+});
 
 function installDOM() {
   const window = new Window({ url: 'https://sectile.dev/forms' });

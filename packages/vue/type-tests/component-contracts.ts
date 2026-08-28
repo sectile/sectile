@@ -1,10 +1,17 @@
 import { h } from 'vue';
+import {
+  createForm as createDOMForm,
+  defineFormSubmission as defineDOMFormSubmission,
+} from '@sectile/dom/form';
 import type { DatePickerPolicies } from '@sectile/dom/temporal';
 import type { DateFieldOptions } from '@sectile/dom/temporal';
 import type { DateTimeFieldOptions } from '@sectile/dom/temporal';
 import type { NumberFieldOptions } from '@sectile/dom/number-field';
 import type { TimeFieldOptions } from '@sectile/dom/temporal';
 import { DateField } from '../dist/temporal.js';
+import {
+  defineFormSubmission as defineVueFormSubmission,
+} from '../dist/form.js';
 import {
   DatePickerContent,
   DatePickerRoot,
@@ -65,6 +72,57 @@ declare const dateFieldPolicies: NonNullable<DateFieldOptions['policies']>;
 declare const dateTimeFieldPolicies: NonNullable<DateTimeFieldOptions['policies']>;
 declare const numberFieldPolicies: NonNullable<NumberFieldOptions['policies']>;
 declare const timeFieldPolicies: NonNullable<TimeFieldOptions['policies']>;
+declare const formElement: HTMLFormElement;
+
+const submissionSchema = {
+  '~standard': {
+    version: 1 as const,
+    vendor: 'sectile-type-fixture',
+    types: undefined as unknown as {
+      readonly input: { readonly profile: { readonly email: string } };
+      readonly output: { readonly accountId: number; readonly normalizedEmail: string };
+    },
+    validate: (_value: unknown) => ({
+      value: { accountId: 42, normalizedEmail: 'release@sectile.dev' },
+    }),
+  },
+};
+
+const rawVueSubmission = defineVueFormSubmission({
+  onSubmit: ({ values }) => {
+    values satisfies Readonly<Record<string, unknown>>;
+    // @ts-expect-error Raw FormData-derived values remain unknown without a schema.
+    values.email.toUpperCase();
+  },
+});
+const schemaVueSubmission = defineVueFormSubmission({
+  schema: submissionSchema,
+  onSubmit: ({ values }) => {
+    values.accountId satisfies number;
+    values.normalizedEmail satisfies string;
+    // @ts-expect-error Schema output does not expose pre-transform input fields.
+    values.profile.email;
+  },
+});
+const rawDOMSubmission = defineDOMFormSubmission({
+  onSubmit: ({ values }) => {
+    values satisfies Readonly<Record<string, unknown>>;
+  },
+});
+const schemaDOMSubmission = defineDOMFormSubmission({
+  schema: submissionSchema,
+  onSubmit: ({ values }) => {
+    values.accountId satisfies number;
+    // @ts-expect-error Schema output accountId is numeric.
+    values.accountId satisfies string;
+  },
+});
+void rawVueSubmission;
+void schemaVueSubmission;
+void rawDOMSubmission;
+void schemaDOMSubmission;
+createDOMForm({ form: formElement, ...rawDOMSubmission });
+createDOMForm({ form: formElement, ...schemaDOMSubmission });
 
 h(SelectRoot, { items: [], modelValue: null, defaultValue: null });
 h(SpinButtonRoot, { min: 0, max: 10, draft: null, defaultDraft: null });

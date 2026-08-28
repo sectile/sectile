@@ -41,6 +41,7 @@ import {
   type FormValues as DOMFormValues,
 } from '@sectile/dom/form';
 import { tryCreateFormFieldPath } from '@sectile/form/path';
+import type { FormSchemaOutput as DOMFormSchemaOutput } from '@sectile/form/schema';
 import {
   compositeControlCapabilities,
   hiddenInputSubmissionCapabilities,
@@ -99,6 +100,25 @@ export type FormSubmitResult =
   | { readonly ok: false; readonly issues?: readonly FormSubmitIssue[] };
 export type FormSubmitHandler<Values extends object = Record<string, unknown>> =
   (event: FormSubmitEvent<Values>) => FormSubmitResult | PromiseLike<FormSubmitResult>;
+export interface FormSubmissionDefinition {
+  readonly schema?: never;
+  readonly onSubmit: FormSubmitHandler<Record<string, unknown>>;
+}
+export interface FormSchemaSubmissionDefinition<Schema extends FormSchema<object, object>> {
+  readonly schema: Schema;
+  readonly onSubmit: FormSubmitHandler<DOMFormSchemaOutput<Schema>>;
+}
+export function defineFormSubmission<const Schema extends FormSchema<object, object>>(
+  definition: FormSchemaSubmissionDefinition<Schema>,
+): FormSchemaSubmissionDefinition<Schema>;
+export function defineFormSubmission(
+  definition: FormSubmissionDefinition,
+): FormSubmissionDefinition;
+export function defineFormSubmission(
+  definition: FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>>,
+): FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>> {
+  return Object.freeze({ ...definition });
+}
 export type FormSubmitErrorMapper = (
   reason: unknown,
 ) => FormSubmitIssue | readonly FormSubmitIssue[] | undefined;
@@ -173,30 +193,9 @@ export interface FormRootComponent {
   };
 }
 
-type FormFieldLeaf = string | number | boolean | bigint | symbol | null | undefined | Date | Blob | File;
-type FormFieldPathSegments<
-  Value,
-  Depth extends readonly unknown[] = [],
-> = Depth['length'] extends 8
-  ? never
-  : NonNullable<Value> extends FormFieldLeaf
-    ? never
-    : NonNullable<Value> extends readonly (infer Item)[]
-      ? readonly [number] | readonly [number, ...FormFieldPathSegments<Item, readonly [...Depth, unknown]>]
-      : NonNullable<Value> extends object
-        ? {
-            [Key in keyof NonNullable<Value> & string]:
-              | readonly [Key]
-              | readonly [Key, ...FormFieldPathSegments<NonNullable<Value>[Key], readonly [...Depth, unknown]>]
-          }[keyof NonNullable<Value> & string]
-        : never;
-export type FormFieldPathOf<Values extends object> = string extends keyof Values
-  ? FormFieldPath
-  : (keyof Values & string) | FormFieldPathSegments<Values>;
-
-export interface FormFieldProps<Values extends object = Record<string, unknown>> {
+export interface FormFieldProps {
   readonly id?: string;
-  readonly name?: FormFieldPathOf<Values>;
+  readonly name?: FormFieldPath;
   readonly form?: string;
   readonly required?: boolean;
   readonly disabled?: boolean;
@@ -205,25 +204,11 @@ export interface FormFieldProps<Values extends object = Record<string, unknown>>
   readonly asChild?: boolean;
 }
 
-export type FormFieldPublicProps<Values extends object = Record<string, unknown>> =
-  FormFieldProps<Values>
+export type FormFieldPublicProps =
+  FormFieldProps
   & VNodeProps
   & AllowedComponentProps
   & ComponentCustomProps;
-
-export interface TypedFormRootComponent<Input extends object, Output extends object = Input> {
-  new (props: FormRootPublicProps<Input, Output>): {
-    $props: FormRootPublicProps<Input, Output>;
-    $slots: { default?: (props: FormRootSlotProps) => VNodeChild };
-  };
-}
-
-export interface TypedFormFieldComponent<Values extends object> {
-  new (props: FormFieldPublicProps<Values>): {
-    $props: FormFieldPublicProps<Values>;
-    $slots: { default?: (props: FormFieldSlotProps) => VNodeChild };
-  };
-}
 
 export interface FormFieldSlotProps {
   readonly id: string;
@@ -1090,33 +1075,6 @@ function renderFieldPart(
     'data-scope': 'form',
     'data-part': part,
   }), { default: () => slots.default?.() });
-}
-
-export interface TypedFormComponents<Input extends object, Output extends object = Input> {
-  readonly Root: TypedFormRootComponent<Input, Output>;
-  readonly Field: TypedFormFieldComponent<Input>;
-  readonly Label: typeof FormLabel;
-  readonly Description: typeof FormDescription;
-  readonly Message: typeof FormMessage;
-  readonly Summary: typeof FormSummary;
-  readonly Reset: typeof FormReset;
-  readonly Submit: typeof FormSubmit;
-}
-
-export function createTypedForm<
-  Input extends object,
-  Output extends object = Input,
->(): TypedFormComponents<Input, Output> {
-  return Object.freeze({
-    Root: FormRoot as unknown as TypedFormRootComponent<Input, Output>,
-    Field: FormField as unknown as TypedFormFieldComponent<Input>,
-    Label: FormLabel,
-    Description: FormDescription,
-    Message: FormMessage,
-    Summary: FormSummary,
-    Reset: FormReset,
-    Submit: FormSubmit,
-  });
 }
 
 function useFormContext(part: string): FormContext {

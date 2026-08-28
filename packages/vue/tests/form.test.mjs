@@ -11,7 +11,16 @@ import {
   FormRoot,
   FormSubmit,
   FormSummary,
+  defineFormSubmission,
 } from '../dist/form.js';
+
+test('Vue defineFormSubmission keeps schema and handler atomic for v-bind', () => {
+  const schema = { '~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) } };
+  const onSubmit = () => ({ ok: true });
+  const submission = defineFormSubmission({ schema, onSubmit });
+  assert.deepEqual(submission, { schema, onSubmit });
+  assert.equal(Object.isFrozen(submission), true);
+});
 
 test('Vue Form renders native semantics and stable compound part boundaries during SSR', async () => {
   const app = createSSRApp({

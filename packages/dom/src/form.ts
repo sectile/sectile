@@ -16,7 +16,11 @@ import {
   type FormFieldPath,
 } from '@sectile/form/path';
 import { tryCreateFormValues, type FormValues } from '@sectile/form/values';
-import type { FormSchema, StandardSchemaV1 } from '@sectile/form/schema';
+import type {
+  FormSchema,
+  FormSchemaOutput,
+  StandardSchemaV1,
+} from '@sectile/form/schema';
 import { FormResultError, type FormResult } from '@sectile/form/error';
 import type { StableID } from '@sectile/core';
 
@@ -30,7 +34,11 @@ export {
   type FormRelativePath,
 } from '@sectile/form/path';
 export type { FormValues } from '@sectile/form/values';
-export type { FormSchema } from '@sectile/form/schema';
+export type {
+  FormSchema,
+  FormSchemaInput,
+  FormSchemaOutput,
+} from '@sectile/form/schema';
 
 export interface FormValidationIssue {
   readonly message: string;
@@ -105,6 +113,34 @@ export type FormSubmitHandler<
 > = (
   payload: FormSubmitPayload<ID, Values>,
 ) => FormSubmitResult<ID> | PromiseLike<FormSubmitResult<ID>>;
+
+export interface FormSubmissionDefinition<ID extends StableID = StableID> {
+  readonly schema?: never;
+  readonly onSubmit: FormSubmitHandler<ID, FormValues>;
+}
+
+export interface FormSchemaSubmissionDefinition<
+  Schema extends FormSchema<object, object>,
+  ID extends StableID = StableID,
+> {
+  readonly schema: Schema;
+  readonly onSubmit: FormSubmitHandler<ID, FormSchemaOutput<Schema>>;
+}
+
+export function defineFormSubmission<
+  const Schema extends FormSchema<object, object>,
+  ID extends StableID = StableID,
+>(
+  definition: FormSchemaSubmissionDefinition<Schema, ID>,
+): FormSchemaSubmissionDefinition<Schema, ID>;
+export function defineFormSubmission<ID extends StableID = StableID>(
+  definition: FormSubmissionDefinition<ID>,
+): FormSubmissionDefinition<ID>;
+export function defineFormSubmission(
+  definition: FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>>,
+): FormSubmissionDefinition | FormSchemaSubmissionDefinition<FormSchema<object, object>> {
+  return Object.freeze({ ...definition });
+}
 
 export type FormSubmitErrorMapper<ID extends StableID = StableID> = (
   reason: unknown,
