@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "c4038fdafe4db2c5a7166fc32c975554892f3585129d498151c2be870dc1183c",
+    "publicSignatureFingerprint": "515a29822522b32ec4256f0b41685ece4d69cee27e8185bcbb8e821c07ca9877",
     "subpaths": [
       ".",
       "./accordion",
@@ -30,6 +30,7 @@
       "./editable",
       "./feed",
       "./grid",
+      "./grid-control",
       "./interaction",
       "./layer-stack",
       "./listbox",
@@ -511,6 +512,6 @@
   ],
   "acceptance": {
     "classification": "breaking",
-    "reason": "Form runtime, declarations, and error codes moved to @sectile/form; @sectile/core/form is removed in the coordinated 0.8.0 release."
+    "reason": "WI-030 splits GridControl declarations from the pure Grid structure into @sectile/core/grid-control."
   }
 }

@@ -1,5 +1,43 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/core",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-030:grid-control-split",
+      "change": "signature-changed",
+      "before": {
+        "subpath": "./grid"
+      },
+      "symbols": [
+        "applyGridEvent",
+        "createGridState",
+        "tryCreateGridState",
+        "GridCommand",
+        "GridEditMode",
+        "GridEvent",
+        "GridPolicies",
+        "GridState",
+        "GridStateInput",
+        "GridUpdate"
+      ],
+      "replacement": {
+        "package": "@sectile/core",
+        "subpath": "./grid-control"
+      }
+    },
+    {
+      "id": "WI-030:tree-grid-grid-closure",
+      "change": "signature-changed",
+      "before": {
+        "subpath": "./tree-grid"
+      },
+      "symbols": [
+        "GridControl declaration closure"
+      ],
+      "replacement": {
+        "package": "@sectile/core",
+        "subpath": "./grid-control"
+      }
+    }
+  ]
 }

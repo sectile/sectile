@@ -1,5 +1,20 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/terminal",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-030:terminal-grid-control-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./grid" },
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "./grid" }
+    },
+    {
+      "id": "WI-030:terminal-root-grid-control-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "." },
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
+      "replacement": { "package": "@sectile/terminal", "subpath": "." }
+    }
+  ]
 }

@@ -41,6 +41,11 @@
       "import": "./dist/structures/grid.js",
       "default": "./dist/structures/grid.js"
     },
+    "./grid-control": {
+      "types": "./dist/grid-control.d.ts",
+      "import": "./dist/grid-control.js",
+      "default": "./dist/grid-control.js"
+    },
     "./tree": {
       "types": "./dist/structures/tree.d.ts",
       "import": "./dist/structures/tree.js",
@@ -344,6 +349,8 @@
     "check:naming": "node scripts/check-acronym-casing.mjs",
     "check:layout": "node scripts/check-layout.mjs",
     "check:import-boundaries": "node scripts/check-import-boundaries.mjs",
+    "check:module-dag": "node scripts/check-core-module-dag.mjs",
+    "update:module-dag": "node scripts/update-core-module-dag.mjs",
     "check:dist-boundary": "node scripts/check-dist-platform-boundary.mjs",
     "check:subpaths": "node scripts/check-subpath-imports.mjs",
     "check:package": "node scripts/check-package-footprint.mjs",

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'; import test from 'node:test';
-import { createGrid, createGridState, applyGridEvent } from '../../.verification-dist/structures/grid.js';
+import { createGrid } from '../../.verification-dist/structures/grid.js';
+import { createGridState, applyGridEvent } from '../../.verification-dist/grid-control.js';
 import { createReferenceGridState, applyReferenceGridEvent } from '../../.verification-dist/internal/reference/composites/grid-control.js';
 import { unwrap } from '../support.mjs';
 

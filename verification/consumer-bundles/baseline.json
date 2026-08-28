@@ -182,6 +182,16 @@
       "pair": null
     },
     {
+      "id": "core:./grid-control:side-effect",
+      "package": "core",
+      "subpath": "./grid-control",
+      "source": "@sectile/core/grid-control",
+      "exportName": null,
+      "mode": "side-effect",
+      "platform": "browser",
+      "pair": null
+    },
+    {
       "id": "core:./grid:side-effect",
       "package": "core",
       "subpath": "./grid",
@@ -3539,6 +3549,32 @@
       "dependencies": []
     },
     {
+      "id": "core:./grid-control:side-effect",
+      "bundler": "esbuild",
+      "mode": "side-effect",
+      "source": "@sectile/core/grid-control",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
+      "id": "core:./grid-control:side-effect",
+      "bundler": "vite",
+      "mode": "side-effect",
+      "source": "@sectile/core/grid-control",
+      "exportName": null,
+      "platform": "browser",
+      "raw": 0,
+      "gzip": 20,
+      "brotli": 1,
+      "modules": [],
+      "dependencies": []
+    },
+    {
       "id": "core:./grid:side-effect",
       "bundler": "esbuild",
       "mode": "side-effect",
@@ -4729,8 +4765,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 371972,
-      "gzip": 93201,
-      "brotli": 75287,
+      "gzip": 93165,
+      "brotli": 75230,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",
@@ -4878,8 +4914,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 373731,
-      "gzip": 93256,
-      "brotli": 75415,
+      "gzip": 93224,
+      "brotli": 75238,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",
@@ -7699,8 +7735,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 316747,
-      "gzip": 72233,
-      "brotli": 57684,
+      "gzip": 72225,
+      "brotli": 57646,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",
@@ -7862,8 +7898,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 317771,
-      "gzip": 72165,
-      "brotli": 57464,
+      "gzip": 72162,
+      "brotli": 57476,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",
@@ -10227,8 +10263,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 572446,
-      "gzip": 138857,
-      "brotli": 108379,
+      "gzip": 138831,
+      "brotli": 108375,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",
@@ -10432,8 +10468,8 @@
       "exportName": null,
       "platform": "browser",
       "raw": 566976,
-      "gzip": 135318,
-      "brotli": 105228,
+      "gzip": 135293,
+      "brotli": 105283,
       "modules": [
         "@sectile/core/dist/accordion.js",
         "@sectile/core/dist/adapter-runtime.js",

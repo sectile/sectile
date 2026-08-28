@@ -219,7 +219,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "0f56084e00615ed34105d92cce170360b62f1ccc5ddea540f66720af7acb4b6c",
+  "fingerprint": "186f54225796424e864ee5e00b5e312bbf1bcfe839fbf29986bb52bb8fa99d76",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -327,7 +327,7 @@
     },
     {
       "path": "dist/grid.d.ts",
-      "sha256": "c15b61f75f65061e3485354e229adeaea774c61f582ee81385968e29e4a891f3"
+      "sha256": "74da63f4c79abb77e05cb9cd089db2f9922d9582bd8676cc12e57275749fb5ce"
     },
     {
       "path": "dist/index.d.ts",

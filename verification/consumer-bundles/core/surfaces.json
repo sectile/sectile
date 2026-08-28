@@ -295,10 +295,23 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
-        "applyGridEvent",
         "createGrid",
+        "tryCreateGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./grid-control",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyGridEvent",
         "createGridState",
-        "tryCreateGrid",
         "tryCreateGridState"
       ],
       "typeBearing": true,

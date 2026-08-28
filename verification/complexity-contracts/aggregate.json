@@ -884,28 +884,10 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "core:./grid:applyGridEvent",
-      "package": "core",
-      "subpath": "./grid",
-      "exportName": "applyGridEvent",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
       "key": "core:./grid:createGrid",
       "package": "core",
       "subpath": "./grid",
       "exportName": "createGrid",
-      "kind": "function",
-      "aliasOf": null,
-      "inherits": "public-callable-v1"
-    },
-    {
-      "key": "core:./grid:createGridState",
-      "package": "core",
-      "subpath": "./grid",
-      "exportName": "createGridState",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -920,9 +902,27 @@
       "inherits": "public-callable-v1"
     },
     {
-      "key": "core:./grid:tryCreateGridState",
+      "key": "core:./grid-control:applyGridEvent",
       "package": "core",
-      "subpath": "./grid",
+      "subpath": "./grid-control",
+      "exportName": "applyGridEvent",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./grid-control:createGridState",
+      "package": "core",
+      "subpath": "./grid-control",
+      "exportName": "createGridState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "core:./grid-control:tryCreateGridState",
+      "package": "core",
+      "subpath": "./grid-control",
       "exportName": "tryCreateGridState",
       "kind": "function",
       "aliasOf": null,

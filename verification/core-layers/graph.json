@@ -1,0 +1,5204 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "path": "src/accordion.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/adapter-runtime.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/alert-dialog.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/carousel.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/cascade-list.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/cascade-select.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/checkbox-group.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/checkbox.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/collection-window.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/color-picker.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/combobox.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/dialog.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/disclosure.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/drawer.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/editable.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/error-code.ts",
+      "layer": "foundation"
+    },
+    {
+      "path": "src/feed.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/grid-control.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/index.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/interaction.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/internal/composites/cascade-choice.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/combobox.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/grid-control.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/linear-action.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/linear-choice.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/listbox.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/menu.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/popup.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/slider.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/tree-grid.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/tree-view.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/editing/text.ts",
+      "layer": "editing"
+    },
+    {
+      "path": "src/internal/kernel/bounded-scalar.ts",
+      "layer": "kernel"
+    },
+    {
+      "path": "src/internal/kernel/decimal.ts",
+      "layer": "kernel"
+    },
+    {
+      "path": "src/internal/kernel/foundation.ts",
+      "layer": "kernel"
+    },
+    {
+      "path": "src/internal/kernel/indexed-sequence.ts",
+      "layer": "kernel"
+    },
+    {
+      "path": "src/internal/kernel/machine.ts",
+      "layer": "kernel"
+    },
+    {
+      "path": "src/internal/reference/composites/accordion.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/carousel.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/combobox.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/feed.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/grid-control.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/linear-action.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/linear-choice.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/listbox.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/menu.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/slider.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/spin-button.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/tree-grid.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/composites/tree-view.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/editing/text.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/state/checked.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/state/cursor.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/state/expansion.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/state/open-state.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/state/selection.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/structures/grid.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/structures/range.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/structures/sequence.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/reference/structures/tree.ts",
+      "layer": "reference"
+    },
+    {
+      "path": "src/internal/runtime/revision.ts",
+      "layer": "runtime"
+    },
+    {
+      "path": "src/internal/state/checked.ts",
+      "layer": "state"
+    },
+    {
+      "path": "src/internal/state/cursor.ts",
+      "layer": "state"
+    },
+    {
+      "path": "src/internal/state/expansion.ts",
+      "layer": "state"
+    },
+    {
+      "path": "src/internal/state/open-state.ts",
+      "layer": "state"
+    },
+    {
+      "path": "src/internal/state/selection.ts",
+      "layer": "state"
+    },
+    {
+      "path": "src/layer-stack.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/listbox.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/menu-button.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/menu.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/menubar.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/meter-group.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/meter.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/multi-thumb-slider.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/navigation-menu.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/number-field.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/pagination.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/pin-input.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/popover.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/progress.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/quantity-field.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/radio-group.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/rating.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/reorder.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/result.ts",
+      "layer": "foundation"
+    },
+    {
+      "path": "src/revision.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/select.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/selection.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/shared.ts",
+      "layer": "foundation"
+    },
+    {
+      "path": "src/slider.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/spin-button.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/stepper.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/structures/grid.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/structures/range.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/structures/sequence.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/structures/tree.ts",
+      "layer": "structures"
+    },
+    {
+      "path": "src/switch.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tabs.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tags-input.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/text.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/timer.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/toast.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/toggle-button.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/toggle-group.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/toolbar.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tooltip.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tree-grid.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tree-view.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/units.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/window-splitter.ts",
+      "layer": "public"
+    }
+  ],
+  "edges": [
+    {
+      "source": "src/accordion.ts",
+      "target": "src/internal/composites/linear-action.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/accordion.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
+      "target": "src/interaction.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
+      "target": "src/revision.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/adapter-runtime.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/carousel.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-list.ts",
+      "target": "src/internal/composites/cascade-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-list.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-list.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-list.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-list.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/internal/composites/cascade-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/cascade-select.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/checkbox-group.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/checkbox-group.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/checkbox-group.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/checkbox-group.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/checkbox.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/checkbox.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/collection-window.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/collection-window.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/collection-window.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/collection-window.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/color-picker.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/combobox.ts",
+      "target": "src/internal/composites/combobox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/combobox.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/combobox.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/combobox.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/combobox.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/disclosure.ts",
+      "target": "src/internal/state/open-state.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/disclosure.ts",
+      "target": "src/internal/state/open-state.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/drawer.ts",
+      "target": "src/internal/composites/popup.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/drawer.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/drawer.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/drawer.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/drawer.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editable.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editable.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editable.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/editable.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/collection-window.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/feed.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/grid-control.ts",
+      "target": "src/internal/composites/grid-control.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/grid-control.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/grid-control.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/cascade-list.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/cascade-select.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/collection-window.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/editable.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/error-code.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/interaction.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/layer-stack.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/number-field.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/pin-input.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/quantity-field.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/reorder.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/selection.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/spin-button.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/tags-input.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/index.ts",
+      "target": "src/units.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/interaction.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/interaction.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/cascade-choice.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/cascade-choice.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/cascade-choice.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/cascade-choice.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/combobox.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/grid-control.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-action.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/linear-choice.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/listbox.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/menu.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/popup.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/slider.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/slider.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/slider.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/slider.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/slider.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/state/expansion.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-grid.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/state/expansion.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/editing/text.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/editing/text.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/editing/text.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/editing/text.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/bounded-scalar.ts",
+      "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/bounded-scalar.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/bounded-scalar.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/foundation.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/foundation.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/indexed-sequence.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/indexed-sequence.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/machine.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/machine.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/kernel/machine.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/accordion.ts",
+      "target": "src/accordion.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/accordion.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/accordion.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/carousel.ts",
+      "target": "src/carousel.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/carousel.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/carousel.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/internal/composites/combobox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/internal/reference/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/combobox.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/feed.ts",
+      "target": "src/feed.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/feed.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/feed.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/grid-control.ts",
+      "target": "src/internal/composites/grid-control.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/grid-control.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/grid-control.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/grid-control.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-action.ts",
+      "target": "src/internal/composites/linear-action.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-action.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-action.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-choice.ts",
+      "target": "src/internal/composites/linear-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-choice.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-choice.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/linear-choice.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/listbox.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/listbox.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/listbox.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/listbox.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/listbox.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/menu.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/menu.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/menu.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "target": "src/multi-thumb-slider.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/slider.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/slider.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/spin-button.ts",
+      "target": "src/internal/reference/composites/slider.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/spin-button.ts",
+      "target": "src/spin-button.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/spin-button.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-grid.ts",
+      "target": "src/internal/composites/tree-grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-grid.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-grid.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-grid.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-view.ts",
+      "target": "src/internal/composites/tree-view.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-view.ts",
+      "target": "src/internal/reference/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-view.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/composites/tree-view.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/editing/text.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/checked.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/cursor.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/cursor.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/expansion.ts",
+      "target": "src/internal/state/expansion.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/expansion.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/expansion.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/open-state.ts",
+      "target": "src/internal/state/open-state.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/selection.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/state/selection.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/grid.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/grid.ts",
+      "target": "src/internal/reference/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/grid.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/grid.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/range.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/range.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/sequence.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/sequence.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/sequence.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/tree.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/tree.ts",
+      "target": "src/internal/reference/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/tree.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/reference/structures/tree.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/runtime/revision.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/checked.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/checked.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/checked.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/checked.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/cursor.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/cursor.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/expansion.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/expansion.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/open-state.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/open-state.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/open-state.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/open-state.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/selection.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/selection.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/state/selection.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/layer-stack.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/layer-stack.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/layer-stack.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/layer-stack.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/layer-stack.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/listbox.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/listbox.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu-button.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu-button.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu-button.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu-button.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menu.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/menu.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/menu.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/menubar.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menubar.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menubar.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/menubar.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/internal/kernel/bounded-scalar.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/meter.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter-group.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter.ts",
+      "target": "src/internal/kernel/bounded-scalar.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/meter.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/internal/state/cursor.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/multi-thumb-slider.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/navigation-menu.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/navigation-menu.ts",
+      "target": "src/internal/composites/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/navigation-menu.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/navigation-menu.ts",
+      "target": "src/menu.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/navigation-menu.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/number-field.ts",
+      "target": "src/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pagination.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pagination.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pagination.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pagination.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pin-input.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pin-input.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pin-input.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/pin-input.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/progress.ts",
+      "target": "src/internal/kernel/bounded-scalar.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/progress.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/progress.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/progress.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/progress.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/number-field.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/quantity-field.ts",
+      "target": "src/units.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/radio-group.ts",
+      "target": "src/internal/composites/linear-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/radio-group.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/radio-group.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/radio-group.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/radio-group.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/rating.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/reorder.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/result.ts",
+      "target": "src/error-code.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/result.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/result.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/result.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/revision.ts",
+      "target": "src/internal/runtime/revision.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/revision.ts",
+      "target": "src/internal/runtime/revision.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/internal/composites/linear-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/select.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/selection.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/selection.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/shared.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/slider.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/slider.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/spin-button.ts",
+      "target": "src/structures/range.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/stepper.ts",
+      "target": "src/internal/composites/linear-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/stepper.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/stepper.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/stepper.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/grid.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/structures/range.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/sequence.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/sequence.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/sequence.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/sequence.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/structures/sequence.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/internal/kernel/indexed-sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/shared.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/tree.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/switch.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/switch.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/switch.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tabs.ts",
+      "target": "src/internal/composites/linear-choice.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tabs.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tabs.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tabs.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tags-input.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tags-input.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tags-input.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tags-input.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/text.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/text.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/text.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/timer.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/timer.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/timer.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toast.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toast.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toast.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-button.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-button.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-button.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-group.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-group.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-group.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-group.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toggle-group.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/toolbar.ts",
+      "target": "src/internal/composites/linear-action.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/toolbar.ts",
+      "target": "src/internal/composites/linear-action.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tooltip.ts",
+      "target": "src/internal/state/open-state.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/internal/composites/tree-grid.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/internal/composites/tree-grid.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/internal/composites/tree-grid.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/internal/composites/tree-grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/structures/grid.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tree-grid.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/tree-view.ts",
+      "target": "src/internal/composites/tree-view.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-view.ts",
+      "target": "src/internal/composites/tree-view.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/units.ts",
+      "target": "src/internal/kernel/decimal.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/units.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/units.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/units.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/window-splitter.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/window-splitter.ts",
+      "target": "src/internal/composites/slider.ts",
+      "kind": "export"
+    }
+  ],
+  "cycles": [],
+  "upwardEdges": [],
+  "publicSubpaths": [
+    {
+      "subpath": ".",
+      "source": "src/index.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/cascade-list.ts",
+        "src/cascade-select.ts",
+        "src/collection-window.ts",
+        "src/editable.ts",
+        "src/error-code.ts",
+        "src/interaction.ts",
+        "src/layer-stack.ts",
+        "src/number-field.ts",
+        "src/pin-input.ts",
+        "src/quantity-field.ts",
+        "src/reorder.ts",
+        "src/selection.ts",
+        "src/shared.ts",
+        "src/shared.ts",
+        "src/spin-button.ts",
+        "src/structures/sequence.ts",
+        "src/tags-input.ts",
+        "src/units.ts"
+      ]
+    },
+    {
+      "subpath": "./accordion",
+      "source": "src/accordion.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-action.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/state/cursor.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./adapter-runtime",
+      "source": "src/adapter-runtime.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/error-code.ts",
+        "src/interaction.ts",
+        "src/revision.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./alert-dialog",
+      "source": "src/alert-dialog.ts",
+      "layer": "public",
+      "facadeTargets": []
+    },
+    {
+      "subpath": "./carousel",
+      "source": "src/carousel.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/state/cursor.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./cascade-list",
+      "source": "src/cascade-list.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./cascade-select",
+      "source": "src/cascade-select.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./checkbox",
+      "source": "src/checkbox.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/checked.ts",
+        "src/internal/state/checked.ts"
+      ]
+    },
+    {
+      "subpath": "./checkbox-group",
+      "source": "src/checkbox-group.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/listbox.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./collection-window",
+      "source": "src/collection-window.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./color-picker",
+      "source": "src/color-picker.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./combobox",
+      "source": "src/combobox.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/combobox.ts",
+        "src/internal/editing/text.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./dialog",
+      "source": "src/dialog.ts",
+      "layer": "public",
+      "facadeTargets": []
+    },
+    {
+      "subpath": "./disclosure",
+      "source": "src/disclosure.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/open-state.ts",
+        "src/internal/state/open-state.ts"
+      ]
+    },
+    {
+      "subpath": "./drawer",
+      "source": "src/drawer.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/popup.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./editable",
+      "source": "src/editable.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./feed",
+      "source": "src/feed.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/collection-window.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/state/cursor.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./grid",
+      "source": "src/structures/grid.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/indexed-sequence.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./grid-control",
+      "source": "src/grid-control.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/grid-control.ts",
+        "src/shared.ts",
+        "src/structures/grid.ts"
+      ]
+    },
+    {
+      "subpath": "./interaction",
+      "source": "src/interaction.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./layer-stack",
+      "source": "src/layer-stack.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./listbox",
+      "source": "src/listbox.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/listbox.ts"
+      ]
+    },
+    {
+      "subpath": "./menu",
+      "source": "src/menu.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/menu.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./menu-button",
+      "source": "src/menu-button.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/menu.ts",
+        "src/menu.ts",
+        "src/menu.ts"
+      ]
+    },
+    {
+      "subpath": "./menubar",
+      "source": "src/menubar.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/menu.ts",
+        "src/menu.ts",
+        "src/menu.ts"
+      ]
+    },
+    {
+      "subpath": "./meter",
+      "source": "src/meter.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/range.ts"
+      ]
+    },
+    {
+      "subpath": "./meter-group",
+      "source": "src/meter-group.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/meter.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/range.ts"
+      ]
+    },
+    {
+      "subpath": "./multi-thumb-slider",
+      "source": "src/multi-thumb-slider.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/state/cursor.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/range.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./navigation-menu",
+      "source": "src/navigation-menu.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/menu.ts",
+        "src/menu.ts",
+        "src/menu.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./number-field",
+      "source": "src/number-field.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/decimal.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/text.ts"
+      ]
+    },
+    {
+      "subpath": "./package.json",
+      "source": null,
+      "layer": "metadata",
+      "facadeTargets": []
+    },
+    {
+      "subpath": "./pagination",
+      "source": "src/pagination.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./pin-input",
+      "source": "src/pin-input.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./popover",
+      "source": "src/popover.ts",
+      "layer": "public",
+      "facadeTargets": []
+    },
+    {
+      "subpath": "./progress",
+      "source": "src/progress.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/range.ts"
+      ]
+    },
+    {
+      "subpath": "./quantity-field",
+      "source": "src/quantity-field.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/decimal.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/number-field.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/text.ts",
+        "src/units.ts"
+      ]
+    },
+    {
+      "subpath": "./radio-group",
+      "source": "src/radio-group.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-choice.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./range",
+      "source": "src/structures/range.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/decimal.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./rating",
+      "source": "src/rating.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/machine.ts",
+        "src/internal/state/selection.ts",
+        "src/radio-group.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./reorder",
+      "source": "src/reorder.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./result",
+      "source": "src/result.ts",
+      "layer": "foundation",
+      "facadeTargets": [
+        "src/error-code.ts",
+        "src/error-code.ts",
+        "src/shared.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./revision",
+      "source": "src/revision.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/runtime/revision.ts",
+        "src/internal/runtime/revision.ts"
+      ]
+    },
+    {
+      "subpath": "./select",
+      "source": "src/select.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./selection",
+      "source": "src/selection.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/selection.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./sequence",
+      "source": "src/structures/sequence.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/indexed-sequence.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./slider",
+      "source": "src/slider.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/slider.ts"
+      ]
+    },
+    {
+      "subpath": "./spin-button",
+      "source": "src/spin-button.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/slider.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/range.ts"
+      ]
+    },
+    {
+      "subpath": "./stepper",
+      "source": "src/stepper.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-choice.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./switch",
+      "source": "src/switch.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/checked.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./tabs",
+      "source": "src/tabs.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-choice.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./tags-input",
+      "source": "src/tags-input.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./text",
+      "source": "src/text.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/editing/text.ts",
+        "src/internal/editing/text.ts",
+        "src/internal/editing/text.ts"
+      ]
+    },
+    {
+      "subpath": "./timer",
+      "source": "src/timer.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./toast",
+      "source": "src/toast.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./toggle-button",
+      "source": "src/toggle-button.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/checked.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./toggle-group",
+      "source": "src/toggle-group.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/listbox.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./toolbar",
+      "source": "src/toolbar.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-action.ts"
+      ]
+    },
+    {
+      "subpath": "./tooltip",
+      "source": "src/tooltip.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/state/open-state.ts"
+      ]
+    },
+    {
+      "subpath": "./tree",
+      "source": "src/structures/tree.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/indexed-sequence.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts"
+      ]
+    },
+    {
+      "subpath": "./tree-grid",
+      "source": "src/tree-grid.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/grid.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
+      "subpath": "./tree-view",
+      "source": "src/tree-view.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/tree-view.ts",
+        "src/internal/composites/tree-view.ts"
+      ]
+    },
+    {
+      "subpath": "./units",
+      "source": "src/units.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/kernel/decimal.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./window-splitter",
+      "source": "src/window-splitter.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/slider.ts"
+      ]
+    }
+  ],
+  "blastRadius": [
+    {
+      "module": "src/accordion.ts",
+      "directDependents": [
+        "src/internal/reference/composites/accordion.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./accordion"
+      ]
+    },
+    {
+      "module": "src/adapter-runtime.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./adapter-runtime"
+      ]
+    },
+    {
+      "module": "src/alert-dialog.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./alert-dialog"
+      ]
+    },
+    {
+      "module": "src/carousel.ts",
+      "directDependents": [
+        "src/internal/reference/composites/carousel.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./carousel"
+      ]
+    },
+    {
+      "module": "src/cascade-list.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./cascade-list"
+      ]
+    },
+    {
+      "module": "src/cascade-select.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./cascade-select"
+      ]
+    },
+    {
+      "module": "src/checkbox-group.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./checkbox-group"
+      ]
+    },
+    {
+      "module": "src/checkbox.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./checkbox"
+      ]
+    },
+    {
+      "module": "src/collection-window.ts",
+      "directDependents": [
+        "src/feed.ts",
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        ".",
+        "./collection-window",
+        "./feed"
+      ]
+    },
+    {
+      "module": "src/color-picker.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./color-picker"
+      ]
+    },
+    {
+      "module": "src/combobox.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./combobox"
+      ]
+    },
+    {
+      "module": "src/dialog.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./dialog"
+      ]
+    },
+    {
+      "module": "src/disclosure.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./disclosure"
+      ]
+    },
+    {
+      "module": "src/drawer.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./drawer"
+      ]
+    },
+    {
+      "module": "src/editable.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./editable"
+      ]
+    },
+    {
+      "module": "src/error-code.ts",
+      "directDependents": [
+        "src/adapter-runtime.ts",
+        "src/index.ts",
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/runtime/revision.ts",
+        "src/result.ts",
+        "src/shared.ts"
+      ],
+      "transitiveDependentCount": 106,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./adapter-runtime",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox",
+        "./checkbox-group",
+        "./collection-window",
+        "./color-picker",
+        "./combobox",
+        "./disclosure",
+        "./drawer",
+        "./editable",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./interaction",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./number-field",
+        "./pagination",
+        "./pin-input",
+        "./progress",
+        "./quantity-field",
+        "./radio-group",
+        "./range",
+        "./rating",
+        "./reorder",
+        "./result",
+        "./revision",
+        "./select",
+        "./selection",
+        "./sequence",
+        "./slider",
+        "./spin-button",
+        "./stepper",
+        "./switch",
+        "./tabs",
+        "./tags-input",
+        "./text",
+        "./timer",
+        "./toast",
+        "./toggle-button",
+        "./toggle-group",
+        "./toolbar",
+        "./tooltip",
+        "./tree",
+        "./tree-grid",
+        "./tree-view",
+        "./units",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/feed.ts",
+      "directDependents": [
+        "src/internal/reference/composites/feed.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./feed"
+      ]
+    },
+    {
+      "module": "src/grid-control.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./grid-control"
+      ]
+    },
+    {
+      "module": "src/index.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "."
+      ]
+    },
+    {
+      "module": "src/interaction.ts",
+      "directDependents": [
+        "src/adapter-runtime.ts",
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        ".",
+        "./adapter-runtime",
+        "./interaction"
+      ]
+    },
+    {
+      "module": "src/internal/composites/cascade-choice.ts",
+      "directDependents": [
+        "src/cascade-list.ts",
+        "src/cascade-select.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        ".",
+        "./cascade-list",
+        "./cascade-select"
+      ]
+    },
+    {
+      "module": "src/internal/composites/combobox.ts",
+      "directDependents": [
+        "src/combobox.ts",
+        "src/internal/reference/composites/combobox.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./combobox"
+      ]
+    },
+    {
+      "module": "src/internal/composites/grid-control.ts",
+      "directDependents": [
+        "src/grid-control.ts",
+        "src/internal/reference/composites/grid-control.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./grid-control"
+      ]
+    },
+    {
+      "module": "src/internal/composites/linear-action.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/internal/reference/composites/linear-action.ts",
+        "src/toolbar.ts"
+      ],
+      "transitiveDependentCount": 4,
+      "publicSubpaths": [
+        "./accordion",
+        "./toolbar"
+      ]
+    },
+    {
+      "module": "src/internal/composites/linear-choice.ts",
+      "directDependents": [
+        "src/internal/reference/composites/linear-choice.ts",
+        "src/radio-group.ts",
+        "src/select.ts",
+        "src/stepper.ts",
+        "src/tabs.ts"
+      ],
+      "transitiveDependentCount": 6,
+      "publicSubpaths": [
+        "./radio-group",
+        "./rating",
+        "./select",
+        "./stepper",
+        "./tabs"
+      ]
+    },
+    {
+      "module": "src/internal/composites/listbox.ts",
+      "directDependents": [
+        "src/checkbox-group.ts",
+        "src/internal/reference/composites/listbox.ts",
+        "src/listbox.ts",
+        "src/toggle-group.ts"
+      ],
+      "transitiveDependentCount": 4,
+      "publicSubpaths": [
+        "./checkbox-group",
+        "./listbox",
+        "./toggle-group"
+      ]
+    },
+    {
+      "module": "src/internal/composites/menu.ts",
+      "directDependents": [
+        "src/internal/reference/composites/menu.ts",
+        "src/menu-button.ts",
+        "src/menu.ts",
+        "src/menubar.ts",
+        "src/navigation-menu.ts"
+      ],
+      "transitiveDependentCount": 5,
+      "publicSubpaths": [
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./navigation-menu"
+      ]
+    },
+    {
+      "module": "src/internal/composites/popup.ts",
+      "directDependents": [
+        "src/drawer.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./drawer"
+      ]
+    },
+    {
+      "module": "src/internal/composites/slider.ts",
+      "directDependents": [
+        "src/internal/reference/composites/slider.ts",
+        "src/slider.ts",
+        "src/spin-button.ts",
+        "src/window-splitter.ts"
+      ],
+      "transitiveDependentCount": 6,
+      "publicSubpaths": [
+        ".",
+        "./slider",
+        "./spin-button",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/internal/composites/tree-grid.ts",
+      "directDependents": [
+        "src/internal/reference/composites/tree-grid.ts",
+        "src/tree-grid.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./tree-grid"
+      ]
+    },
+    {
+      "module": "src/internal/composites/tree-view.ts",
+      "directDependents": [
+        "src/internal/reference/composites/tree-view.ts",
+        "src/tree-view.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/internal/editing/text.ts",
+      "directDependents": [
+        "src/combobox.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/reference/composites/combobox.ts",
+        "src/internal/reference/editing/text.ts",
+        "src/text.ts"
+      ],
+      "transitiveDependentCount": 8,
+      "publicSubpaths": [
+        ".",
+        "./combobox",
+        "./number-field",
+        "./quantity-field",
+        "./text"
+      ]
+    },
+    {
+      "module": "src/internal/kernel/bounded-scalar.ts",
+      "directDependents": [
+        "src/meter-group.ts",
+        "src/meter.ts",
+        "src/progress.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        "./meter",
+        "./meter-group",
+        "./progress"
+      ]
+    },
+    {
+      "module": "src/internal/kernel/decimal.ts",
+      "directDependents": [
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/number-field.ts",
+        "src/quantity-field.ts",
+        "src/structures/range.ts",
+        "src/units.ts"
+      ],
+      "transitiveDependentCount": 18,
+      "publicSubpaths": [
+        ".",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./number-field",
+        "./progress",
+        "./quantity-field",
+        "./range",
+        "./slider",
+        "./spin-button",
+        "./units",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/internal/kernel/foundation.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/carousel.ts",
+        "src/cascade-list.ts",
+        "src/cascade-select.ts",
+        "src/collection-window.ts",
+        "src/color-picker.ts",
+        "src/drawer.ts",
+        "src/editable.ts",
+        "src/feed.ts",
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/editing/text.ts",
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/internal/kernel/indexed-sequence.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/reference/structures/grid.ts",
+        "src/internal/reference/structures/sequence.ts",
+        "src/internal/reference/structures/tree.ts",
+        "src/internal/runtime/revision.ts",
+        "src/internal/state/checked.ts",
+        "src/internal/state/cursor.ts",
+        "src/internal/state/open-state.ts",
+        "src/internal/state/selection.ts",
+        "src/layer-stack.ts",
+        "src/meter-group.ts",
+        "src/meter.ts",
+        "src/multi-thumb-slider.ts",
+        "src/number-field.ts",
+        "src/pagination.ts",
+        "src/pin-input.ts",
+        "src/progress.ts",
+        "src/quantity-field.ts",
+        "src/reorder.ts",
+        "src/select.ts",
+        "src/spin-button.ts",
+        "src/structures/grid.ts",
+        "src/structures/range.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts",
+        "src/tags-input.ts",
+        "src/timer.ts",
+        "src/toast.ts",
+        "src/toggle-group.ts",
+        "src/units.ts"
+      ],
+      "transitiveDependentCount": 101,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./adapter-runtime",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox",
+        "./checkbox-group",
+        "./collection-window",
+        "./color-picker",
+        "./combobox",
+        "./disclosure",
+        "./drawer",
+        "./editable",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./number-field",
+        "./pagination",
+        "./pin-input",
+        "./progress",
+        "./quantity-field",
+        "./radio-group",
+        "./range",
+        "./rating",
+        "./reorder",
+        "./revision",
+        "./select",
+        "./selection",
+        "./sequence",
+        "./slider",
+        "./spin-button",
+        "./stepper",
+        "./switch",
+        "./tabs",
+        "./tags-input",
+        "./text",
+        "./timer",
+        "./toast",
+        "./toggle-button",
+        "./toggle-group",
+        "./toolbar",
+        "./tooltip",
+        "./tree",
+        "./tree-grid",
+        "./tree-view",
+        "./units",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/internal/kernel/indexed-sequence.ts",
+      "directDependents": [
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/structures/grid.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts"
+      ],
+      "transitiveDependentCount": 55,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox-group",
+        "./combobox",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./radio-group",
+        "./rating",
+        "./reorder",
+        "./select",
+        "./sequence",
+        "./stepper",
+        "./tabs",
+        "./toggle-group",
+        "./toolbar",
+        "./tree",
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/internal/kernel/machine.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/carousel.ts",
+        "src/cascade-select.ts",
+        "src/collection-window.ts",
+        "src/color-picker.ts",
+        "src/drawer.ts",
+        "src/editable.ts",
+        "src/feed.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/editing/text.ts",
+        "src/internal/runtime/revision.ts",
+        "src/internal/state/checked.ts",
+        "src/internal/state/open-state.ts",
+        "src/layer-stack.ts",
+        "src/multi-thumb-slider.ts",
+        "src/number-field.ts",
+        "src/pagination.ts",
+        "src/pin-input.ts",
+        "src/quantity-field.ts",
+        "src/rating.ts",
+        "src/reorder.ts",
+        "src/select.ts",
+        "src/spin-button.ts",
+        "src/tags-input.ts"
+      ],
+      "transitiveDependentCount": 75,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./adapter-runtime",
+        "./carousel",
+        "./cascade-select",
+        "./checkbox",
+        "./checkbox-group",
+        "./collection-window",
+        "./color-picker",
+        "./combobox",
+        "./disclosure",
+        "./drawer",
+        "./editable",
+        "./feed",
+        "./grid-control",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./number-field",
+        "./pagination",
+        "./pin-input",
+        "./quantity-field",
+        "./radio-group",
+        "./rating",
+        "./reorder",
+        "./revision",
+        "./select",
+        "./slider",
+        "./spin-button",
+        "./stepper",
+        "./switch",
+        "./tabs",
+        "./tags-input",
+        "./text",
+        "./toggle-button",
+        "./toggle-group",
+        "./toolbar",
+        "./tooltip",
+        "./tree-grid",
+        "./tree-view",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/internal/reference/composites/accordion.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/carousel.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/combobox.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/feed.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/grid-control.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/linear-action.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/linear-choice.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/listbox.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/menu.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/multi-thumb-slider.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/slider.ts",
+      "directDependents": [
+        "src/internal/reference/composites/spin-button.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/spin-button.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/tree-grid.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/composites/tree-view.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/editing/text.ts",
+      "directDependents": [
+        "src/internal/reference/composites/combobox.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/state/checked.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/state/cursor.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/state/expansion.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/state/open-state.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/state/selection.ts",
+      "directDependents": [
+        "src/internal/reference/composites/combobox.ts",
+        "src/internal/reference/composites/grid-control.ts",
+        "src/internal/reference/composites/linear-choice.ts",
+        "src/internal/reference/composites/listbox.ts",
+        "src/internal/reference/composites/tree-grid.ts",
+        "src/internal/reference/composites/tree-view.ts"
+      ],
+      "transitiveDependentCount": 6,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/structures/grid.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/structures/range.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/structures/sequence.ts",
+      "directDependents": [
+        "src/internal/reference/structures/grid.ts",
+        "src/internal/reference/structures/tree.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/reference/structures/tree.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": []
+    },
+    {
+      "module": "src/internal/runtime/revision.ts",
+      "directDependents": [
+        "src/revision.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        "./adapter-runtime",
+        "./revision"
+      ]
+    },
+    {
+      "module": "src/internal/state/checked.ts",
+      "directDependents": [
+        "src/checkbox.ts",
+        "src/internal/reference/state/checked.ts",
+        "src/switch.ts",
+        "src/toggle-button.ts"
+      ],
+      "transitiveDependentCount": 4,
+      "publicSubpaths": [
+        "./checkbox",
+        "./switch",
+        "./toggle-button"
+      ]
+    },
+    {
+      "module": "src/internal/state/cursor.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/carousel.ts",
+        "src/feed.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/reference/state/cursor.ts",
+        "src/internal/state/selection.ts",
+        "src/multi-thumb-slider.ts"
+      ],
+      "transitiveDependentCount": 46,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./carousel",
+        "./checkbox-group",
+        "./combobox",
+        "./feed",
+        "./grid-control",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./radio-group",
+        "./rating",
+        "./select",
+        "./selection",
+        "./stepper",
+        "./tabs",
+        "./toggle-group",
+        "./toolbar",
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/internal/state/expansion.ts",
+      "directDependents": [
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/reference/state/expansion.ts"
+      ],
+      "transitiveDependentCount": 7,
+      "publicSubpaths": [
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/internal/state/open-state.ts",
+      "directDependents": [
+        "src/disclosure.ts",
+        "src/internal/reference/state/open-state.ts",
+        "src/tooltip.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        "./disclosure",
+        "./tooltip"
+      ]
+    },
+    {
+      "module": "src/internal/state/selection.ts",
+      "directDependents": [
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/reference/composites/listbox.ts",
+        "src/internal/reference/state/selection.ts",
+        "src/rating.ts",
+        "src/selection.ts"
+      ],
+      "transitiveDependentCount": 27,
+      "publicSubpaths": [
+        ".",
+        "./checkbox-group",
+        "./combobox",
+        "./grid-control",
+        "./listbox",
+        "./radio-group",
+        "./rating",
+        "./select",
+        "./selection",
+        "./stepper",
+        "./tabs",
+        "./toggle-group",
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/layer-stack.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./layer-stack"
+      ]
+    },
+    {
+      "module": "src/listbox.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./listbox"
+      ]
+    },
+    {
+      "module": "src/menu-button.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./menu-button"
+      ]
+    },
+    {
+      "module": "src/menu.ts",
+      "directDependents": [
+        "src/menu-button.ts",
+        "src/menubar.ts",
+        "src/navigation-menu.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./navigation-menu"
+      ]
+    },
+    {
+      "module": "src/menubar.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./menubar"
+      ]
+    },
+    {
+      "module": "src/meter-group.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./meter-group"
+      ]
+    },
+    {
+      "module": "src/meter.ts",
+      "directDependents": [
+        "src/meter-group.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./meter",
+        "./meter-group"
+      ]
+    },
+    {
+      "module": "src/multi-thumb-slider.ts",
+      "directDependents": [
+        "src/internal/reference/composites/multi-thumb-slider.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./multi-thumb-slider"
+      ]
+    },
+    {
+      "module": "src/navigation-menu.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./navigation-menu"
+      ]
+    },
+    {
+      "module": "src/number-field.ts",
+      "directDependents": [
+        "src/index.ts",
+        "src/quantity-field.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        ".",
+        "./number-field",
+        "./quantity-field"
+      ]
+    },
+    {
+      "module": "src/pagination.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./pagination"
+      ]
+    },
+    {
+      "module": "src/pin-input.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./pin-input"
+      ]
+    },
+    {
+      "module": "src/popover.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./popover"
+      ]
+    },
+    {
+      "module": "src/progress.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./progress"
+      ]
+    },
+    {
+      "module": "src/quantity-field.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./quantity-field"
+      ]
+    },
+    {
+      "module": "src/radio-group.ts",
+      "directDependents": [
+        "src/rating.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./radio-group",
+        "./rating"
+      ]
+    },
+    {
+      "module": "src/rating.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./rating"
+      ]
+    },
+    {
+      "module": "src/reorder.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./reorder"
+      ]
+    },
+    {
+      "module": "src/result.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/carousel.ts",
+        "src/cascade-list.ts",
+        "src/cascade-select.ts",
+        "src/checkbox-group.ts",
+        "src/collection-window.ts",
+        "src/color-picker.ts",
+        "src/combobox.ts",
+        "src/drawer.ts",
+        "src/editable.ts",
+        "src/feed.ts",
+        "src/interaction.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/popup.ts",
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/editing/text.ts",
+        "src/internal/runtime/revision.ts",
+        "src/internal/state/checked.ts",
+        "src/internal/state/open-state.ts",
+        "src/layer-stack.ts",
+        "src/menu.ts",
+        "src/meter-group.ts",
+        "src/meter.ts",
+        "src/multi-thumb-slider.ts",
+        "src/number-field.ts",
+        "src/pagination.ts",
+        "src/pin-input.ts",
+        "src/progress.ts",
+        "src/quantity-field.ts",
+        "src/radio-group.ts",
+        "src/rating.ts",
+        "src/reorder.ts",
+        "src/select.ts",
+        "src/spin-button.ts",
+        "src/stepper.ts",
+        "src/structures/grid.ts",
+        "src/structures/range.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts",
+        "src/switch.ts",
+        "src/tabs.ts",
+        "src/tags-input.ts",
+        "src/timer.ts",
+        "src/toast.ts",
+        "src/toggle-button.ts",
+        "src/toggle-group.ts",
+        "src/tree-grid.ts",
+        "src/units.ts"
+      ],
+      "transitiveDependentCount": 95,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./adapter-runtime",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox",
+        "./checkbox-group",
+        "./collection-window",
+        "./color-picker",
+        "./combobox",
+        "./disclosure",
+        "./drawer",
+        "./editable",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./interaction",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./number-field",
+        "./pagination",
+        "./pin-input",
+        "./progress",
+        "./quantity-field",
+        "./radio-group",
+        "./range",
+        "./rating",
+        "./reorder",
+        "./result",
+        "./revision",
+        "./select",
+        "./sequence",
+        "./slider",
+        "./spin-button",
+        "./stepper",
+        "./switch",
+        "./tabs",
+        "./tags-input",
+        "./text",
+        "./timer",
+        "./toast",
+        "./toggle-button",
+        "./toggle-group",
+        "./toolbar",
+        "./tooltip",
+        "./tree",
+        "./tree-grid",
+        "./tree-view",
+        "./units",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/revision.ts",
+      "directDependents": [
+        "src/adapter-runtime.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./adapter-runtime",
+        "./revision"
+      ]
+    },
+    {
+      "module": "src/select.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./select"
+      ]
+    },
+    {
+      "module": "src/selection.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./selection"
+      ]
+    },
+    {
+      "module": "src/shared.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/adapter-runtime.ts",
+        "src/carousel.ts",
+        "src/cascade-list.ts",
+        "src/cascade-select.ts",
+        "src/checkbox-group.ts",
+        "src/collection-window.ts",
+        "src/color-picker.ts",
+        "src/combobox.ts",
+        "src/drawer.ts",
+        "src/editable.ts",
+        "src/feed.ts",
+        "src/grid-control.ts",
+        "src/index.ts",
+        "src/interaction.ts",
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/slider.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/editing/text.ts",
+        "src/internal/kernel/bounded-scalar.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/indexed-sequence.ts",
+        "src/internal/kernel/machine.ts",
+        "src/internal/reference/composites/accordion.ts",
+        "src/internal/reference/composites/carousel.ts",
+        "src/internal/reference/composites/combobox.ts",
+        "src/internal/reference/composites/feed.ts",
+        "src/internal/reference/composites/grid-control.ts",
+        "src/internal/reference/composites/linear-action.ts",
+        "src/internal/reference/composites/linear-choice.ts",
+        "src/internal/reference/composites/listbox.ts",
+        "src/internal/reference/composites/menu.ts",
+        "src/internal/reference/composites/multi-thumb-slider.ts",
+        "src/internal/reference/composites/tree-grid.ts",
+        "src/internal/reference/composites/tree-view.ts",
+        "src/internal/reference/state/cursor.ts",
+        "src/internal/reference/state/expansion.ts",
+        "src/internal/reference/state/selection.ts",
+        "src/internal/reference/structures/grid.ts",
+        "src/internal/reference/structures/range.ts",
+        "src/internal/reference/structures/sequence.ts",
+        "src/internal/reference/structures/tree.ts",
+        "src/internal/runtime/revision.ts",
+        "src/internal/state/checked.ts",
+        "src/internal/state/cursor.ts",
+        "src/internal/state/expansion.ts",
+        "src/internal/state/open-state.ts",
+        "src/internal/state/selection.ts",
+        "src/layer-stack.ts",
+        "src/menu.ts",
+        "src/meter-group.ts",
+        "src/meter.ts",
+        "src/multi-thumb-slider.ts",
+        "src/number-field.ts",
+        "src/pagination.ts",
+        "src/pin-input.ts",
+        "src/progress.ts",
+        "src/quantity-field.ts",
+        "src/radio-group.ts",
+        "src/rating.ts",
+        "src/reorder.ts",
+        "src/result.ts",
+        "src/select.ts",
+        "src/selection.ts",
+        "src/spin-button.ts",
+        "src/stepper.ts",
+        "src/structures/grid.ts",
+        "src/structures/range.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts",
+        "src/switch.ts",
+        "src/tabs.ts",
+        "src/tags-input.ts",
+        "src/timer.ts",
+        "src/toast.ts",
+        "src/toggle-button.ts",
+        "src/toggle-group.ts",
+        "src/tree-grid.ts",
+        "src/units.ts"
+      ],
+      "transitiveDependentCount": 105,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./adapter-runtime",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox",
+        "./checkbox-group",
+        "./collection-window",
+        "./color-picker",
+        "./combobox",
+        "./disclosure",
+        "./drawer",
+        "./editable",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./interaction",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./number-field",
+        "./pagination",
+        "./pin-input",
+        "./progress",
+        "./quantity-field",
+        "./radio-group",
+        "./range",
+        "./rating",
+        "./reorder",
+        "./result",
+        "./revision",
+        "./select",
+        "./selection",
+        "./sequence",
+        "./slider",
+        "./spin-button",
+        "./stepper",
+        "./switch",
+        "./tabs",
+        "./tags-input",
+        "./text",
+        "./timer",
+        "./toast",
+        "./toggle-button",
+        "./toggle-group",
+        "./toolbar",
+        "./tooltip",
+        "./tree",
+        "./tree-grid",
+        "./tree-view",
+        "./units",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/slider.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./slider"
+      ]
+    },
+    {
+      "module": "src/spin-button.ts",
+      "directDependents": [
+        "src/index.ts",
+        "src/internal/reference/composites/spin-button.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        ".",
+        "./spin-button"
+      ]
+    },
+    {
+      "module": "src/stepper.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./stepper"
+      ]
+    },
+    {
+      "module": "src/structures/grid.ts",
+      "directDependents": [
+        "src/grid-control.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/reference/composites/grid-control.ts",
+        "src/internal/reference/structures/grid.ts",
+        "src/tree-grid.ts"
+      ],
+      "transitiveDependentCount": 7,
+      "publicSubpaths": [
+        "./grid",
+        "./grid-control",
+        "./tree-grid"
+      ]
+    },
+    {
+      "module": "src/structures/range.ts",
+      "directDependents": [
+        "src/internal/composites/slider.ts",
+        "src/internal/reference/composites/multi-thumb-slider.ts",
+        "src/internal/reference/composites/slider.ts",
+        "src/internal/reference/composites/spin-button.ts",
+        "src/internal/reference/structures/range.ts",
+        "src/meter-group.ts",
+        "src/meter.ts",
+        "src/multi-thumb-slider.ts",
+        "src/progress.ts",
+        "src/spin-button.ts"
+      ],
+      "transitiveDependentCount": 13,
+      "publicSubpaths": [
+        ".",
+        "./meter",
+        "./meter-group",
+        "./multi-thumb-slider",
+        "./progress",
+        "./range",
+        "./slider",
+        "./spin-button",
+        "./window-splitter"
+      ]
+    },
+    {
+      "module": "src/structures/sequence.ts",
+      "directDependents": [
+        "src/accordion.ts",
+        "src/carousel.ts",
+        "src/checkbox-group.ts",
+        "src/combobox.ts",
+        "src/feed.ts",
+        "src/index.ts",
+        "src/internal/composites/combobox.ts",
+        "src/internal/composites/grid-control.ts",
+        "src/internal/composites/linear-action.ts",
+        "src/internal/composites/linear-choice.ts",
+        "src/internal/composites/listbox.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/reference/composites/accordion.ts",
+        "src/internal/reference/composites/carousel.ts",
+        "src/internal/reference/composites/combobox.ts",
+        "src/internal/reference/composites/feed.ts",
+        "src/internal/reference/composites/linear-action.ts",
+        "src/internal/reference/composites/linear-choice.ts",
+        "src/internal/reference/composites/listbox.ts",
+        "src/internal/reference/composites/multi-thumb-slider.ts",
+        "src/internal/reference/structures/sequence.ts",
+        "src/layer-stack.ts",
+        "src/multi-thumb-slider.ts",
+        "src/radio-group.ts",
+        "src/rating.ts",
+        "src/reorder.ts",
+        "src/select.ts",
+        "src/stepper.ts",
+        "src/structures/grid.ts",
+        "src/structures/tree.ts",
+        "src/tabs.ts",
+        "src/toggle-group.ts"
+      ],
+      "transitiveDependentCount": 54,
+      "publicSubpaths": [
+        ".",
+        "./accordion",
+        "./carousel",
+        "./cascade-list",
+        "./cascade-select",
+        "./checkbox-group",
+        "./combobox",
+        "./feed",
+        "./grid",
+        "./grid-control",
+        "./layer-stack",
+        "./listbox",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./multi-thumb-slider",
+        "./navigation-menu",
+        "./radio-group",
+        "./rating",
+        "./reorder",
+        "./select",
+        "./sequence",
+        "./stepper",
+        "./tabs",
+        "./toggle-group",
+        "./toolbar",
+        "./tree",
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/structures/tree.ts",
+      "directDependents": [
+        "src/cascade-list.ts",
+        "src/cascade-select.ts",
+        "src/internal/composites/cascade-choice.ts",
+        "src/internal/composites/menu.ts",
+        "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-view.ts",
+        "src/internal/reference/composites/menu.ts",
+        "src/internal/reference/composites/tree-grid.ts",
+        "src/internal/reference/composites/tree-view.ts",
+        "src/internal/reference/state/expansion.ts",
+        "src/internal/reference/structures/tree.ts",
+        "src/internal/state/expansion.ts",
+        "src/menu.ts",
+        "src/navigation-menu.ts",
+        "src/reorder.ts",
+        "src/tree-grid.ts"
+      ],
+      "transitiveDependentCount": 20,
+      "publicSubpaths": [
+        ".",
+        "./cascade-list",
+        "./cascade-select",
+        "./menu",
+        "./menu-button",
+        "./menubar",
+        "./navigation-menu",
+        "./reorder",
+        "./tree",
+        "./tree-grid",
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/switch.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./switch"
+      ]
+    },
+    {
+      "module": "src/tabs.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./tabs"
+      ]
+    },
+    {
+      "module": "src/tags-input.ts",
+      "directDependents": [
+        "src/index.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        ".",
+        "./tags-input"
+      ]
+    },
+    {
+      "module": "src/text.ts",
+      "directDependents": [
+        "src/number-field.ts",
+        "src/quantity-field.ts"
+      ],
+      "transitiveDependentCount": 3,
+      "publicSubpaths": [
+        ".",
+        "./number-field",
+        "./quantity-field",
+        "./text"
+      ]
+    },
+    {
+      "module": "src/timer.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./timer"
+      ]
+    },
+    {
+      "module": "src/toast.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./toast"
+      ]
+    },
+    {
+      "module": "src/toggle-button.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./toggle-button"
+      ]
+    },
+    {
+      "module": "src/toggle-group.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./toggle-group"
+      ]
+    },
+    {
+      "module": "src/toolbar.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./toolbar"
+      ]
+    },
+    {
+      "module": "src/tooltip.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./tooltip"
+      ]
+    },
+    {
+      "module": "src/tree-grid.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./tree-grid"
+      ]
+    },
+    {
+      "module": "src/tree-view.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./tree-view"
+      ]
+    },
+    {
+      "module": "src/units.ts",
+      "directDependents": [
+        "src/index.ts",
+        "src/quantity-field.ts"
+      ],
+      "transitiveDependentCount": 2,
+      "publicSubpaths": [
+        ".",
+        "./quantity-field",
+        "./units"
+      ]
+    },
+    {
+      "module": "src/window-splitter.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./window-splitter"
+      ]
+    }
+  ]
+}

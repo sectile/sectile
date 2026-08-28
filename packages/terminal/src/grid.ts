@@ -1,7 +1,8 @@
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { unwrap } from '@sectile/core/result';
 import type { Result, StableID } from '@sectile/core';
-import { applyGridEvent, tryCreateGrid, tryCreateGridState, type Grid, type GridCommand, type GridEditMode, type GridEvent, type GridOptions as StructureGridOptions, type GridPolicies, type GridState } from '@sectile/core/grid';
+import { tryCreateGrid, type Grid, type GridOptions as StructureGridOptions } from '@sectile/core/grid';
+import { applyGridEvent, tryCreateGridState, type GridCommand, type GridEditMode, type GridEvent, type GridPolicies, type GridState } from '@sectile/core/grid-control';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TerminalKeyboardInput } from './keyboard.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';

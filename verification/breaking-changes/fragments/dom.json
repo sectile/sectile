@@ -1,5 +1,20 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/dom",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-030:dom-grid-control-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "./grid" },
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./grid" }
+    },
+    {
+      "id": "WI-030:dom-root-grid-control-closure",
+      "change": "signature-changed",
+      "before": { "subpath": "." },
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent"],
+      "replacement": { "package": "@sectile/dom", "subpath": "." }
+    }
+  ]
 }

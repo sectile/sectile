@@ -3,7 +3,7 @@
   "parallelStages": [
     {
       "stage": "P0-4",
-      "workItems": ["WI-025", "WI-026", "WI-030"]
+      "workItems": ["WI-026", "WI-030"]
     },
     {
       "stage": "P0-8",
@@ -39,7 +39,9 @@
     ],
     "WI-030": [
       "packages/core/src/", "packages/core/package.json", "verification/core-layers/",
-      "verification/consumer-bundles/core/", "verification/breaking-changes/fragments/core.json"
+      "packages/dom/src/grid.ts", "packages/terminal/src/grid.ts",
+      "verification/consumer-bundles/core/", "verification/breaking-changes/fragments/core.json",
+      "verification/breaking-changes/fragments/dom.json", "verification/breaking-changes/fragments/terminal.json"
     ],
     "WI-013": [
       "packages/core/src/internal/composites/", "packages/core/src/adapter-runtime.ts",

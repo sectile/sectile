@@ -75,6 +75,10 @@
       "types": "dist/structures/grid.d.ts"
     },
     {
+      "subpath": "./grid-control",
+      "types": "dist/grid-control.d.ts"
+    },
+    {
       "subpath": "./interaction",
       "types": "dist/interaction.d.ts"
     },
@@ -247,7 +251,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "f852c3d1759f1edf64a8a3d81a0d0a79edc552136e03a657479fd4f52eef42ed",
+  "fingerprint": "9fe5cb5a3e77723b213b54e620009d6710253d2c9662938cd5ddf63af5c9822c",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -316,6 +320,10 @@
     {
       "path": "dist/feed.d.ts",
       "sha256": "7969eba3905b29ef9c9cdae470c60cc7d5fae864ccaf9f63daaa1922ff764dc4"
+    },
+    {
+      "path": "dist/grid-control.d.ts",
+      "sha256": "bb7c86a755b0ab86ee1c202ac5a5ea45a36b48a1694c31a88ed2d4cb45c496f9"
     },
     {
       "path": "dist/index.d.ts",
@@ -511,7 +519,7 @@
     },
     {
       "path": "dist/structures/grid.d.ts",
-      "sha256": "3e9fdd75823107b774639a5cded3a2ed5957d153c8b734ba40ced33613a67db3"
+      "sha256": "655bcfef2279eaca50ef8f38a2ed1daf65683772b3c8eba4bd206d8dc6a17922"
     },
     {
       "path": "dist/structures/range.d.ts",
