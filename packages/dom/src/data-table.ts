@@ -23,6 +23,7 @@ import type {
 import {
   BindingScope,
   ColumnSizeStore,
+  allMatchingSelectionState,
   bindColumnResizeHandle,
   bindEvent,
   clearAttributes,
@@ -39,6 +40,7 @@ import {
   rowSelected,
   setEditorAttributes,
   setColumnInlineSize,
+  setBulkSelectionControlAttributes,
   validateColumnSizeOptions,
   validateRegistrationGeneration,
   type TabularDOMColumnResizeHandleOptions,
@@ -342,12 +344,26 @@ class DOMDataTable implements DataTableConnection {
 
   public bindBulkSelectionControl(element: HTMLElement, options: DataTableBulkSelectionControlOptions): () => void {
     element.setAttribute('data-part', 'bulk-selection-control');
-    element.setAttribute('aria-disabled', String(options.disabled === true));
-    return bindEvent(this.#scope, element, 'click', () => {
+    const update = (): void => {
+      if (options.target.kind !== 'all-matching') {
+        element.setAttribute('aria-disabled', String(options.disabled === true));
+        return;
+      }
+      setBulkSelectionControlAttributes(element, allMatchingSelectionState(this.getSnapshot()), options.disabled === true);
+    };
+    const dispose = bindEvent(this.#scope, element, 'click', () => {
       if (options.disabled === true) return;
-      if (options.target.kind === 'all-matching') this.handleEvent({ type: 'select-all-matching' });
+      if (options.target.kind === 'all-matching') {
+        const event: DataTableEvent = allMatchingSelectionState(this.getSnapshot()) === 'checked'
+          ? { type: 'set-row-selection', selection: { kind: 'explicit-rows', rowIDs: [] } }
+          : { type: 'select-all-matching' };
+        this.handleEvent(event);
+      }
       else this.handleEvent({ type: 'request-group-leaf-selection', groupID: options.target.groupID });
     });
+    this.#refreshers.add(update);
+    update();
+    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
   }
 
   public bindDisclosure(element: HTMLElement, options: DataTableDisclosureOptions): () => void {

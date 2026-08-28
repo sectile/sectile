@@ -71,7 +71,7 @@ useDataTableSource(table, async (request) => {
 
 ## 선택과 native form
 
-개별 행은 `DataTable.SelectionControl`, 전체 검색 결과나 group leaf는 `DataTable.BulkSelectionControl`로 선택합니다. Body 안에서는 현재 행 ID가 native value의 기본값이므로 `name`만 필요합니다. form에 다른 값을 제출할 때만 `value`를 지정합니다. all-matching selection은 revision에 묶이며 아직 불러오지 않은 모든 ID 대신 제외 목록만 저장합니다.
+개별 행은 `DataTable.SelectionControl`, 전체 검색 결과나 group leaf는 `DataTable.BulkSelectionControl`로 선택합니다. 전체 선택 컨트롤은 선택 없음, 일부 선택, 검색 결과 전체 선택을 각각 `aria-checked="false"`, `"mixed"`, `"true"`로 투영합니다. Body 안에서는 현재 행 ID가 native value의 기본값이므로 `name`만 필요합니다. form에 다른 값을 제출할 때만 `value`를 지정합니다. all-matching selection은 revision에 묶이며 아직 불러오지 않은 모든 ID 대신 제외 목록만 저장합니다.
 
 ```vue
 <DataTable.SelectionControl name="selected-users" />

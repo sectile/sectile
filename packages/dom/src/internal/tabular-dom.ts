@@ -57,6 +57,8 @@ export interface TabularHeaderMetrics {
   readonly depth: number;
 }
 
+export type TabularDOMBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
+
 export class ColumnSizeStore {
   readonly #controlled: boolean;
   readonly #onChange: ((state: TabularDOMColumnSizeState) => void) | undefined;
@@ -249,6 +251,34 @@ export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID)
   return selection.kind === 'explicit-rows'
     ? selection.rowIDs.includes(rowID)
     : !selection.excludedRowIDs.includes(rowID);
+}
+
+export function allMatchingSelectionState(snapshot: TabularSnapshot): TabularDOMBulkSelectionState {
+  const selection = snapshot.state.rowSelection;
+  const view = currentView(snapshot);
+  const count = view?.matchingLeafCount;
+  const total = count?.kind === 'known' ? count.value : null;
+  if (total === 0) return 'unchecked';
+  if (selection.kind === 'explicit-rows') {
+    const selected = new Set(selection.rowIDs);
+    const visibleLeafIDs = view?.rows.filter((row) => row.kind === 'leaf').map((row) => row.id) ?? [];
+    const selectedVisibleCount = visibleLeafIDs.filter((rowID) => selected.has(rowID)).length;
+    if (selectedVisibleCount === 0) return 'unchecked';
+    return total !== null && visibleLeafIDs.length === total && selectedVisibleCount === total ? 'checked' : 'indeterminate';
+  }
+  if (selection.excludedRowIDs.length === 0) return 'checked';
+  return total !== null && selection.excludedRowIDs.length >= total ? 'unchecked' : 'indeterminate';
+}
+
+export function setBulkSelectionControlAttributes(
+  element: HTMLElement,
+  state: TabularDOMBulkSelectionState,
+  disabled: boolean,
+): void {
+  element.setAttribute('role', 'checkbox');
+  element.setAttribute('aria-checked', state === 'indeterminate' ? 'mixed' : String(state === 'checked'));
+  element.setAttribute('aria-disabled', String(disabled));
+  element.setAttribute('data-state', state);
 }
 
 export function queryWithSort(

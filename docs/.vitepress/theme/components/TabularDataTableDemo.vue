@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ArrowDown, ArrowUp, ChevronsUpDown, ListChecks, Search, Table2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ChevronsUpDown, Search, Table2 } from '@lucide/vue';
 import {
   createDataTableComponents,
   defineDataTableColumns,
@@ -108,7 +108,7 @@ const direction = (columnID: string) => {
         <DataTable.Root class="tabular-table" aria-labelledby="tabular-data-table-demo-title">
           <DataTable.Header>
             <DataTable.HeaderRow>
-              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><ListChecks :size="13" aria-hidden="true" /></DataTable.BulkSelectionControl></th>
+              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll" /></th>
               <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
                 <DataTable.SortTrigger :column="column.id">
                   {{ copy.columns[index] }}

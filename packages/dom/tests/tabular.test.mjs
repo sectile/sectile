@@ -76,14 +76,28 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   assert.equal(cell.getAttribute('headers'), 'sectile-tabular-header-header%3Aname');
 
   const selection = document.createElement('input');
+  const bulkSelection = document.createElement('button');
   row.append(selection);
+  row.append(bulkSelection);
   const unbind = connection.bindSelectionControl(selection, { rowID: 'r1', name: 'users', value: 'r1' });
+  const unbindBulk = connection.bindBulkSelectionControl(bulkSelection, { target: { kind: 'all-matching' } });
+  assert.equal(bulkSelection.getAttribute('role'), 'checkbox');
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
+  assert.equal(bulkSelection.getAttribute('data-state'), 'unchecked');
   selection.dispatchEvent(new window.Event('change', { bubbles: true }));
   assert.deepEqual(connection.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'mixed');
+  assert.equal(bulkSelection.getAttribute('data-state'), 'indeterminate');
   assert.deepEqual(new window.FormData(form).getAll('users'), ['r1']);
-  connection.handleEvent({ type: 'select-all-matching' });
+  bulkSelection.click();
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'true');
+  assert.equal(bulkSelection.getAttribute('data-state'), 'checked');
   assert.equal(selection.hasAttribute('name'), false);
   assert.deepEqual(new window.FormData(form).getAll('users'), []);
+  bulkSelection.click();
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
+  assert.equal(bulkSelection.getAttribute('data-state'), 'unchecked');
+  assert.deepEqual(connection.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: [] });
 
   const stale = connection.registerCell(document.createElement('td'), {
     cell: { rowID: 'r1', columnID: 'name' },
@@ -95,6 +109,8 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   registered.value();
   unbind();
   unbind();
+  unbindBulk();
+  unbindBulk();
   connection.disconnect();
   connection.disconnect();
   assert.equal(table.hasAttribute('data-scope'), false);
@@ -135,6 +151,17 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
   assert.equal(second.getAttribute('role'), 'gridcell');
   assert.equal(second.tabIndex, 0);
   assert.equal(connection.requestRevealCell({ rowID: 'r1', columnID: 'name' }, connection.getProjection().generation - 1), false);
+
+  const bulkSelection = document.createElement('button');
+  root.append(bulkSelection);
+  connection.bindBulkSelectionControl(bulkSelection, { target: { kind: 'all-matching' } });
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
+  connection.handleEvent({ type: 'toggle-row-selection', rowID: 'r1' });
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'mixed');
+  bulkSelection.click();
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'true');
+  bulkSelection.click();
+  assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
 
   const revision = connection.getSnapshot().revision;
   connection.disconnect();

@@ -79,7 +79,7 @@ useDataTableSource(table, async (request) => {
 
 ## Selection and native forms
 
-Use `DataTable.SelectionControl` for explicit rows and `DataTable.BulkSelectionControl` for all matching rows or group leaves. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
+Use `DataTable.SelectionControl` for explicit rows and `DataTable.BulkSelectionControl` for all matching rows or group leaves. The bulk control projects `aria-checked="false"`, `"mixed"`, and `"true"` for no selection, partial selection, and all matching rows. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
 
 ```vue
 <DataTable.SelectionControl name="selected-users" />
