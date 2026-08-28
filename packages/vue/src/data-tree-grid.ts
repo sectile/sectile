@@ -1,5 +1,5 @@
 import { getCurrentScope, onScopeDispose, toValue, watch, type Component, type ComputedRef, type InjectionKey } from 'vue';
-import { connectDataTreeGrid, type DataTreeGridColumnSizeState as DOMDataTreeGridColumnSizeState, type DataTreeGridDOMCommand } from '@sectile/dom/data-tree-grid';
+import { connectDataTreeGrid, type DataTreeGridColumnSizeState as DOMDataTreeGridColumnSizeState, type DataTreeGridDOMCommand } from '@sectile/dom/tabular';
 import {
   createDataTreeGrid,
   type DataTreeGridCommand as SemanticDataTreeGridCommand,

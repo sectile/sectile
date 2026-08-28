@@ -62,6 +62,6 @@ DataTable은 세로 linear row adapter를, DataGrid와 DataTreeGrid는 start/cen
 pinning을 보존하는 partitioned-track grid adapter를 사용합니다. projection이 바뀌면
 `reconcileData*VirtualAdapter`가 ID 기반 mutation과 새 adapter를 반환합니다.
 
-기본 `@sectile/tabular`, `@sectile/dom/data-*`, `@sectile/vue/tabular` import는
+기본 `@sectile/tabular`, `@sectile/dom/tabular`, `@sectile/vue/tabular` import는
 Virtual을 불러오지 않습니다. 반대로 `/virtual` subpath를 import하려면
 `@sectile/virtual`을 명시적으로 설치해야 합니다.

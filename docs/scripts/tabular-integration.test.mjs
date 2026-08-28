@@ -48,10 +48,15 @@ test('Tabular documentation covers core, DOM, Vue, profiles, sources, and opt-in
     assert.match(source, /TabularData(?:Table|Grid|TreeGrid)Demo/u);
     assert.match(source, /전체 예제 source|Complete source for the live example/u);
     assert.match(source, /@sectile\/tabular\/data-(?:table|grid|tree-grid)/u);
-    assert.match(source, /@sectile\/dom\/data-(?:table|grid|tree-grid)/u);
+    assert.match(source, /@sectile\/dom\/tabular/u);
+    assert.doesNotMatch(source, /@sectile\/dom\/data-(?:table|grid|tree-grid)/u);
   }
   for (const source of [sourceGuide, koSourceGuide]) assert.match(source, /attachRequestExecutor/u);
-  for (const source of [domGuide, koDomGuide]) assert.match(source, /columnID: 'name'/u);
+  for (const source of [domGuide, koDomGuide]) {
+    assert.match(source, /pnpm add @sectile\/dom @sectile\/tabular/u);
+    assert.match(source, /@sectile\/dom\/tabular/u);
+    assert.match(source, /columnID: 'name'/u);
+  }
   for (const source of [virtual, koVirtual]) {
     assert.match(source, /@sectile\/tabular\/virtual/u);
     assert.match(source, /@sectile\/vue\/virtual/u);

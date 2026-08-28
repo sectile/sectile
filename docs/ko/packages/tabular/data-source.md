@@ -54,7 +54,7 @@ core는 request envelope와 stale 응답 거부를 소유하고, abort controlle
 DOM connection은 별도 source 종류가 아닙니다. connection이 노출하는 semantic controller에 executor를 붙이고, snapshot 변경 시 등록된 element를 갱신합니다.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   columns,

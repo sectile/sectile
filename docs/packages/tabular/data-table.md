@@ -48,10 +48,10 @@ renderRows(table.getProjection().rows)
 
 ## Connect existing DOM
 
-`@sectile/dom/data-table` binds the same controller contract to native table elements, form controls, and events while preserving application styling.
+`@sectile/dom/tabular` binds the same controller contract to native table elements, form controls, and events while preserving application styling.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   columns,

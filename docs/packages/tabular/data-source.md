@@ -52,7 +52,7 @@ Core owns request envelopes and stale-response rejection. The application owns a
 A DOM connection is not another source mode. Attach the executor to its semantic controller and refresh registered elements when snapshots change.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   columns,

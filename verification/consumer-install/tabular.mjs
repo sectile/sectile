@@ -42,24 +42,40 @@ try {
   await missingPeer(tabular, '@sectile/tabular/virtual', '@sectile/virtual');
   scenarios.push({ id: 'tabular-base-without-virtual', status: 'passed' });
 
-  const dom = await fixture('dom-base', [tarballs.core, tarballs.tabular, tarballs.dom]);
+  const dom = await fixture('dom-base', [tarballs.core, tarballs.dom]);
   await runtime(dom, `
     const root = await import('@sectile/dom');
     if (typeof root.createCheckbox !== 'function') process.exit(2);
   `);
   await missingPeer(dom, '@sectile/dom/virtual', '@sectile/virtual');
   await missingPeer(dom, '@sectile/dom/temporal', '@sectile/temporal');
+  await missingPeer(dom, '@sectile/dom/tabular', '@sectile/tabular');
   scenarios.push({ id: 'dom-base-without-optional-peers', status: 'passed' });
 
-  const vue = await fixture('vue-base', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  const vue = await fixture('vue-base', [tarballs.core, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vue, `
     const root = await import('@sectile/vue');
     if (typeof root.CheckboxRoot !== 'object') process.exit(2);
   `);
   await missingPeer(vue, '@sectile/vue/virtual', '@sectile/virtual');
   await missingPeer(vue, '@sectile/vue/temporal', '@sectile/temporal');
-  await typeConsumer(vue);
+  await missingPeer(vue, '@sectile/vue/tabular', '@sectile/tabular');
   scenarios.push({ id: 'vue-base-without-optional-peers', status: 'passed' });
+
+  const domTabular = await fixture('dom-tabular', [tarballs.core, tarballs.tabular, tarballs.dom]);
+  await runtime(domTabular, `
+    const tabular = await import('@sectile/dom/tabular');
+    if (typeof tabular.createDataTable !== 'function' || typeof tabular.createDataGrid !== 'function' || typeof tabular.createDataTreeGrid !== 'function') process.exit(2);
+  `);
+  scenarios.push({ id: 'dom-tabular-explicit-opt-in', status: 'passed' });
+
+  const vueTabular = await fixture('vue-tabular', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  await runtime(vueTabular, `
+    const tabular = await import('@sectile/vue/tabular');
+    if (typeof tabular.createDataTableComponents !== 'function' || typeof tabular.createDataGridComponents !== 'function' || typeof tabular.createDataTreeGridComponents !== 'function') process.exit(2);
+  `);
+  await typeConsumer(vueTabular);
+  scenarios.push({ id: 'vue-tabular-explicit-opt-in', status: 'passed' });
 
   const tabularVirtual = await fixture('tabular-virtual', [tarballs.core, tarballs.tabular, tarballs.virtual]);
   await runtime(tabularVirtual, `
@@ -68,28 +84,28 @@ try {
   `);
   scenarios.push({ id: 'tabular-virtual-explicit-opt-in', status: 'passed' });
 
-  const domVirtual = await fixture('dom-virtual', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.virtual]);
+  const domVirtual = await fixture('dom-virtual', [tarballs.core, tarballs.dom, tarballs.virtual]);
   await runtime(domVirtual, `
     const virtual = await import('@sectile/dom/virtual');
     if (typeof virtual.createVirtualizer !== 'function') process.exit(2);
   `);
   scenarios.push({ id: 'dom-virtual-explicit-opt-in', status: 'passed' });
 
-  const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, tarballs.virtual, `vue@${vueVersion}`]);
+  const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.dom, tarballs.vue, tarballs.virtual, `vue@${vueVersion}`]);
   await runtime(vueVirtual, `
     const virtual = await import('@sectile/vue/virtual');
     if (typeof virtual.useVirtualizer !== 'function') process.exit(2);
   `);
   scenarios.push({ id: 'vue-virtual-explicit-opt-in', status: 'passed' });
 
-  const domTemporal = await fixture('dom-temporal', [tarballs.core, tarballs.tabular, tarballs.temporal, tarballs.dom]);
+  const domTemporal = await fixture('dom-temporal', [tarballs.core, tarballs.temporal, tarballs.dom]);
   await runtime(domTemporal, `
     const temporal = await import('@sectile/dom/temporal');
     if (typeof temporal.createDateField !== 'function') process.exit(2);
   `);
   scenarios.push({ id: 'dom-temporal-explicit-opt-in', status: 'passed' });
 
-  const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.tabular, tarballs.temporal, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
+  const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.temporal, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vueTemporal, `
     const temporal = await import('@sectile/vue/temporal');
     if (typeof temporal.DateField !== 'object' || typeof temporal.TemporalProvider !== 'object') process.exit(2);

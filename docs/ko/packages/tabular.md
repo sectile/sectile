@@ -18,7 +18,7 @@ pnpm add @sectile/tabular
 | 필요한 범위 | 설치 | 사용하는 API |
 | --- | --- | --- |
 | 상태·query·projection만 계산 | `@sectile/tabular` | `createDataTable`, `createDataGrid`, `createDataTreeGrid` |
-| framework 없이 HTML에 연결 | `@sectile/dom` | `createData*` 또는 `connectData*`, element 등록과 `bind*` |
+| framework 없이 HTML에 연결 | `@sectile/dom` + `@sectile/tabular` | `@sectile/dom/tabular`: `createData*`, `connectData*`, element 등록과 `bind*` |
 | Vue component로 구성 | `@sectile/vue @sectile/tabular vue` | `@sectile/vue/tabular`의 `useData*`, `createData*Components`, `useData*Source` |
 
 `@sectile/tabular`가 renderer-neutral한 Tabular core입니다. `@sectile/dom`과 `@sectile/vue`는 같은 controller를 소비하는 선택적 host 계층이며, core를 사용하기 위해 Vue를 설치할 필요가 없습니다.
@@ -98,4 +98,4 @@ Tabular는 표를 직접 그리는 컴포넌트가 아닙니다. DataTable, Data
 | `/data-tree-grid` | 계층형 application grid controller와 reducer |
 | `/virtual` | Tabular projection을 Virtual 전략에 잇는 선택적 adapter |
 
-직접 DOM 연결은 `@sectile/dom/data-*`를 사용합니다. Vue에서는 `@sectile/tabular`를 함께 설치하고 `@sectile/vue/tabular`에서 composable, Provider, compound part와 injected context를 가져옵니다. Tabular를 사용하지 않는 `@sectile/vue` 소비자에게 `@sectile/tabular`는 선택적 의존성입니다. [Vue 구성](./tabular/vue)과 [선택적 가상화](./tabular/virtual)도 참고하세요.
+직접 DOM에 연결할 때는 `@sectile/dom`과 `@sectile/tabular`를 함께 설치하고 `@sectile/dom/tabular`에서 host API를 가져옵니다. Vue에서는 `@sectile/tabular`를 함께 설치하고 `@sectile/vue/tabular`에서 composable, Provider, compound part와 injected context를 가져옵니다. Tabular를 사용하지 않는 소비자에게 `@sectile/tabular`는 선택적 의존성입니다. [DOM 구성](./tabular/dom), [Vue 구성](./tabular/vue), [선택적 가상화](./tabular/virtual)도 참고하세요.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDataGrid } from '@sectile/dom/data-grid';
+import { createDataGrid } from '@sectile/dom/tabular';
 import { createVirtualizer } from '@sectile/dom/virtual';
 import { createDataGridVirtualAdapter } from '../../.verification-dist/virtual.js';
 

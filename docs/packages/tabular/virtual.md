@@ -62,7 +62,7 @@ semantics. DataGrid and DataTreeGrid use a partitioned-track grid that preserves
 start, center, and end pinning. Reconcile projection changes with the matching
 `reconcileData*VirtualAdapter` function.
 
-Importing base `@sectile/tabular`, `@sectile/dom/data-*`, or
+Importing base `@sectile/tabular`, `@sectile/dom/tabular`, or
 `@sectile/vue/tabular` never loads Virtual. Importing `@sectile/tabular/virtual`,
 `@sectile/dom/virtual`, or `@sectile/vue/virtual` without installing
 `@sectile/virtual` fails with the missing optional peer, making opt-in explicit.

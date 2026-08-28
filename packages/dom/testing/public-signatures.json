@@ -43,18 +43,6 @@
       "types": "dist/combobox.d.ts"
     },
     {
-      "subpath": "./data-grid",
-      "types": "dist/data-grid.d.ts"
-    },
-    {
-      "subpath": "./data-table",
-      "types": "dist/data-table.d.ts"
-    },
-    {
-      "subpath": "./data-tree-grid",
-      "types": "dist/data-tree-grid.d.ts"
-    },
-    {
       "subpath": "./dialog",
       "types": "dist/dialog.d.ts"
     },
@@ -175,6 +163,10 @@
       "types": "dist/tabs.d.ts"
     },
     {
+      "subpath": "./tabular",
+      "types": "dist/tabular.d.ts"
+    },
+    {
       "subpath": "./tags-input",
       "types": "dist/tags-input.d.ts"
     },
@@ -227,7 +219,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d4c7c6c8a62f471331aaa50606ba1c67f673d019b70b8da43e52dd1151c88ddc",
+  "fingerprint": "a904515f974b4e8b13b44184816bb9c40948a863412f3a4ca539e1bba4caf10e",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -339,7 +331,7 @@
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "983424e391c1f9bf0824e3fea431dd3ae8026581ce02b7bf74ff46e1203abc4a"
+      "sha256": "4f5a415d2e3c58d54d6c8d5599306737f39ccfacdd298e0663af9ce59fc1eee6"
     },
     {
       "path": "dist/interact-outside.d.ts",
@@ -484,6 +476,10 @@
     {
       "path": "dist/tabs.d.ts",
       "sha256": "4edc9f58dfd7e8bc8f0f9c51eae5911651a93ebfd70e65f063b5674dd8be3846"
+    },
+    {
+      "path": "dist/tabular.d.ts",
+      "sha256": "7b05acd8f1376a56d5d7af855c85db2667442965a9e93eb7888f02d2d62cf391"
     },
     {
       "path": "dist/tags-input.d.ts",

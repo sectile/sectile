@@ -1,9 +1,9 @@
 # DOM에서 Tabular 연결하기
 
-`@sectile/dom/data-*`는 semantic controller를 기존 HTML element에 연결합니다. 스타일과 element 생성은 응용 프로그램이 맡고, connection은 native/ARIA 속성, event, focus, form 값, 등록 수명을 관리합니다.
+`@sectile/dom/tabular`는 semantic controller를 기존 HTML element에 연결합니다. 스타일과 element 생성은 응용 프로그램이 맡고, connection은 native/ARIA 속성, event, focus, form 값, 등록 수명을 관리합니다.
 
 ```sh
-pnpm add @sectile/dom
+pnpm add @sectile/dom @sectile/tabular
 ```
 
 ## 생성과 연결
@@ -11,7 +11,7 @@ pnpm add @sectile/dom
 `createDataTable`은 semantic controller와 DOM connection을 함께 만들고, `connectDataTable`은 이미 만든 `@sectile/tabular` controller에 DOM만 연결합니다. DataGrid와 DataTreeGrid도 같은 `create*`/`connect*` 쌍을 제공합니다.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   table: document.querySelector<HTMLTableElement>('#users')!,

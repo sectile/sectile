@@ -66,12 +66,12 @@ for (const [profile, profileContract] of Object.entries(manifest.profiles ?? {})
   for (const packageName of expectedPackages) {
     const packageRoot = resolve('packages', packageName);
     const packageJson = JSON.parse(await readFile(resolve(packageRoot, 'package.json'), 'utf8'));
-    const subpath = `./${profile}`;
+    const subpath = packageName === 'tabular' ? `./${profile}` : './tabular';
     const target = packageJson.exports?.[subpath];
     assert.ok(target !== undefined, `${packageName}/${profile}: package subpath missing.`);
     assert.deepEqual(Object.keys(target).sort(), ['default', 'import', 'types'],
       `${packageName}/${profile}: export conditions must be exact.`);
-    const expectedBase = `./dist/${profile}`;
+    const expectedBase = packageName === 'tabular' ? `./dist/${profile}` : './dist/tabular';
     assert.deepEqual(target, { types: `${expectedBase}.d.ts`, import: `${expectedBase}.js`, default: `${expectedBase}.js` });
     const [module, rootModule, declaration, rootDeclaration] = await Promise.all([
       import(pathToFileURL(resolve(packageRoot, target.import)).href),
@@ -88,7 +88,8 @@ for (const [profile, profileContract] of Object.entries(manifest.profiles ?? {})
     for (const name of Object.keys(module)) assert.equal(rootNames.has(name), rootPolicy,
       `${packageName}/${profile}: root export ${rootPolicy ? 'missing' : 'forbidden'} ${name}.`);
     assert.equal(declarationModel.hasDefault, false, `${packageName}/${profile}: default export is forbidden.`);
-    assert.equal(declarationModel.hasWildcard, false, `${packageName}/${profile}: wildcard export is forbidden.`);
+    assert.equal(declarationModel.hasWildcard, packageName !== 'tabular',
+      `${packageName}/${profile}: aggregate hosts use wildcard re-exports; the core profile does not.`);
     const allowedImports = new Set(profileContract[packageName].imports);
     for (const specifier of declarationModel.imports) {
       assert.equal(!specifier.startsWith('.') && (specifier.includes('/src/') || specifier.includes('/internal/')), false,

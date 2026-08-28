@@ -1,9 +1,9 @@
 # DOM composition
 
-`@sectile/dom/data-*` connects semantic controllers to existing HTML elements. The application creates and styles elements; the connection owns native/ARIA attributes, events, focus, form values, and registration lifetimes.
+`@sectile/dom/tabular` connects semantic controllers to existing HTML elements. The application creates and styles elements; the connection owns native/ARIA attributes, events, focus, form values, and registration lifetimes.
 
 ```sh
-pnpm add @sectile/dom
+pnpm add @sectile/dom @sectile/tabular
 ```
 
 ## Create or connect
@@ -11,7 +11,7 @@ pnpm add @sectile/dom
 `createDataTable` creates both a semantic controller and a DOM connection. `connectDataTable` attaches DOM behavior to an existing `@sectile/tabular` controller. DataGrid and DataTreeGrid expose the same `create*` and `connect*` pairs.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   table: document.querySelector<HTMLTableElement>('#users')!,

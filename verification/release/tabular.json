@@ -7,7 +7,7 @@
     "acceptanceCriteria": 19,
     "workItems": 17,
     "validations": 18,
-    "publicExports": 14,
+    "publicExports": 10,
     "evidenceFiles": 32
   },
   "requirementOwners": {
@@ -58,9 +58,7 @@
     "AC-019": "VAL-014"
   },
   "publicExports": [
-    "@sectile/dom/data-grid",
-    "@sectile/dom/data-table",
-    "@sectile/dom/data-tree-grid",
+    "@sectile/dom/tabular",
     "@sectile/tabular",
     "@sectile/tabular/data-grid",
     "@sectile/tabular/data-table",
@@ -69,24 +67,22 @@
     "@sectile/tabular/query",
     "@sectile/tabular/source",
     "@sectile/tabular/virtual",
-    "@sectile/vue/data-grid",
-    "@sectile/vue/data-table",
-    "@sectile/vue/data-tree-grid"
+    "@sectile/vue/tabular"
   ],
   "packedDependencyClosure": {
     "status": "passed",
-    "files": 310,
-    "imports": 477
+    "files": 316,
+    "imports": 493
   },
-  "deterministicEvidenceFingerprint": "8619413715ea8c288ac8c49ce2eee6708c35401a6d52b2acfc05f20369c82e46",
+  "deterministicEvidenceFingerprint": "44ba3303bb0974cfa17206abfd72f008d80ed5eca2060289aa29e31187c55c8c",
   "evidence": [
     {
       "path": "docs/ko/packages/tabular.md",
-      "sha256": "51580f82f6aaebf3515bf0429d92a53088d3414ad9123cfc67279cea6c8e2542"
+      "sha256": "c576306f7751dc57ce995e5587715cb64a6d5861a1b8c3cb9a3982e6cdbcc048"
     },
     {
       "path": "docs/packages/tabular.md",
-      "sha256": "5c1e1dbbbaab438972c302b996c8654752209717b625dbee515b05711bcb96c3"
+      "sha256": "a60b76774d2fb3c05b21f6133bfb44c21be977518380ffdf91e557172e98f422"
     },
     {
       "path": "packages/core/testing/public-api.json",
@@ -98,7 +94,7 @@
     },
     {
       "path": "packages/dom/testing/public-signatures.json",
-      "sha256": "8ab3960bb4b228a344cd2967cdd0d9bb86ef175453b2076f3f6dde6756c2d878"
+      "sha256": "fd091ba515eb962dcd3cdf2ef699cf5a424c0c8fe90b7c5b105adc862f1d491b"
     },
     {
       "path": "packages/dom/verification/browser.json",
@@ -126,7 +122,7 @@
     },
     {
       "path": "packages/tabular/verification/implementation-verification.json",
-      "sha256": "8619413715ea8c288ac8c49ce2eee6708c35401a6d52b2acfc05f20369c82e46"
+      "sha256": "44ba3303bb0974cfa17206abfd72f008d80ed5eca2060289aa29e31187c55c8c"
     },
     {
       "path": "packages/tabular/verification/model.json",
@@ -162,27 +158,27 @@
     },
     {
       "path": "packages/vue/tests/data-grid.test.mjs",
-      "sha256": "f43ec6ecbf37c952a7d680d6ee75c2d8a59a7b7ba5ae77b225f791778ac57385"
+      "sha256": "4c31ffb8f421c53fe4ea9777881725d1ad715883299a489399da47981754dffc"
     },
     {
       "path": "packages/vue/tests/data-table.test.mjs",
-      "sha256": "7843c18ef840c89df616f4ecd8ef8487df22baaf69e7ce26ea9e7c67f243ffbb"
+      "sha256": "696d0fb325c7e84f2c585291d7881d80d4383b0e2b3a6e04221940479e63761c"
     },
     {
       "path": "packages/vue/tests/data-tree-grid.test.mjs",
-      "sha256": "e96abd3f6e4a9bf4cc66c31e5f196e6780dccdcd76cda00da5d75b065f6463b7"
+      "sha256": "7bc32e109a596e1769d151d2b449cd5479c31b8e748b486b97b80c77958d8a40"
     },
     {
       "path": "packages/vue/tests/tabular-source.test.mjs",
-      "sha256": "af3fa339848a2f06fe9272bccdcc5af4971131b78dd6d834976e84143d01b823"
+      "sha256": "84b5c9ced7bb38e57ee0ca24b34562a316ca429c363eb19ece414eb2ddd64c7a"
     },
     {
       "path": "packages/vue/tests/tabular-ssr.test.mjs",
-      "sha256": "988677c6b0f01a3e2c283cd6ca8b003530a47cf8d3b51604dadf435f6dfb5d5b"
+      "sha256": "9fea2044661fd5f146ee80c05e483644c503df000825427e60f8c6190e35766b"
     },
     {
       "path": "packages/vue/type-tests/tabular-components.ts",
-      "sha256": "318751705c938ef655221ed0562a55a66af68d0774193c55fea61ec78a890c54"
+      "sha256": "fb1134a3e52e3976c391b5a4bf6046c8e432d8f1950c3159500bc68b2fb5ba0b"
     },
     {
       "path": "packages/vue/verification/tabular-virtual-browser.json",
@@ -198,11 +194,11 @@
     },
     {
       "path": "verification/component-public-api.json",
-      "sha256": "da83db020bd5cf4b773ba11a73a8f3fc4ea3281ad81dd47bb578b51694d8ae8d"
+      "sha256": "074d7e653f74ef71a1cb2b2d70e4bd8359c8869108e91276133ca66ffdd4fe62"
     },
     {
       "path": "verification/consumer-install/tabular.json",
-      "sha256": "984f547b5100e75b7e9ee14fbb30ea7ccf5573c8d95eae6a90ee6e43329f0509"
+      "sha256": "c91d633a9c77469f0e4623bc1c8e5abb2de605559135c603735f3a4a385b2554"
     },
     {
       "path": "verification/tabular/architecture.json",

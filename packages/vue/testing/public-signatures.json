@@ -227,7 +227,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "bc200bcddb5deeb210b50fdcac7f773bf24994374a740ee8140bbd3203e789b4",
+  "fingerprint": "073333f9315f3c445e7561fa5c7eba69d2ffc722a4dec388f0ce919b70aedbe7",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -271,15 +271,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "6e12212d1a5b214abca776e76d4d2940773de836e4d4cc51457c863123a1e42f"
+      "sha256": "91afeb18c329277be6f7778d2adba8a04c24cff82408058c8708430a5d50b947"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "d71612e697018dedf466eda26acf2c496ae90407f7572ca9ae54c984c7604382"
+      "sha256": "4549f1c91f211c2ff39c8f06fa8844c302c6588a8fa592964f8b042b7f708f94"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "83cd7f4e73ed73a528e270655656ea1c39a31417b46f413ada500e44db342693"
+      "sha256": "fc04549a7ac1c2acccd470c3c363922cfb06f4eb4479113d3c10ce16a494bd54"
     },
     {
       "path": "dist/date-field.d.ts",

@@ -57,7 +57,7 @@ renderTreeGrid(tree.getProjection())
 DOM connection은 같은 projection을 ARIA treegrid metadata, disclosure, keyboard 이동과 편집 element에 연결합니다.
 
 ```ts
-import { createDataTreeGrid } from '@sectile/dom/data-tree-grid'
+import { createDataTreeGrid } from '@sectile/dom/tabular'
 
 const connection = createDataTreeGrid({
   columns,

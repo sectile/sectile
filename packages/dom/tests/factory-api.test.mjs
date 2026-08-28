@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './temporal', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './tabular', './temporal', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../dist/index.js');
@@ -36,6 +36,27 @@ test('virtualization is exposed only through its optional subpath', async () => 
 
   const virtualSource = await readFile(new URL('../dist/virtual.js', import.meta.url), 'utf8');
   assert.match(virtualSource, /@sectile\/virtual/);
+});
+
+test('Tabular controls are exposed only through their optional subpath', async () => {
+  assert.equal(packageManifest.dependencies?.['@sectile/tabular'], undefined);
+  assert.equal(packageManifest.peerDependencies?.['@sectile/tabular'], 'workspace:*');
+  assert.equal(packageManifest.peerDependenciesMeta?.['@sectile/tabular']?.optional, true);
+
+  const rootModule = await import('../dist/index.js');
+  assert.equal(rootModule.createDataTable, undefined);
+  assert.equal(rootModule.createDataGrid, undefined);
+  assert.equal(rootModule.createDataTreeGrid, undefined);
+
+  const tabularModule = await import('../dist/tabular.js');
+  assert.equal(typeof tabularModule.createDataTable, 'function');
+  assert.equal(typeof tabularModule.createDataGrid, 'function');
+  assert.equal(typeof tabularModule.createDataTreeGrid, 'function');
+
+  const tabularSource = await readFile(new URL('../dist/tabular.js', import.meta.url), 'utf8');
+  assert.match(tabularSource, /\.\/data-table\.js/);
+  assert.match(tabularSource, /\.\/data-grid\.js/);
+  assert.match(tabularSource, /\.\/data-tree-grid\.js/);
 });
 
 test('temporal controls are exposed only through their optional subpath', async () => {

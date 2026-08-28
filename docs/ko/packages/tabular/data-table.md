@@ -49,10 +49,10 @@ renderRows(table.getProjection().rows)
 
 ## DOM에 직접 연결
 
-`@sectile/dom/data-table`은 같은 controller 계약을 native table element, form control, event에 연결합니다. 직접 만든 HTML과 design system 스타일을 그대로 사용할 수 있습니다.
+`@sectile/dom/tabular`는 같은 controller 계약을 native table element, form control, event에 연결합니다. 직접 만든 HTML과 design system 스타일을 그대로 사용할 수 있습니다.
 
 ```ts
-import { createDataTable } from '@sectile/dom/data-table'
+import { createDataTable } from '@sectile/dom/tabular'
 
 const connection = createDataTable({
   columns,

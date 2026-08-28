@@ -23,15 +23,15 @@
       "bytes": 54278
     },
     "@sectile/dom": {
-      "bytes": 286466
+      "bytes": 285943
     },
     "@sectile/vue": {
-      "bytes": 302528
+      "bytes": 302526
     }
   },
   "declarationClosure": {
     "status": "passed",
-    "files": 315,
+    "files": 316,
     "imports": 493
   },
   "scenarios": [
@@ -45,6 +45,14 @@
     },
     {
       "id": "vue-base-without-optional-peers",
+      "status": "passed"
+    },
+    {
+      "id": "dom-tabular-explicit-opt-in",
+      "status": "passed"
+    },
+    {
+      "id": "vue-tabular-explicit-opt-in",
       "status": "passed"
     },
     {

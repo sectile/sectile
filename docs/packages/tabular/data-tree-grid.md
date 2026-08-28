@@ -57,7 +57,7 @@ renderTreeGrid(tree.getProjection())
 The DOM connection projects the same hierarchy into ARIA treegrid metadata, disclosures, keyboard navigation, and editor elements.
 
 ```ts
-import { createDataTreeGrid } from '@sectile/dom/data-tree-grid'
+import { createDataTreeGrid } from '@sectile/dom/tabular'
 
 const root = document.querySelector<HTMLElement>('#service-tree-grid')!
 const connection = createDataTreeGrid({ columns, root, onCommand: handleTreeGridCommand })

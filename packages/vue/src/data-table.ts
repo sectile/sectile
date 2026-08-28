@@ -13,7 +13,7 @@ import {
   type DataTableColumnSizeState as DOMDataTableColumnSizeState,
   type DataTableDOMCommand as DOMDataTableCommand,
   type DataTableConnection,
-} from '@sectile/dom/data-table';
+} from '@sectile/dom/tabular';
 import {
   createDataTable,
   type DataTableCommand as SemanticDataTableCommand,

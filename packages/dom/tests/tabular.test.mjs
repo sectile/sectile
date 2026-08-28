@@ -391,15 +391,17 @@ test('DOM DataTreeGrid uses the shared explicit editor contract', async () => {
   connection.disconnect();
 });
 
-test('DOM Tabular subpaths declare direct Tabular dependency and no profile Virtual imports', async () => {
-  assert.equal(manifest.dependencies['@sectile/tabular'], 'workspace:*');
+test('DOM Tabular profiles remain Virtual-free behind the aggregate subpath', async () => {
+  assert.deepEqual(Object.keys(manifest.exports['./tabular']).sort(), ['default', 'import', 'types']);
+  assert.equal(manifest.exports['./data-table'], undefined);
+  assert.equal(manifest.exports['./data-grid'], undefined);
+  assert.equal(manifest.exports['./data-tree-grid'], undefined);
   for (const name of ['data-table', 'data-grid', 'data-tree-grid']) {
-    assert.deepEqual(Object.keys(manifest.exports[`./${name}`]).sort(), ['default', 'import', 'types']);
     const source = await readFile(new URL(`../dist/${name}.js`, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /@sectile\/virtual|\.\/virtual/u);
   }
   const root = await import('../dist/index.js');
-  assert.equal(typeof root.createDataTable, 'function');
-  assert.equal(typeof root.createDataGrid, 'function');
-  assert.equal(typeof root.createDataTreeGrid, 'function');
+  assert.equal(root.createDataTable, undefined);
+  assert.equal(root.createDataGrid, undefined);
+  assert.equal(root.createDataTreeGrid, undefined);
 });

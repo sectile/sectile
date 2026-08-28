@@ -42,7 +42,7 @@ renderGrid(grid.getProjection(), grid.getSnapshot())
 The DOM connection projects ARIA grid semantics, roving focus, keyboard navigation, and editor lifetime onto existing elements.
 
 ```ts
-import { createDataGrid } from '@sectile/dom/data-grid'
+import { createDataGrid } from '@sectile/dom/tabular'
 
 const root = document.querySelector<HTMLElement>('#release-grid')!
 const connection = createDataGrid({ columns, root, onCommand: handleGridCommand })

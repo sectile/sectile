@@ -32,7 +32,7 @@ for (const name of packageNames) {
   const pkg = JSON.parse(await readFile(packagePath, 'utf8'));
   const selected = name === 'tabular'
     ? Object.keys(pkg.exports).filter((subpath) => subpath !== './package.json')
-    : ['./data-table', './data-grid', './data-tree-grid'];
+    : ['./tabular'];
   for (const subpath of selected) {
     const target = pkg.exports[subpath];
     assert.deepEqual(Object.keys(target).sort(), ['default', 'import', 'types'], `invalid export conditions: @sectile/${name}${subpath.slice(1)}`);
@@ -47,15 +47,20 @@ assert.equal(tabular.peerDependencies['@sectile/virtual'], 'workspace:*');
 assert.equal(tabular.peerDependenciesMeta['@sectile/virtual'].optional, true);
 const dom = JSON.parse(await readFile(resolve(root, 'packages/dom/package.json'), 'utf8'));
 const vue = JSON.parse(await readFile(resolve(root, 'packages/vue/package.json'), 'utf8'));
-assert.equal(dom.dependencies['@sectile/tabular'], 'workspace:*');
-for (const dependency of ['@sectile/core', '@sectile/dom', '@sectile/tabular', '@sectile/temporal']) {
+assert.equal(dom.dependencies?.['@sectile/tabular'], undefined);
+assert.equal(dom.peerDependencies['@sectile/tabular'], 'workspace:*');
+assert.equal(dom.peerDependenciesMeta['@sectile/tabular'].optional, true);
+for (const dependency of ['@sectile/core', '@sectile/dom']) {
   assert.equal(vue.dependencies[dependency], 'workspace:*', `Vue declaration dependency missing ${dependency}`);
 }
+assert.equal(vue.dependencies?.['@sectile/tabular'], undefined);
+assert.equal(vue.peerDependencies['@sectile/tabular'], 'workspace:*');
+assert.equal(vue.peerDependenciesMeta['@sectile/tabular'].optional, true);
 
 const consumer = JSON.parse(await readFile(resolve(root, 'verification/consumer-install/tabular.json'), 'utf8'));
 assert.equal(consumer.status, 'passed');
 assert.equal(consumer.declarationClosure.status, 'passed');
-assert.equal(consumer.scenarios.length, 6);
+assert.equal(consumer.scenarios.length, 10);
 assert.ok(consumer.scenarios.every((scenario) => scenario.status === 'passed'));
 
 const implementation = JSON.parse(await readFile(resolve(root, 'packages/tabular/verification/implementation-verification.json'), 'utf8'));
