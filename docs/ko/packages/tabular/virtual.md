@@ -7,7 +7,7 @@ Tabular는 기본적으로 가상화하지 않으며 Vue에도 Tabular 전용 Vi
 pnpm add @sectile/vue @sectile/tabular @sectile/virtual vue
 ```
 
-viewport, content, item 생명 주기는 `@sectile/vue/virtual`을 직접 사용합니다.
+viewport, content, item 생명 주기는 `@sectile/vue/virtual/core`을 직접 사용합니다.
 DataTable, DataGrid, DataTreeGrid projection을 안정된 linear 또는
 partitioned-track 입력으로 바꿀 때만 `@sectile/tabular/virtual` adapter를
 사용합니다. adapter가 Tabular를 알 뿐 Tabular controller나 component는 Virtual을
@@ -15,7 +15,7 @@ import하지 않습니다.
 
 ```ts
 import { createDataGridVirtualAdapter } from '@sectile/tabular/virtual'
-import { useVirtualizer } from '@sectile/vue/virtual'
+import { useVirtualizer } from '@sectile/vue/virtual/core'
 import { shallowRef } from 'vue'
 
 let adapter = createDataGridVirtualAdapter({
@@ -62,6 +62,6 @@ DataTable은 세로 linear row adapter를, DataGrid와 DataTreeGrid는 start/cen
 pinning을 보존하는 partitioned-track grid adapter를 사용합니다. projection이 바뀌면
 `reconcileData*VirtualAdapter`가 ID 기반 mutation과 새 adapter를 반환합니다.
 
-기본 `@sectile/tabular`, `@sectile/dom/tabular`, `@sectile/vue/tabular` import는
+기본 `@sectile/tabular`, `@sectile/dom/tabular`, Vue 프로필 진입점 import는
 Virtual을 불러오지 않습니다. 반대로 `/virtual` subpath를 import하려면
 `@sectile/virtual`을 명시적으로 설치해야 합니다.

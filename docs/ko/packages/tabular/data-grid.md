@@ -56,4 +56,4 @@ DataGrid도 DataTable과 같은 query와 source 계약을 사용합니다. 정�
 | 행 선택 | `RowSelectionControl`, `BulkSelectionControl` | explicit/range/all-matching |
 | 열 크기 | `ColumnResizeHandle` | host size state |
 
-Core는 `@sectile/tabular/data-grid`, DOM과 Vue는 각각 `@sectile/dom/tabular`, `@sectile/vue/tabular`에서 import합니다. 자세한 연결 방식은 [DOM](./dom)과 [Vue](./vue)를 참고하세요.
+Core는 `@sectile/tabular/data-grid`, DOM과 Vue는 각각 `@sectile/dom/tabular`, `@sectile/vue/data-grid`에서 import합니다. 자세한 연결 방식은 [DOM](./dom)과 [Vue](./vue)를 참고하세요.

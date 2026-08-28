@@ -9,7 +9,7 @@ import {
   useDataTableSource,
   type DataTableSourceResolver,
   type DataTableViewResponse,
-} from '@sectile/vue/tabular';
+} from '@sectile/vue/data-table';
 import { useDocsLocale } from '../locale.js';
 import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';

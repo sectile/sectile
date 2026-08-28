@@ -30,6 +30,11 @@ const migrationBaselineIDs = new Set([
   'switch', 'tabs', 'text', 'toggle-button', 'toolbar', 'tooltip', 'tree-grid',
   'tree-view', 'window-splitter',
 ]);
+const isSupportSubpath = (subpath) => (
+  supportSubpaths.has(subpath)
+  || subpath.startsWith('temporal/')
+  || subpath.startsWith('virtual/')
+);
 
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
 const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
@@ -50,7 +55,7 @@ const componentsFor = async (path) => {
   return Object.keys(pkg.exports)
     .filter((subpath) => subpath.startsWith('./'))
     .map((subpath) => subpath.slice(2))
-    .filter((subpath) => !supportSubpaths.has(subpath))
+    .filter((subpath) => !isSupportSubpath(subpath))
     .sort();
 };
 
@@ -70,7 +75,7 @@ const vuePackage = JSON.parse(await readFile(vuePackagePath, 'utf8'));
 const vueComponents = Object.keys(vuePackage.exports)
   .filter((subpath) => subpath.startsWith('./'))
   .map((subpath) => subpath.slice(2))
-  .filter((subpath) => !supportSubpaths.has(subpath) && !vueOnlySubpaths.has(subpath))
+  .filter((subpath) => !isSupportSubpath(subpath) && !vueOnlySubpaths.has(subpath))
   .sort();
 assert.deepEqual(vueComponents, await componentsFor('packages/core/package.json'),
   `${vuePackagePath} must project every direct @sectile/core component subpath.`);
@@ -218,7 +223,7 @@ for (const entry of tabularProfiles) {
   assert.ok(entry.standard.startsWith('docs/'), `${entry.id}: Tabular standard must be a repository document.`);
   for (const packageName of tabularPackages) {
     const pkg = JSON.parse(await readFile(`packages/${packageName}/package.json`, 'utf8'));
-    const subpath = packageName === 'tabular' ? `./${entry.id}` : './tabular';
+    const subpath = packageName === 'dom' ? './tabular' : `./${entry.id}`;
     assert.ok(pkg.exports?.[subpath] !== undefined,
       `${entry.id}: @sectile/${packageName} subpath missing.`);
   }

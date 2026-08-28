@@ -900,54 +900,250 @@
       ]
     },
     {
-      "subpath": "./temporal",
+      "subpath": "./temporal/calendar",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createCalendar",
+        "toCalendarEvent",
+        "tryCreateCalendar"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDateField",
+        "formatDateValue",
+        "parseDateValue",
+        "tryCreateDateField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-picker",
       "classification": "optional-domain",
       "platform": "browser",
       "runtimeExports": [
         "calendarID",
-        "createCalendar",
         "createCalendarMonth",
         "createCalendarWeek",
         "createCalendarYear",
-        "createDateField",
         "createDatePicker",
+        "isCalendarValueAvailable",
+        "tryCreateDatePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "createDateRangeField",
+        "tryCreateDateRangeField",
+        "tryCreateDateRangeFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "createDateRangePicker",
+        "tryCreateDateRangePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "createDateTimeField",
-        "createDateTimePicker",
-        "createDateTimeRangePicker",
-        "createMonthPicker",
-        "createMonthPickerYear",
-        "createMonthRangePicker",
-        "createMonthRangePickerYear",
-        "createRangeCalendar",
-        "createTimeField",
-        "createTimeRangeField",
-        "createYearPicker",
-        "createYearRangePicker",
         "formatDateTimeRange",
         "formatDateTimeValue",
-        "formatDateValue",
+        "tryCreateDateTimeField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDateTimePicker",
+        "tryCreateDateTimePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDateTimeRangePicker",
+        "tryCreateDateTimeRangePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/month-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMonthPicker",
+        "createMonthPickerYear",
+        "tryCreateMonthPicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/month-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createMonthRangePicker",
+        "createMonthRangePickerYear",
+        "tryCreateMonthRangePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/range-calendar",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createRangeCalendar",
+        "tryCreateRangeCalendar"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/time-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTimeField",
         "formatTimeValue",
-        "isCalendarValueAvailable",
-        "parseDateValue",
-        "toCalendarEvent",
-        "tryCreateCalendar",
-        "tryCreateDateField",
-        "tryCreateDatePicker",
-        "tryCreateDateRangeField",
-        "tryCreateDateRangeFieldState",
-        "tryCreateDateRangePicker",
-        "tryCreateDateTimeField",
-        "tryCreateDateTimePicker",
-        "tryCreateDateTimeRangePicker",
-        "tryCreateMonthPicker",
-        "tryCreateMonthRangePicker",
-        "tryCreateRangeCalendar",
-        "tryCreateTimeField",
+        "tryCreateTimeField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/time-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTimeRangeField",
         "tryCreateTimeRangeField",
-        "tryCreateTimeRangeFieldState",
-        "tryCreateYearPicker",
+        "tryCreateTimeRangeFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/year-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createYearPicker",
+        "tryCreateYearPicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/year-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createYearRangePicker",
         "tryCreateYearRangePicker"
       ],
       "typeBearing": true,

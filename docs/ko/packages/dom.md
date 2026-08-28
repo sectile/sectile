@@ -128,18 +128,16 @@ Popover와 Tooltip 연결 객체는 Floating UI를 사용합니다. 기본 오�
 
 ## 날짜와 시간 컨트롤
 
-날짜 입력란, 시간 입력란, 달력, 선택기를 브라우저 요소에 연결할 때 `@sectile/temporal`을 설치합니다. 관련 어댑터는 하나의 선택 진입점에 모여 있어 기본 DOM 패키지는 날짜와 시간 계산을 불러오지 않습니다.
+날짜 입력란, 시간 입력란, 달력, 선택기를 브라우저 요소에 연결할 때 `@sectile/temporal`을 설치합니다. 각 어댑터 제품군은 세분화된 선택 진입점을 사용하므로 필요한 제품군만 불러옵니다.
 
 ```sh
 pnpm add @sectile/core @sectile/temporal @sectile/dom
 ```
 
 ```ts
-import {
-  createCalendar,
-  createDateField,
-  createDatePicker,
-} from '@sectile/dom/temporal'
+import { createCalendar } from '@sectile/dom/temporal/calendar'
+import { createDateField } from '@sectile/dom/temporal/date-field'
+import { createDatePicker } from '@sectile/dom/temporal/date-picker'
 ```
 
 ## Form 조정

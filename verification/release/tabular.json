@@ -7,7 +7,7 @@
     "acceptanceCriteria": 19,
     "workItems": 17,
     "validations": 18,
-    "publicExports": 10,
+    "publicExports": 12,
     "evidenceFiles": 32
   },
   "requirementOwners": {
@@ -67,7 +67,9 @@
     "@sectile/tabular/query",
     "@sectile/tabular/source",
     "@sectile/tabular/virtual",
-    "@sectile/vue/tabular"
+    "@sectile/vue/data-grid",
+    "@sectile/vue/data-table",
+    "@sectile/vue/data-tree-grid"
   ],
   "packedDependencyClosure": {
     "status": "passed",

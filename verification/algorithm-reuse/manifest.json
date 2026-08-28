@@ -73,7 +73,15 @@
     {
       "id": "vue-virtual-measurement-and-batching",
       "detectors": ["*"],
-      "paths": ["packages/vue/src/virtual.ts"],
+      "paths": [
+        "packages/vue/src/internal/virtual-core.ts",
+        "packages/vue/src/internal/virtual-list.ts",
+        "packages/vue/src/internal/virtual-collection.ts",
+        "packages/vue/src/internal/virtual-collection-model.ts",
+        "packages/vue/src/virtual-grid.ts",
+        "packages/vue/src/virtual-masonry.ts",
+        "packages/vue/src/virtual-spatial.ts"
+      ],
       "classification": "migration-required",
       "owner": "WI-040",
       "rationale": "DOM observer measurement, one logical domain batch, indexed membership, and stable connections must be authoritative."

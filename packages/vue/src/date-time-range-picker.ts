@@ -1,6 +1,6 @@
-import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal';
-import type { DateValue } from '@sectile/dom/temporal';
-import type { DateTimeRange } from '@sectile/dom/temporal';
+import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
+import type { DateValue } from '@sectile/dom/temporal/date-field';
+import type { DateTimeRange } from '@sectile/dom/temporal/date-time-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, specializePickerRootPart,
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,

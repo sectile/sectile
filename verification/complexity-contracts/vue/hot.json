@@ -7,7 +7,7 @@
     {
       "id": "projection.reconfigure",
       "inherits": "linear-v1",
-      "source": "packages/vue/src/virtual.ts",
+      "source": "packages/vue/src/internal/virtual-list.ts",
       "benchmarkIDs": ["vue:mounted-virtual-projection"],
       "specificationCeiling": "O(nOption + uOption)",
       "contract": {
@@ -26,7 +26,7 @@
     {
       "id": "virtual.measurement-update",
       "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/virtual.ts",
+      "source": "packages/vue/src/internal/virtual-list.ts",
       "benchmarkIDs": ["vue:mounted-virtual-projection"],
       "specificationCeiling": "O(jChanged + kPlacement)",
       "contract": {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { deriveFixtures } from './consumer-bundles/bundle.mjs';
-import { validateBaseline, validateCurrentResults } from './consumer-bundles/check.mjs';
+import { validateBaseline, validateCurrentResults, validateGranularClosures } from './consumer-bundles/check.mjs';
 
 test('intentional uncovered public subpath changes fixture coverage', () => {
   const fragments = [{ package: 'core', surfaces: [{
@@ -39,6 +39,15 @@ test('intentional byte and dependency regressions fail the baseline', () => {
     results: [{ ...before, dependencies: ['unexpected'] }],
   };
   assert.throws(() => validateBaseline(baseline, dependency), /dependency closure expanded/u);
+});
+
+test('intentional temporal and virtual sibling closures fail', () => {
+  assert.throws(() => validateGranularClosures([
+    fixtureResult('vue:./virtual/list:named', 'named', ['@sectile/virtual/dist/masonry-layout.js'], 1),
+  ]), /retained sibling/u);
+  assert.throws(() => validateGranularClosures([
+    fixtureResult('vue:./temporal/calendar:named', 'named', ['@sectile/vue/dist/date-picker.js'], 1),
+  ]), /retained unrelated temporal/u);
 });
 
 function fixtureResult(id, mode, modules, raw, dependencies = []) {

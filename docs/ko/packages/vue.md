@@ -41,7 +41,7 @@ import { HostProvider } from '@sectile/vue/host-provider'
 
 ## 날짜와 시간 컴포넌트
 
-날짜 입력란, 시간 입력란, 달력, 선택기를 사용할 때 `@sectile/temporal`을 설치합니다. Vue용 전체 API는 `@sectile/vue/temporal`에서 제공되며 기본 Vue 패키지는 날짜와 시간 계산에 의존하지 않습니다.
+날짜 입력란, 시간 입력란, 달력, 선택기를 사용할 때 `@sectile/temporal`을 설치합니다. 각 제품군은 세분화된 `@sectile/vue/temporal/*` 진입점에서 가져오며 기본 Vue 패키지는 날짜와 시간 계산에 의존하지 않습니다.
 
 ```sh
 pnpm add @sectile/core @sectile/temporal @sectile/vue vue
@@ -49,10 +49,8 @@ pnpm add @sectile/core @sectile/temporal @sectile/vue vue
 
 ```vue
 <script setup lang="ts">
-import {
-  DatePickerRoot,
-  TemporalProvider,
-} from '@sectile/vue/temporal'
+import { DatePickerRoot } from '@sectile/vue/temporal/date-picker'
+import { TemporalProvider } from '@sectile/vue/temporal/temporal-provider'
 </script>
 
 <template>
@@ -189,7 +187,7 @@ Portal 파트의 `defer`는 같은 mount 또는 update tick 안에서 뒤늦게 
 
 ## 가상화 collection
 
-`@sectile/vue/virtual`은 타입이 보존되는 `useVirtualizer` composable과 세 가지 headless 파트를 제공합니다. `VirtualizerRoot`는 scroll viewport, `VirtualizerContent`는 전체 content 크기, `VirtualizerItem`은 placement 하나의 배치와 측정을 맡습니다. 논리 Listbox, Combobox, Feed, Grid에는 모든 ID를 계속 전달하고 실제 item part만 windowing합니다.
+`@sectile/vue/virtual/core`는 타입이 보존되는 `useVirtualizer` composable과 세 가지 headless 파트를 제공합니다. 선언형 layout은 `list`, `grid`, `masonry`, `spatial` 진입점을 각각 사용합니다. `VirtualizerRoot`는 scroll viewport, `VirtualizerContent`는 전체 content 크기, `VirtualizerItem`은 placement 하나의 배치와 측정을 맡습니다.
 
 ```sh
 pnpm add @sectile/core @sectile/virtual @sectile/vue vue
@@ -209,7 +207,7 @@ import {
   VirtualizerContent,
   VirtualizerItem,
   VirtualizerRoot,
-} from '@sectile/vue/virtual'
+} from '@sectile/vue/virtual/core'
 import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
 
 const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)

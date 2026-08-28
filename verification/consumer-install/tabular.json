@@ -11,32 +11,36 @@
   ],
   "packedFootprint": {
     "@sectile/core": {
-      "bytes": 198176
+      "bytes": 162397
     },
     "@sectile/tabular": {
-      "bytes": 61118
+      "bytes": 55011
     },
     "@sectile/temporal": {
-      "bytes": 41115
+      "bytes": 35331
     },
     "@sectile/virtual": {
-      "bytes": 54278
+      "bytes": 48777
     },
     "@sectile/dom": {
-      "bytes": 287292
+      "bytes": 253245
     },
     "@sectile/vue": {
-      "bytes": 302526
+      "bytes": 265995
     }
   },
   "declarationClosure": {
     "status": "passed",
-    "files": 316,
-    "imports": 493
+    "files": 321,
+    "imports": 496
   },
   "scenarios": [
     {
       "id": "tabular-base-without-virtual",
+      "status": "passed"
+    },
+    {
+      "id": "dom-runtime-virtual-without-type-peer",
       "status": "passed"
     },
     {

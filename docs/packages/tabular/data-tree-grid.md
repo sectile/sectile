@@ -51,4 +51,4 @@ Tabular computes hierarchy semantics for visible rows but does not measure DOM o
 | Editing | `Editor` | leaf-cell commit/cancel/restore |
 | Columns | `ColumnHeader`, `ColumnResizeHandle` | query and host size |
 
-Import Core from `@sectile/tabular/data-tree-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/tabular`.
+Import Core from `@sectile/tabular/data-tree-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/data-tree-grid`.

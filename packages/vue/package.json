@@ -201,10 +201,20 @@
       "import": "./dist/grid.js",
       "default": "./dist/grid.js"
     },
-    "./tabular": {
-      "types": "./dist/tabular.d.ts",
-      "import": "./dist/tabular.js",
-      "default": "./dist/tabular.js"
+    "./data-table": {
+      "types": "./dist/data-table.d.ts",
+      "import": "./dist/data-table.js",
+      "default": "./dist/data-table.js"
+    },
+    "./data-grid": {
+      "types": "./dist/data-grid.d.ts",
+      "import": "./dist/data-grid.js",
+      "default": "./dist/data-grid.js"
+    },
+    "./data-tree-grid": {
+      "types": "./dist/data-tree-grid.d.ts",
+      "import": "./dist/data-tree-grid.js",
+      "default": "./dist/data-tree-grid.js"
     },
     "./tree-grid": {
       "types": "./dist/tree-grid.d.ts",
@@ -291,15 +301,110 @@
       "import": "./dist/host-provider.js",
       "default": "./dist/host-provider.js"
     },
-    "./virtual": {
-      "types": "./dist/virtual.d.ts",
-      "import": "./dist/virtual.js",
-      "default": "./dist/virtual.js"
+    "./virtual/core": {
+      "types": "./dist/virtual-core.d.ts",
+      "import": "./dist/virtual-core.js",
+      "default": "./dist/virtual-core.js"
     },
-    "./temporal": {
-      "types": "./dist/temporal.d.ts",
-      "import": "./dist/temporal.js",
-      "default": "./dist/temporal.js"
+    "./virtual/list": {
+      "types": "./dist/virtual-list.d.ts",
+      "import": "./dist/virtual-list.js",
+      "default": "./dist/virtual-list.js"
+    },
+    "./virtual/grid": {
+      "types": "./dist/virtual-grid.d.ts",
+      "import": "./dist/virtual-grid.js",
+      "default": "./dist/virtual-grid.js"
+    },
+    "./virtual/masonry": {
+      "types": "./dist/virtual-masonry.d.ts",
+      "import": "./dist/virtual-masonry.js",
+      "default": "./dist/virtual-masonry.js"
+    },
+    "./virtual/spatial": {
+      "types": "./dist/virtual-spatial.d.ts",
+      "import": "./dist/virtual-spatial.js",
+      "default": "./dist/virtual-spatial.js"
+    },
+    "./temporal/calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "default": "./dist/calendar.js"
+    },
+    "./temporal/date-field": {
+      "types": "./dist/date-field.d.ts",
+      "import": "./dist/date-field.js",
+      "default": "./dist/date-field.js"
+    },
+    "./temporal/date-range-field": {
+      "types": "./dist/date-range-field.d.ts",
+      "import": "./dist/date-range-field.js",
+      "default": "./dist/date-range-field.js"
+    },
+    "./temporal/date-time-field": {
+      "types": "./dist/date-time-field.d.ts",
+      "import": "./dist/date-time-field.js",
+      "default": "./dist/date-time-field.js"
+    },
+    "./temporal/time-field": {
+      "types": "./dist/time-field.d.ts",
+      "import": "./dist/time-field.js",
+      "default": "./dist/time-field.js"
+    },
+    "./temporal/time-range-field": {
+      "types": "./dist/time-range-field.d.ts",
+      "import": "./dist/time-range-field.js",
+      "default": "./dist/time-range-field.js"
+    },
+    "./temporal/date-picker": {
+      "types": "./dist/date-picker.d.ts",
+      "import": "./dist/date-picker.js",
+      "default": "./dist/date-picker.js"
+    },
+    "./temporal/date-range-picker": {
+      "types": "./dist/date-range-picker.d.ts",
+      "import": "./dist/date-range-picker.js",
+      "default": "./dist/date-range-picker.js"
+    },
+    "./temporal/range-calendar": {
+      "types": "./dist/range-calendar.d.ts",
+      "import": "./dist/range-calendar.js",
+      "default": "./dist/range-calendar.js"
+    },
+    "./temporal/month-picker": {
+      "types": "./dist/month-picker.d.ts",
+      "import": "./dist/month-picker.js",
+      "default": "./dist/month-picker.js"
+    },
+    "./temporal/month-range-picker": {
+      "types": "./dist/month-range-picker.d.ts",
+      "import": "./dist/month-range-picker.js",
+      "default": "./dist/month-range-picker.js"
+    },
+    "./temporal/year-picker": {
+      "types": "./dist/year-picker.d.ts",
+      "import": "./dist/year-picker.js",
+      "default": "./dist/year-picker.js"
+    },
+    "./temporal/year-range-picker": {
+      "types": "./dist/year-range-picker.d.ts",
+      "import": "./dist/year-range-picker.js",
+      "default": "./dist/year-range-picker.js"
+    },
+    "./temporal/date-time-picker": {
+      "types": "./dist/date-time-picker.d.ts",
+      "import": "./dist/date-time-picker.js",
+      "default": "./dist/date-time-picker.js"
+    },
+    "./temporal/date-time-range-picker": {
+      "types": "./dist/date-time-range-picker.d.ts",
+      "import": "./dist/date-time-range-picker.js",
+      "default": "./dist/date-time-range-picker.js"
+    },
+    "./temporal/temporal-provider": {
+      "types": "./dist/temporal-provider.d.ts",
+      "import": "./dist/temporal-provider.js",
+      "default": "./dist/temporal-provider.js"
     },
     "./package.json": "./package.json"
   },

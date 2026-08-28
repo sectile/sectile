@@ -4,7 +4,7 @@ import TabularExample from '../../../.vitepress/theme/components/TabularExample.
 
 # Vue에서 Tabular 사용하기
 
-Tabular용 Vue API는 `@sectile/vue/tabular`에 모여 있습니다. 이 subpath를 사용할 때는 optional peer dependency인 `@sectile/tabular`를 함께 설치합니다. Tabular를 사용하지 않는 `@sectile/vue` 응용 프로그램에는 필요하지 않습니다.
+Tabular용 Vue API는 `@sectile/vue/data-table`, `@sectile/vue/data-grid`, `@sectile/vue/data-tree-grid`로 나뉩니다. 이 진입점을 사용할 때는 optional peer dependency인 `@sectile/tabular`를 함께 설치합니다.
 
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
@@ -33,7 +33,7 @@ import {
   useDataGrid,
   createDataGridComponents,
   useDataGridSource,
-} from '@sectile/vue/tabular'
+} from '@sectile/vue/data-grid'
 
 interface UserCells {
   readonly name: string
@@ -71,7 +71,7 @@ Provider를 중첩하면 각 part가 가장 가까운 matching Provider를 사�
 | DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
 | DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
-모든 part는 `Props`와 `SlotProps` type을 내보냅니다. `@sectile/vue/tabular`는 세 프로필의 row/column/query/view/source/status/error/command/controller/context, accepted-view와 access/request state, change handler, source resolver, `Use*Options`, `Use*SourceOptions`, `Use*SourceReturn`도 함께 제공합니다. Vue package root에서는 이 API를 내보내지 않습니다.
+각 프로필 진입점은 자체 part, `Props`, `SlotProps`, controller·source 계약과 helper를 내보냅니다. Vue package root에서는 이 API를 내보내지 않습니다.
 
 ## source 실행과 UI 상태
 

@@ -4,14 +4,14 @@ import {
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
   type VNodeProps,
 } from 'vue';
-import { createCalendar, type CalendarPolicies } from '@sectile/dom/temporal';
-import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/temporal';
-import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/temporal';
-import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/temporal';
-import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/temporal';
-import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal';
-import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/temporal';
-import { formatTimeValue, type TimeValue } from '@sectile/dom/temporal';
+import { createCalendar, type CalendarPolicies } from '@sectile/dom/temporal/calendar';
+import { createDatePicker, createCalendarMonth, createCalendarYear, isCalendarValueAvailable, type DatePickerConnection, type DatePickerOptions, type PickerPositionOptions, type CalendarMonthValue, type CalendarViewMode } from '@sectile/dom/temporal/date-picker';
+import { createDateRangePicker, type DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
+import { createDateTimePicker, type DateTimePickerOptions } from '@sectile/dom/temporal/date-time-picker';
+import { createDateTimeRangePicker, type DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
+import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
+import { formatDateTimeValue, type DateTimeRange, type DateTimeValue } from '@sectile/dom/temporal/date-time-field';
+import { formatTimeValue, type TimeValue } from '@sectile/dom/temporal/time-field';
 import type { FormSubmissionRegistration } from './form-control.js';
 import {
   hiddenInputSubmissionCapabilities,
@@ -439,7 +439,7 @@ export function createPickerRoot<Kind extends PickerKind>(kind: Kind, name: stri
   return component as unknown as PickerRootComponent<Kind>;
 }
 
-export const PickerTrigger = defineComponent({
+export const PickerTrigger = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerTrigger', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
@@ -450,7 +450,7 @@ export const PickerTrigger = defineComponent({
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 
-export const PickerAnchor = defineComponent({
+export const PickerAnchor = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerAnchor', inheritAttrs: false, props: partProps,
   setup(props, { attrs, slots }) { const root = useRoot('PickerAnchor'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.register('anchor', node instanceof HTMLElement ? node : undefined),
@@ -458,7 +458,7 @@ export const PickerAnchor = defineComponent({
   }), slots); },
 });
 
-export const PickerContent = defineComponent({
+export const PickerContent = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerContent', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('PickerContent'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -468,7 +468,7 @@ export const PickerContent = defineComponent({
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 
-export const PickerPortal = defineComponent({
+export const PickerPortal = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerPortal', inheritAttrs: false,
   props: {
     to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
@@ -483,7 +483,7 @@ export const PickerPortal = defineComponent({
   },
 });
 
-export const PickerGrid = defineComponent({
+export const PickerGrid = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerGrid', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('PickerGrid'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -492,7 +492,7 @@ export const PickerGrid = defineComponent({
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 
-export const PickerCell = defineComponent({
+export const PickerCell = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerCell', inheritAttrs: false,
   props: { value: { type: Object as PropType<DateValue>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: PickerCellSlotProps) => VNodeChild }>,
@@ -568,8 +568,8 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
   });
 }
 
-export const PickerMonthCell = createPickerMonthCell();
-export const PickerYearCell = createPickerYearCell();
+export const PickerMonthCell = /* @__PURE__ */ createPickerMonthCell();
+export const PickerYearCell = /* @__PURE__ */ createPickerYearCell();
 
 export function createPickerInput(part: PickerInputPart, name: string, type: 'text' | 'hidden' = 'text') {
   return defineComponent({

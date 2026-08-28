@@ -51,4 +51,4 @@ Tabular는 visible row의 계층 의미를 계산하지만 scroll이나 DOM 측�
 | 편집 | `Editor` | leaf cell commit/cancel/restore |
 | 열 | `ColumnHeader`, `ColumnResizeHandle` | query와 host size |
 
-Core는 `@sectile/tabular/data-tree-grid`, DOM과 Vue는 `@sectile/dom/tabular`, `@sectile/vue/tabular`에서 import합니다.
+Core는 `@sectile/tabular/data-tree-grid`, DOM과 Vue는 `@sectile/dom/tabular`, `@sectile/vue/data-tree-grid`에서 import합니다.

@@ -12,7 +12,9 @@ const sourcePaths = Object.freeze([
   'benchmarks/virtual-ecosystem/src',
   'packages/dom/src/virtual.ts',
   'packages/virtual/src',
-  'packages/vue/src/virtual.ts',
+  'packages/vue/src/virtual-list.ts',
+  'packages/vue/src/internal/virtual-core.ts',
+  'packages/vue/src/internal/virtual-list.ts',
   'pnpm-lock.yaml',
 ]);
 

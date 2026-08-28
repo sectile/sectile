@@ -10,7 +10,7 @@ import {
   type DataGridEditState,
   type DataGridRootExpose,
   type DataGridViewResponse,
-} from '@sectile/vue/tabular';
+} from '@sectile/vue/data-grid';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';

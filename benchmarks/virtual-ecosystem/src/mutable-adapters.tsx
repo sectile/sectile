@@ -1,4 +1,4 @@
-import { VirtualList } from '@sectile/vue/virtual';
+import { VirtualList } from '@sectile/vue/virtual/list';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { createElement, useLayoutEffect, useRef, useSyncExternalStore, type ComponentType, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';

@@ -1,4 +1,3 @@
-import '@sectile/virtual';
 import type { Result, SectileError, StableID } from '@sectile/core';
 import { unwrap } from '@sectile/core/result';
 import type { ExtentUpdate } from '@sectile/virtual/extent-index';

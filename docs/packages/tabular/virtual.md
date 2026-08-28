@@ -8,14 +8,14 @@ rows or cells.
 pnpm add @sectile/vue @sectile/tabular @sectile/virtual vue
 ```
 
-Use `@sectile/vue/virtual` directly for viewport/content/item lifecycle. Use the
+Use `@sectile/vue/virtual/core` directly for viewport/content/item lifecycle. Use the
 narrow `@sectile/tabular/virtual` adapter when a DataTable, DataGrid, or
 DataTreeGrid projection must be converted to stable linear or partitioned-track
 Virtual inputs.
 
 ```ts
 import { createDataGridVirtualAdapter } from '@sectile/tabular/virtual'
-import { useVirtualizer } from '@sectile/vue/virtual'
+import { useVirtualizer } from '@sectile/vue/virtual/core'
 import { shallowRef } from 'vue'
 
 let adapter = createDataGridVirtualAdapter({
@@ -63,6 +63,6 @@ start, center, and end pinning. Reconcile projection changes with the matching
 `reconcileData*VirtualAdapter` function.
 
 Importing base `@sectile/tabular`, `@sectile/dom/tabular`, or
-`@sectile/vue/tabular` never loads Virtual. Importing `@sectile/tabular/virtual`,
-`@sectile/dom/virtual`, or `@sectile/vue/virtual` without installing
+The Vue profile entry points never load Virtual. Importing `@sectile/tabular/virtual`,
+`@sectile/dom/virtual`, or `@sectile/vue/virtual/core` without installing
 `@sectile/virtual` fails with the missing optional peer, making opt-in explicit.

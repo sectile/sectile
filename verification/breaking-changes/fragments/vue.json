@@ -1,5 +1,30 @@
 {
   "schemaVersion": 1,
   "package": "@sectile/vue",
-  "entries": []
+  "entries": [
+    {
+      "id": "WI-025:tabular-aggregate-removal",
+      "change": "removed",
+      "before": { "subpath": "./tabular" },
+      "symbols": ["all runtime and type exports"],
+      "replacement": null,
+      "removalReason": "Replaced by the checked data-table, data-grid, and data-tree-grid mapping in verification/entrypoint-migrations/WI-025.json."
+    },
+    {
+      "id": "WI-025:temporal-aggregate-removal",
+      "change": "removed",
+      "before": { "subpath": "./temporal" },
+      "symbols": ["all runtime and type exports"],
+      "replacement": null,
+      "removalReason": "Replaced by the complete checked @sectile/vue/temporal/* mapping in verification/entrypoint-migrations/WI-025.json."
+    },
+    {
+      "id": "WI-025:virtual-aggregate-removal",
+      "change": "removed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["all runtime and type exports"],
+      "replacement": null,
+      "removalReason": "Replaced by the complete checked core/list/grid/masonry/spatial mapping in verification/entrypoint-migrations/WI-025.json."
+    }
+  ]
 }

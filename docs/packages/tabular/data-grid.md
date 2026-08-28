@@ -56,4 +56,4 @@ Column order, visibility, and pinning are controller state. Pixel size and scrol
 | Row selection | `RowSelectionControl`, `BulkSelectionControl` | explicit/range/all-matching |
 | Column size | `ColumnResizeHandle` | host size state |
 
-Import Core from `@sectile/tabular/data-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/tabular`. See [DOM](./dom) and [Vue](./vue) for composition details.
+Import Core from `@sectile/tabular/data-grid`, and DOM or Vue bindings from `@sectile/dom/tabular` and `@sectile/vue/data-grid`. See [DOM](./dom) and [Vue](./vue) for composition details.

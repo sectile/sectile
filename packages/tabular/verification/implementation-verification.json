@@ -69,12 +69,13 @@
     "javascriptBytes": 131430,
     "declarationBytes": 39002,
     "sourceMapBytes": 138991,
-    "packedBytes": 61118,
+    "packedBytes": 55011,
     "declarationFiles": 13,
     "publicSubpaths": 9
   },
   "consumerScenarios": [
     "tabular-base-without-virtual",
+    "dom-runtime-virtual-without-type-peer",
     "dom-base-without-optional-peers",
     "vue-base-without-optional-peers",
     "dom-tabular-explicit-opt-in",

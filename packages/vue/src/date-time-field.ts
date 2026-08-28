@@ -4,7 +4,7 @@ import {
   formatDateTimeValue,
   type DateTimeFieldConnection,
   type DateTimeFieldOptions,
-} from '@sectile/dom/temporal';
+} from '@sectile/dom/temporal/date-time-field';
 import { createNativeFieldComponent, type NativeFieldFactoryOptions } from './internal/native-field.js';
 
 export type DateTimeValue = NonNullable<DateTimeFieldOptions['value']>;

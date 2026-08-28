@@ -9,15 +9,15 @@ test('Vue exposes every public DOM component family', async () => {
     readPackage('../../dom/package.json'),
     readPackage('../package.json'),
   ]);
-  const ignored = new Set(['.', './package.json']);
+  const ignored = new Set(['.', './package.json', './form', './tabular', './virtual']);
   const domSubpaths = Object.keys(domPackage.exports).filter((subpath) => !ignored.has(subpath));
   const missing = domSubpaths.filter((subpath) => vuePackage.exports[subpath] === undefined);
 
   assert.deepEqual(missing, []);
-  assert.notEqual(vuePackage.exports['./tabular'], undefined);
-  assert.equal(vuePackage.exports['./data-table'], undefined);
-  assert.equal(vuePackage.exports['./data-grid'], undefined);
-  assert.equal(vuePackage.exports['./data-tree-grid'], undefined);
+  assert.equal(vuePackage.exports['./tabular'], undefined);
+  assert.notEqual(vuePackage.exports['./data-table'], undefined);
+  assert.notEqual(vuePackage.exports['./data-grid'], undefined);
+  assert.notEqual(vuePackage.exports['./data-tree-grid'], undefined);
 });
 
 test('Form is exposed only through its optional subpath', async () => {
@@ -46,15 +46,10 @@ test('Tabular is exposed only through its optional subpath', async () => {
   assert.equal(rootModule.useDataGrid, undefined);
   assert.equal(rootModule.useDataTreeGrid, undefined);
 
-  const tabularModule = await import('../.verification-dist/tabular.js');
-  assert.equal(typeof tabularModule.useDataTable, 'function');
-  assert.equal(typeof tabularModule.useDataGrid, 'function');
-  assert.equal(typeof tabularModule.useDataTreeGrid, 'function');
-
-  const tabularSource = await readFile(new URL('../.verification-dist/tabular.js', import.meta.url), 'utf8');
-  assert.match(tabularSource, /\.\/data-table\.js/);
-  assert.match(tabularSource, /\.\/data-grid\.js/);
-  assert.match(tabularSource, /\.\/data-tree-grid\.js/);
+  assert.equal(vuePackage.exports['./tabular'], undefined);
+  assert.equal(typeof (await import('../.verification-dist/data-table.js')).useDataTable, 'function');
+  assert.equal(typeof (await import('../.verification-dist/data-grid.js')).useDataGrid, 'function');
+  assert.equal(typeof (await import('../.verification-dist/data-tree-grid.js')).useDataTreeGrid, 'function');
 });
 
 test('virtualization is exposed only through its optional subpath', async () => {
@@ -67,12 +62,9 @@ test('virtualization is exposed only through its optional subpath', async () => 
   assert.equal(rootModule.VirtualList, undefined);
   assert.equal(rootModule.useVirtualizer, undefined);
 
-  const virtualModule = await import('../.verification-dist/virtual.js');
-  assert.equal(typeof virtualModule.VirtualList, 'object');
-  assert.equal(typeof virtualModule.useVirtualizer, 'function');
-
-  const virtualSource = await readFile(new URL('../.verification-dist/virtual.js', import.meta.url), 'utf8');
-  assert.match(virtualSource, /@sectile\/virtual/);
+  assert.equal(vuePackage.exports['./virtual'], undefined);
+  assert.equal(typeof (await import('../.verification-dist/virtual-list.js')).VirtualList, 'object');
+  assert.equal(typeof (await import('../.verification-dist/virtual-core.js')).useVirtualizer, 'function');
 });
 
 test('temporal controls are exposed only through their optional subpath', async () => {
@@ -86,14 +78,10 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(rootModule.CalendarRoot, undefined);
   assert.equal(rootModule.TemporalProvider, undefined);
 
-  const temporalModule = await import('../.verification-dist/temporal.js');
-  assert.equal(typeof temporalModule.DateField, 'object');
-  assert.equal(typeof temporalModule.CalendarRoot, 'object');
-  assert.equal(typeof temporalModule.TemporalProvider, 'object');
-
-  const temporalSource = await readFile(new URL('../.verification-dist/temporal.js', import.meta.url), 'utf8');
-  assert.match(temporalSource, /\.\/date-field\.js/);
-  assert.match(temporalSource, /\.\/temporal-provider\.js/);
+  assert.equal(vuePackage.exports['./temporal'], undefined);
+  assert.equal(typeof (await import('../.verification-dist/date-field.js')).DateField, 'object');
+  assert.equal(typeof (await import('../.verification-dist/calendar.js')).CalendarRoot, 'object');
+  assert.equal(typeof (await import('../.verification-dist/temporal-provider.js')).TemporalProvider, 'object');
 });
 
 test('base Tabular profiles are complete and remain Virtual-free', async () => {

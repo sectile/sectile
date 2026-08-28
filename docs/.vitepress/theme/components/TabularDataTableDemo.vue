@@ -8,7 +8,7 @@ import {
   useDataTable,
   useDataTableSource,
   type DataTableViewResponse,
-} from '@sectile/vue/tabular';
+} from '@sectile/vue/data-table';
 import { useDocsLocale } from '../locale.js';
 import { bulkSelectionValue, rowSelectionValue } from '../tabular-selection.js';
 import DocsCheckbox from './DocsCheckbox.vue';

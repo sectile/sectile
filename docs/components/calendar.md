@@ -31,7 +31,7 @@ Let the parent own the current value and apply accepted changes back to the comp
 
 ## API
 
-Vue package: `@sectile/vue/temporal`
+Vue package: `@sectile/vue/temporal/calendar`
 
 <div class="component-api-group">
 <strong class="component-api-label">Components</strong>

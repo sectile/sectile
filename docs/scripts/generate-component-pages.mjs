@@ -499,7 +499,7 @@ ${values.map((value) => `  <li><code class="component-api-token">${value}</code>
 </ul>
 </div>`;
   const heading = '## API';
-  const packageSubpath = temporalComponentIDs.has(component.id) ? 'temporal' : component.id;
+  const packageSubpath = temporalComponentIDs.has(component.id) ? `temporal/${component.id}` : component.id;
   const introduction = korean
     ? `Vue 패키지: \`@sectile/vue/${packageSubpath}\``
     : `Vue package: \`@sectile/vue/${packageSubpath}\``;

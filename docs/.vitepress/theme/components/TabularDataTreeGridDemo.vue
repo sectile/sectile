@@ -10,7 +10,7 @@ import {
   type DataTreeGridEditState,
   type DataTreeGridRootExpose,
   type DataTreeGridViewResponse,
-} from '@sectile/vue/tabular';
+} from '@sectile/vue/data-tree-grid';
 import { useDocsLocale } from '../locale.js';
 import { rowSelectionValue } from '../tabular-selection.js';
 import DocsButton from './DocsButton.vue';

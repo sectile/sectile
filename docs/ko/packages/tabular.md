@@ -51,7 +51,7 @@ DataGrid에 expansion, level·position metadata와 부모 context를 더합니�
 | --- | --- | --- |
 | 상태·query·projection 계산 | `@sectile/tabular` | `@sectile/tabular/data-*` |
 | 기존 HTML에 연결 | `@sectile/dom @sectile/tabular` | `@sectile/dom/tabular` |
-| Vue compound component | `@sectile/vue @sectile/tabular vue` | `@sectile/vue/tabular` |
+| Vue compound component | `@sectile/vue @sectile/tabular vue` | `@sectile/vue/data-table`, `@sectile/vue/data-grid`, `@sectile/vue/data-tree-grid` |
 
 `@sectile/tabular`는 DOM, Vue, terminal을 알지 않습니다. `@sectile/dom`과 `@sectile/vue`에서는 optional peer dependency이므로 Tabular subpath를 사용할 때만 함께 설치합니다. Tabular에는 terminal host를 제공하지 않습니다.
 

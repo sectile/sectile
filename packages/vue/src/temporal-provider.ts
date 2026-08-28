@@ -11,7 +11,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import type { DateValue } from '@sectile/dom/temporal';
+import type { DateValue } from '@sectile/dom/temporal/date-field';
 
 export interface TemporalProviderProps {
   readonly referenceDate?: DateValue;

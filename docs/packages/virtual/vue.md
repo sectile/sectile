@@ -5,7 +5,7 @@ description: Virtualize lists, responsive grids, masonry cards, and spatial surf
 
 # Vue connection
 
-`@sectile/vue/virtual` accepts an item array, stable keys, and slot markup, then measures real rendered elements automatically.
+`@sectile/vue/virtual/list` accepts an item array, stable keys, and slot markup, then measures real rendered elements automatically.
 
 ## Install
 
@@ -17,7 +17,7 @@ pnpm add vue @sectile/vue @sectile/virtual
 
 ```vue
 <script setup lang="ts">
-import { VirtualList } from '@sectile/vue/virtual'
+import { VirtualList } from '@sectile/vue/virtual/list'
 
 const rows = Array.from({ length: 50_000 }, (_, index) => ({
   id: `row-${index}`,

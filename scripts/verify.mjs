@@ -134,6 +134,7 @@ function workspaceContractSteps() {
     commandStep('cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling verification', 'pnpm', ['test:tooling']),
     commandStep('algorithm reuse inventory', 'pnpm', ['check:algorithm-reuse']),
+    commandStep('entrypoint migrations', 'pnpm', ['check:entrypoint-migrations']),
     commandStep('published source maps', process.execPath, [join(root, 'scripts', 'source-map-policy.mjs'), 'check']),
     commandStep('workspace boundaries', 'pnpm', ['check:boundaries']),
     commandStep('public signatures', 'pnpm', ['check:signatures']),

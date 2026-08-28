@@ -3,6 +3,21 @@
   "package": "@sectile/dom",
   "entries": [
     {
+      "id": "WI-025:temporal-aggregate-removal",
+      "change": "removed",
+      "before": { "subpath": "./temporal" },
+      "symbols": ["all runtime and type exports"],
+      "replacement": null,
+      "removalReason": "Replaced by the complete checked @sectile/dom/temporal/* mapping in verification/entrypoint-migrations/WI-025.json."
+    },
+    {
+      "id": "WI-025:dom-virtual-side-effect-removal",
+      "change": "signature-changed",
+      "before": { "subpath": "./virtual" },
+      "symbols": ["module side-effect import @sectile/virtual"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./virtual" }
+    },
+    {
       "id": "WI-030:dom-grid-control-closure",
       "change": "signature-changed",
       "before": { "subpath": "./grid" },

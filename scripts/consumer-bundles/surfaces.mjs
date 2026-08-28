@@ -91,16 +91,18 @@ function classify(packageName, subpath, runtimeCount) {
 }
 
 function optionalPeer(packageName, subpath) {
+  if (packageName === 'dom' && subpath.startsWith('./temporal/')) return '@sectile/temporal';
+  if (packageName === 'vue' && subpath.startsWith('./temporal/')) return '@sectile/temporal';
+  if (packageName === 'vue' && subpath.startsWith('./virtual/')) return '@sectile/virtual';
+  if (packageName === 'vue' && ['./data-table', './data-grid', './data-tree-grid'].includes(subpath)) {
+    return '@sectile/tabular';
+  }
   const optional = new Map([
     ['dom:./form', '@sectile/form'],
     ['dom:./tabular', '@sectile/tabular'],
-    ['dom:./temporal', '@sectile/temporal'],
     ['dom:./virtual', '@sectile/virtual'],
     ['tabular:./virtual', '@sectile/virtual'],
     ['vue:./form', '@sectile/form'],
-    ['vue:./tabular', '@sectile/tabular'],
-    ['vue:./temporal', '@sectile/temporal'],
-    ['vue:./virtual', '@sectile/virtual'],
   ]);
   return optional.get(`${packageName}:${subpath}`) ?? null;
 }

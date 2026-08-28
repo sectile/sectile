@@ -51,7 +51,7 @@ DataGrid plus expansion, hierarchy metadata, and retained parent context.
 | --- | --- | --- |
 | State, query, and projection | `@sectile/tabular` | `@sectile/tabular/data-*` |
 | Existing HTML elements | `@sectile/dom @sectile/tabular` | `@sectile/dom/tabular` |
-| Vue compound components | `@sectile/vue @sectile/tabular vue` | `@sectile/vue/tabular` |
+| Vue compound components | `@sectile/vue @sectile/tabular vue` | `@sectile/vue/data-table`, `@sectile/vue/data-grid`, `@sectile/vue/data-tree-grid` |
 
 `@sectile/tabular` knows nothing about DOM, Vue, or terminals. It is an optional peer of `@sectile/dom` and `@sectile/vue`, so install it only when using their Tabular subpaths. Tabular has no terminal host.
 

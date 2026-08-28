@@ -1,5 +1,5 @@
 import { Teleport, defineComponent, h, nextTick, onMounted, ref, shallowRef } from 'vue';
-import { CalendarRoot } from '../../.verification-dist/temporal.js';
+import { CalendarRoot } from '../../.verification-dist/calendar.js';
 import { DialogContent, DialogRoot, DialogTrigger } from '../../.verification-dist/dialog.js';
 import { DisclosureContent, DisclosureRoot, DisclosureTrigger } from '../../.verification-dist/disclosure.js';
 import { HostProvider } from '../../.verification-dist/host-provider.js';

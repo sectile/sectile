@@ -13,7 +13,7 @@ import {
   type DataTableQuery,
   type DataTableRootProps,
   type DataTableSelectionControlProps,
-} from '../.verification-dist/tabular.js';
+} from '../.verification-dist/data-table.js';
 import {
   defineDataGridColumns,
   useDataGrid,
@@ -22,7 +22,7 @@ import {
   type DataGridBodySlotProps,
   type DataGridCellProps,
   type DataGridRootExpose,
-} from '../.verification-dist/tabular.js';
+} from '../.verification-dist/data-grid.js';
 import {
   defineDataTreeGridColumns,
   useDataTreeGrid,
@@ -31,7 +31,7 @@ import {
   type DataTreeGridCellProps,
   type DataTreeGridRowDisclosureProps,
   type DataTreeGridSourceResolver,
-} from '../.verification-dist/tabular.js';
+} from '../.verification-dist/data-tree-grid.js';
 
 interface User { readonly id: string; readonly name: string }
 interface UserCells { readonly name: string; readonly active: boolean }

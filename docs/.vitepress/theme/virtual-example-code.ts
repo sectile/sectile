@@ -6,7 +6,7 @@ type VirtualExampleSources = Readonly<Record<Host, string>>;
 
 const listSources: VirtualExampleSources = Object.freeze({
   vue: `<script setup lang="ts">
-import { VirtualList } from '@sectile/vue/virtual'
+import { VirtualList } from '@sectile/vue/virtual/list'
 
 const rows = Array.from({ length: 50_000 }, (_, index) => ({
   id: \`row-\${index}\`,
@@ -99,7 +99,7 @@ const gridSources: VirtualExampleSources = Object.freeze({
   vue: `<script setup lang="ts">
 import { createUniformExtentIndex } from '@sectile/virtual/extent-index'
 import { createDenseTrackGridLayout, trackGridLayoutStrategy } from '@sectile/virtual/track-grid-layout'
-import { VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '@sectile/vue/virtual'
+import { VirtualizerContent, VirtualizerItem, VirtualizerRoot } from '@sectile/vue/virtual/core'
 
 const count = 300
 const ids = Array.from({ length: count * count }, (_, index) =>
@@ -187,7 +187,7 @@ drawCells(plan.placements)`,
 
 const masonrySources: VirtualExampleSources = Object.freeze({
   vue: `<script setup lang="ts">
-import { VirtualMasonry } from '@sectile/vue/virtual'
+import { VirtualMasonry } from '@sectile/vue/virtual/masonry'
 
 const cards = Array.from({ length: 30_000 }, (_, index) => ({
   id: \`card-\${index}\`,
@@ -248,7 +248,7 @@ drawCards(plan.placements)`,
 
 const spatialSources: VirtualExampleSources = Object.freeze({
   vue: `<script setup lang="ts">
-import { VirtualSpatial } from '@sectile/vue/virtual'
+import { VirtualSpatial } from '@sectile/vue/virtual/spatial'
 
 const nodes = Array.from({ length: 40_000 }, (_, index) => {
   const cluster = Math.floor(index / 180)

@@ -171,8 +171,64 @@
       "types": "dist/tags-input.d.ts"
     },
     {
-      "subpath": "./temporal",
-      "types": "dist/temporal.d.ts"
+      "subpath": "./temporal/calendar",
+      "types": "dist/calendar.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-field",
+      "types": "dist/date-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-picker",
+      "types": "dist/date-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-range-field",
+      "types": "dist/date-range-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-range-picker",
+      "types": "dist/date-range-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-time-field",
+      "types": "dist/date-time-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-time-picker",
+      "types": "dist/date-time-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/date-time-range-picker",
+      "types": "dist/date-time-range-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/month-picker",
+      "types": "dist/month-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/month-range-picker",
+      "types": "dist/month-range-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/range-calendar",
+      "types": "dist/range-calendar.d.ts"
+    },
+    {
+      "subpath": "./temporal/time-field",
+      "types": "dist/time-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/time-range-field",
+      "types": "dist/time-range-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/year-picker",
+      "types": "dist/year-picker.d.ts"
+    },
+    {
+      "subpath": "./temporal/year-range-picker",
+      "types": "dist/year-range-picker.d.ts"
     },
     {
       "subpath": "./text",
@@ -219,7 +275,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "186f54225796424e864ee5e00b5e312bbf1bcfe839fbf29986bb52bb8fa99d76",
+  "fingerprint": "0b3a5eec7a39af018cee191308f10036674dda2d50f845787b032bd0d7b022c3",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -486,10 +542,6 @@
       "sha256": "a28b0c98f56500d89fe8337c185228a86a28abd558bf560bc5c0a4eb7f3abc67"
     },
     {
-      "path": "dist/temporal.d.ts",
-      "sha256": "da8930959d5f7157e042b50cf725e67836144eb9cc35096b524dd995030a3ed4"
-    },
-    {
       "path": "dist/text.d.ts",
       "sha256": "8062cd6496dd34b3cfcd3cbcb84e9dba7efedb33a45fd505033695e5af7cba2d"
     },
@@ -535,7 +587,7 @@
     },
     {
       "path": "dist/virtual.d.ts",
-      "sha256": "7117005dd52b0c81afe32921fbafc4830a9f3d04d008dc5a377d28c01a79ba50"
+      "sha256": "c3e7d3806c5bb63b8c14941b385df71f5d80e70ac87a01e46dee66e30d397e65"
     },
     {
       "path": "dist/window-splitter.d.ts",

@@ -33,7 +33,7 @@ import {
   defineDataTableColumns,
   useDataTable,
   useDataTableSource,
-} from '@sectile/vue/tabular'
+} from '@sectile/vue/data-table'
 
 interface UserCells { name: string; team: string; status: string }
 ${tableSetup}
@@ -217,7 +217,7 @@ connection.handleEvent({
 
 const gridOverview = Object.freeze({
   vue: `<script setup lang="ts">
-import { createDataGridComponents, defineDataGridColumns, useDataGrid, useDataGridSource } from '@sectile/vue/tabular'
+import { createDataGridComponents, defineDataGridColumns, useDataGrid, useDataGridSource } from '@sectile/vue/data-grid'
 const columns = defineDataGridColumns([{ id: 'task', capabilities: ['sort', 'edit'] }, { id: 'owner', capabilities: ['edit'] }, { id: 'status' }])
 const grid = useDataGrid({ columns })
 const DataGrid = createDataGridComponents(grid)
@@ -281,7 +281,7 @@ grid.dispatch({
 
 const treeOverview = Object.freeze({
   vue: `<script setup lang="ts">
-import { createDataTreeGridComponents, defineDataTreeGridColumns, useDataTreeGrid, useDataTreeGridSource } from '@sectile/vue/tabular'
+import { createDataTreeGridComponents, defineDataTreeGridColumns, useDataTreeGrid, useDataTreeGridSource } from '@sectile/vue/data-tree-grid'
 const columns = defineDataTreeGridColumns([{ id: 'service', capabilities: ['sort', 'edit'] }, { id: 'owner' }, { id: 'status' }])
 const tree = useDataTreeGrid({ columns })
 const DataTreeGrid = createDataTreeGridComponents(tree)

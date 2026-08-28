@@ -3,12 +3,12 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './form', './tabular', './temporal', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './form', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
   for (const subpath of Object.keys(packageManifest.exports)) {
-    if (!subpath.startsWith('./') || excludedSubpaths.has(subpath)) continue;
+    if (!subpath.startsWith('./') || excludedSubpaths.has(subpath) || subpath.startsWith('./temporal/')) continue;
     const component = subpath.slice(2);
     const name = component === 'grid' ? 'GridControl' : component
       .split('-')
@@ -49,7 +49,7 @@ test('virtualization is exposed only through its optional subpath', async () => 
   assert.equal(typeof virtualModule.createVirtualizer, 'function');
 
   const virtualSource = await readFile(new URL('../.verification-dist/virtual.js', import.meta.url), 'utf8');
-  assert.match(virtualSource, /@sectile\/virtual/);
+  assert.doesNotMatch(virtualSource, /(?:^|['"])@sectile\/virtual(?:['"]|$)/);
 });
 
 test('Tabular controls are exposed only through their optional subpath', async () => {
@@ -82,10 +82,11 @@ test('temporal controls are exposed only through their optional subpath', async 
   assert.equal(rootModule.createDateField, undefined);
   assert.equal(rootModule.createCalendar, undefined);
 
-  const temporalModule = await import('../.verification-dist/temporal.js');
-  assert.equal(typeof temporalModule.createDateField, 'function');
-  assert.equal(typeof temporalModule.createCalendar, 'function');
-
-  const temporalSource = await readFile(new URL('../.verification-dist/temporal.js', import.meta.url), 'utf8');
-  assert.match(temporalSource, /@sectile\/temporal/);
+  assert.equal(packageManifest.exports['./temporal'], undefined);
+  const dateFieldModule = await import('../.verification-dist/date-field.js');
+  const calendarModule = await import('../.verification-dist/calendar.js');
+  assert.equal(typeof dateFieldModule.createDateField, 'function');
+  assert.equal(typeof calendarModule.createCalendar, 'function');
+  const dateFieldSource = await readFile(new URL('../.verification-dist/date-field.js', import.meta.url), 'utf8');
+  assert.match(dateFieldSource, /@sectile\/temporal/);
 });

@@ -48,7 +48,10 @@ test('Tabular documentation covers interactive profiles, hosts, sources, and opt
     }
   }
   for (const source of [vue, koVue]) {
-    assert.match(source, /@sectile\/vue\/tabular/u);
+    for (const entrypoint of ['data-table', 'data-grid', 'data-tree-grid']) {
+      assert.match(source, new RegExp(`@sectile/vue/${entrypoint}`));
+    }
+    assert.doesNotMatch(source, /@sectile\/vue\/tabular/u);
     assert.match(source, /pnpm add @sectile\/vue @sectile\/tabular vue/u);
     assert.match(source, /createData(?:Table|Grid)Components/u);
     assert.match(source, /DataGrid\.Provider/u);
@@ -80,7 +83,8 @@ test('Tabular documentation covers interactive profiles, hosts, sources, and opt
   }
   for (const source of [virtual, koVirtual]) {
     assert.match(source, /@sectile\/tabular\/virtual/u);
-    assert.match(source, /@sectile\/vue\/virtual/u);
+    assert.match(source, /@sectile\/vue\/virtual\/core/u);
+    assert.doesNotMatch(source, /@sectile\/vue\/virtual(?:['"]|$)/u);
     assert.match(source, /pnpm add @sectile\/vue @sectile\/tabular @sectile\/virtual vue/u);
   }
   for (const host of ['vue', 'dom', 'core']) assert.match(exampleCode, new RegExp(`${host}:`));
@@ -107,9 +111,12 @@ test('Tabular Vue examples use automatic Body rows and concise public props', as
   assert.match(sources[0], /useId\(\)/u);
   assert.match(sources[0], /:aria-labelledby="titleID"/u);
   assert.doesNotMatch(sources[0], /DataTable\.Caption/u);
-  for (const source of sources.slice(0, 3)) assert.match(source, /@sectile\/vue\/tabular/u);
+  for (const [index, source] of sources.slice(0, 3).entries()) {
+    assert.match(source, new RegExp(`@sectile/vue/${['data-table', 'data-grid', 'data-tree-grid'][index]}`));
+    assert.doesNotMatch(source, /@sectile\/vue\/tabular/u);
+  }
   for (const source of sources) {
-    assert.doesNotMatch(source, /@sectile\/vue\/data-(?:table|grid|tree-grid)/u);
+    assert.doesNotMatch(source, /@sectile\/vue\/tabular/u);
     assert.doesNotMatch(source, /acceptedRows/u);
     assert.doesNotMatch(source, /:depth="0"/u);
     assert.doesNotMatch(source, /(?:^|\s):?columnID=/mu);

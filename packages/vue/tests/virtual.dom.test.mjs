@@ -38,14 +38,11 @@ Object.assign(globalThis, {
 });
 
 const { createApp, h, nextTick, ref, shallowRef } = await import('vue');
-const {
-  VirtualGrid,
-  VirtualList,
-  VirtualMasonry,
-  VirtualSpatial,
-  VirtualizerContent,
-  VirtualizerRoot,
-} = await import('../.verification-dist/virtual.js');
+const { VirtualGrid } = await import('../.verification-dist/virtual-grid.js');
+const { VirtualList } = await import('../.verification-dist/virtual-list.js');
+const { VirtualMasonry } = await import('../.verification-dist/virtual-masonry.js');
+const { VirtualSpatial } = await import('../.verification-dist/virtual-spatial.js');
+const { VirtualizerContent, VirtualizerRoot } = await import('../.verification-dist/virtual-core.js');
 
 test('VirtualList renders intrinsic rows without per-item Sectile wrappers and reconciles keyed data', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');

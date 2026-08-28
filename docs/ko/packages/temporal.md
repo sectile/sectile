@@ -30,4 +30,4 @@ Temporal은 `{ year, month, day }` 모양의 ISO 그레고리력 날짜와 `{ ho
 
 DOM과 Terminal 연결 패키지는 실행 환경의 오늘 날짜를 `referenceDate`로 전달할 수 있습니다. 서버에서 화면을 만들 때는 요청 시점에 정한 기준 날짜를 브라우저까지 이어서 사용합니다.
 
-브라우저 연결은 선택 진입점으로 제공됩니다. `@sectile/dom`을 함께 설치하면 `@sectile/dom/temporal`, `@sectile/vue`와 Vue를 함께 설치하면 `@sectile/vue/temporal`을 사용합니다. Vue 진입점의 `TemporalProvider`는 하위 영역에 하나의 `referenceDate`를 공유합니다.
+브라우저 연결은 `@sectile/dom/temporal/*`와 `@sectile/vue/temporal/*` 아래의 세분화된 선택 진입점으로 제공됩니다. `@sectile/vue/temporal/temporal-provider`의 `TemporalProvider`는 하위 영역에 하나의 `referenceDate`를 공유합니다.

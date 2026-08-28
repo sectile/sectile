@@ -25,7 +25,12 @@ assert.equal(Object.values(migration.before.packages).reduce((sum, entry) => sum
 assert.equal(Object.values(migration.before.packages).reduce((sum, entry) => sum + entry.bytes, 0), migration.before.declarationMapBytes, 'source-map migration byte total drifted');
 assert.equal(migration.after.declarationMapFiles, 0, 'source-map migration must remove declaration maps');
 assert.equal(migration.after.declarationMapBytes, 0, 'source-map migration must remove declaration-map bytes');
-assert.equal(migration.after.externalJavaScriptMapFiles, report.packages.reduce((sum, entry) => sum + entry.sourceMapFiles, 0), 'source-map migration JavaScript map count drifted');
+assert.equal(migration.after.externalJavaScriptMapFiles, migration.before.declarationMapFiles, 'source-map migration historical JavaScript map count drifted');
+assert.equal(
+  report.packages.reduce((sum, entry) => sum + entry.sourceMapFiles, 0),
+  report.packages.reduce((sum, entry) => sum + entry.javascriptFiles, 0),
+  'every current JavaScript artifact must retain one external source map',
+);
 const baselinePath = 'verification/source-maps/baseline.json';
 if (mode === 'record') {
   await mkdir('verification/source-maps', { recursive: true });

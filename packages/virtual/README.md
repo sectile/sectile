@@ -7,7 +7,7 @@ Framework-independent layout engines for large, dynamically sized surfaces. Stab
 Import runtime APIs from explicit subpaths such as `@sectile/virtual/extent-index`, `@sectile/virtual/linear-layout`, `@sectile/virtual/masonry-layout`, `@sectile/virtual/spatial-layout`, and `@sectile/virtual/track-grid-layout`.
 
 Browser scheduling, `ResizeObserver`, scroll correction, and Vue rendering live in
-`@sectile/dom/virtual` and `@sectile/vue/virtual`. This package never reads or
+`@sectile/dom/virtual` and `@sectile/vue/virtual/core`. This package never reads or
 writes host elements.
 
 Layout states are opaque runtime handles. Use each strategy's

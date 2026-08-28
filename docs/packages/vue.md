@@ -41,7 +41,7 @@ import { HostProvider } from '@sectile/vue/host-provider'
 
 ## Date and time components
 
-Install `@sectile/temporal` to use date fields, time fields, calendars, and pickers. The complete Vue surface is available from `@sectile/vue/temporal`; the base Vue package remains independent of date and time logic.
+Install `@sectile/temporal` to use date fields, time fields, calendars, and pickers. Import each family from its granular `@sectile/vue/temporal/*` entry point; the base Vue package remains independent of date and time logic.
 
 ```sh
 pnpm add @sectile/core @sectile/temporal @sectile/vue vue
@@ -49,10 +49,8 @@ pnpm add @sectile/core @sectile/temporal @sectile/vue vue
 
 ```vue
 <script setup lang="ts">
-import {
-  DatePickerRoot,
-  TemporalProvider,
-} from '@sectile/vue/temporal'
+import { DatePickerRoot } from '@sectile/vue/temporal/date-picker'
+import { TemporalProvider } from '@sectile/vue/temporal/temporal-provider'
 </script>
 
 <template>
@@ -189,7 +187,7 @@ Portal parts accept `defer` when their target is rendered by Vue later in the sa
 
 ## Virtualized collections
 
-`@sectile/vue/virtual` provides a typed `useVirtualizer` composable and three headless parts. `VirtualizerRoot` connects the scroll viewport, `VirtualizerContent` projects the full content size, and `VirtualizerItem` positions and measures a placement. The logical Listbox, Combobox, Feed, or Grid still receives every identity; only its rendered item parts are windowed.
+`@sectile/vue/virtual/core` provides a typed `useVirtualizer` composable and three headless parts. Declarative layouts use the separate `list`, `grid`, `masonry`, and `spatial` entry points. `VirtualizerRoot` connects the scroll viewport, `VirtualizerContent` projects the full content size, and `VirtualizerItem` positions and measures a placement.
 
 ```sh
 pnpm add @sectile/core @sectile/virtual @sectile/vue vue
@@ -209,7 +207,7 @@ import {
   VirtualizerContent,
   VirtualizerItem,
   VirtualizerRoot,
-} from '@sectile/vue/virtual'
+} from '@sectile/vue/virtual/core'
 import { ListboxItem, ListboxRoot } from '@sectile/vue/listbox'
 
 const items = Array.from({ length: 100_000 }, (_, index) => `item-${index}`)

@@ -85,12 +85,32 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'install', '--ignore-scripts', '--no-frozen-lockfile', '--config.optional=false', '--config.auto-install-peers=false'], directory);
   }
   await run(process.execPath, ['--input-type=module', '-e', "await import('@sectile/vue');"], directory);
-  const optionalPackages = ['form', 'tabular', 'temporal', 'virtual'];
+  const optionalDomains = [
+    { packageName: 'form', imports: ['@sectile/vue/form'], removed: [] },
+    {
+      packageName: 'tabular',
+      imports: ['@sectile/vue/data-table', '@sectile/vue/data-grid', '@sectile/vue/data-tree-grid'],
+      removed: ['@sectile/vue/tabular'],
+    },
+    {
+      packageName: 'temporal',
+      imports: ['@sectile/vue/temporal/calendar'],
+      removed: ['@sectile/vue/temporal'],
+    },
+    {
+      packageName: 'virtual',
+      imports: ['@sectile/vue/virtual/list'],
+      removed: ['@sectile/vue/virtual'],
+    },
+  ];
   const optionalPeersPresent = [];
-  for (const packageName of optionalPackages) {
+  for (const { packageName, imports, removed } of optionalDomains) {
     if (await exists(join(directory, 'node_modules/@sectile', packageName))) optionalPeersPresent.push(`@sectile/${packageName}`);
-    const result = await runResult(process.execPath, ['--input-type=module', '-e', `await import('@sectile/vue/${packageName}');`], directory);
-    assert.notEqual(result.status, 0, `${packageManager}: optional ${packageName} import unexpectedly resolved without its peer`);
+    for (const specifier of imports) {
+      const result = await runResult(process.execPath, ['--input-type=module', '-e', `await import('${specifier}');`], directory);
+      assert.notEqual(result.status, 0, `${packageManager}: optional ${specifier} unexpectedly resolved without its peer`);
+    }
+    for (const specifier of removed) await assertMissingEntrypoint(directory, packageManager, specifier);
   }
   const installation = await directoryMetrics(join(directory, 'node_modules'));
   const incumbents = {
@@ -100,11 +120,14 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   const dependencyTree = await installedDependencyTree(directory, packageManager);
   const dependencyNames = new Set();
   collectNormalizedNames(dependencyTree, dependencyNames);
-  for (const packageName of optionalPackages) {
+  for (const { packageName, imports, removed } of optionalDomains) {
     const specifier = `file:${tarballs[packageName]}`;
     if (packageManager === 'npm') await run('npm', ['install', specifier, '--no-save', '--ignore-scripts', '--no-audit', '--no-fund', '--omit=optional', '--cache', join(root, 'npm-cache')], directory);
     else await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'add', specifier, '--ignore-scripts', '--config.optional=false', '--config.auto-install-peers=false'], directory);
-    await run(process.execPath, ['--input-type=module', '-e', `await import('@sectile/vue/${packageName}');`], directory);
+    for (const specifier of imports) {
+      await run(process.execPath, ['--input-type=module', '-e', `await import('${specifier}');`], directory);
+    }
+    for (const specifier of removed) await assertMissingEntrypoint(directory, packageManager, specifier);
   }
   return Object.freeze({
     packageManager,
@@ -115,6 +138,12 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     optionalPeersPresent: Object.freeze(optionalPeersPresent),
     incumbents: Object.freeze(incumbents),
   });
+}
+
+async function assertMissingEntrypoint(directory, packageManager, specifier) {
+  const result = await runResult(process.execPath, ['--input-type=module', '-e', `await import('${specifier}');`], directory);
+  assert.notEqual(result.status, 0, `${packageManager}: removed ${specifier} unexpectedly resolved`);
+  assert.match(`${result.stdout}\n${result.stderr}`, /ERR_PACKAGE_PATH_NOT_EXPORTED/u);
 }
 
 async function inspectTarball(root, packageName, tarball) {

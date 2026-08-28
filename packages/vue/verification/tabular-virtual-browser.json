@@ -6,7 +6,7 @@
     "package": "@sectile/virtual",
     "manifestOptional": true,
     "baseProfileImportsVirtual": false,
-    "optInSubpath": "@sectile/vue/virtual"
+    "optInSubpath": "@sectile/vue/virtual/core"
   },
   "scenarios": {
     "tabular-virtual-flat": {

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "workItem": "WI-025",
+  "removed": [
+    {
+      "package": "dom",
+      "subpath": "./temporal",
+      "protectedSource": "packages/dom/src/temporal.ts",
+      "coverage": "modules",
+      "replacements": [
+        "./temporal/calendar", "./temporal/date-field", "./temporal/date-range-field",
+        "./temporal/date-time-field", "./temporal/time-field", "./temporal/time-range-field",
+        "./temporal/date-picker", "./temporal/date-range-picker", "./temporal/range-calendar",
+        "./temporal/month-picker", "./temporal/month-range-picker", "./temporal/year-picker",
+        "./temporal/year-range-picker", "./temporal/date-time-picker", "./temporal/date-time-range-picker"
+      ]
+    },
+    {
+      "package": "vue",
+      "subpath": "./temporal",
+      "protectedSource": "packages/vue/src/temporal.ts",
+      "coverage": "modules",
+      "replacements": [
+        "./temporal/calendar", "./temporal/date-field", "./temporal/date-range-field",
+        "./temporal/date-time-field", "./temporal/time-field", "./temporal/time-range-field",
+        "./temporal/date-picker", "./temporal/date-range-picker", "./temporal/range-calendar",
+        "./temporal/month-picker", "./temporal/month-range-picker", "./temporal/year-picker",
+        "./temporal/year-range-picker", "./temporal/date-time-picker", "./temporal/date-time-range-picker",
+        "./temporal/temporal-provider"
+      ]
+    },
+    {
+      "package": "vue",
+      "subpath": "./tabular",
+      "protectedSource": "packages/vue/src/tabular.ts",
+      "coverage": "modules",
+      "replacements": ["./data-table", "./data-grid", "./data-tree-grid"]
+    },
+    {
+      "package": "vue",
+      "subpath": "./virtual",
+      "protectedSource": "packages/vue/src/virtual.ts",
+      "coverage": "symbols",
+      "replacements": [
+        {
+          "subpath": "./virtual/core",
+          "symbols": [
+            "UseVirtualizerOptions", "UseVirtualizerReturn", "VirtualizerContent",
+            "VirtualizerContentProps", "VirtualizerItem", "VirtualizerItemProps",
+            "VirtualizerItemSize", "VirtualizerRoot", "VirtualizerRootExpose",
+            "VirtualizerRootProps", "VirtualizerRootSlotProps", "useVirtualizer"
+          ]
+        },
+        {
+          "subpath": "./virtual/list",
+          "symbols": [
+            "VirtualCollectionExpose", "VirtualList", "VirtualListComponent", "VirtualListEstimate",
+            "VirtualListExpose", "VirtualListItemAttributes", "VirtualListKeyResolver",
+            "VirtualListProps", "VirtualListPublicProps", "VirtualListSlotProps"
+          ]
+        },
+        {
+          "subpath": "./virtual/grid",
+          "symbols": [
+            "VirtualGrid", "VirtualGridComponent", "VirtualGridProps", "VirtualGridPublicProps",
+            "VirtualGridSlotProps"
+          ]
+        },
+        {
+          "subpath": "./virtual/masonry",
+          "symbols": [
+            "VirtualMasonry", "VirtualMasonryComponent", "VirtualMasonryProps",
+            "VirtualMasonryPublicProps", "VirtualMasonrySlotProps"
+          ]
+        },
+        {
+          "subpath": "./virtual/spatial",
+          "symbols": [
+            "VirtualSpatial", "VirtualSpatialComponent", "VirtualSpatialProps", "VirtualSpatialPublicProps",
+            "VirtualSpatialRectResolver", "VirtualSpatialSlotProps", "VirtualSpatialZIndexResolver"
+          ]
+        }
+      ]
+    }
+  ]
+}

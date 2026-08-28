@@ -440,6 +440,63 @@
       ]
     },
     {
+      "subpath": "./data-grid",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDataGridComponents",
+        "defineDataGridColumns",
+        "useDataGrid",
+        "useDataGridContext",
+        "useDataGridSource"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/tabular",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./data-table",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDataTableComponents",
+        "defineDataTableColumns",
+        "useDataTable",
+        "useDataTableContext",
+        "useDataTableSource"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/tabular",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./data-tree-grid",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDataTreeGridComponents",
+        "defineDataTreeGridColumns",
+        "useDataTreeGrid",
+        "useDataTreeGridContext",
+        "useDataTreeGridSource"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/tabular",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./dialog",
       "classification": "named-subpath",
       "platform": "browser",
@@ -1043,35 +1100,6 @@
       ]
     },
     {
-      "subpath": "./tabular",
-      "classification": "optional-domain",
-      "platform": "browser",
-      "runtimeExports": [
-        "createDataGridComponents",
-        "createDataTableComponents",
-        "createDataTreeGridComponents",
-        "defineDataGridColumns",
-        "defineDataTableColumns",
-        "defineDataTreeGridColumns",
-        "useDataGrid",
-        "useDataGridContext",
-        "useDataGridSource",
-        "useDataTable",
-        "useDataTableContext",
-        "useDataTableSource",
-        "useDataTreeGrid",
-        "useDataTreeGridContext",
-        "useDataTreeGridSource"
-      ],
-      "typeBearing": true,
-      "optionalPeer": "@sectile/tabular",
-      "rootEquivalentExport": null,
-      "fixtureModes": [
-        "side-effect",
-        "named"
-      ]
-    },
-    {
       "subpath": "./tags-input",
       "classification": "named-subpath",
       "platform": "browser",
@@ -1091,7 +1119,7 @@
       ]
     },
     {
-      "subpath": "./temporal",
+      "subpath": "./temporal/calendar",
       "classification": "optional-domain",
       "platform": "browser",
       "runtimeExports": [
@@ -1109,8 +1137,36 @@
         "CalendarPreviousYear",
         "CalendarRoot",
         "CalendarWeekViewTrigger",
-        "CalendarYearViewTrigger",
-        "DateField",
+        "CalendarYearViewTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "DateField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "DatePickerAnchor",
         "DatePickerCell",
         "DatePickerContent",
@@ -1128,10 +1184,38 @@
         "DatePickerRoot",
         "DatePickerTrigger",
         "DatePickerWeekViewTrigger",
-        "DatePickerYearViewTrigger",
+        "DatePickerYearViewTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "DateRangeFieldEndInput",
         "DateRangeFieldRoot",
-        "DateRangeFieldStartInput",
+        "DateRangeFieldStartInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "DateRangePickerAnchor",
         "DateRangePickerCell",
         "DateRangePickerContent",
@@ -1150,8 +1234,36 @@
         "DateRangePickerStartInput",
         "DateRangePickerTrigger",
         "DateRangePickerWeekViewTrigger",
-        "DateRangePickerYearViewTrigger",
-        "DateTimeField",
+        "DateRangePickerYearViewTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "DateTimeField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "DateTimePickerAnchor",
         "DateTimePickerCell",
         "DateTimePickerContent",
@@ -1171,7 +1283,21 @@
         "DateTimePickerTimeInput",
         "DateTimePickerTrigger",
         "DateTimePickerWeekViewTrigger",
-        "DateTimePickerYearViewTrigger",
+        "DateTimePickerYearViewTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/date-time-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "DateTimeRangePickerAnchor",
         "DateTimeRangePickerCell",
         "DateTimeRangePickerContent",
@@ -1194,7 +1320,21 @@
         "DateTimeRangePickerStartTimeInput",
         "DateTimeRangePickerTrigger",
         "DateTimeRangePickerWeekViewTrigger",
-        "DateTimeRangePickerYearViewTrigger",
+        "DateTimeRangePickerYearViewTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/month-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "MonthPickerAnchor",
         "MonthPickerCell",
         "MonthPickerContent",
@@ -1204,7 +1344,21 @@
         "MonthPickerPortal",
         "MonthPickerPreviousYear",
         "MonthPickerRoot",
-        "MonthPickerTrigger",
+        "MonthPickerTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/month-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "MonthRangePickerAnchor",
         "MonthRangePickerCell",
         "MonthRangePickerContent",
@@ -1215,7 +1369,21 @@
         "MonthRangePickerPreviousYear",
         "MonthRangePickerRoot",
         "MonthRangePickerStartInput",
-        "MonthRangePickerTrigger",
+        "MonthRangePickerTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/range-calendar",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "RangeCalendarCell",
         "RangeCalendarContent",
         "RangeCalendarGrid",
@@ -1223,12 +1391,69 @@
         "RangeCalendarNextYear",
         "RangeCalendarPreviousMonth",
         "RangeCalendarPreviousYear",
-        "RangeCalendarRoot",
+        "RangeCalendarRoot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/temporal-provider",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "TemporalProvider",
-        "TimeField",
+        "useTemporalReferenceDate"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/time-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "TimeField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/time-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "TimeRangeFieldEndInput",
         "TimeRangeFieldRoot",
-        "TimeRangeFieldStartInput",
+        "TimeRangeFieldStartInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/year-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "YearPickerAnchor",
         "YearPickerCell",
         "YearPickerContent",
@@ -1238,7 +1463,21 @@
         "YearPickerPortal",
         "YearPickerPreviousPage",
         "YearPickerRoot",
-        "YearPickerTrigger",
+        "YearPickerTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/year-range-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
         "YearRangePickerAnchor",
         "YearRangePickerCell",
         "YearRangePickerContent",
@@ -1249,8 +1488,7 @@
         "YearRangePickerPreviousPage",
         "YearRangePickerRoot",
         "YearRangePickerStartInput",
-        "YearRangePickerTrigger",
-        "useTemporalReferenceDate"
+        "YearRangePickerTrigger"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/temporal",
@@ -1413,21 +1651,74 @@
       ]
     },
     {
-      "subpath": "./virtual",
+      "subpath": "./virtual/core",
       "classification": "optional-domain",
       "platform": "browser",
       "runtimeExports": [
-        "VirtualGrid",
-        "VirtualList",
-        "VirtualMasonry",
-        "VirtualSpatial",
         "VirtualizerContent",
         "VirtualizerItem",
         "VirtualizerRoot",
-        "createAxisMeasurementResolver",
-        "useVirtualizer",
-        "virtualContentStyle",
-        "virtualItemStyle"
+        "useVirtualizer"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./virtual/grid",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "VirtualGrid"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./virtual/list",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "VirtualList"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./virtual/masonry",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "VirtualMasonry"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./virtual/spatial",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "VirtualSpatial"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/virtual",

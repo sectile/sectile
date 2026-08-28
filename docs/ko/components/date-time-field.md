@@ -27,7 +27,7 @@
 
 ## API
 
-Vue 패키지: `@sectile/vue/temporal`
+Vue 패키지: `@sectile/vue/temporal/date-time-field`
 
 <div class="component-api-group">
 <strong class="component-api-label">컴포넌트</strong>

@@ -5,7 +5,7 @@ description: 선언형 마크업으로 목록, 반응형 격자, 벽돌형 카�
 
 # Vue 연결
 
-`@sectile/vue/virtual`은 자료 배열과 안정적인 키, 슬롯 마크업을 받아 실제 요소의 크기를 자동으로 측정합니다.
+`@sectile/vue/virtual/list`은 자료 배열과 안정적인 키, 슬롯 마크업을 받아 실제 요소의 크기를 자동으로 측정합니다.
 
 ## 설치
 
@@ -17,7 +17,7 @@ pnpm add vue @sectile/vue @sectile/virtual
 
 ```vue
 <script setup lang="ts">
-import { VirtualList } from '@sectile/vue/virtual'
+import { VirtualList } from '@sectile/vue/virtual/list'
 
 const rows = Array.from({ length: 50_000 }, (_, index) => ({
   id: `row-${index}`,

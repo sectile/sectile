@@ -4,7 +4,7 @@ import TabularExample from '../../.vitepress/theme/components/TabularExample.vue
 
 # Tabular with Vue
 
-The Vue Tabular API is collected under `@sectile/vue/tabular`. Install its optional peer dependency, `@sectile/tabular`, when using this subpath. Applications that do not use Tabular do not need it.
+The Vue Tabular API is split by profile across `@sectile/vue/data-table`, `@sectile/vue/data-grid`, and `@sectile/vue/data-tree-grid`. Install the optional `@sectile/tabular` peer when using one of these entry points.
 
 ```sh
 pnpm add @sectile/vue @sectile/tabular vue
@@ -33,7 +33,7 @@ import {
   useDataGrid,
   createDataGridComponents,
   useDataGridSource,
-} from '@sectile/vue/tabular'
+} from '@sectile/vue/data-grid'
 
 interface UserCells {
   readonly name: string
@@ -71,7 +71,7 @@ Nested Providers form nested scopes and each part resolves the nearest matching 
 | DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
 | DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
-Every part exports its `Props` and `SlotProps` types. `@sectile/vue/tabular` also exports the row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, source resolvers, `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` for all three profiles. The Vue package root does not export these APIs.
+Every profile entry point exports its own parts, `Props`, `SlotProps`, controller contracts, source contracts, and helpers. The Vue package root does not export these APIs.
 
 ## Source execution and UI states
 

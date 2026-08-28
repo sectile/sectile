@@ -27,7 +27,7 @@ Keep a local schedule valid when its end time falls on the next civil day.
 
 ## API
 
-Vue package: `@sectile/vue/temporal`
+Vue package: `@sectile/vue/temporal/date-time-field`
 
 <div class="component-api-group">
 <strong class="component-api-label">Components</strong>

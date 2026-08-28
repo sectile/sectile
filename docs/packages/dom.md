@@ -128,18 +128,16 @@ Every trigger-owned popup also joins one layer stack per document. Mixed nesting
 
 ## Date and time controls
 
-Install `@sectile/temporal` when browser elements need date fields, time fields, calendars, or pickers. These adapters are grouped under one optional entry point, so the base DOM package does not load date and time logic.
+Install `@sectile/temporal` when browser elements need date fields, time fields, calendars, or pickers. Each adapter family has a granular optional entry point, so consumers load only the selected family.
 
 ```sh
 pnpm add @sectile/core @sectile/temporal @sectile/dom
 ```
 
 ```ts
-import {
-  createCalendar,
-  createDateField,
-  createDatePicker,
-} from '@sectile/dom/temporal'
+import { createCalendar } from '@sectile/dom/temporal/calendar'
+import { createDateField } from '@sectile/dom/temporal/date-field'
+import { createDatePicker } from '@sectile/dom/temporal/date-picker'
 ```
 
 ## Form coordination

@@ -41,6 +41,37 @@ export function validateCurrentResults(fixtures, results) {
       );
     }
   }
+  validateGranularClosures(results);
+}
+
+export function validateGranularClosures(results) {
+  const virtualStrategies = Object.freeze({
+    core: null,
+    grid: 'track-grid-layout',
+    list: 'linear-layout',
+    masonry: 'masonry-layout',
+    spatial: 'spatial-layout',
+  });
+  for (const result of results.filter(({ mode }) => mode === 'named')) {
+    const virtual = /^vue:\.\/virtual\/(core|grid|list|masonry|spatial):named$/u.exec(result.id);
+    if (virtual !== null) {
+      const selected = virtualStrategies[virtual[1]];
+      for (const strategy of Object.values(virtualStrategies).filter((value) => value !== null && value !== selected)) {
+        assert.ok(
+          !result.modules.some((path) => path.endsWith(`/dist/${strategy}.js`)),
+          `${result.bundler}:${result.id}: retained sibling ${strategy}`,
+        );
+      }
+    }
+    if (result.id === 'vue:./temporal/calendar:named') {
+      const unrelated = /@sectile\/(?:dom|vue)\/dist\/(?:date-field|time-field|date-time-field|date-picker|date-range-picker|date-time-picker|date-time-range-picker|month-picker|month-range-picker|year-picker|year-range-picker|range-calendar)\.js$/u;
+      assert.deepEqual(
+        result.modules.filter((path) => unrelated.test(path)),
+        [],
+        `${result.bundler}:${result.id}: retained unrelated temporal family`,
+      );
+    }
+  }
 }
 
 function libraryModules(modules) {

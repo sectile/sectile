@@ -25,25 +25,25 @@
       }
     },
     "dom": {
-      "tarballBytes": 254568,
-      "unpackedBytes": 1590663,
-      "unpackedFiles": 285,
+      "tarballBytes": 253246,
+      "unpackedBytes": 1583928,
+      "unpackedFiles": 282,
       "categories": {
         "runtimeJS": {
-          "files": 94,
-          "bytes": 648646
+          "files": 93,
+          "bytes": 646726
         },
         "declarations": {
-          "files": 94,
-          "bytes": 255113
+          "files": 93,
+          "bytes": 249169
         },
         "sourceMaps": {
-          "files": 94,
-          "bytes": 674485
+          "files": 93,
+          "bytes": 673119
         },
         "other": {
           "files": 3,
-          "bytes": 12419
+          "bytes": 14914
         }
       }
     },
@@ -140,8 +140,8 @@
       }
     },
     "virtual": {
-      "tarballBytes": 48774,
-      "unpackedBytes": 296252,
+      "tarballBytes": 48777,
+      "unpackedBytes": 296257,
       "unpackedFiles": 39,
       "categories": {
         "runtimeJS": {
@@ -158,30 +158,30 @@
         },
         "other": {
           "files": 3,
-          "bytes": 4725
+          "bytes": 4730
         }
       }
     },
     "vue": {
-      "tarballBytes": 264693,
-      "unpackedBytes": 2051201,
-      "unpackedFiles": 276,
+      "tarballBytes": 265991,
+      "unpackedBytes": 2055589,
+      "unpackedFiles": 294,
       "categories": {
         "runtimeJS": {
-          "files": 91,
-          "bytes": 689423
+          "files": 97,
+          "bytes": 688876
         },
         "declarations": {
-          "files": 91,
-          "bytes": 621983
+          "files": 97,
+          "bytes": 622691
         },
         "sourceMaps": {
-          "files": 91,
-          "bytes": 727120
+          "files": 97,
+          "bytes": 727660
         },
         "other": {
           "files": 3,
-          "bytes": 12675
+          "bytes": 16362
         }
       }
     }
@@ -189,8 +189,8 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22085787,
-      "installedFiles": 1531,
+      "installedBytes": 22083440,
+      "installedFiles": 1546,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -572,8 +572,8 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22105248,
-      "installedFiles": 1536,
+      "installedBytes": 22102901,
+      "installedFiles": 1551,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -907,13 +907,13 @@
   "incumbentPerformanceEvidence": {
     "colord": {
       "iterations": 20000,
-      "medianNanoseconds": 2217.797900000001,
-      "medianAllocationBytes": 887104,
-      "medianRetainedBytes": 56856
+      "medianNanoseconds": 2197.0791500000005,
+      "medianAllocationBytes": 880912,
+      "medianRetainedBytes": 56776
     },
     "@floating-ui/dom": {
       "iterations": 50000,
-      "medianNanoseconds": 29.2841599999997,
+      "medianNanoseconds": 30.14333999999963,
       "medianAllocationBytes": 1993776,
       "medianRetainedBytes": 64
     }

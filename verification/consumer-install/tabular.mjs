@@ -47,9 +47,14 @@ try {
     const root = await import('@sectile/dom');
     if (typeof root.createCheckbox !== 'function') process.exit(2);
   `);
-  await missingPeer(dom, '@sectile/dom/virtual', '@sectile/virtual');
-  await missingPeer(dom, '@sectile/dom/temporal', '@sectile/temporal');
+  await runtime(dom, `
+    const virtual = await import('@sectile/dom/virtual');
+    if (typeof virtual.createVirtualizer !== 'function') process.exit(2);
+  `);
+  await missingPeer(dom, '@sectile/dom/temporal/calendar', '@sectile/temporal');
   await missingPeer(dom, '@sectile/dom/tabular', '@sectile/tabular');
+  await missingEntrypoint(dom, '@sectile/dom/temporal');
+  scenarios.push({ id: 'dom-runtime-virtual-without-type-peer', status: 'passed' });
   scenarios.push({ id: 'dom-base-without-optional-peers', status: 'passed' });
 
   const vue = await fixture('vue-base', [tarballs.core, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
@@ -57,9 +62,12 @@ try {
     const root = await import('@sectile/vue');
     if (typeof root.CheckboxRoot !== 'object') process.exit(2);
   `);
-  await missingPeer(vue, '@sectile/vue/virtual', '@sectile/virtual');
-  await missingPeer(vue, '@sectile/vue/temporal', '@sectile/temporal');
-  await missingPeer(vue, '@sectile/vue/tabular', '@sectile/tabular');
+  await missingPeer(vue, '@sectile/vue/virtual/list', '@sectile/virtual');
+  await missingPeer(vue, '@sectile/vue/temporal/calendar', '@sectile/temporal');
+  await missingPeer(vue, '@sectile/vue/data-table', '@sectile/tabular');
+  await missingEntrypoint(vue, '@sectile/vue/temporal');
+  await missingEntrypoint(vue, '@sectile/vue/virtual');
+  await missingEntrypoint(vue, '@sectile/vue/tabular');
   scenarios.push({ id: 'vue-base-without-optional-peers', status: 'passed' });
 
   const domTabular = await fixture('dom-tabular', [tarballs.core, tarballs.tabular, tarballs.dom]);
@@ -71,8 +79,10 @@ try {
 
   const vueTabular = await fixture('vue-tabular', [tarballs.core, tarballs.tabular, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vueTabular, `
-    const tabular = await import('@sectile/vue/tabular');
-    if (typeof tabular.createDataTableComponents !== 'function' || typeof tabular.createDataGridComponents !== 'function' || typeof tabular.createDataTreeGridComponents !== 'function') process.exit(2);
+    const table = await import('@sectile/vue/data-table');
+    const grid = await import('@sectile/vue/data-grid');
+    const tree = await import('@sectile/vue/data-tree-grid');
+    if (typeof table.createDataTableComponents !== 'function' || typeof grid.createDataGridComponents !== 'function' || typeof tree.createDataTreeGridComponents !== 'function') process.exit(2);
   `);
   await typeConsumer(vueTabular);
   scenarios.push({ id: 'vue-tabular-explicit-opt-in', status: 'passed' });
@@ -93,22 +103,27 @@ try {
 
   const vueVirtual = await fixture('vue-virtual', [tarballs.core, tarballs.dom, tarballs.vue, tarballs.virtual, `vue@${vueVersion}`]);
   await runtime(vueVirtual, `
-    const virtual = await import('@sectile/vue/virtual');
-    if (typeof virtual.useVirtualizer !== 'function') process.exit(2);
+    const core = await import('@sectile/vue/virtual/core');
+    const list = await import('@sectile/vue/virtual/list');
+    const grid = await import('@sectile/vue/virtual/grid');
+    const masonry = await import('@sectile/vue/virtual/masonry');
+    const spatial = await import('@sectile/vue/virtual/spatial');
+    if (typeof core.useVirtualizer !== 'function' || typeof list.VirtualList !== 'object' || typeof grid.VirtualGrid !== 'object' || typeof masonry.VirtualMasonry !== 'object' || typeof spatial.VirtualSpatial !== 'object') process.exit(2);
   `);
   scenarios.push({ id: 'vue-virtual-explicit-opt-in', status: 'passed' });
 
   const domTemporal = await fixture('dom-temporal', [tarballs.core, tarballs.temporal, tarballs.dom]);
   await runtime(domTemporal, `
-    const temporal = await import('@sectile/dom/temporal');
+    const temporal = await import('@sectile/dom/temporal/date-field');
     if (typeof temporal.createDateField !== 'function') process.exit(2);
   `);
   scenarios.push({ id: 'dom-temporal-explicit-opt-in', status: 'passed' });
 
   const vueTemporal = await fixture('vue-temporal', [tarballs.core, tarballs.temporal, tarballs.dom, tarballs.vue, `vue@${vueVersion}`]);
   await runtime(vueTemporal, `
-    const temporal = await import('@sectile/vue/temporal');
-    if (typeof temporal.DateField !== 'object' || typeof temporal.TemporalProvider !== 'object') process.exit(2);
+    const field = await import('@sectile/vue/temporal/date-field');
+    const provider = await import('@sectile/vue/temporal/temporal-provider');
+    if (typeof field.DateField !== 'object' || typeof provider.TemporalProvider !== 'object') process.exit(2);
   `);
   await typeTemporalConsumer(vueTemporal);
   scenarios.push({ id: 'vue-temporal-explicit-opt-in', status: 'passed' });
@@ -168,6 +183,16 @@ async function missingPeer(directory, specifier, peer) {
     `${specifier} failure did not identify ${peer}`);
 }
 
+async function missingEntrypoint(directory, specifier) {
+  const result = spawnSync(process.execPath, ['--input-type=module', '--eval', `await import('${specifier}')`], {
+    cwd: directory,
+    encoding: 'utf8',
+  });
+  assert.notEqual(result.status, 0, `${specifier} compatibility entrypoint unexpectedly resolved`);
+  assert.match(`${result.stdout}\n${result.stderr}`, /ERR_PACKAGE_PATH_NOT_EXPORTED/u,
+    `${specifier} did not fail as an unexported compatibility entrypoint`);
+}
+
 async function typeConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
     import {
@@ -175,7 +200,7 @@ async function typeConsumer(directory) {
       useDataTable,
       createDataTableComponents,
       type DataTableContextValue,
-    } from '@sectile/vue/tabular';
+    } from '@sectile/vue/data-table';
     type Row = { id: string; name: string };
     const columns = defineDataTableColumns([{ id: 'name', getValue: (row: Row) => row.name }]);
     const table = useDataTable({ columns });
@@ -199,12 +224,8 @@ async function typeConsumer(directory) {
 
 async function typeTemporalConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
-    import {
-      DateField,
-      TemporalProvider,
-      type DateValue,
-      type TemporalProviderProps,
-    } from '@sectile/vue/temporal';
+    import { DateField, type DateValue } from '@sectile/vue/temporal/date-field';
+    import { TemporalProvider, type TemporalProviderProps } from '@sectile/vue/temporal/temporal-provider';
     const value: DateValue = { year: 2026, month: 8, day: 28 };
     const props: TemporalProviderProps = { referenceDate: value };
     void [DateField, TemporalProvider, props];
