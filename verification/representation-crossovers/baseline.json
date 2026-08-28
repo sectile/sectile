@@ -1,0 +1,2766 @@
+{
+  "schemaVersion": 1,
+  "workItem": "WI-018",
+  "fingerprint": "fnv1a32:026bf15a",
+  "processCount": 5,
+  "runtime": {
+    "node": "v24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "metrics": [
+    {
+      "id": "color-gamut:clip:20000-1",
+      "family": "color-gamut",
+      "candidate": "clip",
+      "input": {
+        "colors": 20000,
+        "iterations": 1
+      },
+      "timing": {
+        "count": 5,
+        "median": 43807.4,
+        "p95": 44698.4857143,
+        "relativeMAD": 0.00362974648311,
+        "minimum": 43648.3902439,
+        "maximum": 44704.3571429
+      },
+      "work": 20000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 356
+    },
+    {
+      "id": "color-gamut:fixed-12-chroma:20000-12",
+      "family": "color-gamut",
+      "candidate": "fixed-12-chroma",
+      "input": {
+        "colors": 20000,
+        "iterations": 12
+      },
+      "timing": {
+        "count": 5,
+        "median": 294408.3,
+        "p95": 300014.14,
+        "relativeMAD": 0.0206770665094,
+        "minimum": 200600,
+        "maximum": 300495.8
+      },
+      "work": 240000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 55648,
+      "sourceBytes": 356
+    },
+    {
+      "id": "color-gamut:reject:20000-1",
+      "family": "color-gamut",
+      "candidate": "reject",
+      "input": {
+        "colors": 20000,
+        "iterations": 1
+      },
+      "timing": {
+        "count": 5,
+        "median": 6530.59999998,
+        "p95": 10121.9125,
+        "relativeMAD": 0.00808501515758,
+        "minimum": 6477.79999999,
+        "maximum": 10997.4375
+      },
+      "work": 20000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 356
+    },
+    {
+      "id": "color-value:immutable-boundary-scalar-internal:50000",
+      "family": "color-value",
+      "candidate": "immutable-boundary-scalar-internal",
+      "input": {
+        "colors": 50000
+      },
+      "timing": {
+        "count": 5,
+        "median": 709698,
+        "p95": 711716.65,
+        "relativeMAD": 0.0029354035099,
+        "minimum": 692635.25,
+        "maximum": 711781.25
+      },
+      "work": 50000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 619888,
+      "sourceBytes": 234
+    },
+    {
+      "id": "color-value:immutable-object-every-step:50000",
+      "family": "color-value",
+      "candidate": "immutable-object-every-step",
+      "input": {
+        "colors": 50000
+      },
+      "timing": {
+        "count": 5,
+        "median": 3558500,
+        "p95": 3568658,
+        "relativeMAD": 0.00321989602359,
+        "minimum": 3531167,
+        "maximum": 3569958
+      },
+      "work": 50000,
+      "allocationUnits": 100000,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 5172944,
+      "sourceBytes": 306
+    },
+    {
+      "id": "color-value:mutable-class-plugin:50000",
+      "family": "color-value",
+      "candidate": "mutable-class-plugin",
+      "input": {
+        "colors": 50000
+      },
+      "timing": {
+        "count": 5,
+        "median": 1734416,
+        "p95": 1755833.8,
+        "relativeMAD": 0.0072548915604,
+        "minimum": 1718250,
+        "maximum": 1760084
+      },
+      "work": 50000,
+      "allocationUnits": 50000,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 3479056,
+      "sourceBytes": 303
+    },
+    {
+      "id": "exact-ratio:euclidean-reduce:2048",
+      "family": "exact-ratio",
+      "candidate": "euclidean-reduce",
+      "input": {
+        "operands": 2048
+      },
+      "timing": {
+        "count": 5,
+        "median": 181666.75,
+        "p95": 184597.9,
+        "relativeMAD": 0.0150811857424,
+        "minimum": 175937.5,
+        "maximum": 185250
+      },
+      "work": 24576,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 1129600,
+      "sourceBytes": 96
+    },
+    {
+      "id": "exact-ratio:memoized-gcd-and-powers:2048",
+      "family": "exact-ratio",
+      "candidate": "memoized-gcd-and-powers",
+      "input": {
+        "operands": 2048
+      },
+      "timing": {
+        "count": 5,
+        "median": 386533.2,
+        "p95": 387305.12,
+        "relativeMAD": 0.00202725147548,
+        "minimum": 372666.6,
+        "maximum": 387316.8
+      },
+      "work": 26624,
+      "allocationUnits": 2048,
+      "retainedBytes": 147456,
+      "heapDeltaBytes": 1138232,
+      "sourceBytes": 245
+    },
+    {
+      "id": "geometry:immutable-object-candidates:12-20000",
+      "family": "geometry",
+      "candidate": "immutable-object-candidates",
+      "input": {
+        "candidates": 12,
+        "iterations": 20000
+      },
+      "timing": {
+        "count": 5,
+        "median": 15023167,
+        "p95": 15132975,
+        "relativeMAD": 0.00446537005142,
+        "minimum": 14934167,
+        "maximum": 15150125
+      },
+      "work": 240000,
+      "allocationUnits": 260000,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 2044800,
+      "sourceBytes": 320
+    },
+    {
+      "id": "geometry:scalar-bounded-scoring:12-20000",
+      "family": "geometry",
+      "candidate": "scalar-bounded-scoring",
+      "input": {
+        "candidates": 12,
+        "iterations": 20000
+      },
+      "timing": {
+        "count": 5,
+        "median": 174539.0625,
+        "p95": 184933.458929,
+        "relativeMAD": 0.00959384092016,
+        "minimum": 172260.4375,
+        "maximum": 187220.214286
+      },
+      "work": 240000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 5856,
+      "sourceBytes": 301
+    },
+    {
+      "id": "grid:csr-csc:99856-0.01",
+      "family": "grid",
+      "candidate": "csr-csc",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.01
+      },
+      "timing": {
+        "count": 5,
+        "median": 76750,
+        "p95": 78164.16,
+        "relativeMAD": 0.0211240746224,
+        "minimum": 72564.3636364,
+        "maximum": 78512.5
+      },
+      "work": 10158.86851277919,
+      "allocationUnits": 2312,
+      "retainedBytes": 26480,
+      "heapDeltaBytes": 404520,
+      "sourceBytes": 730
+    },
+    {
+      "id": "grid:csr-csc:99856-0.05",
+      "family": "grid",
+      "candidate": "csr-csc",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.05
+      },
+      "timing": {
+        "count": 5,
+        "median": 285153,
+        "p95": 291411.133333,
+        "relativeMAD": 0.0115926070098,
+        "minimum": 279750,
+        "maximum": 292708.333333
+      },
+      "work": 28379.325867793603,
+      "allocationUnits": 10300,
+      "retainedBytes": 122336,
+      "heapDeltaBytes": 718352,
+      "sourceBytes": 730
+    },
+    {
+      "id": "grid:csr-csc:99856-0.5",
+      "family": "grid",
+      "candidate": "csr-csc",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.5
+      },
+      "timing": {
+        "count": 5,
+        "median": 3584166,
+        "p95": 3608724.8,
+        "relativeMAD": 0.00417307680503,
+        "minimum": 3552417,
+        "maximum": 3611208
+      },
+      "work": 373166.2366811197,
+      "allocationUnits": 100172,
+      "retainedBytes": 1200800,
+      "heapDeltaBytes": 5508152,
+      "sourceBytes": 730
+    },
+    {
+      "id": "grid:csr-csc:99856-1",
+      "family": "grid",
+      "candidate": "csr-csc",
+      "input": {
+        "cells": 99856,
+        "occupancy": 1
+      },
+      "timing": {
+        "count": 5,
+        "median": 7799375,
+        "p95": 8124699.8,
+        "relativeMAD": 0.00323743889734,
+        "minimum": 7747584,
+        "maximum": 8199833
+      },
+      "work": 837685.4018761062,
+      "allocationUnits": 200028,
+      "retainedBytes": 2399072,
+      "heapDeltaBytes": 10440472,
+      "sourceBytes": 730
+    },
+    {
+      "id": "grid:dense-flat:99856-0.01",
+      "family": "grid",
+      "candidate": "dense-flat",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.01
+      },
+      "timing": {
+        "count": 5,
+        "median": 12252.3333333,
+        "p95": 14065.0039216,
+        "relativeMAD": 0.0248132008465,
+        "minimum": 11911.7647059,
+        "maximum": 14442.1666667
+      },
+      "work": 101878,
+      "allocationUnits": 1,
+      "retainedBytes": 399424,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 305
+    },
+    {
+      "id": "grid:dense-flat:99856-0.05",
+      "family": "grid",
+      "candidate": "dense-flat",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.05
+      },
+      "timing": {
+        "count": 5,
+        "median": 17902.75,
+        "p95": 18651.4242424,
+        "relativeMAD": 0.00465477836262,
+        "minimum": 17784.75,
+        "maximum": 18833.3636364
+      },
+      "work": 105872,
+      "allocationUnits": 1,
+      "retainedBytes": 399424,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 305
+    },
+    {
+      "id": "grid:dense-flat:99856-0.5",
+      "family": "grid",
+      "candidate": "dense-flat",
+      "input": {
+        "cells": 99856,
+        "occupancy": 0.5
+      },
+      "timing": {
+        "count": 5,
+        "median": 83085.3333333,
+        "p95": 84190.4761905,
+        "relativeMAD": 0.0111761172678,
+        "minimum": 82156.7619048,
+        "maximum": 84232.1428571
+      },
+      "work": 150808,
+      "allocationUnits": 1,
+      "retainedBytes": 399424,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 305
+    },
+    {
+      "id": "grid:dense-flat:99856-1",
+      "family": "grid",
+      "candidate": "dense-flat",
+      "input": {
+        "cells": 99856,
+        "occupancy": 1
+      },
+      "timing": {
+        "count": 5,
+        "median": 154243,
+        "p95": 156751.490909,
+        "relativeMAD": 0.00531250472737,
+        "minimum": 153423.583333,
+        "maximum": 156939.363636
+      },
+      "work": 200736,
+      "allocationUnits": 1,
+      "retainedBytes": 399424,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 305
+    },
+    {
+      "id": "index-span-set:flat-normalized-vector:10000",
+      "family": "index-span-set",
+      "candidate": "flat-normalized-vector",
+      "input": {
+        "spans": 10000
+      },
+      "timing": {
+        "count": 5,
+        "median": 57649.1052632,
+        "p95": 58899.1263158,
+        "relativeMAD": 0.026856672811,
+        "minimum": 54403.5263158,
+        "maximum": 59197.3684211
+      },
+      "work": 13606.617476658635,
+      "allocationUnits": 10000,
+      "retainedBytes": 160000,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 326
+    },
+    {
+      "id": "index-span-set:interval-tree:10000",
+      "family": "index-span-set",
+      "candidate": "interval-tree",
+      "input": {
+        "spans": 10000
+      },
+      "timing": {
+        "count": 5,
+        "median": 185745.333333,
+        "p95": 188908.333333,
+        "relativeMAD": 0.00525929169447,
+        "minimum": 184550.888889,
+        "maximum": 189527.777778
+      },
+      "work": 23606.617476658634,
+      "allocationUnits": 10000,
+      "retainedBytes": 480000,
+      "heapDeltaBytes": 560304,
+      "sourceBytes": 400
+    },
+    {
+      "id": "metric-index:balanced-kd:256-16-32",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 393652.833333,
+        "p95": 395793.1,
+        "relativeMAD": 0.00545108062661,
+        "minimum": 391340.333333,
+        "maximum": 395798.666667
+      },
+      "work": 163840,
+      "allocationUnits": 800,
+      "retainedBytes": 40960,
+      "heapDeltaBytes": 587152,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:256-16-512",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 3714042,
+        "p95": 3815191.6,
+        "relativeMAD": 0.0242097423777,
+        "minimum": 3613708,
+        "maximum": 3818000
+      },
+      "work": 2129920,
+      "allocationUnits": 1280,
+      "retainedBytes": 40960,
+      "heapDeltaBytes": 1179912,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:256-2-32",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 180430.5,
+        "p95": 183237.072727,
+        "relativeMAD": 0.0156471731371,
+        "minimum": 174902.75,
+        "maximum": 183253.727273
+      },
+      "work": 20480,
+      "allocationUnits": 800,
+      "retainedBytes": 12288,
+      "heapDeltaBytes": 569344,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:256-2-512",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 376291.666667,
+        "p95": 398088.066667,
+        "relativeMAD": 0.0147456538588,
+        "minimum": 369750,
+        "maximum": 402150
+      },
+      "work": 266240,
+      "allocationUnits": 1280,
+      "retainedBytes": 12288,
+      "heapDeltaBytes": 907392,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:4096-16-32",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 8721083,
+        "p95": 8895549.6,
+        "relativeMAD": 0.00301946444029,
+        "minimum": 8682459,
+        "maximum": 8932583
+      },
+      "work": 2883584,
+      "allocationUnits": 12320,
+      "retainedBytes": 655360,
+      "heapDeltaBytes": 8490336,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:4096-16-512",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 58559750,
+        "p95": 59019333.4,
+        "relativeMAD": 0.00266252844318,
+        "minimum": 58342667,
+        "maximum": 59095250
+      },
+      "work": 34340864,
+      "allocationUnits": 12800,
+      "retainedBytes": 655360,
+      "heapDeltaBytes": 9145136,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:4096-2-32",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 5230167,
+        "p95": 5292375,
+        "relativeMAD": 0.0044851340312,
+        "minimum": 5205875,
+        "maximum": 5302375
+      },
+      "work": 360448,
+      "allocationUnits": 12320,
+      "retainedBytes": 196608,
+      "heapDeltaBytes": 8436640,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:balanced-kd:4096-2-512",
+      "family": "metric-index",
+      "candidate": "balanced-kd",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 5525667,
+        "p95": 5567550.4,
+        "relativeMAD": 0.000633407695444,
+        "minimum": 5522167,
+        "maximum": 5568167
+      },
+      "work": 4292608,
+      "allocationUnits": 12800,
+      "retainedBytes": 196608,
+      "heapDeltaBytes": 8938576,
+      "sourceBytes": 361
+    },
+    {
+      "id": "metric-index:packed-vector-scan:256-16-32",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 174062.5,
+        "p95": 176856.25,
+        "relativeMAD": 0.000478994613856,
+        "minimum": 173979.125,
+        "maximum": 177421.875
+      },
+      "work": 131072,
+      "allocationUnits": 1,
+      "retainedBytes": 32768,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:256-16-512",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 4201417,
+        "p95": 4222767,
+        "relativeMAD": 0.0035107203117,
+        "minimum": 4168500,
+        "maximum": 4224417
+      },
+      "work": 2097152,
+      "allocationUnits": 1,
+      "retainedBytes": 32768,
+      "heapDeltaBytes": 992856,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:256-2-32",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 19208.3636364,
+        "p95": 24551.5272727,
+        "relativeMAD": 0.0171150719276,
+        "minimum": 18879.6111111,
+        "maximum": 24572
+      },
+      "work": 16384,
+      "allocationUnits": 1,
+      "retainedBytes": 4096,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:256-2-512",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 602427.25,
+        "p95": 608135.4,
+        "relativeMAD": 0.00895709813927,
+        "minimum": 592896,
+        "maximum": 609000
+      },
+      "work": 262144,
+      "allocationUnits": 1,
+      "retainedBytes": 4096,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:4096-16-32",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 4031542,
+        "p95": 4153500,
+        "relativeMAD": 0.00456822724412,
+        "minimum": 3991667,
+        "maximum": 4181375
+      },
+      "work": 2097152,
+      "allocationUnits": 1,
+      "retainedBytes": 524288,
+      "heapDeltaBytes": 816792,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:4096-16-512",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 44932875,
+        "p95": 46321891.6,
+        "relativeMAD": 0.00825304412415,
+        "minimum": 44562042,
+        "maximum": 46526625
+      },
+      "work": 33554432,
+      "allocationUnits": 1,
+      "retainedBytes": 524288,
+      "heapDeltaBytes": 830232,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:4096-2-32",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 843416.5,
+        "p95": 845764.7,
+        "relativeMAD": 0.00171682673979,
+        "minimum": 832937.5,
+        "maximum": 845989.75
+      },
+      "work": 262144,
+      "allocationUnits": 1,
+      "retainedBytes": 65536,
+      "heapDeltaBytes": 2115912,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:packed-vector-scan:4096-2-512",
+      "family": "metric-index",
+      "candidate": "packed-vector-scan",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 9551708,
+        "p95": 9611041.6,
+        "relativeMAD": 0.00437963555835,
+        "minimum": 9458291,
+        "maximum": 9624000
+      },
+      "work": 4194304,
+      "allocationUnits": 1,
+      "retainedBytes": 65536,
+      "heapDeltaBytes": 2095864,
+      "sourceBytes": 432
+    },
+    {
+      "id": "metric-index:spatial-hash:256-16-32",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 179279.714286,
+        "p95": 181935.714286,
+        "relativeMAD": 0.00859949097901,
+        "minimum": 177464.285714,
+        "maximum": 182214.285714
+      },
+      "work": 131328,
+      "allocationUnits": 288,
+      "retainedBytes": 36864,
+      "heapDeltaBytes": 9296,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:256-16-512",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 256,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 4188292,
+        "p95": 4253116.4,
+        "relativeMAD": 0.00894350250657,
+        "minimum": 4147083,
+        "maximum": 4259958
+      },
+      "work": 2097408,
+      "allocationUnits": 288,
+      "retainedBytes": 36864,
+      "heapDeltaBytes": 1006464,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:256-2-32",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 26949.4285714,
+        "p95": 27302.9714286,
+        "relativeMAD": 0.0161227908357,
+        "minimum": 21891.6666667,
+        "maximum": 27383.9285714
+      },
+      "work": 16640,
+      "allocationUnits": 288,
+      "retainedBytes": 8192,
+      "heapDeltaBytes": 9296,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:256-2-512",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 256,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 608208,
+        "p95": 957983.3,
+        "relativeMAD": 0.0148658024889,
+        "minimum": 599166.5,
+        "maximum": 958270.75
+      },
+      "work": 262400,
+      "allocationUnits": 288,
+      "retainedBytes": 8192,
+      "heapDeltaBytes": 9296,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:4096-16-32",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 2832750,
+        "p95": 2893941.4,
+        "relativeMAD": 0.0105904156737,
+        "minimum": 2802750,
+        "maximum": 2900583
+      },
+      "work": 2101248,
+      "allocationUnits": 4128,
+      "retainedBytes": 589824,
+      "heapDeltaBytes": 87712,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:4096-16-512",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 4096,
+        "dimensions": 16,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 43898292,
+        "p95": 43918309,
+        "relativeMAD": 0.000467945313209,
+        "minimum": 43596125,
+        "maximum": 43918834
+      },
+      "work": 33558528,
+      "allocationUnits": 4128,
+      "retainedBytes": 589824,
+      "heapDeltaBytes": 87712,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:4096-2-32",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 32
+      },
+      "timing": {
+        "count": 5,
+        "median": 635111,
+        "p95": 641268.233333,
+        "relativeMAD": 0.00118089593764,
+        "minimum": 634361,
+        "maximum": 641819.666667
+      },
+      "work": 266240,
+      "allocationUnits": 4128,
+      "retainedBytes": 131072,
+      "heapDeltaBytes": 83904,
+      "sourceBytes": 681
+    },
+    {
+      "id": "metric-index:spatial-hash:4096-2-512",
+      "family": "metric-index",
+      "candidate": "spatial-hash",
+      "input": {
+        "count": 4096,
+        "dimensions": 2,
+        "queries": 512
+      },
+      "timing": {
+        "count": 5,
+        "median": 8677000,
+        "p95": 8774391.6,
+        "relativeMAD": 0.00308770312321,
+        "minimum": 8495208,
+        "maximum": 8796500
+      },
+      "work": 4198400,
+      "allocationUnits": 4128,
+      "retainedBytes": 131072,
+      "heapDeltaBytes": 83904,
+      "sourceBytes": 681
+    },
+    {
+      "id": "reorder:rebuild-and-reindex:100000",
+      "family": "reorder",
+      "candidate": "rebuild-and-reindex",
+      "input": {
+        "n": 100000
+      },
+      "timing": {
+        "count": 5,
+        "median": 5210125,
+        "p95": 5608600.4,
+        "relativeMAD": 0.00357477027903,
+        "minimum": 5173542,
+        "maximum": 5703917
+      },
+      "work": 300000,
+      "allocationUnits": 300000,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 15466168,
+      "sourceBytes": 217
+    },
+    {
+      "id": "reorder:retained-index-one-materialization:100000",
+      "family": "reorder",
+      "candidate": "retained-index-one-materialization",
+      "input": {
+        "n": 100000
+      },
+      "timing": {
+        "count": 5,
+        "median": 79887.1666667,
+        "p95": 129396.852036,
+        "relativeMAD": 0.0188661925257,
+        "minimum": 78380,
+        "maximum": 141004.882353
+      },
+      "work": 100000,
+      "allocationUnits": 100000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 800392,
+      "sourceBytes": 122
+    },
+    {
+      "id": "selection-expression:set-plus-vector:4096-32768",
+      "family": "selection-expression",
+      "candidate": "set-plus-vector",
+      "input": {
+        "exceptions": 4096,
+        "lookups": 32768
+      },
+      "timing": {
+        "count": 5,
+        "median": 2660708,
+        "p95": 2687999.4,
+        "relativeMAD": 0.00560640250639,
+        "minimum": 2645791,
+        "maximum": 2690416
+      },
+      "work": 32768,
+      "allocationUnits": 4097,
+      "retainedBytes": 163840,
+      "heapDeltaBytes": 2746008,
+      "sourceBytes": 210
+    },
+    {
+      "id": "selection-expression:set-plus-vector:50000-400000",
+      "family": "selection-expression",
+      "candidate": "set-plus-vector",
+      "input": {
+        "exceptions": 50000,
+        "lookups": 400000
+      },
+      "timing": {
+        "count": 5,
+        "median": 30878667,
+        "p95": 30977417,
+        "relativeMAD": 0.00130348891032,
+        "minimum": 30762375,
+        "maximum": 30992042
+      },
+      "work": 400000,
+      "allocationUnits": 50001,
+      "retainedBytes": 2000000,
+      "heapDeltaBytes": 33067568,
+      "sourceBytes": 210
+    },
+    {
+      "id": "selection-expression:sorted-vector-only:4096-32768",
+      "family": "selection-expression",
+      "candidate": "sorted-vector-only",
+      "input": {
+        "exceptions": 4096,
+        "lookups": 32768
+      },
+      "timing": {
+        "count": 5,
+        "median": 4538333,
+        "p95": 4591533,
+        "relativeMAD": 0.00618795491652,
+        "minimum": 4510250,
+        "maximum": 4592708
+      },
+      "work": 393216,
+      "allocationUnits": 4096,
+      "retainedBytes": 32768,
+      "heapDeltaBytes": 2748856,
+      "sourceBytes": 239
+    },
+    {
+      "id": "selection-expression:sorted-vector-only:50000-400000",
+      "family": "selection-expression",
+      "candidate": "sorted-vector-only",
+      "input": {
+        "exceptions": 50000,
+        "lookups": 400000
+      },
+      "timing": {
+        "count": 5,
+        "median": 70022042,
+        "p95": 70918892.2,
+        "relativeMAD": 0.00335965637792,
+        "minimum": 69786792,
+        "maximum": 71077959
+      },
+      "work": 6243856.189774725,
+      "allocationUnits": 50000,
+      "retainedBytes": 400000,
+      "heapDeltaBytes": 33071432,
+      "sourceBytes": 239
+    },
+    {
+      "id": "selection:dense-bitset:100000-0.001",
+      "family": "selection",
+      "candidate": "dense-bitset",
+      "input": {
+        "n": 100000,
+        "density": 0.001
+      },
+      "timing": {
+        "count": 5,
+        "median": 2212.4813278,
+        "p95": 2830.01433107,
+        "relativeMAD": 0.0768585686761,
+        "minimum": 1991.26637555,
+        "maximum": 2959.15873016
+      },
+      "work": 3225,
+      "allocationUnits": 2,
+      "retainedBytes": 12500,
+      "heapDeltaBytes": 3696,
+      "sourceBytes": 249
+    },
+    {
+      "id": "selection:dense-bitset:100000-0.01",
+      "family": "selection",
+      "candidate": "dense-bitset",
+      "input": {
+        "n": 100000,
+        "density": 0.01
+      },
+      "timing": {
+        "count": 5,
+        "median": 3657.25806452,
+        "p95": 6561.36041667,
+        "relativeMAD": 0.0474090407938,
+        "minimum": 3483.87096774,
+        "maximum": 7112.83333333
+      },
+      "work": 4125,
+      "allocationUnits": 2,
+      "retainedBytes": 12500,
+      "heapDeltaBytes": 3928,
+      "sourceBytes": 249
+    },
+    {
+      "id": "selection:dense-bitset:100000-0.0625",
+      "family": "selection",
+      "candidate": "dense-bitset",
+      "input": {
+        "n": 100000,
+        "density": 0.0625
+      },
+      "timing": {
+        "count": 5,
+        "median": 15388.8333333,
+        "p95": 16910,
+        "relativeMAD": 0.00397474359092,
+        "minimum": 15097.3333333,
+        "maximum": 17275
+      },
+      "work": 9375,
+      "allocationUnits": 2,
+      "retainedBytes": 12500,
+      "heapDeltaBytes": 656,
+      "sourceBytes": 249
+    },
+    {
+      "id": "selection:dense-bitset:100000-0.5",
+      "family": "selection",
+      "candidate": "dense-bitset",
+      "input": {
+        "n": 100000,
+        "density": 0.5
+      },
+      "timing": {
+        "count": 5,
+        "median": 101850,
+        "p95": 102546.68,
+        "relativeMAD": 0.00736377025042,
+        "minimum": 99700,
+        "maximum": 102600
+      },
+      "work": 53125,
+      "allocationUnits": 2,
+      "retainedBytes": 12500,
+      "heapDeltaBytes": 656,
+      "sourceBytes": 249
+    },
+    {
+      "id": "selection:persistent-hash-set:100000-0.001",
+      "family": "selection",
+      "candidate": "persistent-hash-set",
+      "input": {
+        "n": 100000,
+        "density": 0.001
+      },
+      "timing": {
+        "count": 5,
+        "median": 1619.38476562,
+        "p95": 1631.03789063,
+        "relativeMAD": 0.00778893411729,
+        "minimum": 1571.859375,
+        "maximum": 1631.99804687
+      },
+      "work": 100,
+      "allocationUnits": 101,
+      "retainedBytes": 3200,
+      "heapDeltaBytes": 8488,
+      "sourceBytes": 139
+    },
+    {
+      "id": "selection:persistent-hash-set:100000-0.01",
+      "family": "selection",
+      "candidate": "persistent-hash-set",
+      "input": {
+        "n": 100000,
+        "density": 0.01
+      },
+      "timing": {
+        "count": 5,
+        "median": 18754.5731707,
+        "p95": 20116.9117647,
+        "relativeMAD": 0.0290225601999,
+        "minimum": 18210.2674419,
+        "maximum": 20228.125
+      },
+      "work": 1000,
+      "allocationUnits": 1001,
+      "retainedBytes": 32000,
+      "heapDeltaBytes": 44576,
+      "sourceBytes": 139
+    },
+    {
+      "id": "selection:persistent-hash-set:100000-0.0625",
+      "family": "selection",
+      "candidate": "persistent-hash-set",
+      "input": {
+        "n": 100000,
+        "density": 0.0625
+      },
+      "timing": {
+        "count": 5,
+        "median": 176359.818182,
+        "p95": 177291.672727,
+        "relativeMAD": 0.00646508841944,
+        "minimum": 172680.583333,
+        "maximum": 177500
+      },
+      "work": 6250,
+      "allocationUnits": 6251,
+      "retainedBytes": 200000,
+      "heapDeltaBytes": 328248,
+      "sourceBytes": 139
+    },
+    {
+      "id": "selection:persistent-hash-set:100000-0.5",
+      "family": "selection",
+      "candidate": "persistent-hash-set",
+      "input": {
+        "n": 100000,
+        "density": 0.5
+      },
+      "timing": {
+        "count": 5,
+        "median": 1720687.5,
+        "p95": 1765612.4,
+        "relativeMAD": 0.0155219933893,
+        "minimum": 1682396,
+        "maximum": 1770166.5
+      },
+      "work": 50000,
+      "allocationUnits": 50001,
+      "retainedBytes": 1600000,
+      "heapDeltaBytes": 2622128,
+      "sourceBytes": 139
+    },
+    {
+      "id": "selection:sorted-sparse-vector:100000-0.001",
+      "family": "selection",
+      "candidate": "sorted-sparse-vector",
+      "input": {
+        "n": 100000,
+        "density": 0.001
+      },
+      "timing": {
+        "count": 5,
+        "median": 288.25,
+        "p95": 324.480078125,
+        "relativeMAD": 0.0287903837815,
+        "minimum": 276.44921875,
+        "maximum": 331.462890625
+      },
+      "work": 100,
+      "allocationUnits": 101,
+      "retainedBytes": 800,
+      "heapDeltaBytes": 5528,
+      "sourceBytes": 232
+    },
+    {
+      "id": "selection:sorted-sparse-vector:100000-0.01",
+      "family": "selection",
+      "candidate": "sorted-sparse-vector",
+      "input": {
+        "n": 100000,
+        "density": 0.01
+      },
+      "timing": {
+        "count": 5,
+        "median": 1613.28125,
+        "p95": 1643.40820312,
+        "relativeMAD": 0.0128631961259,
+        "minimum": 1523.4375,
+        "maximum": 1645.75195312
+      },
+      "work": 1000,
+      "allocationUnits": 1001,
+      "retainedBytes": 8000,
+      "heapDeltaBytes": 23528,
+      "sourceBytes": 232
+    },
+    {
+      "id": "selection:sorted-sparse-vector:100000-0.0625",
+      "family": "selection",
+      "candidate": "sorted-sparse-vector",
+      "input": {
+        "n": 100000,
+        "density": 0.0625
+      },
+      "timing": {
+        "count": 5,
+        "median": 7519.87908497,
+        "p95": 7552.87540537,
+        "relativeMAD": 0.00101033911953,
+        "minimum": 7456.55263158,
+        "maximum": 7559.34343434
+      },
+      "work": 6250,
+      "allocationUnits": 6251,
+      "retainedBytes": 50000,
+      "heapDeltaBytes": 125488,
+      "sourceBytes": 232
+    },
+    {
+      "id": "selection:sorted-sparse-vector:100000-0.5",
+      "family": "selection",
+      "candidate": "sorted-sparse-vector",
+      "input": {
+        "n": 100000,
+        "density": 0.5
+      },
+      "timing": {
+        "count": 5,
+        "median": 129842.105263,
+        "p95": 137755.205229,
+        "relativeMAD": 0.0212369499617,
+        "minimum": 126645.8,
+        "maximum": 139044.117647
+      },
+      "work": 50000,
+      "allocationUnits": 50001,
+      "retainedBytes": 400000,
+      "heapDeltaBytes": 1000488,
+      "sourceBytes": 232
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-1-256",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 1306.60377359,
+        "p95": 1318.018,
+        "relativeMAD": 0.00706888086651,
+        "minimum": 1252,
+        "maximum": 1318.5625
+      },
+      "work": 257,
+      "allocationUnits": 2,
+      "retainedBytes": 800016,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-1-4",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 33.935546875,
+        "p95": 34.862890625,
+        "relativeMAD": 0.00477697841666,
+        "minimum": 33.69140625,
+        "maximum": 35.07421875
+      },
+      "work": 5,
+      "allocationUnits": 2,
+      "retainedBytes": 800016,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-32-256",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 10275.6153846,
+        "p95": 10353.1538462,
+        "relativeMAD": 0.00810731904505,
+        "minimum": 9974.38461538,
+        "maximum": 10358.9230769
+      },
+      "work": 8224,
+      "allocationUnits": 64,
+      "retainedBytes": 800512,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-32-4",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 175.130859375,
+        "p95": 178.645703125,
+        "relativeMAD": 0.00185129423351,
+        "minimum": 169.43359375,
+        "maximum": 179.443359375
+      },
+      "work": 160,
+      "allocationUnits": 64,
+      "retainedBytes": 800512,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-64-256",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 19881,
+        "p95": 21198.5,
+        "relativeMAD": 0.0119784144238,
+        "minimum": 19642.8571428,
+        "maximum": 21256.8333333
+      },
+      "work": 16448,
+      "allocationUnits": 128,
+      "retainedBytes": 801024,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-64-4",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 328.810623557,
+        "p95": 334.117591333,
+        "relativeMAD": 0.0062487114109,
+        "minimum": 322.550588235,
+        "maximum": 335.43020595
+      },
+      "work": 320,
+      "allocationUnits": 128,
+      "retainedBytes": 801024,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-8-256",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 3139.64864865,
+        "p95": 3440.75675676,
+        "relativeMAD": 0.00367036249578,
+        "minimum": 3116.675,
+        "maximum": 3515.75675676
+      },
+      "work": 2056,
+      "allocationUnits": 16,
+      "retainedBytes": 800128,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:adaptive-flat-overlay:100000-8-4",
+      "family": "sequence",
+      "candidate": "adaptive-flat-overlay",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 885.3359375,
+        "p95": 894.351953125,
+        "relativeMAD": 0.0113966273396,
+        "minimum": 835.3671875,
+        "maximum": 895.42578125
+      },
+      "work": 40,
+      "allocationUnits": 16,
+      "retainedBytes": 800128,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 344
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-1-256",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 1276.12711864,
+        "p95": 1315.32827233,
+        "relativeMAD": 0.0119049339716,
+        "minimum": 1245.14166667,
+        "maximum": 1321.33050847
+      },
+      "work": 903,
+      "allocationUnits": 647,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 8000,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-1-4",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 399.251953125,
+        "p95": 483.1375,
+        "relativeMAD": 0.0177382507326,
+        "minimum": 392.169921875,
+        "maximum": 485.513671875
+      },
+      "work": 651,
+      "allocationUnits": 647,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 8000,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-32-256",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 10142.3076923,
+        "p95": 10460.5269346,
+        "relativeMAD": 0.0142236679939,
+        "minimum": 9571.15384615,
+        "maximum": 10504.3432836
+      },
+      "work": 8839,
+      "allocationUnits": 8583,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 137944,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-32-4",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 14257.2575758,
+        "p95": 14379.2662471,
+        "relativeMAD": 0.00929897545536,
+        "minimum": 14089.6946565,
+        "maximum": 14392.9924242
+      },
+      "work": 8587,
+      "allocationUnits": 8583,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 144528,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-64-256",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 18227.8510638,
+        "p95": 37457.75,
+        "relativeMAD": 0.00847502528259,
+        "minimum": 18015.7333333,
+        "maximum": 42242.4090909
+      },
+      "work": 17031,
+      "allocationUnits": 16775,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 272512,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-64-4",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 29592.3913043,
+        "p95": 31184.1941176,
+        "relativeMAD": 0.0191008487075,
+        "minimum": 29027.1515152,
+        "maximum": 31417.8970588
+      },
+      "work": 16779,
+      "allocationUnits": 16775,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 276640,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-8-256",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 2772.47058824,
+        "p95": 2857.42368171,
+        "relativeMAD": 0.0299913731237,
+        "minimum": 2620.91176471,
+        "maximum": 2872.54901961
+      },
+      "work": 2695,
+      "allocationUnits": 2439,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 37064,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:chunked-piece-table:100000-8-4",
+      "family": "sequence",
+      "candidate": "chunked-piece-table",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 3918.22958057,
+        "p95": 5539.28980098,
+        "relativeMAD": 0.00207910749571,
+        "minimum": 3878,
+        "maximum": 5943.89356436
+      },
+      "work": 2443,
+      "allocationUnits": 2439,
+      "retainedBytes": 803128,
+      "heapDeltaBytes": 37064,
+      "sourceBytes": 440
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-1-256",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 193113.636364,
+        "p95": 203176.268182,
+        "relativeMAD": 0.0161772782551,
+        "minimum": 189989.583333,
+        "maximum": 204727.272727
+      },
+      "work": 100256,
+      "allocationUnits": 100000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 1600576,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-1-4",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 1,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 194020.833333,
+        "p95": 196351.527273,
+        "relativeMAD": 0.0144374530227,
+        "minimum": 188656.25,
+        "maximum": 196822
+      },
+      "work": 100004,
+      "allocationUnits": 100000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 1600736,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-32-256",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 2338167,
+        "p95": 2351216.4,
+        "relativeMAD": 0.00516772326355,
+        "minimum": 2312834,
+        "maximum": 2351458
+      },
+      "work": 3200256,
+      "allocationUnits": 3200000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 26416488,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-32-4",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 32,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 2520875,
+        "p95": 2565683,
+        "relativeMAD": 0.0119831407745,
+        "minimum": 2402750,
+        "maximum": 2569333
+      },
+      "work": 3200004,
+      "allocationUnits": 3200000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 11203384,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-64-256",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 4847584,
+        "p95": 5182133,
+        "relativeMAD": 0.0155836391901,
+        "minimum": 4766791,
+        "maximum": 5264958
+      },
+      "work": 6400256,
+      "allocationUnits": 6400000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 20014176,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-64-4",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 64,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 4817834,
+        "p95": 4862058.2,
+        "relativeMAD": 0.0089511178675,
+        "minimum": 4705917,
+        "maximum": 4862333
+      },
+      "work": 6400004,
+      "allocationUnits": 6400000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 20006112,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-8-256",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 256
+      },
+      "timing": {
+        "count": 5,
+        "median": 684083.5,
+        "p95": 705216.9,
+        "relativeMAD": 0.0188208018466,
+        "minimum": 671208.5,
+        "maximum": 705729.5
+      },
+      "work": 800256,
+      "allocationUnits": 800000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 7210536,
+      "sourceBytes": 254
+    },
+    {
+      "id": "sequence:flat-rebuild:100000-8-4",
+      "family": "sequence",
+      "candidate": "flat-rebuild",
+      "input": {
+        "n": 100000,
+        "depth": 8,
+        "reads": 4
+      },
+      "timing": {
+        "count": 5,
+        "median": 757347.333333,
+        "p95": 783358.2,
+        "relativeMAD": 0.0105997160264,
+        "minimum": 737277.666667,
+        "maximum": 787854
+      },
+      "work": 800004,
+      "allocationUnits": 800000,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 7202248,
+      "sourceBytes": 254
+    },
+    {
+      "id": "tabular-cache:multi-entry-lru:20000-8",
+      "family": "tabular-cache",
+      "candidate": "multi-entry-lru",
+      "input": {
+        "records": 20000,
+        "reads": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 1850375,
+        "p95": 1955420.8,
+        "relativeMAD": 0.0165058434101,
+        "minimum": 1819833,
+        "maximum": 1961500
+      },
+      "work": 571516.495181978,
+      "allocationUnits": 40000,
+      "retainedBytes": 320000,
+      "heapDeltaBytes": 777112,
+      "sourceBytes": 260
+    },
+    {
+      "id": "tabular-cache:multi-entry-lru:20000-8-8",
+      "family": "tabular-cache",
+      "candidate": "multi-entry-lru",
+      "input": {
+        "records": 20000,
+        "reads": 8,
+        "generations": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 7046458,
+        "p95": 7063641.4,
+        "relativeMAD": 0.00290926306529,
+        "minimum": 6990125,
+        "maximum": 7066958
+      },
+      "work": 2286033.980727912,
+      "allocationUnits": 160000,
+      "retainedBytes": 1280000,
+      "heapDeltaBytes": 3136264,
+      "sourceBytes": 240
+    },
+    {
+      "id": "tabular-cache:repeat-resolution:20000-8",
+      "family": "tabular-cache",
+      "candidate": "repeat-resolution",
+      "input": {
+        "records": 20000,
+        "reads": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 7053583,
+        "p95": 7177649.4,
+        "relativeMAD": 0.00408189710123,
+        "minimum": 7024791,
+        "maximum": 7193041
+      },
+      "work": 2286033.980727912,
+      "allocationUnits": 160000,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 3136264,
+      "sourceBytes": 113
+    },
+    {
+      "id": "tabular-cache:repeat-resolution:20000-8-8",
+      "family": "tabular-cache",
+      "candidate": "repeat-resolution",
+      "input": {
+        "records": 20000,
+        "reads": 8,
+        "generations": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 7021709,
+        "p95": 7381450,
+        "relativeMAD": 0.0106100950638,
+        "minimum": 6947208,
+        "maximum": 7395625
+      },
+      "work": 2286033.980727912,
+      "allocationUnits": 160000,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 3136264,
+      "sourceBytes": 141
+    },
+    {
+      "id": "tabular-cache:single-current:20000-8",
+      "family": "tabular-cache",
+      "candidate": "single-current",
+      "input": {
+        "records": 20000,
+        "reads": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 951902.666667,
+        "p95": 1033758.33333,
+        "relativeMAD": 0.0154077377659,
+        "minimum": 937236,
+        "maximum": 1046125
+      },
+      "work": 285762.247590989,
+      "allocationUnits": 20000,
+      "retainedBytes": 160000,
+      "heapDeltaBytes": 380720,
+      "sourceBytes": 138
+    },
+    {
+      "id": "tabular-cache:single-current:20000-8-8",
+      "family": "tabular-cache",
+      "candidate": "single-current",
+      "input": {
+        "records": 20000,
+        "reads": 8,
+        "generations": 8
+      },
+      "timing": {
+        "count": 5,
+        "median": 7052875,
+        "p95": 7083483,
+        "relativeMAD": 0.000454849972412,
+        "minimum": 6979583,
+        "maximum": 7090333
+      },
+      "work": 2286033.980727912,
+      "allocationUnits": 160000,
+      "retainedBytes": 160000,
+      "heapDeltaBytes": 3136264,
+      "sourceBytes": 177
+    },
+    {
+      "id": "text:full-utf16-scan:100000",
+      "family": "text",
+      "candidate": "full-utf16-scan",
+      "input": {
+        "codeUnits": 100000
+      },
+      "timing": {
+        "count": 5,
+        "median": 237802,
+        "p95": 243558.35,
+        "relativeMAD": 0.0153741347843,
+        "minimum": 233760.5,
+        "maximum": 244812.5
+      },
+      "work": 100000,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 236
+    },
+    {
+      "id": "text:local-boundary-proof:100000",
+      "family": "text",
+      "candidate": "local-boundary-proof",
+      "input": {
+        "codeUnits": 100000
+      },
+      "timing": {
+        "count": 5,
+        "median": 17.7402343748,
+        "p95": 18.0175781249,
+        "relativeMAD": 0.00462402291332,
+        "minimum": 17.251953125,
+        "maximum": 18.0664062499
+      },
+      "work": 2,
+      "allocationUnits": 0,
+      "retainedBytes": 0,
+      "heapDeltaBytes": 256,
+      "sourceBytes": 55
+    },
+    {
+      "id": "tree:lazy-euler-cache:20000-64-balanced",
+      "family": "tree",
+      "candidate": "lazy-euler-cache",
+      "input": {
+        "n": 20000,
+        "reads": 64,
+        "shape": "balanced"
+      },
+      "timing": {
+        "count": 5,
+        "median": 13621.7948718,
+        "p95": 13756.4179487,
+        "relativeMAD": 0.0058051764707,
+        "minimum": 13493.5897436,
+        "maximum": 13779.8974359
+      },
+      "work": 20064,
+      "allocationUnits": 1,
+      "retainedBytes": 160000,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 260
+    },
+    {
+      "id": "tree:lazy-euler-cache:20000-64-chain",
+      "family": "tree",
+      "candidate": "lazy-euler-cache",
+      "input": {
+        "n": 20000,
+        "reads": 64,
+        "shape": "chain"
+      },
+      "timing": {
+        "count": 5,
+        "median": 13456.2051282,
+        "p95": 14004.0717949,
+        "relativeMAD": 0.00222183265013,
+        "minimum": 13357.7317073,
+        "maximum": 14133.5641026
+      },
+      "work": 20064,
+      "allocationUnits": 1,
+      "retainedBytes": 160000,
+      "heapDeltaBytes": 456,
+      "sourceBytes": 260
+    },
+    {
+      "id": "tree:repeated-dfs:20000-64-balanced",
+      "family": "tree",
+      "candidate": "repeated-dfs",
+      "input": {
+        "n": 20000,
+        "reads": 64,
+        "shape": "balanced"
+      },
+      "timing": {
+        "count": 5,
+        "median": 1306937.5,
+        "p95": 1428983.6,
+        "relativeMAD": 0.0126888240639,
+        "minimum": 1290354,
+        "maximum": 1453167
+      },
+      "work": 1280000,
+      "allocationUnits": 1280000,
+      "retainedBytes": 80000,
+      "heapDeltaBytes": 22240,
+      "sourceBytes": 263
+    },
+    {
+      "id": "tree:repeated-dfs:20000-64-chain",
+      "family": "tree",
+      "candidate": "repeated-dfs",
+      "input": {
+        "n": 20000,
+        "reads": 64,
+        "shape": "chain"
+      },
+      "timing": {
+        "count": 5,
+        "median": 1140653,
+        "p95": 1193650,
+        "relativeMAD": 0.00476072331665,
+        "minimum": 1131416.66667,
+        "maximum": 1205541.66667
+      },
+      "work": 1280000,
+      "allocationUnits": 1280000,
+      "retainedBytes": 80000,
+      "heapDeltaBytes": 22240,
+      "sourceBytes": 263
+    },
+    {
+      "id": "virtual-spatial:blocked-path-copy:100000-1-64",
+      "family": "virtual-spatial",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 715.367965366,
+        "p95": 761.527109371,
+        "relativeMAD": 0.0177760968198,
+        "minimum": 702.651515152,
+        "maximum": 767.947103274
+      },
+      "work": 129,
+      "allocationUnits": 2,
+      "retainedBytes": 800520,
+      "heapDeltaBytes": 640,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-spatial:blocked-path-copy:100000-12500-64",
+      "family": "virtual-spatial",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 565958.333333,
+        "p95": 571005.333333,
+        "relativeMAD": 0.00966855628382,
+        "minimum": 550166.666667,
+        "maximum": 571430.333333
+      },
+      "work": 112596,
+      "allocationUnits": 3126,
+      "retainedBytes": 1612760,
+      "heapDeltaBytes": 427912,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-spatial:blocked-path-copy:100000-64-64",
+      "family": "virtual-spatial",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 14680.247191,
+        "p95": 15349.5124629,
+        "relativeMAD": 0.00462442079931,
+        "minimum": 14612.3595506,
+        "maximum": 15417.1348315
+      },
+      "work": 4224,
+      "allocationUnits": 128,
+      "retainedBytes": 833280,
+      "heapDeltaBytes": 16760,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-spatial:blocked-path-copy:100000-8-64",
+      "family": "virtual-spatial",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 2280.24080268,
+        "p95": 5053.69732427,
+        "relativeMAD": 0.00421869578725,
+        "minimum": 2057.7006579,
+        "maximum": 5745.51569507
+      },
+      "work": 584,
+      "allocationUnits": 16,
+      "retainedBytes": 804160,
+      "heapDeltaBytes": 2304,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-spatial:packed-full-rebuild:100000-1-64",
+      "family": "virtual-spatial",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 376150,
+        "p95": 403078.32,
+        "relativeMAD": 0.0131596437589,
+        "minimum": 371200,
+        "maximum": 407650
+      },
+      "work": 100065,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-spatial:packed-full-rebuild:100000-12500-64",
+      "family": "virtual-spatial",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 403766.6,
+        "p95": 408509.96,
+        "relativeMAD": 0.00645967249404,
+        "minimum": 400950,
+        "maximum": 409166.6
+      },
+      "work": 112564,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-spatial:packed-full-rebuild:100000-64-64",
+      "family": "virtual-spatial",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 374275,
+        "p95": 383569.4,
+        "relativeMAD": 0.00694676374368,
+        "minimum": 370641.6,
+        "maximum": 385243
+      },
+      "work": 100128,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-spatial:packed-full-rebuild:100000-8-64",
+      "family": "virtual-spatial",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 373700,
+        "p95": 388979.92,
+        "relativeMAD": 0.00909820711743,
+        "minimum": 369250,
+        "maximum": 392433.2
+      },
+      "work": 100072,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-spatial:per-item-persistent-tree:100000-1-64",
+      "family": "virtual-spatial",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 575687.5,
+        "p95": 609854.3,
+        "relativeMAD": 0.00412550211708,
+        "minimum": 571187.5,
+        "maximum": 617802.25
+      },
+      "work": 11079.626630838393,
+      "allocationUnits": 10016.609640474437,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1041056,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-spatial:per-item-persistent-tree:100000-12500-64",
+      "family": "virtual-spatial",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 2247292,
+        "p95": 2324374.6,
+        "relativeMAD": 0.0221373101492,
+        "minimum": 2100917,
+        "maximum": 2331208
+      },
+      "work": 218683.5229208241,
+      "allocationUnits": 217620.50593046015,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 2763168,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-spatial:per-item-persistent-tree:100000-64-64",
+      "family": "virtual-spatial",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 575291.75,
+        "p95": 585070.85,
+        "relativeMAD": 0.00686260493091,
+        "minimum": 571343.75,
+        "maximum": 585156.25
+      },
+      "work": 12126.033980727912,
+      "allocationUnits": 11063.016990363956,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1046456,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-spatial:per-item-persistent-tree:100000-8-64",
+      "family": "virtual-spatial",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 575135.25,
+        "p95": 579624.9,
+        "relativeMAD": 0.0038221444434,
+        "minimum": 571656.25,
+        "maximum": 580197.75
+      },
+      "work": 11195.894114159451,
+      "allocationUnits": 10132.877123795495,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1040760,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-track:blocked-path-copy:100000-1-64",
+      "family": "virtual-track",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 532.082500001,
+        "p95": 665.755115545,
+        "relativeMAD": 0.0335775550065,
+        "minimum": 514.216470589,
+        "maximum": 669.215425532
+      },
+      "work": 129,
+      "allocationUnits": 2,
+      "retainedBytes": 800520,
+      "heapDeltaBytes": 640,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-track:blocked-path-copy:100000-12500-64",
+      "family": "virtual-track",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 559458.333333,
+        "p95": 568356.3,
+        "relativeMAD": 0.0062745214865,
+        "minimum": 551500,
+        "maximum": 569948
+      },
+      "work": 112596,
+      "allocationUnits": 3126,
+      "retainedBytes": 1612760,
+      "heapDeltaBytes": 427912,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-track:blocked-path-copy:100000-64-64",
+      "family": "virtual-track",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 14849.137931,
+        "p95": 14966.9148366,
+        "relativeMAD": 0.00905642112848,
+        "minimum": 14611.4625,
+        "maximum": 14983.6179775
+      },
+      "work": 4224,
+      "allocationUnits": 128,
+      "retainedBytes": 833280,
+      "heapDeltaBytes": 16760,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-track:blocked-path-copy:100000-8-64",
+      "family": "virtual-track",
+      "candidate": "blocked-path-copy",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 2278.26237624,
+        "p95": 2360.60139533,
+        "relativeMAD": 0.0393340435055,
+        "minimum": 2094.02173913,
+        "maximum": 2367.87564767
+      },
+      "work": 584,
+      "allocationUnits": 16,
+      "retainedBytes": 804160,
+      "heapDeltaBytes": 2304,
+      "sourceBytes": 470
+    },
+    {
+      "id": "virtual-track:packed-full-rebuild:100000-1-64",
+      "family": "virtual-track",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 374166.666667,
+        "p95": 400758.12,
+        "relativeMAD": 0.011191536748,
+        "minimum": 368618.166667,
+        "maximum": 407008.4
+      },
+      "work": 100065,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-track:packed-full-rebuild:100000-12500-64",
+      "family": "virtual-track",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 406433.4,
+        "p95": 412673.32,
+        "relativeMAD": 0.00930878220162,
+        "minimum": 401400,
+        "maximum": 414075
+      },
+      "work": 112564,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-track:packed-full-rebuild:100000-64-64",
+      "family": "virtual-track",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 374645.833333,
+        "p95": 378652.253333,
+        "relativeMAD": 0.00608370127347,
+        "minimum": 370958.333333,
+        "maximum": 379423.666667
+      },
+      "work": 100128,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-track:packed-full-rebuild:100000-8-64",
+      "family": "virtual-track",
+      "candidate": "packed-full-rebuild",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 370408.4,
+        "p95": 397603.36,
+        "relativeMAD": 0.00196512822049,
+        "minimum": 369680.5,
+        "maximum": 402883.4
+      },
+      "work": 100072,
+      "allocationUnits": 1,
+      "retainedBytes": 800000,
+      "heapDeltaBytes": 472,
+      "sourceBytes": 323
+    },
+    {
+      "id": "virtual-track:per-item-persistent-tree:100000-1-64",
+      "family": "virtual-track",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 1,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 574614.75,
+        "p95": 612114.5,
+        "relativeMAD": 0.0208949561421,
+        "minimum": 562608.2,
+        "maximum": 613927
+      },
+      "work": 11079.626630838393,
+      "allocationUnits": 10016.609640474437,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1043184,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-track:per-item-persistent-tree:100000-12500-64",
+      "family": "virtual-track",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 12500,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 2123125,
+        "p95": 2226337.2,
+        "relativeMAD": 0.00411139240491,
+        "minimum": 2114396,
+        "maximum": 2248708
+      },
+      "work": 218683.5229208241,
+      "allocationUnits": 217620.50593046015,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 2768592,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-track:per-item-persistent-tree:100000-64-64",
+      "family": "virtual-track",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 64,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 580885.5,
+        "p95": 586708.3,
+        "relativeMAD": 0.00995204734852,
+        "minimum": 569697.75,
+        "maximum": 586718.75
+      },
+      "work": 12126.033980727912,
+      "allocationUnits": 11063.016990363956,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1047320,
+      "sourceBytes": 409
+    },
+    {
+      "id": "virtual-track:per-item-persistent-tree:100000-8-64",
+      "family": "virtual-track",
+      "candidate": "per-item-persistent-tree",
+      "input": {
+        "n": 100000,
+        "changed": 8,
+        "queries": 64
+      },
+      "timing": {
+        "count": 5,
+        "median": 573645.75,
+        "p95": 591034.92,
+        "relativeMAD": 0.00346816829034,
+        "minimum": 571645.75,
+        "maximum": 595333.25
+      },
+      "work": 11195.894114159451,
+      "allocationUnits": 10132.877123795495,
+      "retainedBytes": 4000000,
+      "heapDeltaBytes": 1041144,
+      "sourceBytes": 409
+    }
+  ]
+}

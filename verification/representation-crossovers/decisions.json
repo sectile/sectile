@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 1,
+  "workItem": "WI-018",
+  "fingerprint": "fnv1a32:026bf15a",
+  "decisions": [
+    {
+      "id": "sequence",
+      "selected": "adaptive-flat-overlay",
+      "candidates": [
+        "flat-rebuild",
+        "adaptive-flat-overlay",
+        "chunked-piece-table"
+      ],
+      "rule": "Keep a flat indexed base plus at most 32 overlay patches; compact when depth exceeds 32, cumulative changed cardinality exceeds n/8, or projected overlay reads exceed one materialization.",
+      "rationale": "The overlay removes full-copy mutation cost while bounded compaction prevents depth degradation; chunk objects lose on retained bytes and cold construction at the supported ceiling.",
+      "rejected": [
+        {
+          "candidate": "flat-rebuild",
+          "reason": "Copies the complete domain for every bounded patch."
+        },
+        {
+          "candidate": "chunked-piece-table",
+          "reason": "Adds block indirection and retained objects without an end-to-end win before the bounded overlay compacts."
+        }
+      ],
+      "evidence": [
+        "sequence:flat-rebuild:100000-32-4",
+        "sequence:flat-rebuild:100000-32-256",
+        "sequence:adaptive-flat-overlay:100000-32-4",
+        "sequence:adaptive-flat-overlay:100000-32-256",
+        "sequence:chunked-piece-table:100000-32-4",
+        "sequence:chunked-piece-table:100000-32-256"
+      ]
+    },
+    {
+      "id": "selection",
+      "selected": "sorted-sparse-vector",
+      "candidates": [
+        "sorted-sparse-vector",
+        "dense-bitset",
+        "persistent-hash-set"
+      ],
+      "rule": "Store selected domain indexes in one sorted vector; do not retain a dense fallback until a consumer workload proves that conversion plus deterministic materialization beats the vector above 1/16 density.",
+      "rationale": "Sparse selection is the bounded hot path, the vector has deterministic order and lowest retained footprint, and dense public snapshots still require output-proportional ID materialization.",
+      "rejected": [
+        {
+          "candidate": "dense-bitset",
+          "reason": "Dense toggles are fast but every immutable write copies the universe-sized bitset and deterministic ID output still scans the universe."
+        },
+        {
+          "candidate": "persistent-hash-set",
+          "reason": "Per-entry object and hashing overhead exceeds the sorted vector on supported sparse workloads."
+        }
+      ],
+      "evidence": [
+        "selection:sorted-sparse-vector:100000-0.01",
+        "selection:sorted-sparse-vector:100000-0.5",
+        "selection:dense-bitset:100000-0.01",
+        "selection:dense-bitset:100000-0.5",
+        "selection:persistent-hash-set:100000-0.01",
+        "selection:persistent-hash-set:100000-0.5"
+      ]
+    },
+    {
+      "id": "grid",
+      "selected": "dense-flat",
+      "candidates": [
+        "dense-flat",
+        "csr-csc"
+      ],
+      "rule": "Retain dense row-major storage and one ID-position map through the current one-million-cell ceiling; reconsider CSR/CSC only for a new workload below 5% occupancy with repeated row/column reads.",
+      "rationale": "Dense addressing is constant-time, allocation-light, and wins representative construction plus mixed reads; compressed sparse storage saves empty-cell bytes but adds arrays, sorting, and binary searches.",
+      "rejected": [
+        {
+          "candidate": "csr-csc",
+          "reason": "No measured CPU/allocation crossover at or above the supported 5% occupancy boundary."
+        }
+      ],
+      "evidence": [
+        "grid:dense-flat:99856-0.05",
+        "grid:dense-flat:99856-0.5",
+        "grid:csr-csc:99856-0.05",
+        "grid:csr-csc:99856-0.5"
+      ]
+    },
+    {
+      "id": "tree",
+      "selected": "lazy-euler-cache",
+      "candidates": [
+        "repeated-dfs",
+        "lazy-euler-cache"
+      ],
+      "rule": "Build immutable preorder, postorder, child views, and Euler subtree intervals lazily once per Tree owner, then reuse them by owner identity.",
+      "rationale": "The first output remains linear, repeated traversal becomes constant-time access, and lazy ownership avoids paying retained space when a view is never observed.",
+      "rejected": [
+        {
+          "candidate": "repeated-dfs",
+          "reason": "Repeats full-domain traversal and allocation for unchanged immutable input."
+        }
+      ],
+      "evidence": [
+        "tree:repeated-dfs:20000-64-balanced",
+        "tree:repeated-dfs:20000-64-chain",
+        "tree:lazy-euler-cache:20000-64-balanced",
+        "tree:lazy-euler-cache:20000-64-chain"
+      ]
+    },
+    {
+      "id": "text",
+      "selected": "local-boundary-proof",
+      "candidates": [
+        "full-utf16-scan",
+        "local-boundary-proof"
+      ],
+      "rule": "For a canonical well-formed source, validate the replacement and the two adjacent UTF-16 boundaries only; externally supplied text still receives a full scan.",
+      "rationale": "Unchanged canonical code units are already proven, so rescanning them adds linear work without increasing safety; boundary checks cover surrogate splitting.",
+      "rejected": [
+        {
+          "candidate": "full-utf16-scan",
+          "reason": "Redundantly scans the unchanged canonical prefix and suffix."
+        }
+      ],
+      "evidence": [
+        "text:full-utf16-scan:100000",
+        "text:local-boundary-proof:100000"
+      ]
+    },
+    {
+      "id": "reorder",
+      "selected": "retained-index-one-materialization",
+      "candidates": [
+        "rebuild-and-reindex",
+        "retained-index-one-materialization"
+      ],
+      "rule": "Resolve source/destination through the retained canonical index and perform exactly one unavoidable output materialization; never reconstruct the same index in the transition.",
+      "rationale": "Reorder output is necessarily linear for an immutable flat snapshot, but lookup and duplicate index construction are avoidable and materially increase allocation.",
+      "rejected": [
+        {
+          "candidate": "rebuild-and-reindex",
+          "reason": "Performs redundant linear lookup and a second full index allocation."
+        }
+      ],
+      "evidence": [
+        "reorder:rebuild-and-reindex:100000",
+        "reorder:retained-index-one-materialization:100000"
+      ]
+    },
+    {
+      "id": "exact-ratio",
+      "selected": "euclidean-reduce",
+      "candidates": [
+        "euclidean-reduce",
+        "memoized-gcd-and-powers"
+      ],
+      "rule": "Reduce once with Euclidean GCD under explicit operand/result bit ceilings; cache only the fixed powers of ten 0..18 and never memoize arbitrary operand pairs.",
+      "rationale": "Arbitrary rational operands have negligible reuse, while a memo retains attacker-shaped BigInt/string keys; the fixed power table is bounded and serves decimal mapping.",
+      "rejected": [
+        {
+          "candidate": "memoized-gcd-and-powers",
+          "reason": "Unbounded operand-key retention and serialization erase any low-reuse arithmetic gain."
+        }
+      ],
+      "evidence": [
+        "exact-ratio:euclidean-reduce:2048",
+        "exact-ratio:memoized-gcd-and-powers:2048"
+      ]
+    },
+    {
+      "id": "index-span-set",
+      "selected": "flat-normalized-vector",
+      "candidates": [
+        "flat-normalized-vector",
+        "interval-tree"
+      ],
+      "rule": "Store sorted non-overlapping half-open spans in a frozen flat vector, merge adjacency, use binary membership, and merge set algebra linearly in input span counts.",
+      "rationale": "Normalization removes the overlapping-interval query that motivates an interval tree; the tree adds objects without improving logarithmic membership or linear merges.",
+      "rejected": [
+        {
+          "candidate": "interval-tree",
+          "reason": "Adds node/max metadata while normalized non-overlapping spans need only binary search."
+        }
+      ],
+      "evidence": [
+        "index-span-set:flat-normalized-vector:10000",
+        "index-span-set:interval-tree:10000"
+      ]
+    },
+    {
+      "id": "selection-expression",
+      "selected": "set-plus-vector",
+      "candidates": [
+        "set-plus-vector",
+        "sorted-vector-only"
+      ],
+      "rule": "Retain one deterministic frozen exception vector plus one private Set for expected-O(1) membership; return the same owner on semantic no-ops.",
+      "rationale": "Membership dominates expression composition and stable output order is required; the paired bounded representations avoid persistent-set object graphs and repeated binary lookup.",
+      "rejected": [
+        {
+          "candidate": "sorted-vector-only",
+          "reason": "Saves the Set but makes every membership logarithmic and repeated algebra lookup more expensive."
+        }
+      ],
+      "evidence": [
+        "selection-expression:set-plus-vector:4096-32768",
+        "selection-expression:sorted-vector-only:4096-32768"
+      ]
+    },
+    {
+      "id": "metric-index",
+      "selected": "balanced-kd",
+      "candidates": [
+        "packed-vector-scan",
+        "balanced-kd",
+        "spatial-hash"
+      ],
+      "rule": "Use packed scan for x<=128, d>8, fewer than 128 nearest/radius queries per immutable owner, or update-heavy owners; otherwise build a balanced kd index and fall back when one query inspects more than x/2 candidates.",
+      "rationale": "Low-dimensional repeated nearest queries justify kd pruning, while packed vectors win small/high-dimensional/adversarial workloads and provide the deterministic worst-case fallback.",
+      "rejected": [
+        {
+          "candidate": "packed-vector-scan",
+          "reason": "Remains the fallback but cannot be the sole representation for large low-dimensional query-heavy owners."
+        },
+        {
+          "candidate": "spatial-hash",
+          "reason": "Requires distribution- and radius-specific cell sizing and has unstable sparse/skewed worst cases."
+        }
+      ],
+      "evidence": [
+        "metric-index:packed-vector-scan:4096-2-32",
+        "metric-index:packed-vector-scan:4096-2-512",
+        "metric-index:packed-vector-scan:4096-16-32",
+        "metric-index:packed-vector-scan:4096-16-512",
+        "metric-index:balanced-kd:4096-2-32",
+        "metric-index:balanced-kd:4096-2-512",
+        "metric-index:balanced-kd:4096-16-32",
+        "metric-index:balanced-kd:4096-16-512",
+        "metric-index:spatial-hash:4096-2-32",
+        "metric-index:spatial-hash:4096-2-512",
+        "metric-index:spatial-hash:4096-16-32",
+        "metric-index:spatial-hash:4096-16-512"
+      ]
+    },
+    {
+      "id": "geometry",
+      "selected": "scalar-bounded-scoring",
+      "candidates": [
+        "immutable-object-candidates",
+        "scalar-bounded-scoring"
+      ],
+      "rule": "Expose immutable finite-number records at API boundaries but evaluate at most 12 normalized placement candidates through scalar locals and materialize only the winning result.",
+      "rationale": "Candidate count is fixed and tiny, so spatial indexes cannot improve complexity; scalar evaluation removes hot-loop objects, arrays, and sorting.",
+      "rejected": [
+        {
+          "candidate": "immutable-object-candidates",
+          "reason": "Allocates and sorts every bounded candidate despite requiring only one minimum."
+        }
+      ],
+      "evidence": [
+        "geometry:immutable-object-candidates:12-20000",
+        "geometry:scalar-bounded-scoring:12-20000"
+      ]
+    },
+    {
+      "id": "tabular-cache",
+      "selected": "single-current",
+      "candidates": [
+        "repeat-resolution",
+        "single-current",
+        "multi-entry-lru"
+      ],
+      "rule": "Retain exactly one normalized source/query/projection generation keyed by all governing revisions; invalidate once on generation change and never retain an LRU by default.",
+      "rationale": "UI access is concentrated on the active generation, so one entry removes repeated policy work while bounding heap; an LRU duplicates large projections without coherent reuse evidence.",
+      "rejected": [
+        {
+          "candidate": "repeat-resolution",
+          "reason": "Repeats filter/sort/group/projection for access-only observations."
+        },
+        {
+          "candidate": "multi-entry-lru",
+          "reason": "Retains multiple large generations with no measured active-view hit-rate advantage."
+        }
+      ],
+      "evidence": [
+        "tabular-cache:repeat-resolution:20000-8",
+        "tabular-cache:repeat-resolution:20000-8-8",
+        "tabular-cache:single-current:20000-8",
+        "tabular-cache:single-current:20000-8-8",
+        "tabular-cache:multi-entry-lru:20000-8",
+        "tabular-cache:multi-entry-lru:20000-8-8"
+      ]
+    },
+    {
+      "id": "virtual-spatial",
+      "selected": "blocked-path-copy",
+      "candidates": [
+        "packed-full-rebuild",
+        "blocked-path-copy",
+        "per-item-persistent-tree"
+      ],
+      "parameters": {
+        "blockSize": 64,
+        "repairBound": "repairBound(j,n)=touchedBlocks*(64+ceil(log2(ceil(n/64)+1)))+j"
+      },
+      "rule": "incremental iff n>=1024 and repairBound(j,n)<n/2; otherwise abandon repair storage and perform one packed full rebuild.",
+      "rationale": "Sixty-four-item blocks bound copy work and object count; the input-derived half-rebuild ceiling prevents adversarial sparse updates from paying repair plus an uncontrolled rebuild.",
+      "rejected": [
+        {
+          "candidate": "packed-full-rebuild",
+          "reason": "Retained below crossover but cannot be the sole path for small updates to large owners."
+        },
+        {
+          "candidate": "per-item-persistent-tree",
+          "reason": "Per-item nodes and path copies exceed retained-memory and bundle budgets."
+        }
+      ],
+      "evidence": [
+        "virtual-spatial:packed-full-rebuild:100000-8-64",
+        "virtual-spatial:blocked-path-copy:100000-8-64",
+        "virtual-spatial:per-item-persistent-tree:100000-8-64"
+      ]
+    },
+    {
+      "id": "virtual-track",
+      "selected": "blocked-path-copy",
+      "candidates": [
+        "packed-full-rebuild",
+        "blocked-path-copy",
+        "per-item-persistent-tree"
+      ],
+      "parameters": {
+        "blockSize": 64,
+        "repairBound": "repairBound(j,n)=j*(64+ceil(log2(ceil(n/64)+1)))"
+      },
+      "rule": "incremental iff n>=1024 and repairBound(j,n)<n/2; otherwise discard the bounded attempt and rebuild packed prefix/track state once.",
+      "rationale": "Blocked prefix summaries update touched tracks without eagerly shifting every placement, while the fixed bound preserves predictable fallback time and peak space.",
+      "rejected": [
+        {
+          "candidate": "packed-full-rebuild",
+          "reason": "Retained for small or update-dense owners but scales with total tracks for a one-track measurement."
+        },
+        {
+          "candidate": "per-item-persistent-tree",
+          "reason": "Fine-grained nodes increase allocation and retained heap beyond blocked summaries."
+        }
+      ],
+      "evidence": [
+        "virtual-track:packed-full-rebuild:100000-8-64",
+        "virtual-track:blocked-path-copy:100000-8-64",
+        "virtual-track:per-item-persistent-tree:100000-8-64"
+      ]
+    },
+    {
+      "id": "color-value",
+      "selected": "immutable-boundary-scalar-internal",
+      "candidates": [
+        "immutable-boundary-scalar-internal",
+        "mutable-class-plugin",
+        "immutable-object-every-step"
+      ],
+      "rule": "Use explicit frozen normalized color records only at public/state boundaries and scalar locals through conversion matrices, transfer curves, polar transforms, and gamut loops.",
+      "rationale": "The boundary remains immutable and precise while scalar internals remove transient objects; class/plugin dispatch adds dependency, allocation, and hidden extension semantics.",
+      "rejected": [
+        {
+          "candidate": "mutable-class-plugin",
+          "reason": "Adds mutable identity, method dispatch, plugin closure, and one object per conversion step."
+        },
+        {
+          "candidate": "immutable-object-every-step",
+          "reason": "Preserves semantics but allocates intermediate records in every scalar stage."
+        }
+      ],
+      "evidence": [
+        "color-value:immutable-boundary-scalar-internal:50000",
+        "color-value:mutable-class-plugin:50000",
+        "color-value:immutable-object-every-step:50000"
+      ]
+    },
+    {
+      "id": "color-gamut",
+      "selected": "fixed-12-chroma",
+      "candidates": [
+        "reject",
+        "clip",
+        "fixed-12-chroma"
+      ],
+      "rule": "Expose reject and clip as O(1) explicit policies; implement reduce-chroma with exactly 12 monotonic OKLCH iterations and no tolerance-controlled unbounded loop.",
+      "rationale": "Policy choice is semantic, not automatic; twelve iterations give a fixed work ceiling and sufficient chroma resolution while reject/clip stay allocation-free constant paths.",
+      "rejected": [
+        {
+          "candidate": "reject",
+          "reason": "Remains the default policy but cannot serve callers explicitly requesting perceptual gamut projection."
+        },
+        {
+          "candidate": "clip",
+          "reason": "Remains available but may change hue/lightness relationships more than bounded chroma reduction."
+        }
+      ],
+      "evidence": [
+        "color-gamut:reject:20000-1",
+        "color-gamut:clip:20000-1",
+        "color-gamut:fixed-12-chroma:20000-12"
+      ]
+    }
+  ]
+}
