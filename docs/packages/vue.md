@@ -321,7 +321,7 @@ const submission = defineFormSubmission({
 </template>
 ```
 
-Native and Sectile controls can be mixed in one form. A Standard Schema passed to `defineFormSubmission()` infers the transformed handler output; without a schema, raw structured values stay `unknown`. There is no typed component factory. See the [complete Form package guide](/packages/form).
+Native and Sectile controls can be mixed in one form. Start with the [Vue forms guide](/packages/form/vue), then see [fields and controls](/packages/form/fields) for groups, nested names, and externally associated inputs.
 
 ## Styling boundaries
 

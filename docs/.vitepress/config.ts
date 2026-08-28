@@ -90,7 +90,16 @@ const packageSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: '@sectile/form',
     collapsed: false,
-    items: [{ text: 'Overview and integration', link: '/packages/form' }],
+    items: [
+      { text: 'Overview', link: '/packages/form' },
+      { text: 'Vue forms', link: '/packages/form/vue' },
+      { text: 'DOM forms', link: '/packages/form/dom' },
+      { text: 'Fields and controls', link: '/packages/form/fields' },
+      { text: 'Validation and errors', link: '/packages/form/validation' },
+      { text: 'Submission and reset', link: '/packages/form/submission' },
+      { text: 'Custom controls', link: '/packages/form/custom-controls' },
+      { text: 'SSR and hydration', link: '/packages/form/ssr' },
+    ],
   },
   {
     text: '@sectile/temporal',
@@ -156,7 +165,16 @@ const koPackageSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: '@sectile/form',
     collapsed: false,
-    items: [{ text: '개요와 연결 방법', link: '/ko/packages/form' }],
+    items: [
+      { text: '개요', link: '/ko/packages/form' },
+      { text: 'Vue 폼', link: '/ko/packages/form/vue' },
+      { text: 'DOM 폼', link: '/ko/packages/form/dom' },
+      { text: '필드와 컨트롤', link: '/ko/packages/form/fields' },
+      { text: '검증과 오류', link: '/ko/packages/form/validation' },
+      { text: '제출과 초기화', link: '/ko/packages/form/submission' },
+      { text: '사용자 정의 컨트롤', link: '/ko/packages/form/custom-controls' },
+      { text: 'SSR과 hydration', link: '/ko/packages/form/ssr' },
+    ],
   },
   {
     text: '@sectile/temporal',

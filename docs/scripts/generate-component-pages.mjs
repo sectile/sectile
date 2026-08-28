@@ -155,130 +155,58 @@ Dragging \`DrawerHandle\` outward dismisses the drawer. Add \`data-sectile-drawe
 
 function formOverviewSection(component, korean = false) {
   if (component.id !== 'form') return '';
-  if (korean) return `### 구성 방식
+  if (korean) return `### 기본 구성
 
-Form은 다양한 입력 UI에 네이티브 \`<form>\` 제출·초기화·제약 조건 검사와 필드 메타데이터·오류 표시를 연결하는 조정 계층입니다.
+Form은 네이티브 \`<form>\`을 기반으로 입력의 레이블, 설명, 오류, 제출, 초기화를 연결합니다.
 
-| 구성 요소 | 역할 |
+| 파트 | 용도 |
 | --- | --- |
-| \`FormRoot\` | 네이티브 form 요소, 참여 필드 레지스트리, 제출 및 초기화 상태를 소유합니다. |
-| \`FormField\` | 하나의 필드 이름 또는 중첩 경로와 \`id\`, \`required\`, \`disabled\`, \`readonly\` 메타데이터를 선언합니다. |
-| \`FormLabel\` | 일반 입력에는 \`for\`를, 복합 입력에는 \`aria-labelledby\`를 연결합니다. |
-| \`FormDescription\` / \`FormMessage\` | 설명과 현재 오류를 \`aria-describedby\`, \`aria-errormessage\`에 연결합니다. |
-| \`FormSummary\` | 폼 전체 오류를 노출합니다. |
-| \`FormReset\` / \`FormSubmit\` | 네이티브 초기화와 제출 동작을 노출합니다. |
+| \`FormRoot\` | 네이티브 form 속성, 검증 설정, 제출, 폼 상태 |
+| \`FormField\` | 레이블이 있는 값 하나, 그룹 또는 복합 컨트롤 |
+| \`FormLabel\` | 화면에 표시하는 레이블 또는 그룹 범례 |
+| \`FormDescription\` | 필드와 연결된 도움말 |
+| \`FormMessage\` | 현재 필드 오류 |
+| \`FormSummary\` | 폼 전체 오류 요약 |
+| \`FormReset\` / \`FormSubmit\` | 네이티브 초기화·제출 버튼 |
 
-Sectile 입력 컴포넌트는 공통 참여 규약을 통해 필드 메타데이터를 받습니다. 일반 \`input\`, \`select\`, \`textarea\`도 \`FormField\` 안에서 같은 제출에 참여합니다.`;
+네이티브 \`input\`, \`select\`, \`textarea\`와 Sectile 입력 컴포넌트를 같은 폼에서 자유롭게 섞을 수 있습니다.`;
 
-  return `### Composition model
+  return `### Basic composition
 
-Form coordinates native \`<form>\` submission, reset, constraint validation, field metadata, and issue presentation across any input UI.
+Form builds on a native \`<form>\` and connects labels, descriptions, errors, submission, and reset behavior.
 
-| Part | Responsibility |
+| Part | Use it for |
 | --- | --- |
-| \`FormRoot\` | Owns the native form element, participant registry, and submission/reset state. |
-| \`FormField\` | Declares one field name or nested path plus \`id\`, \`required\`, \`disabled\`, and \`readonly\` metadata. |
-| \`FormLabel\` | Connects \`for\` to atomic controls or \`aria-labelledby\` to composite controls. |
-| \`FormDescription\` / \`FormMessage\` | Connect description and current issue IDs through \`aria-describedby\` and \`aria-errormessage\`. |
-| \`FormSummary\` | Exposes form-wide issues. |
-| \`FormReset\` / \`FormSubmit\` | Expose native reset and submission actions. |
+| \`FormRoot\` | Native form attributes, validation settings, submission, and form state |
+| \`FormField\` | One labelled value, group, or compound control |
+| \`FormLabel\` | A visible label or group legend |
+| \`FormDescription\` | Help text connected to the field |
+| \`FormMessage\` | The current field error |
+| \`FormSummary\` | A form-wide error summary |
+| \`FormReset\` / \`FormSubmit\` | Native reset and submit buttons |
 
-Sectile input components receive field metadata through the shared participation contract. Native \`input\`, \`select\`, and \`textarea\` elements also participate when placed inside a \`FormField\`.`;
+Native \`input\`, \`select\`, and \`textarea\` elements can be mixed freely with Sectile input components in the same form.`;
 }
 
 function formDetailsSection(component, korean = false) {
   if (component.id !== 'form') return '';
-  if (korean) return `### 필드 메타데이터
+  if (korean) return `### 다음 단계
 
-\`FormField\`에 한 번 선언한 메타데이터는 입력의 기능에 맞게 분배됩니다. 입력에 같은 속성을 직접 선언하면 명시한 값이 우선합니다.
+- 네이티브 입력, Sectile 컴포넌트, 그룹, 중첩 이름은 [필드와 컨트롤](/ko/packages/form/fields)에서 설명합니다.
+- 브라우저 제약 조건, schema, 서버 오류는 [검증과 오류](/ko/packages/form/validation)에서 설명합니다.
+- \`defineFormSubmission()\`, 파일, 비동기 상태, reset은 [제출과 초기화](/ko/packages/form/submission)에서 설명합니다.
+- 앱에서 만든 입력을 연결하는 방법과 \`useTemplateRef()\`/\`shallowRef()\` 선택은 [사용자 정의 컨트롤](/ko/packages/form/custom-controls)에서 설명합니다.
 
-| 선언 | 연결되는 대상 |
-| --- | --- |
-| \`id\` | 입력 \`id\`, 레이블 \`for\`, 설명 및 오류 ID |
-| \`name\` | 네이티브 제출 이름과 구조화된 값 경로 |
-| \`form\` | 폼 밖에 렌더링된 제출 요소의 form 연결 |
-| \`required\`, \`disabled\`, \`readonly\` | 해당 기능을 지원하는 시맨틱 입력과 숨은 제출 요소 |
-| 레이블·설명·오류 상태 | \`aria-labelledby\`, \`aria-describedby\`, \`aria-errormessage\`, \`aria-invalid\` 및 관련 ARIA 상태 |
+\`FormField\`에 쓴 \`name\`, \`required\`, \`disabled\`, \`readonly\`는 하위 컨트롤의 기본값입니다. 같은 속성을 입력에 직접 지정하면 입력의 값이 우선합니다.`;
 
-### 구조화된 제출 값
+  return `### Continue with the guides
 
-문자열 이름은 최상위 키가 되고, 문자열·숫자 배열은 객체와 배열 경로가 됩니다.
+- [Fields and controls](/packages/form/fields) covers native inputs, Sectile components, groups, and nested names.
+- [Validation and errors](/packages/form/validation) covers browser constraints, schemas, and server errors.
+- [Submission and reset](/packages/form/submission) covers \`defineFormSubmission()\`, files, async state, and reset.
+- [Custom controls](/packages/form/custom-controls) covers application inputs and choosing between \`useTemplateRef()\` and \`shallowRef()\`.
 
-| 필드 이름 | \`details.values\` 결과 |
-| --- | --- |
-| \`name="email"\` | \`values.email\` |
-| \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
-| \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
-
-\`defineFormSubmission()\`은 검증된 제출 handler와 선택적 schema를 하나의 불변 객체로 묶습니다. 반환값을 \`<FormRoot v-bind="submission">\`에 전달하면 handler 타입을 별도로 import하지 않아도 됩니다. schema가 없을 때 \`values\`의 값은 \`unknown\`이며, 파일·반복 이름·네이티브 인코딩이 필요하면 원본 \`formData\`를 사용합니다. Standard Schema를 전달하면 변환된 출력 타입이 handler까지 추론됩니다.
-
-서버 이슈는 \`path\`로 필드에 연결할 수 있습니다. 예: \`{ message: 'Already registered', path: 'email' }\` 또는 \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. \`id\`를 생략하면 폼 이슈 ID를 자동 생성합니다. 제출 콜백이 throw하거나 reject하면 고정된 안전 메시지를 사용합니다. 사용자용 메시지가 필요하면 \`mapSubmitError\`에서 명시적으로 변환합니다.
-
-### 패키지와 타입 경계
-
-Form을 사용하는 Vue 앱은 선택적 peer인 \`@sectile/form\`을 직접 설치하고 \`@sectile/vue/form\`에서 정적 \`FormRoot\`와 \`FormField\`를 가져옵니다. 컴포넌트 factory는 제공하지 않습니다. Vue 템플릿 전체의 동적 필드 경로를 schema 타입으로 제한한다고 가장하지 않고, schema는 제출 경계의 입력 검증과 출력 추론을 담당합니다. DOM은 \`@sectile/dom/form\`을 사용하며 Terminal에는 Form adapter가 없습니다.
-
-### 사용자 정의 컨트롤
-
-단일 네이티브 입력에는 \`useNativeInputFormControl\`, 여러 DOM 요소가 한 값을 구성하는 컨트롤에는 \`useCompositeFormControl\`을 사용합니다. 저수준 조정이 필요하면 \`useFormControl\`과 공개 capability preset을 조합합니다. 하나의 필드에 독립적인 활성 컨트롤을 여러 개 등록하지 말고 복합 컨트롤 하나로 등록합니다. 중첩 참여 컨트롤을 렌더링하는 복합 컨트롤은 \`provideFormControlOwner()\`로 소유권 경계를 선언합니다. helper는 \`FormField\` 밖에서 아무 효과도 내지 않습니다.
-
-고정된 네이티브 템플릿 ref에는 Vue 3.5의 \`useTemplateRef()\`를 우선 사용합니다. callback ref, 동적·사용자 정의 요소, 컬렉션, 외부에서 받은 DOM handle에는 \`shallowRef()\`를 사용합니다. DOM 노드를 deep reactive \`ref()\`에 넣지 않습니다.
-
-네이티브 \`input\`·\`textarea\`·\`select\`, Sectile 입력, 둘의 혼합, \`FormField\` 밖의 직접 named control, radio/checkbox/fieldset 그룹, 사용자 정의 atomic·composite control, Teleport 및 native \`form\` 연관 요소를 함께 사용할 수 있습니다.
-
-### 상태와 검증
-
-- 브라우저 제약 조건과 각 참여 입력의 검증 결과를 하나의 이슈 목록으로 합칩니다.
-- \`FormSummary\`는 폼 전체 이슈를, \`FormMessage\`는 현재 필드 이슈를 표시합니다.
-- \`issues\`, \`schema\`, \`validateOn\` 같은 동적 설정이 바뀌어도 dirty, touched, 제출 상태는 유지합니다.
-- 루트 슬롯의 \`submitStarted\`, \`submitSucceeded\`, \`submitFailed\`, \`replaceIssues\`로 비동기 및 서버 검증 상태를 반영할 수 있습니다.
-- \`TextField\`는 \`v-model.trim\`, \`v-model.number\`, \`v-model.lazy\`를 지원합니다. 다른 입력은 각 컴포넌트의 값 타입과 모델 계약을 유지합니다.`;
-
-  return `### Field metadata
-
-Metadata declared once on \`FormField\` is distributed according to each control's capabilities. An attribute written directly on a control remains authoritative.
-
-| Declaration | Connected target |
-| --- | --- |
-| \`id\` | Control \`id\`, label \`for\`, description ID, and message ID |
-| \`name\` | Native submission name and structured value path |
-| \`form\` | Form association for submission elements rendered outside the form |
-| \`required\`, \`disabled\`, \`readonly\` | Semantic control and hidden submission element when supported |
-| Label, description, and issue state | \`aria-labelledby\`, \`aria-describedby\`, \`aria-errormessage\`, \`aria-invalid\`, and related ARIA states |
-
-### Structured submission values
-
-A string name becomes a top-level key. A string/number path builds nested objects and arrays.
-
-| Field name | Result in \`details.values\` |
-| --- | --- |
-| \`name="email"\` | \`values.email\` |
-| \`:name="['profile', 'displayName']"\` | \`values.profile.displayName\` |
-| \`:name="['members', 0, 'email']"\` | \`values.members[0].email\` |
-
-\`defineFormSubmission()\` keeps a validated submission handler and optional schema in one immutable object. Pass it to \`<FormRoot v-bind="submission">\` without importing a handler type. Without a schema, each value in \`values\` is \`unknown\`; use the original \`formData\` for files, repeated names, and native encoding. A Standard Schema infers its transformed output in the handler.
-
-Server issues can target a field by \`path\` instead of an internal field ID, for example \`{ message: 'Already registered', path: 'email' }\` or \`{ message: 'Invalid', path: ['members', 0, 'email'] }\`. Sectile generates a form issue ID when \`id\` is omitted. A thrown or rejected submit callback uses a fixed safe message instead of exposing the original error. Use \`mapSubmitError\` when an application-facing message should be derived explicitly.
-
-### Package and type boundary
-
-A Vue application using Form installs the optional \`@sectile/form\` peer explicitly and imports the static \`FormRoot\` and \`FormField\` from \`@sectile/vue/form\`. There is no component factory. Sectile does not pretend that a schema can type every dynamic field path in a Vue template; the schema validates input and infers output at the submission boundary. DOM uses \`@sectile/dom/form\`, and Terminal has no Form adapter.
-
-### Custom controls
-
-Use \`useNativeInputFormControl\` for one native input and \`useCompositeFormControl\` when several DOM elements represent one value. For lower-level coordination, combine \`useFormControl\` with the exported capability presets. Register one composite control instead of multiple independent active controls for the same field. A composite rendering nested participants declares its ownership boundary with \`provideFormControlOwner()\`. Helpers are inert outside \`FormField\`.
-
-Prefer Vue 3.5 \`useTemplateRef()\` for a stable native template ref. Use \`shallowRef()\` for callback refs, dynamic or custom elements, collections, and externally supplied DOM handles. Do not place DOM nodes in a deep reactive \`ref()\`.
-
-Native \`input\`, \`textarea\`, and \`select\` elements, Sectile controls, mixed forms, direct named controls outside \`FormField\`, radio/checkbox/fieldset groups, custom atomic and composite controls, Teleports, and elements associated through native \`form\` are all supported compositions.
-
-### State and validation
-
-- Browser constraints and participant validation results are merged into one issue collection.
-- \`FormSummary\` presents form-wide issues while \`FormMessage\` presents the current field's issues.
-- Dynamic configuration such as \`issues\`, \`schema\`, and \`validateOn\` updates without resetting dirty, touched, or submission state.
-- Root slot actions \`submitStarted\`, \`submitSucceeded\`, \`submitFailed\`, and \`replaceIssues\` integrate asynchronous and server validation.
-- \`TextField\` supports \`v-model.trim\`, \`v-model.number\`, and \`v-model.lazy\`. Other inputs retain their component-specific value types and model contracts.`;
+\`name\`, \`required\`, \`disabled\`, and \`readonly\` on \`FormField\` act as defaults for its control. A matching attribute written directly on the input takes precedence.`;
 }
 
 function cascadeListDetailsSection(component, korean = false) {
@@ -607,7 +535,11 @@ function apiSection(component, korean = false) {
     typeDefinitions,
   } = publicVueApi(component.id);
   const functionSet = new Set(functions);
-  const components = values.filter((value) => !functionSet.has(value));
+  const advancedValues = component.id === 'form'
+    ? values.filter((value) => value.endsWith('Capabilities'))
+    : [];
+  const advancedValueSet = new Set(advancedValues);
+  const components = values.filter((value) => !functionSet.has(value) && !advancedValueSet.has(value));
   const hiddenTypes = types.filter((value) => value.endsWith('PublicProps'));
   const propTypes = types.filter((value) => (
     value.endsWith('Props')
@@ -631,6 +563,9 @@ ${values.map((value) => `  <li><code class="component-api-token">${value}</code>
     : `Vue package: \`@sectile/vue/${packageSubpath}\``;
   const groups = [
     tokenList(components, korean ? '컴포넌트' : 'Components'),
+    advancedValues.length === 0
+      ? undefined
+      : tokenList(advancedValues, korean ? '고급 컨트롤 프리셋' : 'Advanced control presets'),
     apiFunctionGroup(functions, functionSignatures, korean),
     apiContractGroup(component.id, propTypes, contracts, defaults, 'props', 'Props', korean),
     apiContractGroup(component.id, slotTypes, contracts, defaults, 'slots', korean ? '슬롯' : 'Slots', korean),

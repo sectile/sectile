@@ -5,7 +5,7 @@ description: 상호작용의 의미와 실행 환경을 맡는 패키지를 구�
 
 # 패키지
 
-Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. Core는 상호작용을 계산하고, Form은 필드 경로와 제출 수명 주기를 조정하며, Temporal은 날짜와 시각을 다룹니다. Tabular는 표 형식 데이터 상호작용을, Virtual은 큰 화면의 배치를 구합니다. DOM, Terminal, Vue 패키지는 이 결과를 실제 입력과 출력에 연결하지만 Form은 의도적으로 DOM과 Vue에만 연결됩니다.
+Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. Core는 상호작용을 계산하고, Form은 접근 가능한 필드 구성과 검증·제출을 연결하며, Temporal은 날짜와 시각을 다룹니다. Tabular는 표 형식 데이터 상호작용을, Virtual은 큰 화면의 배치를 구합니다. DOM, Terminal, Vue 패키지는 이 결과를 실제 입력과 출력에 연결하며 Form은 DOM과 Vue에서 사용할 수 있습니다.
 
 <PackageBoundaryMap />
 
@@ -14,7 +14,7 @@ Sectile 패키지는 계산할 값과 실행할 환경에 따라 나뉩니다. C
 | 패키지 | 핵심 판단 | 함께 쓰는 패키지 |
 | --- | --- | --- |
 | [`@sectile/core`](/ko/packages/core) | 현재 상태와 사건으로 다음 상태와 명령 계산 | DOM · Terminal · Vue |
-| [`@sectile/form`](/ko/packages/form) | 필드 경로, 네이티브 구조화 값, 이슈, 검증·제출 수명 주기 | DOM · Vue |
+| [`@sectile/form`](/ko/packages/form) | 접근 가능한 필드 구성, 오류, 검증, 제출, 초기화 | DOM · Vue |
 | [`@sectile/temporal`](/ko/packages/temporal) | 달력 날짜, 하루 안의 시각, 달력 이동과 선택 계산 | Core · DOM · Vue |
 | [`@sectile/tabular`](/ko/packages/tabular) | 행·열 ID, 데이터 접근, 선택, 그룹화, grid 상호작용 | Core · DOM · Vue |
 | [`@sectile/virtual`](/ko/packages/virtual) | 항목 크기와 화면 영역으로 배치 좌표와 스크롤 보정값 계산 | Core · DOM · Vue |

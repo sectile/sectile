@@ -20,7 +20,7 @@ import * as checkbox from '@sectile/terminal/checkbox'
 
 ## Form 경계
 
-Terminal에는 의도적으로 Form 어댑터, Form 컴포넌트, root export, `@sectile/form` 의존성이 없습니다. 브라우저의 `HTMLFormElement`, `FormData`, 제약 조건 검사, 제출 탐색을 Terminal에 정직하게 대응시킬 수 없기 때문입니다. TUI 앱에 workflow 상태가 필요하면 `@sectile/form/state`의 렌더러 중립 primitive를 직접 조합할 수 있지만, 이는 앱이 소유하는 조정이며 Terminal Form 대체품이 아닙니다.
+Sectile Form은 DOM과 Vue 앱에서 사용할 수 있습니다. `@sectile/terminal`은 Form 어댑터를 제공하지 않으며 `@sectile/form`에 의존하지 않습니다.
 
 ## 화면 전체 구성하기
 

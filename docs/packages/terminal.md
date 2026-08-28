@@ -20,7 +20,7 @@ Integrations for larger applications should keep their renderer in charge of lay
 
 ## Form boundary
 
-Terminal intentionally provides no Form adapter, Form component, root export, or `@sectile/form` dependency. Browser-native `HTMLFormElement`, `FormData`, constraint validation, and submission navigation have no honest Terminal equivalent. A TUI application that needs workflow state may compose the renderer-neutral primitives from `@sectile/form/state` directly, but that is application-owned coordination rather than a Terminal Form replacement.
+Sectile Form is available for DOM and Vue applications. `@sectile/terminal` does not expose a Form adapter or depend on `@sectile/form`.
 
 ## Build a complete screen
 

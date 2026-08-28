@@ -14,7 +14,7 @@ Sectile separates **what an interaction means** from **where it runs**. Core, Fo
 | Package | Owns | Does not own |
 | --- | --- | --- |
 | [`@sectile/core`](/packages/core) | interaction state, transitions, identity, commands | dates, layout geometry, rendering |
-| [`@sectile/form`](/packages/form) | field paths, structured native values, issues, validation and submission lifecycle | control values, rendering, Terminal adaptation |
+| [`@sectile/form`](/packages/form) | accessible field composition, errors, validation, submission, and reset | control values, visual styling, Terminal forms |
 | [`@sectile/temporal`](/packages/temporal) | civil dates, wall-clock time, calendar and picker rules | time zones, formatting, rendering |
 | [`@sectile/tabular`](/packages/tabular) | tabular identity, data access, columns, selection, grouping, grid interaction | transport, rendering, loading/error UI |
 | [`@sectile/virtual`](/packages/virtual) | extents, viewport queries, placements, anchor correction | collection identity, data loading, DOM measurement |

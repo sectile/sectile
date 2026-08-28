@@ -321,7 +321,7 @@ const submission = defineFormSubmission({
 </template>
 ```
 
-한 폼에서 네이티브와 Sectile 컨트롤을 섞을 수 있습니다. `defineFormSubmission()`에 Standard Schema를 전달하면 변환된 handler 출력이 추론되고, schema가 없는 raw 구조화 값은 `unknown`을 유지합니다. 타입 컴포넌트 factory는 제공하지 않습니다. [전체 Form 패키지 안내](/ko/packages/form)를 참고하세요.
+한 폼에서 네이티브와 Sectile 컨트롤을 섞을 수 있습니다. 먼저 [Vue 폼 안내](/ko/packages/form/vue)를 보고, 그룹·중첩 이름·외부 연결 입력은 [필드와 컨트롤](/ko/packages/form/fields)을 참고하세요.
 
 ## 스타일 경계
 

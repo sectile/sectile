@@ -30,7 +30,7 @@ const profiles = Object.freeze({
   ],
   form: [
     row('Tab / Shift+Tab', 'Move through native form controls in document order.', '네이티브 폼 컨트롤을 문서 순서대로 이동합니다.'),
-    row('Enter', 'Submit from an eligible native control and validate registered fields.', '제출 가능한 네이티브 컨트롤에서 폼을 제출하고 등록된 필드를 검증합니다.'),
+    row('Enter', 'Submit from an eligible native control and validate the form.', '제출 가능한 네이티브 컨트롤에서 폼을 제출하고 검증합니다.'),
   ],
   listChoice: [
     row('Arrow keys', 'Move the active option in the visible orientation.', '보이는 방향에 따라 현재 선택 항목을 이동합니다.'),
