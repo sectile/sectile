@@ -113,6 +113,9 @@ const baselineResults = report.baselineResults.map((result) => ({
   scrollSampleCount: result.scrollSampleCount,
   scrollRoundMedianRangeMs: result.scrollRoundMedianRangeMs,
   scrollRoundP95RangeMs: result.scrollRoundP95RangeMs,
+  completedRounds: result.completedRounds,
+  plannedRounds: result.plannedRounds,
+  earlyStopReason: result.earlyStopReason,
 }));
 
 const baselineFailures = (report.baselineFailures ?? []).map((failure) => ({
@@ -125,7 +128,7 @@ const baselineFailures = (report.baselineFailures ?? []).map((failure) => ({
   version: failure.version,
   stack: failure.stack,
   failedRounds: (report.baselineFailures ?? []).filter((entry) => entry.rowProfile === failure.rowProfile && entry.mode === failure.mode && entry.library === failure.library).length,
-  totalRounds: report.conditions.baseline.rounds,
+  totalRounds: report.conditions.baseline.maximumRounds ?? report.conditions.baseline.rounds,
   message: failure.message,
 })).filter((failure, index, failures) => failures.findIndex((candidate) => (
   candidate.rowProfile === failure.rowProfile && candidate.mode === failure.mode && candidate.library === failure.library
@@ -189,6 +192,9 @@ export interface BaselineBenchmarkResult {
   readonly scrollSampleCount: number;
   readonly scrollRoundMedianRangeMs: readonly [number, number];
   readonly scrollRoundP95RangeMs: readonly [number, number];
+  readonly completedRounds: number;
+  readonly plannedRounds: number;
+  readonly earlyStopReason: 'stable-statistics' | null;
 }
 
 export interface BaselineBenchmarkFailure {
@@ -224,7 +230,7 @@ export interface MutationBenchmarkResult {
   readonly totalSamples: number;
   readonly plannedSamples?: number;
   readonly earlyStopped?: boolean;
-  readonly earlyStopReason?: 'reproducible-failure' | null;
+  readonly earlyStopReason?: 'reproducible-failure' | 'stable-statistics' | null;
   readonly heightHandling: {
     readonly sizeInput: 'dom-measurement' | 'application-size';
     readonly initialEstimate: boolean;
@@ -264,6 +270,8 @@ export interface BenchmarkSource {
 export interface BenchmarkRunMetadata {
   readonly id: string;
   readonly observedAt: string;
+  readonly completedAt: string;
+  readonly durationMs: number;
   readonly source: BenchmarkSource;
 }
 

@@ -2,6 +2,12 @@ import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './ada
 import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from './constants.js';
 import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
 import {
+  distributionIsStable,
+  distributionSnapshot,
+  formatElapsed,
+  type DistributionSnapshot,
+} from './adaptive-sampling.js';
+import {
   automaticMutableAdapters,
   mutableAdapters,
   type MutableBenchmarkAdapter,
@@ -25,6 +31,8 @@ interface BenchmarkSource {
 interface BenchmarkRunMetadata {
   readonly id: string;
   readonly observedAt: string;
+  readonly completedAt: string;
+  readonly durationMs: number;
   readonly source: BenchmarkSource;
 }
 
@@ -66,6 +74,9 @@ interface BenchmarkResult {
   readonly scrollRoundP95RangeMs: readonly [number, number];
   readonly renderedRows: number;
   readonly domElements: number;
+  readonly completedRounds: number;
+  readonly plannedRounds: number;
+  readonly earlyStopReason: 'stable-statistics' | null;
 }
 
 interface BaselineBenchmarkFailure {
@@ -107,6 +118,9 @@ interface RawBenchmarkResult extends Omit<BenchmarkResult,
   | 'scrollRoundP95RangeMs'
   | 'scrollTotalHeightErrorMedianPercent'
   | 'scrollTotalHeightErrorP95Percent'
+  | 'completedRounds'
+  | 'plannedRounds'
+  | 'earlyStopReason'
 > {
   readonly setupMs: number;
   readonly firstRowsMs: number;
@@ -155,9 +169,14 @@ declare global {
 
 const search = new URLSearchParams(window.location.search);
 const QUICK_RUN = search.has('quick');
-const ROUNDS = positiveInteger(search.get('baseline-rounds')) ?? (QUICK_RUN ? 1 : 5);
+const requestedBaselineRounds = positiveInteger(search.get('baseline-rounds'));
+const ADAPTIVE_BASELINE = !QUICK_RUN && requestedBaselineRounds === undefined;
+const ROUNDS = requestedBaselineRounds ?? (QUICK_RUN ? 1 : 5);
+const MINIMUM_BASELINE_ROUNDS = ADAPTIVE_BASELINE ? 3 : ROUNDS;
+const BASELINE_MEDIAN_RELATIVE_TOLERANCE = 0.05;
+const BASELINE_P95_RELATIVE_TOLERANCE = 0.1;
 const WARMUP_SCROLLS = QUICK_RUN ? 1 : 5;
-const RECORDED_SCROLLS = QUICK_RUN ? 2 : 40;
+const RECORDED_SCROLLS = QUICK_RUN ? 2 : 20;
 const FRAME_TIMEOUT_MS = 4_000;
 const STABLE_FAILURE_MIN_MS = 300;
 const STABLE_FAILURE_FRAMES = 8;
@@ -252,23 +271,38 @@ for (const support of heightModeSupport) supportResultsBody.append(renderSupport
 runButton.addEventListener('click', () => { void runAll(); });
 
 async function runAll(): Promise<void> {
-  const run = Object.freeze({
-    id: crypto.randomUUID(),
-    observedAt: new Date().toISOString(),
-    source: __BENCHMARK_SOURCE__,
-  });
+  const runId = crypto.randomUUID();
+  const observedAt = new Date().toISOString();
+  const runStartedAt = performance.now();
   runButton!.disabled = true;
   resultsBody!.replaceChildren();
   mutationResultsBody!.replaceChildren();
   json!.textContent = '';
   const raw = new Map<string, RawBenchmarkResult[]>();
   const baselineFailures: BaselineBenchmarkFailure[] = [];
+  const baselineEarlyStops = new Set<string>();
+  const baselineStatistics = new Map<string, DistributionSnapshot>();
+  const baselineTotal = activeCases.length * ROUNDS;
+  let baselineResolved = 0;
+  let baselineExecuted = 0;
   try {
     status!.textContent = `Calibrating ${rowProfile} row heights…`;
     const oracle = await createHeightOracle(rowProfile);
     for (let roundIndex = 0; roundIndex < (MUTATIONS_ONLY ? 0 : ROUNDS); roundIndex += 1) {
       const order = rotate(activeCases, roundIndex * 3);
       for (const benchmarkCase of order) {
+        const key = caseKey(benchmarkCase);
+        if (baselineEarlyStops.has(key)) {
+          baselineResolved += 1;
+          status!.textContent = baselineProgress(
+            baselineResolved,
+            baselineExecuted,
+            baselineTotal,
+            runStartedAt,
+            `${benchmarkCase.mode} · ${benchmarkCase.name} · stable statistics`,
+          );
+          continue;
+        }
         status!.textContent = `Round ${roundIndex + 1}/${ROUNDS} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
         const caseStartedAt = performance.now();
         let result: RawBenchmarkResult;
@@ -287,26 +321,47 @@ async function runAll(): Promise<void> {
             message: reason,
           }));
           resultsBody!.append(renderBaselineFailure(benchmarkCase, reason));
+          baselineResolved += 1;
+          baselineExecuted += 1;
           await idleFrame();
           continue;
         }
-        const key = caseKey(benchmarkCase);
         const samples = raw.get(key) ?? [];
         samples.push(result);
         raw.set(key, samples);
+        baselineResolved += 1;
+        baselineExecuted += 1;
+        const currentStatistics = distributionSnapshot(samples.flatMap((sample) => (
+          sample.scrollMeasurements.map((measurement) => measurement.elapsedMs)
+        )));
+        if (ADAPTIVE_BASELINE && distributionIsStable(baselineStatistics.get(key), currentStatistics, {
+          minimumSamples: MINIMUM_BASELINE_ROUNDS * RECORDED_SCROLLS,
+          medianRelativeTolerance: BASELINE_MEDIAN_RELATIVE_TOLERANCE,
+          p95RelativeTolerance: BASELINE_P95_RELATIVE_TOLERANCE,
+        })) baselineEarlyStops.add(key);
+        if (currentStatistics !== undefined) baselineStatistics.set(key, currentStatistics);
+        status!.textContent = baselineProgress(
+          baselineResolved,
+          baselineExecuted,
+          baselineTotal,
+          runStartedAt,
+          `${benchmarkCase.mode} · ${benchmarkCase.name}`,
+        );
         await idleFrame();
       }
     }
     const baselineCases = MUTATIONS_ONLY ? [] : activeCases;
     const baselineResults = baselineCases.flatMap((entry) => {
       const rounds = raw.get(caseKey(entry)) ?? [];
-      return rounds.length === ROUNDS ? [aggregate(entry, rounds)] : [];
+      const failed = baselineFailures.some((failure) => baselineFailureKey(failure) === caseKey(entry));
+      const complete = baselineEarlyStops.has(caseKey(entry)) || rounds.length === ROUNDS;
+      return !failed && complete ? [aggregate(entry, rounds, baselineEarlyStops.has(caseKey(entry)))] : [];
     });
     const baselineSamples = Object.freeze(Object.fromEntries(baselineCases.map((entry) => [
       caseKey(entry),
       Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
         round.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
-          runId: run.id,
+          runId,
           round: roundIndex + 1,
           sample: sampleIndex + 1,
           ...measurement,
@@ -325,10 +380,17 @@ async function runAll(): Promise<void> {
           mutationFilter,
         );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
-    const reportedBaselineResults = Object.freeze(baselineResults.map((result) => Object.freeze({ runIds: Object.freeze([run.id]), ...result })));
-    const reportedBaselineFailures = Object.freeze(baselineFailures.map((failure) => Object.freeze({ runIds: Object.freeze([run.id]), ...failure })));
-    const reportedMutationResults = Object.freeze(mutationResults.map((result) => Object.freeze({ runIds: Object.freeze([run.id]), ...result })));
-    const runs = Object.freeze({ [run.id]: run });
+    const run = Object.freeze({
+      id: runId,
+      observedAt,
+      completedAt: new Date().toISOString(),
+      durationMs: round(performance.now() - runStartedAt),
+      source: __BENCHMARK_SOURCE__,
+    });
+    const reportedBaselineResults = Object.freeze(baselineResults.map((result) => Object.freeze({ runIds: Object.freeze([runId]), ...result })));
+    const reportedBaselineFailures = Object.freeze(baselineFailures.map((failure) => Object.freeze({ runIds: Object.freeze([runId]), ...failure })));
+    const reportedMutationResults = Object.freeze(mutationResults.map((result) => Object.freeze({ runIds: Object.freeze([runId]), ...result })));
+    const runs = Object.freeze({ [runId]: run });
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
     window.__sectileVirtualBenchmarkReport = Object.freeze({
       source: __BENCHMARK_SOURCE__,
@@ -341,7 +403,7 @@ async function runAll(): Promise<void> {
     });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 4,
+      protocolVersion: 5,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,
@@ -355,8 +417,13 @@ async function runAll(): Promise<void> {
         viewport: [720, VIEWPORT_HEIGHT],
         overscanRows: 8,
         baseline: {
+          adaptiveSampling: ADAPTIVE_BASELINE,
           rounds: ROUNDS,
+          maximumRounds: ROUNDS,
+          minimumRounds: MINIMUM_BASELINE_ROUNDS,
           scrollSamplesPerRound: RECORDED_SCROLLS,
+          medianRelativeTolerance: BASELINE_MEDIAN_RELATIVE_TOLERANCE,
+          p95RelativeTolerance: BASELINE_P95_RELATIVE_TOLERANCE,
           completion: rowProfile === 'uniform'
             ? 'exact target row, contiguous row geometry, correct total scroll height, and complete viewport coverage'
             : 'correct visible row content and geometry, contiguous viewport coverage, and a separately recorded total-height estimate error',
@@ -475,8 +542,14 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: 
   }
 }
 
-function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkResult[]): BenchmarkResult {
-  if (rounds.length !== ROUNDS) throw new Error(`${benchmarkCase.name} (${benchmarkCase.mode}) produced ${rounds.length}/${ROUNDS} rounds.`);
+function aggregate(
+  benchmarkCase: BenchmarkCase,
+  rounds: readonly RawBenchmarkResult[],
+  stableStatistics: boolean,
+): BenchmarkResult {
+  if (rounds.length < MINIMUM_BASELINE_ROUNDS) {
+    throw new Error(`${benchmarkCase.name} (${benchmarkCase.mode}) produced ${rounds.length}/${MINIMUM_BASELINE_ROUNDS} required rounds.`);
+  }
   const setups = rounds.map((round) => round.setupMs).sort(ascending);
   const firstRows = rounds.map((round) => round.firstRowsMs).sort(ascending);
   const mounts = rounds.map((round) => round.mountMs).sort(ascending);
@@ -515,6 +588,9 @@ function aggregate(benchmarkCase: BenchmarkCase, rounds: readonly RawBenchmarkRe
     scrollRoundP95RangeMs: Object.freeze([round(Math.min(...roundP95s)), round(Math.max(...roundP95s))] as const),
     renderedRows: last.renderedRows,
     domElements: last.domElements,
+    completedRounds: rounds.length,
+    plannedRounds: ROUNDS,
+    earlyStopReason: stableStatistics ? 'stable-statistics' : null,
   });
 }
 
@@ -824,6 +900,20 @@ function renderCells(values: readonly string[]): HTMLTableRowElement {
 }
 
 function caseKey(entry: BenchmarkCase): string { return `${entry.rowProfile}:${entry.mode}:${entry.name}`; }
+function baselineFailureKey(entry: BaselineBenchmarkFailure): string { return `${entry.rowProfile}:${entry.mode}:${entry.library}`; }
+
+function baselineProgress(
+  resolved: number,
+  executed: number,
+  total: number,
+  startedAt: number,
+  detail: string,
+): string {
+  const elapsed = performance.now() - startedAt;
+  const remainingUpperBound = executed === 0 ? 0 : (elapsed / executed) * Math.max(0, total - resolved);
+  return `Baseline ${resolved}/${total} · elapsed ${formatElapsed(elapsed)} · ETA ≤ ${formatElapsed(remainingUpperBound)} · ${detail}`;
+}
+
 function rotate<T>(values: readonly T[], offset: number): readonly T[] {
   if (values.length === 0) return values;
   const start = offset % values.length;

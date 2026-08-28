@@ -26,13 +26,15 @@ const merged = {
     ...reports[0].conditions,
     baseline: {
       ...reports.find((report) => (report.baselineResults?.length ?? 0) > 0)?.conditions.baseline,
+      adaptiveSampling: reports.every((report) => report.conditions.baseline?.adaptiveSampling === true),
       rounds: mergedBaseline.rounds,
+      maximumRounds: mergedBaseline.rounds,
+      minimumRounds: reports.every((report) => report.conditions.baseline?.adaptiveSampling === true)
+        ? Math.min(...reports.map((report) => report.conditions.baseline?.minimumRounds ?? mergedBaseline.rounds))
+        : mergedBaseline.rounds,
     },
     rowProfiles: mergeRowProfiles(reports),
-    mutations: {
-      ...reports[0].conditions.mutations,
-      rounds: mergedMutationRounds(reports),
-    },
+    mutations: mergeMutationConditions(reports),
   },
   baselineResults: mergedBaseline.results,
   baselineFailures: mergedBaseline.failures,
@@ -149,6 +151,11 @@ function aggregateBaselineResults(results, samples) {
       Math.min(...results.map((result) => result.scrollRoundP95RangeMs[0])),
       Math.max(...results.map((result) => result.scrollRoundP95RangeMs[1])),
     ],
+    completedRounds: results.reduce((total, result) => total + (result.completedRounds ?? 0), 0),
+    plannedRounds: results.reduce((total, result) => total + (result.plannedRounds ?? 0), 0),
+    earlyStopReason: results.every((result) => result.earlyStopReason === 'stable-statistics')
+      ? 'stable-statistics'
+      : null,
   };
 }
 
@@ -161,6 +168,27 @@ function mergedMutationRounds(reports) {
     return reports.reduce((total, report) => total + (report.conditions.mutations?.rounds ?? 0), 0);
   }
   return Math.max(...reports.map((report) => report.conditions.mutations?.rounds ?? 0));
+}
+
+function mergeMutationConditions(reports) {
+  const rounds = mergedMutationRounds(reports);
+  const keySets = reports.map((report) => (
+    [...new Set((report.mutationResults ?? []).map(mutationKey))].sort().join('\n')
+  ));
+  const sameShard = keySets[0] !== '' && keySets.every((keys) => keys === keySets[0]);
+  const maximumSamples = sameShard
+    ? reports.reduce((total, report) => total + (report.conditions.mutations?.maximumSamplesPerScenario ?? report.conditions.mutations?.samplesPerScenario ?? 0), 0)
+    : Math.max(...reports.map((report) => report.conditions.mutations?.maximumSamplesPerScenario ?? report.conditions.mutations?.samplesPerScenario ?? 0));
+  return {
+    ...reports[0].conditions.mutations,
+    adaptiveSampling: reports.every((report) => report.conditions.mutations?.adaptiveSampling === true),
+    rounds,
+    batchSizes: sameShard
+      ? reports.flatMap((report) => report.conditions.mutations?.batchSizes ?? [])
+      : reports[0].conditions.mutations?.batchSizes,
+    samplesPerScenario: maximumSamples,
+    maximumSamplesPerScenario: maximumSamples,
+  };
 }
 
 function mergeMutationGroup(results) {
@@ -185,13 +213,19 @@ function mergeMutationGroup(results) {
     .filter((sample) => sample.outcome === 'recovered' && typeof sample.elapsedMs === 'number')
     .map((sample) => sample.elapsedMs)
     .sort((left, right) => left - right);
+  const minimumP95Samples = 30;
+  const earlyStopReason = results.some((result) => result.earlyStopReason === 'reproducible-failure')
+    ? 'reproducible-failure'
+    : results.some((result) => result.earlyStopReason === 'stable-statistics')
+      ? 'stable-statistics'
+      : null;
   return {
     ...template,
     runIds: unique(results.flatMap((result) => result.runIds ?? [])),
     medianMs: elapsed.length === 0 ? null : round(percentile(elapsed, 0.5)),
-    p95Ms: elapsed.length === 0 ? null : round(percentile(elapsed, 0.95)),
+    p95Ms: elapsed.length < minimumP95Samples ? null : round(percentile(elapsed, 0.95)),
     recoveryMedianMs: recoveries.length === 0 ? null : round(percentile(recoveries, 0.5)),
-    recoveryP95Ms: recoveries.length === 0 ? null : round(percentile(recoveries, 0.95)),
+    recoveryP95Ms: recoveries.length < minimumP95Samples ? null : round(percentile(recoveries, 0.95)),
     settledSamples: elapsed.length,
     correctSamples: samples.filter((sample) => sample.outcome === 'clean').length,
     recoveredSamples: samples.filter((sample) => sample.outcome === 'recovered').length,
@@ -199,7 +233,7 @@ function mergeMutationGroup(results) {
     totalSamples: samples.length,
     plannedSamples,
     earlyStopped: results.some((result) => result.earlyStopped === true),
-    earlyStopReason: results.some((result) => result.earlyStopped === true) ? 'reproducible-failure' : null,
+    earlyStopReason,
     samples,
     failures,
   };

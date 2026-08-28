@@ -5,6 +5,8 @@
     "types": ["node"]
   },
   "include": [
+    "src/adaptive-sampling.ts",
+    "src/adaptive-sampling.test.ts",
     "src/failure-reproduction.ts",
     "src/failure-reproduction.test.ts"
   ],
