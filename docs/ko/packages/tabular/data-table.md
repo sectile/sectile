@@ -16,13 +16,13 @@ DataTable은 읽기 중심 프로필입니다. native table 의미와 행 단위
 
 ## 기본 구성
 
-`useDataTableComponents`는 controller의 schema type과 결합된 compound component namespace를 만듭니다. Provider는 prop 없이 그 controller를 provide/inject로 전달합니다. source는 revision이 포함된 request를 view로 변환합니다. Body가 accepted row를 반복하고 slot에 schema type이 보존된 `row`를 전달하며, 내부 cell과 control은 그 행의 식별자를 자동으로 상속합니다.
+`createDataTableComponents`는 controller의 schema type과 결합된 compound component namespace를 만듭니다. Provider는 prop 없이 그 controller를 provide/inject로 전달합니다. source는 revision이 포함된 request를 view로 변환합니다. Body가 accepted row를 반복하고 slot에 schema type이 보존된 `row`를 전달하며, 내부 cell과 control은 그 행의 식별자를 자동으로 상속합니다.
 
 ```vue
 <script setup lang="ts">
 import {
   defineDataTableColumns, useDataTable,
-  useDataTableComponents, useDataTableSource,
+  createDataTableComponents, useDataTableSource,
 } from '@sectile/vue/data-table'
 
 interface UserCells {
@@ -35,7 +35,7 @@ const columns = defineDataTableColumns([
   { id: 'role', capabilities: ['sort', 'filter'] },
 ])
 const table = useDataTable<UserCells>({ columns })
-const DataTable = useDataTableComponents(table)
+const DataTable = createDataTableComponents(table)
 
 useDataTableSource(table, async (request) => {
   const page = await fetchUsers(request)
@@ -92,7 +92,7 @@ Header row에는 depth prop이 없습니다. 여러 단계의 `colspan`, `rowspa
 
 ## 공개 Vue API
 
-- 생성: `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
+- 생성: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
 - context: 반환된 namespace의 `DataTable.Provider`, `DataTable.Root`
 - 구조: `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - 조작: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`

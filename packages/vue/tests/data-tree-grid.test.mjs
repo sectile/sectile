@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { defineDataTreeGridColumns, useDataTreeGrid, useDataTreeGridComponents } from '../dist/data-tree-grid.js';
+import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../dist/data-tree-grid.js';
 
 const columns = defineDataTreeGridColumns([{ id: 'name', capabilities: ['edit'] }]);
 
 test('Vue DataTreeGrid exposes only the bound tree-grid component namespace', () => {
-  const components = useDataTreeGridComponents(useDataTreeGrid({ columns }));
+  const components = createDataTreeGridComponents(useDataTreeGrid({ columns }));
   assert.deepEqual(Object.keys(components).sort(), [
     'Body', 'BulkSelectionControl', 'Cell', 'ColumnHeader', 'ColumnResizeHandle',
     'Editor', 'FilterControl', 'Header', 'HeaderRow', 'Provider', 'Root', 'Row',
@@ -16,7 +16,7 @@ test('Vue DataTreeGrid exposes only the bound tree-grid component namespace', ()
 });
 
 test('Vue DataTreeGrid keeps hierarchy and cell semantics in one injected profile', async () => {
-  const app = createSSRApp({ setup() { const controller = useDataTreeGrid({ columns, defaultExpansion: ['g'] }); const DataTreeGrid = useDataTreeGridComponents(controller); accept(controller, [{ kind: 'group', id: 'g', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'Group' } }]); return () => h(DataTreeGrid.Provider, null, { default: () => h(DataTreeGrid.Root, null, { default: () => h(DataTreeGrid.Body, null, { default: ({ row }) => [h(DataTreeGrid.RowDisclosure, null, () => 'Toggle'), h(DataTreeGrid.Cell, { column: 'name' }, () => row.cells.name)] }) }) }); } });
+  const app = createSSRApp({ setup() { const controller = useDataTreeGrid({ columns, defaultExpansion: ['g'] }); const DataTreeGrid = createDataTreeGridComponents(controller); accept(controller, [{ kind: 'group', id: 'g', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'Group' } }]); return () => h(DataTreeGrid.Provider, null, { default: () => h(DataTreeGrid.Root, null, { default: () => h(DataTreeGrid.Body, null, { default: ({ row }) => [h(DataTreeGrid.RowDisclosure, null, () => 'Toggle'), h(DataTreeGrid.Cell, { column: 'name' }, () => row.cells.name)] }) }) }); } });
   const html = await renderToString(app);
   assert.match(html, /role="treegrid"/);
   assert.match(html, /data-part="disclosure"/);

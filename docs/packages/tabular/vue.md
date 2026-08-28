@@ -16,14 +16,14 @@ Each page includes the complete source of its running example plus focused patte
 
 ## Provider and injection
 
-Create the controller in `setup`, then call `useData*Components` once to obtain the schema-typed component namespace. Its Provider injects the bound controller through the subtree and takes no controller prop.
+Create the controller in `setup`, then call `createData*Components` once to obtain the schema-typed component namespace. Its Provider injects the bound controller through the subtree and takes no controller prop.
 
 ```vue
 <script setup lang="ts">
 import {
   defineDataGridColumns,
   useDataGrid,
-  useDataGridComponents,
+  createDataGridComponents,
   useDataGridSource,
 } from '@sectile/vue/data-grid'
 
@@ -35,7 +35,7 @@ const columns = defineDataGridColumns([
   { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
 ])
 const grid = useDataGrid<UserCells>({ columns })
-const DataGrid = useDataGridComponents(grid)
+const DataGrid = createDataGridComponents(grid)
 const source = useDataGridSource(grid, (request, { signal }) =>
   resolveUsers(request, signal),
 )
@@ -59,9 +59,9 @@ Nested Providers form nested scopes and each part resolves the nearest matching 
 
 | Profile | Creation and context | Structure | Controls and editing |
 | --- | --- | --- | --- |
-| DataTable | `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
-| DataGrid | `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
-| DataTreeGrid | `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
+| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
+| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
+| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
 Every part exports its `Props` and `SlotProps` types. Each profile also exports row/column/query/view/source/status/error/command/controller/context types, accepted-view and access/request state, change handlers, a source resolver, and `Use*Options`, `Use*SourceOptions`, and `Use*SourceReturn` from the same `@sectile/vue/data-*` subpath and the Vue package root.
 

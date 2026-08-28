@@ -32,7 +32,7 @@ const rows = [
 
 ## Disclosure and source coordination
 
-Create the typed namespace once with `const DataTreeGrid = useDataTreeGridComponents(tree)`. `DataTreeGrid.RowDisclosure` updates expansion and produces a revisioned source request. The resolver returns only the currently visible branch plus any context-only ancestors needed to explain it. Body supplies the current group row, so the disclosure inherits its row ID.
+Create the typed namespace once with `const DataTreeGrid = createDataTreeGridComponents(tree)`. `DataTreeGrid.RowDisclosure` updates expansion and produces a revisioned source request. The resolver returns only the currently visible branch plus any context-only ancestors needed to explain it. Body supplies the current group row, so the disclosure inherits its row ID.
 
 ```vue
 <DataTreeGrid.RowDisclosure
@@ -58,7 +58,7 @@ The projection exposes parent row, depth, position, size, expansion, and context
 
 ## Public Vue API
 
-- Creation: `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
+- Creation: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
 - Context: `DataTreeGrid.Provider`, `DataTreeGrid.Root`
 - Structure: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - Controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`

@@ -285,7 +285,7 @@ export interface DataTableComponents<LeafCells extends object, GroupCells extend
 }
 
 const componentSuites = new WeakMap<object, Readonly<Record<string, Component>>>();
-export function useDataTableComponents<LeafCells extends object, GroupCells extends object>(controller: DataTableController<LeafCells, GroupCells>): DataTableComponents<LeafCells, GroupCells> {
+export function createDataTableComponents<LeafCells extends object, GroupCells extends object>(controller: DataTableController<LeafCells, GroupCells>): DataTableComponents<LeafCells, GroupCells> {
   return createTabularComponentSuite(parts, controller, componentSuites, 'DataTable', {
     Root: 'Root',
     Caption: 'Caption',

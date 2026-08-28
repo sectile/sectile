@@ -7,7 +7,7 @@ Object.assign(globalThis, { window: browserWindow, document: browserWindow.docum
 const { createApp, h, nextTick } = await import('vue');
 const {
   useDataTable,
-  useDataTableComponents,
+  createDataTableComponents,
   useDataTableSource,
 } = await import('../dist/data-table.js');
 
@@ -18,7 +18,7 @@ test('automatic Body renders accepted rows and supplies row identity to nested p
   const app = createApp({
     setup() {
       const controller = useDataTable({ columns });
-      const DataTable = useDataTableComponents(controller);
+      const DataTable = createDataTableComponents(controller);
       source = useDataTableSource(controller, async (request) => ({
         ...request,
         viewRevision: 1,

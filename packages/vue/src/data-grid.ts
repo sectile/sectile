@@ -169,7 +169,7 @@ export interface DataGridComponents<LeafCells extends object, GroupCells extends
 }
 
 const componentSuites = new WeakMap<object, Readonly<Record<string, Component>>>();
-export function useDataGridComponents<LeafCells extends object, GroupCells extends object>(controller: DataGridController<LeafCells, GroupCells>): DataGridComponents<LeafCells, GroupCells> {
+export function createDataGridComponents<LeafCells extends object, GroupCells extends object>(controller: DataGridController<LeafCells, GroupCells>): DataGridComponents<LeafCells, GroupCells> {
   return createTabularComponentSuite(parts, controller, componentSuites, 'DataGrid', {
     Root: 'Root',
     Header: 'Header',

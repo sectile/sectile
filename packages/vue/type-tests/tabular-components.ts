@@ -2,7 +2,7 @@ import { shallowRef } from 'vue';
 import {
   defineDataTableColumns,
   useDataTable,
-  useDataTableComponents,
+  createDataTableComponents,
   type DataTableBodyProps,
   type DataTableBodySlotProps,
   type DataTableCellProps,
@@ -16,7 +16,7 @@ import {
 import {
   defineDataGridColumns,
   useDataGrid,
-  useDataGridComponents,
+  createDataGridComponents,
   type DataGridBodyProps,
   type DataGridBodySlotProps,
   type DataGridCellProps,
@@ -25,7 +25,7 @@ import {
 import {
   defineDataTreeGridColumns,
   useDataTreeGrid,
-  useDataTreeGridComponents,
+  createDataTreeGridComponents,
   type DataTreeGridBodySlotProps,
   type DataTreeGridCellProps,
   type DataTreeGridRowDisclosureProps,
@@ -44,9 +44,9 @@ const table = useDataTable<UserCells>({ columns: defineDataTableColumns([{ id: '
 const groupedTable = useDataTable<UserCells, UserGroupCells>({ columns: defineDataTableColumns([{ id: 'name' }, { id: 'active' }]) });
 const grid = useDataGrid<UserCells>({ columns: defineDataGridColumns([{ id: 'name', capabilities: ['edit'] }, { id: 'active' }]) });
 const tree = useDataTreeGrid<UserCells>({ columns: defineDataTreeGridColumns([{ id: 'name', capabilities: ['edit'] }, { id: 'active' }]), defaultExpansion: [] });
-const Table = useDataTableComponents(table);
-const Grid = useDataGridComponents(grid);
-const TreeGrid = useDataTreeGridComponents(tree);
+const Table = createDataTableComponents(table);
+const Grid = createDataGridComponents(grid);
+const TreeGrid = createDataTreeGridComponents(tree);
 type TableProviderProps = InstanceType<typeof Table.Provider>['$props'];
 const tableProviderHasController: 'controller' extends keyof TableProviderProps ? true : false = false;
 

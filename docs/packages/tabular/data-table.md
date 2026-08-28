@@ -16,13 +16,13 @@ Try sorting more than once to cycle ascending, descending, and off. Filter the r
 
 ## Basic composition
 
-`useDataTableComponents` creates the typed compound component namespace for a controller. Its Provider carries that controller through injection without a prop. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each schema-typed `row` to its slot; nested cells and controls inherit that row identity.
+`createDataTableComponents` creates the typed compound component namespace for a controller. Its Provider carries that controller through injection without a prop. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each schema-typed `row` to its slot; nested cells and controls inherit that row identity.
 
 ```vue
 <script setup lang="ts">
 import {
   defineDataTableColumns, useDataTable,
-  useDataTableComponents, useDataTableSource,
+  createDataTableComponents, useDataTableSource,
 } from '@sectile/vue/data-table'
 
 interface UserCells {
@@ -35,7 +35,7 @@ const columns = defineDataTableColumns([
   { id: 'role', capabilities: ['sort', 'filter'] },
 ])
 const table = useDataTable<UserCells>({ columns })
-const DataTable = useDataTableComponents(table)
+const DataTable = createDataTableComponents(table)
 
 useDataTableSource(table, async (request) => {
   const page = await fetchUsers(request)
@@ -71,7 +71,7 @@ useDataTableSource(table, async (request) => {
 
 <DataTable.FilterControl
   scope="global"
-  id="directory-search"
+  id="user-search"
   predicate="contains"
   placeholder="Search people"
 />
@@ -103,7 +103,7 @@ Body owns normal row repetition. Use `<DataTable.Body manual>` with explicit `Da
 
 ## Public Vue API
 
-- Creation: `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
+- Creation: `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns`
 - Context: `DataTable.Provider`, `DataTable.Root` from the returned namespace
 - Structure: `Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - Controls: `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor`

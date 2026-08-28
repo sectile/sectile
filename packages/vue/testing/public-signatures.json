@@ -291,7 +291,7 @@
       "types": "dist/year-range-picker.d.ts"
     }
   ],
-  "fingerprint": "e45a0e764f972f9850df7cff29b8812f26fdfdb396bb5c178837da165815a622",
+  "fingerprint": "2f8963848676cfbad62c01c9969be9819e6797c72c2367b52d1f1c5e4cae0402",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -335,15 +335,15 @@
     },
     {
       "path": "dist/data-grid.d.ts",
-      "sha256": "528f9b748bb821a5c7cb90c312e0f2cbe3ed105733f6a5e642f021848745d334"
+      "sha256": "8905a4fedacd88d22176b50031164e9728421a5fd70c2082fa5edbb7eb217b54"
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "436ae3140c428b512ab14315281eec1ee4c4227d9fce1578ca17484a5c300ff6"
+      "sha256": "dc1730277f1829899d1a733a6401eebbde6de890a7278d3fa4612941d612913c"
     },
     {
       "path": "dist/data-tree-grid.d.ts",
-      "sha256": "541e06c050ccf16ef7718bfa91ce467692b0e770c8c6c587d5b9301796e0df7f"
+      "sha256": "6b2edbb4bc70686b5e1770a25b056a0729a9f48a3769563e3194c07cf2ee30c2"
     },
     {
       "path": "dist/date-field.d.ts",

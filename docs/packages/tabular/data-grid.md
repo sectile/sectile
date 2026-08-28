@@ -16,13 +16,13 @@ Click a cell, move with the arrow keys, press Enter to edit, and press Escape to
 
 ## Grid composition
 
-DataGrid uses ARIA grid semantics rather than native table elements. Rows in an accepted view must all be leaves; a hierarchical response is rejected atomically. Create its typed namespace with `useDataGridComponents(grid)`.
+DataGrid uses ARIA grid semantics rather than native table elements. Rows in an accepted view must all be leaves; a hierarchical response is rejected atomically. Create its typed namespace with `createDataGridComponents(grid)`.
 
 ```vue
 <script setup lang="ts">
-import { useDataGridComponents } from '@sectile/vue/data-grid'
+import { createDataGridComponents } from '@sectile/vue/data-grid'
 
-const DataGrid = useDataGridComponents(grid)
+const DataGrid = createDataGridComponents(grid)
 </script>
 
 <template>
@@ -76,7 +76,7 @@ Body renders accepted rows by default and gives each slot invocation its typed `
 
 ## Public Vue API
 
-- Creation: `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
+- Creation: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
 - Context: `DataGrid.Provider`, `DataGrid.Root`
 - Structure: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - Controls: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`

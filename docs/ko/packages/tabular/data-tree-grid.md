@@ -32,7 +32,7 @@ const rows = [
 
 ## disclosure와 source 연결
 
-`const DataTreeGrid = useDataTreeGridComponents(tree)`로 type이 결합된 namespace를 한 번 만듭니다. `DataTreeGrid.RowDisclosure`는 expansion을 변경하고 revision이 붙은 source request를 만듭니다. resolver는 현재 보이는 branch와 이를 설명하는 데 필요한 context-only ancestor만 반환할 수 있습니다. Body가 현재 group row를 제공하므로 disclosure는 row ID를 자동으로 상속합니다.
+`const DataTreeGrid = createDataTreeGridComponents(tree)`로 type이 결합된 namespace를 한 번 만듭니다. `DataTreeGrid.RowDisclosure`는 expansion을 변경하고 revision이 붙은 source request를 만듭니다. resolver는 현재 보이는 branch와 이를 설명하는 데 필요한 context-only ancestor만 반환할 수 있습니다. Body가 현재 group row를 제공하므로 disclosure는 row ID를 자동으로 상속합니다.
 
 ```vue
 <DataTreeGrid.RowDisclosure v-if="row.kind === 'group'">
@@ -56,7 +56,7 @@ projection은 ARIA treegrid 속성에 필요한 parent row, depth, position, siz
 
 ## 공개 Vue API
 
-- 생성: `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
+- 생성: `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns`
 - context: `DataTreeGrid.Provider`, `DataTreeGrid.Root`
 - 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor`

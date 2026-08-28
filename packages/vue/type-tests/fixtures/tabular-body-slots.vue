@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { defineDataTableColumns, useDataTable, useDataTableComponents } from '../../dist/data-table.js';
-import { defineDataGridColumns, useDataGrid, useDataGridComponents } from '../../dist/data-grid.js';
-import { defineDataTreeGridColumns, useDataTreeGrid, useDataTreeGridComponents } from '../../dist/data-tree-grid.js';
+import { defineDataTableColumns, useDataTable, createDataTableComponents } from '../../dist/data-table.js';
+import { defineDataGridColumns, useDataGrid, createDataGridComponents } from '../../dist/data-grid.js';
+import { defineDataTreeGridColumns, useDataTreeGrid, createDataTreeGridComponents } from '../../dist/data-tree-grid.js';
 
 interface Cells {
   readonly name: string;
@@ -11,9 +11,9 @@ interface Cells {
 const table = useDataTable<Cells>({ columns: defineDataTableColumns([{ id: 'name' }, { id: 'active' }]) });
 const grid = useDataGrid<Cells>({ columns: defineDataGridColumns([{ id: 'name' }, { id: 'active' }]) });
 const treeGrid = useDataTreeGrid<Cells>({ columns: defineDataTreeGridColumns([{ id: 'name' }, { id: 'active' }]) });
-const DataTable = useDataTableComponents(table);
-const DataGrid = useDataGridComponents(grid);
-const DataTreeGrid = useDataTreeGridComponents(treeGrid);
+const DataTable = createDataTableComponents(table);
+const DataGrid = createDataGridComponents(grid);
+const DataTreeGrid = createDataTreeGridComponents(treeGrid);
 
 const stringValue = (value: string): string => value;
 const booleanValue = (value: boolean): boolean => value;

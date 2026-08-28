@@ -16,13 +16,13 @@ DataGrid는 평면 application grid 프로필입니다. 셀 사이를 이동하�
 
 ## grid 구성
 
-DataGrid는 native table element가 아니라 ARIA grid 의미를 사용합니다. accepted view의 모든 행은 leaf여야 하며 계층형 response는 상태를 일부 변경하지 않고 원자적으로 거부됩니다. `useDataGridComponents(grid)`로 controller type이 결합된 namespace를 만듭니다.
+DataGrid는 native table element가 아니라 ARIA grid 의미를 사용합니다. accepted view의 모든 행은 leaf여야 하며 계층형 response는 상태를 일부 변경하지 않고 원자적으로 거부됩니다. `createDataGridComponents(grid)`로 controller type이 결합된 namespace를 만듭니다.
 
 ```vue
 <script setup lang="ts">
-import { useDataGridComponents } from '@sectile/vue/data-grid'
+import { createDataGridComponents } from '@sectile/vue/data-grid'
 
-const DataGrid = useDataGridComponents(grid)
+const DataGrid = createDataGridComponents(grid)
 </script>
 
 <template>
@@ -64,7 +64,7 @@ Body는 accepted row를 기본으로 반복하며 매 slot 호출에 type이 지
 
 ## 공개 Vue API
 
-- 생성: `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
+- 생성: `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns`
 - context: `DataGrid.Provider`, `DataGrid.Root`
 - 구조: `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell`
 - 조작: `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor`

@@ -129,7 +129,7 @@ export interface DataTreeGridComponents<LeafCells extends object, GroupCells ext
 }
 
 const componentSuites = new WeakMap<object, Readonly<Record<string, Component>>>();
-export function useDataTreeGridComponents<LeafCells extends object, GroupCells extends object>(controller: DataTreeGridController<LeafCells, GroupCells>): DataTreeGridComponents<LeafCells, GroupCells> {
+export function createDataTreeGridComponents<LeafCells extends object, GroupCells extends object>(controller: DataTreeGridController<LeafCells, GroupCells>): DataTreeGridComponents<LeafCells, GroupCells> {
   return createTabularComponentSuite(parts, controller, componentSuites, 'DataTreeGrid', {
     Root: 'Root',
     Header: 'Header',

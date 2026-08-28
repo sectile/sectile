@@ -2,9 +2,9 @@
 import { computed, reactive, ref } from 'vue';
 import { ArrowDownUp, CheckCircle2, PencilLine, TableCellsSplit } from '@lucide/vue';
 import {
+  createDataGridComponents,
   defineDataGridColumns,
   useDataGrid,
-  useDataGridComponents,
   useDataGridSource,
   type DataGridCommand,
   type DataGridEditState,
@@ -53,7 +53,7 @@ const columns = defineDataGridColumns([
 ]);
 let viewRevision = 0;
 const grid = useDataGrid<ReleaseCells>({ columns });
-const DataGrid = useDataGridComponents(grid);
+const DataGrid = createDataGridComponents(grid);
 const gridRoot = ref<DataGridRootExpose<ReleaseCells> | null>(null);
 useDataGridSource(grid, (request): DataGridViewResponse<ReleaseCells> => {
   let result = [...records];

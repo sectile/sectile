@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ArrowDownUp, Search, Table2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ChevronsUpDown, ListChecks, Search, Table2 } from '@lucide/vue';
 import {
+  createDataTableComponents,
   defineDataTableColumns,
   useDataTable,
-  useDataTableComponents,
   useDataTableSource,
   type DataTableViewResponse,
 } from '@sectile/vue/data-table';
@@ -13,54 +13,65 @@ import '../tabular-docs.css';
 
 const { isKorean } = useDocsLocale();
 const copy = computed(() => isKorean.value ? {
-  title: '팀 디렉터리', subtitle: '구성원과 접근 권한을 한눈에 비교', search: '이름, 팀, 역할 검색', selectAll: '검색 결과 전체 선택',
-  columns: ['이름', '팀', '역할', '근무지', '상태'], status: { active: '활성', away: '자리 비움', offline: '오프라인' }, hint: '검색 · 열 정렬 · 개별 선택 · 검색 결과 전체 선택',
+  title: '사용자 목록', subtitle: '소속, 역할과 계정 상태를 한눈에 확인', search: '이름, 소속 또는 역할 검색', selectAll: '검색 결과 전체 선택',
+  columns: ['이름', '소속', '역할', '최근 활동', '상태'], status: { active: '사용 중', invited: '초대됨', suspended: '중지됨' },
+  hint: '열 제목을 눌러 정렬 · 행 선택 · 검색 결과 전체 선택', loading: '불러오는 중…', empty: '검색 결과가 없습니다',
+  count: (value: number) => `${value}명 표시`, selected: (value: number) => `${value}명 선택`, selectRow: (name: string) => `${name} 선택`,
 } : {
-  title: 'Team directory', subtitle: 'Compare members and access at a glance', search: 'Search name, team, or role', selectAll: 'Select all matching',
-  columns: ['Name', 'Team', 'Role', 'Location', 'Status'], status: { active: 'Active', away: 'Away', offline: 'Offline' }, hint: 'Search · sort columns · select rows · select all matching',
+  title: 'Users', subtitle: 'Compare teams, roles, and account status', search: 'Search name, team, or role', selectAll: 'Select all matching results',
+  columns: ['Name', 'Team', 'Role', 'Last active', 'Status'], status: { active: 'Active', invited: 'Invited', suspended: 'Suspended' },
+  hint: 'Select a column heading to sort · Select rows · Select all matching', loading: 'Loading…', empty: 'No matching users',
+  count: (value: number) => `${value} shown`, selected: (value: number) => `${value} selected`, selectRow: (name: string) => `Select ${name}`,
 });
 
-interface DirectoryCells {
+interface UserCells {
   readonly name: string;
   readonly team: string;
   readonly role: string;
-  readonly location: string;
-  readonly status: 'active' | 'away' | 'offline';
+  readonly lastActive: string;
+  readonly status: 'active' | 'invited' | 'suspended';
 }
-interface DirectoryRecord extends DirectoryCells { readonly id: string }
+interface UserRecord extends UserCells { readonly id: string }
 
-const records: readonly DirectoryRecord[] = [
-  { id: 'ada', name: 'Ada Lovelace', team: 'Platform', role: 'Staff engineer', location: 'London', status: 'active' },
-  { id: 'grace', name: 'Grace Hopper', team: 'Compiler', role: 'Tech lead', location: 'New York', status: 'active' },
-  { id: 'margaret', name: 'Margaret Hamilton', team: 'Reliability', role: 'Principal', location: 'Boston', status: 'away' },
-  { id: 'radia', name: 'Radia Perlman', team: 'Network', role: 'Architect', location: 'Seattle', status: 'active' },
-  { id: 'annie', name: 'Annie Easley', team: 'Infrastructure', role: 'Engineer', location: 'Cleveland', status: 'offline' },
-  { id: 'katherine', name: 'Katherine Johnson', team: 'Analytics', role: 'Staff analyst', location: 'Hampton', status: 'active' },
-  { id: 'mary', name: 'Mary Jackson', team: 'Research', role: 'Engineering lead', location: 'Hampton', status: 'away' },
-  { id: 'barbara', name: 'Barbara Liskov', team: 'Runtime', role: 'Distinguished', location: 'Cambridge', status: 'active' },
-  { id: 'adele', name: 'Adele Goldberg', team: 'Developer tools', role: 'Product engineer', location: 'Palo Alto', status: 'offline' },
-  { id: 'frances', name: 'Frances Allen', team: 'Compiler', role: 'Advisor', location: 'Remote', status: 'active' },
-];
+const records = computed<readonly UserRecord[]>(() => isKorean.value ? [
+  { id: 'minseo', name: '김민서', team: '제품 플랫폼', role: '스태프 엔지니어', lastActive: '8월 28일', status: 'active' },
+  { id: 'junho', name: '박준호', team: '컴파일러', role: '테크 리드', lastActive: '8월 28일', status: 'active' },
+  { id: 'seoyun', name: '이서윤', team: '신뢰성', role: '수석 엔지니어', lastActive: '8월 27일', status: 'active' },
+  { id: 'harin', name: '정하린', team: '데이터', role: '분석 엔지니어', lastActive: '초대 대기', status: 'invited' },
+  { id: 'doyun', name: '최도윤', team: '인프라', role: '엔지니어', lastActive: '8월 26일', status: 'active' },
+  { id: 'jiwoo', name: '한지우', team: '리서치', role: '엔지니어링 리드', lastActive: '8월 26일', status: 'active' },
+  { id: 'seojun', name: '윤서준', team: '런타임', role: '프린시펄 엔지니어', lastActive: '8월 25일', status: 'active' },
+  { id: 'yuna', name: '강유나', team: '개발 도구', role: '제품 엔지니어', lastActive: '8월 21일', status: 'suspended' },
+] : [
+  { id: 'maya', name: 'Maya Chen', team: 'Platform', role: 'Staff engineer', lastActive: 'Aug 28', status: 'active' },
+  { id: 'elias', name: 'Elias Novak', team: 'Compiler', role: 'Tech lead', lastActive: 'Aug 28', status: 'active' },
+  { id: 'amina', name: 'Amina Yusuf', team: 'Reliability', role: 'Principal engineer', lastActive: 'Aug 27', status: 'active' },
+  { id: 'leo', name: 'Leo Martins', team: 'Data', role: 'Analytics engineer', lastActive: 'Invite pending', status: 'invited' },
+  { id: 'priya', name: 'Priya Shah', team: 'Infrastructure', role: 'Engineer', lastActive: 'Aug 26', status: 'active' },
+  { id: 'noah', name: 'Noah Kim', team: 'Research', role: 'Engineering lead', lastActive: 'Aug 26', status: 'active' },
+  { id: 'sofia', name: 'Sofia Rossi', team: 'Runtime', role: 'Principal engineer', lastActive: 'Aug 25', status: 'active' },
+  { id: 'omar', name: 'Omar Haddad', team: 'Developer tools', role: 'Product engineer', lastActive: 'Aug 21', status: 'suspended' },
+]);
 const columns = defineDataTableColumns([
   { id: 'name', label: 'Name', capabilities: ['sort', 'filter'] },
   { id: 'team', label: 'Team', capabilities: ['sort', 'filter'] },
   { id: 'role', label: 'Role', capabilities: ['sort', 'filter'] },
-  { id: 'location', label: 'Location', capabilities: ['sort', 'filter'] },
+  { id: 'lastActive', label: 'Last active', capabilities: ['sort', 'filter'] },
   { id: 'status', label: 'Status', capabilities: ['sort', 'filter'] },
 ]);
 let viewRevision = 0;
 
-const table = useDataTable<DirectoryCells>({ columns });
-const DataTable = useDataTableComponents(table);
-const source = useDataTableSource(table, (request): DataTableViewResponse<DirectoryCells> => {
+const table = useDataTable<UserCells>({ columns });
+const DataTable = createDataTableComponents(table);
+const source = useDataTableSource(table, (request): DataTableViewResponse<UserCells> => {
   const filter = request.query.filters.find((entry) => entry.enabled !== false)?.value;
   const needle = typeof filter === 'string' ? filter.trim().toLocaleLowerCase() : '';
-  let result = records.filter((record) => `${record.name} ${record.team} ${record.role} ${record.location} ${record.status}`.toLocaleLowerCase().includes(needle));
+  let result = records.value.filter((record) => `${record.name} ${record.team} ${record.role} ${record.lastActive} ${record.status}`.toLocaleLowerCase().includes(needle));
   const sort = request.query.sort[0];
   if (sort !== undefined) {
     result = [...result].sort((left, right) => String(left[sort.columnID as keyof typeof left]).localeCompare(String(right[sort.columnID as keyof typeof right])) * (sort.direction === 'ascending' ? 1 : -1));
   }
-  const rows = result.map((record) => ({ kind: 'leaf' as const, id: record.id, cells: { name: record.name, team: record.team, role: record.role, location: record.location, status: record.status } }));
+  const rows = result.map((record) => ({ kind: 'leaf' as const, id: record.id, cells: { name: record.name, team: record.team, role: record.role, lastActive: record.lastActive, status: record.status } }));
   return {
     protocolVersion: 1, requestID: request.requestID, sourceGeneration: request.sourceGeneration,
     queryRevision: request.queryRevision, expansionRevision: request.expansionRevision,
@@ -89,37 +100,39 @@ const direction = (columnID: string) => {
   <DataTable.Provider>
     <section class="tabular-demo tabular-demo--table" :aria-label="copy.title">
       <header class="tabular-demo__toolbar">
-        <div class="tabular-demo__title"><span><Table2 :size="18" aria-hidden="true" /></span><div><strong>{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '명' : ' people' }}</small></div></div>
-        <label class="tabular-demo__search"><Search :size="16" aria-hidden="true" /><DataTable.FilterControl scope="global" id="directory-search" predicate="contains" :placeholder="copy.search" :aria-label="copy.search" /></label>
+        <div class="tabular-demo__title"><span><Table2 :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-table-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ copy.count(records.length) }}</small></div></div>
+        <label class="tabular-demo__search"><Search :size="16" aria-hidden="true" /><DataTable.FilterControl scope="global" id="user-search" predicate="contains" :placeholder="copy.search" :aria-label="copy.search" /></label>
       </header>
 
       <div class="tabular-demo__viewport">
-        <DataTable.Root class="tabular-table">
-          <DataTable.Caption class="sr-only">{{ copy.title }}</DataTable.Caption>
+        <DataTable.Root class="tabular-table" aria-labelledby="tabular-data-table-demo-title">
           <DataTable.Header>
             <DataTable.HeaderRow>
-              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><span aria-hidden="true">✓</span></DataTable.BulkSelectionControl></th>
+              <th class="tabular-table__select"><DataTable.BulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><ListChecks :size="13" aria-hidden="true" /></DataTable.BulkSelectionControl></th>
               <DataTable.ColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
                 <DataTable.SortTrigger :column="column.id">
-                  {{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /><span class="sr-only">{{ direction(column.id) }}</span>
+                  {{ copy.columns[index] }}
+                  <ArrowUp v-if="direction(column.id) === 'ascending'" :size="14" aria-hidden="true" />
+                  <ArrowDown v-else-if="direction(column.id) === 'descending'" :size="14" aria-hidden="true" />
+                  <ChevronsUpDown v-else :size="14" aria-hidden="true" />
                 </DataTable.SortTrigger>
               </DataTable.ColumnHeader>
             </DataTable.HeaderRow>
           </DataTable.Header>
           <DataTable.Body>
             <template #default="{ row }">
-              <td class="tabular-table__select"><DataTable.SelectionControl name="team-members" :aria-label="`Select ${row.cells.name}`" /></td>
+              <td class="tabular-table__select"><DataTable.SelectionControl name="selected-users" :aria-label="copy.selectRow(row.cells.name)" /></td>
               <DataTable.Cell column="name"><strong>{{ row.cells.name }}</strong></DataTable.Cell>
               <DataTable.Cell column="team">{{ row.cells.team }}</DataTable.Cell>
               <DataTable.Cell column="role">{{ row.cells.role }}</DataTable.Cell>
-              <DataTable.Cell column="location">{{ row.cells.location }}</DataTable.Cell>
+              <DataTable.Cell column="lastActive">{{ row.cells.lastActive }}</DataTable.Cell>
               <DataTable.Cell column="status"><span class="tabular-demo__status" :data-tone="row.cells.status">{{ copy.status[row.cells.status] }}</span></DataTable.Cell>
             </template>
-            <template #empty><tr><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? 'Loading…' : 'No matching rows' }}</td></tr></template>
+            <template #empty><tr><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? copy.loading : copy.empty }}</td></tr></template>
           </DataTable.Body>
         </DataTable.Root>
       </div>
-      <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ selectedCount }}{{ isKorean ? '명 선택' : ' selected' }}</strong></footer>
+      <footer class="tabular-demo__footer"><span>{{ copy.hint }}</span><strong>{{ copy.count(rows.length) }} · {{ copy.selected(selectedCount) }}</strong></footer>
     </section>
   </DataTable.Provider>
 </template>

@@ -2,9 +2,9 @@
 import { computed, reactive, ref } from 'vue';
 import { ChevronRight, PencilLine, Workflow } from '@lucide/vue';
 import {
+  createDataTreeGridComponents,
   defineDataTreeGridColumns,
   useDataTreeGrid,
-  useDataTreeGridComponents,
   useDataTreeGridSource,
   type DataTreeGridCommand,
   type DataTreeGridEditState,
@@ -57,7 +57,7 @@ const columns = defineDataTreeGridColumns([
 ]);
 let viewRevision = 0;
 const tree = useDataTreeGrid<ServiceCells>({ columns, defaultExpansion: ['commerce', 'experience', 'foundation'] });
-const DataTreeGrid = useDataTreeGridComponents(tree);
+const DataTreeGrid = createDataTreeGridComponents(tree);
 const treeRoot = ref<DataTreeGridRootExpose<ServiceCells> | null>(null);
 useDataTreeGridSource(tree, (request): DataTreeGridViewResponse<ServiceCells> => {
   const rows = groups.flatMap((group) => {

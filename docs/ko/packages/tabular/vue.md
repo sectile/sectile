@@ -16,14 +16,14 @@ pnpm add @sectile/vue vue
 
 ## Provider와 inject
 
-`setup`에서 controller를 만든 뒤 `useData*Components`를 한 번 호출해 schema type이 결합된 component namespace를 얻습니다. 이 namespace의 Provider는 controller prop 없이 결합된 controller를 하위 트리에 inject합니다.
+`setup`에서 controller를 만든 뒤 `createData*Components`를 한 번 호출해 schema type이 결합된 component namespace를 얻습니다. 이 namespace의 Provider는 controller prop 없이 결합된 controller를 하위 트리에 inject합니다.
 
 ```vue
 <script setup lang="ts">
 import {
   defineDataGridColumns,
   useDataGrid,
-  useDataGridComponents,
+  createDataGridComponents,
   useDataGridSource,
 } from '@sectile/vue/data-grid'
 
@@ -35,7 +35,7 @@ const columns = defineDataGridColumns([
   { id: 'name', capabilities: ['sort', 'filter', 'edit'] },
 ])
 const grid = useDataGrid<UserCells>({ columns })
-const DataGrid = useDataGridComponents(grid)
+const DataGrid = createDataGridComponents(grid)
 const source = useDataGridSource(grid, (request, { signal }) =>
   resolveUsers(request, signal),
 )
@@ -59,9 +59,9 @@ Provider를 중첩하면 각 part가 가장 가까운 matching Provider를 사�
 
 | 프로필 | 생성·context | 구조 | 조작·편집 |
 | --- | --- | --- | --- |
-| DataTable | `useDataTable`, `useDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
-| DataGrid | `useDataGrid`, `useDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
-| DataTreeGrid | `useDataTreeGrid`, `useDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
+| DataTable | `useDataTable`, `createDataTableComponents`, `useDataTableSource`, `useDataTableContext`, `defineDataTableColumns` | `DataTable.Caption`, `Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `SelectionControl`, `BulkSelectionControl`, `Disclosure`, `ColumnResizeHandle`, `Editor` |
+| DataGrid | `useDataGrid`, `createDataGridComponents`, `useDataGridSource`, `useDataGridContext`, `defineDataGridColumns` | `DataGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `ColumnResizeHandle`, `Editor` |
+| DataTreeGrid | `useDataTreeGrid`, `createDataTreeGridComponents`, `useDataTreeGridSource`, `useDataTreeGridContext`, `defineDataTreeGridColumns` | `DataTreeGrid.Header`, `HeaderRow`, `ColumnHeader`, `Body`, `Row`, `Cell` | `SortTrigger`, `FilterControl`, `RowSelectionControl`, `BulkSelectionControl`, `RowDisclosure`, `ColumnResizeHandle`, `Editor` |
 
 모든 part는 `Props`와 `SlotProps` type을 내보냅니다. 각 프로필은 같은 `@sectile/vue/data-*` subpath와 Vue package root에서 row/column/query/view/source/status/error/command/controller/context, accepted-view와 access/request state, change handler, source resolver, `Use*Options`, `Use*SourceOptions`, `Use*SourceReturn`도 제공합니다.
 
