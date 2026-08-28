@@ -262,6 +262,75 @@ test('reset clears coordinator metadata and emits participant commands in order'
   ]);
 });
 
+test('reinitialize establishes a clean baseline without resetting participant values', () => {
+  const state = createFormState({
+    validationStatus: 'invalid',
+    validationTrigger: 'submit',
+    validationIntent: 'submission',
+    submissionStatus: 'failed',
+    submitCount: 2,
+    submitted: true,
+    fields: [
+      {
+        id: 'email',
+        touched: true,
+        dirty: true,
+        valid: false,
+        issues: [
+          requiredIssue,
+          { id: 'email-native', fieldId: 'email', message: 'Invalid.', source: 'native' },
+          { id: 'email-server', fieldId: 'email', message: 'Taken.', source: 'server' },
+        ],
+      },
+    ],
+  });
+
+  const result = applyFormEvent(state, { type: 'reinitialize' }).value;
+
+  assert.equal(result.state.dirty, false);
+  assert.equal(result.state.touched, false);
+  assert.equal(result.state.validationStatus, 'idle');
+  assert.equal(result.state.submissionStatus, 'idle');
+  assert.equal(result.state.submitCount, 0);
+  assert.equal(result.state.submitted, false);
+  assert.deepEqual(result.state.fields[0].issues.map((issue) => issue.id), ['email-required']);
+  assert.deepEqual(result.commands, []);
+});
+
+test('reinitialize can preserve independent metadata groups while dirty always clears', () => {
+  const state = createFormState({
+    validationStatus: 'invalid',
+    validationTrigger: 'submit',
+    validationIntent: 'submission',
+    submissionStatus: 'failed',
+    submitCount: 1,
+    submitted: true,
+    fields: [{
+      id: 'email',
+      touched: true,
+      dirty: true,
+      valid: false,
+      issues: [
+        { id: 'native', fieldId: 'email', message: 'Invalid.', source: 'native' },
+        { id: 'server', fieldId: 'email', message: 'Taken.', source: 'server' },
+      ],
+    }],
+  });
+
+  const result = applyFormEvent(state, {
+    type: 'reinitialize',
+    options: { preserve: { touched: true, validation: true, submission: true } },
+  }).value.state;
+
+  assert.equal(result.dirty, false);
+  assert.equal(result.touched, true);
+  assert.equal(result.validationStatus, 'invalid');
+  assert.equal(result.submissionStatus, 'failed');
+  assert.equal(result.submitCount, 1);
+  assert.equal(result.submitted, true);
+  assert.deepEqual(result.fields[0].issues.map((issue) => issue.id), ['native', 'server']);
+});
+
 test('constructors reject duplicate fields and malformed issue ownership', () => {
   assert.equal(tryCreateFormState({ fields: [{ id: 'email' }, { id: 'email' }] }).ok, false);
   assert.equal(tryCreateFormState({

@@ -498,6 +498,14 @@ test('DOM Form preserves document order and delegates reset to participants and 
     assert.equal(form.state.dirty, true);
     assert.equal(form.state.touched, true);
 
+    first.value = 'initial';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.dirty, false);
+    assert.equal(form.state.touched, true);
+
+    first.value = 'changed';
+    first.dispatchEvent(new Event('input', { bubbles: true }));
+
     form.reset();
     assert.equal(first.value, 'initial');
     assert.deepEqual(resets, ['first', 'second']);
@@ -506,6 +514,112 @@ test('DOM Form preserves document order and delegates reset to participants and 
     assert.equal(form.state.dirty, false);
     assert.equal(form.state.touched, false);
     assert.equal(form.state.submitCount, 0);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form reinitializes the current participant values as a reversible dirty baseline', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const input = document.createElement('input');
+    input.name = 'email';
+    input.value = 'before@sectile.dev';
+    formElement.append(input);
+    document.body.append(formElement);
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'email', element: input }],
+    });
+
+    input.value = 'after@sectile.dev';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('blur'));
+    assert.equal(form.state.dirty, true);
+    assert.equal(form.state.touched, true);
+
+    form.reinitialize();
+    assert.equal(form.state.dirty, false);
+    assert.equal(form.state.touched, false);
+
+    input.value = 'before@sectile.dev';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.dirty, true);
+
+    input.value = 'after@sectile.dev';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.dirty, false);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('DOM Form supports custom value snapshots and comparators', () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const control = document.createElement('button');
+    control.type = 'button';
+    formElement.append(control);
+    document.body.append(formElement);
+    let value = ['alpha'];
+    const form = createForm({
+      form: formElement,
+      participants: [{
+        id: 'tags',
+        element: control,
+        getValue: () => [...value],
+        isValueEqual: (current, baseline) => (
+          Array.isArray(current)
+          && Array.isArray(baseline)
+          && current.join('|') === baseline.join('|')
+        ),
+      }],
+    });
+
+    value = ['alpha', 'beta'];
+    control.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.dirty, true);
+
+    value = ['alpha'];
+    control.dispatchEvent(new Event('input', { bubbles: true }));
+    assert.equal(form.state.dirty, false);
+  } finally {
+    dom.restore();
+  }
+});
+
+test('submit payload reinitialize commits only after a successful submission', async () => {
+  const dom = installDOM();
+  try {
+    const { document, Event } = dom.window;
+    const formElement = document.createElement('form');
+    const input = document.createElement('input');
+    input.name = 'name';
+    input.value = 'before';
+    formElement.append(input);
+    document.body.append(formElement);
+    let resolveSubmission;
+    const form = createForm({
+      form: formElement,
+      participants: [{ id: 'name', element: input }],
+      onSubmit(payload) {
+        payload.reinitialize();
+        return new Promise((resolve) => { resolveSubmission = resolve; });
+      },
+    });
+    input.value = 'after';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    formElement.requestSubmit();
+    assert.equal(form.state.dirty, true);
+
+    resolveSubmission({ ok: true });
+    await Promise.resolve();
+    assert.equal(form.state.dirty, false);
+    assert.equal(form.state.submissionStatus, 'idle');
   } finally {
     dom.restore();
   }
@@ -653,11 +767,12 @@ test('DOM Form observes and refreshes registered out-of-tree controls exactly on
     const form = createForm({ form: formElement });
     form.registerParticipant({ id: 'external', element: external });
 
+    external.value = 'changed@sectile.dev';
     external.dispatchEvent(new Event('input', { bubbles: true }));
     external.dispatchEvent(new Event('blur'));
     assert.equal(form.state.fields[0].dirty, true);
     assert.equal(form.state.fields[0].touched, true);
-    assert.deepEqual([...form.getFormData().entries()], [['email', 'outside@sectile.dev']]);
+    assert.deepEqual([...form.getFormData().entries()], [['email', 'changed@sectile.dev']]);
 
     external.name = 'account.email';
     assert.equal(form.refreshParticipant('external'), true);

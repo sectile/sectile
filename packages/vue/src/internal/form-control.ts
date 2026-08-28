@@ -75,6 +75,8 @@ export interface FormControlRegistration {
   readonly capabilities?: FormControlCapabilities;
   readonly explicit?: readonly FormMetadataAttribute[];
   readonly reset?: () => void;
+  readonly getValue?: (() => unknown) | undefined;
+  readonly isValueEqual?: ((current: unknown, baseline: unknown) => boolean) | undefined;
 }
 
 export interface FormControlParticipation {
@@ -149,7 +151,11 @@ export const hiddenValueSubmissionCapabilities = Object.freeze({
 
 export function useNativeInputFormControl(
   element: Readonly<ShallowRef<HTMLInputElement | HTMLTextAreaElement | null | undefined>>,
-  options: { readonly reset?: () => void } = {},
+  options: {
+    readonly reset?: () => void;
+    readonly getValue?: () => unknown;
+    readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
+  } = {},
 ): FormControlParticipation {
   return useFormControl({
     element: element as FormElementSource<HTMLInputElement>,
@@ -159,6 +165,8 @@ export function useNativeInputFormControl(
     labelMode: 'for',
     capabilities: nativeInputControlCapabilities,
     ...(options.reset === undefined ? {} : { reset: options.reset }),
+    ...(options.getValue === undefined ? {} : { getValue: options.getValue }),
+    ...(options.isValueEqual === undefined ? {} : { isValueEqual: options.isValueEqual }),
   });
 }
 
@@ -169,6 +177,8 @@ export function useCompositeFormControl(options: {
   readonly submissions?: FormSubmissionSource;
   readonly labelMode?: FormLabelMode;
   readonly reset?: () => void;
+  readonly getValue?: () => unknown;
+  readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
 }): FormControlParticipation {
   return useFormControl({
     element: options.root,
@@ -179,6 +189,8 @@ export function useCompositeFormControl(options: {
     capabilities: compositeControlCapabilities,
     ...(options.submissions === undefined ? {} : { submissions: options.submissions }),
     ...(options.reset === undefined ? {} : { reset: options.reset }),
+    ...(options.getValue === undefined ? {} : { getValue: options.getValue }),
+    ...(options.isValueEqual === undefined ? {} : { isValueEqual: options.isValueEqual }),
   });
 }
 

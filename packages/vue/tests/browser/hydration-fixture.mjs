@@ -113,7 +113,7 @@ export function createHydrationFixture() {
                 h(FormMessage),
               ],
             }),
-            h(FormField, { id: 'browser-sectile', name: 'sectile', required: true }, {
+            h(FormField, { id: 'browser-sectile', name: ['sectile'], required: true }, {
               default: () => [
                 h(FormLabel, null, { default: () => 'Sectile value' }),
                 h(TextField, { id: 'browser-sectile-input', defaultValue: 'sectile-default' }),

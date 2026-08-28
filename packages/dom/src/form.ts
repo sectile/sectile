@@ -6,6 +6,7 @@ import {
   type FormFieldState,
   type FormIssue,
   type FormIssueSource,
+  type FormReinitializeOptions,
   type FormState,
   type FormValidationIntent,
   type FormValidationTrigger,
@@ -39,6 +40,7 @@ export type {
   FormSchemaInput,
   FormSchemaOutput,
 } from '@sectile/form/schema';
+export type { FormReinitializeOptions } from '@sectile/form/state';
 
 export interface FormValidationIssue {
   readonly message: string;
@@ -67,6 +69,7 @@ export type FormValidateHandler<
 ) => FormValidationResult | PromiseLike<FormValidationResult>;
 export type FormFocusHandler = () => boolean | void;
 export type FormResetHandler = () => void;
+export type FormReinitializeHandler = (options?: FormReinitializeOptions) => void;
 export type FormAnnounceSummaryHandler<ID extends StableID = StableID> =
   (issues: readonly FormIssue<ID>[]) => void;
 export type FormStateChangeHandler<ID extends StableID = StableID> =
@@ -89,6 +92,8 @@ export interface FormParticipant<ID extends StableID = StableID> {
   readonly name?: FormFieldPath | null;
   readonly focus?: FormFocusHandler;
   readonly reset?: FormResetHandler;
+  readonly getValue?: (() => unknown) | undefined;
+  readonly isValueEqual?: ((current: unknown, baseline: unknown) => boolean) | undefined;
 }
 
 export interface FormSubmitPayload<
@@ -100,6 +105,7 @@ export interface FormSubmitPayload<
   readonly values: Values;
   readonly submitter: HTMLElement | null;
   readonly state: FormState<ID>;
+  readonly reinitialize: FormReinitializeHandler;
 }
 
 export type FormSubmitResult<ID extends StableID = StableID> =
@@ -196,6 +202,7 @@ export interface FormConnection<
   submitStarted(): number | null;
   submitSucceeded(generation: number): boolean;
   submitFailed(generation: number, issues?: readonly FormIssue<ID>[]): boolean;
+  reinitialize(options?: FormReinitializeOptions): void;
   reset(): void;
   subscribe(listener: FormSnapshotListener<ID>): () => void;
   destroy(): void;
@@ -224,8 +231,11 @@ export function tryCreateForm<
   if (!initial.ok) return initial;
 
   const participants = new Map<ID, FormParticipant<ID>>();
+  const participantBaselines = new Map<ID, unknown>();
+  const participantValues = new Map<ID, unknown>();
   const participantObservers = new Map<ID, () => void>();
   const handledParticipantEvents = new WeakSet<Event>();
+  const pendingReinitializations = new Map<number, FormReinitializeOptions>();
   const subscribers = new Set<(snapshot: FormSnapshot<ID>) => void>();
   let state = initial.value;
   let revision = 0;
@@ -318,12 +328,53 @@ export function tryCreateForm<
   ): boolean => {
     const current = field(participant.id);
     if (current === undefined) return false;
+    const touched = flags.touched ?? current.touched;
+    const dirty = flags.dirty ?? current.dirty;
+    if (touched === current.touched && dirty === current.dirty) return true;
     return transition({
       type: 'update-field',
       id: participant.id,
-      touched: flags.touched ?? current.touched,
-      dirty: flags.dirty ?? current.dirty,
+      touched,
+      dirty,
     }) !== null;
+  };
+  const valuesEqual = (
+    participant: FormParticipant<ID>,
+    current: unknown,
+    baseline: unknown,
+  ): boolean => participant.isValueEqual?.(current, baseline)
+    ?? sameParticipantValue(current, baseline);
+  const readValue = (participant: FormParticipant<ID>): unknown => (
+    participant.getValue === undefined
+      ? readParticipantValue(participant)
+      : participant.getValue()
+  );
+  const captureParticipant = (participant: FormParticipant<ID>): unknown => {
+    const value = readValue(participant);
+    participantValues.set(participant.id, value);
+    return value;
+  };
+  const captureAllCurrentValues = (): void => {
+    if (!active) return;
+    for (const participant of participants.values()) {
+      const value = captureParticipant(participant);
+      participantBaselines.set(participant.id, value);
+    }
+  };
+  const reinitialize = (reinitializeOptions: FormReinitializeOptions = {}): void => {
+    if (!active) return;
+    validationController?.abort();
+    validationController = null;
+    validationSequence += 1;
+    nativeResume = null;
+    pendingReinitializations.clear();
+    captureAllCurrentValues();
+    transition({ type: 'reinitialize', options: reinitializeOptions });
+    if (summary !== undefined) {
+      const remaining = orderedIssues(state);
+      summary.textContent = remaining.map((issue) => issue.message).join(' ');
+      summary.hidden = remaining.length === 0;
+    }
   };
   const focusInvalid = (startId: ID): boolean => {
     const invalid = state.fields.filter(
@@ -482,6 +533,10 @@ export function tryCreateForm<
       values: schema !== null && schema.issues === undefined ? schema.value : input as unknown as Output,
       submitter,
       state,
+      reinitialize: (reinitializeOptions = {}) => {
+        if (!active || submissionGeneration !== state.submissionGeneration) return;
+        pendingReinitializations.set(submissionGeneration, reinitializeOptions);
+      },
     });
     let result: FormSubmitResult<ID> | PromiseLike<FormSubmitResult<ID>>;
     try {
@@ -505,6 +560,7 @@ export function tryCreateForm<
   ): void => {
     if (!active || generation !== state.submissionGeneration) return;
     if (typeof result === 'object' && result !== null && result.ok === false) {
+      pendingReinitializations.delete(generation);
       let commands = transition({
         type: 'submit-failed',
         generation,
@@ -520,7 +576,11 @@ export function tryCreateForm<
       if (commands !== null) execute(commands);
       return;
     }
-    transition({ type: 'submit-succeeded', generation });
+    const succeeded = transition({ type: 'submit-succeeded', generation });
+    if (succeeded === null) return;
+    const requested = pendingReinitializations.get(generation);
+    pendingReinitializations.delete(generation);
+    if (requested !== undefined) reinitialize(requested);
   };
   const failManagedSubmission = (generation: number, reason: unknown): void => {
     if (!active || generation !== state.submissionGeneration) return;
@@ -709,24 +769,45 @@ export function tryCreateForm<
         || participant.element.contains(target);
     });
   };
-  const interact = (event: Event, trigger: FormInteractionValidationTrigger): void => {
-    if (recoveringFocus && trigger === 'blur') return;
-    if (handledParticipantEvents.has(event)) return;
-    handledParticipantEvents.add(event);
-    const participant = participantFor(event.target);
+  const invalidateAfterInteraction = (
+    trigger: FormInteractionValidationTrigger,
+    participant: FormParticipant<ID> | undefined,
+  ): void => {
     const previousIntent = state.validationStatus === 'invalid'
       ? state.validationIntent
       : null;
-    if (participant !== undefined) {
-      updateParticipant(participant, trigger === 'input' ? { dirty: true } : { touched: true });
-    }
     if (previousIntent !== null && !revalidateOn.has(trigger)) return;
     transition({ type: 'validation-invalidated' });
     const intent = previousIntent ?? (validateOn.has(trigger) ? 'interaction' : null);
     if (intent !== null) runValidation(trigger, intent, participant?.id ?? null);
   };
-  const onInput = (event: Event): void => interact(event, 'input');
-  const onBlur = (event: Event): void => interact(event, 'blur');
+  const onValueInteraction = (event: Event): void => {
+    if (handledParticipantEvents.has(event)) return;
+    handledParticipantEvents.add(event);
+    const participant = participantFor(event.target);
+    if (participant === undefined) return;
+    const updateValue = (): void => {
+      if (!active || participants.get(participant.id) !== participant) return;
+      const previous = participantValues.get(participant.id);
+      const current = readValue(participant);
+      if (valuesEqual(participant, current, previous)) return;
+      participantValues.set(participant.id, current);
+      const baseline = participantBaselines.get(participant.id);
+      updateParticipant(participant, {
+        dirty: !valuesEqual(participant, current, baseline),
+      });
+      invalidateAfterInteraction('input', participant);
+    };
+    if (event.type === 'input' || event.type === 'change') updateValue();
+    else queueMicrotask(updateValue);
+  };
+  const onBlur = (event: Event): void => {
+    if (recoveringFocus || handledParticipantEvents.has(event)) return;
+    handledParticipantEvents.add(event);
+    const participant = participantFor(event.target);
+    if (participant !== undefined) updateParticipant(participant, { touched: true });
+    invalidateAfterInteraction('blur', participant);
+  };
   const onInvalid = (event: Event): void => {
     if (handledParticipantEvents.has(event)) return;
     handledParticipantEvents.add(event);
@@ -741,6 +822,7 @@ export function tryCreateForm<
     validationController?.abort();
     validationSequence += 1;
     nativeResume = null;
+    pendingReinitializations.clear();
     const commands = transition('reset');
     if (commands !== null) execute(commands);
     if (summary !== undefined) {
@@ -748,10 +830,11 @@ export function tryCreateForm<
       summary.hidden = true;
     }
     resetHandler?.();
+    queueMicrotask(captureAllCurrentValues);
   };
 
-  options.form.addEventListener('input', onInput, true);
-  options.form.addEventListener('change', onInput, true);
+  options.form.addEventListener('input', onValueInteraction);
+  options.form.addEventListener('change', onValueInteraction);
   options.form.addEventListener('blur', onBlur, true);
   options.form.addEventListener('invalid', onInvalid, true);
   options.form.addEventListener('submit', onSubmit);
@@ -766,15 +849,15 @@ export function tryCreateForm<
       (candidate) => candidate !== target && candidate.contains(target),
     ));
     for (const target of roots) {
-      target.addEventListener('input', onInput, true);
-      target.addEventListener('change', onInput, true);
+      target.addEventListener('input', onValueInteraction);
+      target.addEventListener('change', onValueInteraction);
       target.addEventListener('blur', onBlur, true);
       target.addEventListener('invalid', onInvalid, true);
     }
     participantObservers.set(participant.id, () => {
       for (const target of roots) {
-        target.removeEventListener('input', onInput, true);
-        target.removeEventListener('change', onInput, true);
+        target.removeEventListener('input', onValueInteraction);
+        target.removeEventListener('change', onValueInteraction);
         target.removeEventListener('blur', onBlur, true);
         target.removeEventListener('invalid', onInvalid, true);
       }
@@ -785,6 +868,10 @@ export function tryCreateForm<
     const replacing = participants.has(participant.id);
     participantObservers.get(participant.id)?.();
     participants.set(participant.id, participant);
+    const currentValue = captureParticipant(participant);
+    if (!replacing || !participantBaselines.has(participant.id)) {
+      participantBaselines.set(participant.id, currentValue);
+    }
     observeParticipant(participant);
     participant.element.dataset['scope'] = 'form';
     participant.element.dataset['part'] = 'field';
@@ -809,6 +896,8 @@ export function tryCreateForm<
       participantObservers.get(participant.id)?.();
       participantObservers.delete(participant.id);
       participants.delete(participant.id);
+      participantBaselines.delete(participant.id);
+      participantValues.delete(participant.id);
       transition({ type: 'unregister-field', id: participant.id });
     };
   };
@@ -825,8 +914,18 @@ export function tryCreateForm<
       const participant = participants.get(id);
       if (participant === undefined) return false;
       observeParticipant(participant);
-      transition({ type: 'update-field', id, name: readParticipantName(participant) });
+      const currentField = field(id);
+      const name = readParticipantName(participant);
+      if (currentField?.name !== name) transition({ type: 'update-field', id, name });
+      const previous = participantValues.get(id);
+      const current = captureParticipant(participant);
+      const baseline = participantBaselines.get(id);
+      const valueChanged = !valuesEqual(participant, current, previous);
+      if (valueChanged) {
+        updateParticipant(participant, { dirty: !valuesEqual(participant, current, baseline) });
+      }
       reorderParticipants(participants, state, transition);
+      if (!valueChanged) return true;
       const previousIntent = state.validationStatus === 'invalid'
         ? state.validationIntent
         : null;
@@ -846,6 +945,7 @@ export function tryCreateForm<
       execute(commands);
       return true;
     },
+    reinitialize,
     reset: () => options.form.reset(),
     subscribe: (listener) => {
       subscribers.add(listener);
@@ -856,8 +956,8 @@ export function tryCreateForm<
       active = false;
       validationController?.abort();
       nativeResume = null;
-      options.form.removeEventListener('input', onInput, true);
-      options.form.removeEventListener('change', onInput, true);
+      options.form.removeEventListener('input', onValueInteraction);
+      options.form.removeEventListener('change', onValueInteraction);
       options.form.removeEventListener('blur', onBlur, true);
       options.form.removeEventListener('invalid', onInvalid, true);
       options.form.removeEventListener('submit', onSubmit);
@@ -866,9 +966,67 @@ export function tryCreateForm<
       for (const disconnect of participantObservers.values()) disconnect();
       participantObservers.clear();
       participants.clear();
+      participantBaselines.clear();
+      participantValues.clear();
+      pendingReinitializations.clear();
     },
   };
   return { ok: true, value: connection };
+}
+
+function readParticipantValue<ID extends StableID>(
+  participant: FormParticipant<ID>,
+): readonly unknown[] {
+  const explicit = participant.submissionElements ?? [];
+  const candidates = explicit.length > 0
+    ? explicit
+    : [participant.semanticControl ?? participant.element].filter(isSubmissionElement);
+  return Object.freeze(candidates.map(readSubmissionValue));
+}
+
+function isSubmissionElement(element: HTMLElement): element is FormSubmissionElement {
+  return element.tagName === 'BUTTON'
+    || element.tagName === 'INPUT'
+    || element.tagName === 'SELECT'
+    || element.tagName === 'TEXTAREA';
+}
+
+function readSubmissionValue(element: FormSubmissionElement): unknown {
+  if (element.tagName === 'SELECT') {
+    const select = element as HTMLSelectElement;
+    return Object.freeze([
+      'select',
+      select.multiple,
+      Object.freeze([...select.options]
+        .filter((option) => option.selected)
+        .map((option) => option.value)),
+    ]);
+  }
+  if (element.tagName === 'INPUT') {
+    const input = element as HTMLInputElement;
+    const type = input.type.toLowerCase();
+    if (type === 'checkbox' || type === 'radio') {
+      return Object.freeze(['checked', input.checked, input.value]);
+    }
+    if (type === 'file') {
+      return Object.freeze([
+        'files',
+        Object.freeze(Array.from(input.files ?? []).map((file) => Object.freeze([
+          file.name,
+          file.size,
+          file.type,
+          file.lastModified,
+        ]))),
+      ]);
+    }
+  }
+  return Object.freeze(['value', element.value]);
+}
+
+function sameParticipantValue(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+  return left.every((value, index) => sameParticipantValue(value, right[index]));
 }
 
 function readControlName(element: HTMLElement): string | null {
@@ -1018,5 +1176,8 @@ function reorderParticipants<ID extends StableID>(
     return byRegistration.indexOf(left) - byRegistration.indexOf(right);
   });
   const ids = ordered.map((participant) => participant.id);
-  if (ids.length === state.fields.length) transition({ type: 'reorder-fields', ids });
+  if (
+    ids.length === state.fields.length
+    && ids.some((id, index) => state.fields[index]?.id !== id)
+  ) transition({ type: 'reorder-fields', ids });
 }

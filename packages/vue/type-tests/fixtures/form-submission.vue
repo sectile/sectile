@@ -17,9 +17,10 @@ const schema = {
 
 const submission = defineFormSubmission({
   schema,
-  onSubmit: ({ values }) => {
+  onSubmit: ({ values, reinitialize }) => {
     values.userId satisfies number;
     values.email satisfies string;
+    reinitialize({ preserve: { touched: true } });
   },
 });
 

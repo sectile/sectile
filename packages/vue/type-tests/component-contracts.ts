@@ -89,8 +89,9 @@ const submissionSchema = {
 };
 
 const rawVueSubmission = defineVueFormSubmission({
-  onSubmit: ({ values }) => {
+  onSubmit: ({ values, reinitialize }) => {
     values satisfies Readonly<Record<string, unknown>>;
+    reinitialize({ preserve: { touched: true } });
     // @ts-expect-error Raw FormData-derived values remain unknown without a schema.
     values.email.toUpperCase();
   },
@@ -105,8 +106,9 @@ const schemaVueSubmission = defineVueFormSubmission({
   },
 });
 const rawDOMSubmission = defineDOMFormSubmission({
-  onSubmit: ({ values }) => {
+  onSubmit: ({ values, reinitialize }) => {
     values satisfies Readonly<Record<string, unknown>>;
+    reinitialize();
   },
 });
 const schemaDOMSubmission = defineDOMFormSubmission({

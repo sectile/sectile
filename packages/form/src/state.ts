@@ -8,6 +8,7 @@ export {
   type FormFieldState,
   type FormIssue,
   type FormIssueSource,
+  type FormReinitializeOptions,
   type FormState,
   type FormStateInput,
   type FormSubmissionStatus,

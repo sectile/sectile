@@ -19,6 +19,14 @@ export type FormSubmissionStatus = 'idle' | 'submitting' | 'succeeded' | 'failed
 export type FormValidationTrigger = 'input' | 'blur' | 'submit';
 export type FormValidationIntent = 'interaction' | 'submission';
 
+export interface FormReinitializeOptions {
+  readonly preserve?: {
+    readonly touched?: boolean;
+    readonly validation?: boolean;
+    readonly submission?: boolean;
+  };
+}
+
 export interface FormIssue<ID extends StableID = StableID> {
   readonly id: StableID;
   readonly message: string;
@@ -94,6 +102,7 @@ export type FormEvent<ID extends StableID = StableID> =
   | { readonly type: 'submit-started'; readonly generation: number }
   | { readonly type: 'submit-succeeded'; readonly generation: number }
   | { readonly type: 'submit-failed'; readonly generation: number; readonly issues?: readonly FormIssue<ID>[] }
+  | { readonly type: 'reinitialize'; readonly options?: FormReinitializeOptions }
   | 'reset';
 
 export type FormCommand<ID extends StableID = StableID> =
@@ -409,6 +418,7 @@ export function applyFormEvent<ID extends StableID>(
       return replaceIssues(state, event.source, event.issues);
     }
     if (event.type === 'validation-invalidated') return invalidateValidation(state);
+    if (event.type === 'reinitialize') return reinitialize(state, event.options);
     if (event.type === 'validation-started') {
       return startValidation(state, event.trigger, event.intent);
     }
@@ -731,6 +741,42 @@ function reset<ID extends StableID>(state: FormState<ID>): Result<FormUpdate<ID>
     }),
     fields.map((field) => ({ type: 'reset-field', id: field.id })),
   );
+}
+
+function reinitialize<ID extends StableID>(
+  state: FormState<ID>,
+  options: FormReinitializeOptions = {},
+): Result<FormUpdate<ID>> {
+  const preserveTouched = options.preserve?.touched === true;
+  const preserveValidation = options.preserve?.validation === true;
+  const preserveSubmission = options.preserve?.submission === true;
+  const keepIssue = (issue: FormIssue<ID>): boolean => (
+    issue.source === 'form' || issue.source === 'field'
+      ? true
+      : issue.source === 'server' ? preserveSubmission : preserveValidation
+  );
+  const fields = state.fields.map((field) => {
+    const issues = Object.freeze(field.issues.filter(keepIssue));
+    return Object.freeze({
+      ...field,
+      touched: preserveTouched ? field.touched : false,
+      dirty: false,
+      valid: issues.length === 0,
+      issues,
+    });
+  });
+  return update(buildState({
+    validationGeneration: state.validationGeneration,
+    validationStatus: preserveValidation ? state.validationStatus : 'idle',
+    validationTrigger: preserveValidation ? state.validationTrigger : null,
+    validationIntent: preserveValidation ? state.validationIntent : null,
+    submissionGeneration: state.submissionGeneration,
+    submissionStatus: preserveSubmission ? state.submissionStatus : 'idle',
+    submitCount: preserveSubmission ? state.submitCount : 0,
+    submitted: preserveSubmission ? state.submitted : false,
+    fields,
+    issues: state.issues.filter(keepIssue),
+  }));
 }
 
 function normalizeField<ID extends StableID>(

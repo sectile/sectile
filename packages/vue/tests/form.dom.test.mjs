@@ -322,8 +322,13 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   const host = document.createElement('div');
   document.body.append(host);
   const controlledUpdates = [];
+  const rootRef = ref(null);
+  let state;
   const app = createApp({
-    render: () => h(FormRoot, null, {
+    render: () => h(FormRoot, {
+      ref: rootRef,
+      onStateChange: (next) => { state = next; },
+    }, {
       default: () => [
         h(FormField, { name: 'native' }, {
           default: () => h('input', { defaultValue: 'native-default' }),
@@ -357,6 +362,8 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   assert.equal(checkboxRoots.length, 2);
 
   native.value = 'changed-native';
+  native.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  native.dispatchEvent(new Event('blur'));
   text.value = 'changed-sectile';
   text.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
   checkboxRoots[0].click();
@@ -365,6 +372,32 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   assert.equal(checkboxRoots[0].getAttribute('data-state'), 'unchecked');
   assert.equal(checkboxRoots[1].getAttribute('data-state'), 'checked');
   assert.deepEqual(controlledUpdates, [false]);
+  assert.equal(state.dirty, true);
+  assert.equal(state.touched, true);
+
+  native.value = 'native-default';
+  native.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  text.value = 'sectile-default';
+  text.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  checkboxRoots[0].click();
+  await nextTick();
+  await Promise.resolve();
+  assert.equal(state.dirty, false);
+  assert.equal(state.touched, true);
+
+  native.value = 'new-baseline';
+  native.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  assert.equal(state.dirty, true);
+  rootRef.value.reinitialize({ preserve: { touched: true } });
+  assert.equal(state.dirty, false);
+  assert.equal(state.touched, true);
+
+  native.value = 'changed-native';
+  native.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  text.value = 'changed-sectile';
+  text.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  checkboxRoots[0].click();
+  await nextTick();
 
   host.querySelector('[data-part="reset"]').click();
   await Promise.resolve();
@@ -384,9 +417,11 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   document.body.append(host);
   let mode = 'pending';
   let resolveSubmission;
+  let state;
   const handler = (event) => {
     event.preventDefault();
     if (mode === 'pending') {
+      event.reinitialize();
       return new Promise((resolve) => { resolveSubmission = resolve; });
     }
     if (mode === 'field-error') {
@@ -398,7 +433,10 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
     return Promise.reject(new Error('Network unavailable.'));
   };
   const app = createApp({
-    render: () => h(FormRoot, { onSubmit: handler }, {
+    render: () => h(FormRoot, {
+      onSubmit: handler,
+      onStateChange: (next) => { state = next; },
+    }, {
       default: () => [
         h(FormSummary),
         h(FormField, { id: 'email', name: 'email' }, {
@@ -425,13 +463,16 @@ test('Vue Form owns async submission success and failure lifecycle', async () =>
   assert.ok(message instanceof HTMLElement);
   assert.ok(summary instanceof HTMLElement);
 
+  input.value = 'release@sectile.dev';
+  input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
   form.requestSubmit();
   await nextTick();
   assert.equal(form.dataset.submissionStatus, 'submitting');
   resolveSubmission();
   await new Promise((resolve) => setTimeout(resolve, 0));
   await nextTick();
-  assert.equal(form.dataset.submissionStatus, 'succeeded');
+  assert.equal(form.dataset.submissionStatus, 'idle');
+  assert.equal(state.dirty, false);
 
   mode = 'field-error';
   form.requestSubmit();
@@ -806,13 +847,14 @@ test('teleported custom controls keep FormField context, form association, and i
   assert.equal(input.getAttribute('form'), 'teleport-form');
   assert.equal(input.required, true);
 
+  input.value = 'changed@sectile.dev';
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('blur'));
   assert.equal(state.fields[0].dirty, true);
   assert.equal(state.fields[0].touched, true);
 
   host.querySelector('form').requestSubmit();
-  assert.equal(submitted.profile.email, 'portal@sectile.dev');
+  assert.equal(submitted.profile.email, 'changed@sectile.dev');
 
   app.unmount();
   host.remove();
@@ -863,6 +905,7 @@ test('dynamic custom-control replacement preserves field metadata and refreshes 
   await nextTick();
   await nextTick();
   let input = host.querySelector('input');
+  input.value = 'changed';
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('blur'));
   assert.equal(state.fields[0].dirty, true);

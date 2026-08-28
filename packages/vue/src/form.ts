@@ -29,6 +29,7 @@ import {
   type FormOptions,
   type FormParticipant,
   type FormRelativePath,
+  type FormReinitializeOptions as DOMFormReinitializeOptions,
   type FormPathSegment,
   type FormSchema as DOMFormSchema,
   type FormSubmissionElement,
@@ -70,6 +71,7 @@ export type FormState = FormConnection<string>['state'];
 export type FormIssue = NonNullable<FormOptions<string>['issues']>[number];
 export type FormIssueSource = Parameters<FormConnection<string>['replaceIssues']>[0];
 export type FormValues<Shape extends object = Record<string, unknown>> = DOMFormValues<Shape>;
+export type FormReinitializeOptions = DOMFormReinitializeOptions;
 export type FormSchema<
   Input extends object = Record<string, unknown>,
   Output extends object = Input,
@@ -140,6 +142,7 @@ export type FormReplaceIssuesAction = (
   issues: readonly FormIssue[],
 ) => boolean;
 export type FormResetAction = () => void;
+export type FormReinitializeAction = (options?: FormReinitializeOptions) => void;
 
 export interface FormRootProps<
   Input extends object = Record<string, unknown>,
@@ -169,6 +172,7 @@ export interface FormRootSlotProps {
   readonly submitSucceeded: FormSubmitSucceededAction;
   readonly submitFailed: FormSubmitFailedAction;
   readonly replaceIssues: FormReplaceIssuesAction;
+  readonly reinitialize: FormReinitializeAction;
   readonly reset: FormResetAction;
 }
 
@@ -190,6 +194,12 @@ export interface FormRootComponent {
     $slots: {
       default?: (props: FormRootSlotProps) => VNodeChild;
     };
+    submitStarted: FormSubmitStartedAction;
+    submitSucceeded: FormSubmitSucceededAction;
+    submitFailed: FormSubmitFailedAction;
+    replaceIssues: FormReplaceIssuesAction;
+    reinitialize: FormReinitializeAction;
+    reset: FormResetAction;
   };
 }
 
@@ -459,6 +469,7 @@ const FormRootImpl = defineComponent({
       submitSucceeded: (generation: number): boolean => connection.value?.submitSucceeded(generation) ?? false,
       submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => connection.value?.submitFailed(generation, issues) ?? false,
       replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => connection.value?.replaceIssues(source, issues) ?? false,
+      reinitialize: (options?: FormReinitializeOptions): void => connection.value?.reinitialize(options),
       reset: (): void => connection.value?.reset(),
     };
     const slotProps = computed<FormRootSlotProps>(() => Object.freeze({
@@ -503,6 +514,7 @@ function toFormSubmitEvent(
     values: payload.values,
     submitter: payload.submitter,
     state: payload.state,
+    reinitialize: payload.reinitialize,
     nativeEvent: payload.event,
     get defaultPrevented() { return payload.event.defaultPrevented; },
     preventDefault: () => payload.event.preventDefault(),
@@ -678,6 +690,13 @@ export const FormField = defineComponent({
       else if (labelMode.value !== 'for' && props.disabled === true) assign('aria-disabled', 'true');
       if (capabilities.readonly === true && props.readonly === true) assign('readonly', true);
       else if (labelMode.value !== 'for' && props.readonly === true) assign('aria-readonly', 'true');
+      if (labelMode.value !== 'for') {
+        const refreshValue = (): void => {
+          queueMicrotask(() => formContext.connection.value?.refreshParticipant(id.value));
+        };
+        attributes['onClick'] = refreshValue;
+        attributes['onKeydown'] = refreshValue;
+      }
       return Object.freeze(attributes);
     };
 
@@ -874,6 +893,8 @@ export const FormField = defineComponent({
           return control !== null && document.activeElement === control;
         },
         reset: () => activeControl.value?.reset?.(),
+        get getValue() { return activeControl.value?.getValue; },
+        get isValueEqual() { return activeControl.value?.isValueEqual; },
         ...(nameKey.value === undefined ? {} : { name: nameKey.value }),
       };
       unregister = formContext.register(participant);
@@ -899,7 +920,7 @@ export const FormField = defineComponent({
       activeControl,
       effectiveControlId,
       labelMode,
-      () => props.name,
+      nameKey,
       () => props.form,
       () => props.required,
       () => props.disabled,
@@ -1058,6 +1079,7 @@ function useRootSlotProps(form: FormContext): ComputedRef<FormRootSlotProps> {
     submitSucceeded: (generation: number): boolean => form.connection.value?.submitSucceeded(generation) ?? false,
     submitFailed: (generation: number, issues: readonly FormIssue[] = []): boolean => form.connection.value?.submitFailed(generation, issues) ?? false,
     replaceIssues: (source: FormIssueSource, issues: readonly FormIssue[]): boolean => form.connection.value?.replaceIssues(source, issues) ?? false,
+    reinitialize: (options?: FormReinitializeOptions): void => form.connection.value?.reinitialize(options),
     reset: (): void => form.connection.value?.reset(),
   }));
 }
@@ -1286,6 +1308,7 @@ function applyMetadata(
 ): void {
   const explicit = new Set(explicitAttributes ?? []);
   for (const [name, value] of Object.entries(attributes)) {
+    if (name.startsWith('on') && typeof value === 'function') continue;
     if (value === undefined || value === false || explicit.has(name as FormMetadataAttribute)) continue;
     const previous = element.getAttribute(name);
     const mergeTokens = name === 'aria-describedby' || name === 'aria-labelledby';
