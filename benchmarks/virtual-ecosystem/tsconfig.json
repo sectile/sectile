@@ -16,5 +16,6 @@
       "@sectile/virtual/*": ["../../packages/virtual/src/*.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.test.ts"]
 }

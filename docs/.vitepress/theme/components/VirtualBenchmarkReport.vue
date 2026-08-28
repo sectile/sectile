@@ -73,6 +73,7 @@ const copy = computed(() => isKorean.value ? {
   permanentFailure: (failed: number, total: number) => failed === total
     ? `${total}번 모두 정상 화면에 도달하지 못했습니다.`
     : `${total}번 중 ${failed}번은 정상 화면에 도달하지 못했습니다.`,
+  earlyStop: (actual: number, planned: number) => `같은 오류가 두 번의 독립 실행에서 각각 10회 연속 재현되어, 예정된 ${planned}회 중 ${actual}회에서 측정을 마쳤습니다.`,
   failureSummary: (failures: string) => `오류 유형은 ${failures}입니다.`,
   failureCode: { 'scroll-anchor': '기준 행 이동', 'row-overlap': '행 겹침', 'scroll-height': '전체 높이 오차', 'blank-viewport': '빈 화면', timeout: '안정화 실패', 'row-gap': '행 사이 빈틈', 'row-height': '행 높이 오차', 'row-order': '행 순서 오류', 'duplicate-id': 'ID 중복', 'unexpected-id': '잘못된 ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `최대 ${maximum.toFixed(0)} ms · 로그 눈금` : `최대 ${maximum.toFixed(0)} ms`,
@@ -143,6 +144,7 @@ const copy = computed(() => isKorean.value ? {
   permanentFailure: (failed: number, total: number) => failed === total
     ? `All ${total} runs failed to reach a correct screen.`
     : `${failed} of ${total} runs failed to reach a correct screen.`,
+  earlyStop: (actual: number, planned: number) => `The same error repeated ten times in each of two independent runs, so measurement stopped after ${actual} of ${planned} planned samples.`,
   failureSummary: (failures: string) => `The observed errors were ${failures}.`,
   failureCode: { 'scroll-anchor': 'anchor moved', 'row-overlap': 'row overlap', 'scroll-height': 'scroll-height error', 'blank-viewport': 'blank viewport', timeout: 'failed to settle', 'row-gap': 'row gap', 'row-height': 'row-height error', 'row-order': 'row-order error', 'duplicate-id': 'duplicate ID', 'unexpected-id': 'unexpected ID' } as Record<string, string>,
   scale: (maximum: number, logarithmic: boolean) => logarithmic ? `Max ${maximum.toFixed(0)} ms · logarithmic scale` : `Max ${maximum.toFixed(0)} ms`,
@@ -431,6 +433,7 @@ function failureLabel(result: MutationBenchmarkResult): string {
   if (result.recoveredSamples > 0) states.push(copy.value.recoveredFailure(result.recoveredSamples, result.totalSamples));
   if (result.failedSamples > 0) states.push(copy.value.permanentFailure(result.failedSamples, result.totalSamples));
   else if (result.settledSamples === 0) states.push(copy.value.stableFailure);
+  if (result.earlyStopped === true) states.push(copy.value.earlyStop(result.totalSamples, result.plannedSamples ?? result.totalSamples));
   if (failures.length > 0) states.push(copy.value.failureSummary(failures));
   return states.join('\n');
 }

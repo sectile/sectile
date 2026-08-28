@@ -1,4 +1,9 @@
 import { VIEWPORT_HEIGHT, type BenchmarkItem, type RowProfile } from './constants.js';
+import {
+  advanceFailureReproduction,
+  reproducibleFailureSignature,
+  type FailureReproductionStreak,
+} from './failure-reproduction.js';
 import type { ExpectedLayout, HeightOracle } from './fixture.js';
 import {
   automaticMutableAdapters,
@@ -44,6 +49,9 @@ export interface MutationBenchmarkResult {
   readonly recoveredSamples: number;
   readonly failedSamples: number;
   readonly totalSamples: number;
+  readonly plannedSamples: number;
+  readonly earlyStopped: boolean;
+  readonly earlyStopReason: 'reproducible-failure' | null;
   readonly heightHandling: HeightHandling;
   readonly samples: readonly MutationSampleRecord[];
   readonly failures: readonly MutationFailure[];
@@ -113,6 +121,8 @@ const GOOD_RECOVERY_MS = 200;
 const FRAME_TIMEOUT_MS = 500;
 const STABLE_FAILURE_MIN_MS = 300;
 const STABLE_FAILURE_FRAMES = 8;
+const REPRODUCIBLE_FAILURE_ROUNDS = 2;
+const REPRODUCIBLE_FAILURE_SAMPLES_PER_ROUND = 10;
 const GEOMETRY_TOLERANCE_PX = 2;
 
 export const mutationConditions = Object.freeze({
@@ -123,10 +133,13 @@ export const mutationConditions = Object.freeze({
   frameTimeoutMs: FRAME_TIMEOUT_MS,
   stableFailureMinMs: STABLE_FAILURE_MIN_MS,
   stableFailureFrames: STABLE_FAILURE_FRAMES,
+  reproducibleFailureRounds: REPRODUCIBLE_FAILURE_ROUNDS,
+  reproducibleFailureSamplesPerRound: REPRODUCIBLE_FAILURE_SAMPLES_PER_ROUND,
   geometryTolerancePx: GEOMETRY_TOLERANCE_PX,
-  lifecycle: 'five independent mounts; each mount runs ten measured mutations and restores a correct initial collection between samples',
+  lifecycle: 'up to five independent mounts; each mount runs ten measured mutations and restores a correct initial collection between samples',
   completion: 'first animation frame with correct DOM order, row geometry, viewport coverage, and anchor position; exact total height is required for uniform rows and recorded as estimation quality for heterogeneous rows',
   recovery: 'every frame after the mutation becomes observable is checked; recovery within 200ms is responsive, recovery from 200ms through 500ms is slow, and no correct frame within 500ms is a hard failure; an unchanged incorrect layout can fail earlier at the stable-failure threshold',
+  earlyStop: 'a scenario stops after the same hard-failure code set occurs in every sample of two consecutive independent rounds with at least ten samples per round',
 });
 
 export async function runMutationBenchmarks(
@@ -149,6 +162,8 @@ export async function runMutationBenchmarks(
       .filter((location) => filter.location === undefined || location === filter.location)
       .map((location) => createMutationScenario(operation, location, rowProfile, oracle)));
   const raw = new Map<string, RawScenarioResult>();
+  const failureReproductions = new Map<string, FailureReproductionStreak>();
+  const earlyStops = new Set<string>();
   const total = selectedAdapters.length * scenarios.length * MUTATION_ROUNDS * SAMPLES_PER_ROUND;
   let completed = 0;
 
@@ -160,6 +175,11 @@ export async function runMutationBenchmarks(
         const key = resultKey(adapter, scenario);
         const result = raw.get(key) ?? { samples: [], recoverySamples: [], outcomes: [], failures: [] };
         raw.set(key, result);
+        if (earlyStops.has(key)) {
+          completed += SAMPLES_PER_ROUND;
+          onProgress(`Mutation ${completed}/${total} · ${adapter.name} · ${adapter.sizeMode} · ${scenario.operation}/${scenario.location} · reproducible failure, round skipped`);
+          continue;
+        }
         const roundOutcomes = await runMutationRound(adapter, scenario, host, (localSample) => {
           const sample = round * SAMPLES_PER_ROUND + localSample + 1;
           completed += 1;
@@ -179,6 +199,16 @@ export async function runMutationBenchmarks(
           }));
           result.failures.push(...outcome.failures);
         }
+        const signature = reproducibleFailureSignature(
+          roundOutcomes.map(({ outcome }) => outcome),
+          REPRODUCIBLE_FAILURE_SAMPLES_PER_ROUND,
+        );
+        const reproduction = advanceFailureReproduction(failureReproductions.get(key), signature);
+        if (reproduction === undefined) failureReproductions.delete(key);
+        else {
+          failureReproductions.set(key, reproduction);
+          if (reproduction.rounds >= REPRODUCIBLE_FAILURE_ROUNDS) earlyStops.add(key);
+        }
       }
     }
   }
@@ -190,6 +220,8 @@ export async function runMutationBenchmarks(
     const correctSamples = collected.outcomes.filter((sample) => sample.outcome === 'clean').length;
     const recoveredSamples = collected.outcomes.filter((sample) => sample.outcome === 'recovered').length;
     const failedSamples = collected.outcomes.filter((sample) => sample.outcome === 'failed').length;
+    const plannedSamples = MUTATION_ROUNDS * SAMPLES_PER_ROUND;
+    const earlyStopped = earlyStops.has(resultKey(adapter, scenario)) && collected.outcomes.length < plannedSamples;
     return Object.freeze({
       rowProfile,
       library: adapter.name,
@@ -206,7 +238,10 @@ export async function runMutationBenchmarks(
       correctSamples,
       recoveredSamples,
       failedSamples,
-      totalSamples: MUTATION_ROUNDS * SAMPLES_PER_ROUND,
+      totalSamples: collected.outcomes.length,
+      plannedSamples,
+      earlyStopped,
+      earlyStopReason: earlyStopped ? 'reproducible-failure' as const : null,
       heightHandling: adapter.heightHandling,
       samples: Object.freeze(collected.outcomes),
       failures: Object.freeze(collected.failures),

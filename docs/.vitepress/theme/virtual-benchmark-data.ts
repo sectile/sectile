@@ -55,6 +55,9 @@ export interface MutationBenchmarkResult {
   readonly recoveredSamples: number;
   readonly failedSamples: number;
   readonly totalSamples: number;
+  readonly plannedSamples?: number;
+  readonly earlyStopped?: boolean;
+  readonly earlyStopReason?: 'reproducible-failure' | null;
   readonly heightHandling: {
     readonly sizeInput: 'dom-measurement' | 'application-size';
     readonly initialEstimate: boolean;

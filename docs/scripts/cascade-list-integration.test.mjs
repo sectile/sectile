@@ -14,7 +14,7 @@ test('benchmark uses the shared always-visible CascadeList demo', async () => {
 
   assert.match(benchmark, /import DemoCascadeList from '\.\/DemoCascadeList\.vue';/u);
   assert.match(benchmark, /<DemoCascadeList/u);
-  assert.match(benchmark, /:column-count="3"/u);
+  assert.match(benchmark, /:column-count="4"/u);
   assert.match(benchmark, /:show-value="false"/u);
   assert.doesNotMatch(benchmark, /DemoCascadeSelect/u);
 });

@@ -141,6 +141,9 @@ const mutationResults = report.mutationResults.map((result) => ({
   recoveredSamples: result.recoveredSamples,
   failedSamples: result.failedSamples,
   totalSamples: result.totalSamples,
+  plannedSamples: result.plannedSamples ?? result.totalSamples,
+  earlyStopped: result.earlyStopped ?? false,
+  earlyStopReason: result.earlyStopReason ?? null,
   heightHandling: result.heightHandling,
   failureCodes: [...new Set(result.failures.map((failure) => failure.code))],
 }));
@@ -202,6 +205,9 @@ export interface MutationBenchmarkResult {
   readonly recoveredSamples: number;
   readonly failedSamples: number;
   readonly totalSamples: number;
+  readonly plannedSamples?: number;
+  readonly earlyStopped?: boolean;
+  readonly earlyStopReason?: 'reproducible-failure' | null;
   readonly heightHandling: {
     readonly sizeInput: 'dom-measurement' | 'application-size';
     readonly initialEstimate: boolean;

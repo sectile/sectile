@@ -6,7 +6,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "merge-shards": "node scripts/merge-shards.mjs",
-    "typecheck": "tsc --noEmit"
+    "test": "node --test src/failure-reproduction.test.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "@sectile/core": "workspace:*",
@@ -23,6 +24,7 @@
     "vue-virtual-scroller": "3.0.5"
   },
   "devDependencies": {
+    "@types/node": "26.2.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "@types/react-virtualized": "9.22.3",

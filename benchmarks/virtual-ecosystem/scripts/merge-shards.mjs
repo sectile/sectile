@@ -58,6 +58,7 @@ function mergeMutationGroup(results) {
   const template = results[0];
   const samples = [];
   const failures = [];
+  const plannedSamples = results.reduce((total, result) => total + (result.plannedSamples ?? result.totalSamples ?? 0), 0);
   for (const result of results) {
     const offset = samples.length;
     for (const sample of result.samples ?? []) {
@@ -86,6 +87,9 @@ function mergeMutationGroup(results) {
     recoveredSamples: samples.filter((sample) => sample.outcome === 'recovered').length,
     failedSamples: samples.filter((sample) => sample.outcome === 'failed').length,
     totalSamples: samples.length,
+    plannedSamples,
+    earlyStopped: results.some((result) => result.earlyStopped === true),
+    earlyStopReason: results.some((result) => result.earlyStopped === true) ? 'reproducible-failure' : null,
     samples,
     failures,
   };

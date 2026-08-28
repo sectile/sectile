@@ -69,6 +69,9 @@ importers:
         specifier: 3.0.5
         version: 3.0.5(vue@3.5.22(typescript@5.9.3))
     devDependencies:
+      '@types/node':
+        specifier: 26.2.0
+        version: 26.2.0
       '@types/react':
         specifier: 19.2.18
         version: 19.2.18
