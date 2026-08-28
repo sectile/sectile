@@ -9,15 +9,19 @@ Seven libraries render the same 100,000 rows. The suite measures initial display
 
 <VirtualBenchmarkReport />
 
-In this run, Sectile completed 1,200 collection mutations across estimated and omitted-height modes without a recorded visual failure or a two-second recovery timeout.
+## Row profiles
+
+The uniform profile isolates each library's base cost with identical 72px rows. The heterogeneous profile uses 256 deterministic combinations of titles, summaries, tags, and expanded details. Its measured row heights range from 71px to 159px.
+
+The application does not calculate per-row heights. Each library measures the DOM it renders, while a separate calibration fixture supplies geometry only to the correctness validator. Visible rows are checked for order, overlap, gaps, viewport coverage, and anchor position. Total-height estimation error is reported separately for heterogeneous rows because unseen content has not been measured yet.
 
 ## Why height input is split into three modes
 
 The suite measures exact heights, estimates, and omitted height input separately. Combining them would hide the cost difference between a fixed-size fast path and DOM measurement.
 
-- Fixed: the application supplies the exact 48px height.
-- Estimated: the application supplies 48px for the initial layout, then the library reads the actual DOM height.
-- No height input: the application omits both an exact height and an estimate, and the library completes the layout from DOM measurement.
+- Fixed: the application supplies the exact 72px height. This mode is available for the uniform profile.
+- Estimated: the application supplies one common 72px estimate, then the library reads the actual DOM height.
+- No height input: the application omits both an exact height and an estimate. Sectile renders an initial viewport-sized sample, measures those elements, and derives the remaining extent from those measurements.
 
 Libraries that cannot start without a height or estimate are not given a synthetic value. The support table records the required input instead.
 
@@ -45,15 +49,15 @@ Every frame is checked for missing or duplicate IDs, incorrect order or height, 
 
 ## Initial render and scrolling
 
-The fixed-height suite renders 100,000 identical 72px rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared. The actual 72px height differs from Sectile's 48px internal fallback, so the application-estimate and omitted-height paths begin with different geometry.
+Both row profiles render 100,000 rows in a 720 × 480px viewport. Text, CSS, input data, and the requested eight-row overscan target are shared. The no-height-input path starts from measured DOM rather than a library-wide numeric fallback.
 
-Library order rotates across five rounds. Initial rendering is split into synchronous setup, first row output, and the first state with correct total scroll height and viewport geometry. A visible row with an incorrect total height is not considered complete.
+Library order rotates across three to five rounds. A condition stops after three rounds when its cumulative median and p95 are stable; otherwise it continues through round five. Initial rendering is split into synchronous setup, first row output, and the first state with correct viewport geometry. Uniform rows also require the exact total scroll height. Heterogeneous rows retain total-height estimation error as a separate result.
 
-Each round discards five warm-up scrolls and records the next 40. The harness changes `scrollTop` after a frame boundary. Timing starts when the browser begins delivering the native scroll event and ends immediately after the runner reads the resulting DOM geometry. The exact target row, contiguous row geometry, total scroll height, and viewport coverage are then validated against that snapshot outside the timed interval.
+Each round discards five warm-up scrolls and records the next 20. The harness changes `scrollTop` after a frame boundary. Timing starts when the browser begins delivering the native scroll event and ends immediately after the runner reads the resulting DOM geometry. The exact target row, contiguous row geometry, and viewport coverage are then validated against that snapshot outside the timed interval. Uniform rows also validate total scroll height.
 
 The chart uses the conservative upper bound taken after geometry reads. Raw samples also retain the lower bound before those reads, probe cost, correctness-check count, round and sample number, MAD, and per-round ranges. This keeps validation work out of the score without hiding measurement uncertainty or a slow round.
 
-Measurements were recorded on 2026-08-27 in Chrome 151 on Apple Silicon macOS. Absolute timings vary by machine and browser state; compare the relative results together with correctness failures.
+The initial-render and scroll observation was recorded on 2026-08-28 in Chrome 151 on Apple Silicon macOS after removing Sectile's numeric automatic-height fallback. All 27 supported profile and height-input conditions completed; the uniform automatic condition reported 0% total-height error, and the heterogeneous automatic condition reported 3.967% initial total-height error. Absolute timings vary by machine and browser state; compare relative results together with correctness and height-error data.
 
 The suite covers [TanStack Virtual](https://www.npmjs.com/package/%40tanstack/react-virtual), [react-window](https://www.npmjs.com/package/react-window), [React Virtuoso](https://www.npmjs.com/package/react-virtuoso), [react-virtualized](https://www.npmjs.com/package/react-virtualized), [Virtua](https://www.npmjs.com/package/virtua), and [Vue Virtual Scroller](https://www.npmjs.com/package/vue-virtual-scroller). Runner code and committed JSON live in `benchmarks/virtual-ecosystem`.
 

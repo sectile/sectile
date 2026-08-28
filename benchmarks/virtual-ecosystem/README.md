@@ -29,7 +29,7 @@ The uniform profile uses an exact 72px estimate. The heterogeneous profile delib
 
 The automatic condition includes only libraries whose public API can start without application-provided size information. Unsupported libraries remain listed in the result metadata with the required input.
 
-The runner rotates library order across at most five rounds. Each round performs five warm-up scrolls followed by 20 recorded scrolls across the full collection. After three rounds, a condition stops when its cumulative median changes by no more than 5% and its p95 by no more than 10%. Unstable conditions continue through all five rounds. The harness changes `scrollTop` after a frame boundary, then starts timing when the browser begins delivering the native scroll event. It reads row geometry and records the time immediately after those DOM reads. Correctness validation runs against that snapshot outside the timed interval.
+Before measured rounds, the runner completes one untimed mount for every active condition so framework initialization and compilation do not belong to whichever condition happens to run first. It then rotates library order with a step that is coprime to the active condition count, including focused three-condition runs. Each round performs five warm-up scrolls followed by 20 recorded scrolls across the full collection. After three rounds, a condition stops when its cumulative median changes by no more than 5% and its p95 by no more than 10%. Unstable conditions continue through all five rounds. The harness changes `scrollTop` after a frame boundary, then starts timing when the browser begins delivering the native scroll event. It reads row geometry and records the time immediately after those DOM reads. Correctness validation runs against that snapshot outside the timed interval.
 
 Each raw scroll sample retains its round and sample number, a lower bound taken before geometry reads, a conservative upper bound taken after those reads, the probe cost between both bounds, and the number of correctness checks. The reported median and p95 use the conservative upper bound. MAD and per-round ranges remain in the result so a slow round is not hidden by the pooled median. Initial rendering reports synchronous setup, first row output, and the first correct viewport layout.
 
@@ -47,7 +47,7 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem dev
 
 Open the printed URL in Chrome and choose **Run benchmark**. Commit raw results only with the browser version, operating system, viewport, package versions, and conditions emitted by the page.
 
-Protocol 5 records provenance and adaptive stopping with the measurements. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
+Protocol 6 records provenance and adaptive stopping with the measurements. Initial rows and a correct initial layout resolve directly from DOM and size observations; animation frames remain only as liveness and stable-failure checks, so successful initial timings are not rounded up to the next frame boundary. Every browser run receives a UUID, start and completion timestamps, and wall-clock duration. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
 
 To rerun one mutation without repeating the full suite, add focused query parameters. This example runs only Sectile's automatic-height resize at the middle of the collection:
 
@@ -72,6 +72,20 @@ For a long observation, run and save the baseline first, then run mutations one 
 
 Keep the browser otherwise idle and run these shards sequentially. Parallel browser runs compete for the same CPU and change the timing distribution.
 
+Merge the uniform and heterogeneous baseline shards, then commit that complete baseline observation independently:
+
+```sh
+pnpm --filter @sectile/benchmark-virtual-ecosystem merge-shards \
+  /tmp/sectile-virtual-baselines.json \
+  /tmp/sectile-virtual-baseline-uniform.json \
+  /tmp/sectile-virtual-baseline-heterogeneous.json
+node benchmarks/virtual-ecosystem/scripts/commit-results.mjs \
+  --baseline-only \
+  /tmp/sectile-virtual-baselines.json
+```
+
+The current baseline is stored in `results/chrome-151-macos-arm64-baseline.json`. Mutation observations remain in the full-suite result file, so updating initial-render measurements never rewrites them with a different source build.
+
 If one baseline library exceeds the browser session limit, keep all 40 recorded scrolls and split only its independent rounds. Merge the five one-round reports afterward:
 
 ```text
@@ -84,14 +98,8 @@ Merge that focused report into the matching mutation entry while preserving ever
 node benchmarks/virtual-ecosystem/scripts/commit-results.mjs --merge-mutations /tmp/sectile-virtual-benchmark.json
 ```
 
-Merge a baseline profile independently with:
+Mutation merge keys include `rowProfile`, so uniform and heterogeneous shards cannot overwrite one another.
 
-```sh
-node benchmarks/virtual-ecosystem/scripts/commit-results.mjs --merge-baseline /tmp/sectile-virtual-benchmark.json
-```
-
-Both merge modes include `rowProfile` in their result key, so uniform and heterogeneous shards cannot overwrite one another.
-
-All shards that will be merged must come from the same benchmark build. Restarting the page is safe because each run keeps its own ID, but rebuilding after source changes produces a new fingerprint and requires a complete suite.
+All shards within one observation must come from the same benchmark build. Restarting the page is safe because each run keeps its own ID, but rebuilding after source changes produces a new fingerprint and requires both baseline profiles again. Mutation shards still require one shared build for the complete mutation observation.
 
 The observation committed in `results/chrome-151-macos-arm64.json` is descriptive, not a release threshold. Compare revisions on the same machine before treating a difference as a regression.

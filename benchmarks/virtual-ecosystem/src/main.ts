@@ -1,6 +1,7 @@
 import { fixedAdapters, type BenchmarkAdapter, type MountedAdapter } from './adapters.js';
 import { ITEM_COUNT, items, ROW_HEIGHT, VIEWPORT_HEIGHT, type RowProfile } from './constants.js';
 import { createHeightOracle, type ExpectedLayout, type HeightOracle } from './fixture.js';
+import { requiresExactTotalHeight } from './baseline-policy.js';
 import {
   distributionIsStable,
   distributionSnapshot,
@@ -194,6 +195,7 @@ const activeCases = benchmarkCases.filter((entry) => (
   && (libraryFilter === null || entry.name === libraryFilter)
   && (!search.has('fixed') || entry.mode === 'fixed')
 ));
+const BASELINE_ROTATION_STEP = rotationStep(activeCases.length, ROUNDS);
 const BASELINE_ONLY = search.has('baseline-only');
 const MUTATIONS_ONLY = search.has('mutations-only');
 const mutationFilter: MutationBenchmarkFilter = Object.freeze({
@@ -288,8 +290,16 @@ async function runAll(): Promise<void> {
   try {
     status!.textContent = `Calibrating ${rowProfile} row heights…`;
     const oracle = await createHeightOracle(rowProfile);
+    if (!MUTATIONS_ONLY) {
+      for (let index = 0; index < activeCases.length; index += 1) {
+        const benchmarkCase = activeCases[index]!;
+        status!.textContent = `Warming ${index + 1}/${activeCases.length} · ${benchmarkCase.mode} · ${benchmarkCase.name}…`;
+        await warmCase(benchmarkCase, mountHost!, oracle);
+        await idleFrame();
+      }
+    }
     for (let roundIndex = 0; roundIndex < (MUTATIONS_ONLY ? 0 : ROUNDS); roundIndex += 1) {
-      const order = rotate(activeCases, roundIndex * 3);
+      const order = rotate(activeCases, roundIndex * BASELINE_ROTATION_STEP);
       for (const benchmarkCase of order) {
         const key = caseKey(benchmarkCase);
         if (baselineEarlyStops.has(key)) {
@@ -403,7 +413,7 @@ async function runAll(): Promise<void> {
     });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 5,
+      protocolVersion: 6,
       environment: navigator.userAgent,
       source: __BENCHMARK_SOURCE__,
       runs,
@@ -433,6 +443,7 @@ async function runAll(): Promise<void> {
           stableFailureMinMs: STABLE_FAILURE_MIN_MS,
           stableFailureFrames: STABLE_FAILURE_FRAMES,
           timing: {
+            caseWarmup: 'one complete untimed mount per condition before measured rounds',
             setupMs: 'synchronous adapter and framework setup',
             firstRowsMs: 'time until the first benchmark rows exist',
             mountMs: rowProfile === 'uniform'
@@ -495,6 +506,29 @@ function dynamicCase(adapter: MutableBenchmarkAdapter, profile: RowProfile): Ben
   });
 }
 
+async function warmCase(
+  benchmarkCase: BenchmarkCase,
+  host: HTMLElement,
+  oracle: HeightOracle,
+): Promise<void> {
+  host.replaceChildren();
+  const mounted = benchmarkCase.mount(host);
+  try {
+    await waitForAnyRows(host);
+    const expectedLayout = oracle.layout(items);
+    const strictTotalHeight = requiresExactTotalHeight(benchmarkCase.rowProfile);
+    await waitForBaselineLayout(
+      mounted.scroller,
+      strictTotalHeight ? 0 : undefined,
+      expectedLayout,
+      strictTotalHeight,
+    );
+  } finally {
+    mounted.unmount();
+    host.replaceChildren();
+  }
+}
+
 async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: HeightOracle): Promise<RawBenchmarkResult> {
   host.replaceChildren();
   const startedAt = performance.now();
@@ -504,7 +538,7 @@ async function runCase(benchmarkCase: BenchmarkCase, host: HTMLElement, oracle: 
     await waitForAnyRows(host);
     const firstRowsMs = performance.now() - startedAt;
     const expectedLayout = oracle.layout(items);
-    const strictTotalHeight = benchmarkCase.rowProfile === 'uniform' && benchmarkCase.mode !== 'automatic';
+    const strictTotalHeight = requiresExactTotalHeight(benchmarkCase.rowProfile);
     await waitForBaselineLayout(mounted.scroller, strictTotalHeight ? 0 : undefined, expectedLayout, strictTotalHeight);
     const mountMs = performance.now() - startedAt;
     const initialTotalHeightErrorPercent = totalHeightErrorPercent(mounted.scroller.scrollHeight, expectedLayout.totalHeight);
@@ -602,35 +636,65 @@ function waitForBaselineLayout(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const startedAt = performance.now();
+    let settled = false;
     let lastFingerprint: string | undefined;
     let stableFrames = 0;
-    const frame = (): void => {
+    let frameID = 0;
+    let timeoutID = 0;
+    const observer = new MutationObserver(() => { check(false); });
+    const resizeObserver = new ResizeObserver(() => { check(false); });
+    const cleanup = (): void => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+      cancelAnimationFrame(frameID);
+      clearTimeout(timeoutID);
+    };
+    const check = (frameBoundary: boolean): void => {
+      if (settled) return;
       const snapshot = captureBaselineLayout(scroller);
       try {
         assertBaselineSnapshot(snapshot, expectedIndex, expectedLayout, strictTotalHeight);
+        settled = true;
+        cleanup();
         resolve();
         return;
       } catch (error) {
-        const fingerprint = baselineFailureFingerprint(snapshot);
-        if (fingerprint === lastFingerprint) stableFrames += 1;
-        else {
-          lastFingerprint = fingerprint;
-          stableFrames = 1;
+        if (frameBoundary) {
+          const fingerprint = baselineFailureFingerprint(snapshot);
+          if (fingerprint === lastFingerprint) stableFrames += 1;
+          else {
+            lastFingerprint = fingerprint;
+            stableFrames = 1;
+          }
         }
         const elapsed = performance.now() - startedAt;
         const message = error instanceof Error ? error.message : String(error);
         if (elapsed >= STABLE_FAILURE_MIN_MS && stableFrames >= STABLE_FAILURE_FRAMES) {
+          settled = true;
+          cleanup();
           reject(new Error(`Stable incorrect initial layout: ${message}`));
-          return;
-        }
-        if (elapsed >= FRAME_TIMEOUT_MS) {
-          reject(new Error(`Timed out waiting for a correct initial layout: ${message}`));
-          return;
         }
       }
-      requestAnimationFrame(frame);
     };
-    requestAnimationFrame(frame);
+    const frame = (): void => {
+      check(true);
+      if (!settled) frameID = requestAnimationFrame(frame);
+    };
+    observer.observe(scroller, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    resizeObserver.observe(scroller);
+    timeoutID = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error('Timed out waiting for a correct initial layout.'));
+    }, FRAME_TIMEOUT_MS);
+    check(false);
+    if (!settled) frameID = requestAnimationFrame(frame);
   });
 }
 
@@ -809,22 +873,44 @@ function assertBaselineSnapshot(
 }
 
 function waitForAnyRows(host: HTMLElement): Promise<void> {
-  return waitUntilFrame(() => host.querySelector('.bench-row[data-index]') !== null, 'the first benchmark rows');
+  return waitForDOMCondition(
+    host,
+    () => host.querySelector('.bench-row[data-index]') !== null,
+    'the first benchmark rows',
+  );
 }
 
-function waitUntilFrame(predicate: () => boolean, label: string): Promise<void> {
+function waitForDOMCondition(
+  root: Node,
+  predicate: () => boolean,
+  label: string,
+): Promise<void> {
   if (predicate()) return Promise.resolve();
   return new Promise((resolve, reject) => {
-    const startedAt = performance.now();
-    const frame = (): void => {
-      if (predicate()) { resolve(); return; }
-      if (performance.now() - startedAt >= FRAME_TIMEOUT_MS) {
-        reject(new Error(`Timed out waiting for ${label}.`));
-        return;
-      }
-      requestAnimationFrame(frame);
+    let settled = false;
+    const observer = new MutationObserver(() => {
+      if (!predicate()) return;
+      settled = true;
+      observer.disconnect();
+      clearTimeout(timeoutID);
+      resolve();
+    });
+    const timeoutID = window.setTimeout(() => {
+      if (settled) return;
+      observer.disconnect();
+      reject(new Error(`Timed out waiting for ${label}.`));
+    }, FRAME_TIMEOUT_MS);
+    observer.observe(root, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+    if (predicate()) {
+      settled = true;
+      observer.disconnect();
+      clearTimeout(timeoutID);
+      resolve();
     };
-    requestAnimationFrame(frame);
   });
 }
 
@@ -918,6 +1004,20 @@ function rotate<T>(values: readonly T[], offset: number): readonly T[] {
   if (values.length === 0) return values;
   const start = offset % values.length;
   return [...values.slice(start), ...values.slice(0, start)];
+}
+
+function rotationStep(caseCount: number, rounds: number): number {
+  if (caseCount <= 1) return 0;
+  let candidate = Math.max(1, Math.floor(caseCount / Math.max(1, rounds)));
+  while (greatestCommonDivisor(candidate, caseCount) !== 1) candidate += 1;
+  return candidate;
+}
+
+function greatestCommonDivisor(left: number, right: number): number {
+  let a = Math.abs(left);
+  let b = Math.abs(right);
+  while (b !== 0) [a, b] = [b, a % b];
+  return a;
 }
 function ascending(left: number, right: number): number { return left - right; }
 function percentile(sorted: readonly number[], ratio: number): number {

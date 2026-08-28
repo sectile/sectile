@@ -10,14 +10,15 @@ const baselineOnly = args.includes('--baseline-only');
 const mergeBaseline = args.includes('--merge-baseline');
 const mergeMutations = args.includes('--merge-mutations');
 const inputPath = resolve(args.find((argument) => !argument.startsWith('--')) ?? '/tmp/sectile-virtual-benchmark.json');
-const rawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
+const fullRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64.json');
+const baselineRawOutputPath = resolve(packageRoot, 'results/chrome-151-macos-arm64-baseline.json');
 const docsOutputPath = resolve(repoRoot, 'docs/.vitepress/theme/virtual-benchmark-data.ts');
 const incomingReport = JSON.parse(await readFile(inputPath, 'utf8'));
 if ([baselineOnly, mergeBaseline, mergeMutations].filter(Boolean).length > 1) {
   throw new Error('--baseline-only, --merge-baseline, and --merge-mutations are mutually exclusive.');
 }
-const previousReport = baselineOnly || mergeBaseline || mergeMutations
-  ? JSON.parse(await readFile(rawOutputPath, 'utf8'))
+const previousReport = mergeBaseline || mergeMutations
+  ? JSON.parse(await readFile(fullRawOutputPath, 'utf8'))
   : undefined;
 if (previousReport !== undefined) {
   assertCompatibleConditions(previousReport, incomingReport);
@@ -26,25 +27,14 @@ if (previousReport !== undefined) {
 if (baselineOnly && incomingReport.mutationResults.length !== 0) {
   throw new Error('A baseline-only report must not contain mutation results.');
 }
+if (baselineOnly) assertCompleteBaselineReport(incomingReport);
 if (mergeMutations && incomingReport.mutationResults.length === 0) {
   throw new Error('A mutation merge report must contain at least one mutation result.');
 }
 const normalizedIncoming = normalizeReport(incomingReport);
 const normalizedPrevious = previousReport === undefined ? undefined : normalizeReport(previousReport);
 const report = baselineOnly
-  ? {
-      ...normalizedPrevious,
-      ...normalizedIncoming,
-      conditions: {
-        ...normalizedPrevious.conditions,
-        ...normalizedIncoming.conditions,
-        rowProfiles: mergeProfileConditions(normalizedPrevious, normalizedIncoming),
-        mutations: normalizedPrevious.conditions.mutations,
-      },
-      source: normalizedIncoming.source,
-      runs: mergeRuns(normalizedPrevious, normalizedIncoming),
-      mutationResults: normalizedPrevious.mutationResults,
-    }
+  ? normalizedIncoming
   : mergeBaseline
     ? {
         ...normalizedPrevious,
@@ -134,7 +124,10 @@ const baselineFailures = (report.baselineFailures ?? []).map((failure) => ({
   candidate.rowProfile === failure.rowProfile && candidate.mode === failure.mode && candidate.library === failure.library
 )) === index);
 
-const mutationResults = report.mutationResults.map((result) => ({
+const mutationReport = baselineOnly
+  ? normalizeReport(JSON.parse(await readFile(fullRawOutputPath, 'utf8')))
+  : report;
+const mutationResults = mutationReport.mutationResults.map((result) => ({
   runIds: result.runIds,
   rowProfile: result.rowProfile,
   library: result.library,
@@ -210,7 +203,7 @@ export interface BaselineBenchmarkFailure {
 }
 
 export interface MutationBenchmarkResult {
-  readonly runIds: readonly string[];
+  readonly runIds?: readonly string[];
   readonly rowProfile: BenchmarkRowProfile;
   readonly library: string;
   readonly version: string;
@@ -292,11 +285,11 @@ export const benchmarkRuns: Readonly<Record<string, BenchmarkRunMetadata>> = Obj
 `;
 
 await Promise.all([
-  writeFile(rawOutputPath, `${JSON.stringify(rawReport, null, 2)}\n`, 'utf8'),
+  writeFile(baselineOnly ? baselineRawOutputPath : fullRawOutputPath, `${JSON.stringify(rawReport, null, 2)}\n`, 'utf8'),
   writeFile(docsOutputPath, docsModule, 'utf8'),
 ]);
 
-console.log(`Wrote ${rawOutputPath}`);
+console.log(`Wrote ${baselineOnly ? baselineRawOutputPath : fullRawOutputPath}`);
 console.log(`Wrote ${docsOutputPath}`);
 
 function mergeMutationResults(previousResults, incomingResults) {
@@ -377,4 +370,14 @@ function profileConditions(conditions = {}) {
 
 function mergeProfileConditions(previous, incoming) {
   return { ...(previous.conditions.rowProfiles ?? {}), ...(incoming.conditions.rowProfiles ?? {}) };
+}
+
+function assertCompleteBaselineReport(report) {
+  const profiles = new Set([
+    ...(report.baselineResults ?? []).map((result) => result.rowProfile),
+    ...(report.baselineFailures ?? []).map((failure) => failure.rowProfile),
+  ]);
+  if (!profiles.has('uniform') || !profiles.has('heterogeneous')) {
+    throw new Error('A committed baseline report must contain both row profiles. Merge both baseline shards first.');
+  }
 }
