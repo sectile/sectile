@@ -190,41 +190,10 @@
 .tabular-demo__title small { overflow: hidden; color: var(--vp-c-text-3); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 
 .tabular-demo__search {
-  display: flex;
   width: min(280px, 45%);
-  min-height: 36px;
-  align-items: center;
-  gap: 8px;
-  padding: 0 11px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
-  color: var(--vp-c-text-3);
-  background: var(--vp-c-bg);
 }
 
-.tabular-demo__search:focus-within {
-  border-color: var(--sectile-action);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sectile-focus-ring) 22%, transparent);
-}
-
-.tabular-demo .tabular-demo__search-input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  padding: 0;
-  color: var(--vp-c-text-1);
-  background: transparent;
-  box-shadow: none;
-  font-size: 12px;
-}
-
-.tabular-demo .tabular-demo__search-input:focus-visible {
-  outline: 0;
-  box-shadow: none;
-}
-
-.tabular-demo__search-input::placeholder { color: var(--vp-c-text-3); opacity: 1; }
+.tabular-demo__search input { font-size: 12px; }
 
 .tabular-demo__action {
   display: inline-flex;

@@ -5,6 +5,7 @@ import catalog from '../../../data/components.json' with { type: 'json' };
 import { componentSections } from '../../../data/component-sections.js';
 import { useDocsLocale } from '../locale.js';
 import ComponentGalleryCard from './ComponentGalleryCard.vue';
+import DocsSearchField from './DocsSearchField.vue';
 
 const { isKorean } = useDocsLocale();
 const query = ref('');
@@ -48,13 +49,16 @@ const sections = computed(() => {
 
 <template>
   <div class="component-catalog">
-    <TextField
-      v-model="query"
+    <DocsSearchField
       class="component-catalog__search"
-      type="search"
-      :placeholder="isKorean ? '이름이나 기능으로 찾기' : 'Filter by component, family, or capability'"
-      :aria-label="isKorean ? '컴포넌트 찾기' : 'Filter components'"
-    />
+      :label="isKorean ? '컴포넌트 찾기' : 'Filter components'"
+    >
+      <TextField
+        v-model="query"
+        type="search"
+        :placeholder="isKorean ? '이름이나 기능으로 찾기' : 'Filter by component, family, or capability'"
+      />
+    </DocsSearchField>
 
     <section
       v-for="section in sections"
@@ -91,12 +95,6 @@ const sections = computed(() => {
 .component-catalog__search {
   width: 100%;
   margin: 10px 0 34px;
-  padding: 12px 14px;
-  border: 1px solid var(--vp-c-border);
-  border-radius: 10px;
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-1);
-  font: inherit;
 }
 
 .component-catalog__section + .component-catalog__section {
