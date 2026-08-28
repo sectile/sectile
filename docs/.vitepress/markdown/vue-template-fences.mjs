@@ -1,8 +1,9 @@
+import { resolveVueCodeLanguage } from '../code-language.mjs';
+
 const vueFencePattern = /^(\s*)vue(?=$|[\s:{=])/u;
-const vueSfcScriptOrStylePattern = /^(?:<script|<style)\b/mu;
 
 export function isVueTemplateFragment(info, source) {
-  return vueFencePattern.test(info) && !vueSfcScriptOrStylePattern.test(source);
+  return vueFencePattern.test(info) && resolveVueCodeLanguage('vue', source) === 'vue-html';
 }
 
 export function vueTemplateFencePlugin(markdown) {
@@ -13,12 +14,17 @@ export function vueTemplateFencePlugin(markdown) {
 
   markdown.renderer.rules.fence = (tokens, index, options, environment, renderer) => {
     const token = tokens[index];
-    if (!isVueTemplateFragment(token.info, token.content)) {
+    if (!vueFencePattern.test(token.info)) {
+      return renderFence(tokens, index, options, environment, renderer);
+    }
+
+    const language = resolveVueCodeLanguage('vue', token.content);
+    if (language === 'vue') {
       return renderFence(tokens, index, options, environment, renderer);
     }
 
     const originalInfo = token.info;
-    token.info = originalInfo.replace(vueFencePattern, '$1vue-html');
+    token.info = originalInfo.replace(vueFencePattern, `$1${language}`);
 
     let rendered;
     try {

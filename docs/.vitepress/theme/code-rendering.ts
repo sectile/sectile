@@ -1,4 +1,5 @@
 import { codeToHtml } from 'shiki';
+import { resolveVueCodeLanguage } from '../code-language.mjs';
 
 type CodeTheme = 'github-dark-default' | 'github-light-default';
 
@@ -68,7 +69,8 @@ export async function renderCodeSource(
   language: string,
   theme: CodeTheme,
 ): Promise<{ formatted: string; html: string }> {
-  const formatted = await formatCodeSource(source, language);
-  const html = await codeToHtml(formatted, { lang: language, theme });
+  const resolvedLanguage = resolveVueCodeLanguage(language, source);
+  const formatted = await formatCodeSource(source, resolvedLanguage);
+  const html = await codeToHtml(formatted, { lang: resolvedLanguage, theme });
   return { formatted, html };
 }
