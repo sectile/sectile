@@ -1,37 +1,31 @@
 ---
-title: Virtual mental model
-description: Keep identity, geometry, rendered ranges, and loaded data as separate domains.
+title: Core concepts
+description: Understand virtualization through viewport, overscan, placement, and anchor.
 ---
 
-# Virtual mental model
+# Core concepts
 
-Virtualization is not one list with hidden state. Four domains cooperate through explicit values. Dynamic extent evidence remains a first-class input, so measurement, insertion, removal, movement, and live resizing can update geometry without losing identity or viewport position.
+Sectile Virtual calculates a surface from four values.
 
-<VirtualConceptDiagram />
-
-## Keep the windows separate
-
-- **viewport**: the rectangle currently visible to the user
-- **render bounds**: viewport plus overscan
-- **placements**: identities whose geometry intersects the render bounds
-- **loaded window**: records currently available to the application
-
-A placement range is not a loaded-data range. The first changes with scrolling; the second changes when asynchronous requests are accepted. `collectionWindowEventForLinearPlan()` is a bridge, not shared state.
-
-## One strategy contract
-
-Every strategy accepts a two-dimensional viewport and optional overscan. A `VirtualLayoutPlan` returns content size, normalized render bounds, placements, visibility, generation, and an identity anchor.
-
-Measurements and mutations produce a new immutable layout state plus `scrollDelta`. The host renders placements and performs effects. Virtual never reads DOM geometry or mutates input arrays.
-
-## Extent evidence
-
-`ExtentIndex` stores one of three kinds for each indexed item:
-
-| Kind | Meaning |
+| Value | Meaning |
 | --- | --- |
-| `exact` | measured or otherwise authoritative size |
-| `estimated` | provisional size expected to be close |
-| `unknown` | size is unknown; use an explicit fallback until measured |
+| `viewport` | The x-y position and size currently visible to the user |
+| `overscan` | Extra distance prepared outside the viewport |
+| `placement` | The ID and rectangle of an item to render |
+| `anchor` | The item whose screen position is preserved across a change |
 
-Choose a realistic fallback. It determines initial scroll range and how much correction measurement may require.
+## One update
+
+1. Query the current viewport with overscan.
+2. Render only the returned placements.
+3. Let the active environment measure real element sizes.
+4. Update changed sizes and subsequent coordinates.
+5. Apply the difference between the old and new anchor position to scrolling.
+
+Total data size is independent of placement count. A 50,000-row list or a 300 × 300 grid still returns only items around the current viewport.
+
+## State and host responsibilities
+
+`@sectile/virtual` state owns IDs, order, sizes, and coordinates. DOM and Vue connections read the viewport, render placements, and return real sizes and scroll values. The same state can be queried in a browser, server, or worker.
+
+Use each layout's `snapshot*Layout()` and `restore*Layout()` functions when layout state must be stored or moved across execution boundaries.

@@ -1,11 +1,17 @@
 ---
-title: Virtual DOM connection
-description: Connect a layout strategy to browser measurement, scrolling, and application-owned markup.
+title: DOM connection
+description: Connect Virtual layout state to existing DOM scrolling, rendering, and real-size measurement.
 ---
 
-# Virtual DOM connection
+# DOM connection
 
-`@sectile/dom/virtual` schedules browser work around any Virtual strategy. It owns observers and frame ordering, not collection records or markup.
+`@sectile/dom/virtual` connects an existing DOM surface to Virtual layout. It reads scrolling, observes real element sizes, and applies scroll correction after changes.
+
+## Install and import
+
+```sh
+pnpm add @sectile/dom @sectile/virtual
+```
 
 ```ts
 import {
@@ -14,36 +20,44 @@ import {
   virtualContentStyle,
   virtualItemStyle,
 } from '@sectile/dom/virtual'
-import { linearLayoutStrategy } from '@sectile/virtual/linear-layout'
+```
 
+## Connect
+
+```ts
 const virtualizer = createVirtualizer({
   root: scrollElement,
-  state: linearState,
+  state: layout,
   strategy: linearLayoutStrategy,
   overscan: 240,
   measure: createAxisMeasurementResolver('vertical'),
-  onStateChange(state) {
-    linearState = state
+  onStateChange(next) {
+    layout = next
   },
   onPlanChange(plan, connection) {
     Object.assign(contentElement.style, virtualContentStyle(plan))
-    reconcileItems(plan.placements, (element, placement) => {
+
+    for (const placement of plan.placements) {
+      const element = getOrCreateRow(placement.id)
       Object.assign(element.style, virtualItemStyle(placement, { width: true }))
-      return connection.registerItem(element, placement.id)
-    })
+      connection.registerItem(element, placement.id)
+    }
   },
 })
 ```
 
-One animation frame collects root and item resize notifications, reads measurements as a batch, applies one semantic update, writes anchor correction, and publishes the next plan.
+Keep only the returned placements in the DOM during `onPlanChange`. Connecting an element to its stable ID with `registerItem()` routes size changes back into the same layout state.
 
-## Connection methods
+## Common methods
 
-- `registerItem()` associates a mounted element with a stable identity.
-- `measure()` submits strategy-specific evidence such as row and column tracks.
-- `mutate()` changes items or geometry through the same anchored path.
-- `scrollTo()` targets an identity even when it is not mounted.
-- `setOverscan()` updates the render margin without rebuilding the layout.
-- `disconnect()` removes observers and listeners.
+| Method | Role |
+| --- | --- |
+| `registerItem(element, id)` | Connect a DOM element to a placement ID |
+| `measure(batch)` | Apply application-supplied measurements |
+| `mutate(change)` | Apply item, track, or coordinate changes |
+| `scrollTo(id, alignment)` | Move to an item by ID |
+| `setOverscan(value)` | Change offscreen preparation distance |
+| `refresh()` | Refresh viewport and measurements on the next frame |
+| `disconnect()` | End event and observer connections |
 
-The default viewport uses non-negative physical `scrollLeft` and `scrollTop`. Provide `readViewport` and `writeScroll` for RTL or custom coordinate systems.
+Provide `readViewport` and `writeScroll` for right-to-left scrolling or an application-specific coordinate system.

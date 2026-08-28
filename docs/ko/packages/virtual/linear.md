@@ -1,37 +1,30 @@
 ---
-title: 선형 가상화
-description: 항목 크기가 달라지는 세로·가로 목록을 만들고 ID를 기준으로 원하는 곳까지 이동합니다.
+title: 선형 목록
+description: 높이가 서로 다른 긴 목록을 자동 측정하고 변경 뒤에도 읽던 위치를 유지합니다.
 ---
 
-# 선형 가상화
+# 선형 목록
 
-목록, 피드, 순환 목록처럼 한 방향으로 이어지는 화면에는 선형 방식을 사용합니다. 세로와 가로, 정방향과 역방향, 항목 사이 간격, 항목마다 다른 크기, ID 기준 스크롤을 지원합니다.
+피드, 메시지, 검색 결과처럼 한 방향으로 이어지는 화면에는 선형 배치를 사용합니다. 세로·가로 방향, 항목 간격, 서로 다른 크기, ID 기준 이동을 지원합니다.
 
-## 전체 계산 예시
+## 예제
 
-[가상화 첫 페이지](/ko/packages/virtual)의 고객 문의 기록이 아래 코드를 사용합니다. 완료된 기록을 포함한 5만 건을 예상 높이로 배치한 뒤, 화면에 들어온 행의 실제 높이를 측정합니다. 항목을 추가하거나 삭제하고 옮길 때도 같은 ID를 이어서 사용합니다.
+아래 50,000개 행은 네 가지 높이를 반복합니다. Vue와 DOM 환경에서는 실제 요소의 높이가 자동으로 측정됩니다. Core와 Terminal 환경에서는 같은 viewport 조회 결과를 확인할 수 있습니다.
 
-<<< ../../../examples/virtual/linear-window.ts
+<VirtualExample kind="list" />
 
-화면에는 `plan.placements`에 든 항목만 만듭니다. 전체 ID 순서는 Core에 두고 `placement.id`를 화면 출력 키로 씁니다.
+## 크기 선택
 
-## 조회와 스크롤
+| 알고 있는 값 | Vue 속성 | 처리 방식 |
+| --- | --- | --- |
+| 실제 DOM 크기만 사용 | 생략 | 기본 크기로 시작하고 렌더된 요소를 측정 |
+| 대략적인 시작 크기 | `estimateSize` | 예상값으로 시작하고 실제 크기로 갱신 |
+| 모든 항목의 정확한 고정 크기 | `itemSize` | 측정을 생략하고 고정 크기로 계산 |
 
-```ts
-import {
-  linearScrollTarget,
-  queryLinearLayout,
-} from '@sectile/virtual/linear-layout'
-
-const viewport = { x: 0, y: 12_000, width: 560, height: 480 }
-const plan = queryLinearLayout(layout, { viewport, overscan: 240 })
-const target = linearScrollTarget(layout, 'item-900', viewport, 'center')
-```
-
-미리 그릴 범위를 늘리면 DOM 요소도 늘어납니다. 대신 빠르게 스크롤해도 항목이 화면에 들어오기 전에 그릴 시간을 벌 수 있습니다. 처음에는 화면 하나 높이로 잡고, 실제 스크롤 속도와 그리는 데 걸린 시간을 보며 조절합니다.
+DOM 연결에서는 `createAxisMeasurementResolver('vertical')` 또는 `'horizontal'`을 `createVirtualizer`에 전달합니다. Core에서는 `unknown`, `estimated`, `exact` extent로 같은 선택을 표현합니다.
 
 ## 항목 변경
 
-Core의 `SequencePatch`를 `applyLinearPatch()`에 전달하면 됩니다. 항목을 넣을 때는 새 ID마다 임시 크기를 하나씩 함께 넘깁니다. 항목을 옮길 때는 기존 크기를 그대로 쓰며, 목적지 번호는 원본을 뺀 뒤의 순서를 기준으로 합니다. 현재 화면에서 기준으로 삼을 ID도 함께 넘기면 앞쪽 목록이 달라져도 읽고 있던 항목이 제자리에 남습니다.
+배열에 항목을 넣거나 삭제하거나 옮길 때 안정적인 ID를 유지합니다. Sectile은 남아 있는 ID의 측정값을 이어 쓰고, viewport 앞쪽에서 생긴 변화만큼 anchor 위치를 보정합니다.
 
-서버에서 나눠 받는 자료의 범위는 Core의 `CollectionWindow`에 둡니다. 그릴 범위가 지금 받은 자료를 벗어났을 때만 `collectionWindowEventForLinearPlan()`을 호출합니다.
+원하는 항목으로 이동할 때는 Vue의 `scrollTo()`, DOM 연결의 `scrollTo()`, Core의 `linearScrollTarget()`을 사용합니다.

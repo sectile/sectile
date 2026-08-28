@@ -1,53 +1,44 @@
 ---
 title: Virtual
-description: Automatic measurement, anchored collection changes, and four layout strategies for large dynamic surfaces.
+description: Measure real elements, update only the affected layout range, and preserve scroll position.
 ---
 
 # Virtual
 
-`@sectile/virtual` manages layout for large surfaces whose item sizes and order keep changing. Insert items before the viewport, expand a row, or change the number of grid columns; Sectile calculates the new coordinates and render range. The returned `scrollDelta` preserves the viewport coordinate of the anchor item across that change.
-
-Vue applications can omit exact item heights from `VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial`. The DOM adapter measures rendered elements and Sectile updates layout from the changed region. Lists, responsive grids, masonry cards, and spatial surfaces share this measurement and mutation flow.
-
-## Sectile Virtual strengths
-
-<VirtualStrengthOverview />
+`@sectile/virtual` lays out large surfaces whose item sizes and order keep changing. Once an element renders, its browser size updates coordinates from the changed point onward. Inserts, removals, and moves before the viewport also preserve the screen position of the item currently being read.
 
 ## Install
 
-```sh
-pnpm add @sectile/core @sectile/virtual
-```
+The command follows the **Usage** environment selected in the top navigation.
 
-```ts
-import { createExtentIndex } from '@sectile/virtual/extent-index'
-import { createLinearLayout } from '@sectile/virtual/linear-layout'
-```
+<VirtualInstall />
 
-## Validation scope
+## Variable-height list
 
-The browser benchmark separates fixed and dynamic height conditions, then measures initial rendering and scrolling. It also records time to reach a correct screen after inserts, moves, removals, and height changes, along with every visual failure. Current results, failure criteria, and execution details are published in the [virtualization benchmark](/packages/virtual/benchmark).
+This list contains 50,000 rows with different heights. Sectile creates only the rows around the viewport and automatically applies their actual DOM sizes. The code tab shows only the implementation for the selected **Usage** environment.
 
-## Customer request list
+<VirtualExample kind="list" />
 
-Work with 50,000 customer requests rendered as complete component rows with selection, disclosures, status, metrics, and activity history. Changing the view or adding a reply alters row height, and browser measurements update the layout automatically. Insert, remove, or move requests before the viewport and the item being read stays in place.
+## What Sectile handles
 
-<VirtualWindowLab />
+- **Real element sizes**: rendered elements can supply their dimensions without a fixed height or an application-owned sizing function.
+- **Incremental layout**: changing one size updates coordinates from the affected range.
+- **Anchored scrolling**: collection and size changes preserve the viewport position of the current anchor.
+- **Large two-dimensional surfaces**: lists, track grids, masonry, and spatial layouts share the same query and measurement flow.
 
-## Compare every strategy
+## Choose a layout
 
-The same viewport contract drives 50k linear records, 48k grid cells, 30k masonry tiles, and 25k spatial nodes. Switch strategies and scroll both axes to compare actual placement plans against the number of DOM nodes created.
+| Surface | Layout | Read more |
+| --- | --- | --- |
+| One ordered axis | Linear | [Linear lists](virtual/linear.md) |
+| Many rows and many columns | Track grid | [Grid, masonry, and spatial](virtual/layouts.md#track-grid) |
+| Variable-height cards | Masonry | [Grid, masonry, and spatial](virtual/layouts.md#masonry) |
+| Application-positioned canvas | Spatial | [Grid, masonry, and spatial](virtual/layouts.md#spatial) |
 
-<VirtualStrategyLab />
+## Continue
 
-## Learning path
-
-1. [Mental model](virtual/concepts.md): identity, geometry, render windows, and loaded windows.
-2. [Linear lists](virtual/linear.md): dynamic rows, overscan, scrolling, and collection changes.
-3. [Grid, masonry, and spatial layouts](virtual/layouts.md): choose the lowest-cost fitting strategy.
-4. [Measurement and anchoring](virtual/measurement.md): generation-safe measurement and scroll correction.
-5. [DOM connection](virtual/dom.md): browser scheduling, reads, writes, and normalized scrolling.
-6. [Vue connection](virtual/vue.md): `useVirtualizer` and headless rendering parts.
-7. [Benchmark](virtual/benchmark.md): timing and visual stability for initial rendering, scrolling, and dynamic changes.
-
-Runtime layout states are opaque handles. Use each strategy's `snapshot*Layout()` and `restore*Layout()` pair when state must cross a worker or serialization boundary.
+- [Core concepts](virtual/concepts.md): viewport, overscan, placement, and anchor.
+- [Measurement and anchoring](virtual/measurement.md): when real sizes and scroll corrections are applied.
+- [DOM connection](virtual/dom.md): connect existing markup with `createVirtualizer`.
+- [Vue connection](virtual/vue.md): `VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial`.
+- [Benchmark](virtual/benchmark.md): initial render, scrolling, stabilization time, and visual failures.

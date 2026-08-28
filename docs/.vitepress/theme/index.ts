@@ -11,11 +11,9 @@ import TerminalCheckboxDemo from './components/TerminalCheckboxDemo.vue';
 import TheoryComposition from './components/TheoryComposition.vue';
 import TheoryContractDiagram from './components/TheoryContractDiagram.vue';
 import TheoryOverview from './components/TheoryOverview.vue';
-import VirtualConceptDiagram from './components/VirtualConceptDiagram.vue';
 import VirtualBenchmarkReport from './components/VirtualBenchmarkReport.vue';
-import VirtualStrengthOverview from './components/VirtualStrengthOverview.vue';
-import VirtualStrategyLab from './components/VirtualStrategyLab.vue';
-import VirtualWindowLab from './components/VirtualWindowLab.vue';
+import VirtualExample from './components/VirtualExample.vue';
+import VirtualInstall from './components/VirtualInstall.vue';
 import Layout from './Layout.vue';
 import './styles.css';
 import './component-examples.css';
@@ -37,10 +35,8 @@ export default {
     app.component('TheoryComposition', TheoryComposition);
     app.component('TheoryContractDiagram', TheoryContractDiagram);
     app.component('TheoryOverview', TheoryOverview);
-    app.component('VirtualConceptDiagram', VirtualConceptDiagram);
     app.component('VirtualBenchmarkReport', VirtualBenchmarkReport);
-    app.component('VirtualStrengthOverview', VirtualStrengthOverview);
-    app.component('VirtualStrategyLab', VirtualStrategyLab);
-    app.component('VirtualWindowLab', VirtualWindowLab);
+    app.component('VirtualExample', VirtualExample);
+    app.component('VirtualInstall', VirtualInstall);
   },
 } satisfies Theme;

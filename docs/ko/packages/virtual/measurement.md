@@ -1,41 +1,24 @@
 ---
-title: 측정과 기준 항목 유지
-description: 내용에 따라 달라진 크기를 반영하면서 기준 항목의 위치와 최신 측정값을 유지합니다.
+title: 측정과 위치 유지
+description: 실제 크기를 반영하고, 최신 측정만 받아들이며, 기준 항목의 화면 위치를 유지합니다.
 ---
 
-# 측정과 기준 항목 유지
+# 측정과 위치 유지
 
-임시로 잡아 둔 크기는 다음 순서로 실제 크기와 맞춥니다. 각 측정에는 순번이 붙습니다.
+내용 줄 수, 이미지 비율, 펼침 상태처럼 DOM이 결정하는 크기는 렌더 후에 알 수 있습니다. Sectile의 DOM과 Vue 연결은 `ResizeObserver`로 변화를 모아 한 번에 배치 상태에 반영합니다.
 
-1. 최신 배치 상태와 화면 영역을 조회합니다.
-2. 반환된 항목만 화면에 만듭니다.
-3. 실행 환경에서 모든 항목 크기를 한꺼번에 읽습니다.
-4. `plan.generation`과 `plan.anchor`를 넣은 측정 묶음 하나를 전달합니다.
-5. 반환된 상태를 반영합니다.
-6. 다음 화면을 그리기 전에 `scrollDelta`를 적용합니다.
-7. 새 배치를 조회합니다.
+## 처리 순서
 
-```ts
-const plan = queryLinearLayout(layout, { viewport, overscan: 200 })
+1. 현재 viewport의 placement를 렌더링합니다.
+2. 렌더된 요소의 크기를 함께 읽습니다.
+3. 같은 배치 세대의 측정값을 한 묶음으로 적용합니다.
+4. 달라진 구간부터 좌표를 갱신합니다.
+5. 다음 화면을 그리기 전에 `scrollDelta`를 적용합니다.
 
-const mutation = applyLinearMeasurements(layout, {
-  generation: plan.generation,
-  anchor: plan.anchor,
-  measurements: [{ index: 0, extent: { kind: 'exact', value: 72 } }],
-})
+`generation`은 측정이 어느 배치에서 시작됐는지 구분합니다. 현재 배치와 generation이 일치하는 측정만 상태에 반영합니다.
 
-layout = mutation.state
-scrollBy(mutation.scrollDelta.x, mutation.scrollDelta.y)
-```
+## anchor와 `scrollDelta`
 
-## 기준 ID가 필요한 이유
+anchor는 viewport 안에서 기준이 되는 안정적인 ID와 상대 위치입니다. 목록 앞쪽의 행 높이가 바뀌거나 항목이 추가되면 같은 ID의 이전 좌표와 새 좌표를 비교합니다. 그 차이가 `scrollDelta`이며 DOM 연결이 실제 스크롤 값에 적용합니다.
 
-배치 결과는 화면에 보이는 첫 ID를 기준으로 잡고 화면 안에서의 상대 좌표를 기록합니다. 그 앞이나 주변의 크기가 바뀌면 같은 ID의 이전 사각형과 새 사각형을 비교합니다. `scrollDelta`는 상대 좌표를 그대로 유지하는 데 필요한 변화량입니다.
-
-보정값은 같은 화면 갱신 안에서 즉시 적용합니다. 이렇게 하면 사용자가 읽던 항목이 제자리에 남고 다음 입력도 현재 좌표에서 이어집니다.
-
-## 오래된 측정값
-
-측정값이나 항목 변경을 받아들일 때마다 순번이 하나씩 늘어납니다. 현재 배치의 순번과 일치하는 측정 묶음만 반영합니다. 이전 순번의 결과가 도착하면 현재 화면의 항목을 다시 재어 최신 묶음을 만듭니다.
-
-브라우저에서는 모든 크기를 읽은 뒤 스크롤 값을 씁니다. 항목마다 읽기와 쓰기를 번갈아 수행하면 브라우저 배치 계산을 여러 번 일으킵니다.
+Vue의 `VirtualList`, `VirtualGrid`, `VirtualMasonry`, `VirtualSpatial`은 이 흐름을 포함합니다. 낮은 수준 API에서는 `measure()`와 반환된 상태·`scrollDelta`를 같은 화면 갱신 안에서 처리합니다.

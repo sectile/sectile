@@ -1,46 +1,43 @@
 ---
-title: Virtual layout strategies
-description: Choose linear, track-grid, masonry, or spatial geometry from the surface contract.
+title: Grid, masonry, and spatial layouts
+description: Virtualize large two-axis grids, variable-height cards, and wide coordinate spaces.
 ---
 
-# Virtual layout strategies
+# Grid, masonry, and spatial layouts
 
-Choose the lowest-cost strategy that represents the surface without application-side guessing.
-
-<VirtualStrategyLab />
-
-The explorer above builds and queries every plan through these public package APIs:
-
-<<< ../../examples/virtual/strategy-explorer.ts
-
-| Strategy | Use for | Geometry |
-| --- | --- | --- |
-| linear | lists, feeds, carousels | one ordered track with dynamic item extents |
-| track grid | tables, schedules, spreadsheets | independent row and column tracks, sparse merged regions |
-| masonry | galleries, boards | shortest-lane or stable round-robin placement |
-| spatial | diagrams, canvases, layered editors | arbitrary rectangles, overlap, deterministic z-order |
+Choose the layout that matches the structure already present in the surface. Every code tab follows the **Usage** environment selected in the top navigation.
 
 ## Track grid
 
-```ts
-import { createExtentIndex } from '@sectile/virtual/extent-index'
-import { createTrackGridLayout } from '@sectile/virtual/track-grid-layout'
+Use a track grid when rows and columns are both independently large. This example contains **300 rows × 300 columns**, or 90,000 cells with equal axis counts. Scrolling in either direction keeps only the cells inside the viewport and overscan in the DOM.
 
-const exact = (value: number) => ({ kind: 'exact' as const, value })
-const grid = createTrackGridLayout(
-  createExtentIndex([exact(32), exact(40), exact(40)]),
-  createExtentIndex([exact(180), exact(120), exact(120)]),
-  [{ id: 'title', row: 0, column: 0, columnSpan: 3 }],
-  { rowGap: 1, columnGap: 1 },
-)
-```
+<VirtualExample kind="grid" />
 
-Storage is proportional to row tracks, column tracks, and declared regions—not `rows × columns`. Blank cells can be projected from returned row and column ranges. Frozen panes are multiple viewport queries over one state.
+A track grid manages row heights and column widths separately. Spanning regions can occupy multiple tracks in the same coordinate system. In Vue, connect `trackGridLayoutStrategy` to `VirtualizerRoot`.
+
+For a product-card grid that only flows vertically and changes its column count with viewport width, `VirtualGrid` is the smaller API. `minLaneSize` derives its responsive column count.
 
 ## Masonry
 
-`shortest` balances columns but later items may change lanes after measurement. `round-robin` preserves lane ownership when continuity matters more than perfect balance. Responsive lane-count changes are explicit geometry mutations and return anchor correction.
+Masonry places variable-height cards across lanes while reducing empty space. This example measures the actual DOM height of 30,000 cards and creates only those around the viewport.
+
+<VirtualExample kind="masonry" />
+
+`VirtualMasonry` derives its lane count from viewport width and `minLaneSize`. Once a card is measured, only the affected tail of the layout is updated.
 
 ## Spatial
 
-Spatial layout accepts arbitrary rectangles and emits placements in `zIndex`, then declaration order. Use it for genuine freeform geometry. Linear and track-grid indexes are cheaper when the surface has regular structure.
+Use spatial layout when a diagram or editor already owns each item's x-y coordinates and size. This example arranges 40,000 service nodes in irregular clusters. With no row-column rule or fixed node size, moving in either direction queries only nodes intersecting the viewport.
+
+<VirtualExample kind="spatial" />
+
+Pass x, y, width, and height through `getRect`. Sectile keeps those coordinates and performs the viewport intersection query.
+
+## Choose by data shape
+
+| Structure already present in the data | Layout |
+| --- | --- |
+| Order and item size | [Linear](linear.md) |
+| Independent rows and columns | Track grid |
+| Order and variable card heights | Masonry |
+| Existing x-y rectangles | Spatial |
