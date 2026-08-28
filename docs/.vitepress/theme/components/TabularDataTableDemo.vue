@@ -4,6 +4,7 @@ import { ArrowDownUp, Search, Table2 } from '@lucide/vue';
 import {
   DataTableBody,
   DataTableBulkSelectionControl,
+  DataTableCaption,
   DataTableCell,
   DataTableColumnHeader,
   DataTableFilterControl,
@@ -11,7 +12,6 @@ import {
   DataTableHeaderRow,
   DataTableProvider,
   DataTableRoot,
-  DataTableRow,
   DataTableSelectionControl,
   DataTableSortTrigger,
   defineDataTableColumns,
@@ -95,27 +95,28 @@ const direction = (columnID: string) => {
       </header>
 
       <div class="tabular-demo__viewport">
-        <DataTableRoot :aria-label="copy.title" class="tabular-table">
+        <DataTableRoot class="tabular-table">
+          <DataTableCaption class="sr-only">{{ copy.title }}</DataTableCaption>
           <DataTableHeader>
-            <DataTableHeaderRow :depth="0">
+            <DataTableHeaderRow>
               <th class="tabular-table__select"><DataTableBulkSelectionControl :target="{ kind: 'all-matching' }" :aria-label="copy.selectAll"><span aria-hidden="true">✓</span></DataTableBulkSelectionControl></th>
               <DataTableColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
-                <DataTableSortTrigger :columnID="column.id">
+                <DataTableSortTrigger :column="column.id">
                   {{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /><span class="sr-only">{{ direction(column.id) }}</span>
                 </DataTableSortTrigger>
               </DataTableColumnHeader>
             </DataTableHeaderRow>
           </DataTableHeader>
           <DataTableBody>
-            <DataTableRow v-for="row in rows" :key="row.id" :rowID="row.id">
-              <td class="tabular-table__select"><DataTableSelectionControl :rowID="row.id" name="team-members" :value="row.id" :aria-label="`Select ${row.cells['name']}`" /></td>
-              <DataTableCell :rowID="row.id" columnID="name"><strong>{{ row.cells['name'] }}</strong></DataTableCell>
-              <DataTableCell :rowID="row.id" columnID="team">{{ row.cells['team'] }}</DataTableCell>
-              <DataTableCell :rowID="row.id" columnID="role">{{ row.cells['role'] }}</DataTableCell>
-              <DataTableCell :rowID="row.id" columnID="location">{{ row.cells['location'] }}</DataTableCell>
-              <DataTableCell :rowID="row.id" columnID="status"><span class="tabular-demo__status" :data-tone="row.cells['status']">{{ copy.status[row.cells['status'] as keyof typeof copy.status] }}</span></DataTableCell>
-            </DataTableRow>
-            <tr v-if="rows.length === 0"><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? 'Loading…' : 'No matching rows' }}</td></tr>
+            <template #default="{ row }">
+              <td class="tabular-table__select"><DataTableSelectionControl name="team-members" :aria-label="`Select ${row.cells['name']}`" /></td>
+              <DataTableCell column="name"><strong>{{ row.cells['name'] }}</strong></DataTableCell>
+              <DataTableCell column="team">{{ row.cells['team'] }}</DataTableCell>
+              <DataTableCell column="role">{{ row.cells['role'] }}</DataTableCell>
+              <DataTableCell column="location">{{ row.cells['location'] }}</DataTableCell>
+              <DataTableCell column="status"><span class="tabular-demo__status" :data-tone="row.cells['status']">{{ copy.status[row.cells['status'] as keyof typeof copy.status] }}</span></DataTableCell>
+            </template>
+            <template #empty><tr><td colspan="6" class="tabular-demo__empty">{{ source.status.value === 'loading' ? 'Loading…' : 'No matching rows' }}</td></tr></template>
           </DataTableBody>
         </DataTableRoot>
       </div>

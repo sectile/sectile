@@ -32,12 +32,11 @@ const rows = [
 
 ## Disclosure and source coordination
 
-`DataTreeGridRowDisclosure` updates expansion and produces a revisioned source request. The resolver returns only the currently visible branch plus any context-only ancestors needed to explain it.
+`DataTreeGridRowDisclosure` updates expansion and produces a revisioned source request. The resolver returns only the currently visible branch plus any context-only ancestors needed to explain it. Body supplies the current group row, so the disclosure inherits its row ID.
 
 ```vue
 <DataTreeGridRowDisclosure
   v-if="row.kind === 'group'"
-  :rowID="row.id"
 >
   Toggle {{ row.cells.name }}
 </DataTreeGridRowDisclosure>
@@ -46,6 +45,8 @@ const rows = [
 ## Grid navigation and editing
 
 Leaf cells use the same navigation and edit lifecycle as DataGrid. Group cells are read-only. Enter begins an editor, Escape cancels, and a valid commit emits an application command. Collapse or removal cancels an affected editor before recovering the cursor to a visible cell.
+
+`DataTreeGridBody` renders the accepted ordered hierarchy and exposes `{ row, rowIndex, isGroup }`. Cells, disclosure controls, selection controls, and editors inherit the row ID. Use manual Body plus explicit Row only when custom windowing owns placement. Flat headers omit `depth`.
 
 ## Selection across branches
 

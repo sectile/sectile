@@ -16,13 +16,14 @@ Try sorting more than once to cycle ascending, descending, and off. Filter the r
 
 ## Basic composition
 
-The Provider receives the controller once. Root and every nested part read it through injection. A source resolves the request envelope into a revision-matched view; rendered row IDs must come from that accepted view.
+The Provider receives the controller once. Root and every nested part read it through injection. A source resolves the request envelope into a revision-matched view. Body iterates the accepted rows and provides each `row` to its slot; nested cells and controls inherit that row identity.
 
 ```vue
 <script setup lang="ts">
 import {
-  DataTableProvider, DataTableRoot, DataTableHeader, DataTableHeaderRow,
-  DataTableColumnHeader, DataTableBody, DataTableRow, DataTableCell,
+  DataTableProvider, DataTableRoot, DataTableCaption,
+  DataTableHeader, DataTableHeaderRow, DataTableColumnHeader,
+  DataTableBody, DataTableCell,
   defineDataTableColumns, useDataTable, useDataTableSource,
 } from '@sectile/vue/data-table'
 
@@ -40,16 +41,15 @@ useDataTableSource(table, async (request) => {
 
 <template>
   <DataTableProvider :controller="table">
-    <DataTableRoot aria-label="Users">
-      <DataTableHeader><DataTableHeaderRow :depth="0">
+    <DataTableRoot>
+      <DataTableCaption>Users</DataTableCaption>
+      <DataTableHeader><DataTableHeaderRow>
         <DataTableColumnHeader headerNodeID="name">Name</DataTableColumnHeader>
         <DataTableColumnHeader headerNodeID="role">Role</DataTableColumnHeader>
       </DataTableHeaderRow></DataTableHeader>
-      <DataTableBody>
-        <DataTableRow v-for="row in acceptedRows" :key="row.id" :rowID="row.id">
-          <DataTableCell :rowID="row.id" columnID="name">{{ row.cells.name }}</DataTableCell>
-          <DataTableCell :rowID="row.id" columnID="role">{{ row.cells.role }}</DataTableCell>
-        </DataTableRow>
+      <DataTableBody v-slot="{ row }">
+        <DataTableCell column="name">{{ row.cells.name }}</DataTableCell>
+        <DataTableCell column="role">{{ row.cells.role }}</DataTableCell>
       </DataTableBody>
     </DataTableRoot>
   </DataTableProvider>
@@ -61,7 +61,7 @@ useDataTableSource(table, async (request) => {
 `DataTableSortTrigger` cycles one column through ascending, descending, and unsorted. `DataTableFilterControl` binds an input or select to a global or column descriptor. Both update the canonical query and request a new view; the source decides what comparator and predicate keys mean.
 
 ```vue
-<DataTableSortTrigger columnID="name" comparator="locale">
+<DataTableSortTrigger column="name" comparator="locale">
   Name
 </DataTableSortTrigger>
 
@@ -75,14 +75,10 @@ useDataTableSource(table, async (request) => {
 
 ## Selection and native forms
 
-Use `DataTableSelectionControl` for explicit rows and `DataTableBulkSelectionControl` for all matching rows or group leaves. Explicit selection keeps a native `name` and `value`; all-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
+Use `DataTableSelectionControl` for explicit rows and `DataTableBulkSelectionControl` for all matching rows or group leaves. Inside Body, the row ID and native value default to the current row, so only `name` is required. Set `value` only when a submitted form needs a different value. All-matching selection is revision-bound and stores exclusions rather than every unloaded ID.
 
 ```vue
-<DataTableSelectionControl
-  :rowID="row.id"
-  name="selected-users"
-  :value="row.id"
-/>
+<DataTableSelectionControl name="selected-users" />
 
 <DataTableBulkSelectionControl :target="{ kind: 'all-matching' }">
   Select all results
@@ -92,6 +88,10 @@ Use `DataTableSelectionControl` for explicit rows and `DataTableBulkSelectionCon
 ## Grouped rows and edit intent
 
 DataTable may render group rows returned by the source. `DataTableDisclosure` changes expansion and requests a new view. `DataTableEditor` emits value-commit intent from an input, textarea, or select, but the application validates and persists the value. There is no two-dimensional cursor or edit mode; use DataGrid when that interaction is central.
+
+Flat headers omit `depth`; it defaults to `0`. Pass an explicit depth only for multi-level header rows. Give a native DataTable its accessible name with `DataTableCaption`, or use `aria-labelledby` when a visible title outside the table already names it.
+
+Body owns normal row repetition. Use `<DataTableBody manual>` with explicit `DataTableRow rowID="…"` only for low-level rendering such as a virtualized window.
 
 ## Source and presentation states
 

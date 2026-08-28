@@ -49,7 +49,7 @@ const source = useDataGridSource(grid, (request, { signal }) =>
 </template>
 ```
 
-Provider를 중첩하면 거부되며 matching Provider 밖에서 part를 사용하면 즉시 실패합니다. 응용 프로그램은 accepted source row를 렌더링해야 합니다. 현재 projection에 없는 임의의 local ID는 interactive row나 cell로 등록할 수 없습니다.
+Provider를 중첩하면 거부되며 matching Provider 밖에서 part를 사용하면 즉시 실패합니다. Body가 accepted source row를 렌더링하고 slot에 각 `row`를 노출합니다. 내부 cell과 control은 현재 row ID를 상속하며 현재 projection에 없는 임의의 local ID는 interactive row나 cell로 등록할 수 없습니다.
 
 ## 프로필별 공개 API
 
@@ -70,7 +70,10 @@ SSR에서는 resolver를 실행하지 않습니다. hydration은 같은 accepted
 ## 렌더링 계약
 
 - `as`는 element를 고르고 `asChild`는 유효한 child 하나를 채택합니다.
-- acronym prop은 template에서도 공개 표기를 유지합니다: `rowID`, `columnID`, `headerNodeID`.
+- Body는 accepted row를 기본으로 반복합니다. slot은 `{ row, rowIndex, isGroup }`를 제공하고 `manual`은 명시적인 저수준 Row 구성을 켭니다.
+- cell 계열 part에는 `column="name"`을 사용합니다. 자동 Body 밖에서만 명시적인 `rowID`가 필요합니다. header node는 column 또는 group을 뜻할 수 있으므로 `headerNodeID`를 유지합니다.
+- 평면 `HeaderRow`는 기본 `depth=0`을 사용하며 중첩 header row에서만 `depth`를 전달합니다.
+- native DataTable은 `Caption`이나 `aria-labelledby`로 이름을 붙입니다. Grid와 TreeGrid는 `aria-label` 또는 `aria-labelledby`를 사용합니다.
 - DataTable은 native table 의미와 form submission을 유지합니다.
 - DataGrid와 DataTreeGrid는 grid/treegrid ARIA, roving tab stop, cursor, edit state를 투영합니다.
 - controlled ownership은 mount된 Provider 수명 동안 고정됩니다.

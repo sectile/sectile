@@ -11,7 +11,6 @@ import {
   DataTableHeaderRow,
   DataTableProvider,
   DataTableRoot,
-  DataTableRow,
   defineDataTableColumns,
   useDataTable,
   useDataTableContext,
@@ -24,16 +23,30 @@ test('Vue DataTable renders one native table tree and propagates controller cont
   const Probe = { setup() { injected = useDataTableContext(); return () => null; } };
   let controller;
   const app = createSSRApp({
-    setup() { controller = useDataTable({ columns }); return () => h(DataTableProvider, { controller }, { default: () => h(DataTableRoot, null, { default: () => [h(DataTableCaption, null, () => 'Users'), h(DataTableHeader, null, () => h(DataTableHeaderRow, { depth: 0 }, () => h(DataTableColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataTableBody, null, () => h(DataTableRow, { rowID: 'r1' }, () => h(DataTableCell, { rowID: 'r1', columnID: 'name' }, () => 'Ada'))), h(Probe)] }) }); },
+    setup() {
+      controller = useDataTable({ columns });
+      accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]);
+      return () => h(DataTableProvider, { controller }, { default: () => h(DataTableRoot, null, { default: () => [h(DataTableCaption, null, () => 'Users'), h(DataTableHeader, null, () => h(DataTableHeaderRow, null, () => h(DataTableColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataTableBody, null, { default: ({ row }) => h(DataTableCell, { column: 'name' }, () => row.cells.name) }), h(Probe)] }) });
+    },
   });
   const html = await renderToString(app);
   assert.match(html, /<table/);
   assert.match(html, /<caption[^>]*>Users/);
   assert.match(html, /<thead/);
   assert.match(html, /<tbody/);
+  assert.match(html, /data-depth="0"/);
+  assert.match(html, /data-row-id="r1"/);
+  assert.match(html, />Ada</);
   assert.equal(injected.controller, controller);
   assert.equal('connection' in injected, false);
 });
+
+function accept(controller, rows) {
+  const request = controller.requestState.value.pendingRequest;
+  assert.notEqual(request, null);
+  const result = controller.synchronizeView({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: rows.length }, visibleRowCount: { kind: 'known', value: rows.length }, rows, columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
+  assert.equal(result.ok, true);
+}
 
 test('Vue DataTable rejects missing providers and invalid asChild composition', async () => {
   await assert.rejects(() => renderToString(createSSRApp({ render: () => h(DataTableRoot) })), /matching Provider/);

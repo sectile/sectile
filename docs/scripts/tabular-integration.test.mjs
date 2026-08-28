@@ -47,3 +47,22 @@ test('Tabular documentation covers profiles, live examples, Vue injection, sourc
   assert.match(config, /\/packages\/tabular\/data-tree-grid/u);
   assert.match(config, /\/ko\/packages\/tabular\/virtual/u);
 });
+
+test('Tabular Vue examples use automatic Body rows and concise public props', async () => {
+  const sources = await Promise.all([
+    read('.vitepress/theme/components/TabularDataTableDemo.vue'),
+    read('.vitepress/theme/components/TabularDataGridDemo.vue'),
+    read('.vitepress/theme/components/TabularDataTreeGridDemo.vue'),
+    ...['data-table', 'data-grid', 'data-tree-grid'].flatMap((profile) => [
+      read(`packages/tabular/${profile}.md`),
+      read(`ko/packages/tabular/${profile}.md`),
+    ]),
+  ]);
+  assert.match(sources[0], /DataTableCaption/u);
+  for (const source of sources) {
+    assert.doesNotMatch(source, /acceptedRows/u);
+    assert.doesNotMatch(source, /:depth="0"/u);
+    assert.doesNotMatch(source, /(?:^|\s):?columnID=/mu);
+    assert.doesNotMatch(source, /Data(?:Table|Grid|TreeGrid)Row\s+v-for/u);
+  }
+});

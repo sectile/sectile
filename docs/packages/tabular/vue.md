@@ -49,7 +49,7 @@ const source = useDataGridSource(grid, (request, { signal }) =>
 </template>
 ```
 
-Nested Providers are rejected, and a part used outside its matching Provider fails immediately. The application renders accepted source rows; arbitrary local IDs that are absent from the current projection cannot be registered as interactive rows or cells.
+Nested Providers are rejected, and a part used outside its matching Provider fails immediately. Body renders accepted source rows and exposes each `row` to its slot. Nested cells and controls inherit the current row ID; arbitrary local IDs that are absent from the current projection cannot be registered as interactive rows or cells.
 
 ## Public API by profile
 
@@ -70,7 +70,10 @@ SSR does not execute a source resolver. Hydration must begin from the same accep
 ## Rendering contracts
 
 - `as` selects the rendered element; `asChild` adopts exactly one valid child.
-- Acronym props retain their public spelling in templates: `rowID`, `columnID`, and `headerNodeID`.
+- Body repeats accepted rows by default. Its slot exposes `{ row, rowIndex, isGroup }`; `manual` enables explicit low-level Row composition.
+- Cell-oriented parts use `column="name"`. Explicit `rowID` is needed only outside automatic Body composition. Header nodes keep `headerNodeID` because a node may represent a column or a group.
+- Flat `HeaderRow` uses the default `depth=0`; pass `depth` only for nested header rows.
+- Name a native DataTable with `Caption` or `aria-labelledby`. Grid and TreeGrid use `aria-label` or `aria-labelledby`.
 - Native DataTable markup retains table semantics and form submission.
 - DataGrid and DataTreeGrid project grid/treegrid ARIA, a roving tab stop, cursor, and edit state.
 - Controlled ownership is fixed for the mounted Provider.

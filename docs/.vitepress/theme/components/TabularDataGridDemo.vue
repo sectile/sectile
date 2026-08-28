@@ -10,7 +10,6 @@ import {
   DataGridHeaderRow,
   DataGridProvider,
   DataGridRoot,
-  DataGridRow,
   DataGridRowSelectionControl,
   DataGridSortTrigger,
   defineDataGridColumns,
@@ -104,27 +103,25 @@ const handleCommand = (command: DataGridCommand) => {
 <template>
   <section class="tabular-demo tabular-demo--grid" :aria-label="copy.title">
     <header class="tabular-demo__toolbar">
-      <div class="tabular-demo__title"><span><TableCellsSplit :size="18" aria-hidden="true" /></span><div><strong>{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 항목' : ' items' }}</small></div></div>
+      <div class="tabular-demo__title"><span><TableCellsSplit :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 항목' : ' items' }}</small></div></div>
       <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
     </header>
     <DataGridProvider :controller="grid">
       <div class="tabular-demo__viewport">
-        <DataGridRoot ref="gridRoot" class="tabular-grid" :aria-label="copy.title" @command="handleCommand">
+        <DataGridRoot ref="gridRoot" class="tabular-grid" aria-labelledby="tabular-data-grid-demo-title" @command="handleCommand">
           <DataGridHeader>
-            <DataGridHeaderRow :depth="0">
+            <DataGridHeaderRow>
               <DataGridColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">
-                <DataGridSortTrigger :columnID="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGridSortTrigger>
+                <DataGridSortTrigger :column="column.id">{{ copy.columns[index] }}<ArrowDownUp :size="14" aria-hidden="true" /></DataGridSortTrigger>
               </DataGridColumnHeader>
             </DataGridHeaderRow>
           </DataGridHeader>
-          <DataGridBody>
-            <DataGridRow v-for="row in rows" :key="row.id" :rowID="row.id">
-              <DataGridCell v-for="column in columns" :key="`${row.id}:${column.id}`" :rowID="row.id" :columnID="column.id" v-slot="{ editState }">
-                <DataGridRowSelectionControl v-if="column.id === 'task'" :rowID="row.id" name="release-items" :value="row.id" :aria-label="`Select ${row.cells['task']}`" />
-                <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
-                <DataGridEditor :rowID="row.id" :columnID="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
-              </DataGridCell>
-            </DataGridRow>
+          <DataGridBody v-slot="{ row }">
+            <DataGridCell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
+              <DataGridRowSelectionControl v-if="column.id === 'task'" name="release-items" :aria-label="`Select ${row.cells['task']}`" />
+              <span v-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
+              <DataGridEditor :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+            </DataGridCell>
           </DataGridBody>
         </DataGridRoot>
       </div>

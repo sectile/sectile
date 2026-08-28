@@ -12,7 +12,7 @@ import {
   type DataGridState,
   type DataGridUpdate,
 } from '@sectile/tabular/data-grid';
-import type { TabularAcceptedViewState, TabularAccessState, TabularColumnDefinition, TabularColumnState, TabularError, TabularGroupID, TabularHeaderNode, TabularHeaderNodeID, TabularLimits, TabularQuery, TabularRequest, TabularRequestState, TabularResult, TabularRowID, TabularRowSelection, TabularView, TabularViewResponse, TabularWireValue } from '@sectile/tabular';
+import type { TabularAcceptedViewState, TabularAccessState, TabularColumnDefinition, TabularColumnState, TabularError, TabularGroupID, TabularHeaderNode, TabularHeaderNodeID, TabularLimits, TabularQuery, TabularRequest, TabularRequestState, TabularResult, TabularRow, TabularRowID, TabularRowSelection, TabularView, TabularViewResponse, TabularWireValue } from '@sectile/tabular';
 import type { PrimitiveAs } from './primitive.js';
 import type { DataTableColumn, DataTableReactiveInput, DataTableWritableRef } from './data-table.js';
 import { createTabularParts, type HostConnection } from './internal/tabular-parts.js';
@@ -22,6 +22,7 @@ export type DataGridColumn<RecordValue = unknown, ID extends string = string, Ce
 export type DataGridQuery = TabularQuery;
 export type DataGridView = TabularView;
 export type DataGridViewResponse = TabularViewResponse;
+export type DataGridViewRow = TabularRow;
 export type DataGridRowSelection = TabularRowSelection;
 export type DataGridGroupID = TabularGroupID;
 export type DataGridRowID = TabularRowID;
@@ -131,21 +132,22 @@ const parts = createTabularParts({ profile: 'data-grid', prefix: 'DataGrid', pub
 
 export interface DataGridProviderProps { readonly controller: DataGridController }
 export interface DataGridRootProps { readonly onCommand?: DataGridCommandHandler; readonly onError?: DataGridErrorHandler; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataGridRootSlotProps { readonly acceptedViewState: DataGridAcceptedViewState; readonly requestState: DataGridRequestState; readonly query: DataGridQuery; readonly rowSelection: DataGridRowSelection; readonly columnState: DataGridColumnState; readonly accessState: DataGridAccessState; readonly cursor: DataGridCursorState; readonly editState: DataGridEditState }
+export interface DataGridRootSlotProps { readonly acceptedViewState: DataGridAcceptedViewState; readonly requestState: DataGridRequestState; readonly query: DataGridQuery; readonly rowSelection: DataGridRowSelection; readonly columnState: DataGridColumnState; readonly accessState: DataGridAccessState; readonly cursor: DataGridCursorState; readonly editState: DataGridEditState; readonly rows: readonly DataGridViewRow[] }
 export interface DataGridRootExpose { readonly controller: DataGridController; refresh(): void }
 export interface DataGridPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataGridHeaderRowProps extends DataGridPartProps { readonly depth: number }
+export interface DataGridHeaderRowProps extends DataGridPartProps { readonly depth?: number }
 export interface DataGridColumnHeaderProps extends DataGridPartProps { readonly headerNodeID: TabularHeaderNodeID }
-export interface DataGridSortTriggerProps extends DataGridPartProps { readonly columnID: string; readonly comparator?: string }
-export type DataGridFilterControlProps = DataGridPartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly columnID: string; readonly id: string; readonly predicate: string });
-export interface DataGridColumnResizeHandleProps extends DataGridPartProps { readonly columnID: string; readonly minSize?: number; readonly maxSize?: number }
+export interface DataGridSortTriggerProps extends DataGridPartProps { readonly column: string; readonly comparator?: string }
+export type DataGridFilterControlProps = DataGridPartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: string; readonly id: string; readonly predicate: string });
+export interface DataGridColumnResizeHandleProps extends DataGridPartProps { readonly column: string; readonly minSize?: number; readonly maxSize?: number }
 export interface DataGridRowProps extends DataGridPartProps { readonly rowID: DataGridRowID }
-export interface DataGridRowSelectionControlProps extends DataGridPartProps { readonly rowID: DataGridRowID; readonly name: string; readonly value: string; readonly form?: string; readonly disabled?: boolean }
+export interface DataGridRowSelectionControlProps extends DataGridPartProps { readonly rowID?: DataGridRowID; readonly name: string; readonly value?: string; readonly form?: string; readonly disabled?: boolean }
 export interface DataGridBulkSelectionControlProps extends DataGridPartProps { readonly target: { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: DataGridGroupID }; readonly disabled?: boolean }
-export interface DataGridCellProps extends DataGridPartProps { readonly rowID: DataGridRowID; readonly columnID: string }
+export interface DataGridCellProps extends DataGridPartProps { readonly rowID?: DataGridRowID; readonly column: string }
 export interface DataGridEditorProps extends DataGridCellProps { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }
-export type DataGridHeaderProps = DataGridPartProps; export type DataGridBodyProps = DataGridPartProps; export type DataGridPartSlotProps = DataGridRootSlotProps; export type DataGridProviderSlotProps = DataGridRootSlotProps;
-export type DataGridHeaderSlotProps = DataGridRootSlotProps; export type DataGridHeaderRowSlotProps = DataGridRootSlotProps; export type DataGridColumnHeaderSlotProps = DataGridRootSlotProps; export type DataGridSortTriggerSlotProps = DataGridRootSlotProps; export type DataGridFilterControlSlotProps = DataGridRootSlotProps; export type DataGridColumnResizeHandleSlotProps = DataGridRootSlotProps; export type DataGridBodySlotProps = DataGridRootSlotProps; export type DataGridRowSlotProps = DataGridRootSlotProps; export type DataGridRowSelectionControlSlotProps = DataGridRootSlotProps; export type DataGridBulkSelectionControlSlotProps = DataGridRootSlotProps; export type DataGridCellSlotProps = DataGridRootSlotProps; export type DataGridEditorSlotProps = DataGridRootSlotProps;
+export type DataGridHeaderProps = DataGridPartProps; export interface DataGridBodyProps extends DataGridPartProps { readonly manual?: boolean } export interface DataGridPartSlotProps extends DataGridRootSlotProps { readonly row?: DataGridViewRow; readonly isGroup?: boolean } export type DataGridProviderSlotProps = DataGridRootSlotProps;
+export interface DataGridBodySlotProps extends DataGridRootSlotProps { readonly row: DataGridViewRow; readonly rowIndex: number; readonly isGroup: boolean }
+export type DataGridHeaderSlotProps = DataGridRootSlotProps; export type DataGridHeaderRowSlotProps = DataGridRootSlotProps; export type DataGridColumnHeaderSlotProps = DataGridRootSlotProps; export type DataGridSortTriggerSlotProps = DataGridRootSlotProps; export type DataGridFilterControlSlotProps = DataGridRootSlotProps; export type DataGridColumnResizeHandleSlotProps = DataGridRootSlotProps; export type DataGridRowSlotProps = DataGridRootSlotProps; export type DataGridRowSelectionControlSlotProps = DataGridPartSlotProps; export type DataGridBulkSelectionControlSlotProps = DataGridRootSlotProps; export type DataGridCellSlotProps = DataGridPartSlotProps; export type DataGridEditorSlotProps = DataGridPartSlotProps;
 export const DataGridProvider = parts['Provider'] as DefineComponent<DataGridProviderProps>;
 export const DataGridRoot = parts['Root'] as DefineComponent<DataGridRootProps>;
 export const DataGridHeader = parts['Header'] as DefineComponent<DataGridHeaderProps>;

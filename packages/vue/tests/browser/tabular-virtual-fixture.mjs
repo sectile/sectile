@@ -42,10 +42,10 @@ async function nativeScenario() {
         default: () => h(VirtualizerRoot, { ref: root, defaultState: adapter.state, strategy: adapter.strategy, initialViewport: nativeViewport, overscan: 0, style: { width: '320px', height: '104px', overflow: 'auto' }, onError: (error) => errors.push(`${error.code}:${error.message}`) }, {
           default: ({ placements }) => h(VirtualizerContent, { asChild: true }, {
             default: () => h(DataTableRoot, { 'aria-label': 'Native virtual table' }, {
-              default: () => h(DataTableBody, null, {
+              default: () => h(DataTableBody, { manual: true }, {
                 default: () => placements.map((placement) => h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
                   default: () => h(DataTableRow, { rowID: placement.id }, {
-                    default: () => h(DataTableCell, { rowID: placement.id, columnID: 'name' }, () => rows[placement.index]?.cells.name),
+                    default: () => h(DataTableCell, { rowID: placement.id, column: 'name' }, () => rows[placement.index]?.cells.name),
                   }),
                 })),
               }),
@@ -84,8 +84,8 @@ async function pinnedScenario() {
               default: () => placements.map((placement) => {
                 const cell = cells.get(placement.id);
                 return cell === undefined ? null : h(VirtualizerItem, { key: placement.id, placement, asChild: true }, {
-                  default: () => h(DataGridCell, { rowID: cell.rowID, columnID: cell.columnID }, {
-                    default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGridEditor, { rowID: cell.rowID, columnID: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
+                  default: () => h(DataGridCell, { rowID: cell.rowID, column: cell.columnID }, {
+                    default: () => [rows[Number(cell.rowID.slice(1))]?.cells[cell.columnID], h(DataGridEditor, { rowID: cell.rowID, column: cell.columnID, 'aria-label': `Edit ${cell.rowID} ${cell.columnID}` })],
                   }),
                 });
               }),

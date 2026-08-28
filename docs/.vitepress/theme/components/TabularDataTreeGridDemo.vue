@@ -10,7 +10,6 @@ import {
   DataTreeGridHeaderRow,
   DataTreeGridProvider,
   DataTreeGridRoot,
-  DataTreeGridRow,
   DataTreeGridRowDisclosure,
   DataTreeGridRowSelectionControl,
   defineDataTreeGridColumns,
@@ -104,26 +103,24 @@ const handleCommand = (command: DataTreeGridCommand) => {
 <template>
   <section class="tabular-demo tabular-demo--tree" :aria-label="copy.title">
     <header class="tabular-demo__toolbar">
-      <div class="tabular-demo__title"><span><Workflow :size="18" aria-hidden="true" /></span><div><strong>{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 서비스' : ' services' }}</small></div></div>
+      <div class="tabular-demo__title"><span><Workflow :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-tree-grid-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ records.length }}{{ isKorean ? '개 서비스' : ' services' }}</small></div></div>
       <button class="tabular-demo__action" type="button" @click="beginFirstEdit"><PencilLine :size="15" aria-hidden="true" />{{ copy.edit }}</button>
     </header>
     <DataTreeGridProvider :controller="tree">
       <div class="tabular-demo__viewport">
-        <DataTreeGridRoot ref="treeRoot" class="tabular-grid tabular-tree-grid" :aria-label="copy.title" @command="handleCommand">
-          <DataTreeGridHeader><DataTreeGridHeaderRow :depth="0"><DataTreeGridColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">{{ copy.columns[index] }}</DataTreeGridColumnHeader></DataTreeGridHeaderRow></DataTreeGridHeader>
-          <DataTreeGridBody>
-            <DataTreeGridRow v-for="row in rows" :key="row.id" :rowID="row.id" :class="{ 'is-group': row.kind === 'group' }">
-              <DataTreeGridCell v-for="column in columns" :key="`${row.id}:${column.id}`" :rowID="row.id" :columnID="column.id" v-slot="{ editState }">
-                <template v-if="column.id === 'name'">
-                  <DataTreeGridRowDisclosure v-if="row.kind === 'group'" :rowID="row.id" :aria-label="`Toggle ${row.cells['name']}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGridRowDisclosure>
-                  <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
-                  <DataTreeGridRowSelectionControl v-if="row.kind === 'leaf'" :rowID="row.id" name="services" :value="row.id" :aria-label="`Select ${row.cells['name']}`" />
-                </template>
-                <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells['name'] }}</strong>
-                <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
-                <DataTreeGridEditor v-if="row.kind === 'leaf'" :rowID="row.id" :columnID="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
-              </DataTreeGridCell>
-            </DataTreeGridRow>
+        <DataTreeGridRoot ref="treeRoot" class="tabular-grid tabular-tree-grid" aria-labelledby="tabular-data-tree-grid-demo-title" @command="handleCommand">
+          <DataTreeGridHeader><DataTreeGridHeaderRow><DataTreeGridColumnHeader v-for="(column, index) in columns" :key="column.id" :headerNodeID="column.id">{{ copy.columns[index] }}</DataTreeGridColumnHeader></DataTreeGridHeaderRow></DataTreeGridHeader>
+          <DataTreeGridBody v-slot="{ row }">
+            <DataTreeGridCell v-for="column in columns" :key="column.id" :column="column.id" v-slot="{ editState }">
+              <template v-if="column.id === 'name'">
+                <DataTreeGridRowDisclosure v-if="row.kind === 'group'" :aria-label="`Toggle ${row.cells['name']}`"><ChevronRight :size="16" aria-hidden="true" /></DataTreeGridRowDisclosure>
+                <span v-else class="tabular-tree-grid__indent" aria-hidden="true" />
+                <DataTreeGridRowSelectionControl v-if="row.kind === 'leaf'" name="services" :aria-label="`Select ${row.cells['name']}`" />
+              </template>
+              <strong v-if="row.kind === 'group' && column.id === 'name'">{{ row.cells['name'] }}</strong>
+              <span v-else-if="!isEditing(editState, row.id, column.id)" :class="{ 'tabular-demo__status': column.id === 'status' && row.kind === 'leaf' }" :data-tone="column.id === 'status' ? row.cells['status'] : undefined">{{ column.id === 'status' && row.kind === 'leaf' ? copy.status[row.cells['status'] as keyof typeof copy.status] : row.cells[column.id] }}</span>
+              <DataTreeGridEditor v-if="row.kind === 'leaf'" :column="column.id" :value="row.cells[column.id]" :aria-label="`Edit ${column.id} for ${row.id}`" />
+            </DataTreeGridCell>
           </DataTreeGridBody>
         </DataTreeGridRoot>
       </div>

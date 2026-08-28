@@ -301,7 +301,7 @@
 .tabular-grid [data-part='editor'] { width: 100%; min-width: 0; height: 31px; border: 1px solid var(--vp-c-brand-1); border-radius: 7px; padding: 0 8px; outline: 0; color: var(--vp-c-text-1); background: var(--vp-c-bg); }
 .tabular-grid [data-part='editor'][hidden] { display: none; }
 
-.tabular-tree-grid [data-part='row'].is-group { background: var(--vp-c-bg-alt); }
+.tabular-tree-grid [data-part='row'][data-row-kind='group'] { background: var(--vp-c-bg-alt); }
 .tabular-tree-grid [data-part='row-disclosure'] { display: grid; width: 24px; height: 24px; flex: none; place-items: center; border: 0; border-radius: 6px; color: var(--vp-c-text-3); background: transparent; cursor: pointer; }
 .tabular-tree-grid [data-part='row-disclosure']:hover { color: var(--vp-c-text-1); background: var(--tabular-accent-soft); }
 .tabular-tree-grid [data-part='row-disclosure'][aria-expanded='true'] svg { transform: rotate(90deg); }

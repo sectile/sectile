@@ -16,13 +16,14 @@ DataTable은 읽기 중심 프로필입니다. native table 의미와 행 단위
 
 ## 기본 구성
 
-Provider에는 controller를 한 번만 전달합니다. Root와 모든 하위 part는 provide/inject로 이를 공유합니다. source는 revision이 포함된 request를 view로 변환하며, 화면에 그리는 row ID는 반드시 accepted view에 있어야 합니다.
+Provider에는 controller를 한 번만 전달합니다. Root와 모든 하위 part는 provide/inject로 이를 공유합니다. source는 revision이 포함된 request를 view로 변환합니다. Body가 accepted row를 반복하고 slot에 `row`를 전달하며, 내부 cell과 control은 그 행의 식별자를 자동으로 상속합니다.
 
 ```vue
 <script setup lang="ts">
 import {
-  DataTableProvider, DataTableRoot, DataTableHeader, DataTableHeaderRow,
-  DataTableColumnHeader, DataTableBody, DataTableRow, DataTableCell,
+  DataTableProvider, DataTableRoot, DataTableCaption,
+  DataTableHeader, DataTableHeaderRow, DataTableColumnHeader,
+  DataTableBody, DataTableCell,
   defineDataTableColumns, useDataTable, useDataTableSource,
 } from '@sectile/vue/data-table'
 
@@ -40,16 +41,15 @@ useDataTableSource(table, async (request) => {
 
 <template>
   <DataTableProvider :controller="table">
-    <DataTableRoot aria-label="사용자">
-      <DataTableHeader><DataTableHeaderRow :depth="0">
+    <DataTableRoot>
+      <DataTableCaption>사용자</DataTableCaption>
+      <DataTableHeader><DataTableHeaderRow>
         <DataTableColumnHeader headerNodeID="name">이름</DataTableColumnHeader>
         <DataTableColumnHeader headerNodeID="role">역할</DataTableColumnHeader>
       </DataTableHeaderRow></DataTableHeader>
-      <DataTableBody>
-        <DataTableRow v-for="row in acceptedRows" :key="row.id" :rowID="row.id">
-          <DataTableCell :rowID="row.id" columnID="name">{{ row.cells.name }}</DataTableCell>
-          <DataTableCell :rowID="row.id" columnID="role">{{ row.cells.role }}</DataTableCell>
-        </DataTableRow>
+      <DataTableBody v-slot="{ row }">
+        <DataTableCell column="name">{{ row.cells.name }}</DataTableCell>
+        <DataTableCell column="role">{{ row.cells.role }}</DataTableCell>
       </DataTableBody>
     </DataTableRoot>
   </DataTableProvider>
@@ -61,22 +61,26 @@ useDataTableSource(table, async (request) => {
 `DataTableSortTrigger`는 열 하나를 오름차순, 내림차순, 정렬 해제 순으로 바꿉니다. `DataTableFilterControl`은 input이나 select를 global 또는 column filter descriptor에 연결합니다. 둘 다 canonical query를 갱신하고 새 view를 요청하며 comparator와 predicate key의 의미는 source가 결정합니다.
 
 ```vue
-<DataTableSortTrigger columnID="name" comparator="locale">이름</DataTableSortTrigger>
+<DataTableSortTrigger column="name" comparator="locale">이름</DataTableSortTrigger>
 <DataTableFilterControl scope="global" id="user-search" predicate="contains" placeholder="사용자 검색" />
 ```
 
 ## 선택과 native form
 
-개별 행은 `DataTableSelectionControl`, 전체 검색 결과나 group leaf는 `DataTableBulkSelectionControl`로 선택합니다. explicit selection에는 native `name`과 `value`가 유지됩니다. all-matching selection은 revision에 묶이며 아직 불러오지 않은 모든 ID 대신 제외 목록만 저장합니다.
+개별 행은 `DataTableSelectionControl`, 전체 검색 결과나 group leaf는 `DataTableBulkSelectionControl`로 선택합니다. Body 안에서는 현재 행 ID가 native value의 기본값이므로 `name`만 필요합니다. form에 다른 값을 제출할 때만 `value`를 지정합니다. all-matching selection은 revision에 묶이며 아직 불러오지 않은 모든 ID 대신 제외 목록만 저장합니다.
 
 ```vue
-<DataTableSelectionControl :rowID="row.id" name="selected-users" :value="row.id" />
+<DataTableSelectionControl name="selected-users" />
 <DataTableBulkSelectionControl :target="{ kind: 'all-matching' }">검색 결과 전체 선택</DataTableBulkSelectionControl>
 ```
 
 ## 그룹 행과 편집 의도
 
 source가 반환한 group row는 `DataTableDisclosure`로 펼치고 새 view를 요청할 수 있습니다. `DataTableEditor`는 input, textarea, select에서 value commit 의도를 보내지만 검증과 저장은 응용 프로그램이 맡습니다. 2차원 cursor와 edit mode는 제공하지 않으므로 셀 편집이 중심이면 DataGrid를 사용하세요.
+
+평면 header에서는 `depth`를 생략합니다. 기본값은 `0`이며 여러 단계의 header row를 구성할 때만 명시합니다. native DataTable의 접근 가능한 이름은 `DataTableCaption`으로 제공하고, table 밖의 보이는 제목이 이미 있다면 `aria-labelledby`로 연결합니다.
+
+일반적인 행 반복은 Body가 맡습니다. virtual window처럼 저수준 렌더링이 필요할 때만 `<DataTableBody manual>`과 `DataTableRow rowID="…"`를 직접 사용합니다.
 
 ## source와 표현 상태
 

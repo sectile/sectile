@@ -36,6 +36,7 @@ import type {
   TabularRequest,
   TabularRequestState,
   TabularResult,
+  TabularRow,
   TabularRowID,
   TabularRowSelection,
   TabularSnapshot,
@@ -71,6 +72,7 @@ export interface DataTableWritableRef<T> { value: T }
 export type DataTableQuery = TabularQuery;
 export type DataTableView = TabularView;
 export type DataTableViewResponse = TabularViewResponse;
+export type DataTableViewRow = TabularRow;
 export type DataTableRowSelection = TabularRowSelection;
 export type DataTableGroupID = TabularGroupID;
 export type DataTableRowID = TabularRowID;
@@ -213,26 +215,27 @@ const parts = createTabularParts({
 
 export interface DataTableProviderProps { readonly controller: DataTableController }
 export interface DataTableRootProps { readonly onCommand?: DataTableCommandHandler; readonly onError?: DataTableErrorHandler; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataTableRootSlotProps { readonly acceptedViewState: DataTableAcceptedViewState; readonly requestState: DataTableRequestState; readonly query: DataTableQuery; readonly rowSelection: DataTableRowSelection; readonly columnState: DataTableColumnState; readonly accessState: DataTableAccessState; readonly expansion: readonly DataTableGroupID[] }
+export interface DataTableRootSlotProps { readonly acceptedViewState: DataTableAcceptedViewState; readonly requestState: DataTableRequestState; readonly query: DataTableQuery; readonly rowSelection: DataTableRowSelection; readonly columnState: DataTableColumnState; readonly accessState: DataTableAccessState; readonly expansion: readonly DataTableGroupID[]; readonly rows: readonly DataTableViewRow[] }
 export interface DataTableRootExpose { readonly controller: DataTableController; refresh(): void }
 export interface DataTablePartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface DataTableHeaderRowProps extends DataTablePartProps { readonly depth: number }
+export interface DataTableHeaderRowProps extends DataTablePartProps { readonly depth?: number }
 export interface DataTableColumnHeaderProps extends DataTablePartProps { readonly headerNodeID: TabularHeaderNodeID }
-export interface DataTableSortTriggerProps extends DataTablePartProps { readonly columnID: string; readonly comparator?: string }
-export type DataTableFilterControlProps = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly columnID: string; readonly id: string; readonly predicate: string });
-export interface DataTableColumnResizeHandleProps extends DataTablePartProps { readonly columnID: string; readonly minSize?: number; readonly maxSize?: number }
+export interface DataTableSortTriggerProps extends DataTablePartProps { readonly column: string; readonly comparator?: string }
+export type DataTableFilterControlProps = DataTablePartProps & ({ readonly scope: 'global'; readonly id: string; readonly predicate: string } | { readonly scope: 'column'; readonly column: string; readonly id: string; readonly predicate: string });
+export interface DataTableColumnResizeHandleProps extends DataTablePartProps { readonly column: string; readonly minSize?: number; readonly maxSize?: number }
 export interface DataTableRowProps extends DataTablePartProps { readonly rowID: DataTableRowID | DataTableGroupID }
-export interface DataTableSelectionControlProps extends DataTablePartProps { readonly rowID: DataTableRowID; readonly name: string; readonly value: string; readonly form?: string; readonly disabled?: boolean }
+export interface DataTableSelectionControlProps extends DataTablePartProps { readonly rowID?: DataTableRowID; readonly name: string; readonly value?: string; readonly form?: string; readonly disabled?: boolean }
 export interface DataTableBulkSelectionControlProps extends DataTablePartProps { readonly target: { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: DataTableGroupID }; readonly disabled?: boolean }
-export interface DataTableDisclosureProps extends DataTablePartProps { readonly rowID: DataTableGroupID; readonly disabled?: boolean }
-export interface DataTableCellProps extends DataTablePartProps { readonly rowID: DataTableRowID | DataTableGroupID; readonly columnID: string }
+export interface DataTableDisclosureProps extends DataTablePartProps { readonly rowID?: DataTableGroupID; readonly disabled?: boolean }
+export interface DataTableCellProps extends DataTablePartProps { readonly rowID?: DataTableRowID | DataTableGroupID; readonly column: string }
 export interface DataTableEditorProps extends DataTableCellProps { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }
-export interface DataTablePartSlotProps extends DataTableRootSlotProps {}
+export interface DataTablePartSlotProps extends DataTableRootSlotProps { readonly row?: DataTableViewRow; readonly isGroup?: boolean }
+export interface DataTableBodySlotProps extends DataTableRootSlotProps { readonly row: DataTableViewRow; readonly rowIndex: number; readonly isGroup: boolean }
 export type DataTableProviderSlotProps = DataTableRootSlotProps;
 export type DataTableCaptionProps = DataTablePartProps;
 export type DataTableHeaderProps = DataTablePartProps;
-export type DataTableBodyProps = DataTablePartProps;
-export type DataTableCaptionSlotProps = DataTableRootSlotProps; export type DataTableHeaderSlotProps = DataTableRootSlotProps; export type DataTableHeaderRowSlotProps = DataTableRootSlotProps; export type DataTableColumnHeaderSlotProps = DataTableRootSlotProps; export type DataTableSortTriggerSlotProps = DataTableRootSlotProps; export type DataTableFilterControlSlotProps = DataTableRootSlotProps; export type DataTableColumnResizeHandleSlotProps = DataTableRootSlotProps; export type DataTableBodySlotProps = DataTableRootSlotProps; export type DataTableRowSlotProps = DataTableRootSlotProps; export type DataTableSelectionControlSlotProps = DataTableRootSlotProps; export type DataTableBulkSelectionControlSlotProps = DataTableRootSlotProps; export type DataTableDisclosureSlotProps = DataTableRootSlotProps; export type DataTableCellSlotProps = DataTableRootSlotProps; export type DataTableEditorSlotProps = DataTableRootSlotProps;
+export interface DataTableBodyProps extends DataTablePartProps { readonly manual?: boolean }
+export type DataTableCaptionSlotProps = DataTableRootSlotProps; export type DataTableHeaderSlotProps = DataTableRootSlotProps; export type DataTableHeaderRowSlotProps = DataTableRootSlotProps; export type DataTableColumnHeaderSlotProps = DataTableRootSlotProps; export type DataTableSortTriggerSlotProps = DataTableRootSlotProps; export type DataTableFilterControlSlotProps = DataTableRootSlotProps; export type DataTableColumnResizeHandleSlotProps = DataTableRootSlotProps; export type DataTableRowSlotProps = DataTableRootSlotProps; export type DataTableSelectionControlSlotProps = DataTablePartSlotProps; export type DataTableBulkSelectionControlSlotProps = DataTableRootSlotProps; export type DataTableDisclosureSlotProps = DataTablePartSlotProps; export type DataTableCellSlotProps = DataTablePartSlotProps; export type DataTableEditorSlotProps = DataTablePartSlotProps;
 
 export const DataTableProvider = parts['Provider'] as DefineComponent<DataTableProviderProps>;
 export const DataTableRoot = parts['Root'] as DefineComponent<DataTableRootProps>;

@@ -2,18 +2,26 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { DataGridBody, DataGridCell, DataGridColumnHeader, DataGridHeader, DataGridHeaderRow, DataGridProvider, DataGridRoot, DataGridRow, defineDataGridColumns, useDataGrid } from '../dist/data-grid.js';
+import { DataGridBody, DataGridCell, DataGridColumnHeader, DataGridHeader, DataGridHeaderRow, DataGridProvider, DataGridRoot, defineDataGridColumns, useDataGrid } from '../dist/data-grid.js';
 
 const columns = defineDataGridColumns([{ id: 'name', capabilities: ['edit'] }]);
 
 test('Vue DataGrid owns ARIA grid composition without a repeated controller prop', async () => {
-  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); return () => h(DataGridProvider, { controller }, { default: () => h(DataGridRoot, null, { default: () => [h(DataGridHeader, null, () => h(DataGridHeaderRow, { depth: 0 }, () => h(DataGridColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataGridBody, null, () => h(DataGridRow, { rowID: 'r1' }, () => h(DataGridCell, { rowID: 'r1', columnID: 'name' }, () => 'Ada')))] }) }); } });
+  const app = createSSRApp({ setup() { const controller = useDataGrid({ columns }); accept(controller, [{ kind: 'leaf', id: 'r1', cells: { name: 'Ada' } }]); return () => h(DataGridProvider, { controller }, { default: () => h(DataGridRoot, null, { default: () => [h(DataGridHeader, null, () => h(DataGridHeaderRow, null, () => h(DataGridColumnHeader, { headerNodeID: 'name' }, () => 'Name'))), h(DataGridBody, null, { default: ({ row }) => h(DataGridCell, { column: 'name' }, () => row.cells.name) })] }) }); } });
   const html = await renderToString(app);
   assert.match(html, /role="grid"/);
   assert.match(html, /role="rowgroup"/);
   assert.match(html, /role="columnheader"/);
   assert.match(html, /role="gridcell"/);
+  assert.match(html, /data-row-id="r1"/);
 });
+
+function accept(controller, rows) {
+  const request = controller.requestState.value.pendingRequest;
+  assert.notEqual(request, null);
+  const result = controller.synchronizeView({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: rows.length }, visibleRowCount: { kind: 'known', value: rows.length }, rows, columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
+  assert.equal(result.ok, true);
+}
 
 test('Vue DataGrid rejects a hierarchical initial view', () => {
   const request = { protocolVersion: 1, requestID: 1, sourceGeneration: 0, queryRevision: 0, expansionRevision: 0, query: { sort: [], filters: [], groups: [], aggregates: [], pivots: [] }, expansion: [], access: { kind: 'page', page: 1, itemsPerPage: 25 }, columnSchemaRevision: 0 };

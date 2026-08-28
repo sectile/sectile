@@ -22,16 +22,14 @@ DataGrid uses ARIA grid semantics rather than native table elements. Rows in an 
 <DataGridProvider :controller="grid">
   <DataGridRoot aria-label="Release tasks" @command="handleCommand">
     <DataGridHeader>
-      <DataGridHeaderRow :depth="0">
+      <DataGridHeaderRow>
         <DataGridColumnHeader headerNodeID="task">Task</DataGridColumnHeader>
         <DataGridColumnHeader headerNodeID="owner">Owner</DataGridColumnHeader>
       </DataGridHeaderRow>
     </DataGridHeader>
-    <DataGridBody>
-      <DataGridRow v-for="row in acceptedRows" :key="row.id" :rowID="row.id">
-        <DataGridCell :rowID="row.id" columnID="task">{{ row.cells.task }}</DataGridCell>
-        <DataGridCell :rowID="row.id" columnID="owner">{{ row.cells.owner }}</DataGridCell>
-      </DataGridRow>
+    <DataGridBody v-slot="{ row }">
+      <DataGridCell column="task">{{ row.cells.task }}</DataGridCell>
+      <DataGridCell column="owner">{{ row.cells.owner }}</DataGridCell>
     </DataGridBody>
   </DataGridRoot>
 </DataGridProvider>
@@ -51,17 +49,18 @@ grid.dispatch({ type: 'move-cell', direction: 'down' })
 Mark editable columns with the `edit` capability and place a `DataGridEditor` in each editable cell. Enter begins editing, Enter commits, and Escape cancels. `parseValue` can return a structured failure; commit commands remain application-owned so persistence and optimistic updates stay outside the reducer.
 
 ```vue
-<DataGridCell :rowID="row.id" columnID="owner" v-slot="{ editState }">
+<DataGridCell column="owner" v-slot="{ editState }">
   <span v-if="editState.kind !== 'editing'">{{ row.cells.owner }}</span>
   <DataGridEditor
-    :rowID="row.id"
-    columnID="owner"
+    column="owner"
     :value="row.cells.owner"
   />
 </DataGridCell>
 ```
 
 When a source response removes the edited row or column, DataGrid cancels the editor before moving the cursor to a deterministic surviving cell. Replacing the source also cancels editing before requesting the replacement view.
+
+Body renders accepted rows by default and gives each slot invocation its `row`. Cells, row-selection controls, and editors inherit the row ID. Use `<DataGridBody manual>` and explicit `DataGridRow` only when a custom windowing strategy must own row placement. Flat headers omit `depth`; nested headers pass it explicitly.
 
 ## Selection, columns, and large data
 
