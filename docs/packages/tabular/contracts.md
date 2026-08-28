@@ -110,12 +110,18 @@ Explicit selection owns loaded row IDs. All-matching selection is bound to the c
 
 ```ts
 table.dispatch({ type: 'toggle-row-selection', rowID: 'user-42' })
+table.dispatch({
+  type: 'set-row-selection-range',
+  anchorRowID: 'user-42', rowID: 'user-48', selected: true,
+})
 table.dispatch({ type: 'select-all-matching' })
 table.dispatch({
   type: 'set-row-selection',
   selection: { kind: 'explicit-rows', rowIDs: ['user-7', 'user-42'] },
 })
 ```
+
+`set-row-selection-range` applies one state to the inclusive leaf-row interval in the currently accepted view. It never enumerates unloaded rows. DOM and Vue checkbox controls dispatch it automatically for Shift-click or Shift-Space and reset the anchor when the projection changes.
 
 DataTable projects native form controls. Grid profiles keep row selection independent from the cell cursor. DataTreeGrid can also emit a group-leaf selection intent without guessing descendant IDs.
 

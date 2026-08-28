@@ -24,11 +24,11 @@ import '../tabular-docs.css';
 const { isKorean } = useDocsLocale();
 const copy = computed(() => isKorean.value ? {
   title: '서비스 소유권', subtitle: '도메인과 서비스의 계층을 한 grid에서 관리', columns: ['서비스', '담당자', '등급', '리전', '상태'],
-  hint: '그룹 펼침·접기 · leaf 선택 · 셀 이동 · leaf 편집', edit: '첫 서비스 편집',
+  hint: '그룹 펼침·접기 · Shift로 leaf 범위 선택 · 셀 이동 · leaf 편집', edit: '첫 서비스 편집',
   status: { Healthy: '정상', Review: '검토', Planned: '계획', Incident: '장애 대응' },
 } : {
   title: 'Service ownership', subtitle: 'Manage domains and services in one hierarchy', columns: ['Service', 'Owner', 'Tier', 'Region', 'Status'],
-  hint: 'Expand groups · select leaves · move between cells · edit leaves', edit: 'Edit first service',
+  hint: 'Expand groups · Shift-select visible leaves · move between cells · edit leaves', edit: 'Edit first service',
   status: { Healthy: 'Healthy', Review: 'Review', Planned: 'Planned', Incident: 'Incident' },
 });
 

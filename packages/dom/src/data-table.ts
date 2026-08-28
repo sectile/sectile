@@ -37,6 +37,7 @@ import {
   readEditorValue,
   resolveHeaderReference,
   rowSelected,
+  rowSelectionActivation,
   setEditorAttributes,
   setColumnInlineSize,
   setBulkSelectionControlAttributes,
@@ -51,6 +52,7 @@ import {
   type TabularDOMEditorValueParser,
   type TabularDOMHeaderReference,
   type TabularDOMRegistrationOptions,
+  type TabularDOMRowSelectionAnchor,
 } from './internal/tabular-dom.js';
 
 export type DataTableDOMCommand = SemanticDataTableCommand;
@@ -168,12 +170,15 @@ class DOMDataTable implements DataTableConnection {
   readonly #cells = new Map<string, { readonly element: HTMLTableCellElement; readonly options: DataTableCellOptions }>();
   readonly #refreshers = new Set<() => void>();
   readonly #unsubscribeCommands: () => void;
+  #projectionGeneration: number;
+  #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
 
   public constructor(options: DataTableConnectionOptions, ownsController: boolean) {
     this.#options = options;
     this.controller = options.controller;
     this.#ownsController = ownsController;
     this.#columnSizes = new ColumnSizeStore(options);
+    this.#projectionGeneration = this.controller.getProjection().generation;
     this.#unsubscribeCommands = this.controller.subscribeCommands((command) => options.onCommand?.(command));
     this.setTableAttributes();
   }
@@ -340,12 +345,33 @@ class DOMDataTable implements DataTableConnection {
         else input.removeAttribute('name');
       }
     };
-    const dispose = bindEvent(this.#scope, element, input === null ? 'click' : 'change', () => {
-      if (options.disabled !== true) this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID });
-    });
+    const activate = (shiftKey: boolean): void => {
+      if (options.disabled === true) return;
+      const projection = this.getProjection();
+      const activation = rowSelectionActivation(
+        projection.rowSelection,
+        projection.generation,
+        this.#selectionAnchor,
+        options.rowID,
+        shiftKey,
+      );
+      if (this.handleEvent(activation.event)) this.#selectionAnchor = activation.anchor;
+      else if (activation.event.type === 'set-row-selection-range') {
+        const fallback = rowSelectionActivation(projection.rowSelection, projection.generation, null, options.rowID, false);
+        if (this.handleEvent(fallback.event)) this.#selectionAnchor = fallback.anchor;
+      }
+    };
+    const disposers = [
+      bindEvent(this.#scope, element, 'click', (event) => activate(event.shiftKey)),
+      bindEvent(this.#scope, element, 'keydown', (event) => {
+        if (event.key !== ' ' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+        activate(true);
+        event.preventDefault();
+      }),
+    ];
     this.#refreshers.add(update);
     update();
-    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
+    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
   }
 
   public bindBulkSelectionControl(element: HTMLElement, options: DataTableBulkSelectionControlOptions): () => void {
@@ -426,6 +452,11 @@ class DOMDataTable implements DataTableConnection {
 
   public refresh(): void {
     if (!this.#scope.active) return;
+    const generation = this.getProjection().generation;
+    if (generation !== this.#projectionGeneration) {
+      this.#projectionGeneration = generation;
+      this.#selectionAnchor = null;
+    }
     this.setTableAttributes();
     for (const registration of this.#rows.values()) this.setRowAttributes(registration.element, registration.options);
     for (const registration of this.#cells.values()) this.setCellAttributes(registration.element, registration.options);
@@ -439,6 +470,7 @@ class DOMDataTable implements DataTableConnection {
     this.#rows.clear();
     this.#cells.clear();
     this.#refreshers.clear();
+    this.#selectionAnchor = null;
     clearAttributes(this.#options.table, ['data-scope', 'data-part']);
     if (this.#ownsController) this.controller.dispose();
   }

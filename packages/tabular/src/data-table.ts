@@ -8,6 +8,7 @@ import {
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
+  setVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from './internal/selection.js';
 import { tryCreateTabularModel, tryCreateTabularState } from './model.js';
@@ -48,6 +49,7 @@ export type DataTableEvent =
   | { readonly type: 'set-query'; readonly query: TabularQuery }
   | { readonly type: 'set-row-selection'; readonly selection: TabularRowSelection }
   | { readonly type: 'toggle-row-selection'; readonly rowID: TabularRowID }
+  | { readonly type: 'set-row-selection-range'; readonly anchorRowID: TabularRowID; readonly rowID: TabularRowID; readonly selected: boolean }
   | { readonly type: 'select-all-matching' }
   | { readonly type: 'request-group-leaf-selection'; readonly groupID: TabularGroupID }
   | { readonly type: 'set-column-state'; readonly columnState: TabularColumnState }
@@ -341,6 +343,20 @@ function reduceDataTableEvent(
   }
   if (event.type === 'toggle-row-selection') {
     const selection = toggleExplicitRowSelection(state.rowSelection, event.rowID, model.limits);
+    return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
+  }
+  if (event.type === 'set-row-selection-range') {
+    const visibleRowIDs = state.acceptedViewState.kind === 'none'
+      ? Object.freeze([])
+      : Object.freeze(state.acceptedViewState.view.rows.filter((row) => row.kind === 'leaf').map((row) => row.id));
+    const selection = setVisibleRowSelectionRange(
+      state.rowSelection,
+      visibleRowIDs,
+      event.anchorRowID,
+      event.rowID,
+      event.selected,
+      model.limits,
+    );
     return selection.ok ? ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: selection.value }), commands: Object.freeze([]) })) : selection;
   }
   if (event.type === 'select-all-matching') {

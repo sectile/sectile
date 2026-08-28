@@ -101,3 +101,23 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   assert.equal(table.getSnapshot().state.query.sort[0].id, 'name');
   assert.deepEqual(commands, ['request-view']);
 });
+
+test('TAB-TBL-06: row range events use accepted leaf order and reject stale endpoints', () => {
+  const table = createDataTable({ columns });
+  const pending = table.getSnapshot().state.requestState.pendingRequest;
+  const response = resolveClientTabularRequest(source, pending);
+  assert.equal(response.ok, true);
+  assert.equal(table.synchronizeView(response.value).ok, true);
+  assert.equal(table.dispatch({ type: 'toggle-row-selection', rowID: 'a' }).ok, true);
+  assert.equal(table.dispatch({
+    type: 'set-row-selection-range', anchorRowID: 'a', rowID: 'b', selected: true,
+  }).ok, true);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['a', 'b'] });
+  const before = table.getSnapshot();
+  const rejected = table.dispatch({
+    type: 'set-row-selection-range', anchorRowID: 'missing', rowID: 'b', selected: false,
+  });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-selection-range');
+  assert.equal(table.getSnapshot(), before);
+});

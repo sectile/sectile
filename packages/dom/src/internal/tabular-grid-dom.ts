@@ -28,6 +28,7 @@ import {
   readEditorValue,
   resolveHeaderReference,
   rowSelected,
+  rowSelectionActivation,
   setColumnInlineSize,
   setBulkSelectionControlAttributes,
   setRowSelectionControlAttributes,
@@ -40,6 +41,7 @@ import {
   type TabularDOMEditorOptions,
   type TabularDOMHeaderReference,
   type TabularDOMRegistrationOptions,
+  type TabularDOMRowSelectionAnchor,
 } from './tabular-dom.js';
 
 export interface GridDOMCursorState { readonly current: TabularCellAddress | null }
@@ -129,6 +131,7 @@ type BaseGridEvent =
   | { readonly type: 'focus-cell'; readonly cell: TabularCellAddress }
   | { readonly type: 'move-cell'; readonly direction: 'left' | 'right' | 'up' | 'down'; readonly boundary?: 'stop' | 'wrap-axis' }
   | { readonly type: 'toggle-row-selection'; readonly rowID: TabularRowID }
+  | { readonly type: 'set-row-selection-range'; readonly anchorRowID: TabularRowID; readonly rowID: TabularRowID; readonly selected: boolean }
   | { readonly type: 'set-row-selection'; readonly selection: TabularRowSelection }
   | { readonly type: 'select-all-matching' }
   | { readonly type: 'request-group-leaf-selection'; readonly groupID: TabularGroupID }
@@ -154,6 +157,7 @@ export class DOMTabularGrid<
   #pendingCell: GridRevealCellCommand | null = null;
   #pendingRow: GridRevealRowCommand | null = null;
   #projectionGeneration: number;
+  #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
 
   public constructor(
     options: GridDOMConnectionOptions<GridDOMController<Event, Command, State, Projection>, Command>,
@@ -371,12 +375,33 @@ export class DOMTabularGrid<
         else input.removeAttribute('name');
       }
     };
-    const dispose = bindEvent(this.#scope, element, input === null ? 'click' : 'change', () => {
-      if (options.disabled !== true) this.handleEvent({ type: 'toggle-row-selection', rowID: options.rowID } as Event);
-    });
+    const activate = (shiftKey: boolean): void => {
+      if (options.disabled === true) return;
+      const projection = this.getProjection();
+      const activation = rowSelectionActivation(
+        projection.rowSelection,
+        projection.generation,
+        this.#selectionAnchor,
+        options.rowID,
+        shiftKey,
+      );
+      if (this.handleEvent(activation.event as Event)) this.#selectionAnchor = activation.anchor;
+      else if (activation.event.type === 'set-row-selection-range') {
+        const fallback = rowSelectionActivation(projection.rowSelection, projection.generation, null, options.rowID, false);
+        if (this.handleEvent(fallback.event as Event)) this.#selectionAnchor = fallback.anchor;
+      }
+    };
+    const disposers = [
+      bindEvent(this.#scope, element, 'click', (event) => activate(event.shiftKey)),
+      bindEvent(this.#scope, element, 'keydown', (event) => {
+        if (event.key !== ' ' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+        activate(true);
+        event.preventDefault();
+      }),
+    ];
     this.#refreshers.add(update);
     update();
-    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
+    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
   }
 
   public bindBulkSelectionControl(element: HTMLElement, options: GridDOMBulkSelectionControlOptions): () => void {
@@ -522,6 +547,7 @@ export class DOMTabularGrid<
       this.#projectionGeneration = generation;
       this.#pendingCell = null;
       this.#pendingRow = null;
+      this.#selectionAnchor = null;
     }
     this.setGridAttributes();
     for (const registration of this.#rows.values()) this.setRowAttributes(registration.element, registration.options);
@@ -539,6 +565,7 @@ export class DOMTabularGrid<
     this.#refreshers.clear();
     this.#pendingCell = null;
     this.#pendingRow = null;
+    this.#selectionAnchor = null;
     clearAttributes(this.#options.root, ['role', 'data-scope', 'data-part', 'aria-rowcount', 'aria-colcount']);
     if (this.#ownsController) this.controller.dispose();
   }

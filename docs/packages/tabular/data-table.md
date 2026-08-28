@@ -50,6 +50,8 @@ renderRows(table.getProjection().rows)
 
 `@sectile/dom/tabular` binds the same controller contract to native table elements, form controls, and events while preserving application styling.
 
+Bound row checkboxes support anchored range selection without extra options. Activate one checkbox, then Shift-click or press Shift-Space on another to apply that checkbox's next state to the inclusive visible leaf range.
+
 ```ts
 import { createDataTable } from '@sectile/dom/tabular'
 

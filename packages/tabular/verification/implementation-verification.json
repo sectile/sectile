@@ -66,19 +66,23 @@
     "timingPolicy": "informational-no-threshold"
   },
   "footprint": {
-    "javascriptBytes": 129053,
-    "declarationBytes": 39063,
-    "sourceMapBytes": 169879,
-    "packedBytes": 60307,
+    "javascriptBytes": 131430,
+    "declarationBytes": 39500,
+    "sourceMapBytes": 172871,
+    "packedBytes": 61118,
     "declarationFiles": 13,
     "publicSubpaths": 9
   },
   "consumerScenarios": [
     "tabular-base-without-virtual",
-    "dom-base-without-virtual",
-    "vue-base-types-without-direct-tabular",
+    "dom-base-without-optional-peers",
+    "vue-base-without-optional-peers",
+    "dom-tabular-explicit-opt-in",
+    "vue-tabular-explicit-opt-in",
     "tabular-virtual-explicit-opt-in",
     "dom-virtual-explicit-opt-in",
-    "vue-virtual-explicit-opt-in"
+    "vue-virtual-explicit-opt-in",
+    "dom-temporal-explicit-opt-in",
+    "vue-temporal-explicit-opt-in"
   ]
 }

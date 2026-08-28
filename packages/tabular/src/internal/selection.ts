@@ -36,6 +36,48 @@ export function toggleExplicitRowSelection(
     : ok(Object.freeze({ ...selection, excludedRowIDs: ids.value }));
 }
 
+export function setVisibleRowSelectionRange(
+  selection: TabularRowSelection,
+  visibleRowIDs: readonly TabularRowID[],
+  anchorRowID: TabularRowID,
+  rowID: TabularRowID,
+  selected: boolean,
+  limits: TabularLimits,
+): TabularResult<TabularRowSelection> {
+  const anchorError = validateID(anchorRowID, 'anchorRowID', limits);
+  if (anchorError !== null) return { ok: false, error: anchorError };
+  const rowError = validateID(rowID, 'rowID', limits);
+  if (rowError !== null) return { ok: false, error: rowError };
+  if (typeof selected !== 'boolean') {
+    return fail('transition-rejection', 'invalid-selection-range', 'Range selection requires a boolean selected state.');
+  }
+  const anchorIndex = visibleRowIDs.indexOf(anchorRowID);
+  const rowIndex = visibleRowIDs.indexOf(rowID);
+  if (anchorIndex === -1 || rowIndex === -1) {
+    return fail('transition-rejection', 'invalid-selection-range', 'Range selection endpoints must be visible leaf rows.', {
+      anchorRowID,
+      rowID,
+    });
+  }
+  const start = Math.min(anchorIndex, rowIndex);
+  const end = Math.max(anchorIndex, rowIndex);
+  const range = new Set(visibleRowIDs.slice(start, end + 1));
+  const current = selection.kind === 'explicit-rows'
+    ? [...selection.rowIDs]
+    : [...selection.excludedRowIDs];
+  const next = new Set(current);
+  const addRange = selection.kind === 'explicit-rows' ? selected : !selected;
+  for (const candidate of range) {
+    if (addRange) next.add(candidate);
+    else next.delete(candidate);
+  }
+  const ids = normalizeIDs([...next], limits);
+  if (!ids.ok) return ids;
+  return selection.kind === 'explicit-rows'
+    ? ok(Object.freeze({ kind: 'explicit-rows', rowIDs: ids.value }))
+    : ok(Object.freeze({ ...selection, excludedRowIDs: ids.value }));
+}
+
 export function selectAllMatchingRows(
   sourceGeneration: number,
   queryRevision: number,

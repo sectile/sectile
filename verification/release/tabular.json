@@ -74,7 +74,7 @@
     "files": 316,
     "imports": 493
   },
-  "deterministicEvidenceFingerprint": "44ba3303bb0974cfa17206abfd72f008d80ed5eca2060289aa29e31187c55c8c",
+  "deterministicEvidenceFingerprint": "e97da7ad1ccf6984226b18ea3f941814e57ad9df3d29f0ecebb78a9ba6c3d27d",
   "evidence": [
     {
       "path": "docs/ko/packages/tabular.md",
@@ -94,7 +94,7 @@
     },
     {
       "path": "packages/dom/testing/public-signatures.json",
-      "sha256": "fd091ba515eb962dcd3cdf2ef699cf5a424c0c8fe90b7c5b105adc862f1d491b"
+      "sha256": "8607427d8502e0a1058d238fccb38ce0ef33a488b377372a65d29bdd993a74a8"
     },
     {
       "path": "packages/dom/verification/browser.json",
@@ -122,7 +122,7 @@
     },
     {
       "path": "packages/tabular/verification/implementation-verification.json",
-      "sha256": "44ba3303bb0974cfa17206abfd72f008d80ed5eca2060289aa29e31187c55c8c"
+      "sha256": "e97da7ad1ccf6984226b18ea3f941814e57ad9df3d29f0ecebb78a9ba6c3d27d"
     },
     {
       "path": "packages/tabular/verification/model.json",
@@ -198,7 +198,7 @@
     },
     {
       "path": "verification/consumer-install/tabular.json",
-      "sha256": "c91d633a9c77469f0e4623bc1c8e5abb2de605559135c603735f3a4a385b2554"
+      "sha256": "f5f29e8c867d3277ccab55c90191dc72a96d97d8c5cad2a1d0acb70724b9ec5e"
     },
     {
       "path": "verification/tabular/architecture.json",

@@ -56,6 +56,8 @@ renderTreeGrid(tree.getProjection())
 
 The DOM connection projects the same hierarchy into ARIA treegrid metadata, disclosures, keyboard navigation, and editor elements.
 
+`RowSelectionControl` applies Shift ranges only to visible leaf rows, so group rows and collapsed descendants do not enter the checkbox range.
+
 ```ts
 import { createDataTreeGrid } from '@sectile/dom/tabular'
 

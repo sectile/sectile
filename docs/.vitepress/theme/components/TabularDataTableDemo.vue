@@ -22,12 +22,12 @@ const { isKorean } = useDocsLocale();
 const copy = computed(() => isKorean.value ? {
   title: '사용자 목록', subtitle: '소속, 역할과 계정 상태를 한눈에 확인', search: '이름, 소속 또는 역할 검색', selectAll: '검색 결과 전체 선택',
   columns: ['이름', '소속', '역할', '최근 활동', '상태'], status: { active: '사용 중', invited: '초대됨', suspended: '중지됨' },
-  hint: '열 제목을 눌러 정렬 · 행 선택 · 검색 결과 전체 선택', loading: '불러오는 중…', empty: '검색 결과가 없습니다',
+  hint: '열 제목을 눌러 정렬 · Shift로 행 범위 선택 · 검색 결과 전체 선택', loading: '불러오는 중…', empty: '검색 결과가 없습니다',
   count: (value: number) => `${value}명 표시`, selected: (value: number) => `${value}명 선택`, selectRow: (name: string) => `${name} 선택`,
 } : {
   title: 'Users', subtitle: 'Compare teams, roles, and account status', search: 'Search name, team, or role', selectAll: 'Select all matching results',
   columns: ['Name', 'Team', 'Role', 'Last active', 'Status'], status: { active: 'Active', invited: 'Invited', suspended: 'Suspended' },
-  hint: 'Select a column heading to sort · Select rows · Select all matching', loading: 'Loading…', empty: 'No matching users',
+  hint: 'Select a column heading to sort · Shift-select a row range · Select all matching', loading: 'Loading…', empty: 'No matching users',
   count: (value: number) => `${value} shown`, selected: (value: number) => `${value} selected`, selectRow: (name: string) => `Select ${name}`,
 });
 

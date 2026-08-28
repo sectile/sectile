@@ -77,11 +77,13 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
       source = useDataTableSource(controller, async (request) => ({
         ...request,
         viewRevision: 1,
-        matchingLeafCount: { kind: 'known', value: 2 },
-        visibleRowCount: { kind: 'known', value: 2 },
+        matchingLeafCount: { kind: 'known', value: 4 },
+        visibleRowCount: { kind: 'known', value: 4 },
         rows: [
           { kind: 'leaf', id: 'ada', cells: { name: 'Ada', role: 'Engineer' } },
           { kind: 'leaf', id: 'grace', cells: { name: 'Grace', role: 'Admiral' } },
+          { kind: 'leaf', id: 'margaret', cells: { name: 'Margaret', role: 'Engineer' } },
+          { kind: 'leaf', id: 'radia', cells: { name: 'Radia', role: 'Architect' } },
         ],
         columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] },
         removedRowIDs: [],
@@ -130,7 +132,7 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
   const bulk = host.querySelector('.bulk-checkbox');
   const rows = [...host.querySelectorAll('.row-checkbox')];
   assert.equal(bulk?.getAttribute('aria-checked'), 'false');
-  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['false', 'false']);
+  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['false', 'false', 'false', 'false']);
 
   rows[0].click();
   await nextTick();
@@ -138,9 +140,20 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
   assert.equal(bulk?.getAttribute('aria-checked'), 'mixed');
   assert.equal(bulk?.textContent, '−');
 
+  rows[3].dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+  await nextTick();
+  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['true', 'true', 'true', 'true']);
+  assert.equal(bulk?.getAttribute('aria-checked'), 'true');
+
+  rows[1].click();
+  rows[3].dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+  await nextTick();
+  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['true', 'false', 'false', 'false']);
+  assert.equal(bulk?.getAttribute('aria-checked'), 'mixed');
+
   bulk?.click();
   await nextTick();
-  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['true', 'true']);
+  assert.deepEqual(rows.map((row) => row.getAttribute('aria-checked')), ['true', 'true', 'true', 'true']);
   assert.equal(bulk?.getAttribute('aria-checked'), 'true');
 
   app.unmount();

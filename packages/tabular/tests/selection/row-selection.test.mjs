@@ -7,6 +7,7 @@ import {
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   selectAllMatchingRows,
+  setVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from '../../.verification-dist/internal/selection.js';
 
@@ -71,4 +72,31 @@ test('TAB-SEL-06: selection identity and exclusion ceilings reject atomically', 
   const duplicate = createExplicitRowSelection(['a', 'a'], limits);
   assert.equal(duplicate.ok, false);
   assert.equal(duplicate.error.code, 'duplicate-identity');
+});
+
+test('TAB-SEL-07: visible ranges apply one selected state in either direction', () => {
+  const initial = createExplicitRowSelection(['off-page', 'b'], limits);
+  assert.equal(initial.ok, true);
+  const selected = setVisibleRowSelectionRange(initial.value, ['a', 'b', 'c', 'd'], 'b', 'd', true, limits);
+  assert.equal(selected.ok, true);
+  assert.deepEqual(selected.value, { kind: 'explicit-rows', rowIDs: ['off-page', 'b', 'c', 'd'] });
+  const deselected = setVisibleRowSelectionRange(selected.value, ['a', 'b', 'c', 'd'], 'd', 'b', false, limits);
+  assert.equal(deselected.ok, true);
+  assert.deepEqual(deselected.value, { kind: 'explicit-rows', rowIDs: ['off-page'] });
+});
+
+test('TAB-SEL-08: all-matching ranges update exclusions and reject hidden endpoints atomically', () => {
+  const all = selectAllMatchingRows(2, 4);
+  const excluded = setVisibleRowSelectionRange(all.value, ['a', 'b', 'c'], 'a', 'c', false, limits);
+  assert.equal(excluded.ok, true);
+  assert.deepEqual(excluded.value, {
+    kind: 'all-matching', sourceGeneration: 2, queryRevision: 4, excludedRowIDs: ['a', 'b', 'c'],
+  });
+  const selected = setVisibleRowSelectionRange(excluded.value, ['a', 'b', 'c'], 'b', 'c', true, limits);
+  assert.equal(selected.ok, true);
+  assert.deepEqual(selected.value.excludedRowIDs, ['a']);
+  const rejected = setVisibleRowSelectionRange(selected.value, ['a', 'b', 'c'], 'missing', 'c', true, limits);
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-selection-range');
+  assert.deepEqual(selected.value.excludedRowIDs, ['a']);
 });

@@ -31,27 +31,30 @@ function clientResponse(controller, records = [
   return response.value;
 }
 
-function treeResponse(controller) {
+function treeResponse(controller, rows = [
+  { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'A', score: 1 } },
+  { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+], viewRevision = 1) {
   const request = controller.getSnapshot().tabular.state.requestState.pendingRequest;
   assert.notEqual(request, null);
-  const rows = [
-    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'A', score: 1 } },
-    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
-  ];
   return {
     protocolVersion: 1,
     requestID: request.requestID,
     sourceGeneration: request.sourceGeneration,
     queryRevision: request.queryRevision,
     expansionRevision: request.expansionRevision,
-    viewRevision: 1,
+    viewRevision,
     access: request.access,
-    matchingLeafCount: { kind: 'known', value: 1 },
-    visibleRowCount: { kind: 'known', value: 2 },
+    matchingLeafCount: { kind: 'known', value: rows.filter((row) => row.kind === 'leaf').length },
+    visibleRowCount: { kind: 'known', value: rows.length },
     rows,
     columnSchema: { revision: 0, columns, headers: [] },
     removedRowIDs: [],
   };
+}
+
+function shiftClick(window, element) {
+  element.dispatchEvent(new window.MouseEvent('click', { bubbles: true, shiftKey: true }));
 }
 
 test('DOM DataTable preserves native structure, form output, and disposable registration', () => {
@@ -98,7 +101,7 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   assert.equal(bulkSelection.getAttribute('role'), 'checkbox');
   assert.equal(bulkSelection.getAttribute('aria-checked'), 'false');
   assert.equal(bulkSelection.getAttribute('data-state'), 'unchecked');
-  selection.dispatchEvent(new window.Event('change', { bubbles: true }));
+  selection.click();
   assert.deepEqual(connection.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
   assert.equal(bulkSelection.getAttribute('aria-checked'), 'mixed');
   assert.equal(bulkSelection.getAttribute('data-state'), 'indeterminate');
@@ -131,6 +134,71 @@ test('DOM DataTable preserves native structure, form output, and disposable regi
   connection.disconnect();
   assert.equal(table.hasAttribute('data-scope'), false);
   assert.equal(commands.some((command) => command.type === 'request-view'), false);
+});
+
+test('DOM Tabular checkbox controls select and clear visible leaf ranges from one anchor', () => {
+  const records = [
+    { id: 'r1', name: 'Alpha', score: 1 },
+    { id: 'r2', name: 'Beta', score: 2 },
+    { id: 'r3', name: 'Gamma', score: 3 },
+    { id: 'r4', name: 'Delta', score: 4 },
+  ];
+
+  const tableWindow = new Window();
+  const table = createDataTable({ columns, table: tableWindow.document.createElement('table') });
+  assert.equal(table.synchronizeView(clientResponse(table.controller, records)).ok, true);
+  const tableControls = records.map((record) => {
+    const element = tableWindow.document.createElement('button');
+    table.bindSelectionControl(element, { rowID: record.id, name: 'rows', value: record.id });
+    return element;
+  });
+  tableControls[0].click();
+  shiftClick(tableWindow, tableControls[3]);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r2', 'r3', 'r4'] });
+  tableControls[1].click();
+  shiftClick(tableWindow, tableControls[3]);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
+  assert.equal(table.requestView().ok, true);
+  const reordered = clientResponse(table.controller, [...records].reverse());
+  assert.equal(table.synchronizeView({ ...reordered, viewRevision: 2 }).ok, true);
+  shiftClick(tableWindow, tableControls[2]);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r3'] });
+  const shiftSpace = new tableWindow.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true, shiftKey: true });
+  tableControls[1].dispatchEvent(shiftSpace);
+  assert.equal(shiftSpace.defaultPrevented, true);
+  assert.deepEqual(table.getSnapshot().state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r3', 'r2'] });
+  table.disconnect();
+
+  const gridWindow = new Window();
+  const grid = createDataGrid({ columns, root: gridWindow.document.createElement('div') });
+  assert.equal(grid.synchronizeView(clientResponse(grid.controller, records)).ok, true);
+  const gridControls = records.map((record) => {
+    const element = gridWindow.document.createElement('button');
+    grid.bindRowSelectionControl(element, { rowID: record.id, name: 'rows', value: record.id });
+    return element;
+  });
+  gridControls[0].click();
+  shiftClick(gridWindow, gridControls[3]);
+  assert.deepEqual(grid.getSnapshot().tabular.state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r2', 'r3', 'r4'] });
+  grid.disconnect();
+
+  const treeWindow = new Window();
+  const treeRows = [
+    { kind: 'group', id: 'group:a', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'A', score: 3 } },
+    { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+    { kind: 'leaf', id: 'r2', cells: { name: 'Beta', score: 2 } },
+    { kind: 'leaf', id: 'r3', cells: { name: 'Gamma', score: 3 } },
+  ];
+  const tree = createDataTreeGrid({ columns, root: treeWindow.document.createElement('div') });
+  assert.equal(tree.synchronizeView(treeResponse(tree.controller, treeRows)).ok, true);
+  const firstLeaf = treeWindow.document.createElement('button');
+  const lastLeaf = treeWindow.document.createElement('button');
+  tree.bindRowSelectionControl(firstLeaf, { rowID: 'r1', name: 'rows', value: 'r1' });
+  tree.bindRowSelectionControl(lastLeaf, { rowID: 'r3', name: 'rows', value: 'r3' });
+  firstLeaf.click();
+  shiftClick(treeWindow, lastLeaf);
+  assert.deepEqual(tree.getSnapshot().tabular.state.rowSelection, { kind: 'explicit-rows', rowIDs: ['r1', 'r2', 'r3'] });
+  tree.disconnect();
 });
 
 test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears down listeners', async () => {

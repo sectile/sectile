@@ -24,11 +24,11 @@ import '../tabular-docs.css';
 const { isKorean } = useDocsLocale();
 const copy = computed(() => isKorean.value ? {
   title: '출시 준비 보드', subtitle: '셀을 이동하며 릴리스 항목을 바로 편집', columns: ['작업', '담당자', '영역', '목표일', '위험도', '상태'],
-  hint: '셀 선택 · 방향키 이동 · Enter 편집 · Escape 취소', edit: '첫 셀 편집',
+  hint: 'Shift로 행 범위 선택 · 방향키 이동 · Enter 편집 · Escape 취소', edit: '첫 셀 편집',
   status: { Ready: '준비', Review: '검토', Blocked: '차단', Progress: '진행 중' },
 } : {
   title: 'Release readiness', subtitle: 'Move through cells and edit release work in place', columns: ['Work item', 'Owner', 'Area', 'Target', 'Risk', 'Status'],
-  hint: 'Select a cell · Arrow keys move · Enter edits · Escape cancels', edit: 'Edit first cell',
+  hint: 'Shift-select a row range · Arrow keys move · Enter edits · Escape cancels', edit: 'Edit first cell',
   status: { Ready: 'Ready', Review: 'Review', Blocked: 'Blocked', Progress: 'In progress' },
 });
 

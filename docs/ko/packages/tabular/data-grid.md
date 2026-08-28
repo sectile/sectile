@@ -44,6 +44,8 @@ renderGrid(grid.getProjection(), { cursor, edit })
 
 DOM connection은 ARIA grid, roving tab stop, keyboard 이동과 editor 수명을 기존 element에 투영합니다.
 
+`RowSelectionControl`은 현재 보이는 leaf 행에서 Shift+클릭과 Shift+Space 범위 선택도 지원합니다. cell 선택과 cursor 이동 동작은 바뀌지 않습니다.
+
 ```ts
 import { createDataGrid } from '@sectile/dom/tabular'
 

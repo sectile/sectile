@@ -51,6 +51,8 @@ renderRows(table.getProjection().rows)
 
 `@sectile/dom/tabular`는 같은 controller 계약을 native table element, form control, event에 연결합니다. 직접 만든 HTML과 design system 스타일을 그대로 사용할 수 있습니다.
 
+행 checkbox는 별도 option 없이 anchor 기반 범위 선택을 지원합니다. checkbox 하나를 누른 뒤 다른 checkbox를 Shift+클릭하거나 Shift+Space로 활성화하면, 두 행 사이의 보이는 leaf 전체가 마지막 checkbox가 바뀔 상태로 선택되거나 해제됩니다.
+
 ```ts
 import { createDataTable } from '@sectile/dom/tabular'
 

@@ -41,6 +41,8 @@ renderGrid(grid.getProjection(), grid.getSnapshot())
 
 The DOM connection projects ARIA grid semantics, roving focus, keyboard navigation, and editor lifetime onto existing elements.
 
+`RowSelectionControl` also supports Shift-click and Shift-Space range selection across the currently visible leaf rows; cell selection and cursor movement remain unchanged.
+
 ```ts
 import { createDataGrid } from '@sectile/dom/tabular'
 

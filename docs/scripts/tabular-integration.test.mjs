@@ -50,6 +50,7 @@ test('Tabular documentation covers core, DOM, Vue, profiles, sources, and opt-in
     assert.match(source, /@sectile\/tabular\/data-(?:table|grid|tree-grid)/u);
     assert.match(source, /@sectile\/dom\/tabular/u);
     assert.doesNotMatch(source, /@sectile\/dom\/data-(?:table|grid|tree-grid)/u);
+    assert.match(source, /Shift/u);
   }
   for (const source of [sourceGuide, koSourceGuide]) assert.match(source, /attachRequestExecutor/u);
   for (const source of [domGuide, koDomGuide]) {

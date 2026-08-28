@@ -56,6 +56,8 @@ renderTreeGrid(tree.getProjection())
 
 DOM connection은 같은 projection을 ARIA treegrid metadata, disclosure, keyboard 이동과 편집 element에 연결합니다.
 
+`RowSelectionControl`의 Shift 범위는 현재 보이는 leaf 행에만 적용되므로 group 행과 접힌 descendant는 checkbox 범위에 들어가지 않습니다.
+
 ```ts
 import { createDataTreeGrid } from '@sectile/dom/tabular'
 

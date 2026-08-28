@@ -68,6 +68,20 @@ export interface ResolvedTabularHeaderReference {
 
 export type TabularDOMBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
 
+export interface TabularDOMRowSelectionAnchor {
+  readonly rowID: TabularRowID;
+  readonly projectionGeneration: number;
+}
+
+export type TabularDOMRowSelectionEvent =
+  | { readonly type: 'toggle-row-selection'; readonly rowID: TabularRowID }
+  | { readonly type: 'set-row-selection-range'; readonly anchorRowID: TabularRowID; readonly rowID: TabularRowID; readonly selected: boolean };
+
+export interface TabularDOMRowSelectionActivation {
+  readonly event: TabularDOMRowSelectionEvent;
+  readonly anchor: TabularDOMRowSelectionAnchor;
+}
+
 export class ColumnSizeStore {
   readonly #controlled: boolean;
   readonly #onChange: ((state: TabularDOMColumnSizeState) => void) | undefined;
@@ -260,6 +274,28 @@ export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID)
   return selection.kind === 'explicit-rows'
     ? selection.rowIDs.includes(rowID)
     : !selection.excludedRowIDs.includes(rowID);
+}
+
+export function rowSelectionActivation(
+  selection: TabularRowSelection,
+  projectionGeneration: number,
+  anchor: TabularDOMRowSelectionAnchor | null,
+  rowID: TabularRowID,
+  shiftKey: boolean,
+): TabularDOMRowSelectionActivation {
+  const current = Object.freeze({ rowID, projectionGeneration });
+  if (!shiftKey || anchor === null || anchor.projectionGeneration !== projectionGeneration) {
+    return Object.freeze({ event: Object.freeze({ type: 'toggle-row-selection' as const, rowID }), anchor: current });
+  }
+  return Object.freeze({
+    event: Object.freeze({
+      type: 'set-row-selection-range' as const,
+      anchorRowID: anchor.rowID,
+      rowID,
+      selected: !rowSelected(selection, rowID),
+    }),
+    anchor,
+  });
 }
 
 export function setRowSelectionControlAttributes(

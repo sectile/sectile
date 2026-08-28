@@ -110,12 +110,18 @@ table.dispatch({
 
 ```ts
 table.dispatch({ type: 'toggle-row-selection', rowID: 'user-42' })
+table.dispatch({
+  type: 'set-row-selection-range',
+  anchorRowID: 'user-42', rowID: 'user-48', selected: true,
+})
 table.dispatch({ type: 'select-all-matching' })
 table.dispatch({
   type: 'set-row-selection',
   selection: { kind: 'explicit-rows', rowIDs: ['user-7', 'user-42'] },
 })
 ```
+
+`set-row-selection-range`는 현재 받아들인 view에서 두 leaf row 사이의 구간 전체를 같은 상태로 바꿉니다. 아직 불러오지 않은 행은 열거하지 않습니다. DOM과 Vue checkbox는 Shift+클릭 또는 Shift+Space에서 이 event를 자동으로 보내며, projection이 바뀌면 anchor를 초기화합니다.
 
 DataTable은 native form control을, DataGrid와 DataTreeGrid는 cursor와 독립된 행 선택을 투영합니다. DataTreeGrid는 `request-group-leaf-selection`으로 아직 로드되지 않은 descendant까지 포함하는 선택 intent도 보낼 수 있습니다.
 

@@ -35,11 +35,11 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "5b9b0a4e453d60a89896b7b01c4d62994fdae1aec6d65f90a0c221b186640bd3",
+  "fingerprint": "b50b16287ea6c56e6b4d0dc4f27cab543f0aa66fc01d2b5674f17195d4b84160",
   "files": [
     {
       "path": "dist/contracts.d.ts",
-      "sha256": "53d0cdb1f5d588bb8739ea61b0ffb930d97f0cba3844f21ae114149d11fa9fcd"
+      "sha256": "319e01dba639327ef224096a52b02c10c7c0a332d800293af024ae5bb97f903a"
     },
     {
       "path": "dist/data-grid.d.ts",
@@ -47,7 +47,7 @@
     },
     {
       "path": "dist/data-table.d.ts",
-      "sha256": "b430f1eb2972a1998bec70a509ce95602f7c6dda60b3945c40dff09acf51637f"
+      "sha256": "49c485342d782e6e93b7a277cd680cf84b47db81aa99a96aca0472eba2f50e04"
     },
     {
       "path": "dist/data-tree-grid.d.ts",

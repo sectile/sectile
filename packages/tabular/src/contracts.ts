@@ -450,6 +450,7 @@ export type TabularErrorCode =
   | 'stale-source-generation'
   | 'stale-query-revision'
   | 'stale-view-revision'
+  | 'invalid-selection-range'
   | 'invalid-edit-target'
   | 'duplicate-source-executor';
 
