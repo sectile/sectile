@@ -2,12 +2,12 @@ import { performance } from 'node:perf_hooks';
 import {
   createFacadeConnection,
   createSemanticController,
-} from '../../packages/core/dist/adapter-runtime.js';
-import { createSelectionState, toggleMultipleSelection } from '../../packages/core/dist/selection.js';
-import { createGrid } from '../../packages/core/dist/structures/grid.js';
-import { createSequence } from '../../packages/core/dist/structures/sequence.js';
-import { createTree } from '../../packages/core/dist/structures/tree.js';
-import { replacePlainText } from '../../packages/core/dist/text.js';
+} from '@sectile/core/adapter-runtime';
+import { createGrid } from '@sectile/core/grid';
+import { createSelectionState, toggleMultipleSelection } from '@sectile/core/selection';
+import { createSequence } from '@sectile/core/sequence';
+import { replacePlainText } from '@sectile/core/text';
+import { createTree } from '@sectile/core/tree';
 
 export const COMPLEXITY_SCALES = Object.freeze([1_000, 10_000, 100_000]);
 
