@@ -16,6 +16,24 @@ import './style.css';
 
 type HeightMode = 'fixed' | 'estimated' | 'automatic';
 
+interface BenchmarkSource {
+  readonly gitCommit: string;
+  readonly gitDirty: boolean;
+  readonly buildFingerprint: string;
+}
+
+interface BenchmarkRunMetadata {
+  readonly id: string;
+  readonly observedAt: string;
+  readonly source: BenchmarkSource;
+}
+
+interface RunReferences {
+  readonly runIds: readonly string[];
+}
+
+declare const __BENCHMARK_SOURCE__: BenchmarkSource;
+
 interface BenchmarkCase {
   readonly rowProfile: RowProfile;
   readonly mode: HeightMode;
@@ -124,10 +142,12 @@ declare global {
   interface Window {
     __sectileVirtualBenchmarkResults?: readonly BenchmarkResult[];
     __sectileVirtualBenchmarkReport?: {
-      readonly baselineResults: readonly BenchmarkResult[];
-      readonly baselineFailures: readonly BaselineBenchmarkFailure[];
-      readonly baselineSamples: Readonly<Record<string, readonly BaselineSample[]>>;
-      readonly mutationResults: readonly MutationBenchmarkResult[];
+      readonly source: BenchmarkSource;
+      readonly runs: Readonly<Record<string, BenchmarkRunMetadata>>;
+      readonly baselineResults: readonly (BenchmarkResult & RunReferences)[];
+      readonly baselineFailures: readonly (BaselineBenchmarkFailure & RunReferences)[];
+      readonly baselineSamples: Readonly<Record<string, readonly (BaselineSample & { readonly runId: string })[]>>;
+      readonly mutationResults: readonly (MutationBenchmarkResult & RunReferences)[];
       readonly heightModeSupport: readonly HeightModeSupport[];
     };
   }
@@ -232,6 +252,11 @@ for (const support of heightModeSupport) supportResultsBody.append(renderSupport
 runButton.addEventListener('click', () => { void runAll(); });
 
 async function runAll(): Promise<void> {
+  const run = Object.freeze({
+    id: crypto.randomUUID(),
+    observedAt: new Date().toISOString(),
+    source: __BENCHMARK_SOURCE__,
+  });
   runButton!.disabled = true;
   resultsBody!.replaceChildren();
   mutationResultsBody!.replaceChildren();
@@ -281,6 +306,7 @@ async function runAll(): Promise<void> {
       caseKey(entry),
       Object.freeze((raw.get(caseKey(entry)) ?? []).flatMap((round, roundIndex) => (
         round.scrollMeasurements.map((measurement, sampleIndex) => Object.freeze({
+          runId: run.id,
           round: roundIndex + 1,
           sample: sampleIndex + 1,
           ...measurement,
@@ -299,12 +325,26 @@ async function runAll(): Promise<void> {
           mutationFilter,
         );
     for (const result of mutationResults) mutationResultsBody!.append(renderMutationResult(result));
+    const reportedBaselineResults = Object.freeze(baselineResults.map((result) => Object.freeze({ runIds: Object.freeze([run.id]), ...result })));
+    const reportedBaselineFailures = Object.freeze(baselineFailures.map((failure) => Object.freeze({ runIds: Object.freeze([run.id]), ...failure })));
+    const reportedMutationResults = Object.freeze(mutationResults.map((result) => Object.freeze({ runIds: Object.freeze([run.id]), ...result })));
+    const runs = Object.freeze({ [run.id]: run });
     window.__sectileVirtualBenchmarkResults = Object.freeze(baselineResults);
-    window.__sectileVirtualBenchmarkReport = Object.freeze({ baselineResults, baselineFailures, baselineSamples, mutationResults, heightModeSupport });
+    window.__sectileVirtualBenchmarkReport = Object.freeze({
+      source: __BENCHMARK_SOURCE__,
+      runs,
+      baselineResults: reportedBaselineResults,
+      baselineFailures: reportedBaselineFailures,
+      baselineSamples,
+      mutationResults: reportedMutationResults,
+      heightModeSupport,
+    });
     json!.textContent = JSON.stringify({
       benchmark: 'sectile-virtual-ecosystem',
-      protocolVersion: 3,
+      protocolVersion: 4,
       environment: navigator.userAgent,
+      source: __BENCHMARK_SOURCE__,
+      runs,
       conditions: {
         itemCount: ITEM_COUNT,
         rowProfile,
@@ -336,10 +376,10 @@ async function runAll(): Promise<void> {
         mutations: mutationConditions,
       },
       heightModeSupport,
-      baselineResults,
-      baselineFailures,
+      baselineResults: reportedBaselineResults,
+      baselineFailures: reportedBaselineFailures,
       baselineSamples,
-      mutationResults,
+      mutationResults: reportedMutationResults,
     }, null, 2);
     status!.textContent = 'Complete.';
   } catch (error) {

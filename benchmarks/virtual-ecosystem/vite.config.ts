@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { benchmarkSourceMetadata } from './scripts/source-metadata.mjs';
 
 export default defineConfig({
+  define: {
+    __BENCHMARK_SOURCE__: JSON.stringify(benchmarkSourceMetadata()),
+  },
   resolve: {
     dedupe: ['vue'],
     alias: [

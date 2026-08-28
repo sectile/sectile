@@ -47,6 +47,8 @@ pnpm --filter @sectile/benchmark-virtual-ecosystem dev
 
 Open the printed URL in Chrome and choose **Run benchmark**. Commit raw results only with the browser version, operating system, viewport, package versions, and conditions emitted by the page.
 
+Protocol 4 records provenance with the measurements. Every browser run receives a UUID and an ISO timestamp. Results retain the run IDs that contributed to them, and the report stores the corresponding Git commit, dirty-worktree flag, and SHA-256 fingerprint of the benchmark harness plus the Sectile virtual source used by that build. A partial commit or shard merge rejects reports with missing provenance or a different build fingerprint. This prevents a focused rerun from silently mixing measurements produced by different code.
+
 To rerun one mutation without repeating the full suite, add focused query parameters. This example runs only Sectile's automatic-height resize at the middle of the collection:
 
 ```text
@@ -89,5 +91,7 @@ node benchmarks/virtual-ecosystem/scripts/commit-results.mjs --merge-baseline /t
 ```
 
 Both merge modes include `rowProfile` in their result key, so uniform and heterogeneous shards cannot overwrite one another.
+
+All shards that will be merged must come from the same benchmark build. Restarting the page is safe because each run keeps its own ID, but rebuilding after source changes produces a new fingerprint and requires a complete suite.
 
 The observation committed in `results/chrome-151-macos-arm64.json` is descriptive, not a release threshold. Compare revisions on the same machine before treating a difference as a regression.

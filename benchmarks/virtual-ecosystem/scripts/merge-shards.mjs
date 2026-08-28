@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { assertCompatibleSource, mergeRuns } from './source-metadata.mjs';
 
 const [outputArgument, ...inputArguments] = process.argv.slice(2);
 if (outputArgument === undefined || inputArguments.length === 0) {
@@ -10,12 +11,17 @@ const outputPath = resolve(outputArgument);
 const reports = await Promise.all(inputArguments.map(async (input) => (
   JSON.parse(await readFile(resolve(input), 'utf8'))
 )));
-for (const report of reports.slice(1)) assertCompatible(reports[0], report);
+for (const report of reports.slice(1)) {
+  assertCompatible(reports[0], report);
+  assertCompatibleSource(reports[0], report);
+}
 const mergedBaseline = mergeBaselineReports(reports);
 
 const merged = {
   ...reports[0],
   environment: reports.at(-1).environment,
+  source: reports[0].source,
+  runs: mergeRuns(...reports),
   conditions: {
     ...reports[0].conditions,
     baseline: {
@@ -121,6 +127,7 @@ function aggregateBaselineResults(results, samples) {
   const deviations = elapsed.map((value) => Math.abs(value - scrollMedian)).sort((left, right) => left - right);
   return {
     ...template,
+    runIds: unique(results.flatMap((result) => result.runIds ?? [])),
     setupMs: round(percentile(results.map((result) => result.setupMs).sort((left, right) => left - right), 0.5)),
     firstRowsMs: round(percentile(results.map((result) => result.firstRowsMs).sort((left, right) => left - right), 0.5)),
     mountMs: round(percentile(results.map((result) => result.mountMs).sort((left, right) => left - right), 0.5)),
@@ -180,6 +187,7 @@ function mergeMutationGroup(results) {
     .sort((left, right) => left - right);
   return {
     ...template,
+    runIds: unique(results.flatMap((result) => result.runIds ?? [])),
     medianMs: elapsed.length === 0 ? null : round(percentile(elapsed, 0.5)),
     p95Ms: elapsed.length === 0 ? null : round(percentile(elapsed, 0.95)),
     recoveryMedianMs: recoveries.length === 0 ? null : round(percentile(recoveries, 0.5)),
@@ -228,4 +236,8 @@ function percentile(sorted, ratio) {
 
 function round(value) {
   return Number(value.toFixed(3));
+}
+
+function unique(values) {
+  return [...new Set(values)];
 }
