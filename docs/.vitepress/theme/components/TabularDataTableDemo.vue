@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search, Table2 } from '@lucide/vue';
+import { TextField } from '@sectile/vue/text';
 import {
   createDataTableComponents,
   defineDataTableColumns,
@@ -103,7 +104,17 @@ const direction = (columnID: string) => {
     <section class="tabular-demo tabular-demo--table" :aria-label="copy.title">
       <header class="tabular-demo__toolbar">
         <div class="tabular-demo__title"><span><Table2 :size="18" aria-hidden="true" /></span><div><strong id="tabular-data-table-demo-title">{{ copy.title }}</strong><small>{{ copy.subtitle }} · {{ copy.count(records.length) }}</small></div></div>
-        <label class="tabular-demo__search"><Search :size="16" aria-hidden="true" /><DataTable.FilterControl scope="global" id="user-search" predicate="contains" :placeholder="copy.search" :aria-label="copy.search" /></label>
+        <label class="tabular-demo__search">
+          <Search :size="16" aria-hidden="true" />
+          <DataTable.FilterControl as-child scope="global" id="user-search" predicate="contains">
+            <TextField
+              class="tabular-demo__search-input"
+              type="search"
+              :placeholder="copy.search"
+              :aria-label="copy.search"
+            />
+          </DataTable.FilterControl>
+        </label>
       </header>
 
       <div class="tabular-demo__viewport">
