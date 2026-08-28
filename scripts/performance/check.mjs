@@ -97,7 +97,35 @@ export function compareReports(baseline, current) {
       regressions.push(comparison);
     }
   }
-  return Object.freeze({ runnerBand, comparisons: Object.freeze(comparisons), regressions: Object.freeze(regressions) });
+  const footprintComparisons = comparePackageFootprints(baseline, current, runnerBand);
+  regressions.push(...footprintComparisons.filter(({ footprintRatio, band }) => footprintRatio > 1 + band));
+  return Object.freeze({
+    runnerBand,
+    comparisons: Object.freeze(comparisons),
+    footprintComparisons,
+    regressions: Object.freeze(regressions),
+  });
+}
+
+function comparePackageFootprints(baseline, current, runnerBand) {
+  const before = baseline.provenance.packageFootprint;
+  const after = current.provenance.packageFootprint;
+  assert.ok(before !== null && typeof before === 'object', 'baseline package footprint is missing');
+  assert.ok(after !== null && typeof after === 'object', 'current package footprint is missing');
+  assert.deepEqual(Object.keys(after).sort(), Object.keys(before).sort(), 'performance reports have mismatched package footprint keys');
+  return Object.freeze(Object.keys(after).sort().map((packageName) => {
+    assert.ok(Number.isSafeInteger(before[packageName]) && before[packageName] >= 0, `invalid baseline footprint for ${packageName}`);
+    assert.ok(Number.isSafeInteger(after[packageName]) && after[packageName] >= 0, `invalid current footprint for ${packageName}`);
+    return Object.freeze({
+      id: `package-footprint:${packageName}`,
+      kind: 'footprint',
+      package: packageName,
+      baselineBytes: before[packageName],
+      currentBytes: after[packageName],
+      footprintRatio: ratio(after[packageName], before[packageName]),
+      band: runnerBand,
+    });
+  }));
 }
 
 function ratio(current, baseline) {

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "repositoryCommand": "pnpm verify:performance",
+  "evidenceCommand": "pnpm performance:check -- --work-item <WI-NNN> --output <task-local-path>",
+  "requiredEvidence": ["latency", "allocation", "retainedHeap", "scaling", "packageFootprint"],
+  "workItems": [
+    "WI-002", "WI-003", "WI-004", "WI-005", "WI-006", "WI-007", "WI-008", "WI-009", "WI-010", "WI-011",
+    "WI-013", "WI-014", "WI-015", "WI-018", "WI-020", "WI-021", "WI-022", "WI-023", "WI-025", "WI-026",
+    "WI-027", "WI-028", "WI-029", "WI-030", "WI-031", "WI-032", "WI-033", "WI-034", "WI-035", "WI-036",
+    "WI-037", "WI-038", "WI-039", "WI-040"
+  ]
+}

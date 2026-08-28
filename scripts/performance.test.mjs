@@ -38,6 +38,23 @@ test('comparison reports an intentional timing regression', () => {
   assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
 });
 
+test('comparison reports intentional allocation and retained-heap regressions', () => {
+  const baseline = fixture();
+  const current = fixture();
+  baseline.metrics['core:case'].heap = heapMetric(1_048_576);
+  current.metrics['core:case'].heap = heapMetric(1_310_720);
+  const comparison = compareReports(baseline, current);
+  assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
+});
+
+test('comparison reports an intentional package-footprint regression', () => {
+  const baseline = fixture();
+  const current = fixture();
+  current.provenance.packageFootprint.core = 121;
+  const comparison = compareReports(baseline, current);
+  assert.deepEqual(comparison.regressions.map(({ id }) => id), ['package-footprint:core']);
+});
+
 test('comparison does not call a bimodal median shift a regression without tail corroboration', () => {
   const baseline = fixture();
   const current = fixture();
@@ -78,12 +95,22 @@ function fixture() {
     provenance: {
       node: 'v1', v8: '1', platform: 'test', architecture: 'test', osRelease: '1',
       cpuModel: 'test', cpuCount: 1, execArgv: [], workloadFingerprint: 'schema', buildFingerprint: 'build',
+      packageFootprint: { core: 100 },
     },
     runner: { processCount: 5 },
     metrics: {
       'runner:calibration': metric(10, 0.01),
       'core:case': metric(100, 0.01),
     },
+  };
+}
+
+function heapMetric(value) {
+  return {
+    peakDelta: { p95: value, minimum: value, maximum: value },
+    retainedDelta: { p95: value, minimum: value, maximum: value },
+    positivePeakDeltaMedian: value,
+    positiveRetainedDeltaMedian: value,
   };
 }
 

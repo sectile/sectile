@@ -10,6 +10,7 @@ and captures peak allocation pressure plus post-GC retained heap.
 pnpm performance:record
 pnpm performance:compare
 pnpm performance:check
+pnpm verify:performance
 ```
 
 `record` replaces `baseline.json` atomically. `compare` reports differences
@@ -19,6 +20,18 @@ baseline distribution, or when allocation/retained-heap evidence satisfies the
 same three checks.
 This prevents a bimodal process split from turning a stable tail into a false
 regression while still rejecting uniform slowdowns.
+
+Every runtime-changing work item listed in `gates.json` retains task-local
+before/after evidence with latency, allocation, retained heap, scaling, and
+package-footprint comparisons:
+
+```sh
+pnpm performance:check -- --work-item WI-013 --output .tasks/aux/WI-013-performance.json
+```
+
+The work-item flag is rejected without an output path. `verify:performance` is
+the repository gate for a controlled runner; portable CI must not replace it
+with a noisy single sample or compare against mismatched hardware metadata.
 
 Reports include the workload fingerprint, implementation/build fingerprint,
 Node/V8/OS/architecture/CPU/flag metadata, all eight built-package footprints,

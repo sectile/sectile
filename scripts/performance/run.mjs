@@ -19,7 +19,7 @@ import { WORKLOAD_SCHEMA } from './workloads.mjs';
 
 const execFile = promisify(execFileCallback);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const options = parseArguments(process.argv.slice(2));
+const options = parseArguments(process.argv.slice(2).filter((argument) => argument !== '--'));
 if (options.processCount < MINIMUM_PROCESS_COUNT) {
   throw new Error(`Performance runs require at least ${MINIMUM_PROCESS_COUNT} isolated processes.`);
 }
@@ -68,6 +68,7 @@ if (options.mode === 'record') {
   const comparison = compareReports(baseline, report);
   const output = Object.freeze({
     mode: options.mode,
+    workItem: options.workItem,
     baseline: options.baselinePath,
     baselineBuildFingerprint: baseline.provenance.buildFingerprint,
     currentBuildFingerprint: report.provenance.buildFingerprint,
@@ -124,16 +125,23 @@ function parseArguments(arguments_) {
   let outputPath = null;
   let processCount = DEFAULT_PROCESS_COUNT;
   let quick = false;
+  let workItem = null;
   for (let index = 1; index < arguments_.length; index += 1) {
     const argument = arguments_[index];
     if (argument === '--quick') quick = true;
     else if (argument === '--baseline') baselinePath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
     else if (argument === '--output') outputPath = resolve(repoRoot, requireValue(arguments_, ++index, argument));
+    else if (argument === '--work-item') workItem = requireValue(arguments_, ++index, argument);
     else if (argument === '--processes') processCount = Number(requireValue(arguments_, ++index, argument));
     else throw new Error(`Unknown performance option: ${argument}`);
   }
   if (!Number.isSafeInteger(processCount) || processCount < 1) throw new Error('--processes must be a positive safe integer.');
-  return Object.freeze({ mode, baselinePath, outputPath, processCount, quick });
+  if (workItem !== null) {
+    assert.match(workItem, /^WI-[0-9]{3}$/u, '--work-item must use WI-NNN.');
+    assert.notEqual(mode, 'record', '--work-item is only valid for compare/check evidence.');
+    assert.notEqual(outputPath, null, '--work-item requires --output so before/after evidence is retained.');
+  }
+  return Object.freeze({ mode, baselinePath, outputPath, processCount, quick, workItem });
 }
 
 function requireValue(arguments_, index, option) {

@@ -16,6 +16,8 @@
     "performance:record": "pnpm run build:workspace && node scripts/performance/run.mjs record",
     "performance:compare": "pnpm run build:workspace && node scripts/performance/run.mjs compare",
     "performance:check": "pnpm run build:workspace && node scripts/performance/run.mjs check",
+    "check:performance-gates": "node scripts/check-performance-gates.mjs",
+    "verify:performance": "pnpm check:performance-gates && pnpm performance:check",
     "update:complexity": "pnpm run build:workspace && node scripts/check-complexity-contracts.mjs --write",
     "check:complexity": "pnpm run build:workspace && node scripts/check-complexity-contracts.mjs",
     "test:complexity": "node --test --test-concurrency=1 scripts/complexity-contracts.test.mjs scripts/complexity-witnesses.test.mjs",
