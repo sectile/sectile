@@ -3,8 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "pnpm --filter @sectile/core --filter @sectile/tabular --filter @sectile/temporal --filter @sectile/virtual --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue build",
+    "build:packages": "pnpm --filter @sectile/core --filter @sectile/tabular --filter @sectile/temporal --filter @sectile/virtual --filter @sectile/dom --filter @sectile/terminal --filter @sectile/vue build",
+    "predev": "pnpm run build:packages",
     "dev": "vitepress dev --host 127.0.0.1",
+    "prebuild": "pnpm run build:packages",
     "build": "vitepress build",
     "preview": "vitepress preview --host 127.0.0.1",
     "generate": "node scripts/generate-component-pages.mjs",

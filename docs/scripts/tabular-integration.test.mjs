@@ -4,6 +4,14 @@ import test from 'node:test';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
+test('documentation build prepares workspace package outputs', async () => {
+  const packageJSON = JSON.parse(await read('package.json'));
+  assert.equal(packageJSON.scripts.prebuild, 'pnpm run build:packages');
+  assert.equal(packageJSON.scripts.predev, packageJSON.scripts.prebuild);
+  assert.match(packageJSON.scripts['build:packages'], /@sectile\/core/u);
+  assert.match(packageJSON.scripts['build:packages'], /@sectile\/tabular/u);
+});
+
 test('Tabular documentation covers profiles, live examples, Vue injection, source ownership, and opt-in Virtual', async () => {
   const [overview, vue, virtual, koOverview, koVue, koVirtual, config, ...profilePages] = await Promise.all([
     read('packages/tabular.md'),
